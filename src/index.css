@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./styles/omega-room.css";
 
 /* Microinteracción sobria: la proyección del holograma "se actualiza" al
    cambiar el compromiso enfocado. Es una transición breve, no una animación
@@ -238,22 +239,8 @@
   }
 }
 
-/* --- Sprint 8.1: reencuadre de escena (cámara alejada ~11%) ---------------- */
-
-@media (min-width: 1024px) {
-  .room-scene-viewport {
-    zoom: 0.89;
-  }
-}
-
-@supports not (zoom: 1) {
-  @media (min-width: 1024px) {
-    .room-scene-viewport {
-      transform: scale(0.89);
-      transform-origin: top center;
-    }
-  }
-}
+/* --- Viewport de sala: sin zoom reductor — el monitor debe dominar -------- */
+/* (La altura dominante vive en omega-room.css / roomTheme.) */
 
 /* --- Sprint 10.5B: geometría mecanizada del Cristal Maestro (esquinas cortadas) */
 

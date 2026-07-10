@@ -297,7 +297,7 @@ export function CrystalSlab({
 }) {
   return (
     <div
-      className={`relative ${CRYSTAL_SLAB_THICKNESS} ${edgeGlowClass ?? ''} ${edgeGlowClass ? CRYSTAL_STATE_TRANSITION : ''}`}
+      className={`relative ${CRYSTAL_SLAB_THICKNESS} lg:flex lg:h-full lg:min-h-0 lg:flex-1 lg:flex-col ${edgeGlowClass ?? ''} ${edgeGlowClass ? CRYSTAL_STATE_TRANSITION : ''}`}
     >
       {children}
     </div>

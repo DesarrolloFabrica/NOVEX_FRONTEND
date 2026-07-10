@@ -24,11 +24,14 @@ export const roomDepth =
   'bg-[radial-gradient(ellipse_130%_88%_at_50%_-14%,rgba(226,232,240,0.1)_0%,rgba(148,163,184,0.045)_28%,transparent_52%),radial-gradient(ellipse_68%_42%_at_50%_96%,rgba(15,23,42,0.06)_0%,transparent_62%),radial-gradient(ellipse_120%_100%_at_50%_50%,#1a2230_0%,#151b25_48%,#121820_100%)]'
 
 /**
- * Sprint 10.3 — unidad videowall (marco + cristal + dashboard) en desktop.
- * ~20% más estrecha que el escenario anterior, centrada — aire lateral vacío.
+ * Unidad videowall — ancho y composición; la altura física la controla omega-room.css:
+ *   --screen-max-height  → alto del monitor (portátil ≤900px alto: ~80vh)
+ *   --screen-top-space   → reserva vertical en cálculos de altura
+ *   --screen-stage-offset → desplazamiento visual del monitor (solo portátil)
+ *   --screen-floor-reserve → margen inferior (menor en portátil; holograma superpone)
  */
 export const roomVideowallUnit =
-  'mx-auto w-full max-w-none lg:h-auto lg:w-[80%] lg:max-w-[106rem]'
+  'mx-auto flex w-full max-w-none flex-col lg:w-full lg:max-w-[94rem]'
 
 /**
  * @deprecated Sprint 10.3 — usar roomVideowallUnit.
@@ -36,27 +39,26 @@ export const roomVideowallUnit =
  */
 export const roomMaxWidth = roomVideowallUnit
 
-/** Márgenes exteriores mínimos — más superficie útil sin tocar el interior. */
-export const roomOuterPadding = 'px-1 py-1 sm:px-2 sm:py-2 lg:px-1 lg:pt-2 lg:pb-0'
+/** Márgenes exteriores — aire lateral; el top lo controla --screen-top-space. */
+export const roomOuterPadding = 'px-2 py-0 sm:px-3 sm:py-0 lg:px-3 lg:pt-0 lg:pb-0'
 
-/** Fila del videowall — centrada; el aire lateral queda en la sala (Sprint 10.3). */
+/** Fila del videowall — zona superior-media; piso y proyección debajo. */
 export const roomSceneRow =
-  'relative z-10 flex min-h-0 flex-1 flex-col items-stretch overflow-visible lg:items-center lg:justify-start lg:pt-0.5 lg:pb-0 lg:overflow-visible'
+  'relative z-10 flex min-h-0 flex-none flex-col items-stretch overflow-visible lg:items-center lg:justify-start lg:pt-0 lg:pb-0 lg:overflow-visible'
 
 /**
- * Sprint 8.1 — Cámara alejada: escala ~11% sobre la unidad visual completa.
- * La clase `room-scene-viewport` aplica zoom/scale en index.css (sin recortar).
+ * Viewport del monitor — altura acotada para que la sala respire.
  */
 export const roomSceneViewport =
-  'room-scene-viewport relative flex min-h-0 w-full flex-1 flex-col lg:h-auto lg:max-h-[calc(100dvh-8rem)] lg:flex-none lg:overflow-visible'
+  'room-scene-viewport relative flex min-h-0 w-full flex-col lg:h-full lg:max-h-full lg:flex-none lg:overflow-visible'
 
 /**
- * Capa flotante del Sistema de Proyección (Sprint 9.2B / 12.4).
- * Desktop: absoluta sobre la sala, elevada hacia primer plano sobre el cristal.
+ * Capa flotante del Sistema de Proyección — fuera del flujo del documento.
+ * Desktop: posicionamiento real en `.operative-projection` (omega-room.css).
  * Móvil: flujo normal debajo del videowall.
  */
 export const roomProjectionStage =
-  'relative z-[60] flex w-full flex-col overflow-visible px-1 max-lg:mt-3 max-lg:pb-3 sm:px-2 lg:pointer-events-none lg:absolute lg:inset-x-0 lg:bottom-[5.5rem] lg:mt-0 lg:flex lg:items-center lg:justify-end lg:px-1 lg:pb-0'
+  'relative z-[30] flex w-full flex-col overflow-visible px-1 max-lg:mt-2 max-lg:pb-3 sm:px-2 lg:pointer-events-none lg:mt-0 lg:flex lg:items-center lg:justify-center lg:px-1 lg:pb-0 lg:pt-0'
 
 /** Alineación horizontal — solo posicionamiento visual, sin capturar eventos. */
 export const roomProjectionStageAlign =
@@ -84,12 +86,12 @@ export const frameGlow =
 export const frameSurface =
   'rounded-2xl bg-gradient-to-b from-[#141a24] via-[#10151c] to-[#0e1218] p-1.5 sm:p-2 lg:rounded-xl lg:p-1'
 
-/** Marco envuelve solo el Cristal Maestro — no estira al suelo de la sala (Sprint 10.4B). */
+/** Marco envuelve el Cristal Maestro y llena la altura del monitor dominante. */
 export const frameStageFill =
-  'max-lg:flex max-lg:min-h-0 max-lg:flex-1 max-lg:flex-col lg:flex lg:h-auto lg:max-h-[calc(100dvh-8rem)] lg:min-h-0 lg:flex-col lg:overflow-visible'
+  'max-lg:flex max-lg:min-h-0 max-lg:flex-1 max-lg:flex-col lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:overflow-visible'
 
 /** Cavidad del marco: transmite altura al cristal. */
-export const frameCavityFill = 'lg:flex lg:min-h-0 lg:flex-1 lg:flex-col'
+export const frameCavityFill = 'lg:flex lg:h-full lg:min-h-0 lg:flex-1 lg:flex-col'
 
 // --- Pantalla principal (superficie interna) -------------------------------
 
@@ -97,8 +99,8 @@ export const frameCavityFill = 'lg:flex lg:min-h-0 lg:flex-1 lg:flex-col'
 export const mainScreenSurface =
   'overflow-x-hidden overflow-y-visible rounded-xl bg-slate-950 ring-1 ring-inset ring-slate-900'
 
-/** Gran pantalla: ocupa el volumen interior del marco. */
-export const mainScreenFill = 'lg:flex lg:min-h-0 lg:flex-1 lg:flex-col'
+/** Gran pantalla: ocupa el volumen interior del marco (altura dominante). */
+export const mainScreenFill = 'lg:flex lg:h-full lg:min-h-0 lg:flex-1 lg:flex-col'
 
 /** Cuerpo del cristal: altura disponible para el deck operativo. */
 export const mainScreenBodyFill = 'lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden'

@@ -16,6 +16,7 @@ import { findAreaById } from '@/modules/areas/utils/areas.utils'
 import {
   selectAllAreasHealth,
   selectAreaHealth,
+  selectFocusedAreaCommitments,
   selectGlobalAreaHealth,
 } from '@/modules/monitoring/selectors/areaHealth.selectors'
 import { MonitoringCenter } from '@/modules/monitoring/components/MonitoringCenter'
@@ -85,10 +86,10 @@ export function MonitoringPage() {
     [isGlobal, items, selectedAreaId],
   )
 
-  // Compromisos a mostrar: global => todas las áreas operativas; si no, filtrado.
+  // Compromisos a mostrar: global => todas las áreas operativas; si no, filtrado por área.
   const areaCommitments = useMemo(
-    () => (isGlobal ? items : items.filter((c) => c.areaId === selectedAreaId)),
-    [isGlobal, items, selectedAreaId],
+    () => selectFocusedAreaCommitments(items, selectedArea),
+    [items, selectedArea],
   )
 
   // Compromiso enfocado, derivado del id seleccionado (selección = UI local).
@@ -161,6 +162,7 @@ export function MonitoringPage() {
   return (
     <OmegaRoom
       environment={areaHealth.environment}
+      projectionActive={!!selectedCommitment}
       projection={
         <ProjectionStage
           environment={areaHealth.environment}

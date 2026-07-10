@@ -45,6 +45,8 @@ interface EvaluationConsoleProps {
   loading: boolean
   error: string | null
   executorWithoutArea: boolean
+  /** Vista agregada (Visión General Operaciones). */
+  isGlobal?: boolean
   onSelectCommitment: (commitmentId: string) => void
   /** Estado del área enfocada (acento de estación en el cristal). */
   environment: EnvironmentStatus
@@ -129,6 +131,7 @@ export function EvaluationConsole({
   loading,
   error,
   executorWithoutArea,
+  isGlobal = false,
   onSelectCommitment,
   environment,
 }: EvaluationConsoleProps) {
@@ -168,6 +171,11 @@ export function EvaluationConsole({
             className={`h-2 w-2 shrink-0 rounded-full ${AMBIENT_ACCENT_TRANSITION} ${roomVisual.consoleAccent}`}
           />
           Consola central
+          {isGlobal ? (
+            <span className={`ml-1.5 font-normal normal-case ${CONSOLE_META}`}>
+              · Vista agregada
+            </span>
+          ) : null}
         </h2>
 
         {hasData ? (
@@ -199,11 +207,13 @@ export function EvaluationConsole({
             </select>
             <span className={`shrink-0 ${CONSOLE_META}`}>
               {visibleCommitments.length}/{commitments.length}
+              {isGlobal ? ' · todas las áreas' : ''}
             </span>
           </div>
         ) : (
           <span className={`shrink-0 ${CONSOLE_META}`}>
             {commitments.length} compromisos
+            {isGlobal ? ' agregados' : ''}
           </span>
         )}
       </header>
@@ -228,7 +238,13 @@ export function EvaluationConsole({
         </ConsoleListViewport>
       ) : commitments.length === 0 ? (
         <ConsoleListViewport label="Lista de compromisos">
-          <ConsoleNotice message="No hay compromisos registrados para esta área." />
+          <ConsoleNotice
+            message={
+              isGlobal
+                ? 'No hay compromisos registrados en las áreas operativas.'
+                : 'No hay compromisos registrados para esta área.'
+            }
+          />
         </ConsoleListViewport>
       ) : visibleCommitments.length === 0 ? (
         <ConsoleListViewport label="Lista de compromisos">

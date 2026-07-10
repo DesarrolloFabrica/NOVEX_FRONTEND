@@ -35,6 +35,7 @@ export function ProjectionStage({
       className={`${PLANE_PROJECTION_STACK} ${roomProjectionStage}`}
       role="region"
       aria-label="Sistema de proyección del Centro de Monitoreo"
+      data-projection-interactive
     >
       <div className={roomProjectionStageAlign}>
         <ProjectionPlatform

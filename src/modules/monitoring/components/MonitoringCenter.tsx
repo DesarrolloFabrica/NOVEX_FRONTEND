@@ -88,6 +88,7 @@ export function MonitoringCenter({
               loading={loading}
               error={error}
               executorWithoutArea={executorWithoutArea}
+              isGlobal={isGlobal}
               onSelectCommitment={onSelectCommitment}
               environment={areaHealth.environment}
             />

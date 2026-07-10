@@ -38,10 +38,10 @@ export function MainScreen({ children, environment }: MainScreenProps) {
 
   return (
     <div className={`${PLANE_CRYSTAL} ${CRYSTAL_PLANE_LIFT} ${mainScreenFill}`}>
-      <div className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+      <div className="lg:flex lg:h-full lg:min-h-0 lg:flex-1 lg:flex-col">
         <CrystalSlab edgeGlowClass={visual?.crystalStateEdgeGlow}>
         <div
-          className={`relative overflow-x-hidden max-lg:overflow-y-visible lg:overflow-hidden ${CRYSTAL_CHAMFER_CLIP} ${CRYSTAL_BODY_BASE} ${CRYSTAL_LAMINATE_EDGE} ${mainScreenBodyFill} ${CRYSTAL_STATE_TRANSITION}`}
+          className={`relative overflow-x-hidden max-lg:overflow-y-visible lg:h-full lg:overflow-hidden ${CRYSTAL_CHAMFER_CLIP} ${CRYSTAL_BODY_BASE} ${CRYSTAL_LAMINATE_EDGE} ${mainScreenBodyFill} ${CRYSTAL_STATE_TRANSITION}`}
         >
           <CrystalMaterialLayers />
           <CrystalMachinedPerimeter />

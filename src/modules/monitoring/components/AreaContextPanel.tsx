@@ -118,6 +118,9 @@ export function AreaContextPanel({
 
       <EtchedSection className={CRYSTAL_SECTION_TAIL}>
         <div className={`${CRYSTAL_DATA_STACK} ${CRYSTAL_ETCHED_DATA_BLOCK}`}>
+          {isGlobal ? (
+            <CountRow label="Total agregado" value={health.totalCommitments} />
+          ) : null}
           <CountRow label="Pendientes" value={health.pendingCount} />
           <CountRow label="Cumplidos" value={health.fulfilledCount} />
           <CountRow label="Incumplidos" value={health.breachedCount} />

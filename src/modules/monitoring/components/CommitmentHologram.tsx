@@ -217,7 +217,7 @@ export function CommitmentHologram({
         }`}
       >
         <header>
-          <p className={`text-center ${visual.eyebrow}`}>Proyección operativa</p>
+          <p className={`text-center ${visual.eyebrow}`}>PROYECCIÓN OPERATIVA</p>
           <div className="mt-1.5 flex flex-wrap items-center justify-center gap-2">
             <span
               className={`${visual.statusBadge} ${HOLOGRAM_CHROMATIC_TRANSITION} ${

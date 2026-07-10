@@ -5,3 +5,9 @@ export { OmegaRoom } from '@/modules/room/components/OmegaRoom'
 export { OmegaFrame } from '@/modules/room/components/OmegaFrame'
 export { MainScreen } from '@/modules/room/components/MainScreen'
 export { ProjectionStage } from '@/modules/room/components/ProjectionStage'
+/** Reservado para assets Blender futuros — no montado en la escena actual. */
+export { RoomConsoleLayer } from '@/modules/room/components/RoomConsoleLayer'
+export {
+  deriveRoomStatus,
+  type RoomStatus,
+} from '@/modules/room/utils/deriveRoomStatus'
