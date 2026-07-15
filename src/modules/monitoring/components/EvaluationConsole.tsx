@@ -1,6 +1,6 @@
 // Componente: consola de evaluación (estación central del cristal).
 // Sprint 10.1: registros compactos de alta densidad — navegación, no tarjetas.
-// Sprint 10.2: ventana fija con scroll interno y reserva inferior sobre el holograma.
+// Sprint 10.2: ventana fija con scroll interno para la lista de compromisos.
 
 import { useMemo, useState, type ReactNode } from 'react'
 import type {
@@ -23,7 +23,6 @@ import {
   CONSOLE_ZONE,
 } from '@/modules/monitoring/constants/visualHierarchy'
 import {
-  CONSOLE_LIST_SCROLL_END,
   CONSOLE_LIST_VIEWPORT,
   CRYSTAL_CONSOLE_HEADER,
   CRYSTAL_CONSOLE_ZONE,
@@ -105,7 +104,6 @@ function ConsoleSkeleton() {
           </div>
         </li>
       ))}
-      <li aria-hidden="true" className={CONSOLE_LIST_SCROLL_END} />
     </ul>
   )
 }
@@ -265,7 +263,6 @@ export function EvaluationConsole({
                 />
               </li>
             ))}
-            <li aria-hidden="true" className={CONSOLE_LIST_SCROLL_END} />
           </ul>
         </ConsoleListViewport>
       )}

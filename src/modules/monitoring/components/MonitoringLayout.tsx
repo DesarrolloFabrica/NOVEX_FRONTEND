@@ -1,6 +1,6 @@
 // Componente: rejilla del Cristal Maestro (Plano 1).
 // Sprint 7.3: estación de trabajo unificada — una losa, zonas funcionales.
-// Sprint 9.1: solo dashboard grabado; la proyección vive en ProjectionStage.
+// El dashboard y el detalle seleccionado permanecen dentro del videowall.
 
 import type { ReactNode } from 'react'
 import {

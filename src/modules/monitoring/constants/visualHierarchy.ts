@@ -34,24 +34,6 @@ export const INK_PETROLEUM = 'text-[#3d5563]'
 /** Tinta de acento operativo — proyección y selección sobre cristal claro. */
 export const INK_OPERATIVE = 'text-indigo-700'
 
-// --- Nivel 1: Holograma / expediente proyectado -----------------------------
-// Sprint 7.2: contraste interno reforzado sobre cristal blanco.
-
-export const HOLOGRAM_EYEBROW =
-  'text-[10px] font-semibold uppercase tracking-[0.22em] text-indigo-800/92'
-
-export const HOLOGRAM_TITLE =
-  'line-clamp-2 text-base font-bold leading-snug text-slate-900 sm:text-lg'
-
-export const HOLOGRAM_METRIC_LABEL =
-  'text-[11px] font-semibold uppercase tracking-[0.16em] text-indigo-800/88'
-
-export const HOLOGRAM_METRIC_VALUE =
-  'mt-0.5 truncate text-sm font-semibold text-slate-800'
-
-export const HOLOGRAM_IDLE_HINT =
-  'max-w-xs text-center text-[11px] leading-relaxed text-slate-600 sm:text-xs'
-
 // --- Nivel 2: Consola central -----------------------------------------------
 
 export const CONSOLE_ZONE = ''
@@ -101,13 +83,6 @@ export const DOSSIER_DUE_IDLE =
 export const DOSSIER_DUE_PROJECTED =
   'shrink-0 font-mono text-[10px] tabular-nums text-indigo-700'
 
-/** @deprecated Sprint 10.1 — impacto solo en holograma. */
-export const DOSSIER_IMPACT_IDLE = 'shrink-0 font-mono text-[11px] text-slate-600'
-
-/** @deprecated Sprint 10.1 — impacto solo en holograma. */
-export const DOSSIER_IMPACT_PROJECTED =
-  'shrink-0 font-mono text-[11px] text-indigo-700'
-
 // --- Nivel 3: Módulos operativos --------------------------------------------
 
 export const MODULE_IDLE = ''
@@ -151,10 +126,6 @@ export const CONTEXT_SUBTITLE =
 
 export const CONTEXT_AREA_NAME =
   `text-sm font-semibold leading-snug ${INK_PRIMARY}`
-
-export const CONTEXT_METRIC = `font-mono text-lg font-semibold text-slate-800`
-
-export const CONTEXT_ROW_VALUE = 'font-mono text-sm font-medium text-slate-700'
 
 export const CONTEXT_ROW_LABEL = 'text-sm text-slate-600'
 

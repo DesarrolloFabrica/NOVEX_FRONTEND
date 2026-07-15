@@ -1,5 +1,5 @@
 // Componente: registro de evaluación en la consola compacta (Sprint 10.1).
-// Fila de alta densidad para navegación — detalle completo en el Holograma.
+// Fila de alta densidad para navegación — detalle en la columna derecha.
 
 import type { Commitment } from '@/modules/commitments/types/commitment.types'
 import { STATUS_BADGE_CLASSES } from '@/modules/monitoring/components/presentation'

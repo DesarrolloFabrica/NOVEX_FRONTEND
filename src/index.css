@@ -1,22 +1,68 @@
 @import "tailwindcss";
 @import "./styles/omega-room.css";
 
-/* Microinteracción sobria: la proyección del holograma "se actualiza" al
-   cambiar el compromiso enfocado. Es una transición breve, no una animación
-   compleja, y se desactiva si el usuario prefiere movimiento reducido. */
-@keyframes omega-projection-in {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
+/* --- Seguimiento operativo integrado en la columna izquierda ------------- */
+
+.left-operational-panel {
+  --operational-animation-size: 12rem;
+  --left-panel-gap: 0.75rem;
+  --selected-commitment-max-height: 12rem;
+  --selected-commitment-padding: 0.75rem;
+}
+
+.left-operational-panel__content {
+  gap: var(--left-panel-gap);
+}
+
+.operational-animation-slot {
+  width: min(100%, var(--operational-animation-size));
+  aspect-ratio: 1 / 1;
+  flex: 0 0 auto;
+  margin-inline: auto;
+  background-image:
+    linear-gradient(rgba(71, 85, 105, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(71, 85, 105, 0.045) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.selected-commitment-panel {
+  min-height: 9.5rem;
+  max-height: var(--selected-commitment-max-height);
+  padding: var(--selected-commitment-padding);
+}
+
+@media (min-width: 1024px) and (max-height: 800px) {
+  .left-operational-panel {
+    --operational-animation-size: 9rem;
+    --left-panel-gap: 0.5rem;
+    --selected-commitment-max-height: 10rem;
+    --selected-commitment-padding: 0.625rem;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  .selected-commitment-description {
+    display: none;
+  }
+
+  .selected-commitment-title {
+    font-size: 0.8125rem;
   }
 }
 
-.omega-projection-in {
-  animation: omega-projection-in 250ms ease-out;
+@media (min-width: 1024px) and (max-height: 650px) {
+  .left-operational-panel {
+    --operational-animation-size: 7.5rem;
+    --left-panel-gap: 0.375rem;
+    --selected-commitment-max-height: 9rem;
+    --selected-commitment-padding: 0.5rem;
+  }
+
+  .left-operational-panel__context > p:last-child {
+    display: none;
+  }
+
+  .selected-commitment-panel {
+    min-height: 8.5rem;
+  }
 }
 
 /* --- Sprint 5.2: microactividad operativa (respiración institucional) ---- */
@@ -93,66 +139,6 @@
   }
 }
 
-@keyframes omega-platform-idle {
-  0%,
-  100% {
-    opacity: 0.48;
-  }
-  50% {
-    opacity: 0.68;
-  }
-}
-
-@keyframes omega-platform-active {
-  0%,
-  100% {
-    opacity: 0.62;
-  }
-  50% {
-    opacity: 0.84;
-  }
-}
-
-@keyframes omega-hologram-idle {
-  0%,
-  100% {
-    opacity: 0.38;
-  }
-  50% {
-    opacity: 0.52;
-  }
-}
-
-@keyframes omega-hologram-active {
-  0%,
-  100% {
-    opacity: 0.55;
-  }
-  50% {
-    opacity: 0.72;
-  }
-}
-
-@keyframes omega-hologram-beam-idle {
-  0%,
-  100% {
-    opacity: 0.76;
-  }
-  50% {
-    opacity: 0.88;
-  }
-}
-
-@keyframes omega-hologram-beam-active {
-  0%,
-  100% {
-    opacity: 0.82;
-  }
-  50% {
-    opacity: 0.94;
-  }
-}
-
 .omega-breath-room-overlay {
   animation: omega-room-overlay 16s ease-in-out infinite;
 }
@@ -187,54 +173,14 @@
   animation-delay: 2.1s;
 }
 
-.omega-breath-platform-idle {
-  animation: omega-platform-idle 13s ease-in-out infinite;
-  animation-delay: 1.8s;
-}
-
-.omega-breath-platform-active {
-  animation: omega-platform-active 11s ease-in-out infinite;
-  animation-delay: 0.9s;
-}
-
-.omega-breath-hologram-idle {
-  animation: omega-hologram-idle 15s ease-in-out infinite;
-  animation-delay: 2.3s;
-}
-
-.omega-breath-hologram-active {
-  animation: omega-hologram-active 12s ease-in-out infinite;
-  animation-delay: 1.4s;
-}
-
-.omega-breath-hologram-beam-idle {
-  animation: omega-hologram-beam-idle 14s ease-in-out infinite;
-  animation-delay: 0.4s;
-}
-
-.omega-breath-hologram-beam-active {
-  animation: omega-hologram-beam-active 11s ease-in-out infinite;
-  animation-delay: 2.8s;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .omega-projection-in {
-    animation: none;
-  }
-
   .omega-breath-room-overlay,
   .omega-breath-room-depth,
   .omega-breath-crystal-sheen,
   .omega-breath-crystal-face,
   .omega-breath-crystal-ambient,
   .omega-breath-crystal-bevel,
-  .omega-breath-frame,
-  .omega-breath-platform-idle,
-  .omega-breath-platform-active,
-  .omega-breath-hologram-idle,
-  .omega-breath-hologram-active,
-  .omega-breath-hologram-beam-idle,
-  .omega-breath-hologram-beam-active {
+  .omega-breath-frame {
     animation: none;
   }
 }
@@ -267,34 +213,6 @@
     10px 100%,
     0% calc(100% - 10px),
     0% 10px
-  );
-}
-
-/* --- Sprint 12.3: geometría mecanizada del Holograma Operativo (chamfer) --- */
-
-.hologram-chamfer-outer {
-  clip-path: polygon(
-    8px 0%,
-    calc(100% - 8px) 0%,
-    100% 8px,
-    100% calc(100% - 8px),
-    calc(100% - 8px) 100%,
-    8px 100%,
-    0% calc(100% - 8px),
-    0% 8px
-  );
-}
-
-.hologram-chamfer-inner {
-  clip-path: polygon(
-    6px 0%,
-    calc(100% - 6px) 0%,
-    100% 6px,
-    100% calc(100% - 6px),
-    calc(100% - 6px) 100%,
-    6px 100%,
-    0% calc(100% - 6px),
-    0% 6px
   );
 }
 

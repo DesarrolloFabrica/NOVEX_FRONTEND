@@ -20,7 +20,10 @@ import {
 /** Estratos de emisión interna — panel retroiluminado de campo completo. */
 export function CrystalMaterialLayers() {
   return (
-    <div className="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
+    <div
+      className="crystal-material-layers pointer-events-none absolute inset-0 z-0"
+      aria-hidden="true"
+    >
       <div className={`absolute inset-0 ${CRYSTAL_OPAL_FLOOD}`} />
       <div className={`absolute inset-0 ${CRYSTAL_BODY_DEPTH}`} />
       <div className={`absolute inset-0 ${CRYSTAL_AMBIENT_TRANSMISSION}`} />

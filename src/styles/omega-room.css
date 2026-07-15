@@ -1,7 +1,8 @@
 /*
- * Sala O.M.E.G.A. — arquitectura construida solo con iluminación.
+ * Sala O.M.E.G.A. — ciudad ilustrada integrada con iluminación ambiental.
  *
- * Sin consolas, modelos ni imágenes. Capas (todas pointer-events: none):
+ * Sin consolas ni modelos. Capas decorativas (todas pointer-events: none):
+ *   RoomCityLayer         → ciudad por EnvironmentStatus (plano 0)
  *   .room-atmosphere      → volumen base + atmósfera por estado + guías técnicas (Fase 3)
  *   .room-ceiling-spotlights → focos cenitales en cono (estilo Organigrama)
  *   .room-ceiling-lighting → techo alto insinuado (ranuras + wash)
@@ -11,9 +12,7 @@
  *   .room-floor-platform  → piso técnico / plataforma de proyección
  *   .room-floor-lines     → marcas técnicas del piso (líneas sutiles)
  *   .room-monitor-reflection → reflejo del monitor en el piso
- *   .room-projection-beam    → haz de luz plataforma → holograma
  *   .room-screen-stage    → pantalla protagonista (~52–60vh, con aire de sala)
- *   .operative-projection → holograma flotante (fuera del flujo)
  *
  * Estados: .scene--stable | .scene--attention | .scene--critical
  */
@@ -65,6 +64,18 @@
   --screen-min-height: 0px;
   --screen-floor-reserve: 9rem;
   --screen-width: min(84vw, 1500px);
+  /* Ajustes del fondo de ciudad — fuente visual principal de esta fase. */
+  --room-city-fit: cover;
+  --room-city-position: center center;
+  --room-city-scale: 1;
+  --room-city-opacity: 1;
+  /* Integración mínima sobre una ilustración que ya contiene atmósfera. */
+  --room-atmosphere-opacity: 0.08;
+  --room-depth-haze-opacity: 0.08;
+  --room-vignette-opacity: 0.14;
+  --room-state-wash-opacity: 0.06;
+  /* Translucidez muy leve del material del Cristal Maestro. */
+  --main-screen-material-opacity: 0.9;
   /* Borde inferior del monitor — alinea el reflejo en el piso */
   --screen-reflection-top: calc(var(--screen-top-space) + var(--screen-max-height) - 0.75rem);
 
@@ -75,12 +86,38 @@
   padding-top: 0;
 }
 
+/* Ciudad principal: el fondo CSS del contenedor permanece detrás como fallback. */
+.room-city-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
+  object-fit: var(--room-city-fit, cover);
+  object-position: var(--room-city-position, center center);
+  opacity: 0;
+  transform: scale(var(--room-city-scale, 1));
+  transform-origin: center center;
+  transition: opacity 500ms ease-out;
+  will-change: opacity;
+}
+
+.room-city-image[data-active='true'] {
+  opacity: var(--room-city-opacity, 1);
+}
+
+.crystal-material-layers {
+  opacity: var(--main-screen-material-opacity, 0.9);
+}
+
 /* Volumen base: múltiples fuentes de luz (techo + piso + centro) */
 .room-atmosphere {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 0;
+  opacity: var(--room-atmosphere-opacity, 0.08);
   /* Guías técnicas de fondo (Fase 3) */
   --tech-line-intensity: 0.18;
   --tech-line-width: 1px;
@@ -110,7 +147,7 @@
       rgba(10, 14, 20, 0.45) 55%,
       rgba(8, 10, 14, 0.7) 100%
     );
-  transition: background 800ms ease;
+  transition: background 800ms ease, opacity 800ms ease;
 }
 
 /* Infraestructura de fondo — canales horizontales discretos (no Matrix) */
@@ -1169,7 +1206,7 @@
       transparent 40%,
       var(--scene-haze, rgba(15, 23, 42, 0.42)) 100%
     );
-  opacity: 0.55;
+  opacity: var(--room-depth-haze-opacity, 0.08);
   transition: background 800ms ease, opacity 800ms ease;
 }
 
@@ -1185,6 +1222,13 @@
     rgba(6, 8, 12, 0.35) 78%,
     rgba(4, 6, 10, 0.72) 100%
   );
+  opacity: var(--room-vignette-opacity, 0.14);
+  transition: opacity 800ms ease;
+}
+
+/* Lavados cromáticos del estado: integración mínima, no recoloración. */
+.room-state-wash {
+  opacity: var(--room-state-wash-opacity, 0.06);
 }
 
 /* --- Piso técnico / plataforma de proyección ------------------------------ */
@@ -1518,178 +1562,6 @@
   opacity: 0.65;
 }
 
-/* --- Haz de proyección — cono de luz plataforma → holograma -------------- */
-
-.room-projection-beam {
-  position: absolute;
-  left: 50%;
-  bottom: clamp(96px, 14vh, 160px);
-  transform: translateX(-50%);
-  width: clamp(180px, 18vw, 360px);
-  height: clamp(180px, 24vh, 340px);
-  pointer-events: none;
-  z-index: 16; /* sobre piso (4) y reflejo monitor (12), bajo monitor (20) y proyección (35) */
-  opacity: 0.12;
-  filter: blur(18px);
-  clip-path: polygon(40% 100%, 60% 100%, 76% 0%, 24% 0%);
-  background: linear-gradient(
-    to top,
-    rgba(147, 197, 253, 0.1) 0%,
-    rgba(148, 163, 184, 0.05) 38%,
-    transparent 86%
-  );
-  transition: opacity 800ms ease, background 800ms ease;
-}
-
-/* Compromiso enfocado — haz teñido por el estado operativo */
-.omega-room.projection-active .room-projection-beam {
-  background: linear-gradient(
-    to top,
-    color-mix(in srgb, var(--scene-glow, rgba(45, 212, 191, 0.22)) 52%, transparent) 0%,
-    color-mix(in srgb, var(--scene-accent-soft, rgba(45, 212, 191, 0.16)) 38%, transparent) 36%,
-    transparent 88%
-  );
-  opacity: 0.2;
-}
-
-/* Núcleo central — más estrecho y brillante en la base */
-.room-projection-beam::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  transform: translateX(-50%);
-  width: 36%;
-  height: 70%;
-  pointer-events: none;
-  clip-path: polygon(32% 100%, 68% 100%, 56% 0%, 44% 0%);
-  background: linear-gradient(
-    to top,
-    color-mix(in srgb, var(--scene-accent, #2dd4bf) 24%, rgba(248, 250, 252, 0.07)) 0%,
-    transparent 78%
-  );
-  filter: blur(12px);
-  opacity: 0.38;
-  animation: projection-beam-core-breathe 6.5s ease-in-out infinite;
-  transition: background 800ms ease;
-}
-
-.omega-room:not(.projection-active) .room-projection-beam::before {
-  background: linear-gradient(
-    to top,
-    rgba(191, 219, 254, 0.12) 0%,
-    transparent 75%
-  );
-  opacity: 0.28;
-}
-
-/* Brillo en la base — conecta el haz con la plataforma */
-.room-projection-beam::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: -6%;
-  transform: translateX(-50%) scaleY(0.38);
-  width: 50%;
-  height: 16%;
-  pointer-events: none;
-  border-radius: 50%;
-  background: radial-gradient(
-    ellipse 100% 100% at 50% 50%,
-    color-mix(in srgb, var(--scene-glow, rgba(45, 212, 191, 0.22)) 42%, rgba(248, 250, 252, 0.05)) 0%,
-    transparent 70%
-  );
-  filter: blur(10px);
-  opacity: 0.4;
-  transition: background 800ms ease, opacity 800ms ease;
-}
-
-.omega-room:not(.projection-active) .room-projection-beam::after {
-  background: radial-gradient(
-    ellipse 100% 100% at 50% 50%,
-    rgba(147, 197, 253, 0.1) 0%,
-    transparent 72%
-  );
-  opacity: 0.3;
-}
-
-.scene--stable .room-projection-beam {
-  opacity: 0.12;
-}
-
-.scene--stable.projection-active .room-projection-beam {
-  opacity: 0.2;
-}
-
-.scene--attention .room-projection-beam {
-  opacity: 0.14;
-}
-
-.scene--attention.projection-active .room-projection-beam {
-  opacity: 0.22;
-}
-
-.scene--critical .room-projection-beam {
-  opacity: 0.15;
-}
-
-.scene--critical.projection-active .room-projection-beam {
-  opacity: 0.26;
-}
-
-@keyframes projection-beam-core-breathe {
-  0%,
-  100% {
-    opacity: 0.34;
-  }
-
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.omega-room.projection-active .room-projection-beam::before {
-  animation: projection-beam-core-breathe-active 7s ease-in-out infinite;
-}
-
-@keyframes projection-beam-core-breathe-active {
-  0%,
-  100% {
-    opacity: 0.4;
-  }
-
-  50% {
-    opacity: 0.58;
-  }
-}
-
-/* --- Proyección operativa — fuera del flujo del monitor ------------------- */
-
-.operative-projection {
-  position: relative;
-  z-index: 35;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  pointer-events: none;
-}
-
-.operative-projection > * {
-  pointer-events: none;
-}
-
-.operative-projection .operative-projection-hitbox,
-.operative-projection [data-projection-interactive],
-.operative-projection button,
-.operative-projection a {
-  pointer-events: auto;
-}
-
-.omega-room .operative-projection {
-  --projection-scene-ring: var(--scene-border);
-}
-
 /* Escritorio grande: monitor ~58vh (solo viewports altos; no portátiles anchos) */
 @media (min-width: 1441px) and (min-height: 901px) {
   .omega-room {
@@ -1726,18 +1598,6 @@
     flex: 1 1 auto;
     min-height: 0;
     height: 100%;
-  }
-
-  .operative-projection {
-    position: absolute;
-    left: 50%;
-    bottom: clamp(1.25rem, 3.5vh, 2.75rem);
-    width: auto;
-    max-width: min(90vw, 30rem);
-    margin: 0;
-    padding: 0;
-    transform: translateX(-50%) scale(0.86);
-    transform-origin: bottom center;
   }
 
   .room-floor-platform {
@@ -1811,19 +1671,6 @@
     width: clamp(200px, 22vw, 420px);
   }
 
-  .operative-projection {
-    position: absolute;
-    left: 50%;
-    bottom: clamp(0.75rem, 2vh, 1.75rem);
-    width: auto;
-    max-width: min(90vw, 28rem);
-    margin: 0;
-    padding: 0;
-    transform: translateX(-50%) scale(0.84);
-    transform-origin: bottom center;
-    z-index: 35;
-  }
-
   .room-floor-platform {
     bottom: clamp(12px, 3.5vh, 44px);
     width: clamp(640px, 78vw, 1200px);
@@ -1838,29 +1685,6 @@
 
   .room-floor-lines {
     opacity: 0.18;
-  }
-
-  .room-projection-beam {
-    bottom: clamp(64px, 9vh, 120px);
-    width: clamp(160px, 16vw, 300px);
-    height: clamp(130px, 17vh, 240px);
-    filter: blur(16px);
-  }
-
-  .scene--stable .room-projection-beam {
-    opacity: 0.1;
-  }
-
-  .scene--stable.projection-active .room-projection-beam {
-    opacity: 0.17;
-  }
-
-  .scene--attention.projection-active .room-projection-beam {
-    opacity: 0.19;
-  }
-
-  .scene--critical.projection-active .room-projection-beam {
-    opacity: 0.22;
   }
 
   .room-monitor-reflection {
@@ -1964,22 +1788,6 @@
     opacity: 0.22;
   }
 
-  .room-projection-beam {
-    bottom: clamp(64px, 10vh, 110px);
-    width: clamp(130px, 22vw, 220px);
-    height: clamp(120px, 16vh, 200px);
-    filter: blur(14px);
-    opacity: 0.09;
-  }
-
-  .omega-room.projection-active .room-projection-beam {
-    opacity: 0.14;
-  }
-
-  .room-projection-beam::before {
-    animation: none;
-  }
-
   .room-monitor-reflection {
     width: 80vw;
     height: clamp(48px, 7vh, 90px);
@@ -1993,15 +1801,6 @@
     display: none;
   }
 
-  .operative-projection {
-    position: relative;
-    left: auto;
-    bottom: auto;
-    transform: none;
-    max-width: 100%;
-    margin-top: 0;
-    padding-bottom: 0.5rem;
-  }
 }
 
 /* Móvil / pantallas estrechas: ocultar paredes laterales */
@@ -2094,10 +1893,6 @@
     opacity: 0.22;
   }
 
-  .room-projection-beam {
-    display: none;
-  }
-
   .room-monitor-reflection {
     width: 80vw;
     height: clamp(40px, 6vh, 72px);
@@ -2111,19 +1906,11 @@
     display: none;
   }
 
-  .operative-projection {
-    position: relative;
-    left: auto;
-    bottom: auto;
-    transform: none;
-    max-width: 100%;
-    margin-top: 0;
-    padding-bottom: 0.5rem;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .omega-room,
+  .room-city-image,
   .room-atmosphere,
   .room-atmosphere::after,
   .room-ceiling-spotlights,
@@ -2135,10 +1922,9 @@
   .room-monitor-reflection,
   .room-monitor-reflection::before,
   .room-monitor-reflection::after,
-  .room-projection-beam,
-  .room-projection-beam::before,
-  .room-projection-beam::after,
   .room-depth-haze,
+  .room-ambient-vignette,
+  .room-state-wash,
   .room-floor-glow,
   .room-floor-reflect,
   .room-floor-rings,
@@ -2152,17 +1938,9 @@
     filter: none;
   }
 
-  .room-projection-beam::before {
-    animation: none;
-  }
-
   @media (min-width: 1024px) {
     .omega-room .main-screen {
       transform: none;
-    }
-
-    .operative-projection {
-      transform: translateX(-50%);
     }
   }
 }

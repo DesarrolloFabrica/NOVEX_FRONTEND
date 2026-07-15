@@ -1,9 +1,17 @@
 // Escala de planos visuales O.M.E.G.A. (Sprint 4.2).
-// Fondo → marco → cristal → contenido grabado → plataforma → holograma.
+// Fondo → ciudad → marco → cristal → contenido grabado.
 // Solo presentación: z-index, sombras y opacidad — sin alterar layout.
 
 /** Plano 0 — Fondo de la Sala (más lejano al operador). */
 export const PLANE_ROOM = 'isolate'
+
+/**
+ * Ciudad ambiental — delante del fondo CSS del contenedor y detrás de las
+ * capas atmosféricas. El orden DOM dentro de OmegaRoom resuelve el apilado
+ * entre elementos del mismo plano 0.
+ */
+export const PLANE_CITY =
+  'pointer-events-none absolute inset-0 z-0 overflow-hidden'
 
 /** Viñeta radial: caída de luz suave en bordes — sala amplia, no cueva oscura. */
 export const ROOM_VIGNETTE =
@@ -34,19 +42,3 @@ export const PLANE_ETCHED = 'relative z-[22]'
 export const PLANE_ETCHED_FIELD =
   'shadow-[inset_0_1px_0_0_rgba(71,85,105,0.14)]'
 
-/** Plano 4 — Plataforma de proyección (delante del cristal). */
-export const PLANE_PLATFORM = 'relative z-40'
-
-/** Plataforma en espera: presencia sutil pero legible sobre el cristal. */
-export const PLATFORM_PLANE_IDLE =
-  'max-lg:drop-shadow-[0_8px_24px_-10px_rgba(0,0,0,0.42)]'
-
-/** Elevación de la plataforma sobre el cristal (expediente activo). */
-export const PLATFORM_PLANE_LIFT =
-  'max-lg:drop-shadow-[0_16px_40px_-10px_rgba(0,0,0,0.72)]'
-
-/** Plano 5 — Holograma (más cercano al operador). */
-export const PLANE_HOLOGRAM = 'relative z-50'
-
-/** Contenedor de capa de proyección en la sala (Sprint 9.2B: primer plano flotante). */
-export const PLANE_PROJECTION_STACK = 'isolate'

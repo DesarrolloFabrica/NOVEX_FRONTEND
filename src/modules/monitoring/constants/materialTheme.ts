@@ -1,5 +1,5 @@
 // Separación de materiales de la Sala O.M.E.G.A.
-// Marco sólido → lámina de cristal → grabado → plataforma mecánica → holograma luminoso.
+// Marco sólido → lámina de cristal → contenido grabado.
 // Sprint 4.3: lenguaje de superficies grabadas sin cajas flotantes.
 
 // --- Plano 1: Marco físico (estructura metálica sólida) ---------------------
@@ -103,10 +103,6 @@ export const CRYSTAL_DOSSIER_INSCRIPTION_IDLE =
 export const CRYSTAL_CONSOLE_READING_FIELD =
   'shadow-[inset_0_1px_0_0_rgba(71,85,105,0.18),inset_1px_0_0_0_rgba(100,116,139,0.1),inset_-1px_0_0_0_rgba(100,116,139,0.1)]'
 
-/** Bloque de datos — regla de retícula. */
-export const CRYSTAL_ETCHED_DATA_BLOCK =
-  'shadow-[inset_0_1px_0_0_rgba(71,85,105,0.14)]'
-
 /** Select mecanizado. */
 export const CRYSTAL_SELECT_MECHANICAL =
   'cursor-pointer shadow-[inset_0_0_0_1px_rgba(71,85,105,0.28)]'
@@ -193,44 +189,3 @@ export const WORKSTATION_MODULE_CONSOLE_CHANNEL =
 /** Pulso de carga: surco grabado, no bloque de relleno. */
 export const CRYSTAL_SKELETON_PULSE =
   'animate-pulse shadow-[inset_0_1px_0_0_rgba(203,213,225,0.1)]'
-
-// --- Plano 4: Plataforma de proyección (mecánica, sólida) -------------------
-
-/** Cuerpo mecánico de la mesa: aleación oscura, mate. */
-export const PLATFORM_MECHANICAL_BODY =
-  'bg-gradient-to-b from-[#1a2230] via-[#121820] to-[#0a0e14]'
-
-/** Bisel de chasis: arista recta, no curva de cristal. */
-export const PLATFORM_MECHANICAL_BEVEL =
-  'shadow-[inset_0_1px_0_0_rgba(100,116,139,0.22),inset_0_-1px_0_0_rgba(0,0,0,0.65)]'
-
-/** Núcleo emisor: lente mecánica (no luminosa hasta activar). */
-export const PLATFORM_EMITTER_MECHANICAL_IDLE =
-  'bg-[radial-gradient(circle_at_35%_30%,rgba(71,85,105,0.35)_0%,#030508_55%)]'
-
-export const PLATFORM_EMITTER_MECHANICAL_ACTIVE =
-  'bg-[radial-gradient(circle_at_35%_30%,rgba(99,102,241,0.28)_0%,#0a0820_58%)]'
-
-// --- Plano 5: Holograma (volumen proyectado, luminoso — Sprint 4.6) ----------
-
-/** Volumen en espera: luz difusa mínima sobre cristal claro. */
-export const HOLOGRAM_VOLUME_IDLE =
-  'bg-transparent bg-gradient-to-b from-indigo-200/7 via-indigo-300/3 to-transparent'
-
-/** Volumen activo: proyección luminosa, no bloque sólido. */
-export const HOLOGRAM_VOLUME_ACTIVE =
-  'bg-transparent bg-gradient-to-b from-indigo-100/20 via-indigo-300/9 to-indigo-400/3'
-
-/** Anillo de proyección: luz en el borde, no caja. */
-export const HOLOGRAM_PROJECTION_RING_IDLE =
-  'ring-1 ring-inset ring-indigo-300/24 shadow-[0_0_20px_-14px_rgba(129,140,248,0.16)]'
-
-export const HOLOGRAM_PROJECTION_RING_ACTIVE =
-  'ring-1 ring-inset ring-indigo-200/42 shadow-[0_0_36px_-12px_rgba(165,180,252,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]'
-
-/** Haz superior del volumen proyectado. */
-export const HOLOGRAM_LIGHT_SHAFT_IDLE =
-  'bg-[radial-gradient(ellipse_at_top,rgba(165,180,252,0.1)_0%,transparent_72%)]'
-
-export const HOLOGRAM_LIGHT_SHAFT_ACTIVE =
-  'bg-[radial-gradient(ellipse_at_top,rgba(196,181,253,0.28)_0%,transparent_64%)]'

@@ -1,9 +1,15 @@
-// Panel ejecutivo de riesgo operativo — donut + tarjetas de distribución.
+// Panel ejecutivo de riesgo operativo — gauge técnico + tarjetas de distribución.
 
 import type { CSSProperties } from 'react'
-import type { AreaHealth, EnvironmentStatus } from '@/modules/monitoring/types/monitoring.types'
-import { RiskDonut } from '@/modules/monitoring/components/RiskDonut'
+import type {
+  AreaHealth,
+  EnvironmentStatus,
+} from '@/modules/monitoring/types/monitoring.types'
 import { RiskSummaryCards } from '@/modules/monitoring/components/RiskSummaryCards'
+import {
+  TechnicalRiskGauge,
+  type RiskLevel,
+} from '@/modules/monitoring/components/TechnicalRiskGauge'
 import { TEXT_LABEL } from '@/modules/monitoring/constants/monitoringTheme'
 
 interface OperationalRiskKpiProps {
@@ -11,15 +17,21 @@ interface OperationalRiskKpiProps {
   environment: EnvironmentStatus
 }
 
-export function OperationalRiskKpi({ health, environment }: OperationalRiskKpiProps) {
+function environmentToRiskLevel(environment: EnvironmentStatus): RiskLevel {
+  if (environment === 'critical') return 'critical'
+  if (environment === 'attention') return 'attention'
+  return 'stable'
+}
+
+export function OperationalRiskKpi({
+  health,
+  environment,
+}: OperationalRiskKpiProps) {
   return (
     <section
       className="operational-risk-kpi flex min-h-[10.5rem] flex-col"
       style={
         {
-          '--risk-donut-size': '6.75rem',
-          '--risk-donut-stroke': '9px',
-          '--risk-donut-value-size': '1.35rem',
           '--risk-card-gap': '0.5rem',
           '--risk-card-radius': '0.25rem',
           '--risk-card-value-size': '1rem',
@@ -42,9 +54,11 @@ export function OperationalRiskKpi({ health, environment }: OperationalRiskKpiPr
         style={{ minHeight: 0 }}
       >
         <div className="flex flex-[3] items-center justify-center">
-          <RiskDonut
-            percentage={health.operationalRiskPercentage}
-            environment={environment}
+          <TechnicalRiskGauge
+            value={health.operationalRiskPercentage}
+            level={environmentToRiskLevel(environment)}
+            label="Riesgo"
+            size={108}
           />
         </div>
         <div className="flex flex-[2] items-end">

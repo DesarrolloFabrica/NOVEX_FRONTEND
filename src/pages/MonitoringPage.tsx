@@ -20,7 +20,7 @@ import {
   selectGlobalAreaHealth,
 } from '@/modules/monitoring/selectors/areaHealth.selectors'
 import { MonitoringCenter } from '@/modules/monitoring/components/MonitoringCenter'
-import { MainScreen, OmegaFrame, OmegaRoom, ProjectionStage } from '@/modules/room'
+import { MainScreen, OmegaFrame, OmegaRoom } from '@/modules/room'
 
 export function MonitoringPage() {
   const { user, logout } = useAuth()
@@ -139,8 +139,7 @@ export function MonitoringPage() {
   }, [])
 
   // Valida el compromiso enfocado. Se conserva selectedCommitmentId para que el
-  // holograma siga proyectando la MISMA tarea; el operador cambia de selección
-  // manualmente desde la Consola Central (Sprint 12.2).
+  // detalle integrado siga mostrando la misma tarea hasta una nueva selección.
   const handleValidateCommitment = useCallback(
     async (status: 'Cumplido' | 'Incumplido') => {
       if (!selectedCommitment || !user) return
@@ -160,19 +159,7 @@ export function MonitoringPage() {
   )
 
   return (
-    <OmegaRoom
-      environment={areaHealth.environment}
-      projectionActive={!!selectedCommitment}
-      projection={
-        <ProjectionStage
-          environment={areaHealth.environment}
-          selectedCommitment={selectedCommitment}
-          canValidate={canValidate}
-          isUpdating={isUpdating}
-          onValidateCommitment={handleValidateCommitment}
-        />
-      }
-    >
+    <OmegaRoom environment={areaHealth.environment}>
       <OmegaFrame environment={areaHealth.environment}>
         <MainScreen environment={areaHealth.environment}>
           <MonitoringCenter
@@ -183,14 +170,18 @@ export function MonitoringPage() {
             areaHealth={areaHealth}
             isGlobal={isGlobal}
             areaCommitments={areaCommitments}
+            selectedCommitment={selectedCommitment}
             selectedCommitmentId={selectedCommitmentId}
             loading={loading}
             error={error}
             executorWithoutArea={executorWithoutArea}
             criticalCount={criticalCount}
             projectedTitle={projectedTitle}
+            canValidate={canValidate}
+            isUpdating={isUpdating}
             onSelectArea={handleSelectArea}
             onSelectCommitment={handleSelectCommitment}
+            onValidateCommitment={handleValidateCommitment}
             onLogout={() => void logout()}
             onReset={() => void resetCommitments()}
           />

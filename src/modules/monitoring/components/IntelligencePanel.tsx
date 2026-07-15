@@ -1,5 +1,5 @@
 // Componente: estación de inteligencia (columna derecha del cristal).
-// Panel continuo de KPIs visuales — riesgo ejecutivo, alertas y proyección.
+// Panel continuo — riesgo agregado, cumplimiento, alertas e indicadores.
 
 import type { ReactNode } from 'react'
 import type { AreaHealth, EnvironmentStatus } from '@/modules/monitoring/types/monitoring.types'
@@ -75,7 +75,7 @@ export function IntelligencePanel({
         </h2>
       </header>
 
-      <PanelSection className={`kpi-risk-section ${CRYSTAL_STATION_LEAD}`}>
+      <PanelSection className={`intelligence-risk-section ${CRYSTAL_STATION_LEAD}`}>
         <OperationalRiskKpi health={health} environment={environment} />
       </PanelSection>
 
@@ -88,8 +88,8 @@ export function IntelligencePanel({
         />
       </PanelSection>
 
-      <PanelSection className={`kpi-projection-section ${CRYSTAL_SECTION_TAIL}`}>
-        <p className={`mb-2.5 ${TEXT_LABEL}`}>Compromiso proyectado</p>
+      <PanelSection className={`secondary-indicators-section ${CRYSTAL_SECTION_TAIL}`}>
+        <p className={`mb-2.5 ${TEXT_LABEL}`}>Compromiso priorizado</p>
         <ProjectedCommitmentKpi title={projectedTitle} />
       </PanelSection>
     </aside>

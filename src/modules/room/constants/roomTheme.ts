@@ -11,7 +11,7 @@ import { OPERATIONAL_ROOM_VISUAL } from '@/modules/monitoring/constants/operatio
 
 /**
  * Suelo base: gris institucional profundo (no negro absoluto).
- * Sprint 9.2B: viewport único sin fila inferior — la proyección flota en primer plano.
+ * Viewport único: toda la interacción operativa permanece en el videowall.
  */
 export const roomBackground =
   'min-h-screen w-full bg-[#0e1218] text-slate-200 lg:flex lg:h-dvh lg:max-h-dvh lg:flex-col lg:overflow-hidden'
@@ -28,7 +28,7 @@ export const roomDepth =
  *   --screen-max-height  → alto del monitor (portátil ≤900px alto: ~80vh)
  *   --screen-top-space   → reserva vertical en cálculos de altura
  *   --screen-stage-offset → desplazamiento visual del monitor (solo portátil)
- *   --screen-floor-reserve → margen inferior (menor en portátil; holograma superpone)
+ *   --screen-floor-reserve → margen inferior de la composición
  */
 export const roomVideowallUnit =
   'mx-auto flex w-full max-w-none flex-col lg:w-full lg:max-w-[94rem]'
@@ -42,7 +42,7 @@ export const roomMaxWidth = roomVideowallUnit
 /** Márgenes exteriores — aire lateral; el top lo controla --screen-top-space. */
 export const roomOuterPadding = 'px-2 py-0 sm:px-3 sm:py-0 lg:px-3 lg:pt-0 lg:pb-0'
 
-/** Fila del videowall — zona superior-media; piso y proyección debajo. */
+/** Fila del videowall — zona superior-media de la escena. */
 export const roomSceneRow =
   'relative z-10 flex min-h-0 flex-none flex-col items-stretch overflow-visible lg:items-center lg:justify-start lg:pt-0 lg:pb-0 lg:overflow-visible'
 
@@ -51,24 +51,6 @@ export const roomSceneRow =
  */
 export const roomSceneViewport =
   'room-scene-viewport relative flex min-h-0 w-full flex-col lg:h-full lg:max-h-full lg:flex-none lg:overflow-visible'
-
-/**
- * Capa flotante del Sistema de Proyección — fuera del flujo del documento.
- * Desktop: posicionamiento real en `.operative-projection` (omega-room.css).
- * Móvil: flujo normal debajo del videowall.
- */
-export const roomProjectionStage =
-  'relative z-[30] flex w-full flex-col overflow-visible px-1 max-lg:mt-2 max-lg:pb-3 sm:px-2 lg:pointer-events-none lg:mt-0 lg:flex lg:items-center lg:justify-center lg:px-1 lg:pb-0 lg:pt-0'
-
-/** Alineación horizontal — solo posicionamiento visual, sin capturar eventos. */
-export const roomProjectionStageAlign =
-  'pointer-events-none mx-auto flex w-full max-w-none justify-center lg:max-w-[132.5rem]'
-
-/** @deprecated Sprint 9.2B — la profundidad la aporta la superposición, no una fila de aire. */
-export const roomProjectionDepthAir = 'hidden'
-
-/** @deprecated Sprint 9.1 — usar roomProjectionStage. */
-export const roomForeground = roomProjectionStage
 
 /** @deprecated Usar roomSceneRow — la cadena flex vive dentro del viewport escalado. */
 export const roomStageFill = 'lg:flex lg:min-h-0 lg:flex-1 lg:flex-col'

@@ -37,7 +37,7 @@ function SummaryCard({ label, value, tone }: SummaryCardProps) {
 export function RiskSummaryCards({ cumplidos, incumplidos }: RiskSummaryCardsProps) {
   return (
     <div
-      className="risk-summary-cards grid grid-cols-2 gap-[var(--risk-card-gap,0.5rem)]"
+      className="risk-summary-cards grid w-full min-w-0 grid-cols-2 gap-[var(--risk-card-gap,0.5rem)]"
       role="group"
       aria-label="Distribución de cumplimiento"
     >

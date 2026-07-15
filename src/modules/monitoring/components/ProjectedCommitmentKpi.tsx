@@ -1,4 +1,4 @@
-// Compromiso proyectado — lectura ejecutiva compacta sobre el cristal.
+// Compromiso priorizado — lectura ejecutiva compacta sobre el cristal.
 
 import { INTEL_BODY, INTEL_EMPTY } from '@/modules/monitoring/constants/visualHierarchy'
 
@@ -14,7 +14,7 @@ export function ProjectedCommitmentKpi({ title }: ProjectedCommitmentKpiProps) {
           aria-hidden="true"
           className="mt-0.5 h-8 w-0.5 shrink-0 rounded-full bg-slate-300"
         />
-        <p className={INTEL_EMPTY}>Sin proyección</p>
+        <p className={INTEL_EMPTY}>Sin compromiso priorizado</p>
       </div>
     )
   }
