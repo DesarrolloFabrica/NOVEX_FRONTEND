@@ -15,7 +15,7 @@ interface SelectedCommitmentPanelProps {
 
 const DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/
 const PANEL_FRAME =
-  'selected-commitment-panel flex w-full min-w-0 flex-col overflow-hidden rounded-sm border border-slate-400/30 bg-white/30 shadow-none'
+  'omega-subpanel selected-commitment-panel flex w-full min-w-0 flex-col overflow-hidden border'
 const PANEL_TITLE =
   'selected-commitment-title mt-1 line-clamp-2 text-sm font-semibold leading-snug text-slate-800'
 
@@ -57,17 +57,17 @@ export function SelectedCommitmentPanel({
   if (!commitment) {
     return (
       <section
-        className={PANEL_FRAME}
+        className={`${PANEL_FRAME} is-empty`}
         aria-labelledby="selected-commitment-heading"
       >
         <p
           id="selected-commitment-heading"
-          className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600"
+          className="omega-section-title text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600"
         >
           Compromiso seleccionado
         </p>
         <div className="flex min-h-0 flex-1 items-center justify-center">
-          <p className="max-w-[8rem] text-center text-xs leading-relaxed text-slate-600">
+          <p className="w-full px-1 text-center text-xs leading-snug text-slate-600">
             Seleccione un compromiso en la consola central para consultar su
             información.
           </p>
@@ -93,7 +93,7 @@ export function SelectedCommitmentPanel({
       <header className="flex min-w-0 items-center justify-between gap-2">
         <p
           id="selected-commitment-heading"
-          className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600"
+          className="omega-section-title text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600"
         >
           Compromiso seleccionado
         </p>
@@ -117,7 +117,7 @@ export function SelectedCommitmentPanel({
 
       <dl className="mt-auto grid grid-cols-2 gap-2 border-t border-slate-400/25 pt-2">
         <div className="min-w-0">
-          <dt className="text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+          <dt className="omega-section-label text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-500">
             Fecha
           </dt>
           <dd className="mt-0.5 truncate font-mono text-[10px] font-medium text-slate-700">
@@ -125,7 +125,7 @@ export function SelectedCommitmentPanel({
           </dd>
         </div>
         <div className="min-w-0">
-          <dt className="text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+          <dt className="omega-section-label text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-500">
             Impacto
           </dt>
           <dd className="mt-0.5 font-mono text-[10px] font-semibold text-slate-700">

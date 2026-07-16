@@ -38,7 +38,7 @@ function PanelSection({
   className?: string
 }) {
   return (
-    <div className={className}>
+    <div className={`omega-intelligence-section ${className}`}>
       <CrystalStructuralRule />
       <div className={`${CRYSTAL_ETCH_GAP} ${ETCHED_GROOVE_SHADOW}`}>{children}</div>
     </div>

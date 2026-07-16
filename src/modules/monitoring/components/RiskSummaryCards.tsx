@@ -14,12 +14,13 @@ interface SummaryCardProps {
 function SummaryCard({ label, value, tone }: SummaryCardProps) {
   const toneClasses =
     tone === 'fulfilled'
-      ? 'border-emerald-200/80 bg-emerald-50/45 text-emerald-800'
-      : 'border-red-200/80 bg-red-50/40 text-red-800'
+      ? 'text-emerald-800'
+      : 'text-red-800'
 
   return (
     <div
-      className={`risk-summary-card flex min-w-0 flex-col gap-1 rounded-[var(--risk-card-radius,0.25rem)] border px-2 py-1.5 ${toneClasses}`}
+      data-tone={tone}
+      className={`omega-status-card risk-summary-card flex min-w-0 flex-col gap-1 border px-2 py-1.5 ${toneClasses}`}
     >
       <span className="truncate text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-600">
         {label}

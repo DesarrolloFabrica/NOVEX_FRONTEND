@@ -13,6 +13,21 @@ export const PLANE_ROOM = 'isolate'
 export const PLANE_CITY =
   'pointer-events-none absolute inset-0 z-0 overflow-hidden'
 
+/** Vidrio del ventanal — delante de ciudad/atmósfera base y detrás del marco. */
+export const PLANE_WINDOW_GLASS =
+  'pointer-events-none absolute z-[1]'
+
+/** Suelo interior — delante de ciudad/vidrio y detrás del marco/videowall. */
+export const PLANE_COMMAND_FLOOR =
+  'pointer-events-none absolute z-[3]'
+
+/**
+ * Estructura del ventanal — delante de la ciudad y sus veladuras, pero detrás
+ * del reflejo del monitor, del videowall y de todo contenido interactivo.
+ */
+export const PLANE_WINDOW_FRAME =
+  'pointer-events-none absolute inset-0 z-[4]'
+
 /** Viñeta radial: caída de luz suave en bordes — sala amplia, no cueva oscura. */
 export const ROOM_VIGNETTE =
   'pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_118%_88%_at_50%_38%,transparent_68%,rgba(14,18,24,0.12)_100%)] lg:bg-[radial-gradient(ellipse_124%_90%_at_50%_40%,transparent_72%,rgba(14,18,24,0.1)_100%)]'
@@ -30,6 +45,10 @@ export const FRAME_INNER_CAVITY =
 
 /** Plano 2 — Cristal Maestro (lámina entre marco y contenido). */
 export const PLANE_CRYSTAL = 'relative z-20'
+
+/** Textura de señal — sobre la superficie emisiva y bajo el contenido. */
+export const PLANE_SCREEN_SIGNAL =
+  'pointer-events-none absolute inset-[3px] z-[21] overflow-hidden'
 
 /** Separación de la lámina respecto a la cavidad oscura — emisión opal dominante. */
 export const CRYSTAL_PLANE_LIFT =

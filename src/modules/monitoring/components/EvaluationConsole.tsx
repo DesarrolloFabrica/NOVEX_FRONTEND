@@ -11,10 +11,7 @@ import type { EnvironmentStatus } from '@/modules/monitoring/types/monitoring.ty
 import { CommitmentEvaluationCard } from '@/modules/monitoring/components/CommitmentEvaluationCard'
 import { getOperationalRoomVisual } from '@/modules/monitoring/constants/operationalRoomState'
 import { AMBIENT_ACCENT_TRANSITION } from '@/modules/monitoring/constants/ambientLighting'
-import {
-  CrystalExpedienteGroove,
-  CrystalStationHeaderBracket,
-} from '@/modules/monitoring/components/CrystalStructure'
+import { CrystalStationHeaderBracket } from '@/modules/monitoring/components/CrystalStructure'
 import {
   CONSOLE_CONTROLS,
   CONSOLE_FILTER,
@@ -33,8 +30,6 @@ import {
 } from '@/modules/monitoring/constants/monitoringTheme'
 import {
   CRYSTAL_CONSOLE_READING_FIELD,
-  CRYSTAL_CONTROL_FIELD,
-  CRYSTAL_SELECT_MECHANICAL,
   CRYSTAL_SKELETON_PULSE,
 } from '@/modules/monitoring/constants/materialTheme'
 
@@ -64,7 +59,7 @@ const STATUS_OPTIONS: StatusFilter[] = [
 ]
 
 const SELECT_CLASSES =
-  `${CRYSTAL_CONTROL_FIELD} ${CRYSTAL_SELECT_MECHANICAL} px-2 py-0.5 ${CONSOLE_FILTER} transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400/40`
+  `appearance-none px-2 py-0.5 ${CONSOLE_FILTER} transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400/40`
 
 function ConsoleListViewport({
   children,
@@ -154,7 +149,9 @@ export function EvaluationConsole({
     !loading && !error && !executorWithoutArea && commitments.length > 0
 
   return (
-    <section className={`shrink-0 pb-4 lg:pb-5 ${CONSOLE_ZONE} ${CRYSTAL_CONSOLE_ZONE}`}>
+    <section
+      className={`omega-evaluation-console shrink-0 pb-4 lg:pb-5 ${CONSOLE_ZONE} ${CRYSTAL_CONSOLE_ZONE}`}
+    >
       {roomVisual.consoleVeil && (
         <div
           aria-hidden="true"
@@ -177,14 +174,16 @@ export function EvaluationConsole({
         </h2>
 
         {hasData ? (
-          <div className={`flex flex-wrap items-center gap-1.5 ${CONSOLE_CONTROLS}`}>
+          <div
+            className={`omega-console-controls flex flex-wrap items-center gap-1.5 ${CONSOLE_CONTROLS}`}
+          >
             <select
               aria-label="Filtrar por estado"
               value={statusFilter}
               onChange={(event) =>
                 setStatusFilter(event.target.value as StatusFilter)
               }
-              className={`${SELECT_CLASSES} ${FOCUS_VISIBLE}`}
+              className={`omega-console-filter ${SELECT_CLASSES} ${FOCUS_VISIBLE}`}
             >
               {STATUS_OPTIONS.map((option) => (
                 <option key={option} value={option}>
@@ -198,7 +197,7 @@ export function EvaluationConsole({
               onChange={(event) =>
                 setSortOrder(event.target.value as SortOrder)
               }
-              className={`${SELECT_CLASSES} ${FOCUS_VISIBLE}`}
+              className={`omega-console-filter ${SELECT_CLASSES} ${FOCUS_VISIBLE}`}
             >
               <option value="impact-desc">Mayor impacto primero</option>
               <option value="impact-asc">Menor impacto primero</option>
@@ -251,11 +250,10 @@ export function EvaluationConsole({
       ) : (
         <ConsoleListViewport label="Lista de compromisos">
           <ul
-            className={`${CRYSTAL_LIST_PAD} ${CRYSTAL_STRUCTURAL_DIVIDE} ${CRYSTAL_CONSOLE_READING_FIELD}`}
+            className={`${CRYSTAL_LIST_PAD} ${CRYSTAL_CONSOLE_READING_FIELD}`}
           >
-            {visibleCommitments.map((commitment, index) => (
+            {visibleCommitments.map((commitment) => (
               <li key={commitment.id} className="relative">
-                {index > 0 ? <CrystalExpedienteGroove /> : null}
                 <CommitmentEvaluationCard
                   commitment={commitment}
                   selected={commitment.id === selectedCommitmentId}

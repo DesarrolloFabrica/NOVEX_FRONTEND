@@ -1,11 +1,11 @@
 export function OperationalAnimationSlot() {
   return (
     <section
-      className="operational-animation-slot relative min-h-0 min-w-0 overflow-hidden rounded-sm border border-slate-400/30 bg-white/24"
+      className="omega-subpanel operational-animation-slot relative min-h-0 min-w-0 overflow-hidden border"
       aria-label="Visualización operativa reservada"
     >
       <header className="absolute inset-x-3 top-3 z-10 flex items-center justify-between gap-2">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600">
+        <p className="omega-section-title text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600">
           Visualización operativa
         </p>
         <span className="font-mono text-[9px] tracking-[0.12em] text-slate-500">

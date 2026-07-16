@@ -9,7 +9,7 @@ interface ProjectedCommitmentKpiProps {
 export function ProjectedCommitmentKpi({ title }: ProjectedCommitmentKpiProps) {
   if (!title) {
     return (
-      <div className="flex items-start gap-2.5 rounded-sm border border-dashed border-slate-300/70 bg-slate-50/40 px-2.5 py-2.5">
+      <div className="omega-subpanel projected-commitment-card is-empty flex items-start gap-2.5 border">
         <span
           aria-hidden="true"
           className="mt-0.5 h-8 w-0.5 shrink-0 rounded-full bg-slate-300"
@@ -20,7 +20,7 @@ export function ProjectedCommitmentKpi({ title }: ProjectedCommitmentKpiProps) {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-sm border border-slate-200/80 bg-gradient-to-r from-indigo-50/50 via-white to-white px-2.5 py-2.5">
+    <div className="omega-subpanel projected-commitment-card is-active relative overflow-hidden border">
       <span
         aria-hidden="true"
         className="absolute inset-y-0 left-0 w-0.5 bg-indigo-500/70"

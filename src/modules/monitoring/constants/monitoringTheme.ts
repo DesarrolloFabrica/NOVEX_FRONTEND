@@ -175,7 +175,7 @@ export const FOCUS_VISIBLE =
 // --- Tipografía institucional ----------------------------------------------
 
 export const TEXT_LABEL =
-  'text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-600'
+  'omega-section-title text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-600'
 export const TEXT_HEADING = 'text-slate-800'
 export const TEXT_MUTED = 'text-slate-600'
 export const TEXT_METRIC = 'font-mono text-slate-800'

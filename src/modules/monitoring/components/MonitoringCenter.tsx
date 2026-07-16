@@ -14,6 +14,7 @@ import { LeftOperationalPanel } from '@/modules/monitoring/components/LeftOperat
 import { EvaluationConsole } from '@/modules/monitoring/components/EvaluationConsole'
 import { IntelligencePanel } from '@/modules/monitoring/components/IntelligencePanel'
 import { CrystalModuleConsoleChannel } from '@/modules/monitoring/components/CrystalStructure'
+import { OperationalOverview } from '@/modules/monitoring/components/OperationalOverview'
 
 interface MonitoringCenterProps {
   user: User | null
@@ -88,6 +89,11 @@ export function MonitoringCenter({
         }
         main={
           <>
+            <OperationalOverview
+              area={selectedArea}
+              health={areaHealth}
+              isGlobal={isGlobal}
+            />
             <AreaFocusStrip
               entries={areaEntries}
               selectedAreaId={selectedAreaId}
