@@ -37,6 +37,19 @@ function makeCommitment(
 }
 
 describe('calculateAreaHealth / resolveEnvironmentStatus', () => {
+  it('expone la suma total de impacto aunque sigan pendientes', () => {
+    const health = calculateAreaHealth([
+      makeCommitment('Pendiente de validación', 4),
+      makeCommitment('Pendiente de validación', 2),
+    ])
+
+    expect(health.totalPossibleImpact).toBe(6)
+    expect(health.fulfilledImpact).toBe(0)
+    expect(health.breachedImpact).toBe(0)
+    expect(health.environment).toBe('pending')
+    expect(health.operationalRiskPercentage).toBe(0)
+  })
+
   it('sin compromisos evaluados => environment pending', () => {
     // Solo pendientes (ninguno cumplido ni incumplido).
     const health = calculateAreaHealth([
@@ -52,38 +65,68 @@ describe('calculateAreaHealth / resolveEnvironmentStatus', () => {
   })
 
   it('riesgo menor a 30% => healthy', () => {
-    // Evaluado: 4 + 4 + 2 = 10; incumplido = 2 => 20%.
+    // Total del área: 4 + 4 + 2 = 10; incumplido = 2 => 20%.
     const health = calculateAreaHealth([
       makeCommitment('Cumplido', 4),
       makeCommitment('Cumplido', 4),
       makeCommitment('Incumplido', 2),
     ])
+    expect(health.totalPossibleImpact).toBe(10)
     expect(health.operationalRiskPercentage).toBe(20)
     expect(health.environment).toBe('healthy')
   })
 
   it('riesgo entre 30% y 59% => attention', () => {
-    // Evaluado: 3 + 3 = 6; incumplido = 3 => 50%.
+    // Total del área: 3 + 3 = 6; incumplido = 3 => 50%.
     const health = calculateAreaHealth([
       makeCommitment('Cumplido', 3),
       makeCommitment('Incumplido', 3),
     ])
+    expect(health.totalPossibleImpact).toBe(6)
     expect(health.operationalRiskPercentage).toBe(50)
     expect(health.environment).toBe('attention')
   })
 
   it('riesgo de 60% o más => critical', () => {
-    // Evaluado: 2 + 4 = 6; incumplido = 4 => 67%.
+    // Total del área: 2 + 4 = 6; incumplido = 4 => 67%.
     const health = calculateAreaHealth([
       makeCommitment('Cumplido', 2),
       makeCommitment('Incumplido', 4),
     ])
+    expect(health.totalPossibleImpact).toBe(6)
     expect(health.operationalRiskPercentage).toBe(67)
     expect(health.environment).toBe('critical')
   })
 
+  it('impactos 1+2+5 con fallo en el nivel 5 => riesgo 63% y estado crítico', () => {
+    const health = calculateAreaHealth([
+      makeCommitment('Cumplido', 1),
+      makeCommitment('Cumplido', 2),
+      makeCommitment('Incumplido', 5),
+    ])
+
+    expect(health.totalPossibleImpact).toBe(8)
+    expect(health.fulfilledImpact).toBe(3)
+    expect(health.breachedImpact).toBe(5)
+    expect(health.operationalRiskPercentage).toBe(63)
+    expect(health.hasCriticalBreach).toBe(true)
+    expect(health.environment).toBe('critical')
+  })
+
+  it('con pendientes en el área no se mide riesgo aunque haya evaluados', () => {
+    const health = calculateAreaHealth([
+      makeCommitment('Cumplido', 1),
+      makeCommitment('Incumplido', 2),
+      makeCommitment('Pendiente de validación', 5),
+    ])
+
+    expect(health.totalPossibleImpact).toBe(8)
+    expect(health.environment).toBe('pending')
+    expect(health.operationalRiskPercentage).toBe(0)
+  })
+
   it('incumplido con operationalImpact 5 => critical (aunque el riesgo sea bajo)', () => {
-    // Evaluado: 5*4 + 5 = 25; incumplido = 5 => 20% (sería healthy),
+    // Total del área: 5*4 + 5 = 25; incumplido = 5 => 20% (sería healthy),
     // pero el incumplimiento crítico fuerza critical.
     const health = calculateAreaHealth([
       makeCommitment('Cumplido', 5),

@@ -1,5 +1,5 @@
 // Componente: orquestador visual del Cristal Maestro (Dashboard).
-// Sprint 9.1: solo rejilla grabada — la proyección vive en ProjectionStage (OmegaRoom).
+// La izquierda sigue la selección; la derecha resume la salud del área.
 
 import type { Area } from '@/modules/areas/types/area.types'
 import type { Commitment } from '@/modules/commitments/types/commitment.types'
@@ -10,7 +10,7 @@ import { MonitoringHeader } from '@/modules/monitoring/components/MonitoringHead
 import { MonitoringLayout } from '@/modules/monitoring/components/MonitoringLayout'
 import { ScreenDeck } from '@/modules/monitoring/components/ScreenDeck'
 import { AreaFocusStrip } from '@/modules/monitoring/components/AreaFocusStrip'
-import { AreaContextPanel } from '@/modules/monitoring/components/AreaContextPanel'
+import { LeftOperationalPanel } from '@/modules/monitoring/components/LeftOperationalPanel'
 import { EvaluationConsole } from '@/modules/monitoring/components/EvaluationConsole'
 import { IntelligencePanel } from '@/modules/monitoring/components/IntelligencePanel'
 import { CrystalModuleConsoleChannel } from '@/modules/monitoring/components/CrystalStructure'
@@ -23,14 +23,21 @@ interface MonitoringCenterProps {
   areaHealth: AreaHealth
   isGlobal: boolean
   areaCommitments: Commitment[]
+  selectedCommitment: Commitment | null
   selectedCommitmentId: string | null
   loading: boolean
   error: string | null
   executorWithoutArea: boolean
   criticalCount: number
   projectedTitle: string | null
+  canValidate: boolean
+  isUpdating: boolean
+  canApplyValidation: boolean
+  isApplyingValidation: boolean
   onSelectArea: (areaId: string) => void
   onSelectCommitment: (commitmentId: string) => void
+  onValidateCommitment: (status: 'Cumplido' | 'Incumplido') => void
+  onApplyAreaValidation: () => void
   onLogout: () => void
   onReset: () => void
 }
@@ -43,14 +50,21 @@ export function MonitoringCenter({
   areaHealth,
   isGlobal,
   areaCommitments,
+  selectedCommitment,
   selectedCommitmentId,
   loading,
   error,
   executorWithoutArea,
   criticalCount,
   projectedTitle,
+  canValidate,
+  isUpdating,
+  canApplyValidation,
+  isApplyingValidation,
   onSelectArea,
   onSelectCommitment,
+  onValidateCommitment,
+  onApplyAreaValidation,
   onLogout,
   onReset,
 }: MonitoringCenterProps) {
@@ -68,10 +82,11 @@ export function MonitoringCenter({
     >
       <MonitoringLayout
         left={
-          <AreaContextPanel
-            area={selectedArea}
-            health={areaHealth}
-            isGlobal={isGlobal}
+          <LeftOperationalPanel
+            selectedCommitment={selectedCommitment}
+            canValidate={canValidate}
+            isUpdating={isUpdating}
+            onValidateCommitment={onValidateCommitment}
           />
         }
         main={
@@ -88,7 +103,12 @@ export function MonitoringCenter({
               loading={loading}
               error={error}
               executorWithoutArea={executorWithoutArea}
+              isGlobal={isGlobal}
+              canValidate={canValidate}
+              canApplyValidation={canApplyValidation}
+              isApplyingValidation={isApplyingValidation}
               onSelectCommitment={onSelectCommitment}
+              onApplyAreaValidation={onApplyAreaValidation}
               environment={areaHealth.environment}
             />
           </>

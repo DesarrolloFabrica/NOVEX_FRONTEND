@@ -84,3 +84,59 @@ describe('commitmentsReducer · COMMITMENT_STATUS_UPDATED', () => {
     expect(c1.history).toHaveLength(0)
   })
 })
+
+describe('commitmentsReducer · COMMITMENT_DRAFT_STATUS_UPDATED', () => {
+  const c1 = makeCommitment('c1', 'Pendiente de validación', 3)
+  const baseState: CommitmentsState = {
+    items: [c1],
+    loading: false,
+    error: null,
+  }
+
+  const result = commitmentsReducer(baseState, {
+    type: 'COMMITMENT_DRAFT_STATUS_UPDATED',
+    id: 'c1',
+    draftStatus: 'Cumplido',
+  })
+
+  it('registra el borrador sin alterar el estado oficial', () => {
+    expect(result.items[0].draftStatus).toBe('Cumplido')
+    expect(result.items[0].status).toBe('Pendiente de validación')
+    expect(result.items[0].history).toHaveLength(0)
+  })
+})
+
+describe('commitmentsReducer · AREA_VALIDATION_APPLIED', () => {
+  const c1 = makeCommitment('c1', 'Pendiente de validación', 3)
+  const c2 = makeCommitment('c2', 'Pendiente de validación', 2)
+  c2.areaId = 'area-b'
+
+  const baseState: CommitmentsState = {
+    items: [
+      { ...c1, draftStatus: 'Cumplido' },
+      { ...c2, draftStatus: 'Incumplido' },
+    ],
+    loading: false,
+    error: null,
+  }
+
+  const result = commitmentsReducer(baseState, {
+    type: 'AREA_VALIDATION_APPLIED',
+    areaId: 'area-a',
+    lastUpdateAt: '2026-06-29T10:00:00.000Z',
+    actorId: 'u1',
+    actorName: 'Ana',
+  })
+
+  it('consolida los borradores del área en el estado oficial', () => {
+    expect(result.items[0].status).toBe('Cumplido')
+    expect(result.items[0].draftStatus).toBeUndefined()
+    expect(result.items[0].history).toHaveLength(1)
+  })
+
+  it('no aplica validación en otras áreas', () => {
+    expect(result.items[1].status).toBe('Pendiente de validación')
+    expect(result.items[1].draftStatus).toBe('Incumplido')
+    expect(result.items[1].history).toHaveLength(0)
+  })
+})

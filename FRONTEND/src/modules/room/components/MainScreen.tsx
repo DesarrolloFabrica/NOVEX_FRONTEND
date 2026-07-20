@@ -4,10 +4,12 @@
 
 import type { ReactNode } from 'react'
 import type { RoomEnvironment } from '@/modules/room/constants/roomTheme'
-import { CrystalMaterialLayers } from '@/modules/monitoring/components/CrystalMaterial'
+import {
+  CrystalMaterialLayers,
+  ScreenSignalLayer,
+} from '@/modules/monitoring/components/CrystalMaterial'
 import {
   CrystalBottomStateRule,
-  CrystalMachinedPerimeter,
   CrystalSlab,
   CrystalStateEnvelope,
   CrystalSurfaceCorners,
@@ -18,7 +20,6 @@ import {
   CRYSTAL_BREATH_AMBIENT,
   CRYSTAL_BREATH_BEVEL,
 } from '@/modules/monitoring/constants/operationalBreathing'
-import { CRYSTAL_LAMINATE_EDGE } from '@/modules/monitoring/constants/materialTheme'
 import { CRYSTAL_BODY_BASE, CRYSTAL_CHAMFER_CLIP } from '@/modules/monitoring/constants/crystalMaterial'
 import {
   CRYSTAL_PLANE_LIFT,
@@ -38,13 +39,12 @@ export function MainScreen({ children, environment }: MainScreenProps) {
 
   return (
     <div className={`${PLANE_CRYSTAL} ${CRYSTAL_PLANE_LIFT} ${mainScreenFill}`}>
-      <div className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+      <div className="lg:flex lg:h-full lg:min-h-0 lg:flex-1 lg:flex-col">
         <CrystalSlab edgeGlowClass={visual?.crystalStateEdgeGlow}>
         <div
-          className={`relative overflow-x-hidden max-lg:overflow-y-visible lg:overflow-hidden ${CRYSTAL_CHAMFER_CLIP} ${CRYSTAL_BODY_BASE} ${CRYSTAL_LAMINATE_EDGE} ${mainScreenBodyFill} ${CRYSTAL_STATE_TRANSITION}`}
+          className={`omega-screen-surface relative overflow-x-hidden max-lg:overflow-y-visible lg:h-full lg:overflow-hidden ${CRYSTAL_CHAMFER_CLIP} ${CRYSTAL_BODY_BASE} ${mainScreenBodyFill} ${CRYSTAL_STATE_TRANSITION}`}
         >
           <CrystalMaterialLayers />
-          <CrystalMachinedPerimeter />
           {visual ? <CrystalStateEnvelope visual={visual} /> : null}
           <CrystalSurfaceCorners />
 
@@ -69,7 +69,17 @@ export function MainScreen({ children, environment }: MainScreenProps) {
             <CrystalBottomStateRule structuralAccentClass={visual.crystalStateStructuralAccent} />
           ) : null}
 
-          <div className={`${PLANE_ETCHED} relative lg:min-h-0 lg:flex-1 lg:overflow-hidden`}>
+          <ScreenSignalLayer />
+          <div className="omega-screen-boot" aria-hidden="true" />
+          <div className="omega-state-ornaments" aria-hidden="true">
+            <span className="omega-state-corner omega-state-corner--tl" />
+            <span className="omega-state-corner omega-state-corner--tr" />
+            <span className="omega-state-corner omega-state-corner--bl" />
+            <span className="omega-state-corner omega-state-corner--br" />
+            <span className="omega-state-rail" />
+          </div>
+
+          <div className={`omega-screen-content ${PLANE_ETCHED} relative lg:min-h-0 lg:flex-1 lg:overflow-hidden`}>
             {children}
           </div>
         </div>

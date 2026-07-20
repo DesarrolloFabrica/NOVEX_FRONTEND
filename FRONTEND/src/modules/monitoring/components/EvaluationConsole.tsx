@@ -1,20 +1,18 @@
 // Componente: consola de evaluación (estación central del cristal).
 // Sprint 10.1: registros compactos de alta densidad — navegación, no tarjetas.
-// Sprint 10.2: ventana fija con scroll interno y reserva inferior sobre el holograma.
+// Sprint 10.2: ventana fija con scroll interno para la lista de compromisos.
 
 import { useMemo, useState, type ReactNode } from 'react'
 import type {
   Commitment,
   CommitmentStatus,
 } from '@/modules/commitments/types/commitment.types'
+import { getCommitmentDisplayStatus } from '@/modules/commitments/utils/commitmentValidation.utils'
 import type { EnvironmentStatus } from '@/modules/monitoring/types/monitoring.types'
 import { CommitmentEvaluationCard } from '@/modules/monitoring/components/CommitmentEvaluationCard'
 import { getOperationalRoomVisual } from '@/modules/monitoring/constants/operationalRoomState'
 import { AMBIENT_ACCENT_TRANSITION } from '@/modules/monitoring/constants/ambientLighting'
-import {
-  CrystalExpedienteGroove,
-  CrystalStationHeaderBracket,
-} from '@/modules/monitoring/components/CrystalStructure'
+import { CrystalStationHeaderBracket } from '@/modules/monitoring/components/CrystalStructure'
 import {
   CONSOLE_CONTROLS,
   CONSOLE_FILTER,
@@ -23,7 +21,6 @@ import {
   CONSOLE_ZONE,
 } from '@/modules/monitoring/constants/visualHierarchy'
 import {
-  CONSOLE_LIST_SCROLL_END,
   CONSOLE_LIST_VIEWPORT,
   CRYSTAL_CONSOLE_HEADER,
   CRYSTAL_CONSOLE_ZONE,
@@ -34,8 +31,6 @@ import {
 } from '@/modules/monitoring/constants/monitoringTheme'
 import {
   CRYSTAL_CONSOLE_READING_FIELD,
-  CRYSTAL_CONTROL_FIELD,
-  CRYSTAL_SELECT_MECHANICAL,
   CRYSTAL_SKELETON_PULSE,
 } from '@/modules/monitoring/constants/materialTheme'
 
@@ -45,7 +40,13 @@ interface EvaluationConsoleProps {
   loading: boolean
   error: string | null
   executorWithoutArea: boolean
+  /** Vista agregada (Visión General Operaciones). */
+  isGlobal?: boolean
+  canValidate?: boolean
+  canApplyValidation?: boolean
+  isApplyingValidation?: boolean
   onSelectCommitment: (commitmentId: string) => void
+  onApplyAreaValidation?: () => void
   /** Estado del área enfocada (acento de estación en el cristal). */
   environment: EnvironmentStatus
 }
@@ -63,7 +64,10 @@ const STATUS_OPTIONS: StatusFilter[] = [
 ]
 
 const SELECT_CLASSES =
-  `${CRYSTAL_CONTROL_FIELD} ${CRYSTAL_SELECT_MECHANICAL} px-2 py-0.5 ${CONSOLE_FILTER} transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400/40`
+  `appearance-none px-2 py-0.5 ${CONSOLE_FILTER} transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400/40`
+
+const APPLY_STATES_BUTTON_CLASSES =
+  'omega-console-action omega-console-action--apply shrink-0 focus:outline-none focus:ring-2 focus:ring-indigo-400/40'
 
 function ConsoleListViewport({
   children,
@@ -103,7 +107,6 @@ function ConsoleSkeleton() {
           </div>
         </li>
       ))}
-      <li aria-hidden="true" className={CONSOLE_LIST_SCROLL_END} />
     </ul>
   )
 }
@@ -129,7 +132,12 @@ export function EvaluationConsole({
   loading,
   error,
   executorWithoutArea,
+  isGlobal = false,
+  canValidate = false,
+  canApplyValidation = false,
+  isApplyingValidation = false,
   onSelectCommitment,
+  onApplyAreaValidation,
   environment,
 }: EvaluationConsoleProps) {
   const roomVisual = getOperationalRoomVisual(environment)
@@ -140,7 +148,10 @@ export function EvaluationConsole({
     const filtered =
       statusFilter === 'Todos'
         ? commitments
-        : commitments.filter((c) => c.status === statusFilter)
+        : commitments.filter(
+            (commitment) =>
+              getCommitmentDisplayStatus(commitment) === statusFilter,
+          )
 
     return [...filtered].sort((a, b) =>
       sortOrder === 'impact-desc'
@@ -152,8 +163,23 @@ export function EvaluationConsole({
   const hasData =
     !loading && !error && !executorWithoutArea && commitments.length > 0
 
+  const applyDisabled =
+    !canValidate ||
+    isGlobal ||
+    !canApplyValidation ||
+    isApplyingValidation ||
+    !onApplyAreaValidation
+
+  const applyButtonTitle = isGlobal
+    ? 'Seleccione un área operativa para aplicar la validación.'
+    : !canApplyValidation
+      ? 'Califique todos los compromisos del área para habilitar la aplicación.'
+      : 'Consolidar las calificaciones y actualizar el estado del área.'
+
   return (
-    <section className={`shrink-0 pb-4 lg:pb-5 ${CONSOLE_ZONE} ${CRYSTAL_CONSOLE_ZONE}`}>
+    <section
+      className={`omega-evaluation-console min-h-0 flex flex-col overflow-hidden pb-4 lg:min-h-0 lg:flex-1 lg:pb-5 ${CONSOLE_ZONE} ${CRYSTAL_CONSOLE_ZONE}`}
+    >
       {roomVisual.consoleVeil && (
         <div
           aria-hidden="true"
@@ -168,17 +194,24 @@ export function EvaluationConsole({
             className={`h-2 w-2 shrink-0 rounded-full ${AMBIENT_ACCENT_TRANSITION} ${roomVisual.consoleAccent}`}
           />
           Consola central
+          {isGlobal ? (
+            <span className={`ml-1.5 font-normal normal-case ${CONSOLE_META}`}>
+              · Vista agregada
+            </span>
+          ) : null}
         </h2>
 
         {hasData ? (
-          <div className={`flex flex-wrap items-center gap-1.5 ${CONSOLE_CONTROLS}`}>
+          <div
+            className={`omega-console-controls flex flex-wrap items-center gap-1.5 ${CONSOLE_CONTROLS}`}
+          >
             <select
               aria-label="Filtrar por estado"
               value={statusFilter}
               onChange={(event) =>
                 setStatusFilter(event.target.value as StatusFilter)
               }
-              className={`${SELECT_CLASSES} ${FOCUS_VISIBLE}`}
+              className={`omega-console-filter ${SELECT_CLASSES} ${FOCUS_VISIBLE}`}
             >
               {STATUS_OPTIONS.map((option) => (
                 <option key={option} value={option}>
@@ -186,24 +219,39 @@ export function EvaluationConsole({
                 </option>
               ))}
             </select>
+            <button
+              type="button"
+              className={`${APPLY_STATES_BUTTON_CLASSES} ${FOCUS_VISIBLE} ${
+                applyDisabled ? 'omega-console-action--apply-disabled' : ''
+              }`}
+              aria-label="Aplicar validación del área operativa"
+              title={applyButtonTitle}
+              disabled={applyDisabled}
+              aria-busy={isApplyingValidation}
+              onClick={() => onApplyAreaValidation?.()}
+            >
+              {isApplyingValidation ? 'Aplicando…' : 'Aplicar validación'}
+            </button>
             <select
               aria-label="Ordenar por impacto operativo"
               value={sortOrder}
               onChange={(event) =>
                 setSortOrder(event.target.value as SortOrder)
               }
-              className={`${SELECT_CLASSES} ${FOCUS_VISIBLE}`}
+              className={`omega-console-filter ${SELECT_CLASSES} ${FOCUS_VISIBLE}`}
             >
               <option value="impact-desc">Mayor impacto primero</option>
               <option value="impact-asc">Menor impacto primero</option>
             </select>
             <span className={`shrink-0 ${CONSOLE_META}`}>
               {visibleCommitments.length}/{commitments.length}
+              {isGlobal ? ' · todas las áreas' : ''}
             </span>
           </div>
         ) : (
           <span className={`shrink-0 ${CONSOLE_META}`}>
             {commitments.length} compromisos
+            {isGlobal ? ' agregados' : ''}
           </span>
         )}
       </header>
@@ -228,7 +276,13 @@ export function EvaluationConsole({
         </ConsoleListViewport>
       ) : commitments.length === 0 ? (
         <ConsoleListViewport label="Lista de compromisos">
-          <ConsoleNotice message="No hay compromisos registrados para esta área." />
+          <ConsoleNotice
+            message={
+              isGlobal
+                ? 'No hay compromisos registrados en las áreas operativas.'
+                : 'No hay compromisos registrados para esta área.'
+            }
+          />
         </ConsoleListViewport>
       ) : visibleCommitments.length === 0 ? (
         <ConsoleListViewport label="Lista de compromisos">
@@ -237,11 +291,10 @@ export function EvaluationConsole({
       ) : (
         <ConsoleListViewport label="Lista de compromisos">
           <ul
-            className={`${CRYSTAL_LIST_PAD} ${CRYSTAL_STRUCTURAL_DIVIDE} ${CRYSTAL_CONSOLE_READING_FIELD}`}
+            className={`${CRYSTAL_LIST_PAD} ${CRYSTAL_CONSOLE_READING_FIELD}`}
           >
-            {visibleCommitments.map((commitment, index) => (
+            {visibleCommitments.map((commitment) => (
               <li key={commitment.id} className="relative">
-                {index > 0 ? <CrystalExpedienteGroove /> : null}
                 <CommitmentEvaluationCard
                   commitment={commitment}
                   selected={commitment.id === selectedCommitmentId}
@@ -249,7 +302,6 @@ export function EvaluationConsole({
                 />
               </li>
             ))}
-            <li aria-hidden="true" className={CONSOLE_LIST_SCROLL_END} />
           </ul>
         </ConsoleListViewport>
       )}

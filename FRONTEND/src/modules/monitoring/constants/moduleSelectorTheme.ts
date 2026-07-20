@@ -3,7 +3,6 @@
 
 import type { EnvironmentStatus } from '@/modules/monitoring/types/monitoring.types'
 import { CRYSTAL_STATE_TRANSITION } from '@/modules/monitoring/constants/ambientLighting'
-import { getOperationalRoomVisual } from '@/modules/monitoring/constants/operationalRoomState'
 
 /** Franja de módulos — altura mínima, prioriza la Consola Central. */
 export const MODULE_SELECTOR_STRIP =
@@ -17,13 +16,12 @@ export const MODULE_SELECTOR_BAND =
 export const MODULE_SELECTOR_ROW =
   `${MODULE_SELECTOR_BAND} flex items-stretch divide-x divide-slate-500/[0.11]`
 
-/** Base del botón selector — altura ampliada para nombre en dos líneas (Sprint 11.4 / 11.5). */
+/** Base del botón selector — columna icono + nombre, altura generosa. */
 export const MODULE_SELECTOR_BUTTON =
-  `relative flex min-h-[6rem] w-[7.5rem] shrink-0 flex-col items-center justify-center gap-1.5 px-2.5 pb-1.5 pt-1 text-center sm:min-h-[6.25rem] sm:w-[7.75rem] ${CRYSTAL_STATE_TRANSITION}`
+  `relative flex min-h-[6.75rem] w-[7.5rem] shrink-0 flex-col items-center justify-center gap-2 px-2.5 pb-2 pt-2 text-center sm:min-h-[7rem] sm:w-[7.75rem] ${CRYSTAL_STATE_TRANSITION}`
 
 /** Reposo — casi invisible; solo perimetral tenue sobre el cristal (Sprint 11.6). */
-export const MODULE_SELECTOR_IDLE_SURFACE =
-  'bg-transparent ring-1 ring-inset ring-slate-500/[0.09] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.16),inset_0_-1px_0_0_rgba(71,85,105,0.05)]'
+export const MODULE_SELECTOR_IDLE_SURFACE = 'bg-transparent'
 
 export const MODULE_SELECTOR_IDLE_ICON =
   'bg-transparent text-slate-500/68 shadow-[inset_0_0_0_1px_rgba(148,163,184,0.16)]'
@@ -32,7 +30,7 @@ export const MODULE_SELECTOR_IDLE_ICON_GLOBAL =
   'bg-transparent text-slate-500/70 shadow-[inset_0_0_0_1px_rgba(148,163,184,0.18)]'
 
 export const MODULE_SELECTOR_IDLE_NAME =
-  'line-clamp-2 min-h-[3rem] w-full shrink-0 px-1 text-[10px] font-medium leading-normal text-slate-500/66 sm:text-[11px]'
+  'line-clamp-2 min-h-[2.5rem] w-full shrink-0 px-1 text-[11px] font-medium leading-snug text-slate-500/66 sm:text-xs'
 
 export interface ModuleSelectorActiveVisual {
   surface: string
@@ -43,7 +41,7 @@ export interface ModuleSelectorActiveVisual {
 }
 
 const MODULE_SELECTOR_ACTIVE_NAME_BASE =
-  'line-clamp-2 min-h-[3rem] w-full shrink-0 px-1 text-[10px] font-semibold leading-normal sm:text-[11px]'
+  'line-clamp-2 min-h-[2.5rem] w-full shrink-0 px-1 text-[11px] font-semibold leading-snug sm:text-xs'
 
 const MODULE_ACTIVE_ICON: Record<
   EnvironmentStatus,
@@ -78,12 +76,11 @@ const MODULE_ACTIVE_ICON: Record<
 function buildModuleActiveVisual(
   environment: EnvironmentStatus,
 ): ModuleSelectorActiveVisual {
-  const crystal = getOperationalRoomVisual(environment)
   const icons = MODULE_ACTIVE_ICON[environment]
 
   return {
-    surface: `bg-transparent ${crystal.crystalStateLowerWash} ${crystal.crystalStatePerimeter}`,
-    glow: crystal.crystalStateEdgeGlow,
+    surface: 'bg-transparent',
+    glow: '',
     icon: icons.icon,
     iconGlobal: icons.iconGlobal,
     name: icons.name,

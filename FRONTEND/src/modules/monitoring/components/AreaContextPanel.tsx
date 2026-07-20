@@ -114,6 +114,9 @@ export function AreaContextPanel({
         <p className={`${CRYSTAL_LABEL_GAP} ${CONTEXT_METRIC}`}>
           {health.operationalRiskPercentage}%
         </p>
+        <p className="mt-1 text-[10px] font-medium tracking-wide text-slate-500">
+          Peso total del área: {health.totalPossibleImpact} pts
+        </p>
       </EtchedSection>
 
       <EtchedSection className={CRYSTAL_SECTION_TAIL}>

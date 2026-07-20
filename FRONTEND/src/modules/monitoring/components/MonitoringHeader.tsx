@@ -41,7 +41,12 @@ export function MonitoringHeader({
       className={`flex items-center justify-between gap-4 ${CRYSTAL_HEADER_PAD} ${HEADER_ZONE}`}
     >
       <div className="flex items-center gap-3">
-        <h1 className={HEADER_BRAND}>O.M.E.G.A.</h1>
+        <h1 className={`omega-header-brand ${HEADER_BRAND}`}>
+          <span className="omega-brand-icon" aria-hidden="true">
+            <img src="/capas/Logoprovisional.png" alt="" draggable={false} />
+          </span>
+          <span>O.M.E.G.A.</span>
+        </h1>
         <span aria-hidden="true" className={HEADER_SEPARATOR} />
         <span className={`hidden sm:inline ${HEADER_SUBTITLE}`}>
           Centro de Monitoreo Operativo

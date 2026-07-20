@@ -1,6 +1,6 @@
 // Sistema de estados operativos visuales de la Sala O.M.E.G.A. (solo presentación).
 // Sprint 4.4.1: temperatura de luz perceptible — iluminar, no pintar.
-// La Sala comunica el estado del área; el Holograma comunica el expediente.
+// La Sala comunica el estado del área; el videowall presenta el expediente.
 import type { EnvironmentStatus } from '@/modules/monitoring/types/monitoring.types'
 
 /** Intención ambiental de la Sala (no confundir con EnvironmentStatus del motor). */
@@ -39,10 +39,6 @@ export interface OperationalRoomVisual {
   consoleAccent: string
   /** Pool de luz en consola central. */
   consoleVeil: string
-  /** Riel mecánico de plataforma (integración espacial mínima). */
-  platformRailIdle: string
-  /** Acento de luz en mesa de plataforma. */
-  platformDeckIdle: string
   /** Intensidad tipográfica base (sin variación emocional). */
   textIntensity: string
   /** Borde perimetral del cristal — tema claro (Sprint 10.5C). */
@@ -117,8 +113,6 @@ export const OPERATIONAL_ROOM_VISUAL: Record<
       'bg-gradient-to-b from-sky-100/34 via-slate-400/18 to-slate-500/13 shadow-[0_0_6px_-4px_rgba(191,219,254,0.12)]',
     consoleVeil:
       'bg-[radial-gradient(ellipse_68%_54%_at_0%_10%,rgba(191,219,254,0.03)_0%,transparent_72%)]',
-    platformRailIdle: 'via-slate-400/30',
-    platformDeckIdle: 'shadow-[inset_0_1px_0_0_rgba(203,213,225,0.11)]',
     textIntensity: TEXT_BASE,
     crystalStatePerimeter:
       'ring-1 ring-inset ring-sky-400/30 shadow-[inset_0_1px_0_0_rgba(125,211,252,0.22),inset_0_-1px_0_0_rgba(148,163,184,0.14),inset_1px_0_0_0_rgba(186,230,253,0.14),inset_-1px_0_0_0_rgba(148,163,184,0.1)]',
@@ -153,8 +147,6 @@ export const OPERATIONAL_ROOM_VISUAL: Record<
       'bg-gradient-to-b from-sky-100/38 via-slate-400/18 to-slate-500/13 shadow-[0_0_6px_-4px_rgba(186,230,253,0.13)]',
     consoleVeil:
       'bg-[radial-gradient(ellipse_68%_54%_at_0%_10%,rgba(186,230,253,0.034)_0%,transparent_70%)]',
-    platformRailIdle: 'via-slate-400/30',
-    platformDeckIdle: 'shadow-[inset_0_1px_0_0_rgba(203,213,225,0.12)]',
     textIntensity: TEXT_BASE,
     crystalStatePerimeter:
       'ring-1 ring-inset ring-teal-400/32 shadow-[inset_0_1px_0_0_rgba(94,234,212,0.24),inset_0_-1px_0_0_rgba(45,212,191,0.14),inset_1px_0_0_0_rgba(153,246,228,0.14),inset_-1px_0_0_0_rgba(45,212,191,0.1)]',
@@ -188,8 +180,6 @@ export const OPERATIONAL_ROOM_VISUAL: Record<
       'bg-gradient-to-b from-amber-100/34 via-slate-400/16 to-slate-500/12 shadow-[0_0_6px_-4px_rgba(251,191,36,0.11)]',
     consoleVeil:
       'bg-[radial-gradient(ellipse_68%_54%_at_0%_10%,rgba(254,243,199,0.028)_0%,transparent_70%)]',
-    platformRailIdle: 'via-slate-400/30',
-    platformDeckIdle: 'shadow-[inset_0_1px_0_0_rgba(203,213,225,0.11)]',
     textIntensity: TEXT_BASE,
     crystalStatePerimeter:
       'ring-1 ring-inset ring-amber-400/34 shadow-[inset_0_1px_0_0_rgba(251,191,36,0.24),inset_0_-1px_0_0_rgba(245,158,11,0.16),inset_1px_0_0_0_rgba(253,230,138,0.16),inset_-1px_0_0_0_rgba(245,158,11,0.12)]',
@@ -223,8 +213,6 @@ export const OPERATIONAL_ROOM_VISUAL: Record<
       'bg-gradient-to-b from-orange-100/28 via-slate-400/15 to-slate-500/12 shadow-[0_0_6px_-4px_rgba(251,146,60,0.09)]',
     consoleVeil:
       'bg-[radial-gradient(ellipse_68%_54%_at_0%_10%,rgba(254,237,213,0.024)_0%,transparent_70%)]',
-    platformRailIdle: 'via-slate-400/30',
-    platformDeckIdle: 'shadow-[inset_0_1px_0_0_rgba(203,213,225,0.11)]',
     textIntensity: TEXT_BASE,
     crystalStatePerimeter:
       'ring-1 ring-inset ring-orange-400/32 shadow-[inset_0_1px_0_0_rgba(251,146,60,0.22),inset_0_-1px_0_0_rgba(234,88,12,0.14),inset_1px_0_0_0_rgba(253,186,116,0.14),inset_-1px_0_0_0_rgba(234,88,12,0.1)]',
@@ -259,8 +247,6 @@ export const OPERATIONAL_ROOM_VISUAL: Record<
       'bg-gradient-to-b from-red-100/32 via-slate-400/14 to-slate-500/11 shadow-[0_0_6px_-4px_rgba(248,113,113,0.12)]',
     consoleVeil:
       'bg-[radial-gradient(ellipse_68%_54%_at_0%_10%,rgba(254,202,202,0.03)_0%,transparent_68%)]',
-    platformRailIdle: 'via-slate-400/30',
-    platformDeckIdle: 'shadow-[inset_0_1px_0_0_rgba(203,213,225,0.1)]',
     textIntensity: TEXT_BASE,
     crystalStatePerimeter:
       'ring-1 ring-inset ring-red-400/38 shadow-[inset_0_1px_0_0_rgba(248,113,113,0.28),inset_0_-1px_0_0_rgba(239,68,68,0.2),inset_1px_0_0_0_rgba(252,165,165,0.18),inset_-1px_0_0_0_rgba(239,68,68,0.14)]',

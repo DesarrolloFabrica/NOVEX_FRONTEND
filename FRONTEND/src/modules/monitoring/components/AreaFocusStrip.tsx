@@ -33,7 +33,7 @@ export function AreaFocusStrip({
   onSelectArea,
 }: AreaFocusStripProps) {
   return (
-    <section className={MODULE_SELECTOR_STRIP}>
+    <section className={`omega-module-strip ${MODULE_SELECTOR_STRIP}`}>
       <h2
         className={`mb-1 flex items-center gap-2 px-4 sm:px-5 lg:px-6 ${CRYSTAL_STATION_TITLE} ${MODULE_STATION_TITLE}`}
       >
@@ -43,7 +43,7 @@ export function AreaFocusStrip({
 
       <CrystalStructuralRule />
 
-      <div className={`${MODULE_SELECTOR_ROW} overflow-x-auto`}>
+      <div className={`omega-module-row ${MODULE_SELECTOR_ROW} overflow-x-auto`}>
         {entries.map(({ area, health }) => {
           const isSelected = area.id === selectedAreaId
           const isGlobal = area.isGlobal === true
@@ -71,17 +71,23 @@ export function AreaFocusStrip({
               onClick={() => onSelectArea(area.id)}
               aria-pressed={isSelected}
               aria-label={area.name}
-              className={`${MODULE_SELECTOR_BUTTON} ${FOCUS_VISIBLE} ${surfaceClass}`}
+              className={`omega-module-button omega-operation-station ${MODULE_SELECTOR_BUTTON} ${FOCUS_VISIBLE} ${surfaceClass}`}
             >
               <AreaModuleMonogram
                 monogram={identity.monogram}
                 glyph={identity.glyph}
                 isGlobal={isGlobal}
                 size="selector"
-                className={iconClass}
+                className={`omega-operation-station__identifier ${iconClass}`}
               />
 
-              <p className={nameClass}>{area.name}</p>
+              <p className={`omega-operation-station__name ${nameClass}`}>
+                {area.name}
+              </p>
+              <span
+                className="omega-operation-station__signal"
+                aria-hidden="true"
+              />
             </button>
           )
         })}

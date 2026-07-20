@@ -12,6 +12,7 @@ import type {
 import {
   selectAllAreasHealth,
   selectAreaHealth,
+  selectFocusedAreaCommitments,
   selectGlobalAreaHealth,
 } from '@/modules/monitoring/selectors/areaHealth.selectors'
 
@@ -64,9 +65,24 @@ describe('selectAreaHealth', () => {
 })
 
 describe('selectGlobalAreaHealth', () => {
-  it('agrega todos los compromisos', () => {
+  it('agrega todos los compromisos operativos', () => {
     const health = selectGlobalAreaHealth(commitments)
     expect(health.totalCommitments).toBe(3)
+  })
+})
+
+describe('selectFocusedAreaCommitments', () => {
+  it('vista global devuelve compromisos de todas las áreas operativas', () => {
+    const globalArea = areas.find((a) => a.isGlobal)!
+    const result = selectFocusedAreaCommitments(commitments, globalArea)
+    expect(result).toHaveLength(3)
+  })
+
+  it('área operativa filtra por areaId', () => {
+    const areaA = areas.find((a) => a.id === 'a')!
+    const result = selectFocusedAreaCommitments(commitments, areaA)
+    expect(result).toHaveLength(2)
+    expect(result.every((c) => c.areaId === 'a')).toBe(true)
   })
 })
 

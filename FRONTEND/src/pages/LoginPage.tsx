@@ -30,75 +30,107 @@ export function LoginPage() {
   }, [isAuthenticated, navigate])
 
   return (
-    <main className={`${ROOM_SURFACE} flex items-center justify-center px-4 py-10`}>
-      <div className="grid w-full max-w-5xl items-center gap-8 lg:grid-cols-2">
-        {/* Identidad institucional de la sala. */}
-        <section className="text-center lg:text-left">
-          <div className="mb-3 flex items-center justify-center gap-2 lg:justify-start">
-            <span className="h-2 w-2 rounded-full bg-indigo-400" />
-            <span className={TEXT_LABEL}>Centro de Monitoreo Operativo</span>
+    <main className={`${ROOM_SURFACE} omega-login`}>
+      <div className="omega-login__scene" aria-hidden="true">
+        <img src="/capas/primeraCapa.png" alt="" draggable={false} />
+        <img src="/capas/SegundaCapa.png" alt="" draggable={false} />
+        <div className="omega-login__scene-wash" />
+      </div>
+
+      <div className="omega-login__topbar">
+        <div className="omega-login__brand">
+          <span className="omega-brand-icon omega-login__brand-mark" aria-hidden="true">
+            <img src="/capas/Logoprovisional.png" alt="" draggable={false} />
+          </span>
+          <span>O.M.E.G.A.</span>
+        </div>
+        <div className="omega-login__connection">
+          <span aria-hidden="true" />
+          Sistemas operativos
+        </div>
+      </div>
+
+      <div className="omega-login__shell">
+        <section className="omega-login__intro">
+          <div className="omega-login__eyebrow">
+            <span aria-hidden="true" />
+            Centro de Monitoreo Operativo
           </div>
-          <h1 className="text-5xl font-bold tracking-[0.3em] text-slate-100">
-            O.M.E.G.A.
+          <h1 className="omega-login__hero-logo">
+            <img
+              src="/capas/Logoprovisional.png"
+              alt=""
+              draggable={false}
+              aria-hidden="true"
+            />
+            <span className="sr-only">O.M.E.G.A.</span>
           </h1>
-          <p className="mt-4 max-w-md text-sm leading-relaxed text-slate-400">
-            Antesala de acceso a la Sala de Operaciones. Valida los compromisos
-            institucionales por área durante el precomité y monitorea la salud
-            operativa en tiempo real.
+          <p>
+            Inteligencia operacional para visualizar compromisos, anticipar
+            riesgos y coordinar decisiones institucionales en tiempo real.
           </p>
+          <div className="omega-login__capabilities" aria-label="Capacidades del sistema">
+            <span>Monitoreo activo</span>
+            <span>Análisis de riesgo</span>
+            <span>Control institucional</span>
+          </div>
         </section>
 
-        {/* Controles de acceso. */}
-        <section className={`p-6 sm:p-8 ${PANEL}`}>
-          <header className="mb-6">
-            <h2 className="text-lg font-semibold text-slate-100">
-              Acceso a la Sala
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Selecciona tu modo de operación para ingresar.
-            </p>
+        <section className={`omega-login__panel ${PANEL}`}>
+          <div className="omega-login__panel-scan" aria-hidden="true" />
+          <header className="omega-login__panel-header">
+            <div>
+              <span>Autenticación segura</span>
+              <h2>Acceso a la sala</h2>
+              <p>Selecciona tu perfil operativo para continuar.</p>
+            </div>
+            <div className="omega-login__security-mark" aria-hidden="true">
+              <span />
+            </div>
           </header>
 
           {error && (
-            <p className="mb-5 rounded-lg bg-red-950/40 px-3 py-2 text-sm text-red-300 ring-1 ring-inset ring-red-900/60">
+            <p className="omega-login__error">
               {error}
             </p>
           )}
 
-          {/* Acceso Supervisor. */}
-          <div className={`p-4 ${PANEL_QUIET}`}>
-            <p className={TEXT_LABEL}>Supervisor</p>
-            <p className="mt-1 mb-3 text-sm text-slate-400">
-              Acceso a la visión global y a la validación de compromisos.
-            </p>
+          <div className={`omega-login__access-card ${PANEL_QUIET}`}>
+            <div className="omega-login__access-copy">
+              <span className="omega-login__role-icon" aria-hidden="true">SG</span>
+              <div>
+                <p className={TEXT_LABEL}>Supervisor general</p>
+                <p>Visión global, seguimiento y validación.</p>
+              </div>
+            </div>
             <button
               type="button"
               disabled={loading}
               onClick={() => void loginAsSupervisor()}
-              className={`w-full rounded-lg bg-indigo-600 px-4 py-2.5 font-medium text-white ring-1 ring-inset ring-indigo-500/60 transition-colors duration-200 hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 ${FOCUS_VISIBLE}`}
+              className={`omega-login__primary-action ${FOCUS_VISIBLE}`}
             >
-              Ingresar como Supervisor
+              <span>Ingresar como supervisor</span>
+              <span aria-hidden="true">→</span>
             </button>
           </div>
 
-          {/* Separador entre modos de acceso. */}
-          <div className="my-5 flex items-center gap-3">
-            <span className="h-px flex-1 bg-slate-800/70" />
-            <span className="text-[11px] uppercase tracking-[0.18em] text-slate-600">
-              o
-            </span>
-            <span className="h-px flex-1 bg-slate-800/70" />
+          <div className="omega-login__separator">
+            <span />
+            <p>Acceso por área</p>
+            <span />
           </div>
 
-          {/* Acceso Ejecutor. */}
-          <div className={`p-4 ${PANEL_QUIET}`}>
-            <p className={TEXT_LABEL}>Ejecutor</p>
-            <p className="mt-1 mb-3 text-sm text-slate-400">
-              Acceso a los compromisos del área seleccionada.
-            </p>
+          <div className={`omega-login__access-card ${PANEL_QUIET}`}>
+            <div className="omega-login__access-copy">
+              <span className="omega-login__role-icon" aria-hidden="true">EO</span>
+              <div>
+                <p className={TEXT_LABEL}>Ejecutor operativo</p>
+                <p>Gestión focalizada de compromisos.</p>
+              </div>
+            </div>
             <label
               htmlFor="area"
-              className="mb-1.5 block text-[11px] uppercase tracking-[0.18em] text-slate-500"
+              className="omega-login__field-label"
             >
               Área operativa
             </label>
@@ -106,7 +138,7 @@ export function LoginPage() {
               id="area"
               value={areaId}
               onChange={(event) => setAreaId(event.target.value)}
-              className="mb-3 w-full rounded-lg bg-slate-900/60 px-3 py-2 text-slate-100 ring-1 ring-inset ring-slate-700 transition focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={`omega-login__select ${FOCUS_VISIBLE}`}
             >
               {OPERATIONAL_AREAS.map((area) => (
                 <option key={area.id} value={area.id}>
@@ -118,15 +150,17 @@ export function LoginPage() {
               type="button"
               disabled={loading || !areaId}
               onClick={() => void loginAsEjecutor(areaId)}
-              className={`w-full rounded-lg bg-slate-800/80 px-4 py-2.5 font-medium text-slate-100 ring-1 ring-inset ring-slate-700 transition-colors duration-200 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 ${FOCUS_VISIBLE}`}
+              className={`omega-login__secondary-action ${FOCUS_VISIBLE}`}
             >
-              Ingresar como Ejecutor
+              <span>Ingresar como ejecutor</span>
+              <span aria-hidden="true">→</span>
             </button>
           </div>
 
-          <p className="mt-5 text-center text-xs text-slate-600">
-            {loading ? 'Conectando con la Sala…' : 'Entorno de demostración'}
-          </p>
+          <footer className="omega-login__panel-footer">
+            <span aria-hidden="true" />
+            {loading ? 'Estableciendo enlace seguro…' : 'Entorno seguro de demostración'}
+          </footer>
         </section>
       </div>
     </main>

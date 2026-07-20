@@ -33,7 +33,7 @@ export const CRYSTAL_SPECULAR_STREAK =
 
 /** Espesor de losa: aristas visibles + volumen interno de luz contenida. */
 export const CRYSTAL_SLAB_THICKNESS =
-  'shadow-[inset_0_3px_0_0_rgba(255,255,255,0.76),inset_0_-3px_0_0_rgba(100,116,139,0.26),inset_0_5px_14px_-10px_rgba(51,65,85,0.14),inset_0_0_76px_-26px_rgba(255,255,255,0.2)]'
+  'shadow-[inset_0_1px_0_0_rgba(255,255,255,0.48),inset_0_-1px_0_0_rgba(51,65,85,0.28),0_4px_12px_-10px_rgba(15,23,42,0.42)]'
 
 /** Canto superior: highlight mecanizado — arista iluminada, no glow. */
 export const CRYSTAL_EDGE_SHEEN =

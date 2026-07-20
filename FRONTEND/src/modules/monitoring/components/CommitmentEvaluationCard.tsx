@@ -1,26 +1,12 @@
 // Componente: registro de evaluación en la consola compacta (Sprint 10.1).
-// Fila de alta densidad para navegación — detalle completo en el Holograma.
+// Fila de alta densidad para navegación — detalle en la columna derecha.
 
 import type { Commitment } from '@/modules/commitments/types/commitment.types'
+import { getCommitmentDisplayStatus } from '@/modules/commitments/utils/commitmentValidation.utils'
 import { STATUS_BADGE_CLASSES } from '@/modules/monitoring/components/presentation'
 import {
-  CONSOLE_DOSSIER_ROW,
-  DOSSIER_DUE_IDLE,
-  DOSSIER_DUE_PROJECTED,
-  DOSSIER_IDLE,
-  DOSSIER_PROJECTED,
-  DOSSIER_REF_IDLE,
-  DOSSIER_REF_PROJECTED,
-  DOSSIER_ROW_SELECTED,
-  DOSSIER_TITLE_IDLE,
-  DOSSIER_TITLE_PROJECTED,
-} from '@/modules/monitoring/constants/visualHierarchy'
-import {
-  CRYSTAL_DOSSIER_PAD,
-  DOSSIER_PROJECT_RAIL,
   FOCUS_VISIBLE,
 } from '@/modules/monitoring/constants/monitoringTheme'
-import { CRYSTAL_INTERACTION_HOVER } from '@/modules/monitoring/constants/materialTheme'
 
 interface CommitmentEvaluationCardProps {
   commitment: Commitment
@@ -42,52 +28,50 @@ export function CommitmentEvaluationCard({
   selected,
   onSelect,
 }: CommitmentEvaluationCardProps) {
+  const displayStatus = getCommitmentDisplayStatus(commitment)
+
   return (
     <button
       type="button"
       onClick={() => onSelect(commitment.id)}
       aria-pressed={selected}
-      className={`group relative w-full text-left transition-colors duration-200 ease-out ${CRYSTAL_DOSSIER_PAD} ${FOCUS_VISIBLE} ${
-        selected ? `${DOSSIER_PROJECTED} ${DOSSIER_ROW_SELECTED}` : DOSSIER_IDLE
-      } ${selected ? '' : CRYSTAL_INTERACTION_HOVER}`}
+      data-status={displayStatus}
+      className={`omega-commitment-row group relative w-full text-left ${FOCUS_VISIBLE}`}
     >
       <span
         aria-hidden="true"
-        className={`absolute inset-y-0 left-0 w-0.5 transition-colors duration-200 ${
-          selected ? DOSSIER_PROJECT_RAIL : 'bg-transparent'
+        className={`omega-commitment-row__rail absolute inset-y-0 left-0 w-0.5 transition-colors duration-200 ${
+          selected ? 'omega-commitment-row__rail--active' : 'bg-transparent'
         }`}
       />
 
-      <div className={`relative z-10 ${CONSOLE_DOSSIER_ROW}`}>
-        <span
-          className={`transition-colors duration-200 ${
-            selected ? DOSSIER_REF_PROJECTED : DOSSIER_REF_IDLE
-          }`}
-        >
+      <div className="omega-commitment-row__layout relative z-10">
+        <span className="omega-commitment-row__identity">
           {expeditionRef(commitment.id)}
         </span>
 
-        <span
-          className={`transition-colors duration-200 ${
-            selected ? DOSSIER_TITLE_PROJECTED : DOSSIER_TITLE_IDLE
-          }`}
-        >
-          {commitment.title}
+        <span className="omega-commitment-row__main">
+          <span className="omega-commitment-row__title" title={commitment.title}>
+            {commitment.title}
+          </span>
+          <span className="omega-commitment-row__meta">
+            Impacto {commitment.operationalImpact}/5
+          </span>
         </span>
 
         <span
-          className={`max-w-[5.5rem] shrink-0 truncate sm:max-w-none ${STATUS_BADGE_CLASSES[commitment.status]}`}
+          data-status={displayStatus}
+          className={`omega-commitment-row__status ${STATUS_BADGE_CLASSES[displayStatus]}`}
         >
-          {commitment.status}
+          {displayStatus}
         </span>
 
-        <span
-          className={`transition-colors duration-200 ${
-            selected ? DOSSIER_DUE_PROJECTED : DOSSIER_DUE_IDLE
-          }`}
+        <time
+          dateTime={commitment.dueDate}
+          className="omega-commitment-row__date"
         >
           {formatDueDate(commitment.dueDate)}
-        </span>
+        </time>
       </div>
     </button>
   )
