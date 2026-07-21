@@ -2,9 +2,9 @@
 // Fila de alta densidad para navegación — detalle en la columna derecha.
 
 import type { Commitment } from '@/modules/commitments/types/commitment.types'
+import { getCommitmentDisplayStatus } from '@/modules/commitments/utils/commitmentValidation.utils'
 import { STATUS_BADGE_CLASSES } from '@/modules/monitoring/components/presentation'
 import {
-  DOSSIER_PROJECT_RAIL,
   FOCUS_VISIBLE,
 } from '@/modules/monitoring/constants/monitoringTheme'
 
@@ -28,17 +28,20 @@ export function CommitmentEvaluationCard({
   selected,
   onSelect,
 }: CommitmentEvaluationCardProps) {
+  const displayStatus = getCommitmentDisplayStatus(commitment)
+
   return (
     <button
       type="button"
       onClick={() => onSelect(commitment.id)}
       aria-pressed={selected}
+      data-status={displayStatus}
       className={`omega-commitment-row group relative w-full text-left ${FOCUS_VISIBLE}`}
     >
       <span
         aria-hidden="true"
         className={`omega-commitment-row__rail absolute inset-y-0 left-0 w-0.5 transition-colors duration-200 ${
-          selected ? DOSSIER_PROJECT_RAIL : 'bg-transparent'
+          selected ? 'omega-commitment-row__rail--active' : 'bg-transparent'
         }`}
       />
 
@@ -57,10 +60,10 @@ export function CommitmentEvaluationCard({
         </span>
 
         <span
-          data-status={commitment.status}
-          className={`omega-commitment-row__status ${STATUS_BADGE_CLASSES[commitment.status]}`}
+          data-status={displayStatus}
+          className={`omega-commitment-row__status ${STATUS_BADGE_CLASSES[displayStatus]}`}
         >
-          {commitment.status}
+          {displayStatus}
         </span>
 
         <time

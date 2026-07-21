@@ -55,7 +55,7 @@ export function IntelligencePanel({
 
   return (
     <aside
-      className={`operations-intelligence-panel relative flex h-full flex-col ${INTEL_ZONE} ${CRYSTAL_ZONE_SUPPORT}`}
+      className={`operations-intelligence-panel relative flex h-full min-h-0 flex-col overflow-hidden ${INTEL_ZONE} ${CRYSTAL_ZONE_SUPPORT}`}
     >
       {roomVisual.sidePanelVeil && (
         <div
@@ -64,7 +64,7 @@ export function IntelligencePanel({
         />
       )}
 
-      <header className="operations-intelligence-header relative flex items-center gap-2.5">
+      <header className="operations-intelligence-header relative shrink-0 flex items-center gap-2.5">
         <h2 className={`flex items-center gap-2.5 ${INTEL_STATION_TITLE}`}>
           <CrystalStationHeaderBracket />
           <span
@@ -75,23 +75,25 @@ export function IntelligencePanel({
         </h2>
       </header>
 
-      <PanelSection className={`intelligence-risk-section ${CRYSTAL_STATION_LEAD}`}>
-        <OperationalRiskKpi health={health} environment={environment} />
-      </PanelSection>
+      <div className="operations-intelligence-panel__body min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+        <PanelSection className={`intelligence-risk-section ${CRYSTAL_STATION_LEAD}`}>
+          <OperationalRiskKpi health={health} environment={environment} />
+        </PanelSection>
 
-      <PanelSection className={`kpi-alerts-section ${CRYSTAL_SECTION_TAIL}`}>
-        <p className={`mb-2 ${TEXT_LABEL}`}>Alertas</p>
-        <AlertsDistribution
-          incumplidos={health.breachedCount}
-          criticos={criticalCount}
-          pendientes={health.pendingCount}
-        />
-      </PanelSection>
+        <PanelSection className={`kpi-alerts-section ${CRYSTAL_SECTION_TAIL}`}>
+          <p className={`mb-2.5 ${TEXT_LABEL}`}>Alertas</p>
+          <AlertsDistribution
+            incumplidos={health.breachedCount}
+            criticos={criticalCount}
+            pendientes={health.pendingCount}
+          />
+        </PanelSection>
 
-      <PanelSection className={`secondary-indicators-section ${CRYSTAL_SECTION_TAIL}`}>
-        <p className={`mb-2.5 ${TEXT_LABEL}`}>Compromiso priorizado</p>
-        <ProjectedCommitmentKpi title={projectedTitle} />
-      </PanelSection>
+        <PanelSection className={`secondary-indicators-section ${CRYSTAL_SECTION_TAIL}`}>
+          <p className={`mb-3 ${TEXT_LABEL}`}>Compromiso priorizado</p>
+          <ProjectedCommitmentKpi title={projectedTitle} />
+        </PanelSection>
+      </div>
     </aside>
   )
 }

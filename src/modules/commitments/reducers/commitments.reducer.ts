@@ -26,9 +26,21 @@ export type CommitmentsAction =
   | { type: 'COMMITMENTS_LOADED'; items: Commitment[] }
   | { type: 'COMMITMENTS_ERROR'; error: string }
   | {
+      type: 'COMMITMENT_DRAFT_STATUS_UPDATED'
+      id: string
+      draftStatus: Extract<CommitmentStatus, 'Cumplido' | 'Incumplido'>
+    }
+  | {
       type: 'COMMITMENT_STATUS_UPDATED'
       id: string
       status: CommitmentStatus
+      lastUpdateAt: string
+      actorId: string
+      actorName: string
+    }
+  | {
+      type: 'AREA_VALIDATION_APPLIED'
+      areaId: string
       lastUpdateAt: string
       actorId: string
       actorName: string
@@ -56,6 +68,16 @@ export function commitmentsReducer(
     case 'COMMITMENTS_ERROR':
       return { ...state, loading: false, error: action.error }
 
+    case 'COMMITMENT_DRAFT_STATUS_UPDATED':
+      return {
+        ...state,
+        items: state.items.map((item) =>
+          item.id === action.id
+            ? { ...item, draftStatus: action.draftStatus }
+            : item,
+        ),
+      }
+
     case 'COMMITMENT_STATUS_UPDATED':
       // Mutación inmutable: solo se reemplaza el compromiso afectado,
       // actualizando su estado, su marca de última actualización y agregando
@@ -80,6 +102,38 @@ export function commitmentsReducer(
           return {
             ...item,
             status: action.status,
+            lastUpdateAt: action.lastUpdateAt,
+            history: [...item.history, entry],
+          }
+        }),
+      }
+
+    case 'AREA_VALIDATION_APPLIED':
+      return {
+        ...state,
+        items: state.items.map((item) => {
+          if (item.areaId !== action.areaId) return item
+          if (item.status !== 'Pendiente de validación') return item
+          if (item.draftStatus !== 'Cumplido' && item.draftStatus !== 'Incumplido') {
+            return item
+          }
+
+          const entry: CommitmentHistoryEntry = {
+            id: `hist-${item.id}-${item.history.length + 1}`,
+            commitmentId: item.id,
+            type: 'status_change',
+            fromStatus: item.status,
+            toStatus: item.draftStatus,
+            byUserId: action.actorId,
+            byUserName: action.actorName,
+            at: action.lastUpdateAt,
+            description: `Validación aplicada: ${item.status} → ${item.draftStatus} por ${action.actorName}.`,
+          }
+
+          return {
+            ...item,
+            status: item.draftStatus,
+            draftStatus: undefined,
             lastUpdateAt: action.lastUpdateAt,
             history: [...item.history, entry],
           }

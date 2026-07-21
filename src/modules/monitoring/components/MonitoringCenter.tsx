@@ -14,7 +14,6 @@ import { LeftOperationalPanel } from '@/modules/monitoring/components/LeftOperat
 import { EvaluationConsole } from '@/modules/monitoring/components/EvaluationConsole'
 import { IntelligencePanel } from '@/modules/monitoring/components/IntelligencePanel'
 import { CrystalModuleConsoleChannel } from '@/modules/monitoring/components/CrystalStructure'
-import { OperationalOverview } from '@/modules/monitoring/components/OperationalOverview'
 
 interface MonitoringCenterProps {
   user: User | null
@@ -33,9 +32,12 @@ interface MonitoringCenterProps {
   projectedTitle: string | null
   canValidate: boolean
   isUpdating: boolean
+  canApplyValidation: boolean
+  isApplyingValidation: boolean
   onSelectArea: (areaId: string) => void
   onSelectCommitment: (commitmentId: string) => void
   onValidateCommitment: (status: 'Cumplido' | 'Incumplido') => void
+  onApplyAreaValidation: () => void
   onLogout: () => void
   onReset: () => void
 }
@@ -43,7 +45,7 @@ interface MonitoringCenterProps {
 export function MonitoringCenter({
   user,
   areaEntries,
-  selectedArea,
+  selectedArea: _selectedArea,
   selectedAreaId,
   areaHealth,
   isGlobal,
@@ -57,9 +59,12 @@ export function MonitoringCenter({
   projectedTitle,
   canValidate,
   isUpdating,
+  canApplyValidation,
+  isApplyingValidation,
   onSelectArea,
   onSelectCommitment,
   onValidateCommitment,
+  onApplyAreaValidation,
   onLogout,
   onReset,
 }: MonitoringCenterProps) {
@@ -78,9 +83,6 @@ export function MonitoringCenter({
       <MonitoringLayout
         left={
           <LeftOperationalPanel
-            area={selectedArea}
-            isGlobal={isGlobal}
-            environment={areaHealth.environment}
             selectedCommitment={selectedCommitment}
             canValidate={canValidate}
             isUpdating={isUpdating}
@@ -89,11 +91,6 @@ export function MonitoringCenter({
         }
         main={
           <>
-            <OperationalOverview
-              area={selectedArea}
-              health={areaHealth}
-              isGlobal={isGlobal}
-            />
             <AreaFocusStrip
               entries={areaEntries}
               selectedAreaId={selectedAreaId}
@@ -107,7 +104,11 @@ export function MonitoringCenter({
               error={error}
               executorWithoutArea={executorWithoutArea}
               isGlobal={isGlobal}
+              canValidate={canValidate}
+              canApplyValidation={canApplyValidation}
+              isApplyingValidation={isApplyingValidation}
               onSelectCommitment={onSelectCommitment}
+              onApplyAreaValidation={onApplyAreaValidation}
               environment={areaHealth.environment}
             />
           </>

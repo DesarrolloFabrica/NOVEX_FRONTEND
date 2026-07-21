@@ -43,6 +43,10 @@ export function OperationalOverview({
           <dt>Riesgo</dt>
           <dd>{Math.round(health.operationalRiskPercentage)}%</dd>
         </div>
+        <div>
+          <dt>Peso total</dt>
+          <dd>{health.totalPossibleImpact}</dd>
+        </div>
       </dl>
     </section>
   )

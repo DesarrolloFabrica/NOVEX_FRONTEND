@@ -16,7 +16,9 @@ import type {
   CommitmentStatus,
 } from '@/modules/commitments/types/commitment.types'
 import {
+  applyAreaValidationRequest,
   fetchCommitmentsRequest,
+  updateCommitmentDraftStatusRequest,
   updateCommitmentStatusRequest,
 } from '@/modules/commitments/services/commitments.service'
 import {
@@ -37,6 +39,20 @@ export interface CommitmentsContextValue extends CommitmentsState {
   loadCommitments: () => Promise<void>
   /** Limpia la persistencia y recarga los compromisos mock. */
   resetCommitments: () => Promise<void>
+  /**
+   * Registra una calificación en borrador (no altera la salud del área).
+   */
+  updateCommitmentDraftStatus: (
+    commitmentId: string,
+    draftStatus: Extract<CommitmentStatus, 'Cumplido' | 'Incumplido'>,
+  ) => Promise<void>
+  /**
+   * Consolida las calificaciones en borrador del área en su estado oficial.
+   */
+  applyAreaValidation: (
+    areaId: string,
+    actor: CommitmentActor,
+  ) => Promise<void>
   /**
    * Actualiza el estado de un compromiso (marca de actualización + historial).
    * Requiere el actor para registrar la trazabilidad de la validación.
@@ -94,6 +110,46 @@ export function CommitmentsProvider({ children }: { children: ReactNode }) {
     }
   }, [state.items])
 
+  const updateCommitmentDraftStatus = useCallback(
+    async (
+      commitmentId: string,
+      draftStatus: Extract<CommitmentStatus, 'Cumplido' | 'Incumplido'>,
+    ) => {
+      try {
+        const result = await updateCommitmentDraftStatusRequest(
+          commitmentId,
+          draftStatus,
+        )
+        dispatch({
+          type: 'COMMITMENT_DRAFT_STATUS_UPDATED',
+          id: result.id,
+          draftStatus: result.draftStatus,
+        })
+      } catch (error) {
+        dispatch({ type: 'COMMITMENTS_ERROR', error: getErrorMessage(error) })
+      }
+    },
+    [],
+  )
+
+  const applyAreaValidation = useCallback(
+    async (areaId: string, actor: CommitmentActor) => {
+      try {
+        const result = await applyAreaValidationRequest(areaId, actor)
+        dispatch({
+          type: 'AREA_VALIDATION_APPLIED',
+          areaId: result.areaId,
+          lastUpdateAt: result.lastUpdateAt,
+          actorId: result.actor.id,
+          actorName: result.actor.name,
+        })
+      } catch (error) {
+        dispatch({ type: 'COMMITMENTS_ERROR', error: getErrorMessage(error) })
+      }
+    },
+    [],
+  )
+
   const updateCommitmentStatus = useCallback(
     async (
       commitmentId: string,
@@ -127,9 +183,18 @@ export function CommitmentsProvider({ children }: { children: ReactNode }) {
       ...state,
       loadCommitments,
       resetCommitments,
+      updateCommitmentDraftStatus,
+      applyAreaValidation,
       updateCommitmentStatus,
     }),
-    [state, loadCommitments, resetCommitments, updateCommitmentStatus],
+    [
+      state,
+      loadCommitments,
+      resetCommitments,
+      updateCommitmentDraftStatus,
+      applyAreaValidation,
+      updateCommitmentStatus,
+    ],
   )
 
   return (

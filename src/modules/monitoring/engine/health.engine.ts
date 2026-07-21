@@ -16,20 +16,25 @@ import {
   RISK_THRESHOLDS,
 } from '@/modules/monitoring/constants/thresholds'
 
+/** Suma el peso operativo (1..5) de todos los compromisos del ámbito. */
+export function sumCommitmentImpact(commitments: Commitment[]): number {
+  return commitments.reduce((acc, commitment) => acc + commitment.operationalImpact, 0)
+}
+
 /**
  * Resuelve el estado semáforo del entorno a partir de una salud ya calculada.
  *
  * Reglas (en orden de prioridad):
- * 1. Sin compromisos evaluados (ni cumplidos ni incumplidos) => 'pending'.
- * 2. Existe un incumplimiento de impacto crítico (5)          => 'critical'.
- * 3. Riesgo operativo >= umbral critical (60%)                => 'critical'.
- * 4. Riesgo operativo >= umbral attention (30%)               => 'attention'.
- * 5. En cualquier otro caso                                   => 'healthy'.
+ * 1. Quedan pendientes o sin evaluar => 'pending'.
+ * 2. Existe un incumplimiento de impacto crítico (5) => 'critical'.
+ * 3. Riesgo operativo >= umbral critical (60%) => 'critical'.
+ * 4. Riesgo operativo >= umbral attention (30%) => 'attention'.
+ * 5. En cualquier otro caso => 'healthy'.
  */
 export function resolveEnvironmentStatus(health: AreaHealth): EnvironmentStatus {
   const evaluatedCount = health.fulfilledCount + health.breachedCount
 
-  if (evaluatedCount === 0) return 'pending'
+  if (health.pendingCount > 0 || evaluatedCount === 0) return 'pending'
   if (health.hasCriticalBreach) return 'critical'
   if (health.operationalRiskPercentage >= RISK_THRESHOLDS.critical) return 'critical'
   if (health.operationalRiskPercentage >= RISK_THRESHOLDS.attention) return 'attention'
@@ -39,46 +44,50 @@ export function resolveEnvironmentStatus(health: AreaHealth): EnvironmentStatus 
 /**
  * Calcula la salud operativa de un conjunto de compromisos.
  *
- * El riesgo operativo se mide sobre los compromisos EVALUADOS
- * (cumplidos + incumplidos): porcentaje del impacto evaluado que terminó
- * en incumplimiento. Los pendientes de validación no inflan ni diluyen el
- * riesgo, pero sí cuentan en los totales informativos.
+ * Regla de riesgo:
+ * 1. Primero se obtiene el peso total del área (suma de impactos 1..5).
+ * 2. Tras validar todos los compromisos, el riesgo es:
+ *    incumplido / total × 100.
+ *
+ * Ejemplo: impactos 1 + 2 + 5 = 8. Si se cumplen 1 y 2 pero falla el 5,
+ * el riesgo es 5/8 ≈ 63% (estado crítico).
  */
 export function calculateAreaHealth(commitments: Commitment[]): AreaHealth {
   const pendingCount = commitments.filter(
-    (c) => c.status === 'Pendiente de validación',
+    (commitment) => commitment.status === 'Pendiente de validación',
   ).length
-  const fulfilledCount = commitments.filter((c) => c.status === 'Cumplido').length
-  const breached = commitments.filter((c) => c.status === 'Incumplido')
+  const fulfilled = commitments.filter(
+    (commitment) => commitment.status === 'Cumplido',
+  )
+  const breached = commitments.filter(
+    (commitment) => commitment.status === 'Incumplido',
+  )
+  const fulfilledCount = fulfilled.length
   const breachedCount = breached.length
 
-  const evaluated = commitments.filter(
-    (c) => c.status === 'Cumplido' || c.status === 'Incumplido',
-  )
+  const totalPossibleImpact = sumCommitmentImpact(commitments)
+  const fulfilledImpact = sumCommitmentImpact(fulfilled)
+  const breachedImpact = sumCommitmentImpact(breached)
 
-  const totalPossibleImpact = evaluated.reduce(
-    (acc, c) => acc + c.operationalImpact,
-    0,
-  )
-  const breachedImpact = breached.reduce((acc, c) => acc + c.operationalImpact, 0)
+  const evaluatedCount = fulfilledCount + breachedCount
+  const canMeasureRisk =
+    totalPossibleImpact > 0 && evaluatedCount > 0 && pendingCount === 0
 
-  const operationalRiskPercentage =
-    totalPossibleImpact > 0
-      ? Math.round((breachedImpact / totalPossibleImpact) * 100)
-      : 0
+  const operationalRiskPercentage = canMeasureRisk
+    ? Math.round((breachedImpact / totalPossibleImpact) * 100)
+    : 0
 
   const hasCriticalBreach = breached.some(
-    (c) => c.operationalImpact === CRITICAL_IMPACT,
+    (commitment) => commitment.operationalImpact === CRITICAL_IMPACT,
   )
 
-  // Se construye primero la salud "sin entorno" para que resolveEnvironmentStatus
-  // trabaje exactamente sobre los mismos valores expuestos al resto de la app.
   const baseHealth: AreaHealth = {
     totalCommitments: commitments.length,
     pendingCount,
     fulfilledCount,
     breachedCount,
     totalPossibleImpact,
+    fulfilledImpact,
     breachedImpact,
     operationalRiskPercentage,
     hasCriticalBreach,

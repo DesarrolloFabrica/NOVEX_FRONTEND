@@ -53,10 +53,10 @@ export function CrystalWorkstationTransverseRule({
         className={`absolute right-3 top-0 h-1.5 w-px -translate-y-1/2 ${INK_REGISTRY_TICK} sm:right-5`}
       />
       <span
-        className={`absolute left-[15rem] top-0 hidden h-2 w-px -translate-y-1/2 ${INK_REGISTRY_TICK} lg:block xl:left-[16.5rem] 2xl:left-[18rem]`}
+        className={`absolute left-1/4 top-0 hidden h-2 w-px -translate-x-1/2 -translate-y-1/2 ${INK_REGISTRY_TICK} lg:block`}
       />
       <span
-        className={`absolute right-[15rem] top-0 hidden h-2 w-px -translate-y-1/2 ${INK_REGISTRY_TICK} lg:block xl:right-[16.5rem] 2xl:right-[18rem]`}
+        className={`absolute right-1/4 top-0 hidden h-2 w-px translate-x-1/2 -translate-y-1/2 ${INK_REGISTRY_TICK} lg:block`}
       />
     </div>
   )

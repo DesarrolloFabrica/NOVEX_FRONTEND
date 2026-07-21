@@ -3,7 +3,8 @@
 // Mantener estos valores aquí evita "números mágicos" dispersos en la lógica.
 
 /**
- * Umbrales de riesgo operativo (en porcentaje) que definen el estado del entorno:
+ * Umbrales de riesgo operativo (en porcentaje) sobre el peso total del área:
+ * riesgo = (impacto incumplido / suma total de impactos del área) × 100.
  * - riesgo < attention            -> healthy
  * - attention <= riesgo < critical -> attention
  * - riesgo >= critical            -> critical

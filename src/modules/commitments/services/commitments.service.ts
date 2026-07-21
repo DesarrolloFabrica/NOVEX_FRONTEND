@@ -51,3 +51,41 @@ export async function updateCommitmentStatusRequest(
     actor,
   }
 }
+
+/** Resultado de registrar una calificación en borrador. */
+export interface CommitmentDraftStatusUpdate {
+  id: string
+  draftStatus: Extract<CommitmentStatus, 'Cumplido' | 'Incumplido'>
+}
+
+/**
+ * Registra la calificación en borrador de un compromiso.
+ * No altera el estado oficial ni la salud del área hasta aplicar.
+ */
+export async function updateCommitmentDraftStatusRequest(
+  commitmentId: string,
+  draftStatus: Extract<CommitmentStatus, 'Cumplido' | 'Incumplido'>,
+): Promise<CommitmentDraftStatusUpdate> {
+  await delay(150)
+  return { id: commitmentId, draftStatus }
+}
+
+/** Resultado de consolidar la validación de un área operativa. */
+export interface AreaValidationApplied {
+  areaId: string
+  lastUpdateAt: string
+  actor: CommitmentActor
+}
+
+/** Consolida los borradores calificados en el estado oficial del área. */
+export async function applyAreaValidationRequest(
+  areaId: string,
+  actor: CommitmentActor,
+): Promise<AreaValidationApplied> {
+  await delay(400)
+  return {
+    areaId,
+    lastUpdateAt: new Date().toISOString(),
+    actor,
+  }
+}

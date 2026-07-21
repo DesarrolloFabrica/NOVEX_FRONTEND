@@ -8,10 +8,16 @@ import { CRYSTAL_STATUS_CHIP_BASE } from '@/modules/monitoring/constants/materia
 const INK_STATUS_FRAME =
   'px-1 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.08em]'
 
-/** Clases para el estado de validación — acentos operativos legibles. */
+/**
+ * Colores por estado de compromiso (paleta institucional de 4 tonos):
+ * - Pendiente de validación => azul
+ * - Cumplido                 => verde
+ * - Incumplido               => rojo
+ * (El ámbar/amarillo queda reservado al entorno operativo "Atención".)
+ */
 export const STATUS_BADGE_CLASSES: Record<CommitmentStatus, string> = {
   'Pendiente de validación':
-    `${CRYSTAL_STATUS_CHIP_BASE} ${INK_STATUS_FRAME} text-amber-800 shadow-[inset_0_0_0_1px_rgba(180,83,9,0.45)]`,
+    `${CRYSTAL_STATUS_CHIP_BASE} ${INK_STATUS_FRAME} text-sky-800 shadow-[inset_0_0_0_1px_rgba(3,105,161,0.45)]`,
   Cumplido:
     `${CRYSTAL_STATUS_CHIP_BASE} ${INK_STATUS_FRAME} text-emerald-800 shadow-[inset_0_0_0_1px_rgba(4,120,87,0.45)]`,
   Incumplido:

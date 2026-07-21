@@ -29,7 +29,7 @@ export function MonitoringLayout({ left, main, right }: MonitoringLayoutProps) {
       >
         <CrystalFieldAnchors />
 
-        <div className="omega-workstation__left relative order-2 z-[2] min-w-0 max-lg:pt-3 lg:order-1 lg:min-h-0 lg:overflow-hidden lg:pt-0">
+        <div className="omega-workstation__left relative order-2 z-[2] min-w-0 max-lg:pt-3 lg:order-1 lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden lg:pt-0">
           <CrystalRowGroove className="absolute inset-x-0 top-0 z-[2] lg:hidden" />
           {left}
         </div>
@@ -38,7 +38,7 @@ export function MonitoringLayout({ left, main, right }: MonitoringLayoutProps) {
           {main}
         </div>
 
-        <div className="omega-workstation__right relative order-3 z-[2] min-w-0 max-lg:pt-3 lg:min-h-0 lg:overflow-hidden lg:pt-0">
+        <div className="omega-workstation__right relative order-3 z-[2] min-w-0 max-lg:pt-3 lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden lg:pt-0">
           <CrystalRowGroove className="absolute inset-x-0 top-0 z-[2] lg:hidden" />
           {right}
         </div>

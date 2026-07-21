@@ -29,13 +29,12 @@ export function OperationalRiskKpi({
 }: OperationalRiskKpiProps) {
   return (
     <section
-      className="operational-risk-kpi flex min-h-[10.5rem] flex-col"
+      className="operational-risk-kpi flex flex-col gap-3"
       style={
         {
-          '--risk-card-gap': '0.5rem',
+          '--risk-card-gap': '0.625rem',
           '--risk-card-radius': '0.25rem',
           '--risk-card-value-size': '1rem',
-          '--risk-kpi-gap': '0.625rem',
         } as CSSProperties
       }
       aria-labelledby="operational-risk-heading"
@@ -45,15 +44,12 @@ export function OperationalRiskKpi({
           Riesgo operativo
         </p>
         <p className="mt-0.5 text-[10px] font-medium tracking-wide text-slate-500">
-          Estado general del área
+          Incumplido {health.breachedImpact}/{health.totalPossibleImpact} pts del área
         </p>
       </header>
 
-      <div
-        className="flex flex-[5.5] flex-col justify-center gap-[var(--risk-kpi-gap)] py-1"
-        style={{ minHeight: 0 }}
-      >
-        <div className="flex flex-[3] items-center justify-center">
+      <div className="flex flex-col items-stretch gap-3">
+        <div className="flex items-center justify-center py-1">
           <TechnicalRiskGauge
             value={health.operationalRiskPercentage}
             level={environmentToRiskLevel(environment)}
@@ -61,12 +57,10 @@ export function OperationalRiskKpi({
             size={108}
           />
         </div>
-        <div className="flex flex-[2] items-end">
-          <RiskSummaryCards
-            cumplidos={health.fulfilledCount}
-            incumplidos={health.breachedCount}
-          />
-        </div>
+        <RiskSummaryCards
+          cumplidos={health.fulfilledCount}
+          incumplidos={health.breachedCount}
+        />
       </div>
     </section>
   )

@@ -7,6 +7,7 @@ import type {
   Commitment,
   CommitmentStatus,
 } from '@/modules/commitments/types/commitment.types'
+import { getCommitmentDisplayStatus } from '@/modules/commitments/utils/commitmentValidation.utils'
 import type { EnvironmentStatus } from '@/modules/monitoring/types/monitoring.types'
 import { CommitmentEvaluationCard } from '@/modules/monitoring/components/CommitmentEvaluationCard'
 import { getOperationalRoomVisual } from '@/modules/monitoring/constants/operationalRoomState'
@@ -41,7 +42,11 @@ interface EvaluationConsoleProps {
   executorWithoutArea: boolean
   /** Vista agregada (Visión General Operaciones). */
   isGlobal?: boolean
+  canValidate?: boolean
+  canApplyValidation?: boolean
+  isApplyingValidation?: boolean
   onSelectCommitment: (commitmentId: string) => void
+  onApplyAreaValidation?: () => void
   /** Estado del área enfocada (acento de estación en el cristal). */
   environment: EnvironmentStatus
 }
@@ -60,6 +65,9 @@ const STATUS_OPTIONS: StatusFilter[] = [
 
 const SELECT_CLASSES =
   `appearance-none px-2 py-0.5 ${CONSOLE_FILTER} transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400/40`
+
+const APPLY_STATES_BUTTON_CLASSES =
+  'omega-console-action omega-console-action--apply shrink-0 focus:outline-none focus:ring-2 focus:ring-indigo-400/40'
 
 function ConsoleListViewport({
   children,
@@ -125,7 +133,11 @@ export function EvaluationConsole({
   error,
   executorWithoutArea,
   isGlobal = false,
+  canValidate = false,
+  canApplyValidation = false,
+  isApplyingValidation = false,
   onSelectCommitment,
+  onApplyAreaValidation,
   environment,
 }: EvaluationConsoleProps) {
   const roomVisual = getOperationalRoomVisual(environment)
@@ -136,7 +148,10 @@ export function EvaluationConsole({
     const filtered =
       statusFilter === 'Todos'
         ? commitments
-        : commitments.filter((c) => c.status === statusFilter)
+        : commitments.filter(
+            (commitment) =>
+              getCommitmentDisplayStatus(commitment) === statusFilter,
+          )
 
     return [...filtered].sort((a, b) =>
       sortOrder === 'impact-desc'
@@ -148,9 +163,22 @@ export function EvaluationConsole({
   const hasData =
     !loading && !error && !executorWithoutArea && commitments.length > 0
 
+  const applyDisabled =
+    !canValidate ||
+    isGlobal ||
+    !canApplyValidation ||
+    isApplyingValidation ||
+    !onApplyAreaValidation
+
+  const applyButtonTitle = isGlobal
+    ? 'Seleccione un área operativa para aplicar la validación.'
+    : !canApplyValidation
+      ? 'Califique todos los compromisos del área para habilitar la aplicación.'
+      : 'Consolidar las calificaciones y actualizar el estado del área.'
+
   return (
     <section
-      className={`omega-evaluation-console shrink-0 pb-4 lg:pb-5 ${CONSOLE_ZONE} ${CRYSTAL_CONSOLE_ZONE}`}
+      className={`omega-evaluation-console min-h-0 flex flex-col overflow-hidden pb-4 lg:min-h-0 lg:flex-1 lg:pb-5 ${CONSOLE_ZONE} ${CRYSTAL_CONSOLE_ZONE}`}
     >
       {roomVisual.consoleVeil && (
         <div
@@ -191,6 +219,19 @@ export function EvaluationConsole({
                 </option>
               ))}
             </select>
+            <button
+              type="button"
+              className={`${APPLY_STATES_BUTTON_CLASSES} ${FOCUS_VISIBLE} ${
+                applyDisabled ? 'omega-console-action--apply-disabled' : ''
+              }`}
+              aria-label="Aplicar validación del área operativa"
+              title={applyButtonTitle}
+              disabled={applyDisabled}
+              aria-busy={isApplyingValidation}
+              onClick={() => onApplyAreaValidation?.()}
+            >
+              {isApplyingValidation ? 'Aplicando…' : 'Aplicar validación'}
+            </button>
             <select
               aria-label="Ordenar por impacto operativo"
               value={sortOrder}

@@ -54,7 +54,7 @@ export function AlertsDistribution({
 
   return (
     <div
-      className="alerts-distribution space-y-2"
+      className="alerts-distribution space-y-3"
       role="group"
       aria-label={`Alertas operativas, total ${total}`}
     >
@@ -76,8 +76,8 @@ export function AlertsDistribution({
         label="Pendientes"
         value={pendientes}
         maxValue={maxAlertValue}
-        barClass="bg-amber-500/90"
-        valueClass="text-amber-700"
+        barClass="bg-sky-500/90"
+        valueClass="text-sky-700"
       />
     </div>
   )

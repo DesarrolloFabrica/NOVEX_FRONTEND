@@ -32,7 +32,7 @@ export const SCREEN_DECK =
 
 /** Separación interior del cristal (compacta en desktop para más presencia). */
 export const ROOM_CONTAINER =
-  'px-3 py-3 sm:px-4 sm:py-4 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden lg:px-4 lg:py-3'
+  'omega-room-container px-3 py-3 sm:px-4 sm:py-4 lg:flex lg:h-full lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden lg:px-4 lg:py-3'
 
 // --- Ritmo y respiración del Cristal ---------------------------------------
 
@@ -71,9 +71,9 @@ export const CRYSTAL_LIST_PAD =
 /** Zona de consola central — continuación de la misma placa. */
 export const CRYSTAL_CONSOLE_ZONE = 'relative'
 
-/** Sprint 10.2 — ventana fija de compromisos (~4.5 filas visibles, scroll interno). */
+/** Sprint 10.2 — ventana fija de compromisos con scroll interno cuando desborda. */
 export const CONSOLE_LIST_VIEWPORT =
-  'omega-console-list-scroll max-h-[12rem] overflow-x-hidden overflow-y-auto sm:max-h-[13rem] lg:max-h-[14.5rem]'
+  'omega-console-list-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto'
 
 /** Padding interior de cada módulo operativo. */
 export const CRYSTAL_MODULE_PAD = 'px-4 py-3.5 sm:px-5 sm:py-4'
@@ -88,9 +88,9 @@ export const CRYSTAL_CONSOLE_HEADER =
 /** Padding de registro en consola compacta (Sprint 10.1). */
 export const CRYSTAL_DOSSIER_PAD = 'px-4 py-1.5 sm:px-5 sm:py-2'
 
-/** Rejilla de columnas: laterales proporcionales, centro dominante en desktop. */
+/** Rejilla de columnas: 25% laterales, 50% centro (1:2:1). */
 export const CRYSTAL_GRID =
-  'lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-[15rem_minmax(0,1fr)_15rem] xl:grid-cols-[16.5rem_minmax(0,1fr)_16.5rem] 2xl:grid-cols-[18rem_minmax(0,1fr)_18rem]'
+  'lg:grid lg:min-h-0 lg:flex-1 lg:overflow-hidden lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)]'
 
 /** Divisor grabado entre zonas — trazo de ingeniería visible. */
 export const CRYSTAL_DIVIDER = 'border-slate-500/28'
@@ -211,38 +211,38 @@ export const ENVIRONMENT_THEME: Record<EnvironmentStatus, EnvironmentTheme> = {
   pending: {
     label: 'En espera',
     dot: 'bg-sky-400 shadow-[0_0_4px_-1px_rgba(56,189,248,0.4)]',
-    badge: 'bg-sky-950/35 text-sky-200 ring-1 ring-inset ring-sky-400/38',
-    accentText: 'text-sky-200',
+    badge: 'bg-sky-50 text-sky-700 ring-1 ring-inset ring-sky-400/45',
+    accentText: 'text-sky-600',
     accentRing: 'ring-sky-400/42',
     rail: 'bg-sky-400/45',
-    ambient: 'from-sky-950/25',
+    ambient: 'from-sky-100/60',
   },
   healthy: {
     label: 'Estable',
     dot: 'bg-emerald-400 shadow-[0_0_4px_-1px_rgba(52,211,153,0.4)]',
     badge:
-      'bg-emerald-950/35 text-emerald-200 ring-1 ring-inset ring-emerald-400/38',
-    accentText: 'text-emerald-200',
+      'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-400/45',
+    accentText: 'text-emerald-600',
     accentRing: 'ring-emerald-400/42',
     rail: 'bg-emerald-400/45',
-    ambient: 'from-emerald-950/25',
+    ambient: 'from-emerald-100/60',
   },
   attention: {
     label: 'Atención',
     dot: 'bg-amber-400 shadow-[0_0_4px_-1px_rgba(251,191,36,0.4)]',
-    badge: 'bg-amber-950/35 text-amber-200 ring-1 ring-inset ring-amber-400/38',
-    accentText: 'text-amber-200',
+    badge: 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-400/45',
+    accentText: 'text-amber-600',
     accentRing: 'ring-amber-400/42',
     rail: 'bg-amber-400/45',
-    ambient: 'from-amber-950/25',
+    ambient: 'from-amber-100/60',
   },
   critical: {
     label: 'Crítico',
     dot: 'bg-red-400 shadow-[0_0_4px_-1px_rgba(248,113,113,0.4)]',
-    badge: 'bg-red-950/35 text-red-200 ring-1 ring-inset ring-red-400/38',
-    accentText: 'text-red-200',
+    badge: 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-400/45',
+    accentText: 'text-red-600',
     accentRing: 'ring-red-400/42',
     rail: 'bg-red-400/45',
-    ambient: 'from-red-950/25',
+    ambient: 'from-red-100/60',
   },
 }

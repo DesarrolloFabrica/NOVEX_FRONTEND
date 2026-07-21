@@ -128,9 +128,9 @@
 
 .omega-room--reference {
   --screen-top-space: clamp(68px, 11.6vh, 116px);
-  --screen-max-height: min(59.6vh, 34rem);
+  --screen-max-height: min(62.6vh, 35.7rem);
   --screen-floor-reserve: 0rem;
-  --screen-width: min(75.5vw, 1268px);
+  --screen-width: min(83vw, 1395px);
   --room-atmosphere-opacity: 0.16;
   --room-depth-haze-opacity: 0.1;
   --room-vignette-opacity: 0.36;
@@ -256,12 +256,13 @@
   position: absolute;
   z-index: 35;
   left: 50%;
-  bottom: -6%;
-  width: 90%;
+  bottom: -11%;
+  width: 85%;
   height: auto;
   pointer-events: none;
   user-select: none;
-  transform: translateX(-50%);
+  transform: translateX(-50%) scale(0.94);
+  transform-origin: center bottom;
 }
 
 .room-reference-base {
@@ -726,14 +727,14 @@
 
 /* Superficie emisiva del videowall: clara, fría y continua, no papel. */
 .omega-screen-surface {
-  --screen-emission-strength: 0.86;
-  --screen-bloom-strength: 0.034;
-  --screen-white-temperature: 242 248 250;
+  --screen-emission-strength: 0.94;
+  --screen-bloom-strength: 0.03;
+  --screen-white-temperature: 252 253 254;
   --screen-black-temperature: 24 35 43;
   --screen-luminance-amplitude: 0.004;
   --screen-luminance-duration: 6.8s;
-  --screen-glass-opacity: 0.025;
-  --screen-panel-contrast: 0.058;
+  --screen-glass-opacity: 0.022;
+  --screen-panel-contrast: 0.042;
   --screen-electrical-field-opacity: 0.68;
   --screen-electrical-field-duration: 11.4s;
   --screen-refresh-opacity: 0.38;
@@ -746,15 +747,15 @@
   --screen-noise-duration: 760ms;
   --screen-grain-size: 3px;
   --screen-scanline-gap: 4px;
-  --screen-surface-highlight-opacity: 0.76;
+  --screen-surface-highlight-opacity: 0.82;
   --screen-bezel-width: 2px;
-  --screen-inner-shadow: rgb(71 98 112 / 0.055);
+  --screen-inner-shadow: rgb(71 98 112 / 0.032);
   --screen-front-reflection-opacity: 0.034;
 
   background:
     radial-gradient(
       ellipse 132% 112% at 50% 46%,
-      transparent 62%,
+      transparent 68%,
       rgb(
           var(--screen-black-temperature) /
             var(--screen-panel-contrast)
@@ -768,8 +769,8 @@
             var(--screen-emission-strength)
         )
         0%,
-      rgb(238 245 248 / 0.936) 52%,
-      rgb(232 240 244 / 0.928) 100%
+      rgb(249 251 252 / 0.96) 54%,
+      rgb(246 249 251 / 0.95) 100%
     );
   box-shadow:
     inset 0 0 0 var(--screen-bezel-width) rgb(30 41 50 / 0.46),
@@ -1083,6 +1084,16 @@
 .omega-module-button[aria-pressed='true']::after,
 .omega-console-list-scroll button[aria-pressed='true']::after {
   opacity: 1;
+}
+
+.omega-console-list-scroll .omega-commitment-row[aria-pressed='true']::after {
+  box-shadow:
+    inset 0 0 var(--screen-active-bloom-radius)
+      rgb(var(--commitment-status-rgb) / var(--screen-active-bloom-opacity)),
+    inset 0 0 0 1px
+      rgb(var(--commitment-status-rgb) / calc(var(--screen-active-bloom-opacity) * 2.4)),
+    0 0 6px
+      rgb(var(--commitment-status-rgb) / calc(var(--screen-active-bloom-opacity) * 0.5));
 }
 
 /* El riel lateral existente permanece como indicador principal de selección. */
@@ -2490,16 +2501,23 @@
   overflow: hidden;
   border-radius: 0.875rem;
   transform: none;
-  background:
-    linear-gradient(180deg, rgb(3 16 21 / 0.76), rgb(1 10 15 / 0.72)),
-    radial-gradient(ellipse 80% 120% at 50% 50%, rgb(20 184 166 / 0.08), transparent 70%);
+  background: rgb(255 255 255 / 0.98);
   box-shadow:
-    0 0 0 1px rgb(94 234 212 / 0.32),
-    0 0 0 2px rgb(2 6 23 / 0.46),
-    0 0 44px -14px rgb(45 212 191 / 0.42),
-    0 30px 86px -38px rgb(0 0 0 / 0.78),
-    inset 0 1px 0 rgb(209 250 229 / 0.18),
-    inset 0 0 42px rgb(20 184 166 / 0.055);
+    0 0 0 1px rgb(148 163 184 / 0.28),
+    0 0 0 2px rgb(255 255 255 / 0.92),
+    0 0 36px -14px rgb(var(--omega-state-rgb) / 0.32),
+    0 30px 86px -38px rgb(15 23 42 / 0.22),
+    inset 0 1px 0 rgb(255 255 255 / 0.95);
+  transition: box-shadow 520ms ease;
+}
+
+.omega-room--reference .main-screen::before {
+  inset: -1px;
+  border-radius: inherit;
+  box-shadow:
+    0 0 54px -18px rgb(var(--omega-state-rgb) / 0.38),
+    0 0 1px 0 rgb(var(--omega-state-rgb) / 0.42);
+  transition: box-shadow 520ms ease;
 }
 
 .omega-room--reference .main-screen > * {
@@ -2508,12 +2526,9 @@
   height: 100%;
 }
 
-.omega-room--reference .main-screen::before {
-  inset: -1px;
-  border-radius: inherit;
-  box-shadow:
-    0 0 54px -18px rgb(45 212 191 / 0.48),
-    0 0 1px 0 rgb(94 234 212 / 0.44);
+.omega-room--reference .screen-deck-ambient {
+  opacity: 0.22;
+  transition: opacity 520ms ease;
 }
 
 .omega-room--reference .room-monitor-reflection {
@@ -3370,11 +3385,11 @@
 @media (min-width: 1024px) {
   .omega-room.omega-room--reference {
     --screen-top-space: 12.5cqh;
-    --screen-max-height: 56cqh;
+    --screen-max-height: 58.8cqh;
     --screen-min-height: 0px;
     --screen-floor-reserve: 0rem;
     --screen-stage-offset: 0px;
-    --screen-width: 68cqw;
+    --screen-width: 74.8cqw;
     min-height: 100dvh;
     max-height: 100dvh;
     overflow: hidden;
@@ -3422,16 +3437,24 @@
   }
 
   .omega-room--reference .omega-screen-content {
-    width: 121.952%;
-    height: 121.952%;
-    min-height: 121.952%;
-    max-width: none;
-    transform: scale(0.82);
-    transform-origin: left top;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    transform: none;
   }
 
   .omega-room--reference .omega-workstation {
-    grid-template-columns: 11rem minmax(0, 1fr) 11rem;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    flex: 1 1 0%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
   }
 }
 

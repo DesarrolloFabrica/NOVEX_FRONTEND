@@ -3,6 +3,7 @@ import type {
   Commitment,
   CommitmentStatus,
 } from '@/modules/commitments/types/commitment.types'
+import { getCommitmentDisplayStatus } from '@/modules/commitments/utils/commitmentValidation.utils'
 import { STATUS_BADGE_CLASSES } from '@/modules/monitoring/components/presentation'
 import { FOCUS_VISIBLE } from '@/modules/monitoring/constants/monitoringTheme'
 
@@ -15,9 +16,9 @@ interface SelectedCommitmentPanelProps {
 
 const DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/
 const PANEL_FRAME =
-  'omega-subpanel selected-commitment-panel flex w-full min-w-0 flex-col overflow-hidden border'
+  'omega-subpanel selected-commitment-panel flex h-full min-w-0 min-h-0 w-full flex-col gap-1.5 overflow-x-hidden overflow-y-auto border'
 const PANEL_TITLE =
-  'selected-commitment-title mt-1 line-clamp-2 text-sm font-semibold leading-snug text-slate-800'
+  'selected-commitment-title text-sm font-semibold leading-normal text-slate-800'
 
 function formatDueDate(value: string): string {
   const match = DATE_ONLY_PATTERN.exec(value)
@@ -76,7 +77,8 @@ export function SelectedCommitmentPanel({
     )
   }
 
-  const displayStatus = optimisticStatus ?? commitment.status
+  const displayStatus =
+    optimisticStatus ?? getCommitmentDisplayStatus(commitment)
   const validateDisabled = !canValidate || isUpdating
 
   const handleValidate = (status: 'Cumplido' | 'Incumplido') => {
@@ -97,25 +99,25 @@ export function SelectedCommitmentPanel({
         >
           Compromiso seleccionado
         </p>
-        <p className="min-w-0 truncate font-mono text-[10px] tracking-[0.12em] text-slate-600">
+        <p className="shrink-0 break-all font-mono text-[10px] tracking-[0.08em] text-slate-600">
           {commitment.id}
         </p>
       </header>
 
       <span
-        className={`mt-1.5 max-w-full self-start truncate ${STATUS_BADGE_CLASSES[displayStatus]}`}
+        className={`shrink-0 max-w-full self-start ${STATUS_BADGE_CLASSES[displayStatus]}`}
         title={displayStatus}
       >
         {displayStatus}
       </span>
-      <h3 className={PANEL_TITLE}>
+      <h3 className={`${PANEL_TITLE} shrink-0`}>
         {commitment.title}
       </h3>
-      <p className="selected-commitment-description mt-1 line-clamp-2 text-[11px] leading-snug text-slate-600">
+      <p className="selected-commitment-description shrink-0 text-[11px] leading-normal text-slate-600">
         {commitment.description}
       </p>
 
-      <dl className="mt-auto grid grid-cols-2 gap-2 border-t border-slate-400/25 pt-2">
+      <dl className="mt-1 grid shrink-0 grid-cols-2 gap-2 border-t border-slate-400/25 pt-2">
         <div className="min-w-0">
           <dt className="omega-section-label text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-500">
             Fecha
@@ -134,7 +136,7 @@ export function SelectedCommitmentPanel({
         </div>
       </dl>
 
-      <div className="mt-2 grid grid-cols-2 gap-1.5">
+      <div className="mt-1 grid shrink-0 grid-cols-2 gap-1.5">
         <button
           type="button"
           disabled={validateDisabled}

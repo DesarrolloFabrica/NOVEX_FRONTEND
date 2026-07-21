@@ -106,7 +106,7 @@ export function AreaModuleMonogram({
 }: AreaModuleMonogramProps) {
   const sizeClass =
     size === 'selector'
-      ? 'h-12 w-12 text-[12px] font-semibold'
+      ? 'h-[3rem] w-[3rem] text-[13px] font-semibold'
       : 'h-9 w-9 text-[10px] font-semibold'
 
   return (

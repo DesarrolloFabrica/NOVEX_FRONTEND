@@ -5,7 +5,7 @@
 >
 > Última actualización: **30 jun 2026** — incluye Fases 4–8.1 (material, ambiente, jerarquía, identidad de áreas, escala cinematográfica).
 
-Stack visual: **React + TypeScript + Tailwind CSS v4**. Animaciones de microactividad en `FRONTEND/src/index.css`.
+Stack visual: **React + TypeScript + Tailwind CSS v4**. Animaciones de microactividad en `src/index.css`.
 
 ---
 
@@ -222,7 +222,7 @@ Objetivo: recuperar presencia cinematográfica en desktop **sin scroll vertical*
 
 ## 14. Comandos de verificación
 
-Ejecutar desde `FRONTEND/`:
+Ejecutar desde la raíz del repositorio (`OMEGA_FRONTEND/`):
 
 ```bash
 npm run test
@@ -243,4 +243,4 @@ npm run build
 ## 15. Documentos relacionados
 
 - [Estado del MVP](mvp-estado-actual.md) — producto, arquitectura de módulos y flujo de datos
-- Código de referencia: `FRONTEND/src/modules/room/`, `FRONTEND/src/modules/monitoring/`
+- Código de referencia: `src/modules/room/`, `src/modules/monitoring/`

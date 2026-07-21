@@ -24,11 +24,19 @@ export interface AreaHealth {
   fulfilledCount: number
   /** Compromisos incumplidos. */
   breachedCount: number
-  /** Suma de impacto de los compromisos evaluados (cumplidos + incumplidos). */
+  /**
+   * Suma de impacto operativo de TODOS los compromisos del área (1..5 cada uno).
+   * Es la base del cálculo antes de cualquier validación.
+   */
   totalPossibleImpact: number
+  /** Suma de impacto de los compromisos cumplidos. */
+  fulfilledImpact: number
   /** Suma de impacto de los compromisos incumplidos. */
   breachedImpact: number
-  /** Riesgo operativo en porcentaje (breachedImpact / totalPossibleImpact). */
+  /**
+   * Riesgo operativo en porcentaje (breachedImpact / totalPossibleImpact).
+   * Solo aplica cuando no quedan compromisos pendientes de validación.
+   */
   operationalRiskPercentage: number
   /** Indica si existe un incumplimiento con impacto operativo máximo (5). */
   hasCriticalBreach: boolean

@@ -2,7 +2,7 @@
 // pointer-events: none — no bloquea la UI.
 //
 // Assets Blender (WebP/PNG exportados):
-//   Colocar en FRONTEND/public/scene/
+//   Colocar en public/scene/
 //   - console-front.webp  → proyector/base frontal (debajo del holograma)
 //   - console-left.webp   → consola lateral izquierda
 //   - console-right.webp  → consola lateral derecha

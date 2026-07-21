@@ -27,13 +27,13 @@ export function ScreenDeck({ header, environment, children }: ScreenDeckProps) {
     >
       <div
         aria-hidden="true"
-        className={`pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b ${visual.deckGradient} to-transparent ${AMBIENT_LIGHT_TRANSITION}`}
+        className={`screen-deck-ambient pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b ${visual.deckGradient} to-transparent ${AMBIENT_LIGHT_TRANSITION}`}
       />
       {header}
 
       <CrystalTopRail accentClass={visual.mainRail} />
 
-      <div className="relative overflow-visible pt-2 lg:min-h-0 lg:flex-1 lg:overflow-hidden lg:pt-2">
+      <div className="relative overflow-visible pt-2 lg:flex lg:h-full lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden lg:pt-2">
         {children}
       </div>
     </div>
