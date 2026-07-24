@@ -1,7 +1,8 @@
-// Componente: cabecera de la Sala O.M.E.G.A.
+// Componente: cabecera de la Sala O.M.E.G.A. (flujo Legacy · Commitments).
 // Identidad del sistema, indicador de estado de la sala, sesión y acciones.
 // Solo presentación — jerarquía más baja del recorrido visual.
 
+import { Link } from 'react-router-dom'
 import type { User } from '@/modules/auth/types/user.types'
 import type { EnvironmentStatus } from '@/modules/monitoring/types/monitoring.types'
 import {
@@ -49,7 +50,7 @@ export function MonitoringHeader({
         </h1>
         <span aria-hidden="true" className={HEADER_SEPARATOR} />
         <span className={`hidden sm:inline ${HEADER_SUBTITLE}`}>
-          Centro de Monitoreo Operativo
+          Legacy · Monitoreo de compromisos
         </span>
         <span
           className={`hidden items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-medium opacity-92 transition-colors duration-500 md:inline-flex ${theme.badge}`}
@@ -62,6 +63,12 @@ export function MonitoringHeader({
       </div>
 
       <div className="flex items-center gap-2.5">
+        <Link
+          to="/intelligence"
+          className={`rounded-lg px-2.5 py-1.5 ${HEADER_ACTION_QUIET} ${FOCUS_VISIBLE}`}
+        >
+          Ir a Inteligencia
+        </Link>
         <div className="hidden text-right sm:block">
           <p className={HEADER_SESSION_NAME}>{user?.name ?? '—'}</p>
           <p className={HEADER_SESSION_ROLE}>{user?.role ?? '—'}</p>

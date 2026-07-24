@@ -22,10 +22,10 @@ export function LoginPage() {
   const navigate = useNavigate()
   const [areaId, setAreaId] = useState<string>(OPERATIONAL_AREAS[0]?.id ?? '')
 
-  // Cuando la sesión queda activa, se navega al Centro de Monitoreo.
+  // Sesión activa → Centro de Inteligencia Operacional (experiencia principal).
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/monitoring', { replace: true })
+      navigate('/intelligence', { replace: true })
     }
   }, [isAuthenticated, navigate])
 
@@ -54,7 +54,7 @@ export function LoginPage() {
         <section className="omega-login__intro">
           <div className="omega-login__eyebrow">
             <span aria-hidden="true" />
-            Centro de Monitoreo Operativo
+            Centro de Inteligencia Operacional
           </div>
           <h1 className="omega-login__hero-logo">
             <img
@@ -66,13 +66,13 @@ export function LoginPage() {
             <span className="sr-only">O.M.E.G.A.</span>
           </h1>
           <p>
-            Inteligencia operacional para visualizar compromisos, anticipar
-            riesgos y coordinar decisiones institucionales en tiempo real.
+            Interpreta eventos operacionales, anticipa riesgos y coordina
+            decisiones institucionales desde un único centro de inteligencia.
           </p>
           <div className="omega-login__capabilities" aria-label="Capacidades del sistema">
-            <span>Monitoreo activo</span>
-            <span>Análisis de riesgo</span>
-            <span>Control institucional</span>
+            <span>Eventos operacionales</span>
+            <span>Interpretación con IA</span>
+            <span>Tablero ejecutivo</span>
           </div>
         </section>
 
@@ -125,7 +125,7 @@ export function LoginPage() {
               <span className="omega-login__role-icon" aria-hidden="true">EO</span>
               <div>
                 <p className={TEXT_LABEL}>Ejecutor operativo</p>
-                <p>Gestión focalizada de compromisos.</p>
+                <p>Registro y seguimiento por área operativa.</p>
               </div>
             </div>
             <label

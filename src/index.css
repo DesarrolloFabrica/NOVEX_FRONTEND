@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./styles/omega-room.css";
+@import "./styles/omega-executive.css";
 
 /* --- Sistema común de zonas y subpaneles del videowall ------------------- */
 
@@ -32,8 +33,8 @@
   --omega-module-width: 7.75rem;
   --omega-module-signal-width: 0.875rem;
   --omega-module-scrollbar-size: 5px;
-  --omega-commitment-row-height: 3rem;
-  --omega-commitment-row-padding-inline: 1rem;
+  --omega-commitment-row-height: 2.65rem;
+  --omega-commitment-row-padding-inline: 0.75rem;
   --omega-commitment-identity-width: 3.5rem;
   --omega-commitment-status-width: 8.5rem;
   --omega-commitment-date-width: 5.25rem;
@@ -1205,7 +1206,8 @@
 }
 
 .omega-room--reference .omega-room-container {
-  padding-block: 0.5rem;
+  padding-block: 0.15rem;
+  padding-inline: 0.35rem;
 }
 
 .omega-room--reference .omega-workstation__left,
@@ -1216,20 +1218,16 @@
   overflow: hidden;
 }
 
+/* Sprint 9 — zonas del cristal sin cajas ERP: continuidad de placa. */
 .omega-room--reference :is(
   .omega-workstation__left,
   .omega-workstation__main,
   .omega-workstation__right
 ) {
-  border: 1px solid rgb(var(--omega-state-rgb) / 0.22);
-  border-radius: 0.75rem;
-  background: rgb(255 255 255 / 0.9);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.95),
-    0 12px 30px -26px rgb(var(--omega-state-rgb) / 0.28);
-  transition:
-    border-color 520ms ease,
-    box-shadow 520ms ease;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .omega-room--reference .omega-workstation__main {

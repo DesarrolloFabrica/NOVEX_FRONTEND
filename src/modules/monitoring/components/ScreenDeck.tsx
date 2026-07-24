@@ -33,7 +33,7 @@ export function ScreenDeck({ header, environment, children }: ScreenDeckProps) {
 
       <CrystalTopRail accentClass={visual.mainRail} />
 
-      <div className="relative overflow-visible pt-2 lg:flex lg:h-full lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden lg:pt-2">
+      <div className="relative overflow-visible pt-1 lg:flex lg:h-full lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden lg:pt-1">
         {children}
       </div>
     </div>

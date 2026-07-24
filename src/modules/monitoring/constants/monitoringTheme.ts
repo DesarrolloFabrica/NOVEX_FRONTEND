@@ -30,18 +30,18 @@ export const ROOM_SURFACE = 'min-h-screen bg-slate-950 text-slate-200'
 export const SCREEN_DECK =
   'text-slate-700 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden'
 
-/** Separación interior del cristal (compacta en desktop para más presencia). */
+/** Separación interior del cristal — máxima ocupación del videowall. */
 export const ROOM_CONTAINER =
-  'omega-room-container px-3 py-3 sm:px-4 sm:py-4 lg:flex lg:h-full lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden lg:px-4 lg:py-3'
+  'omega-room-container px-1.5 py-1 sm:px-2 sm:py-1.5 lg:flex lg:h-full lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden lg:px-2 lg:py-1'
 
 // --- Ritmo y respiración del Cristal ---------------------------------------
 
 /** Padding de estación — zona funcional sobre la placa unificada (sin fresado aislado). */
-export const CRYSTAL_ZONE = 'relative px-4 py-4 sm:px-5 sm:py-5'
+export const CRYSTAL_ZONE = 'relative px-3 py-2.5 sm:px-4 sm:py-3'
 
 /** Estaciones laterales — misma placa, mismo plano. */
 export const CRYSTAL_ZONE_SUPPORT =
-  'relative px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6'
+  'relative px-3 py-2.5 sm:px-3.5 sm:py-3 lg:px-4 lg:py-3.5'
 
 /** Placa de estación de trabajo — losa mecanizada única. */
 export const CRYSTAL_WORKSTATION_PLATE = `relative ${ETCH_WORKSTATION_PLATE}`
@@ -50,7 +50,7 @@ export const CRYSTAL_WORKSTATION_PLATE = `relative ${ETCH_WORKSTATION_PLATE}`
 export const CRYSTAL_WORKSTATION_MAIN = `relative flex min-h-0 min-w-0 flex-col ${WORKSTATION_CHANNEL_VERTICAL}`
 
 /** Cabecera incrustada: compacta en desktop. */
-export const CRYSTAL_HEADER_PAD = 'px-4 py-3.5 sm:px-5 sm:py-4 lg:px-5 lg:py-3'
+export const CRYSTAL_HEADER_PAD = 'px-3 py-2 sm:px-4 sm:py-2.5 lg:px-4 lg:py-2'
 
 /** Respiro tras regla grabada antes del contenido. */
 export const CRYSTAL_ETCH_GAP = 'pt-4 sm:pt-5'
@@ -83,7 +83,7 @@ export const CRYSTAL_STATION_TITLE = 'mb-3'
 
 /** Cabecera de consola tras regla grabada. */
 export const CRYSTAL_CONSOLE_HEADER =
-  'flex flex-wrap items-center justify-between gap-3 px-4 pb-0 pt-5 sm:px-5 lg:px-6'
+  'flex flex-wrap items-center justify-between gap-2 px-3 pb-0 pt-2.5 sm:px-4 lg:px-4'
 
 /** Padding de registro en consola compacta (Sprint 10.1). */
 export const CRYSTAL_DOSSIER_PAD = 'px-4 py-1.5 sm:px-5 sm:py-2'
@@ -175,10 +175,17 @@ export const FOCUS_VISIBLE =
 // --- Tipografía institucional ----------------------------------------------
 
 export const TEXT_LABEL =
-  'omega-section-title text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-600'
+  'omega-section-title text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500'
 export const TEXT_HEADING = 'text-slate-800'
-export const TEXT_MUTED = 'text-slate-600'
-export const TEXT_METRIC = 'font-mono text-slate-800'
+export const TEXT_MUTED = 'text-slate-500'
+export const TEXT_METRIC =
+  'font-mono text-slate-800 tabular-nums tracking-tight'
+/** Métrica hero — domina el tablero ejecutivo. */
+export const TEXT_METRIC_HERO =
+  'font-mono text-3xl font-semibold leading-none tabular-nums tracking-tight text-slate-800 sm:text-4xl'
+/** Métrica de estación — lectura rápida sin caja. */
+export const TEXT_METRIC_STATION =
+  'font-mono text-xl font-semibold leading-none tabular-nums tracking-tight text-slate-800 sm:text-2xl'
 
 // --- Tema por estado del entorno -------------------------------------------
 

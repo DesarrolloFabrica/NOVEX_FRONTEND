@@ -1,8 +1,7 @@
-// Capa: página del Centro de Monitoreo.
-// Responsabilidad: ser el "contenedor" que conecta el estado global (auth y
-// compromisos) con la presentación (MonitoringCenter). Aquí vive el estado
-// LOCAL de la UI (área y compromiso seleccionados) y la DERIVACIÓN de datos
-// mediante los selectores. Los componentes hijos solo reciben props ya listas.
+// Capa: página Legacy — Centro de Monitoreo de compromisos.
+// Conservada como referencia hasta finalizar la migración.
+// Ruta: /legacy-monitoring (ya no es la experiencia principal).
+// Responsabilidad: conectar auth + CommitmentsProvider con MonitoringCenter.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@/modules/auth/hooks/useAuth'

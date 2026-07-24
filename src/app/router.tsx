@@ -1,18 +1,36 @@
 // Capa: app (enrutado).
 // Responsabilidad: declarar las rutas y su protección. Sin lógica de negocio.
+// Experiencia principal: Centro de Inteligencia Operacional.
 
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute'
 import { LoginPage } from '@/pages/LoginPage'
 import { MonitoringPage } from '@/pages/MonitoringPage'
+import { OperationalEventsCenterPage } from '@/pages/OperationalEventsCenterPage'
+import { OperationalIntelligencePage } from '@/pages/OperationalIntelligencePage'
+import { RegisterOperationalEventPage } from '@/pages/RegisterOperationalEventPage'
 
 export const router = createBrowserRouter([
-  // Entrada por defecto: se redirige al Centro de Monitoreo (que está protegido).
-  { path: '/', element: <Navigate to="/monitoring" replace /> },
+  { path: '/', element: <Navigate to="/intelligence" replace /> },
   { path: '/login', element: <LoginPage /> },
+  // Alias legado: el monitoreo de compromisos ya no es la entrada.
+  { path: '/monitoring', element: <Navigate to="/legacy-monitoring" replace /> },
   {
-    // Todas las rutas hijas requieren sesión activa.
     element: <ProtectedRoute />,
-    children: [{ path: '/monitoring', element: <MonitoringPage /> }],
+    children: [
+      { path: '/intelligence', element: <OperationalIntelligencePage /> },
+      {
+        path: '/operational-events',
+        element: <OperationalEventsCenterPage />,
+      },
+      {
+        path: '/operational-events/register',
+        element: <RegisterOperationalEventPage />,
+      },
+      {
+        path: '/legacy-monitoring',
+        element: <MonitoringPage />,
+      },
+    ],
   },
 ])

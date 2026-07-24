@@ -1,0 +1,779 @@
+/* Sprint 9–10 — capa ejecutiva + arquitectura de información. */
+
+.omega-screen-content {
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+}
+
+.omega-screen-content .font-mono,
+.omega-screen-content [class*='font-mono'] {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+/* --- Chrome institucional ------------------------------------------------ */
+
+.omega-product-chrome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  min-height: 2.75rem;
+  padding: 0.4rem 0.85rem 0.35rem;
+  border-bottom: 1px solid rgb(148 163 184 / 0.18);
+}
+
+.omega-product-chrome__brand {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.omega-product-chrome__mark {
+  display: flex;
+  height: 1.65rem;
+  width: 1.65rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.omega-product-chrome__mark img {
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+}
+
+.omega-product-chrome__identity {
+  min-width: 0;
+}
+
+.omega-product-chrome__name {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgb(30 41 59);
+  line-height: 1.1;
+}
+
+.omega-product-chrome__station {
+  margin: 0.15rem 0 0;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.omega-product-nav {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem 0.85rem;
+}
+
+.omega-product-nav__stations {
+  display: flex;
+  align-items: stretch;
+  gap: 0.15rem;
+}
+
+.omega-product-nav__link {
+  position: relative;
+  padding: 0.35rem 0.7rem 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+  text-decoration: none;
+  transition: color 180ms ease;
+}
+
+.omega-product-nav__link:hover {
+  color: rgb(51 65 85);
+}
+
+.omega-product-nav__link--active {
+  color: rgb(15 23 42);
+}
+
+.omega-product-nav__link--active::after {
+  content: '';
+  position: absolute;
+  left: 0.55rem;
+  right: 0.55rem;
+  bottom: 0;
+  height: 1.5px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(var(--omega-state-rgb, 56 189 248) / 0.85),
+    transparent
+  );
+}
+
+.omega-product-nav__session {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding-left: 0.75rem;
+  margin-left: 0.15rem;
+  border-left: 1px solid rgb(148 163 184 / 0.22);
+}
+
+.omega-product-nav__user {
+  max-width: 9rem;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: rgb(71 85 105);
+}
+
+.omega-product-nav__logout {
+  border: 0;
+  background: transparent;
+  padding: 0.2rem 0;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+  cursor: pointer;
+}
+
+.omega-product-nav__logout:hover {
+  color: rgb(30 41 59);
+}
+
+.omega-section-eyebrow {
+  margin: 0 0 0.45rem;
+  font-size: 0.58rem;
+  font-weight: 650;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+}
+
+.omega-exec-chip {
+  display: inline-block;
+  padding: 0;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+/* ========================================================================
+   Sprint 10 — Arquitectura de información: Centro de comando
+   ======================================================================== */
+
+/* Tablero: banda de mando → contexto → atención (dominante) */
+
+.omega-intel-board {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 0%;
+  flex-direction: column;
+  gap: 0.55rem;
+  overflow: hidden;
+  padding: 0.2rem 0.75rem 0.35rem;
+}
+
+.omega-cmd-band {
+  display: grid;
+  flex-shrink: 0;
+  gap: 0.65rem 1.5rem;
+  align-items: end;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid rgb(148 163 184 / 0.14);
+}
+
+@media (min-width: 1100px) {
+  .omega-cmd-band {
+    grid-template-columns: minmax(0, 1.1fr) auto minmax(0, 1fr);
+  }
+}
+
+.omega-cmd-band__status {
+  margin: 0;
+  font-size: clamp(2rem, 3.2vw, 3.25rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  color: rgb(15 23 42);
+}
+
+.omega-cmd-band__risk {
+  text-align: left;
+}
+
+@media (min-width: 1100px) {
+  .omega-cmd-band__risk {
+    text-align: center;
+    padding: 0 0.5rem;
+  }
+}
+
+.omega-cmd-band__risk-value {
+  margin: 0;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: clamp(2.4rem, 4vw, 3.75rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+  color: rgb(15 23 42);
+}
+
+.omega-cmd-band__risk-label {
+  margin: 0.35rem 0 0;
+  font-size: 0.58rem;
+  font-weight: 650;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+}
+
+.omega-cmd-band__satellites {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem 0.85rem;
+}
+
+.omega-cmd-sat__value {
+  margin: 0;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: clamp(1.15rem, 1.6vw, 1.55rem);
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: rgb(30 41 59);
+}
+
+.omega-cmd-sat__label {
+  margin: 0.25rem 0 0;
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(148 163 184);
+}
+
+.omega-cmd-narrative {
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.omega-cmd-narrative summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.58rem;
+  font-weight: 650;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+}
+
+.omega-cmd-narrative summary::-webkit-details-marker {
+  display: none;
+}
+
+.omega-cmd-narrative[open] summary {
+  margin-bottom: 0.35rem;
+}
+
+.omega-cmd-narrative p {
+  margin: 0;
+  max-width: 52rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: rgb(71 85 105);
+}
+
+.omega-cmd-context {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 1.75rem;
+  padding: 0.15rem 0 0.35rem;
+}
+
+.omega-cmd-context__item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+}
+
+.omega-cmd-context__value {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 1.15rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: rgb(15 23 42);
+}
+
+.omega-cmd-context__label {
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(148 163 184);
+}
+
+.omega-cmd-main {
+  display: grid;
+  min-height: 0;
+  flex: 1 1 0%;
+  gap: 1rem 1.75rem;
+  overflow: hidden;
+}
+
+@media (min-width: 1100px) {
+  .omega-cmd-main {
+    grid-template-columns: minmax(0, 1.55fr) minmax(14rem, 0.7fr);
+  }
+}
+
+.omega-intel-priority {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.omega-intel-priority__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-height: 0;
+  flex: 1 1 0%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  overflow: hidden;
+}
+
+.omega-intel-priority__row {
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr) auto;
+  gap: 0.65rem 0.85rem;
+  align-items: center;
+  min-height: 3.1rem;
+  padding: 0.45rem 0.15rem;
+  text-decoration: none;
+  color: inherit;
+  border-top: 1px solid rgb(148 163 184 / 0.1);
+}
+
+.omega-intel-priority__row:first-child {
+  border-top: 0;
+}
+
+.omega-intel-priority__score {
+  margin: 0;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: rgb(15 23 42);
+}
+
+.omega-intel-priority__title {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: rgb(15 23 42);
+}
+
+.omega-intel-priority__meta {
+  margin: 0.2rem 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.7rem;
+  color: rgb(100 116 139);
+}
+
+.omega-intel-priority__where {
+  color: rgb(51 65 85);
+  font-weight: 500;
+}
+
+.omega-intel-priority__row:hover .omega-intel-priority__title {
+  color: rgb(67 56 202);
+}
+
+.omega-intel-change {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  padding-top: 0.15rem;
+}
+
+.omega-intel-change__facts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.omega-intel-change__facts li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.omega-intel-change__facts span {
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(148 163 184);
+}
+
+.omega-intel-change__facts strong {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgb(15 23 42);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Centro de Eventos: expedientes -------------------------------------- */
+
+.omega-events-center .omega-workstation {
+  grid-template-columns: minmax(10.5rem, 0.72fr) minmax(0, 1.35fr) minmax(17rem, 1.15fr);
+}
+
+.omega-dossier {
+  display: block;
+  width: 100%;
+  padding: 0.85rem 0.65rem 0.85rem 0.85rem;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-top: 1px solid rgb(148 163 184 / 0.12);
+}
+
+.omega-dossier:first-child,
+li:first-child > .omega-dossier {
+  border-top: 0;
+}
+
+.omega-dossier[aria-pressed='true'] {
+  background: rgb(99 102 241 / 0.05);
+}
+
+.omega-dossier__grid {
+  display: grid;
+  grid-template-columns: 3.5rem minmax(0, 1fr) auto;
+  gap: 0.65rem 0.9rem;
+  align-items: start;
+}
+
+.omega-dossier__score {
+  margin: 0;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 1.55rem;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: rgb(15 23 42);
+}
+
+.omega-dossier__title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: rgb(15 23 42);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.omega-dossier__where {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgb(51 65 85);
+}
+
+.omega-dossier__meta {
+  margin: 0.2rem 0 0;
+  font-size: 0.68rem;
+  color: rgb(148 163 184);
+}
+
+.omega-dossier__side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  padding-top: 0.1rem;
+}
+
+.omega-dossier__date {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.68rem;
+  color: rgb(100 116 139);
+}
+
+/* --- Ficha ejecutiva (detalle) ------------------------------------------- */
+
+.omega-brief {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.omega-brief__hero {
+  flex-shrink: 0;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgb(148 163 184 / 0.14);
+}
+
+.omega-brief__score {
+  margin: 0;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 2.75rem;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+  color: rgb(15 23 42);
+}
+
+.omega-brief__title {
+  margin: 0.65rem 0 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: rgb(15 23 42);
+}
+
+.omega-brief__where {
+  margin: 0.4rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: rgb(51 65 85);
+}
+
+.omega-brief__summary {
+  margin: 0.65rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: rgb(71 85 105);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.omega-brief__impacts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  flex-shrink: 0;
+  margin-top: 0.85rem;
+}
+
+.omega-brief__body {
+  min-height: 0;
+  flex: 1 1 0%;
+  margin-top: 0.85rem;
+  overflow-y: auto;
+}
+
+.omega-brief details {
+  margin: 0 0 0.55rem;
+}
+
+.omega-brief details summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.58rem;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+  padding: 0.35rem 0;
+}
+
+.omega-brief details summary::-webkit-details-marker {
+  display: none;
+}
+
+.omega-brief details[open] summary {
+  margin-bottom: 0.35rem;
+}
+
+.omega-brief details p,
+.omega-brief details li {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: rgb(71 85 105);
+}
+
+/* --- Wizard estación de trabajo ------------------------------------------ */
+
+.omega-wizard-station {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 0%;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.omega-wizard-station__rail {
+  flex-shrink: 0;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid rgb(148 163 184 / 0.14);
+}
+
+.omega-capture-desk {
+  display: grid;
+  gap: 1.25rem 2rem;
+  min-height: 0;
+}
+
+@media (min-width: 1024px) {
+  .omega-capture-desk {
+    grid-template-columns: minmax(0, 1.35fr) minmax(14rem, 0.85fr);
+    align-items: start;
+  }
+}
+
+.omega-capture-desk__primary {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.omega-capture-desk__context {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.omega-wizard-steps__rail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+}
+
+.omega-wizard-steps__step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: rgb(148 163 184);
+}
+
+.omega-wizard-steps__step--active {
+  color: rgb(15 23 42);
+  font-weight: 600;
+}
+
+.omega-wizard-steps__step--done {
+  color: rgb(71 85 105);
+}
+
+.omega-wizard-steps__index {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: inherit;
+}
+
+.omega-exec-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem 0.65rem;
+}
+
+.omega-exec-stat__value {
+  margin: 0;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 1.55rem;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: rgb(15 23 42);
+}
+
+.omega-exec-stat__label {
+  margin: 0.28rem 0 0;
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(148 163 184);
+}
+
+.omega-exec-metric {
+  padding: 0.15rem 0;
+}
+
+.omega-exec-metric__value {
+  margin: 0;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: rgb(15 23 42);
+}
+
+.omega-exec-metric__label {
+  margin: 0.2rem 0 0;
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(148 163 184);
+}
+
+@media (max-width: 1023px) {
+  .omega-intel-board {
+    overflow-y: auto;
+  }
+
+  .omega-intel-priority__list {
+    overflow: visible;
+  }
+
+  .omega-events-center .omega-workstation {
+    grid-template-columns: none;
+  }
+}
