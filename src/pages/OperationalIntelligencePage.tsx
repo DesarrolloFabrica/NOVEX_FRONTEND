@@ -21,7 +21,7 @@ export function OperationalIntelligencePage() {
   )
 
   return (
-    <OmegaRoom environment={environment}>
+    <OmegaRoom environment={environment} scene="intelligence">
       <OmegaFrame environment={environment}>
         <MainScreen environment={environment}>
           <ScreenDeck

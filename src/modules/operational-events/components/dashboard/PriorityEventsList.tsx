@@ -26,6 +26,7 @@ export function PriorityEventsList({ events }: PriorityEventsListProps) {
         </h3>
         <Link
           to="/operational-events"
+          viewTransition
           className={`text-[0.58rem] font-semibold uppercase tracking-[0.14em] text-slate-500 hover:text-indigo-700 ${FOCUS_VISIBLE}`}
         >
           Expedientes
@@ -33,7 +34,9 @@ export function PriorityEventsList({ events }: PriorityEventsListProps) {
       </div>
 
       {events.length === 0 ? (
-        <p className="py-3 text-xs text-slate-500">Sin prioridades activas.</p>
+        <p className="omega-empty-signal py-3 text-xs text-slate-500">
+          Sin prioridades activas.
+        </p>
       ) : (
         <ul className="omega-intel-priority__list">
           {events.map((event) => {
@@ -46,6 +49,7 @@ export function PriorityEventsList({ events }: PriorityEventsListProps) {
               <li key={event.id}>
                 <Link
                   to={`/operational-events?event=${encodeURIComponent(event.id)}`}
+                  viewTransition
                   className={`omega-intel-priority__row ${FOCUS_VISIBLE}`}
                 >
                   <p className="omega-intel-priority__score">

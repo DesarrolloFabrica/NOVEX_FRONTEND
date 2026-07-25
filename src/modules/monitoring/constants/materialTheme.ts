@@ -188,4 +188,4 @@ export const WORKSTATION_MODULE_CONSOLE_CHANNEL =
 
 /** Pulso de carga: surco grabado, no bloque de relleno. */
 export const CRYSTAL_SKELETON_PULSE =
-  'animate-pulse shadow-[inset_0_1px_0_0_rgba(203,213,225,0.1)]'
+  'omega-scan-skeleton__bar shadow-[inset_0_1px_0_0_rgba(203,213,225,0.1)]'

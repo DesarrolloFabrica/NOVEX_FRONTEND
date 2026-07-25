@@ -94,7 +94,7 @@ function ConsoleListViewport({
 function ConsoleSkeleton() {
   return (
     <ul
-      className={`${CRYSTAL_LIST_PAD} ${CRYSTAL_STRUCTURAL_DIVIDE} ${CRYSTAL_CONSOLE_READING_FIELD}`}
+      className={`omega-scan-skeleton ${CRYSTAL_LIST_PAD} ${CRYSTAL_STRUCTURAL_DIVIDE} ${CRYSTAL_CONSOLE_READING_FIELD}`}
       aria-hidden="true"
     >
       {Array.from({ length: 8 }).map((_, index) => (
@@ -115,12 +115,18 @@ function ConsoleSkeleton() {
 function ConsoleNotice({
   message,
   role,
+  state = 'empty',
 }: {
   message: string
   role?: 'alert'
+  state?: 'empty' | 'error'
 }) {
   return (
-    <p role={role} className="px-5 py-8 text-center text-sm text-slate-600">
+    <p
+      role={role}
+      className="omega-console-notice"
+      data-state={role === 'alert' ? 'error' : state}
+    >
       {message}
     </p>
   )
@@ -267,6 +273,7 @@ export function EvaluationConsole({
         <ConsoleListViewport label="Lista de compromisos">
           <ConsoleNotice
             role="alert"
+            state="error"
             message="No fue posible cargar los compromisos. Reinicia los datos o intenta nuevamente."
           />
         </ConsoleListViewport>

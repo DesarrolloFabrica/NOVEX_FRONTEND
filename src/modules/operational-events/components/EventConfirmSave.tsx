@@ -61,12 +61,14 @@ export function EventConfirmSave({
           <div className="flex flex-wrap gap-4 text-[0.7rem] font-semibold uppercase tracking-[0.12em]">
             <Link
               to="/intelligence"
+              viewTransition
               className={`text-slate-500 hover:text-slate-800 ${FOCUS_VISIBLE}`}
             >
               Tablero
             </Link>
             <Link
               to="/operational-events"
+              viewTransition
               className={`text-indigo-700 hover:text-indigo-900 ${FOCUS_VISIBLE}`}
             >
               Eventos

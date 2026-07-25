@@ -27,7 +27,7 @@ export function OperationalEventsCenterPage() {
   )
 
   return (
-    <OmegaRoom environment={environment}>
+    <OmegaRoom environment={environment} scene="events">
       <OmegaFrame environment={environment}>
         <MainScreen environment={environment}>
           <ScreenDeck

@@ -190,7 +190,7 @@ export function MonitoringPage() {
   ])
 
   return (
-    <OmegaRoom environment={areaHealth.environment}>
+    <OmegaRoom environment={areaHealth.environment} scene="commitments">
       <OmegaFrame environment={areaHealth.environment}>
         <MainScreen environment={areaHealth.environment}>
           <MonitoringCenter

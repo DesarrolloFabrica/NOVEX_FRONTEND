@@ -61,9 +61,23 @@ function ConsoleListViewport({
   )
 }
 
-function ConsoleNotice({ message }: { message: string }) {
+function ConsoleNotice({
+  message,
+  state = 'empty',
+}: {
+  message: string
+  state?: 'loading' | 'empty' | 'error'
+}) {
   return (
-    <p className="px-5 py-8 text-center text-sm text-slate-600">{message}</p>
+    <p
+      className="omega-console-notice"
+      data-state={state}
+      role={state === 'error' ? 'alert' : state === 'loading' ? 'status' : undefined}
+      aria-live={state === 'loading' ? 'polite' : undefined}
+      aria-busy={state === 'loading' ? true : undefined}
+    >
+      {message}
+    </p>
   )
 }
 
@@ -204,11 +218,14 @@ export function EventsConsole({
 
       {loading ? (
         <ConsoleListViewport label="Lista de eventos">
-          <ConsoleNotice message="Cargando eventos operacionales…" />
+          <ConsoleNotice
+            state="loading"
+            message="Cargando eventos operacionales…"
+          />
         </ConsoleListViewport>
       ) : error ? (
         <ConsoleListViewport label="Lista de eventos">
-          <ConsoleNotice message={error} />
+          <ConsoleNotice state="error" message={error} />
         </ConsoleListViewport>
       ) : events.length === 0 ? (
         <ConsoleListViewport label="Lista de eventos">

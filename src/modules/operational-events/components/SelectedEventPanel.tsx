@@ -21,11 +21,11 @@ export function SelectedEventPanel({ event }: SelectedEventPanelProps) {
   if (!event) {
     return (
       <aside
-        className={`operations-intelligence-panel omega-brief relative ${INTEL_ZONE} ${CRYSTAL_ZONE_SUPPORT}`}
+        className={`operations-intelligence-panel omega-brief is-empty relative ${INTEL_ZONE} ${CRYSTAL_ZONE_SUPPORT}`}
       >
         <p className="omega-section-eyebrow">Ficha</p>
         <div className="flex min-h-0 flex-1 items-center justify-center">
-          <p className="text-center text-[0.72rem] text-slate-500">
+          <p className="omega-empty-signal text-center text-[0.72rem] text-slate-500">
             Seleccione un expediente.
           </p>
         </div>

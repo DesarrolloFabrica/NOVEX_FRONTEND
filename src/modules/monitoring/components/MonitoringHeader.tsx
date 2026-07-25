@@ -6,20 +6,9 @@ import { Link } from 'react-router-dom'
 import type { User } from '@/modules/auth/types/user.types'
 import type { EnvironmentStatus } from '@/modules/monitoring/types/monitoring.types'
 import {
-  CRYSTAL_HEADER_PAD,
   ENVIRONMENT_THEME,
   FOCUS_VISIBLE,
-  HEADER_SEPARATOR,
 } from '@/modules/monitoring/constants/monitoringTheme'
-import {
-  HEADER_ACTION,
-  HEADER_ACTION_QUIET,
-  HEADER_BRAND,
-  HEADER_SESSION_NAME,
-  HEADER_SESSION_ROLE,
-  HEADER_SUBTITLE,
-  HEADER_ZONE,
-} from '@/modules/monitoring/constants/visualHierarchy'
 
 interface MonitoringHeaderProps {
   user: User | null
@@ -38,55 +27,51 @@ export function MonitoringHeader({
   const theme = ENVIRONMENT_THEME[environment]
 
   return (
-    <header
-      className={`flex items-center justify-between gap-4 ${CRYSTAL_HEADER_PAD} ${HEADER_ZONE}`}
-    >
-      <div className="flex items-center gap-3">
-        <h1 className={`omega-header-brand ${HEADER_BRAND}`}>
-          <span className="omega-brand-icon" aria-hidden="true">
-            <img src="/capas/Logoprovisional.png" alt="" draggable={false} />
-          </span>
-          <span>O.M.E.G.A.</span>
+    <header className="omega-os-topbar omega-os-topbar--legacy">
+      <div className="omega-os-topbar__heading">
+        <p className="omega-os-topbar__eyebrow">
+          Centro de Inteligencia Operacional
+        </p>
+        <h1>
+          Monitoreo de <span>compromisos</span>
         </h1>
-        <span aria-hidden="true" className={HEADER_SEPARATOR} />
-        <span className={`hidden sm:inline ${HEADER_SUBTITLE}`}>
-          Legacy · Monitoreo de compromisos
-        </span>
-        <span
-          className={`hidden items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-medium opacity-92 transition-colors duration-500 md:inline-flex ${theme.badge}`}
-        >
-          <span
-            className={`h-1.5 w-1.5 rounded-full transition-colors duration-500 ${theme.dot}`}
-          />
+        <p className="omega-os-topbar__route">
+          <span aria-hidden="true" />
           Sala · {theme.label}
-        </span>
+        </p>
       </div>
 
-      <div className="flex items-center gap-2.5">
+      <div className="omega-os-topbar__legacy-actions">
         <Link
           to="/intelligence"
-          className={`rounded-lg px-2.5 py-1.5 ${HEADER_ACTION_QUIET} ${FOCUS_VISIBLE}`}
+          viewTransition
+          className={`omega-os-topbar__quiet-action ${FOCUS_VISIBLE}`}
         >
-          Ir a Inteligencia
+          Inteligencia
         </Link>
-        <div className="hidden text-right sm:block">
-          <p className={HEADER_SESSION_NAME}>{user?.name ?? '—'}</p>
-          <p className={HEADER_SESSION_ROLE}>{user?.role ?? '—'}</p>
+        <div className="omega-os-topbar__profile omega-os-topbar__profile--compact">
+          <span className="omega-os-topbar__avatar" aria-hidden="true">
+            {(user?.name ?? 'O').slice(0, 1)}
+          </span>
+          <div>
+            <strong>{user?.name ?? 'Operador'}</strong>
+            <small>{user?.role ?? 'sesión'}</small>
+          </div>
         </div>
         <button
           type="button"
           onClick={onReset}
           title="Restaura los compromisos mock (solo desarrollo)"
-          className={`rounded-lg px-2.5 py-1.5 ${HEADER_ACTION_QUIET} ${FOCUS_VISIBLE}`}
+          className={`omega-os-topbar__quiet-action ${FOCUS_VISIBLE}`}
         >
           Reiniciar datos
         </button>
         <button
           type="button"
           onClick={onLogout}
-          className={`rounded-lg ${HEADER_ACTION} ${FOCUS_VISIBLE}`}
+          className={`omega-os-topbar__danger-action ${FOCUS_VISIBLE}`}
         >
-          Cerrar sesión
+          Salir
         </button>
       </div>
     </header>

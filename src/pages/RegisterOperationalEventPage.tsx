@@ -8,7 +8,7 @@ import { OmegaProductHeader } from '@/shared/components/OmegaProductHeader'
 
 export function RegisterOperationalEventPage() {
   return (
-    <OmegaRoom environment="pending">
+    <OmegaRoom environment="pending" scene="register">
       <OmegaFrame environment="pending">
         <MainScreen environment="pending">
           <ScreenDeck

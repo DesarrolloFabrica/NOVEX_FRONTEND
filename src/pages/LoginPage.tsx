@@ -57,12 +57,11 @@ export function LoginPage() {
             Centro de Inteligencia Operacional
           </div>
           <h1 className="omega-login__hero-logo">
-            <img
-              src="/capas/Logoprovisional.png"
-              alt=""
-              draggable={false}
-              aria-hidden="true"
-            />
+            <span aria-hidden="true">
+              Inteligencia
+              <br />
+              operacional
+            </span>
             <span className="sr-only">O.M.E.G.A.</span>
           </h1>
           <p>
@@ -90,7 +89,7 @@ export function LoginPage() {
           </header>
 
           {error && (
-            <p className="omega-login__error">
+            <p className="omega-login__error" role="alert">
               {error}
             </p>
           )}
@@ -106,6 +105,7 @@ export function LoginPage() {
             <button
               type="button"
               disabled={loading}
+              aria-busy={loading}
               onClick={() => void loginAsSupervisor()}
               className={`omega-login__primary-action ${FOCUS_VISIBLE}`}
             >
@@ -149,6 +149,7 @@ export function LoginPage() {
             <button
               type="button"
               disabled={loading || !areaId}
+              aria-busy={loading}
               onClick={() => void loginAsEjecutor(areaId)}
               className={`omega-login__secondary-action ${FOCUS_VISIBLE}`}
             >
@@ -157,7 +158,11 @@ export function LoginPage() {
             </button>
           </div>
 
-          <footer className="omega-login__panel-footer">
+          <footer
+            className="omega-login__panel-footer"
+            aria-live="polite"
+            data-state={loading ? 'loading' : 'ready'}
+          >
             <span aria-hidden="true" />
             {loading ? 'Estableciendo enlace seguro…' : 'Entorno seguro de demostración'}
           </footer>

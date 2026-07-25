@@ -178,6 +178,134 @@
   border-radius: 0 !important;
 }
 
+/* Proyección operativa sobre el escenario oscuro. */
+.omega-room--reference .omega-product-chrome {
+  margin-bottom: 24px;
+  border-color: rgb(120 170 255 / 0.08);
+  padding-bottom: 24px;
+  background:
+    linear-gradient(90deg, transparent, rgb(120 170 255 / 0.08) 12% 88%, transparent)
+    center bottom / 100% 1px no-repeat;
+  backdrop-filter: none;
+}
+
+.omega-room--reference .omega-product-chrome__mark {
+  filter:
+    drop-shadow(0 0 6px rgb(56 189 248 / 0.36))
+    drop-shadow(0 0 14px rgb(139 92 246 / 0.18));
+}
+
+.omega-room--reference .omega-product-chrome__name,
+.omega-room--reference .omega-product-nav__link--active {
+  color: rgb(224 242 254);
+  text-shadow: 0 0 14px rgb(56 189 248 / 0.2);
+}
+
+.omega-room--reference .omega-product-chrome__station,
+.omega-room--reference .omega-section-title,
+.omega-room--reference .omega-section-eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgb(180 205 255 / 0.72);
+}
+
+.omega-room--reference .omega-product-nav__link,
+.omega-room--reference .omega-product-nav__user,
+.omega-room--reference .omega-product-nav__logout {
+  color: rgb(148 163 184);
+}
+
+.omega-room--reference .omega-product-nav__link:hover,
+.omega-room--reference .omega-product-nav__logout:hover {
+  color: rgb(125 211 252);
+  text-shadow: 0 0 12px rgb(56 189 248 / 0.42);
+}
+
+.omega-room--reference .omega-product-nav__session {
+  border-color: rgb(96 165 250 / 0.12);
+}
+
+.omega-room--reference .omega-product-nav__link--active::after {
+  box-shadow:
+    0 0 8px rgb(56 189 248 / 0.58),
+    0 0 16px rgb(139 92 246 / 0.24);
+}
+
+.omega-room--reference .omega-cmd-band,
+.omega-room--reference .omega-cmd-context {
+  border-color: rgb(110 170 255 / 0.1);
+}
+
+.omega-room--reference .omega-cmd-band__status,
+.omega-room--reference .omega-cmd-band__risk-value,
+.omega-room--reference .omega-cmd-sat__value,
+.omega-room--reference .omega-cmd-context__value,
+.omega-room--reference .omega-intel-priority__score,
+.omega-room--reference .omega-intel-priority__title,
+.omega-room--reference .omega-intel-change__facts strong,
+.omega-room--reference .omega-dossier__score,
+.omega-room--reference .omega-dossier__title {
+  color: rgb(224 242 254);
+}
+
+.omega-room--reference .omega-section-eyebrow,
+.omega-room--reference .omega-cmd-band__risk-label,
+.omega-room--reference .omega-cmd-sat__label,
+.omega-room--reference .omega-cmd-narrative summary,
+.omega-room--reference .omega-cmd-context__label,
+.omega-room--reference .omega-intel-priority__meta,
+.omega-room--reference .omega-intel-change__facts span,
+.omega-room--reference .omega-dossier__meta,
+.omega-room--reference .omega-dossier__date {
+  color: rgb(148 163 184);
+}
+
+.omega-room--reference .omega-cmd-narrative p,
+.omega-room--reference .omega-intel-priority__where,
+.omega-room--reference .omega-dossier__where {
+  color: rgb(186 230 253 / 0.72);
+}
+
+.omega-room--reference .omega-cmd-main > *,
+.omega-room--reference .omega-events-center .omega-workstation > *,
+.omega-room--reference .omega-wizard-station {
+  border: 1px solid rgb(110 170 255 / 0.08);
+  border-radius: clamp(18px, 1.5vw, 28px);
+  background: rgb(10 15 28 / 0.18);
+  box-shadow:
+    0 0 40px rgb(90 140 255 / 0.05),
+    inset 0 1px 0 rgb(147 197 253 / 0.035);
+  backdrop-filter: blur(10px);
+}
+
+.omega-room--reference .omega-intel-priority__row,
+.omega-room--reference .omega-dossier,
+.omega-room--reference .omega-brief__hero {
+  border-color: rgb(110 170 255 / 0.08);
+}
+
+.omega-room--reference .omega-intel-priority__row,
+.omega-room--reference .omega-dossier {
+  transition:
+    background-color 400ms ease,
+    border-color 400ms ease,
+    transform 400ms ease;
+}
+
+.omega-room--reference .omega-intel-priority__row:hover,
+.omega-room--reference .omega-dossier:hover,
+.omega-room--reference .omega-dossier[aria-pressed='true'] {
+  border-color: rgb(56 189 248 / 0.18);
+  background: linear-gradient(90deg, rgb(56 189 248 / 0.08), rgb(139 92 246 / 0.035));
+  transform: translateY(-1px);
+}
+
+.omega-room--reference .omega-intel-priority__row:hover .omega-intel-priority__title {
+  color: rgb(125 211 252);
+}
+
 /* ========================================================================
    Sprint 10 — Arquitectura de información: Centro de comando
    ======================================================================== */

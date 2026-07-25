@@ -2,7 +2,6 @@
 // Expone la estructura de escenario (Sala -> Marco -> Pantalla) y su tema.
 
 export { OmegaRoom } from '@/modules/room/components/OmegaRoom'
-export { RoomCityLayer } from '@/modules/room/components/RoomCityLayer'
 export { OmegaFrame } from '@/modules/room/components/OmegaFrame'
 export { MainScreen } from '@/modules/room/components/MainScreen'
 /** Reservado para assets Blender futuros — no montado en la escena actual. */

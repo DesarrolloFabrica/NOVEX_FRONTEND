@@ -1,7 +1,7 @@
 // Componente: tablero ejecutivo — arquitectura de mando (Sprint 10).
 // Solo consume DashboardMetrics + eventos priorizados. Sin lógica nueva.
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, type CSSProperties } from 'react'
 import {
   CRYSTAL_WORKSTATION_PLATE,
   ROOM_CONTAINER,
@@ -53,16 +53,69 @@ export function OperationalIntelligenceDashboard({
         className={`omega-workstation ${PLANE_ETCHED} ${CRYSTAL_WORKSTATION_PLATE} relative flex min-h-0 flex-1 flex-col overflow-hidden`}
       >
         {loading ? (
-          <p className="py-10 text-center text-sm text-slate-500">
+          <p
+            className="omega-ai-state omega-ai-state--loading"
+            role="status"
+            aria-live="polite"
+            aria-busy="true"
+          >
             Cargando inteligencia operacional…
           </p>
         ) : error ? (
-          <p role="alert" className="py-10 text-center text-sm text-red-700">
+          <p
+            role="alert"
+            className="omega-ai-state omega-ai-state--error"
+          >
             {error}
           </p>
         ) : (
-          <div className="omega-intel-board">
+          <div
+            className="omega-intel-board"
+            style={
+              {
+                '--omega-risk-level': `${Math.min(100, metrics.averageRiskScore)}%`,
+              } as CSSProperties
+            }
+          >
             <OperationalStateHero metrics={metrics} />
+            <section
+              className="omega-orbital-hero"
+              aria-label="Gemelo digital de inteligencia operacional"
+            >
+              <div className="omega-orbital-hero__visual" aria-hidden="true">
+                <img
+                  src="/assests/scenes/omega-city-intelligence.jpg"
+                  alt=""
+                  draggable={false}
+                />
+                <span className="omega-orbital-hero__scan" />
+                <span className="omega-orbital-hero__reticle omega-orbital-hero__reticle--one" />
+                <span className="omega-orbital-hero__reticle omega-orbital-hero__reticle--two" />
+              </div>
+              <div className="omega-orbital-node omega-orbital-node--primary">
+                <span aria-hidden="true" />
+                <div>
+                  <small>Concentración activa</small>
+                  <strong>{metrics.dominantAreaName ?? 'Cobertura global'}</strong>
+                </div>
+              </div>
+              <div className="omega-orbital-node omega-orbital-node--secondary">
+                <span aria-hidden="true" />
+                <div>
+                  <small>Vector dominante</small>
+                  <strong>{metrics.dominantCategoryName ?? 'Operación estable'}</strong>
+                </div>
+              </div>
+              <div className="omega-orbital-hero__coverage">
+                <div>
+                  <small>Índice de exposición operacional</small>
+                  <strong>{metrics.averageRiskScore}%</strong>
+                </div>
+                <span className="omega-orbital-hero__track">
+                  <span />
+                </span>
+              </div>
+            </section>
             <OperationalContextStrip metrics={metrics} />
             <div className="omega-cmd-main">
               <PriorityEventsList events={priorityEvents} />
