@@ -91,7 +91,7 @@ describe('buildOperationalIntelligence', () => {
     expect(metrics.criticalCount).toBe(0)
     expect(metrics.environment).toBe('pending')
     expect(metrics.trend).toBe('insufficient_data')
-    expect(metrics.executiveNarrative).toContain('No hay eventos operacionales')
+    expect(metrics.executiveNarrative).toContain('No hay situaciones operacionales')
     expect(metrics.generatedAt).toBe('2026-07-24T00:00:00.000Z')
   })
 

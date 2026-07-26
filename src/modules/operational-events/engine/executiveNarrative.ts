@@ -52,7 +52,7 @@ type NarrativeInput = Pick<
  */
 export function buildExecutiveNarrative(input: NarrativeInput): string {
   if (input.totalEvents === 0) {
-    return 'No hay eventos operacionales registrados en este periodo. El tablero permanece en espera de nueva información.'
+    return 'No hay situaciones operacionales registradas en este periodo. El tablero permanece en espera de nueva información.'
   }
 
   const dominantArea = input.dominantAreaName ?? 'varias áreas operativas'
@@ -68,12 +68,12 @@ export function buildExecutiveNarrative(input: NarrativeInput): string {
 
   const criticalClause =
     input.criticalCount > 0
-      ? ` Se identifican ${input.criticalCount} evento${input.criticalCount === 1 ? '' : 's'} crítico${input.criticalCount === 1 ? '' : 's'} activo${input.criticalCount === 1 ? '' : 's'} que requieren atención prioritaria.`
-      : ' No se registran eventos críticos activos en el recorte actual.'
+      ? ` Se identifican ${input.criticalCount} situación${input.criticalCount === 1 ? '' : 'es'} crítica${input.criticalCount === 1 ? '' : 's'} activa${input.criticalCount === 1 ? '' : 's'} que requieren atención prioritaria.`
+      : ' No se registran situaciones críticas activas en el recorte actual.'
 
   return (
     `Durante este periodo la mayor concentración de incidentes corresponde al área ${dominantArea}` +
-    ` (${input.openCount} evento${input.openCount === 1 ? '' : 's'} activo${input.openCount === 1 ? '' : 's'}),` +
+    ` (${input.openCount} situación${input.openCount === 1 ? '' : 'es'} activa${input.openCount === 1 ? '' : 's'}),` +
     ` con categoría predominante «${dominantCategory}»` +
     ` y un impacto predominante sobre ${impactLabel}.` +
     ` El nivel de riesgo operacional es ${riskLabel} (índice ${input.averageRiskScore}).` +

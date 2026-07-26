@@ -55,7 +55,7 @@ export async function updateCommitmentStatusRequest(
 /** Resultado de registrar una calificación en borrador. */
 export interface CommitmentDraftStatusUpdate {
   id: string
-  draftStatus: Extract<CommitmentStatus, 'Cumplido' | 'Incumplido'>
+  draftStatus: CommitmentStatus
 }
 
 /**
@@ -64,7 +64,7 @@ export interface CommitmentDraftStatusUpdate {
  */
 export async function updateCommitmentDraftStatusRequest(
   commitmentId: string,
-  draftStatus: Extract<CommitmentStatus, 'Cumplido' | 'Incumplido'>,
+  draftStatus: CommitmentStatus,
 ): Promise<CommitmentDraftStatusUpdate> {
   await delay(150)
   return { id: commitmentId, draftStatus }

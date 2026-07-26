@@ -13,7 +13,7 @@ export function RegisterOperationalEventPage() {
         <MainScreen environment="pending">
           <ScreenDeck
             environment="pending"
-            header={<OmegaProductHeader title="Registro" />}
+            header={<OmegaProductHeader title="Registrar situación" />}
           >
             <OperationalEventWizard />
           </ScreenDeck>

@@ -1,13 +1,10 @@
-// Componente: riel de pasos del wizard de captura operacional.
-// Sprint 9: índice tipográfico — sin pastillas ni anillos.
+// Componente: riel de pasos del wizard (captura → interpretación).
 
-export type WizardStepId = 1 | 2 | 3 | 4
+export type WizardStepId = 1 | 2
 
 const STEPS: Array<{ id: WizardStepId; label: string }> = [
   { id: 1, label: 'Registrar' },
-  { id: 2, label: 'Analizar' },
-  { id: 3, label: 'Interpretación' },
-  { id: 4, label: 'Confirmar' },
+  { id: 2, label: 'Interpretar' },
 ]
 
 interface WizardStepRailProps {

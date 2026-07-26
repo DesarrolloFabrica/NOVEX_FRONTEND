@@ -68,7 +68,7 @@ export function buildOperationalEventFromCapture(input: {
           at: reportedAt,
           byUserId: input.actor.id,
           byUserName: input.actor.name,
-          description: `Evento registrado por ${input.actor.name}.`,
+          description: `Situación registrada por ${input.actor.name}.`,
         },
         {
           id: `tl-${input.eventId}-2`,

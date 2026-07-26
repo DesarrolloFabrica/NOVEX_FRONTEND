@@ -36,7 +36,7 @@ export function EventAnalyzeStep({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <p className={TEXT_LABEL}>Evento</p>
+          <p className={TEXT_LABEL}>Situación</p>
           <p className="mt-1 text-sm font-medium text-slate-800">{draft.title}</p>
         </div>
         <div>

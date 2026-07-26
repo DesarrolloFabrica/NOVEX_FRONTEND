@@ -1,21 +1,9 @@
-// Componente: consola central del Centro de Eventos (lista + filtros).
+// Componente: consola central — tabla y filtros de situaciones.
 
-import { useMemo, type ReactNode } from 'react'
-import {
-  CONSOLE_LIST_VIEWPORT,
-  CRYSTAL_CONSOLE_HEADER,
-  CRYSTAL_CONSOLE_ZONE,
-  FOCUS_VISIBLE,
-} from '@/modules/monitoring/constants/monitoringTheme'
-import {
-  CONSOLE_CONTROLS,
-  CONSOLE_FILTER,
-  CONSOLE_META,
-  CONSOLE_ZONE,
-} from '@/modules/monitoring/constants/visualHierarchy'
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { FOCUS_VISIBLE } from '@/modules/monitoring/constants/monitoringTheme'
 import { OperationalEventRow } from '@/modules/operational-events/components/OperationalEventRow'
-import { INCIDENT_CATEGORIES } from '@/modules/operational-events/data/incident-categories.mock'
-import { OPERATIONAL_AREAS } from '@/modules/operational-events/data/operational-areas.mock'
 import type { OperationalEvent } from '@/modules/operational-events/types/operational-event.types'
 import {
   filterAndSortEvents,
@@ -28,9 +16,7 @@ import {
   EVENT_STATUS_LABEL,
   RISK_LEVEL_LABEL,
 } from '@/modules/operational-events/components/eventPresentation'
-
-const SELECT_CLASSES = `appearance-none bg-transparent px-1.5 py-0.5 ${CONSOLE_FILTER} transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-400/35`
-const INPUT_CLASSES = `min-w-[9rem] flex-1 border-0 bg-transparent px-1 py-1 text-xs text-slate-800 shadow-[inset_0_-1px_0_0_rgba(100,116,139,0.28)] placeholder:text-slate-500/70 ${FOCUS_VISIBLE}`
+import { OmegaIcon } from '@/shared/components/OmegaIcon'
 
 interface EventsConsoleProps {
   events: OperationalEvent[]
@@ -42,24 +28,7 @@ interface EventsConsoleProps {
   onSelectEvent: (eventId: string) => void
 }
 
-function ConsoleListViewport({
-  children,
-  label,
-}: {
-  children: ReactNode
-  label: string
-}) {
-  return (
-    <div
-      className={CONSOLE_LIST_VIEWPORT}
-      role="region"
-      aria-label={label}
-      tabIndex={0}
-    >
-      {children}
-    </div>
-  )
-}
+const PAGE_SIZE_OPTIONS = [8, 15, 25] as const
 
 function ConsoleNotice({
   message,
@@ -70,7 +39,7 @@ function ConsoleNotice({
 }) {
   return (
     <p
-      className="omega-console-notice"
+      className="omega-events-table__notice"
       data-state={state}
       role={state === 'error' ? 'alert' : state === 'loading' ? 'status' : undefined}
       aria-live={state === 'loading' ? 'polite' : undefined}
@@ -95,26 +64,81 @@ export function EventsConsole({
     [events, query],
   )
 
-  return (
-    <section
-      className={`omega-events-console min-h-0 flex flex-col overflow-hidden pb-2 lg:min-h-0 lg:flex-1 lg:pb-2 ${CONSOLE_ZONE} ${CRYSTAL_CONSOLE_ZONE}`}
-    >
-      <header className={`mb-1 shrink-0 ${CRYSTAL_CONSOLE_HEADER}`}>
-        <h2 className="omega-section-eyebrow mb-0">Expedientes</h2>
+  const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTIONS[0])
+  const [page, setPage] = useState(1)
 
-        <div
-          className={`omega-console-controls flex flex-wrap items-center gap-1.5 ${CONSOLE_CONTROLS}`}
-        >
-          <input
-            type="search"
-            aria-label="Buscar eventos"
-            placeholder="Buscar…"
-            value={query.search}
-            onChange={(event) =>
-              onQueryChange({ ...query, search: event.target.value })
-            }
-            className={INPUT_CLASSES}
-          />
+  const pageCount = Math.max(1, Math.ceil(visible.length / pageSize))
+
+  // Mantiene la página dentro de rango cuando cambian filtros o tamaño.
+  useEffect(() => {
+    setPage((current) => Math.min(current, pageCount))
+  }, [pageCount])
+
+  useEffect(() => {
+    setPage(1)
+  }, [query.search, query.status, query.risk, query.sort, pageSize])
+
+  const paged = useMemo(() => {
+    const start = (page - 1) * pageSize
+    return visible.slice(start, start + pageSize)
+  }, [visible, page, pageSize])
+
+  const rangeStart = visible.length === 0 ? 0 : (page - 1) * pageSize + 1
+  const rangeEnd = Math.min(page * pageSize, visible.length)
+
+  const notice = loading
+    ? { state: 'loading' as const, message: 'Cargando situaciones…' }
+    : error
+      ? { state: 'error' as const, message: error }
+      : visible.length === 0 && events.length > 0
+        ? {
+            state: 'empty' as const,
+            message:
+              'Ninguna situación coincide con los filtros. Ajuste la búsqueda para continuar.',
+          }
+        : null
+
+  return (
+    <section className="omega-events-table" aria-labelledby="events-table-heading">
+      <header className="omega-events-table__header">
+        <div className="omega-events-table__heading">
+          <div className="omega-events-table__title-row">
+            <h2 id="events-table-heading">Listado de situaciones</h2>
+            <span className="omega-table-help">
+              <button
+                type="button"
+                className="omega-table-help__trigger"
+                aria-label="Qué muestra esta tabla"
+                aria-describedby="events-table-help-tip"
+              >
+                <OmegaIcon name="help" size={11} strokeWidth={1.6} />
+              </button>
+              <span
+                id="events-table-help-tip"
+                className="omega-table-help__tip"
+                role="tooltip"
+              >
+                Cada fila es una situación registrada: riesgo, área, categoría,
+                estado y fecha. Seleccione una para abrir su análisis detallado.
+              </span>
+            </span>
+          </div>
+          <p>Seleccione una fila para abrir el análisis completo.</p>
+        </div>
+
+        <div className="omega-events-table__controls">
+          <span className="omega-events-table__search">
+            <OmegaIcon name="search" size={13} />
+            <input
+              type="search"
+              aria-label="Buscar situaciones"
+              placeholder="Buscar situación, área o categoría…"
+              value={query.search}
+              onChange={(event) =>
+                onQueryChange({ ...query, search: event.target.value })
+              }
+            />
+          </span>
 
           <select
             aria-label="Filtrar por estado"
@@ -125,7 +149,7 @@ export function EventsConsole({
                 status: event.target.value as EventStatusFilter,
               })
             }
-            className={`omega-console-filter ${SELECT_CLASSES} ${FOCUS_VISIBLE}`}
+            className={FOCUS_VISIBLE}
           >
             <option value="all">Todos los estados</option>
             {(Object.keys(EVENT_STATUS_LABEL) as Array<keyof typeof EVENT_STATUS_LABEL>).map(
@@ -146,7 +170,7 @@ export function EventsConsole({
                 risk: event.target.value as EventRiskFilter,
               })
             }
-            className={`omega-console-filter ${SELECT_CLASSES} ${FOCUS_VISIBLE}`}
+            className={FOCUS_VISIBLE}
           >
             <option value="all">Todo riesgo</option>
             {(Object.keys(RISK_LEVEL_LABEL) as Array<keyof typeof RISK_LEVEL_LABEL>).map(
@@ -159,39 +183,7 @@ export function EventsConsole({
           </select>
 
           <select
-            aria-label="Filtrar por categoría"
-            value={query.categoryId}
-            onChange={(event) =>
-              onQueryChange({ ...query, categoryId: event.target.value })
-            }
-            className={`omega-console-filter ${SELECT_CLASSES} ${FOCUS_VISIBLE}`}
-          >
-            <option value="all">Todas las categorías</option>
-            {INCIDENT_CATEGORIES.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            aria-label="Filtrar por área"
-            value={query.areaId}
-            onChange={(event) =>
-              onQueryChange({ ...query, areaId: event.target.value })
-            }
-            className={`omega-console-filter ${SELECT_CLASSES} ${FOCUS_VISIBLE}`}
-          >
-            <option value="all">Todas las áreas</option>
-            {OPERATIONAL_AREAS.map((area) => (
-              <option key={area.id} value={area.id}>
-                {area.code} · {area.name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            aria-label="Ordenar eventos"
+            aria-label="Ordenar situaciones"
             value={query.sort}
             onChange={(event) =>
               onQueryChange({
@@ -199,57 +191,115 @@ export function EventsConsole({
                 sort: event.target.value as EventSortOrder,
               })
             }
-            className={`omega-console-filter ${SELECT_CLASSES} ${FOCUS_VISIBLE}`}
+            className={FOCUS_VISIBLE}
           >
             <option value="date-desc">Más recientes</option>
-            <option value="date-asc">Más antiguos</option>
             <option value="risk-desc">Mayor riesgo</option>
-            <option value="risk-asc">Menor riesgo</option>
-            <option value="impact-desc">Mayor impacto</option>
-            <option value="impact-asc">Menor impacto</option>
-            <option value="title-asc">Título A–Z</option>
+            <option value="date-asc">Más antiguos</option>
           </select>
 
-          <span className={`shrink-0 ${CONSOLE_META}`}>
-            {visible.length}/{events.length}
+          <span className="omega-events-table__count">
+            {visible.length} de {events.length}
           </span>
         </div>
       </header>
 
-      {loading ? (
-        <ConsoleListViewport label="Lista de eventos">
-          <ConsoleNotice
-            state="loading"
-            message="Cargando eventos operacionales…"
-          />
-        </ConsoleListViewport>
-      ) : error ? (
-        <ConsoleListViewport label="Lista de eventos">
-          <ConsoleNotice state="error" message={error} />
-        </ConsoleListViewport>
-      ) : events.length === 0 ? (
-        <ConsoleListViewport label="Lista de eventos">
-          <ConsoleNotice message="No hay eventos registrados todavía." />
-        </ConsoleListViewport>
-      ) : visible.length === 0 ? (
-        <ConsoleListViewport label="Lista de eventos">
-          <ConsoleNotice message="Ningún evento coincide con la búsqueda o los filtros." />
-        </ConsoleListViewport>
+      {events.length === 0 && !loading && !error ? (
+        <p className="omega-events-table__notice">
+          Aún no hay situaciones registradas.{' '}
+          <Link
+            to="/operational-events/register"
+            viewTransition
+            className={`font-semibold text-indigo-300 hover:text-indigo-200 ${FOCUS_VISIBLE}`}
+          >
+            Registre la primera
+          </Link>
+        </p>
       ) : (
-        <ConsoleListViewport label="Lista de eventos">
-          <ul className="divide-y-0">
-            {visible.map((event) => (
-              <li key={event.id} className="relative">
-                <OperationalEventRow
-                  event={event}
-                  selected={event.id === selectedEventId}
-                  onSelect={onSelectEvent}
-                />
-              </li>
-            ))}
-          </ul>
-        </ConsoleListViewport>
+        <div className="omega-events-table__scroll" tabIndex={0}>
+          <table className="omega-events-table__grid">
+            <thead>
+              <tr>
+                <th scope="col">Riesgo</th>
+                <th scope="col">Situación</th>
+                <th scope="col">Área</th>
+                <th scope="col">Categoría</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Reportada</th>
+                <th scope="col">
+                  <span className="sr-only">Acción</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {notice ? (
+                <tr>
+                  <td colSpan={7}>
+                    <ConsoleNotice state={notice.state} message={notice.message} />
+                  </td>
+                </tr>
+              ) : (
+                paged.map((event) => (
+                  <OperationalEventRow
+                    key={event.id}
+                    event={event}
+                    selected={event.id === selectedEventId}
+                    onSelect={onSelectEvent}
+                  />
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       )}
+
+      {!notice && visible.length > 0 ? (
+        <footer className="omega-events-table__footer">
+          <div className="omega-events-table__pagesize">
+            <label htmlFor="events-page-size">Filas por página</label>
+            <select
+              id="events-page-size"
+              value={pageSize}
+              onChange={(event) => setPageSize(Number(event.target.value))}
+              className={FOCUS_VISIBLE}
+            >
+              {PAGE_SIZE_OPTIONS.map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <p className="omega-events-table__range" aria-live="polite">
+            {rangeStart}–{rangeEnd} de {visible.length}
+          </p>
+
+          <nav className="omega-events-table__pager" aria-label="Paginación de situaciones">
+            <button
+              type="button"
+              className={FOCUS_VISIBLE}
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              disabled={page <= 1}
+              aria-label="Página anterior"
+            >
+              <OmegaIcon name="chevron-left" size={14} />
+            </button>
+            <span className="omega-events-table__pager-status">
+              Página {page} de {pageCount}
+            </span>
+            <button
+              type="button"
+              className={FOCUS_VISIBLE}
+              onClick={() => setPage((current) => Math.min(pageCount, current + 1))}
+              disabled={page >= pageCount}
+              aria-label="Página siguiente"
+            >
+              <OmegaIcon name="chevron-right" size={14} />
+            </button>
+          </nav>
+        </footer>
+      ) : null}
     </section>
   )
 }

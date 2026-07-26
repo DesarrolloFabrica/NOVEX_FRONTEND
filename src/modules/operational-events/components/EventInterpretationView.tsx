@@ -18,7 +18,9 @@ const RISK_LABEL: Record<AIInterpretation['riskLevel'], string> = {
 interface EventInterpretationViewProps {
   interpretation: AIInterpretation
   onBack: () => void
-  onContinue: () => void
+  onSave: () => void
+  saving?: boolean
+  error?: string | null
 }
 
 function MetricCell({
@@ -39,7 +41,9 @@ function MetricCell({
 export function EventInterpretationView({
   interpretation,
   onBack,
-  onContinue,
+  onSave,
+  saving = false,
+  error = null,
 }: EventInterpretationViewProps) {
   const confidencePct =
     interpretation.confidence !== undefined
@@ -138,20 +142,33 @@ export function EventInterpretationView({
         ) : null}
       </div>
 
+      {error ? (
+        <p role="alert" className="text-sm text-red-700">
+          {error}
+        </p>
+      ) : null}
+
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-400/15 pt-4">
         <button
           type="button"
           onClick={onBack}
+          disabled={saving}
           className={`px-1 py-2 text-sm text-slate-500 ${FOCUS_VISIBLE}`}
         >
           Volver
         </button>
         <button
           type="button"
-          onClick={onContinue}
-          className={`bg-indigo-600/90 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-600 ${FOCUS_VISIBLE}`}
+          onClick={onSave}
+          disabled={saving}
+          aria-busy={saving}
+          className={`px-4 py-2 text-sm font-semibold text-white ${FOCUS_VISIBLE} ${
+            saving
+              ? 'cursor-wait bg-indigo-500/60'
+              : 'bg-indigo-600/90 hover:bg-indigo-600'
+          }`}
         >
-          Continuar
+          {saving ? 'Guardando…' : 'Guardar situación'}
         </button>
       </div>
     </section>

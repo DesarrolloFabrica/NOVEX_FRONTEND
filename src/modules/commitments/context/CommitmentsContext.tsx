@@ -44,7 +44,7 @@ export interface CommitmentsContextValue extends CommitmentsState {
    */
   updateCommitmentDraftStatus: (
     commitmentId: string,
-    draftStatus: Extract<CommitmentStatus, 'Cumplido' | 'Incumplido'>,
+    draftStatus: CommitmentStatus,
   ) => Promise<void>
   /**
    * Consolida las calificaciones en borrador del área en su estado oficial.
@@ -113,7 +113,7 @@ export function CommitmentsProvider({ children }: { children: ReactNode }) {
   const updateCommitmentDraftStatus = useCallback(
     async (
       commitmentId: string,
-      draftStatus: Extract<CommitmentStatus, 'Cumplido' | 'Incumplido'>,
+      draftStatus: CommitmentStatus,
     ) => {
       try {
         const result = await updateCommitmentDraftStatusRequest(

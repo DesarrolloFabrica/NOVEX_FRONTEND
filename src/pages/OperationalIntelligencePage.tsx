@@ -26,7 +26,7 @@ export function OperationalIntelligencePage() {
         <MainScreen environment={environment}>
           <ScreenDeck
             environment={environment}
-            header={<OmegaProductHeader title="Inteligencia" />}
+            header={<OmegaProductHeader title="Análisis IA" showHelp />}
           >
             <OperationalIntelligenceDashboard
               onEnvironmentChange={handleEnvironmentChange}

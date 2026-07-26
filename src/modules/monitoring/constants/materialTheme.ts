@@ -43,23 +43,23 @@ export const ETCHED_GROOVE_SHADOW =
 
 /** Fresado de estación — canal grabado legible sobre blanco. */
 export const ETCH_STATION_BEFORE =
-  'before:pointer-events-none before:absolute before:inset-0 before:shadow-[inset_0_1px_0_0_rgba(71,85,105,0.16),inset_1px_0_0_0_rgba(100,116,139,0.12),inset_-1px_0_0_0_rgba(100,116,139,0.12)]'
+  'before:pointer-events-none before:absolute before:inset-0 before:shadow-[inset_0_1px_0_0_rgba(71,85,105,0.08)]'
 
 /** Fresado lateral — misma placa, reglas visibles. */
 export const ETCH_STATION_SUPPORT_BEFORE =
-  'before:pointer-events-none before:absolute before:inset-0 before:shadow-[inset_0_1px_0_0_rgba(71,85,105,0.14),inset_1px_0_0_0_rgba(100,116,139,0.1)]'
+  'before:pointer-events-none before:absolute before:inset-0 before:shadow-[inset_0_1px_0_0_rgba(71,85,105,0.07)]'
 
 /** Franja de módulos: regla superior de canal. */
 export const ETCH_MODULE_STRIP_BEFORE =
-  'before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-slate-500/36 before:to-transparent'
+  'before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-slate-500/18 before:to-transparent'
 
 /** Lista de consola: línea de registro superior. */
 export const ETCH_CONSOLE_LIST_BEFORE =
-  'before:pointer-events-none before:absolute before:inset-x-3 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-slate-500/32 before:to-transparent sm:before:inset-x-4'
+  'before:pointer-events-none before:absolute before:inset-x-3 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-slate-500/16 before:to-transparent sm:before:inset-x-4'
 
 /** Zona de consola central: canal mecanizado continuo. */
 export const ETCH_CONSOLE_ZONE_BEFORE =
-  'before:pointer-events-none before:absolute before:inset-0 before:shadow-[inset_0_1px_0_0_rgba(71,85,105,0.14),inset_1px_0_0_0_rgba(100,116,139,0.1),inset_-1px_0_0_0_rgba(100,116,139,0.1)]'
+  'before:pointer-events-none before:absolute before:inset-0 before:shadow-[inset_0_1px_0_0_rgba(71,85,105,0.07)]'
 
 /** Hover sobre elemento grabado — surco de respuesta. */
 export const CRYSTAL_INTERACTION_HOVER =
@@ -180,7 +180,7 @@ export const WORKSTATION_LATTICE_GRID =
 
 /** Canales verticales continuos — columnas de la estación (mismo tono que divisores). */
 export const WORKSTATION_CHANNEL_VERTICAL =
-  'lg:border-x lg:border-slate-500/28'
+  'lg:border-x lg:border-slate-500/12'
 
 /** Canal mecanizado módulos → consola. */
 export const WORKSTATION_MODULE_CONSOLE_CHANNEL =

@@ -22,7 +22,12 @@ export function EventsCenterSummary({ metrics }: EventsCenterSummaryProps) {
     <aside
       className={`left-operational-panel relative flex h-full min-h-0 flex-col overflow-hidden ${INTEL_ZONE} ${CRYSTAL_ZONE_SUPPORT}`}
     >
-      <p className="omega-section-eyebrow shrink-0">Sala</p>
+      <div>
+        <p className="omega-section-eyebrow mb-1">Resumen operacional</p>
+        <p className="omega-section-hint mb-2">
+          Vista rápida del riesgo y la carga actual.
+        </p>
+      </div>
 
       <div className="min-h-0 flex-1 space-y-6 overflow-y-auto pr-1">
         <div>

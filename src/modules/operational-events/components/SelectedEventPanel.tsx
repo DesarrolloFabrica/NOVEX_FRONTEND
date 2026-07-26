@@ -11,7 +11,9 @@ import {
   RISK_LEVEL_LABEL,
   eventRef,
   formatEventDate,
+  timelineTypeLabel,
 } from '@/modules/operational-events/components/eventPresentation'
+import { Link } from 'react-router-dom'
 
 interface SelectedEventPanelProps {
   event: OperationalEvent | null
@@ -23,11 +25,19 @@ export function SelectedEventPanel({ event }: SelectedEventPanelProps) {
       <aside
         className={`operations-intelligence-panel omega-brief is-empty relative ${INTEL_ZONE} ${CRYSTAL_ZONE_SUPPORT}`}
       >
-        <p className="omega-section-eyebrow">Ficha</p>
-        <div className="flex min-h-0 flex-1 items-center justify-center">
-          <p className="omega-empty-signal text-center text-[0.72rem] text-slate-500">
-            Seleccione un expediente.
+        <p className="omega-section-eyebrow">Detalle de la situación</p>
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 px-3">
+          <p className="omega-empty-signal text-center text-sm leading-relaxed text-slate-400">
+            Elija una situación del feed para ver su análisis y decidir qué
+            hacer.
           </p>
+          <Link
+            to="/operational-events/register"
+            viewTransition
+            className="text-[0.72rem] font-semibold text-indigo-600 hover:text-indigo-800"
+          >
+            Registrar una situación
+          </Link>
         </div>
       </aside>
     )
@@ -133,12 +143,8 @@ export function SelectedEventPanel({ event }: SelectedEventPanelProps) {
             <details>
               <summary>Lectura técnica</summary>
               <ul className="space-y-1">
-                <li>
-                  Categoría · {interpretation.categoryName}
-                </li>
-                <li>
-                  Severidad · {interpretation.impactSeverity}/5
-                </li>
+                <li>Categoría · {interpretation.categoryName}</li>
+                <li>Severidad · {interpretation.impactSeverity}/5</li>
                 <li>
                   Afectación · {interpretation.affectationPercentage}%
                 </li>
@@ -166,7 +172,7 @@ export function SelectedEventPanel({ event }: SelectedEventPanelProps) {
                 .map((entry) => (
                   <li key={entry.id}>
                     <p className="font-mono text-[10px] text-slate-500">
-                      {formatEventDate(entry.at)} · {entry.type}
+                      {formatEventDate(entry.at)} · {timelineTypeLabel(entry.type)}
                     </p>
                     <p className="mt-0.5">{entry.description}</p>
                   </li>
@@ -182,8 +188,7 @@ export function SelectedEventPanel({ event }: SelectedEventPanelProps) {
             <li>Por · {event.reportedBy.name}</li>
             <li>Fecha · {formatEventDate(event.reportedAt)}</li>
             <li>
-              Observaciones ·{' '}
-              {event.observations?.trim() || 'Ninguna'}
+              Observaciones · {event.observations?.trim() || 'Ninguna'}
             </li>
             <li>
               Adjuntos ·{' '}

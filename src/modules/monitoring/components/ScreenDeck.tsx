@@ -12,11 +12,18 @@ interface ScreenDeckProps {
   environment: EnvironmentStatus
   /** Contenido de la pantalla (rejilla grabada del Cristal Maestro). */
   children: ReactNode
+  /** Variante visual opcional para escenarios especializados. */
+  className?: string
 }
 
-export function ScreenDeck({ header, environment, children }: ScreenDeckProps) {
+export function ScreenDeck({
+  header,
+  environment,
+  children,
+  className = '',
+}: ScreenDeckProps) {
   return (
-    <div className="omega-os-deck" data-environment={environment}>
+    <div className={`omega-os-deck ${className}`} data-environment={environment}>
       {header}
       <div className="omega-os-deck__content">{children}</div>
     </div>

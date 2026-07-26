@@ -7,10 +7,8 @@
 import {
   createContext,
   useCallback,
-  useEffect,
   useMemo,
   useReducer,
-  useRef,
 } from 'react'
 import type { ReactNode } from 'react'
 import {
@@ -22,21 +20,16 @@ import {
   operationalEventsReducer,
   type OperationalEventsState,
 } from '@/modules/operational-events/reducers/operational-events.reducer'
-import {
-  clearStoredOperationalEvents,
-  loadStoredOperationalEvents,
-  saveStoredOperationalEvents,
-} from '@/modules/operational-events/utils/operationalEventsStorage'
 import type { OperationalEvent } from '@/modules/operational-events/types/operational-event.types'
 import { getErrorMessage } from '@/shared/utils/error'
 
 /** Valor expuesto por el contexto: estado + acciones de alto nivel. */
 export interface OperationalEventsContextValue extends OperationalEventsState {
-  /** Carga los eventos: primero localStorage, luego el servicio mock. */
+  /** Carga los eventos desde la API operacional. */
   loadOperationalEvents: () => Promise<void>
-  /** Limpia la persistencia y recarga los eventos mock. */
+  /** Recarga los eventos desde la API operacional. */
   resetOperationalEvents: () => Promise<void>
-  /** Registra un evento interpretado y lo persiste en storage. */
+  /** Registra un evento operacional en backend. */
   registerOperationalEvent: (event: OperationalEvent) => Promise<OperationalEvent>
 }
 
@@ -53,15 +46,10 @@ export function OperationalEventsProvider({
     initialOperationalEventsState,
   )
 
-  // Evita persistir el estado inicial vacío antes de la primera carga.
-  const hasLoadedRef = useRef(false)
-
   const loadOperationalEvents = useCallback(async () => {
     dispatch({ type: 'OPERATIONAL_EVENTS_LOADING' })
     try {
-      const items =
-        loadStoredOperationalEvents() ?? (await fetchOperationalEventsRequest())
-      hasLoadedRef.current = true
+      const items = await fetchOperationalEventsRequest()
       dispatch({ type: 'OPERATIONAL_EVENTS_LOADED', items })
     } catch (error) {
       dispatch({
@@ -72,11 +60,9 @@ export function OperationalEventsProvider({
   }, [])
 
   const resetOperationalEvents = useCallback(async () => {
-    clearStoredOperationalEvents()
     dispatch({ type: 'OPERATIONAL_EVENTS_LOADING' })
     try {
       const items = await fetchOperationalEventsRequest()
-      hasLoadedRef.current = true
       dispatch({ type: 'OPERATIONAL_EVENTS_LOADED', items })
     } catch (error) {
       dispatch({
@@ -91,7 +77,6 @@ export function OperationalEventsProvider({
       dispatch({ type: 'OPERATIONAL_EVENTS_LOADING' })
       try {
         const saved = await registerOperationalEventRequest(event)
-        hasLoadedRef.current = true
         dispatch({ type: 'OPERATIONAL_EVENT_REGISTERED', event: saved })
         return saved
       } catch (error) {
@@ -104,12 +89,6 @@ export function OperationalEventsProvider({
     },
     [],
   )
-
-  useEffect(() => {
-    if (hasLoadedRef.current) {
-      saveStoredOperationalEvents(state.items)
-    }
-  }, [state.items])
 
   const value = useMemo<OperationalEventsContextValue>(
     () => ({

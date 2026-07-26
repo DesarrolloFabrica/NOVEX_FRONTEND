@@ -11,6 +11,8 @@ export const SUPERVISOR_USER: User = {
   id: 'user-supervisor',
   name: 'Supervisora General',
   role: 'supervisor',
+  onboardingCompleted: false,
+  onboardingSeenAt: null,
 }
 
 /**
@@ -23,5 +25,7 @@ export function buildEjecutorUser(areaId: string): User {
     name: `Ejecutor · ${resolveAreaName(AREAS, areaId)}`,
     role: 'ejecutor',
     selectedAreaId: areaId,
+    onboardingCompleted: false,
+    onboardingSeenAt: null,
   }
 }

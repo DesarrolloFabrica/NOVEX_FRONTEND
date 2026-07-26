@@ -104,6 +104,19 @@ describe('commitmentsReducer · COMMITMENT_DRAFT_STATUS_UPDATED', () => {
     expect(result.items[0].status).toBe('Pendiente de validación')
     expect(result.items[0].history).toHaveLength(0)
   })
+
+  it('permite devolver el compromiso a En proceso', () => {
+    const pendingResult = commitmentsReducer(result, {
+      type: 'COMMITMENT_DRAFT_STATUS_UPDATED',
+      id: 'c1',
+      draftStatus: 'Pendiente de validación',
+    })
+
+    expect(pendingResult.items[0].draftStatus).toBe(
+      'Pendiente de validación',
+    )
+    expect(pendingResult.items[0].status).toBe('Pendiente de validación')
+  })
 })
 
 describe('commitmentsReducer · AREA_VALIDATION_APPLIED', () => {

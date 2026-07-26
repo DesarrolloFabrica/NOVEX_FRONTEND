@@ -2,7 +2,7 @@
 // La izquierda sigue la selección; la derecha resume la salud del área.
 
 import type { Area } from '@/modules/areas/types/area.types'
-import type { Commitment } from '@/modules/commitments/types/commitment.types'
+import type { Commitment, CommitmentStatus } from '@/modules/commitments/types/commitment.types'
 import type { User } from '@/modules/auth/types/user.types'
 import type { AreaHealth } from '@/modules/monitoring/types/monitoring.types'
 import type { AreaHealthEntry } from '@/modules/monitoring/selectors/areaHealth.selectors'
@@ -13,7 +13,6 @@ import { AreaFocusStrip } from '@/modules/monitoring/components/AreaFocusStrip'
 import { LeftOperationalPanel } from '@/modules/monitoring/components/LeftOperationalPanel'
 import { EvaluationConsole } from '@/modules/monitoring/components/EvaluationConsole'
 import { IntelligencePanel } from '@/modules/monitoring/components/IntelligencePanel'
-import { CrystalModuleConsoleChannel } from '@/modules/monitoring/components/CrystalStructure'
 
 interface MonitoringCenterProps {
   user: User | null
@@ -36,16 +35,15 @@ interface MonitoringCenterProps {
   isApplyingValidation: boolean
   onSelectArea: (areaId: string) => void
   onSelectCommitment: (commitmentId: string) => void
-  onValidateCommitment: (status: 'Cumplido' | 'Incumplido') => void
+  onValidateCommitment: (status: CommitmentStatus) => void
   onApplyAreaValidation: () => void
   onLogout: () => void
-  onReset: () => void
 }
 
 export function MonitoringCenter({
   user,
   areaEntries,
-  selectedArea: _selectedArea,
+  selectedArea,
   selectedAreaId,
   areaHealth,
   isGlobal,
@@ -66,62 +64,73 @@ export function MonitoringCenter({
   onValidateCommitment,
   onApplyAreaValidation,
   onLogout,
-  onReset,
 }: MonitoringCenterProps) {
+  const areaLabel = selectedArea
+    ? `${selectedArea.code} · ${selectedArea.name}`
+    : isGlobal
+      ? 'Visión general'
+      : 'Área sin seleccionar'
+
   return (
     <ScreenDeck
       environment={areaHealth.environment}
+      className="omega-monitoring-deck"
       header={
         <MonitoringHeader
           user={user}
           environment={areaHealth.environment}
+          areaLabel={areaLabel}
           onLogout={onLogout}
-          onReset={onReset}
         />
       }
     >
-      <MonitoringLayout
-        left={
-          <LeftOperationalPanel
-            selectedCommitment={selectedCommitment}
-            canValidate={canValidate}
-            isUpdating={isUpdating}
-            onValidateCommitment={onValidateCommitment}
-          />
-        }
-        main={
-          <>
-            <AreaFocusStrip
-              entries={areaEntries}
-              selectedAreaId={selectedAreaId}
-              onSelectArea={onSelectArea}
-            />
-            <CrystalModuleConsoleChannel />
-            <EvaluationConsole
-              commitments={areaCommitments}
-              selectedCommitmentId={selectedCommitmentId}
-              loading={loading}
-              error={error}
-              executorWithoutArea={executorWithoutArea}
-              isGlobal={isGlobal}
+      <div className="omega-monitoring-reference">
+        <MonitoringLayout
+          showFieldAnchors={false}
+          left={
+            <LeftOperationalPanel
+              selectedCommitment={selectedCommitment}
+              health={areaHealth}
               canValidate={canValidate}
-              canApplyValidation={canApplyValidation}
-              isApplyingValidation={isApplyingValidation}
-              onSelectCommitment={onSelectCommitment}
-              onApplyAreaValidation={onApplyAreaValidation}
-              environment={areaHealth.environment}
+              isUpdating={isUpdating}
+              onValidateCommitment={onValidateCommitment}
             />
-          </>
-        }
-        right={
-          <IntelligencePanel
-            health={areaHealth}
-            criticalCount={criticalCount}
-            projectedTitle={projectedTitle}
-            environment={areaHealth.environment}
-          />
-        }
-      />
+          }
+          main={
+            <>
+              <AreaFocusStrip
+                entries={areaEntries}
+                selectedAreaId={selectedAreaId}
+                onSelectArea={onSelectArea}
+              />
+              <EvaluationConsole
+                commitments={areaCommitments}
+                selectedCommitmentId={selectedCommitmentId}
+                loading={loading}
+                error={error}
+                executorWithoutArea={executorWithoutArea}
+                isGlobal={isGlobal}
+                areaLabel={areaLabel}
+                canValidate={canValidate}
+                canApplyValidation={canApplyValidation}
+                isApplyingValidation={isApplyingValidation}
+                onSelectCommitment={onSelectCommitment}
+                onApplyAreaValidation={onApplyAreaValidation}
+                environment={areaHealth.environment}
+              />
+            </>
+          }
+          right={
+            <IntelligencePanel
+              health={areaHealth}
+              criticalCount={criticalCount}
+              projectedTitle={projectedTitle}
+              environment={areaHealth.environment}
+              areaLabel={areaLabel}
+            />
+          }
+        />
+      </div>
     </ScreenDeck>
   )
 }

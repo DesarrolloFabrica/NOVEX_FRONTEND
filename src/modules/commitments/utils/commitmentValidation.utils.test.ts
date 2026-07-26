@@ -13,7 +13,7 @@ import {
 function makeCommitment(
   id: string,
   status: CommitmentStatus,
-  draftStatus?: Extract<CommitmentStatus, 'Cumplido' | 'Incumplido'>,
+  draftStatus?: CommitmentStatus,
 ): Commitment {
   return {
     id,
@@ -49,6 +49,22 @@ describe('commitmentValidation.utils', () => {
     ]
 
     expect(isAreaFullyDraftRated(commitments)).toBe(true)
+  })
+
+  it('muestra En proceso sin habilitar la consolidación del área', () => {
+    const commitments = [
+      makeCommitment(
+        'c1',
+        'Pendiente de validación',
+        'Pendiente de validación',
+      ),
+    ]
+
+    expect(getCommitmentDisplayStatus(commitments[0])).toBe(
+      'Pendiente de validación',
+    )
+    expect(isAreaFullyDraftRated(commitments)).toBe(false)
+    expect(canApplyAreaValidation(commitments)).toBe(false)
   })
 
   it('habilita aplicar solo si todos están calificados y siguen pendientes', () => {

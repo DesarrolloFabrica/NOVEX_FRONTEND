@@ -67,7 +67,7 @@ export interface Commitment {
    * Calificación en borrador (precomité). No afecta la salud del área hasta
    * pulsar «Aplicar validación» en la consola central.
    */
-  draftStatus?: Extract<CommitmentStatus, 'Cumplido' | 'Incumplido'>
+  draftStatus?: CommitmentStatus
   /** Impacto operativo (1..5) usado para ponderar el riesgo. */
   operationalImpact: OperationalImpact
   /** Avance porcentual opcional (0..100). */

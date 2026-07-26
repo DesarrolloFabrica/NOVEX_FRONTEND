@@ -64,24 +64,14 @@ export function LoginPage() {
             </span>
             <span className="sr-only">O.M.E.G.A.</span>
           </h1>
-          <p>
-            Interpreta eventos operacionales, anticipa riesgos y coordina
-            decisiones institucionales desde un único centro de inteligencia.
-          </p>
-          <div className="omega-login__capabilities" aria-label="Capacidades del sistema">
-            <span>Eventos operacionales</span>
-            <span>Interpretación con IA</span>
-            <span>Tablero ejecutivo</span>
-          </div>
         </section>
 
         <section className={`omega-login__panel ${PANEL}`}>
           <div className="omega-login__panel-scan" aria-hidden="true" />
           <header className="omega-login__panel-header">
             <div>
-              <span>Autenticación segura</span>
-              <h2>Acceso a la sala</h2>
-              <p>Selecciona tu perfil operativo para continuar.</p>
+              <h2>Acceso a O.M.E.G.A.</h2>
+              <p>Elige tu perfil para continuar.</p>
             </div>
             <div className="omega-login__security-mark" aria-hidden="true">
               <span />
@@ -164,7 +154,7 @@ export function LoginPage() {
             data-state={loading ? 'loading' : 'ready'}
           >
             <span aria-hidden="true" />
-            {loading ? 'Estableciendo enlace seguro…' : 'Entorno seguro de demostración'}
+            {loading ? 'Conectando…' : 'Listo para ingresar'}
           </footer>
         </section>
       </div>

@@ -1,12 +1,11 @@
-// Componente: orquestador del Centro de Eventos Operacionales.
-// Carga eventos del módulo, deriva métricas con el motor y compone la sala.
+// Componente: orquestador del Centro de Situaciones.
+// Objetivo único: encontrar y abrir una situación.
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { MonitoringLayout } from '@/modules/monitoring/components/MonitoringLayout'
-import { EventsCenterSummary } from '@/modules/operational-events/components/EventsCenterSummary'
 import { EventsConsole } from '@/modules/operational-events/components/EventsConsole'
-import { SelectedEventPanel } from '@/modules/operational-events/components/SelectedEventPanel'
+import { SituationDetailModal } from '@/modules/operational-events/components/SituationDetailModal'
 import { useOperationalEvents } from '@/modules/operational-events/hooks/useOperationalEvents'
 import {
   selectEventById,
@@ -26,7 +25,7 @@ export function OperationalEventsCenter({
   onEnvironmentChange,
 }: OperationalEventsCenterProps) {
   const { items, loading, error, loadOperationalEvents } = useOperationalEvents()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [query, setQuery] = useState<EventListQuery>(DEFAULT_EVENT_LIST_QUERY)
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
 
@@ -34,7 +33,6 @@ export function OperationalEventsCenter({
     void loadOperationalEvents()
   }, [loadOperationalEvents])
 
-  // Deep-link desde el tablero ejecutivo: /operational-events?event=evt-xxx
   useEffect(() => {
     const focusId = searchParams.get('event')
     if (focusId) setSelectedEventId(focusId)
@@ -54,10 +52,26 @@ export function OperationalEventsCenter({
     [items, selectedEventId],
   )
 
+  const handleSelectEvent = useCallback(
+    (eventId: string) => {
+      setSelectedEventId(eventId)
+      const next = new URLSearchParams(searchParams)
+      next.set('event', eventId)
+      setSearchParams(next, { replace: true })
+    },
+    [searchParams, setSearchParams],
+  )
+
+  const handleCloseDetail = useCallback(() => {
+    setSelectedEventId(null)
+    const next = new URLSearchParams(searchParams)
+    next.delete('event')
+    setSearchParams(next, { replace: true })
+  }, [searchParams, setSearchParams])
+
   return (
-    <div className="omega-events-center flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="omega-events-center omega-events-center--feed flex min-h-0 flex-1 flex-col overflow-hidden">
       <MonitoringLayout
-        left={<EventsCenterSummary metrics={metrics} />}
         main={
           <EventsConsole
             events={items}
@@ -66,11 +80,17 @@ export function OperationalEventsCenter({
             loading={loading}
             error={error}
             onQueryChange={setQuery}
-            onSelectEvent={setSelectedEventId}
+            onSelectEvent={handleSelectEvent}
           />
         }
-        right={<SelectedEventPanel event={selectedEvent} />}
       />
+
+      {selectedEvent ? (
+        <SituationDetailModal
+          event={selectedEvent}
+          onClose={handleCloseDetail}
+        />
+      ) : null}
     </div>
   )
 }

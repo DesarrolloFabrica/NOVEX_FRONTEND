@@ -48,5 +48,16 @@ export function formatEventDate(iso: string): string {
 }
 
 export function eventRef(id: string): string {
-  return id.replace(/^evt-/i, 'EVT-').toUpperCase()
+  return id.replace(/^evt-/i, 'SIT-').toUpperCase()
+}
+
+const TIMELINE_TYPE_LABEL: Record<string, string> = {
+  event_registered: 'Registro',
+  interpretation_generated: 'Interpretación',
+  status_change: 'Cambio de estado',
+  note: 'Nota',
+}
+
+export function timelineTypeLabel(type: string): string {
+  return TIMELINE_TYPE_LABEL[type] ?? type
 }

@@ -1,15 +1,6 @@
-// Capa: dominio (tipos) del módulo "auth".
-// Responsabilidad: describir al usuario autenticado y su rol.
-// Sin lógica: contrato consumido por context/services/hooks de autenticación.
-
-/**
- * Rol del usuario dentro del Centro de Monitoreo.
- * - supervisor: valida compromisos y observa la salud global.
- * - ejecutor: gestiona los compromisos de su área seleccionada.
- */
+/** Usuario autenticado en O.M.E.G.A. */
 export type UserRole = 'supervisor' | 'ejecutor'
 
-/** Usuario autenticado en O.M.E.G.A. */
 export interface User {
   /** Identificador estable e interno del usuario. */
   id: string
@@ -19,4 +10,8 @@ export interface User {
   role: UserRole
   /** Área seleccionada (relevante sobre todo para el rol ejecutor). */
   selectedAreaId?: string
+  /** Preferencia: onboarding de primera vez completado. */
+  onboardingCompleted: boolean
+  /** Timestamp ISO de la primera finalización del onboarding. */
+  onboardingSeenAt: string | null
 }

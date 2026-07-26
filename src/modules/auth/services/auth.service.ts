@@ -1,7 +1,7 @@
 // Capa: servicios del módulo "auth".
-// Responsabilidad: simular la comunicación con un backend de autenticación.
-// Devuelve Promesas con un pequeño retardo para imitar latencia de red.
-// Cuando exista API real, solo cambia ESTA capa; contextos y UI no se tocan.
+// Responsabilidad: simular login y sincronizar preferencias de onboarding
+// con el backend (POST/PATCH /users). Si la API no está disponible, usa
+// fallback local para no bloquear la demo.
 
 import { AREAS } from '@/modules/areas/data/areas.mock'
 import { findAreaById, isGlobalArea } from '@/modules/areas/utils/areas.utils'
@@ -10,15 +10,52 @@ import {
   buildEjecutorUser,
 } from '@/modules/auth/data/users.mock'
 import type { User } from '@/modules/auth/types/user.types'
+import { apiRequest } from '@/shared/api/http'
 
-/** Retardo artificial para simular una llamada de red. */
 const delay = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms))
+
+interface UserApiResponse {
+  id: string
+  name: string
+  role: 'supervisor' | 'ejecutor'
+  selectedAreaId: string | null
+  onboardingCompleted: boolean
+  onboardingSeenAt: string | null
+}
+
+function toUser(payload: UserApiResponse): User {
+  return {
+    id: payload.id,
+    name: payload.name,
+    role: payload.role,
+    selectedAreaId: payload.selectedAreaId ?? undefined,
+    onboardingCompleted: payload.onboardingCompleted,
+    onboardingSeenAt: payload.onboardingSeenAt,
+  }
+}
+
+async function ensureUserPreferences(user: User): Promise<User> {
+  try {
+    const response = await apiRequest<UserApiResponse>('/users/ensure', {
+      method: 'POST',
+      body: JSON.stringify({
+        id: user.id,
+        name: user.name,
+        role: user.role,
+        selectedAreaId: user.selectedAreaId ?? null,
+      }),
+    })
+    return toUser(response)
+  } catch {
+    return user
+  }
+}
 
 /** Inicia sesión como supervisor (no requiere área). */
 export async function loginAsSupervisorRequest(): Promise<User> {
   await delay(400)
-  return SUPERVISOR_USER
+  return ensureUserPreferences(SUPERVISOR_USER)
 }
 
 /**
@@ -38,7 +75,26 @@ export async function loginAsEjecutorRequest(areaId: string): Promise<User> {
     throw new Error('El rol ejecutor no puede operar sobre el área global.')
   }
 
-  return buildEjecutorUser(areaId)
+  return ensureUserPreferences(buildEjecutorUser(areaId))
+}
+
+/** Marca el onboarding de primera vez como completado. */
+export async function completeOnboardingRequest(
+  user: User,
+): Promise<User> {
+  try {
+    const response = await apiRequest<UserApiResponse>(
+      `/users/${encodeURIComponent(user.id)}/onboarding/complete`,
+      { method: 'PATCH' },
+    )
+    return toUser(response)
+  } catch {
+    return {
+      ...user,
+      onboardingCompleted: true,
+      onboardingSeenAt: new Date().toISOString(),
+    }
+  }
 }
 
 /** Cierra la sesión actual. */

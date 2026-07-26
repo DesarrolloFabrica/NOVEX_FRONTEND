@@ -5,7 +5,8 @@
 // Reglas aplicadas a estos mocks:
 // - Mínimo 3 compromisos por cada área OPERATIVA.
 // - El área global ("Visión General Operaciones") NO tiene compromisos propios.
-// - Todos inician en «Pendiente de validación»; impactos variados para el motor de salud.
+// - La semilla mezcla estados para que Seguimiento pueda evaluarse con una
+//   fotografía realista desde la primera carga; los impactos siguen variados.
 
 import { AREAS } from '@/modules/areas/data/areas.mock'
 import { resolveAreaName } from '@/modules/areas/utils/areas.utils'
@@ -57,7 +58,7 @@ const SEEDS: CommitmentSeed[] = [
     description: 'Consolidar y publicar la malla curricular validada por decanatura.',
     responsibleName: 'Laura Gómez',
     dueDate: '2026-07-10',
-    status: 'Pendiente de validación',
+    status: 'Cumplido',
     operationalImpact: 3,
     progress: 100,
   },
@@ -77,7 +78,7 @@ const SEEDS: CommitmentSeed[] = [
     description: 'Regularizar actas de evaluación del periodo anterior.',
     responsibleName: 'Carlos Méndez',
     dueDate: '2026-06-30',
-    status: 'Pendiente de validación',
+    status: 'Incumplido',
     operationalImpact: 2,
     progress: 40,
   },
@@ -89,7 +90,7 @@ const SEEDS: CommitmentSeed[] = [
     description: 'Desplegar la nueva versión del LMS en producción.',
     responsibleName: 'Andrés Rivas',
     dueDate: '2026-07-05',
-    status: 'Pendiente de validación',
+    status: 'Incumplido',
     operationalImpact: 5,
     progress: 70,
   },
@@ -99,7 +100,7 @@ const SEEDS: CommitmentSeed[] = [
     description: 'Publicar la documentación de la API para aliados.',
     responsibleName: 'Andrés Rivas',
     dueDate: '2026-07-20',
-    status: 'Pendiente de validación',
+    status: 'Cumplido',
     operationalImpact: 2,
     progress: 100,
   },
@@ -121,7 +122,7 @@ const SEEDS: CommitmentSeed[] = [
     description: 'Ejecutar el piloto de la herramienta de IA con dos cursos.',
     responsibleName: 'Sofía Ramírez',
     dueDate: '2026-07-18',
-    status: 'Pendiente de validación',
+    status: 'Cumplido',
     operationalImpact: 3,
     progress: 100,
   },
@@ -153,7 +154,7 @@ const SEEDS: CommitmentSeed[] = [
     description: 'Formalizar el contrato del nuevo cliente corporativo.',
     responsibleName: 'Mónica Salas',
     dueDate: '2026-07-09',
-    status: 'Pendiente de validación',
+    status: 'Cumplido',
     operationalImpact: 5,
     progress: 100,
   },
@@ -173,7 +174,7 @@ const SEEDS: CommitmentSeed[] = [
     description: 'Ejecutar el plan de retención de cuentas críticas.',
     responsibleName: 'Pablo Herrera',
     dueDate: '2026-07-03',
-    status: 'Pendiente de validación',
+    status: 'Incumplido',
     operationalImpact: 4,
     progress: 25,
   },
@@ -185,7 +186,7 @@ const SEEDS: CommitmentSeed[] = [
     description: 'Cumplir el SLA de respuesta a tickets de soporte.',
     responsibleName: 'Natalia Ruiz',
     dueDate: '2026-07-14',
-    status: 'Pendiente de validación',
+    status: 'Cumplido',
     operationalImpact: 3,
     progress: 100,
   },
@@ -227,7 +228,7 @@ const SEEDS: CommitmentSeed[] = [
     description: 'Entregar el informe de resultados con plan de mejora.',
     responsibleName: 'Patricia León',
     dueDate: '2026-06-28',
-    status: 'Pendiente de validación',
+    status: 'Incumplido',
     operationalImpact: 5,
     progress: 35,
   },
@@ -249,7 +250,7 @@ const SEEDS: CommitmentSeed[] = [
     description: 'Realizar la jornada de proyección social del trimestre.',
     responsibleName: 'Valeria Ospina',
     dueDate: '2026-07-16',
-    status: 'Pendiente de validación',
+    status: 'Cumplido',
     operationalImpact: 2,
     progress: 100,
   },

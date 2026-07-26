@@ -43,10 +43,10 @@ export function EventConfirmSave({
       <section className="omega-event-saved space-y-5">
         <header className="space-y-1">
           <h2 className="text-sm font-semibold tracking-tight text-emerald-800">
-            Evento guardado
+            Situación guardada
           </h2>
           <p className="text-[0.8rem] leading-relaxed text-slate-500">
-            El evento ya alimenta el Centro de Eventos y el tablero ejecutivo.
+            La situación ya alimenta Situaciones registradas y Análisis IA.
           </p>
         </header>
 
@@ -64,14 +64,14 @@ export function EventConfirmSave({
               viewTransition
               className={`text-slate-500 hover:text-slate-800 ${FOCUS_VISIBLE}`}
             >
-              Tablero
+              Análisis IA
             </Link>
             <Link
               to="/operational-events"
               viewTransition
               className={`text-indigo-700 hover:text-indigo-900 ${FOCUS_VISIBLE}`}
             >
-              Eventos
+              Situaciones registradas
             </Link>
           </div>
           <button
@@ -79,7 +79,7 @@ export function EventConfirmSave({
             onClick={onRegisterAnother}
             className={`bg-indigo-600/90 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-600 ${FOCUS_VISIBLE}`}
           >
-            Registrar otro
+            Registrar otra
           </button>
         </div>
       </section>
@@ -93,8 +93,7 @@ export function EventConfirmSave({
           Confirmar y guardar
         </h2>
         <p className="text-[0.8rem] leading-relaxed text-slate-500">
-          Revise el expediente antes de persistirlo en el dominio Operational
-          Events.
+          Revise la situación antes de guardarla en el sistema.
         </p>
       </header>
 
@@ -153,7 +152,7 @@ export function EventConfirmSave({
               : 'bg-indigo-600/90 hover:bg-indigo-600'
           }`}
         >
-          {saving ? 'Guardando…' : 'Guardar evento'}
+          {saving ? 'Guardando…' : 'Guardar situación'}
         </button>
       </div>
     </section>

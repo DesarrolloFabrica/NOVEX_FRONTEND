@@ -8,6 +8,7 @@ import type {
   AIInterpretation,
   OperationalEventDraft,
 } from '@/modules/operational-events/types/operational-event.types'
+import { buildExecutiveReport } from '@/modules/operational-events/utils/buildExecutiveReport'
 
 const delay = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms))
@@ -54,7 +55,7 @@ function adaptInterpretation(
   draft: OperationalEventDraft,
 ): AIInterpretation {
   const now = new Date().toISOString()
-  return {
+  const adapted: AIInterpretation = {
     ...template,
     id: `ai-${eventId}`,
     eventId,
@@ -71,6 +72,16 @@ function adaptInterpretation(
     interpretedAt: now,
     confidence: template.confidence ?? 0.84,
   }
+
+  // El reporte ejecutivo (contrato v2) se regenera con el relato del usuario
+  // para que las secciones respondan al contexto realmente reportado.
+  adapted.executiveReport = buildExecutiveReport(adapted, {
+    title: draft.title,
+    description: draft.description,
+    observations: draft.observations,
+  })
+
+  return adapted
 }
 
 /**

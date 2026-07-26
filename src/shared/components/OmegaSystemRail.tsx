@@ -1,12 +1,8 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
+import { RegisterSituationCta } from '@/shared/components/RegisterSituationCta'
 
-type IconName =
-  | 'intelligence'
-  | 'events'
-  | 'register'
-  | 'monitoring'
-  | 'logout'
+type IconName = 'intelligence' | 'events' | 'monitoring' | 'logout'
 
 const NAV_ITEMS: Array<{
   to: string
@@ -16,28 +12,22 @@ const NAV_ITEMS: Array<{
   end?: boolean
 }> = [
   {
-    to: '/intelligence',
-    label: 'Inteligencia',
-    eyebrow: 'Visión ejecutiva',
-    icon: 'intelligence',
-    end: true,
-  },
-  {
     to: '/operational-events',
-    label: 'Eventos',
-    eyebrow: 'Centro táctico',
+    label: 'Situaciones registradas',
+    eyebrow: 'Historial operativo',
     icon: 'events',
     end: true,
   },
   {
-    to: '/operational-events/register',
-    label: 'Registrar',
-    eyebrow: 'Nueva señal',
-    icon: 'register',
+    to: '/intelligence',
+    label: 'Análisis IA',
+    eyebrow: 'Prioridades',
+    icon: 'intelligence',
+    end: true,
   },
   {
     to: '/legacy-monitoring',
-    label: 'Monitoreo',
+    label: 'Seguimiento',
     eyebrow: 'Compromisos',
     icon: 'monitoring',
   },
@@ -56,12 +46,6 @@ function OmegaRailIcon({ name }: { name: IconName }) {
         <path d="M5 4.5h14v15H5z" />
         <path d="M8 8h5M8 12h8M8 16h6" />
         <path d="M16.75 6.25v3.5M15 8h3.5" />
-      </>
-    ),
-    register: (
-      <>
-        <path d="M12 3.5 20 12l-8 8.5L4 12l8-8.5Z" />
-        <path d="M12 8v8M8 12h8" />
       </>
     ),
     monitoring: (
@@ -110,8 +94,12 @@ export function OmegaSystemRail() {
         <OmegaCoreMark />
         <div className="omega-os-rail__brand-copy">
           <strong>O.M.E.G.A.</strong>
-          <span>Operational Intelligence</span>
+          <span>Centro de Inteligencia</span>
         </div>
+      </div>
+
+      <div className="omega-os-rail__primary">
+        <RegisterSituationCta variant="rail" />
       </div>
 
       <nav className="omega-os-rail__nav">

@@ -1,6 +1,5 @@
 // Componente: rejilla del Cristal Maestro (Plano 1).
 // Sprint 7.3: estación de trabajo unificada — una losa, zonas funcionales.
-// El dashboard y el detalle seleccionado permanecen dentro del videowall.
 
 import type { ReactNode } from 'react'
 import {
@@ -16,32 +15,61 @@ import {
 import { PLANE_ETCHED } from '@/modules/monitoring/constants/visualPlanes'
 
 interface MonitoringLayoutProps {
-  left: ReactNode
+  left?: ReactNode
   main: ReactNode
-  right: ReactNode
+  right?: ReactNode
+  showFieldAnchors?: boolean
 }
 
-export function MonitoringLayout({ left, main, right }: MonitoringLayoutProps) {
+export function MonitoringLayout({
+  left,
+  main,
+  right,
+  showFieldAnchors = true,
+}: MonitoringLayoutProps) {
+  const hasLeft = left != null && left !== false
+  const hasRight = right != null && right !== false
+  const isFullMain = !hasLeft && !hasRight
+  const layoutClass = [
+    hasLeft ? '' : 'omega-workstation--no-left',
+    hasRight ? '' : 'omega-workstation--no-right',
+    isFullMain ? 'omega-workstation--full-main' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  // Vista a ancho completo: sin grabados ni canales laterales (evitan reborde fantasma).
+  const plateClass = isFullMain
+    ? 'relative'
+    : `${PLANE_ETCHED} ${CRYSTAL_WORKSTATION_PLATE}`
+  const mainClass = isFullMain
+    ? 'relative flex min-h-0 min-w-0 flex-col'
+    : CRYSTAL_WORKSTATION_MAIN
+
   return (
     <div className={`${ROOM_CONTAINER} relative max-lg:overflow-visible lg:overflow-hidden`}>
       <div
-        className={`omega-workstation ${PLANE_ETCHED} ${CRYSTAL_WORKSTATION_PLATE} relative flex min-h-0 flex-1 flex-col ${CRYSTAL_GRID}`}
+        className={`omega-workstation ${plateClass} relative flex min-h-0 flex-1 flex-col ${isFullMain ? 'lg:grid lg:min-h-0 lg:flex-1 lg:overflow-hidden lg:grid-cols-1 lg:grid-rows-[minmax(0,1fr)]' : CRYSTAL_GRID} ${layoutClass}`}
       >
-        <CrystalFieldAnchors />
+        {isFullMain || !showFieldAnchors ? null : <CrystalFieldAnchors />}
 
-        <div className="omega-workstation__left relative order-2 z-[2] min-w-0 max-lg:pt-3 lg:order-1 lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden lg:pt-0">
-          <CrystalRowGroove className="absolute inset-x-0 top-0 z-[2] lg:hidden" />
-          {left}
-        </div>
+        {hasLeft ? (
+          <div className="omega-workstation__left relative order-2 z-[2] min-w-0 max-lg:pt-3 lg:order-1 lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden lg:pt-0">
+            <CrystalRowGroove className="absolute inset-x-0 top-0 z-[2] lg:hidden" />
+            {left}
+          </div>
+        ) : null}
 
-        <div className={`omega-workstation__main ${CRYSTAL_WORKSTATION_MAIN} order-1 z-[2] lg:order-2`}>
+        <div className={`omega-workstation__main ${mainClass} order-1 z-[2] lg:order-2`}>
           {main}
         </div>
 
-        <div className="omega-workstation__right relative order-3 z-[2] min-w-0 max-lg:pt-3 lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden lg:pt-0">
-          <CrystalRowGroove className="absolute inset-x-0 top-0 z-[2] lg:hidden" />
-          {right}
-        </div>
+        {hasRight ? (
+          <div className="omega-workstation__right relative order-3 z-[2] min-w-0 max-lg:pt-3 lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden lg:pt-0">
+            <CrystalRowGroove className="absolute inset-x-0 top-0 z-[2] lg:hidden" />
+            {right}
+          </div>
+        ) : null}
       </div>
     </div>
   )

@@ -6,17 +6,18 @@ import type {
 import { getCommitmentDisplayStatus } from '@/modules/commitments/utils/commitmentValidation.utils'
 import { STATUS_BADGE_CLASSES } from '@/modules/monitoring/components/presentation'
 import { FOCUS_VISIBLE } from '@/modules/monitoring/constants/monitoringTheme'
+import { OmegaIcon } from '@/shared/components/OmegaIcon'
 
 interface SelectedCommitmentPanelProps {
   commitment: Commitment | null
   canValidate: boolean
   isUpdating: boolean
-  onValidate: (status: 'Cumplido' | 'Incumplido') => void
+  onValidate: (status: CommitmentStatus) => void
 }
 
 const DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/
 const PANEL_FRAME =
-  'omega-subpanel selected-commitment-panel flex h-full min-w-0 min-h-0 w-full flex-col gap-1.5 overflow-x-hidden overflow-y-auto border'
+  'omega-subpanel selected-commitment-panel flex h-full min-w-0 min-h-0 w-full flex-col gap-1.5 overflow-x-hidden overflow-y-auto'
 const PANEL_TITLE =
   'selected-commitment-title text-sm font-semibold leading-normal text-slate-800'
 
@@ -58,19 +59,19 @@ export function SelectedCommitmentPanel({
   if (!commitment) {
     return (
       <section
-        className={`${PANEL_FRAME} is-empty`}
+        className={`${PANEL_FRAME} is-empty omega-surface-open`}
         aria-labelledby="selected-commitment-heading"
       >
         <p
           id="selected-commitment-heading"
-          className="omega-section-title text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600"
+          className="omega-type-meta font-medium text-slate-400"
         >
-          Compromiso seleccionado
+          Acción
         </p>
         <div className="flex min-h-0 flex-1 items-center justify-center">
-          <p className="w-full px-1 text-center text-xs leading-snug text-slate-600">
-            Seleccione un compromiso en la consola central para consultar su
-            información.
+          <p className="w-full px-1 text-center text-sm leading-relaxed text-slate-400">
+            Elija un compromiso en la lista central para verlo aquí y
+            validarlo.
           </p>
         </div>
       </section>
@@ -81,23 +82,23 @@ export function SelectedCommitmentPanel({
     optimisticStatus ?? getCommitmentDisplayStatus(commitment)
   const validateDisabled = !canValidate || isUpdating
 
-  const handleValidate = (status: 'Cumplido' | 'Incumplido') => {
+  const handleValidate = (status: CommitmentStatus) => {
     setOptimisticStatus(status)
     onValidate(status)
   }
 
   return (
     <section
-      className={PANEL_FRAME}
+      className={`${PANEL_FRAME} omega-surface-feature`}
       aria-labelledby="selected-commitment-heading"
       aria-busy={isUpdating}
     >
       <header className="flex min-w-0 items-center justify-between gap-2">
         <p
           id="selected-commitment-heading"
-          className="omega-section-title text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600"
+          className="omega-type-meta font-medium text-slate-400"
         >
-          Compromiso seleccionado
+          Compromiso a validar
         </p>
         <p className="shrink-0 break-all font-mono text-[10px] tracking-[0.08em] text-slate-600">
           {commitment.id}
@@ -108,7 +109,11 @@ export function SelectedCommitmentPanel({
         className={`shrink-0 max-w-full self-start ${STATUS_BADGE_CLASSES[displayStatus]}`}
         title={displayStatus}
       >
-        {displayStatus}
+        {displayStatus === 'Pendiente de validación'
+          ? 'En proceso'
+          : displayStatus === 'Incumplido'
+            ? 'No cumplido'
+            : displayStatus}
       </span>
       <h3 className={`${PANEL_TITLE} shrink-0`}>
         {commitment.title}
@@ -136,22 +141,36 @@ export function SelectedCommitmentPanel({
         </div>
       </dl>
 
-      <div className="mt-1 grid shrink-0 grid-cols-2 gap-1.5">
+      <div className="selected-commitment-panel__decisions mt-1 shrink-0">
         <button
           type="button"
           disabled={validateDisabled}
+          aria-pressed={displayStatus === 'Cumplido'}
           onClick={() => handleValidate('Cumplido')}
-          className={`rounded-sm border border-emerald-600/30 bg-emerald-50/45 px-1.5 py-1 text-[10px] font-semibold text-emerald-800 transition-colors hover:bg-emerald-50/70 disabled:cursor-not-allowed disabled:opacity-50 ${FOCUS_VISIBLE}`}
+          className={`selected-commitment-panel__decision selected-commitment-panel__decision--fulfilled ${FOCUS_VISIBLE}`}
         >
+          <OmegaIcon name="check" size={17} />
           Cumplido
         </button>
         <button
           type="button"
           disabled={validateDisabled}
-          onClick={() => handleValidate('Incumplido')}
-          className={`rounded-sm border border-red-600/30 bg-red-50/40 px-1.5 py-1 text-[10px] font-semibold text-red-800 transition-colors hover:bg-red-50/65 disabled:cursor-not-allowed disabled:opacity-50 ${FOCUS_VISIBLE}`}
+          aria-pressed={displayStatus === 'Pendiente de validación'}
+          onClick={() => handleValidate('Pendiente de validación')}
+          className={`selected-commitment-panel__decision selected-commitment-panel__decision--progress ${FOCUS_VISIBLE}`}
         >
-          Incumplido
+          <OmegaIcon name="clock" size={17} />
+          En proceso
+        </button>
+        <button
+          type="button"
+          disabled={validateDisabled}
+          aria-pressed={displayStatus === 'Incumplido'}
+          onClick={() => handleValidate('Incumplido')}
+          className={`selected-commitment-panel__decision selected-commitment-panel__decision--breached ${FOCUS_VISIBLE}`}
+        >
+          <OmegaIcon name="x" size={17} />
+          No cumplido
         </button>
       </div>
     </section>

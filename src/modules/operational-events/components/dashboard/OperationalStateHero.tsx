@@ -27,7 +27,10 @@ export function OperationalStateHero({ metrics }: OperationalStateHeroProps) {
   return (
     <section className="omega-cmd-band" aria-labelledby="intel-state-heading">
       <div>
-        <p className="omega-section-eyebrow mb-2">Estado</p>
+        <p className="omega-section-eyebrow mb-1">Estado</p>
+        <p className="omega-section-hint mb-2">
+          Muestra el nivel actual de riesgo operacional.
+        </p>
         <h2
           id="intel-state-heading"
           className="omega-cmd-band__status flex items-center gap-3"
@@ -47,7 +50,7 @@ export function OperationalStateHero({ metrics }: OperationalStateHeroProps) {
         </p>
       </div>
 
-      <dl className="omega-cmd-band__satellites" aria-label="Señales satélite">
+      <dl className="omega-cmd-band__satellites" aria-label="Indicadores satélite">
         <div>
           <dd className="omega-cmd-sat__value">{metrics.criticalCount}</dd>
           <dt className="omega-cmd-sat__label">Críticos</dt>
@@ -101,7 +104,7 @@ export function OperationalContextStrip({
         <span className="omega-cmd-context__value">
           {TREND_SHORT[metrics.trend]}
         </span>
-        <span className="omega-cmd-context__label">Señal</span>
+        <span className="omega-cmd-context__label">Tendencia</span>
       </div>
       {metrics.dominantCategoryName ? (
         <div className="omega-cmd-context__item min-w-0">

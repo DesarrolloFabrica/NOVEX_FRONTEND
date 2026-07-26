@@ -6,7 +6,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { useCommitments } from '@/modules/commitments/hooks/useCommitments'
-import { canApplyAreaValidation } from '@/modules/commitments/utils/commitmentValidation.utils'
+import type { CommitmentStatus } from '@/modules/commitments/types/commitment.types'
+import {
+  canApplyAreaValidation,
+  getCommitmentDisplayStatus,
+} from '@/modules/commitments/utils/commitmentValidation.utils'
 import {
   AREAS,
   GLOBAL_AREA,
@@ -30,7 +34,6 @@ export function MonitoringPage() {
     loading,
     error,
     loadCommitments,
-    resetCommitments,
     updateCommitmentDraftStatus,
     applyAreaValidation,
   } = useCommitments()
@@ -38,8 +41,9 @@ export function MonitoringPage() {
   const isEjecutor = user?.role === 'ejecutor'
   // Caso límite de presentación: un ejecutor sin área operativa asignada.
   const executorWithoutArea = isEjecutor && !user?.selectedAreaId
-  // Solo el supervisor valida compromisos; el ejecutor únicamente consulta.
-  const canValidate = user?.role === 'supervisor'
+  // El ejecutor califica el avance; el supervisor consolida el área.
+  const canValidate = user != null
+  const canApplyValidationForRole = user?.role === 'supervisor'
 
   // Estado local de la UI: el supervisor arranca en la Vista General (global);
   // el ejecutor arranca (y queda fijado) en su propia área operativa.
@@ -95,6 +99,23 @@ export function MonitoringPage() {
     [items, selectedArea],
   )
 
+  // Mantiene una acción disponible desde la entrada y al cambiar de área.
+  useEffect(() => {
+    if (loading) return
+    setSelectedCommitmentId((currentId) => {
+      if (currentId && areaCommitments.some(({ id }) => id === currentId)) {
+        return currentId
+      }
+      return (
+        areaCommitments.find(
+          (commitment) =>
+            getCommitmentDisplayStatus(commitment) ===
+            'Pendiente de validación',
+        )?.id ?? areaCommitments[0]?.id ?? null
+      )
+    })
+  }, [areaCommitments, loading])
+
   // Compromiso enfocado: en vista global busca en todos los operativos.
   const selectedCommitment = useMemo(() => {
     if (!selectedCommitmentId) return null
@@ -133,8 +154,11 @@ export function MonitoringPage() {
   }, [areaCommitments])
 
   const canApplyValidation = useMemo(
-    () => !isGlobal && canApplyAreaValidation(areaCommitments),
-    [isGlobal, areaCommitments],
+    () =>
+      canApplyValidationForRole &&
+      !isGlobal &&
+      canApplyAreaValidation(areaCommitments),
+    [canApplyValidationForRole, isGlobal, areaCommitments],
   )
 
   const handleSelectArea = useCallback(
@@ -155,7 +179,7 @@ export function MonitoringPage() {
 
   // Califica el compromiso enfocado en borrador; el área no cambia hasta aplicar.
   const handleValidateCommitment = useCallback(
-    async (status: 'Cumplido' | 'Incumplido') => {
+    async (status: CommitmentStatus) => {
       if (!selectedCommitment || !user || !canValidate) return
       const focusedCommitmentId = selectedCommitment.id
       setIsUpdating(true)
@@ -170,7 +194,7 @@ export function MonitoringPage() {
   )
 
   const handleApplyAreaValidation = useCallback(async () => {
-    if (!user || !canValidate || isGlobal || !canApplyValidation) return
+    if (!user || !canApplyValidationForRole || isGlobal || !canApplyValidation) return
     setIsApplyingValidation(true)
     try {
       await applyAreaValidation(selectedAreaId, {
@@ -182,7 +206,7 @@ export function MonitoringPage() {
     }
   }, [
     user,
-    canValidate,
+    canApplyValidationForRole,
     isGlobal,
     canApplyValidation,
     applyAreaValidation,
@@ -217,7 +241,6 @@ export function MonitoringPage() {
             onValidateCommitment={handleValidateCommitment}
             onApplyAreaValidation={handleApplyAreaValidation}
             onLogout={() => void logout()}
-            onReset={() => void resetCommitments()}
           />
         </MainScreen>
       </OmegaFrame>

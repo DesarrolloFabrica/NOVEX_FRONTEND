@@ -23,7 +23,7 @@ export const INK_BODY = 'text-sm text-slate-600'
 
 /** Tinta de leyenda — etiquetas, subtítulos, pies de campo. */
 export const INK_CAPTION =
-  'omega-section-title text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-600'
+  'omega-section-title omega-type-meta font-medium tracking-normal text-slate-400'
 
 /** Tinta auxiliar — contadores, apoyo, metadata menor. */
 export const INK_AUXILIARY = 'font-mono text-[10px] text-slate-600'

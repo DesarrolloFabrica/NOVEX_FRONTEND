@@ -23,7 +23,6 @@ export type {
   RiskLevel,
 } from '@/modules/operational-events/types/operational-event.types'
 
-export { OPERATIONAL_EVENTS } from '@/modules/operational-events/data/operational-events.mock'
 export { INCIDENT_CATEGORIES } from '@/modules/operational-events/data/incident-categories.mock'
 export {
   GLOBAL_OPERATIONAL_AREA,

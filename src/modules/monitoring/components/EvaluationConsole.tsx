@@ -2,7 +2,7 @@
 // Sprint 10.1: registros compactos de alta densidad — navegación, no tarjetas.
 // Sprint 10.2: ventana fija con scroll interno para la lista de compromisos.
 
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import type {
   Commitment,
   CommitmentStatus,
@@ -33,6 +33,7 @@ import {
   CRYSTAL_CONSOLE_READING_FIELD,
   CRYSTAL_SKELETON_PULSE,
 } from '@/modules/monitoring/constants/materialTheme'
+import { OmegaIcon } from '@/shared/components/OmegaIcon'
 
 interface EvaluationConsoleProps {
   commitments: Commitment[]
@@ -42,6 +43,7 @@ interface EvaluationConsoleProps {
   executorWithoutArea: boolean
   /** Vista agregada (Visión General Operaciones). */
   isGlobal?: boolean
+  areaLabel?: string
   canValidate?: boolean
   canApplyValidation?: boolean
   isApplyingValidation?: boolean
@@ -62,6 +64,8 @@ const STATUS_OPTIONS: StatusFilter[] = [
   'Cumplido',
   'Incumplido',
 ]
+
+const PAGE_SIZE = 3
 
 const SELECT_CLASSES =
   `appearance-none px-2 py-0.5 ${CONSOLE_FILTER} transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400/40`
@@ -114,21 +118,27 @@ function ConsoleSkeleton() {
 /** Estado vacío/informativo integrado en la ventana fija de la consola. */
 function ConsoleNotice({
   message,
+  title,
+  actionHint,
   role,
   state = 'empty',
 }: {
   message: string
+  title?: string
+  actionHint?: string
   role?: 'alert'
   state?: 'empty' | 'error'
 }) {
   return (
-    <p
+    <div
       role={role}
       className="omega-console-notice"
       data-state={role === 'alert' ? 'error' : state}
     >
-      {message}
-    </p>
+      {title ? <strong>{title}</strong> : null}
+      <p>{message}</p>
+      {actionHint ? <span>{actionHint}</span> : null}
+    </div>
   )
 }
 
@@ -139,6 +149,7 @@ export function EvaluationConsole({
   error,
   executorWithoutArea,
   isGlobal = false,
+  areaLabel,
   canValidate = false,
   canApplyValidation = false,
   isApplyingValidation = false,
@@ -149,6 +160,7 @@ export function EvaluationConsole({
   const roomVisual = getOperationalRoomVisual(environment)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('Todos')
   const [sortOrder, setSortOrder] = useState<SortOrder>('impact-desc')
+  const [page, setPage] = useState(1)
 
   const visibleCommitments = useMemo(() => {
     const filtered =
@@ -165,6 +177,22 @@ export function EvaluationConsole({
         : a.operationalImpact - b.operationalImpact,
     )
   }, [commitments, statusFilter, sortOrder])
+
+  const totalPages = Math.max(1, Math.ceil(visibleCommitments.length / PAGE_SIZE))
+  const currentPage = Math.min(page, totalPages)
+  const pageStart = (currentPage - 1) * PAGE_SIZE
+  const pageEnd = pageStart + PAGE_SIZE
+  const paginatedCommitments = visibleCommitments.slice(pageStart, pageEnd)
+  const visibleRangeStart = visibleCommitments.length === 0 ? 0 : pageStart + 1
+  const visibleRangeEnd = Math.min(pageEnd, visibleCommitments.length)
+
+  useEffect(() => {
+    setPage((value) => Math.min(value, totalPages))
+  }, [totalPages])
+
+  useEffect(() => {
+    setPage(1)
+  }, [commitments])
 
   const hasData =
     !loading && !error && !executorWithoutArea && commitments.length > 0
@@ -193,19 +221,26 @@ export function EvaluationConsole({
         />
       )}
       <header className={`mb-3.5 shrink-0 ${CRYSTAL_CONSOLE_HEADER}`}>
-        <h2 className={`flex items-center gap-2 ${CONSOLE_STATION_TITLE}`}>
-          <CrystalStationHeaderBracket />
-          <span
-            aria-hidden="true"
-            className={`h-2 w-2 shrink-0 rounded-full ${AMBIENT_ACCENT_TRANSITION} ${roomVisual.consoleAccent}`}
-          />
-          Consola central
-          {isGlobal ? (
-            <span className={`ml-1.5 font-normal normal-case ${CONSOLE_META}`}>
-              · Vista agregada
-            </span>
-          ) : null}
-        </h2>
+        <div className="min-w-0">
+          <h2 className={`flex items-center gap-2 ${CONSOLE_STATION_TITLE}`}>
+            <CrystalStationHeaderBracket />
+            <span
+              aria-hidden="true"
+              className={`h-2 w-2 shrink-0 rounded-full ${AMBIENT_ACCENT_TRANSITION} ${roomVisual.consoleAccent}`}
+            />
+            Compromisos
+            {isGlobal ? (
+              <span className={`ml-1.5 font-normal normal-case ${CONSOLE_META}`}>
+                · todas las áreas
+              </span>
+            ) : null}
+          </h2>
+          <p className="omega-section-hint mt-1 mb-0">
+            {areaLabel
+              ? `Seleccione un compromiso de ${areaLabel}.`
+              : 'Elija un compromiso para validarlo.'}
+          </p>
+        </div>
 
         {hasData ? (
           <div
@@ -214,14 +249,21 @@ export function EvaluationConsole({
             <select
               aria-label="Filtrar por estado"
               value={statusFilter}
-              onChange={(event) =>
+              onChange={(event) => {
                 setStatusFilter(event.target.value as StatusFilter)
-              }
+                setPage(1)
+              }}
               className={`omega-console-filter ${SELECT_CLASSES} ${FOCUS_VISIBLE}`}
             >
               {STATUS_OPTIONS.map((option) => (
                 <option key={option} value={option}>
-                  {option === 'Todos' ? 'Todos los estados' : option}
+                  {option === 'Todos'
+                    ? 'Todos los estados'
+                    : option === 'Pendiente de validación'
+                      ? 'En proceso'
+                      : option === 'Incumplido'
+                        ? 'No cumplido'
+                        : option}
                 </option>
               ))}
             </select>
@@ -236,22 +278,30 @@ export function EvaluationConsole({
               aria-busy={isApplyingValidation}
               onClick={() => onApplyAreaValidation?.()}
             >
+              <OmegaIcon name="check" size={14} />
               {isApplyingValidation ? 'Aplicando…' : 'Aplicar validación'}
             </button>
             <select
               aria-label="Ordenar por impacto operativo"
               value={sortOrder}
-              onChange={(event) =>
+              onChange={(event) => {
                 setSortOrder(event.target.value as SortOrder)
-              }
+                setPage(1)
+              }}
               className={`omega-console-filter ${SELECT_CLASSES} ${FOCUS_VISIBLE}`}
             >
               <option value="impact-desc">Mayor impacto primero</option>
               <option value="impact-asc">Menor impacto primero</option>
             </select>
             <span className={`shrink-0 ${CONSOLE_META}`}>
-              {visibleCommitments.length}/{commitments.length}
+              {visibleRangeStart}-{visibleRangeEnd} de {visibleCommitments.length}
               {isGlobal ? ' · todas las áreas' : ''}
+            </span>
+            <span className="omega-help-tip" tabIndex={0} aria-label="Ayuda de validación">
+              <OmegaIcon name="help" size={14} />
+              <span role="tooltip">
+                Primero elija un compromiso, marque Cumplido o Incumplido en el panel izquierdo y luego aplique la validación del área.
+              </span>
             </span>
           </div>
         ) : (
@@ -274,33 +324,39 @@ export function EvaluationConsole({
           <ConsoleNotice
             role="alert"
             state="error"
-            message="No fue posible cargar los compromisos. Reinicia los datos o intenta nuevamente."
+            message="No fue posible cargar los compromisos. Intente de nuevo en unos momentos."
           />
         </ConsoleListViewport>
       ) : executorWithoutArea ? (
         <ConsoleListViewport label="Lista de compromisos">
-          <ConsoleNotice message="No tienes un área operativa asignada. Contacta al supervisor para habilitar tu acceso." />
+          <ConsoleNotice message="Aún no tiene un área asignada. Pida al supervisor que habilite su acceso para continuar." />
         </ConsoleListViewport>
       ) : commitments.length === 0 ? (
         <ConsoleListViewport label="Lista de compromisos">
           <ConsoleNotice
+            title={isGlobal ? 'Sin compromisos registrados' : 'Área sin compromisos activos'}
             message={
               isGlobal
-                ? 'No hay compromisos registrados en las áreas operativas.'
-                : 'No hay compromisos registrados para esta área.'
+                ? 'Aún no hay compromisos cargados para la operación general.'
+                : `No encontramos compromisos para ${areaLabel ?? 'esta área'} en este momento.`
             }
+            actionHint={isGlobal ? 'Seleccione un área operativa para revisar el detalle.' : 'Cambie el área desde el selector superior para continuar.'}
           />
         </ConsoleListViewport>
       ) : visibleCommitments.length === 0 ? (
         <ConsoleListViewport label="Lista de compromisos">
-          <ConsoleNotice message="Ningún compromiso coincide con el filtro seleccionado." />
+          <ConsoleNotice
+            title="Sin resultados para este filtro"
+            message="No hay compromisos que coincidan con la vista seleccionada."
+            actionHint="Pruebe otro estado o cambie el orden de revisión."
+          />
         </ConsoleListViewport>
       ) : (
         <ConsoleListViewport label="Lista de compromisos">
           <ul
             className={`${CRYSTAL_LIST_PAD} ${CRYSTAL_CONSOLE_READING_FIELD}`}
           >
-            {visibleCommitments.map((commitment) => (
+            {paginatedCommitments.map((commitment) => (
               <li key={commitment.id} className="relative">
                 <CommitmentEvaluationCard
                   commitment={commitment}
@@ -310,6 +366,36 @@ export function EvaluationConsole({
               </li>
             ))}
           </ul>
+          <nav
+            className="omega-console-pagination"
+            aria-label="Paginación de compromisos"
+          >
+              <button
+                type="button"
+                className={FOCUS_VISIBLE}
+                disabled={currentPage === 1}
+                onClick={() => setPage((value) => Math.max(1, value - 1))}
+                aria-label="Página anterior"
+              >
+                <OmegaIcon name="chevron-left" size={15} />
+                Anterior
+              </button>
+              <span>
+                Página {currentPage} de {totalPages}
+              </span>
+              <button
+                type="button"
+                className={FOCUS_VISIBLE}
+                disabled={currentPage === totalPages}
+                onClick={() =>
+                  setPage((value) => Math.min(totalPages, value + 1))
+                }
+                aria-label="Página siguiente"
+              >
+                Siguiente
+                <OmegaIcon name="chevron-right" size={15} />
+              </button>
+          </nav>
         </ConsoleListViewport>
       )}
     </section>

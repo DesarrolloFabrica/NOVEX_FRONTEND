@@ -10,7 +10,7 @@
 import type { Commitment } from '@/modules/commitments/types/commitment.types'
 
 /** Clave de almacenamiento versionada (permite migraciones futuras). */
-export const COMMITMENTS_STORAGE_KEY = 'omega.commitments.v2'
+export const COMMITMENTS_STORAGE_KEY = 'omega.commitments.v4'
 
 /** Obtiene localStorage si existe; null en cualquier otro caso. */
 function getStorage(): Storage | null {
@@ -32,6 +32,7 @@ function isValidCommitmentArray(value: unknown): value is Commitment[] {
         typeof (item as Commitment).id === 'string' &&
         typeof (item as Commitment).status === 'string' &&
         ((item as Commitment).draftStatus === undefined ||
+          (item as Commitment).draftStatus === 'Pendiente de validación' ||
           (item as Commitment).draftStatus === 'Cumplido' ||
           (item as Commitment).draftStatus === 'Incumplido') &&
         Array.isArray((item as Commitment).history),

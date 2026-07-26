@@ -1,17 +1,32 @@
 // Componente: atención inmediata — zona dominante del tablero.
-// Sprint 10: score · título · dónde (antes que metadatos).
 
 import { Link } from 'react-router-dom'
 import type { OperationalEvent } from '@/modules/operational-events/types/operational-event.types'
 import { FOCUS_VISIBLE } from '@/modules/monitoring/constants/monitoringTheme'
 import {
   EVENT_STATUS_LABEL,
-  RISK_LEVEL_LABEL,
   eventRef,
 } from '@/modules/operational-events/components/eventPresentation'
+import { OmegaIcon } from '@/shared/components/OmegaIcon'
 
 interface PriorityEventsListProps {
   events: OperationalEvent[]
+}
+
+function formatRelativeTime(event: OperationalEvent): string {
+  const stamp = event.lastUpdateAt ?? event.createdAt
+  const time = new Date(stamp).getTime()
+  if (Number.isNaN(time)) return 'Sin fecha'
+
+  const elapsedMinutes = Math.max(0, Math.floor((Date.now() - time) / 60_000))
+  if (elapsedMinutes < 1) return 'Ahora'
+  if (elapsedMinutes < 60) return `Hace ${elapsedMinutes} min`
+
+  const hours = Math.floor(elapsedMinutes / 60)
+  if (hours < 24) return `Hace ${hours} h`
+
+  const days = Math.floor(hours / 24)
+  return `Hace ${days} d`
 }
 
 export function PriorityEventsList({ events }: PriorityEventsListProps) {
@@ -20,59 +35,108 @@ export function PriorityEventsList({ events }: PriorityEventsListProps) {
       className="omega-intel-priority"
       aria-labelledby="intel-priority-heading"
     >
-      <div className="mb-2 flex items-baseline justify-between gap-3">
-        <h3 id="intel-priority-heading" className="omega-section-eyebrow mb-0">
-          Atender primero
-        </h3>
+      <div className="omega-intel-priority__heading">
+        <div className="omega-intel-priority__heading-copy">
+          <div className="omega-intel-priority__title-row">
+            <h3 id="intel-priority-heading">Cola de atención</h3>
+          </div>
+          <p>
+            Situaciones priorizadas por la IA según su impacto y urgencia.
+          </p>
+        </div>
         <Link
           to="/operational-events"
           viewTransition
-          className={`text-[0.58rem] font-semibold uppercase tracking-[0.14em] text-slate-500 hover:text-indigo-700 ${FOCUS_VISIBLE}`}
+          className={`omega-intel-priority__view-all ${FOCUS_VISIBLE}`}
         >
-          Expedientes
+          Ver todas
+          <OmegaIcon name="arrow-up-right" size={12} />
         </Link>
       </div>
 
       {events.length === 0 ? (
-        <p className="omega-empty-signal py-3 text-xs text-slate-500">
-          Sin prioridades activas.
+        <p className="omega-empty-signal py-3 text-sm leading-relaxed text-slate-400">
+          Todavía no hay nada que priorizar.{' '}
+          <Link
+            to="/operational-events/register"
+            viewTransition
+            className={`font-semibold text-indigo-300 hover:text-indigo-200 ${FOCUS_VISIBLE}`}
+          >
+            Registre la primera situación
+          </Link>
         </p>
       ) : (
-        <ul className="omega-intel-priority__list">
-          {events.map((event) => {
-            const risk = event.interpretation?.riskLevel
-            const score = event.interpretation?.riskScore
-            const where =
-              event.interpretation?.affectedAreaNames[0] ??
-              event.sourceAreaName
-            return (
-              <li key={event.id}>
-                <Link
-                  to={`/operational-events?event=${encodeURIComponent(event.id)}`}
-                  viewTransition
-                  className={`omega-intel-priority__row ${FOCUS_VISIBLE}`}
-                >
-                  <p className="omega-intel-priority__score">
-                    {score ?? '—'}
-                  </p>
-                  <div className="min-w-0">
-                    <p className="omega-intel-priority__title">{event.title}</p>
-                    <p className="omega-intel-priority__meta">
-                      <span className="omega-intel-priority__where">{where}</span>
-                      {' · '}
-                      {eventRef(event.id)} · {EVENT_STATUS_LABEL[event.status]}
-                    </p>
-                  </div>
-                  {risk ? (
-                    <span className="omega-exec-chip text-slate-600">
-                      {RISK_LEVEL_LABEL[risk]}
-                    </span>
-                  ) : null}
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
+        <div className="omega-intel-priority__table-wrap">
+          <table className="omega-intel-priority__table">
+            <thead>
+              <tr>
+                <th scope="col">Prioridad</th>
+                <th scope="col">Situación</th>
+                <th scope="col">Área / Proceso</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Actualizado</th>
+                <th scope="col">Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {events.map((event) => {
+                const score = event.interpretation?.riskScore
+                const where =
+                  event.interpretation?.affectedAreaNames[0] ??
+                  event.sourceAreaName
+                const category = event.interpretation?.categoryName
+                return (
+                  <tr key={event.id}>
+                    <td data-label="Prioridad">
+                      <span
+                        className="omega-intel-priority__score"
+                        data-risk={event.interpretation?.riskLevel ?? 'moderate'}
+                      >
+                        {score ?? '—'}
+                      </span>
+                    </td>
+                    <td data-label="Situación">
+                      <strong className="omega-intel-priority__event-title">
+                        {event.title}
+                      </strong>
+                    </td>
+                    <td data-label="Área / Proceso">
+                      <span className="omega-intel-priority__area">
+                        {where}
+                        {category ? ` · ${category}` : ''}
+                        {' · '}
+                        {eventRef(event.id)}
+                      </span>
+                    </td>
+                    <td data-label="Estado">
+                      <span
+                        className="omega-intel-priority__status"
+                        data-status={event.status}
+                      >
+                        {EVENT_STATUS_LABEL[event.status]}
+                      </span>
+                    </td>
+                    <td data-label="Actualizado">
+                      <time dateTime={event.lastUpdateAt ?? event.createdAt}>
+                        {formatRelativeTime(event)}
+                      </time>
+                    </td>
+                    <td data-label="Acción">
+                      <Link
+                        to={`/operational-events?event=${encodeURIComponent(event.id)}`}
+                        viewTransition
+                        className={`omega-intel-priority__detail ${FOCUS_VISIBLE}`}
+                      >
+                        Ver detalle
+                        <OmegaIcon name="arrow-up-right" size={11} />
+                      </Link>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
     </section>
   )

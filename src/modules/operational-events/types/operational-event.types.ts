@@ -98,6 +98,138 @@ export interface OperationalIndicator {
   suggestedByAI: boolean
 }
 
+// ---------------------------------------------------------------------------
+// CONTRATO DEFINITIVO DE INTELIGENCIA OPERACIONAL — omega.intelligence.v2
+//
+// La IA no clasifica incidentes: asiste decisiones. Este contrato responde
+// las preguntas de un Director de Operaciones. Cuando se conecte Gemini real,
+// el proveedor deberá producir exactamente esta estructura (vía backend).
+// ---------------------------------------------------------------------------
+
+/** Versión estable del contrato de inteligencia. */
+export const INTELLIGENCE_CONTRACT_VERSION = 'omega.intelligence.v2'
+
+/** Nivel cualitativo de certeza del análisis (reemplaza "Confianza IA"). */
+export type CertaintyLevel = 'low' | 'medium' | 'high'
+
+/** Prioridad de una acción recomendada. */
+export type ActionPriority = 'immediate' | 'high' | 'medium' | 'scheduled'
+
+/** Tendencia esperada de un indicador operacional. */
+export type IndicatorTrend = 'up' | 'down' | 'stable'
+
+/** Urgencia institucional expresada en la conclusión ejecutiva. */
+export type ExecutiveUrgency = 'immediate' | 'high' | 'medium' | 'low'
+
+/** 1. ¿Qué ocurrió? */
+export interface IncidentSummary {
+  /** Título ejecutivo normalizado por la IA (no el título crudo). */
+  executiveTitle: string
+  /** Resumen dirigido a dirección (2-3 oraciones, sin tecnicismos). */
+  executiveSummary: string
+}
+
+/** 2. ¿Qué tan grave es? — incluye nivel de certeza con explicación. */
+export interface RiskAssessment {
+  riskScore: number
+  riskLevel: RiskLevel
+  severity: ImpactSeverity
+  certainty: {
+    level: CertaintyLevel
+    /** 0..100 para lectura directa en UI. */
+    percentage: number
+    /** Por qué la IA tiene (o no) certeza: fuentes, señales, vacíos. */
+    explanation: string
+  }
+}
+
+/** 4. ¿A quién afecta? — análisis cuantitativo. */
+export interface ImpactAnalysis {
+  internalImpactPercentage: number
+  externalImpactPercentage: number
+  studentImpactPercentage: number
+  /** Procesos institucionales interrumpidos o degradados. */
+  affectedProcesses: string[]
+  /** null cuando la IA no puede inferirlo del contexto. */
+  estimatedAffectedStudents: number | null
+  estimatedAffectedAreas: number
+}
+
+/** Área afectada con nivel y motivo (lista completa). */
+export interface AffectedAreaAssessment {
+  name: string
+  affectationLevel: RiskLevel
+  reason: string
+}
+
+/** ¿Por qué ocurrió? — solo sobre el contexto recibido, sin inventar. */
+export interface RootCauseAnalysis {
+  /** Causas con evidencia directa en el relato/observaciones. */
+  detectedCauses: string[]
+  /** Hipótesis plausibles, marcadas como tales. */
+  hypotheses: string[]
+  /** Dependencias técnicas u organizacionales involucradas. */
+  dependencies: string[]
+}
+
+/** 5. ¿Por qué la IA llegó a esa conclusión? — factores de decisión. */
+export type DecisionFactors = string[]
+
+/** 6. ¿Qué debería hacerse ahora? — acción priorizada. */
+export interface RecommendedAction {
+  priority: ActionPriority
+  action: string
+  reason: string
+  suggestedArea: string
+  /** Ventana recomendada de ejecución (ej. "30 minutos", "24 horas"). */
+  recommendedTime: string
+}
+
+/** 8. ¿Qué indicadores se verán afectados? */
+export interface ExecutiveIndicator {
+  name: string
+  explanation: string
+  unit: string
+  suggestedValue: number
+  trend: IndicatorTrend
+}
+
+/** 9. Hito de seguimiento sugerido. */
+export interface TimelineSuggestion {
+  /** Horizonte temporal (ej. "30 minutos", "2 horas", "24 horas"). */
+  horizon: string
+  checkpoint: string
+}
+
+/** 10. Conclusión final dirigida al Director. */
+export interface ExecutiveConclusion {
+  gravity: string
+  urgency: ExecutiveUrgency
+  recommendation: string
+}
+
+/**
+ * ExecutiveIntelligenceReport — respuesta definitiva del Asistente Ejecutivo
+ * Operacional. Todo proveedor de IA (mock o Gemini real) produce esta forma.
+ */
+export interface ExecutiveIntelligenceReport {
+  contractVersion: typeof INTELLIGENCE_CONTRACT_VERSION
+  incidentSummary: IncidentSummary
+  riskAssessment: RiskAssessment
+  impactAnalysis: ImpactAnalysis
+  affectedAreas: AffectedAreaAssessment[]
+  rootCause: RootCauseAnalysis
+  decisionFactors: DecisionFactors
+  recommendedActions: RecommendedAction[]
+  /** 7. ¿Qué pasa si nadie actúa? */
+  operationalConsequences: string[]
+  operationalIndicators: ExecutiveIndicator[]
+  timelineSuggestions: TimelineSuggestion[]
+  executiveConclusion: ExecutiveConclusion
+  /** Vacíos de información que la IA declara explícitamente (no inventa). */
+  dataGaps: string[]
+}
+
 /**
  * AIInterpretation — resultado estructurado de la capa de inteligencia.
  *
@@ -156,6 +288,12 @@ export interface AIInterpretation {
   interpretedAt: string
   /** Confianza opcional 0..1. */
   confidence?: number
+  /**
+   * Reporte ejecutivo definitivo (contrato omega.intelligence.v2).
+   * Opcional por compatibilidad: interpretaciones antiguas no lo traen.
+   * El proveedor de IA (mock hoy, Gemini mañana) siempre debe producirlo.
+   */
+  executiveReport?: ExecutiveIntelligenceReport
 }
 
 /**

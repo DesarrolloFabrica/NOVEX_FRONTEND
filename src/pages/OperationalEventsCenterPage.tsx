@@ -33,7 +33,7 @@ export function OperationalEventsCenterPage() {
           <ScreenDeck
             environment={environment}
             header={
-              <OmegaProductHeader title="Eventos" />
+              <OmegaProductHeader title="Situaciones registradas" />
             }
           >
             <OperationalEventsCenter

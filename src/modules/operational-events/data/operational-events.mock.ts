@@ -24,6 +24,7 @@ import {
   resolveIncidentCategoryName,
   resolveOperationalAreaName,
 } from '@/modules/operational-events/utils/operationalArea.utils'
+import { buildExecutiveReport } from '@/modules/operational-events/utils/buildExecutiveReport'
 
 /** Semilla mínima para construir un evento con su interpretación mock. */
 interface OperationalEventSeed {
@@ -70,7 +71,7 @@ function buildInterpretation(
     resolveOperationalAreaName(OPERATIONAL_AREAS_CATALOG, areaId),
   )
 
-  return {
+  const interpretation: AIInterpretation = {
     id: `ai-${eventId}`,
     eventId,
     categoryId: seed.categoryId,
@@ -100,6 +101,13 @@ function buildInterpretation(
     interpretedAt: seed.reportedAt,
     confidence: seed.confidence ?? 0.86,
   }
+
+  interpretation.executiveReport = buildExecutiveReport(interpretation, {
+    title: seed.title,
+    description: seed.description,
+  })
+
+  return interpretation
 }
 
 function buildTimeline(
@@ -116,7 +124,7 @@ function buildTimeline(
         at: seed.reportedAt,
         byUserId: seed.reportedBy.id,
         byUserName: seed.reportedBy.name,
-        description: `Evento registrado por ${seed.reportedBy.name}.`,
+          description: `Situación registrada por ${seed.reportedBy.name}.`,
       },
       {
         id: `tl-${eventId}-2`,
@@ -187,7 +195,7 @@ const SEEDS: OperationalEventSeed[] = [
       },
       {
         code: 'OPEN_CRITICAL_EVENTS',
-        label: 'Eventos críticos abiertos',
+        label: 'Situaciones críticas abiertas',
         value: 1,
         unit: 'count',
         direction: 'higher_is_worse',

@@ -38,7 +38,7 @@ export function buildConsolidatedIndicators(input: {
   const engineIndicators: ConsolidatedIndicator[] = [
     {
       code: 'EVT_TOTAL',
-      label: 'Eventos registrados',
+      label: 'Situaciones registradas',
       value: input.events.length,
       unit: 'count',
       direction: 'higher_is_worse',
@@ -46,7 +46,7 @@ export function buildConsolidatedIndicators(input: {
     },
     {
       code: 'EVT_OPEN',
-      label: 'Eventos abiertos',
+      label: 'Situaciones abiertas',
       value: input.openCount,
       unit: 'count',
       direction: 'higher_is_worse',
@@ -54,7 +54,7 @@ export function buildConsolidatedIndicators(input: {
     },
     {
       code: 'EVT_CRITICAL',
-      label: 'Eventos críticos',
+      label: 'Situaciones críticas',
       value: input.criticalCount,
       unit: 'count',
       direction: 'higher_is_worse',

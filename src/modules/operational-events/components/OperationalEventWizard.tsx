@@ -1,12 +1,12 @@
-// Componente: orquestador del wizard de captura de eventos operacionales.
-// Responsabilidad: estado local de pasos + ensamblado del evento + persistencia
-// vía useOperationalEvents. Sin Gemini real.
+// Componente: orquestador del wizard — 2 pasos: capturar e interpretar/guardar.
 
 import { useEffect, useMemo, useState } from 'react'
-import { CRYSTAL_ZONE } from '@/modules/monitoring/constants/monitoringTheme'
-import { EventAnalyzeStep } from '@/modules/operational-events/components/EventAnalyzeStep'
+import { Link } from 'react-router-dom'
+import {
+  CRYSTAL_ZONE,
+  FOCUS_VISIBLE,
+} from '@/modules/monitoring/constants/monitoringTheme'
 import { EventCaptureForm } from '@/modules/operational-events/components/EventCaptureForm'
-import { EventConfirmSave } from '@/modules/operational-events/components/EventConfirmSave'
 import { EventInterpretationView } from '@/modules/operational-events/components/EventInterpretationView'
 import {
   WizardStepRail,
@@ -76,7 +76,7 @@ export function OperationalEventWizard() {
       setEventId(nextId)
       const result = await simulateAIInterpretation(draft, nextId)
       setInterpretation(result)
-      setStep(3)
+      setStep(2)
     } catch (analyzeError) {
       setError(getErrorMessage(analyzeError))
     } finally {
@@ -123,58 +123,76 @@ export function OperationalEventWizard() {
 
       <div className="min-h-0 flex-1 overflow-y-auto pr-1">
         {step === 1 ? (
-          <EventCaptureForm
-            draft={draft}
-            areas={areas}
-            onChange={setDraft}
-            onSubmit={() => {
-              setError(null)
-              setStep(2)
-            }}
-          />
+          <div className="space-y-3">
+            <EventCaptureForm
+              draft={draft}
+              areas={areas}
+              submitLabel={analyzing ? 'Analizando…' : 'Analizar con IA'}
+              submitDisabled={analyzing}
+              onChange={setDraft}
+              onSubmit={() => {
+                void handleAnalyze()
+              }}
+            />
+            {error ? (
+              <p role="alert" className="text-sm text-red-700">
+                {error}
+              </p>
+            ) : null}
+          </div>
         ) : null}
 
-        {step === 2 ? (
-          <EventAnalyzeStep
-            draft={draft}
-            analyzing={analyzing}
+        {step === 2 && interpretation && !saved ? (
+          <EventInterpretationView
+            interpretation={interpretation}
+            saving={saving || storeLoading}
             error={error}
-            onAnalyze={() => void handleAnalyze()}
             onBack={() => {
               setError(null)
               setStep(1)
             }}
-          />
-        ) : null}
-
-        {step === 3 && interpretation ? (
-          <EventInterpretationView
-            interpretation={interpretation}
-            onBack={() => {
-              setError(null)
-              setStep(2)
-            }}
-            onContinue={() => {
-              setError(null)
-              setStep(4)
-            }}
-          />
-        ) : null}
-
-        {step === 4 && interpretation ? (
-          <EventConfirmSave
-            draft={draft}
-            interpretation={interpretation}
-            saving={saving || storeLoading}
-            saved={saved}
-            error={error}
-            onBack={() => {
-              setError(null)
-              setStep(3)
-            }}
             onSave={() => void handleSave()}
-            onRegisterAnother={handleRegisterAnother}
           />
+        ) : null}
+
+        {step === 2 && saved ? (
+          <section className="omega-event-saved space-y-5">
+            <header className="space-y-1">
+              <h2 className="text-sm font-semibold tracking-tight text-emerald-800">
+                Situación guardada
+              </h2>
+              <p className="text-[0.8rem] leading-relaxed text-slate-500">
+                Ya está disponible en Situaciones registradas.
+              </p>
+            </header>
+
+            <div className="py-1 text-sm">
+              <p className="font-medium text-slate-800">{draft.title}</p>
+              {interpretation ? (
+                <p className="mt-1 text-[0.8rem] text-slate-500">
+                  {interpretation.categoryName} · Riesgo{' '}
+                  {interpretation.riskScore}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-400/15 pt-4">
+              <Link
+                to="/operational-events"
+                viewTransition
+                className={`text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-indigo-700 hover:text-indigo-900 ${FOCUS_VISIBLE}`}
+              >
+                Situaciones registradas
+              </Link>
+              <button
+                type="button"
+                onClick={handleRegisterAnother}
+                className={`bg-indigo-600/90 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-600 ${FOCUS_VISIBLE}`}
+              >
+                Registrar otra
+              </button>
+            </div>
+          </section>
         ) : null}
       </div>
     </div>

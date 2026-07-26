@@ -28,7 +28,7 @@ export type CommitmentsAction =
   | {
       type: 'COMMITMENT_DRAFT_STATUS_UPDATED'
       id: string
-      draftStatus: Extract<CommitmentStatus, 'Cumplido' | 'Incumplido'>
+      draftStatus: CommitmentStatus
     }
   | {
       type: 'COMMITMENT_STATUS_UPDATED'

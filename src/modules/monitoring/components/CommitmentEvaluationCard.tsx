@@ -7,6 +7,7 @@ import { STATUS_BADGE_CLASSES } from '@/modules/monitoring/components/presentati
 import {
   FOCUS_VISIBLE,
 } from '@/modules/monitoring/constants/monitoringTheme'
+import { OmegaIcon } from '@/shared/components/OmegaIcon'
 
 interface CommitmentEvaluationCardProps {
   commitment: Commitment
@@ -63,15 +64,25 @@ export function CommitmentEvaluationCard({
           data-status={displayStatus}
           className={`omega-commitment-row__status ${STATUS_BADGE_CLASSES[displayStatus]}`}
         >
-          {displayStatus}
+          {displayStatus === 'Pendiente de validación'
+            ? 'En proceso'
+            : displayStatus === 'Incumplido'
+              ? 'No cumplido'
+              : displayStatus}
         </span>
 
         <time
           dateTime={commitment.dueDate}
           className="omega-commitment-row__date"
         >
+          <OmegaIcon name="calendar" size={14} />
           {formatDueDate(commitment.dueDate)}
         </time>
+        <OmegaIcon
+          name="chevron-right"
+          size={18}
+          className="omega-commitment-row__chevron"
+        />
       </div>
     </button>
   )

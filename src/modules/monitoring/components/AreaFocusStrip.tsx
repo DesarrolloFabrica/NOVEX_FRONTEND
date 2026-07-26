@@ -2,24 +2,9 @@
 // Solo cambio de contexto — la información vive en la Consola Central.
 
 import type { AreaHealthEntry } from '@/modules/monitoring/selectors/areaHealth.selectors'
-import { AreaModuleMonogram } from '@/modules/monitoring/components/AreaModuleIdentity'
-import {
-  CrystalStationHeaderBracket,
-  CrystalStructuralRule,
-} from '@/modules/monitoring/components/CrystalStructure'
-import { getAreaModuleIdentity } from '@/modules/monitoring/constants/areaIdentity'
-import {
-  getModuleSelectorActive,
-  MODULE_SELECTOR_BUTTON,
-  MODULE_SELECTOR_IDLE_ICON,
-  MODULE_SELECTOR_IDLE_ICON_GLOBAL,
-  MODULE_SELECTOR_IDLE_NAME,
-  MODULE_SELECTOR_IDLE_SURFACE,
-  MODULE_SELECTOR_ROW,
-  MODULE_SELECTOR_STRIP,
-} from '@/modules/monitoring/constants/moduleSelectorTheme'
 import { CRYSTAL_STATION_TITLE, FOCUS_VISIBLE } from '@/modules/monitoring/constants/monitoringTheme'
 import { MODULE_STATION_TITLE } from '@/modules/monitoring/constants/visualHierarchy'
+import { OmegaIcon } from '@/shared/components/OmegaIcon'
 
 interface AreaFocusStripProps {
   entries: AreaHealthEntry[]
@@ -32,65 +17,51 @@ export function AreaFocusStrip({
   selectedAreaId,
   onSelectArea,
 }: AreaFocusStripProps) {
+  const selectedEntry = entries.find(({ area }) => area.id === selectedAreaId)
+
   return (
-    <section className={`omega-module-strip ${MODULE_SELECTOR_STRIP}`}>
-      <h2
-        className={`mb-1 flex items-center gap-2 px-4 sm:px-5 lg:px-6 ${CRYSTAL_STATION_TITLE} ${MODULE_STATION_TITLE}`}
-      >
-        <CrystalStationHeaderBracket />
-        Módulos operativos
-      </h2>
+    <section className="omega-module-strip">
+      <div className="omega-module-strip__header px-4 sm:px-5 lg:px-6">
+        <div className="min-w-0">
+          <h2
+            className={`mb-1 ${CRYSTAL_STATION_TITLE} ${MODULE_STATION_TITLE}`}
+          >
+            Áreas
+          </h2>
+          <p className="omega-section-hint mb-0">
+            Seleccione el área operativa que va a revisar.
+          </p>
+        </div>
+        <span className="omega-help-tip" tabIndex={0} aria-label="Ayuda sobre selección de área">
+          <OmegaIcon name="help" size={15} />
+          <span role="tooltip">
+            Cambie de área para ver sus compromisos, validar pendientes y revisar su salud operativa.
+          </span>
+        </span>
+      </div>
 
-      <CrystalStructuralRule />
-
-      <div className={`omega-module-row ${MODULE_SELECTOR_ROW} overflow-x-auto`}>
-        {entries.map(({ area, health }) => {
-          const isSelected = area.id === selectedAreaId
-          const isGlobal = area.isGlobal === true
-          const identity = getAreaModuleIdentity(area.id, area.code)
-          const active = getModuleSelectorActive(health.environment)
-
-          const surfaceClass = isSelected
-            ? `${active.surface} ${active.glow}`
-            : MODULE_SELECTOR_IDLE_SURFACE
-
-          const iconClass = isSelected
-            ? isGlobal
-              ? active.iconGlobal
-              : active.icon
-            : isGlobal
-              ? MODULE_SELECTOR_IDLE_ICON_GLOBAL
-              : MODULE_SELECTOR_IDLE_ICON
-
-          const nameClass = isSelected ? active.name : MODULE_SELECTOR_IDLE_NAME
-
-          return (
-            <button
-              key={area.id}
-              type="button"
-              onClick={() => onSelectArea(area.id)}
-              aria-pressed={isSelected}
-              aria-label={area.name}
-              className={`omega-module-button omega-operation-station ${MODULE_SELECTOR_BUTTON} ${FOCUS_VISIBLE} ${surfaceClass}`}
+      <div className="omega-area-select-panel px-4 sm:px-5 lg:px-6">
+        {selectedEntry ? (
+          <label className="omega-area-select-panel__identity">
+            <div className="min-w-0">
+              <strong>{selectedEntry.area.name}</strong>
+              <span>{selectedEntry.area.code} · Área operativa</span>
+            </div>
+            <OmegaIcon name="chevron-down" size={18} />
+            <select
+              value={selectedAreaId}
+              aria-label="Área a revisar"
+              onChange={(event) => onSelectArea(event.target.value)}
+              className={FOCUS_VISIBLE}
             >
-              <AreaModuleMonogram
-                monogram={identity.monogram}
-                glyph={identity.glyph}
-                isGlobal={isGlobal}
-                size="selector"
-                className={`omega-operation-station__identifier ${iconClass}`}
-              />
-
-              <p className={`omega-operation-station__name ${nameClass}`}>
-                {area.name}
-              </p>
-              <span
-                className="omega-operation-station__signal"
-                aria-hidden="true"
-              />
-            </button>
-          )
-        })}
+              {entries.map(({ area, health }) => (
+                <option key={area.id} value={area.id}>
+                  {area.code} · {area.name} · {health.environment}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
       </div>
     </section>
   )

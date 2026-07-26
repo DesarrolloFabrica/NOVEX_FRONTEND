@@ -22,9 +22,12 @@ export function RecentOperationalChange({
       className="omega-intel-change"
       aria-labelledby="intel-change-heading"
     >
-      <h3 id="intel-change-heading" className="omega-section-eyebrow">
+      <h3 id="intel-change-heading" className="omega-section-eyebrow mb-0">
         Contexto
       </h3>
+      <p className="omega-section-hint mb-2">
+        Cambios recientes del entorno operacional.
+      </p>
 
       <ul className="omega-intel-change__facts">
         <li>
