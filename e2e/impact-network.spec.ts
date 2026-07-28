@@ -51,6 +51,52 @@ test('muestra escena vacía y panel de situaciones activas', async ({ page }) =>
   expect(Date.now() - startedAt).toBeLessThan(2_000)
 })
 
+test('muestra la guía del mapa, su leyenda y el control para recentrar', async ({
+  page,
+}) => {
+  await openImpactNetwork(page)
+
+  await expect(
+    page.getByRole('heading', { name: 'Mapa de conexiones' }),
+  ).toBeVisible()
+
+  const impactLegend = page.getByLabel('Nivel de impacto')
+  await expect(impactLegend).toBeVisible()
+  await expect(impactLegend.getByText('Muy alto', { exact: true })).toBeVisible()
+  await expect(impactLegend.getByText('Alto', { exact: true })).toBeVisible()
+  await expect(impactLegend.getByText('Medio', { exact: true })).toBeVisible()
+  await expect(impactLegend.getByText('Bajo', { exact: true })).toBeVisible()
+
+  const recenterButton = page.getByRole('button', {
+    name: 'Recentrar mapa',
+  })
+  await expect(recenterButton).toBeVisible()
+  await expect(recenterButton).toBeEnabled()
+})
+
+test('expone telemetría y controles de zoom accesibles al seleccionar', async ({
+  page,
+}) => {
+  await openImpactNetwork(page)
+
+  await expect(page.locator('.impact-map-selection')).toHaveCount(0)
+  await expect(page.locator('.impact-map-summary')).toHaveCount(0)
+
+  await page.locator('.situation-command-panel__item').first().click()
+
+  await expect(page.locator('.impact-map-selection')).toBeVisible()
+  await expect(page.locator('.impact-map-summary')).toBeVisible()
+
+  const zoomControls = page.getByLabel('Controles de zoom del mapa')
+  await expect(zoomControls).toBeVisible()
+  await expect(
+    zoomControls.getByRole('button', { name: 'Acercar mapa' }),
+  ).toBeEnabled()
+  await expect(
+    zoomControls.getByRole('button', { name: 'Alejar mapa' }),
+  ).toBeEnabled()
+})
+
 test('al seleccionar una situación solo aparecen islas focalizadas', async ({
   page,
 }) => {
@@ -225,6 +271,7 @@ test('Escape cierra el dossier de isla antes de limpiar la situación', async ({
   await expect(page.locator('.propagation-island')).toHaveCount(
     await page.locator('.propagation-island').count(),
   )
+  await expect(page.locator('.impact-network--island-focus')).toHaveCount(0)
 
   await page.keyboard.press('Escape')
   await expect(page.locator('.propagation-scene--empty')).toHaveCount(1)

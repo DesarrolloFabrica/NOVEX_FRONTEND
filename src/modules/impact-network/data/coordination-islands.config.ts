@@ -22,86 +22,92 @@ export interface CoordinationDefinition {
   islandAsset: string
 }
 
-const FALLBACK_ISLAND = '/islas/CoordGeneral.png'
+const ISLAND_ASSETS = {
+  general: '/islas/CoordGeneral.png',
+  b2b: '/islas/CoordB2B.png',
+  bellasArtes: '/islas/CoordBellasartes.png',
+  desarrolloProfesional: '/islas/CoordDesarrolloprof.png',
+  socialLab: '/islas/CoordSociallab.png',
+} as const
 
 export const COORDINATION_CATALOG: readonly CoordinationDefinition[] = [
   {
     id: 'coord-general',
     name: 'Coordinación General',
     shortName: 'General',
-    islandAsset: '/islas/CoordGeneral.png',
+    islandAsset: ISLAND_ASSETS.general,
   },
   {
     id: 'coord-b2b',
     name: 'Coordinación Supervisor B2B',
     shortName: 'B2B',
-    islandAsset: '/islas/CoordB2B.png',
+    islandAsset: ISLAND_ASSETS.b2b,
   },
   {
     id: 'coord-bellas-artes',
     name: 'Coordinador Bellas Artes',
     shortName: 'Bellas Artes',
-    islandAsset: '/islas/CoordBellasartes.png',
+    islandAsset: ISLAND_ASSETS.bellasArtes,
   },
   {
     id: 'coord-desarrollo-profesional',
     name: 'Coordinador Desarrollo Profesional',
     shortName: 'Desarrollo Prof.',
-    islandAsset: '/islas/CoordDesarrolloprof.png',
+    islandAsset: ISLAND_ASSETS.desarrolloProfesional,
   },
   {
     id: 'coord-social-lab',
     name: 'Coordinador de Social - Social Lab',
     shortName: 'Social Lab',
-    islandAsset: '/islas/CoordSociallab.png',
+    islandAsset: ISLAND_ASSETS.socialLab,
   },
   {
     id: 'coord-empresarial',
     name: 'Coordinador Empresarial',
     shortName: 'Empresarial',
-    islandAsset: FALLBACK_ISLAND,
+    islandAsset: ISLAND_ASSETS.b2b,
   },
   {
     id: 'coord-especializaciones',
     name: 'Coordinador Especializaciones',
     shortName: 'Especializaciones',
-    islandAsset: FALLBACK_ISLAND,
+    islandAsset: ISLAND_ASSETS.desarrolloProfesional,
   },
   {
     id: 'coord-ingenierias',
     name: 'Coordinador Ingenierías',
     shortName: 'Ingenierías',
-    islandAsset: FALLBACK_ISLAND,
+    islandAsset: ISLAND_ASSETS.general,
   },
   {
     id: 'coord-operaciones-academicas',
     name: 'Coordinador Operaciones Académicas',
     shortName: 'Op. Académicas',
-    islandAsset: FALLBACK_ISLAND,
+    islandAsset: ISLAND_ASSETS.desarrolloProfesional,
   },
   {
     id: 'coord-proyeccion-social',
     name: 'Coordinador Proyección Social',
     shortName: 'Proyección Social',
-    islandAsset: FALLBACK_ISLAND,
+    islandAsset: ISLAND_ASSETS.socialLab,
   },
   {
     id: 'coord-saber-pro',
     name: 'Coordinador Saber Pro',
     shortName: 'Saber Pro',
-    islandAsset: FALLBACK_ISLAND,
+    islandAsset: ISLAND_ASSETS.desarrolloProfesional,
   },
   {
     id: 'coord-transversales',
     name: 'Coordinador Transversales',
     shortName: 'Transversales',
-    islandAsset: FALLBACK_ISLAND,
+    islandAsset: ISLAND_ASSETS.general,
   },
   {
     id: 'coord-negocios',
     name: 'Negocios',
     shortName: 'Negocios',
-    islandAsset: FALLBACK_ISLAND,
+    islandAsset: ISLAND_ASSETS.b2b,
   },
 ] as const
 

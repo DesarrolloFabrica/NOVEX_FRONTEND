@@ -18,6 +18,7 @@ export interface IslandNodeProps {
   coordinationId: CoordinationId
   role: IslandNodeRole
   riskLevel?: RiskLevel | null
+  visualRisk?: RiskLevel | null
   impactState?: IslandImpactState
   selected?: boolean
   onSelect?: (coordinationId: CoordinationId) => void
@@ -31,6 +32,7 @@ function IslandNodeView({
   coordinationId,
   role,
   riskLevel = null,
+  visualRisk = null,
   impactState = 'idle',
   selected = false,
   onSelect,
@@ -41,6 +43,7 @@ function IslandNodeView({
 }: IslandNodeProps) {
   const coordination = getCoordination(coordinationId)
   const risk = riskLevel ?? 'moderate'
+  const tone = visualRisk ?? risk
   const isOrigin = role === 'origin'
   const isAmbient = role === 'ambient'
   const [hovered, setHovered] = useState(false)
@@ -72,7 +75,8 @@ function IslandNodeView({
         .join(' ')}
       data-coordination-id={coordinationId}
       data-role={role}
-      data-risk={displayState === 'idle' || displayState === 'ambient' ? 'dormant' : risk}
+      data-risk={displayState === 'ambient' ? 'dormant' : tone}
+      data-tone={displayState === 'ambient' ? 'low' : tone}
       data-impact-state={displayState}
       data-selected={selected}
       style={style}
@@ -107,16 +111,27 @@ function IslandNodeView({
 
       <div className="propagation-island__overlays">
         <span className="propagation-island__label">
-          <i aria-hidden="true" />
-          {coordination.shortName}
+          <i className="propagation-island__badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M4 20V8l8-4v16M12 10h8v10M2 20h20M7 10h2M7 14h2M15 13h2M15 16h2" />
+            </svg>
+          </i>
+          <b>{coordination.shortName}</b>
+          {!isAmbient ? (
+            <small>
+              Impacto: <em>{tone === 'critical' ? 'Muy alto' : tone === 'moderate' ? 'Medio' : tone === 'high' ? 'Alto' : 'Bajo'}</em>
+            </small>
+          ) : (
+            <small>Coordinación en red</small>
+          )}
         </span>
         {!isAmbient ? (
           <span className="propagation-island__state" aria-hidden="true">
             {impactState === 'impacted'
-              ? 'IMPACTO'
+              ? 'Impactando'
               : impactState === 'illuminated'
-                ? 'ACTIVA'
-                : 'EN ESPERA'}
+                ? 'Conectada'
+                : 'Monitoreando'}
           </span>
         ) : null}
         <span

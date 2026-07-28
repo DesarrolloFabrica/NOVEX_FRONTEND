@@ -70,6 +70,7 @@ describe('radial-layout', () => {
     expect(layout.nodes.some((node) => node.role === 'ambient')).toBe(false)
     expect(origin).toMatchObject({ x: 536, y: 450 })
     expect(affected).toHaveLength(2)
+    expect(affected.every((node) => node.y < origin.y)).toBe(true)
 
     for (const node of affected) {
       const centerDistance = Math.hypot(node.x - origin.x, node.y - origin.y)
@@ -89,6 +90,51 @@ describe('radial-layout', () => {
       nodeVisualSize(affected[0], layout.nodeSize),
     )
   })
+
+  it.each([
+    [1, [-90]],
+    [2, [-150, -30]],
+    [3, [-155, -90, -25]],
+    [4, [-165, -115, -65, -15]],
+  ] as const)(
+    'distribuye %i satélite(s) en un arco superior sin solapes',
+    (satelliteCount, expectedAngles) => {
+      const satelliteIds = [
+        'coord-proyeccion-social',
+        'coord-empresarial',
+        'coord-social-lab',
+        'coord-saber-pro',
+      ] as const
+      const layout = computeRadialLayout(
+        'coord-operaciones-academicas',
+        satelliteIds.slice(0, satelliteCount),
+        { width: 1072, height: 900 },
+        { includeConstellation: false },
+      )
+      const origin = layout.nodes.find((node) => node.role === 'origin')!
+      const affected = layout.nodes.filter((node) => node.role === 'affected')
+
+      expect(origin).toMatchObject({ x: 536, y: 450 })
+      expect(affected.map((node) => node.angleDeg)).toEqual(expectedAngles)
+      expect(affected.every((node) => node.y < origin.y)).toBe(true)
+
+      const nodes = [origin, ...affected]
+      for (let index = 0; index < nodes.length; index += 1) {
+        const node = nodes[index]
+        const nodeSize = nodeVisualSize(node, layout.nodeSize)
+
+        for (const other of nodes.slice(index + 1)) {
+          const otherSize = nodeVisualSize(other, layout.nodeSize)
+          const overlapsHorizontally =
+            Math.abs(node.x - other.x) < (nodeSize + otherSize) / 2
+          const overlapsVertically =
+            Math.abs(node.y - other.y) < (nodeSize + otherSize) / 2
+
+          expect(overlapsHorizontally && overlapsVertically).toBe(false)
+        }
+      }
+    },
+  )
 
   it('calcula anclas en el borde de las islas con curva cúbica', () => {
     const anchors = computeEdgeAnchors(

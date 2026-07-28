@@ -6350,3 +6350,1455 @@
     max-height: min(56vh, 620px);
   }
 }
+
+/* ==========================================================================
+   Mapa de conexiones — composición visual de referencia
+
+   Este pase está deliberadamente limitado al canvas. El panel de situaciones
+   conserva su DOM, sus estilos y su comportamiento.
+   ========================================================================== */
+
+.impact-network--propagation .impact-toolbar {
+  display: none;
+}
+
+.impact-network__canvas .propagation-scene {
+  --map-critical-rgb: 255 62 78;
+  --map-high-rgb: 255 132 24;
+  --map-moderate-rgb: 250 201 48;
+  --map-low-rgb: 43 210 211;
+  --map-blue-rgb: 56 145 220;
+  --map-summary-height: 108px;
+  color: #e8f3ff;
+  background:
+    radial-gradient(ellipse 62% 54% at 52% 48%, rgb(13 58 105 / 0.26), transparent 72%),
+    radial-gradient(circle at 50% 42%, rgb(4 31 63 / 0.78), transparent 58%),
+    linear-gradient(180deg, #020b18 0%, #020916 56%, #010711 100%);
+}
+
+.impact-network__canvas .propagation-scene::before {
+  inset: 0;
+  z-index: 1;
+  display: block;
+  background:
+    linear-gradient(90deg, rgb(0 0 0 / 0.22), transparent 15% 83%, rgb(0 0 0 / 0.24)),
+    linear-gradient(180deg, rgb(1 5 12 / 0.06), transparent 42%, rgb(0 4 11 / 0.38)),
+    radial-gradient(ellipse at center, transparent 32%, rgb(0 4 11 / 0.24) 76%, rgb(0 2 8 / 0.62));
+  opacity: 1;
+  transform: none;
+}
+
+.impact-network__canvas .propagation-scene__backdrop {
+  z-index: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(rgb(25 93 148 / 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(25 93 148 / 0.018) 1px, transparent 1px);
+  background-size: 10px 10px;
+  transform: none;
+}
+
+.impact-network__canvas .propagation-scene__fog {
+  z-index: 0;
+  inset: -12%;
+  opacity: 1;
+  background:
+    radial-gradient(ellipse at 50% 47%, rgb(21 80 135 / 0.2), transparent 47%),
+    radial-gradient(ellipse at 50% 108%, rgb(20 87 132 / 0.14), transparent 48%);
+  filter: blur(24px);
+}
+
+.impact-network__canvas .propagation-scene__grid {
+  z-index: 1;
+  inset: 7% 4% 11%;
+  opacity: 0.33;
+  background-image:
+    linear-gradient(30deg, rgb(44 118 178 / 0.2) 1px, transparent 1px),
+    linear-gradient(150deg, rgb(44 118 178 / 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(44 118 178 / 0.12) 1px, transparent 1px);
+  background-position: center;
+  background-size: 42px 24px, 42px 24px, 42px 24px;
+  mask-image: radial-gradient(ellipse 64% 62% at 52% 52%, black 5%, transparent 92%);
+  animation: impact-reference-grid-drift 38s linear infinite;
+  transform: perspective(780px) rotateX(63deg) scale(1.42) translateY(9%);
+  transform-origin: center 58%;
+}
+
+.impact-network__canvas .propagation-scene__scanlines {
+  z-index: 2;
+  opacity: 0.035;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0 4px,
+    rgb(114 190 244 / 0.22) 5px
+  );
+  animation: propagation-scan-drift 24s linear infinite;
+}
+
+.impact-network__canvas .propagation-scene__orbits {
+  z-index: 1;
+  top: 51%;
+  width: min(94vw, 1220px);
+  height: min(78vw, 720px);
+  opacity: 0.52;
+  transform: translate(-50%, -50%);
+}
+
+.impact-network__canvas .propagation-scene__orbit {
+  border-color: rgb(55 133 195 / 0.12);
+  box-shadow:
+    0 0 26px rgb(35 122 192 / 0.025),
+    inset 0 0 24px rgb(35 122 192 / 0.018);
+}
+
+.impact-network__canvas .propagation-scene__orbit--mid {
+  border-color: rgb(58 143 210 / 0.1);
+}
+
+.impact-network__canvas .propagation-scene__orbit--inner {
+  border-color: rgb(58 155 220 / 0.12);
+}
+
+.impact-network__canvas .propagation-scene__atlas {
+  position: absolute;
+  z-index: 1;
+  inset: 2% -4% 5%;
+  width: 108%;
+  height: 93%;
+  overflow: visible;
+  opacity: 0.7;
+  pointer-events: none;
+  filter: drop-shadow(0 0 28px rgb(24 99 170 / 0.08));
+  transform: translate3d(var(--scene-parallax-x), var(--scene-parallax-y), 0);
+  transition: transform 900ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.impact-network__canvas .propagation-scene__atlas-sphere {
+  fill: none;
+  stroke: rgb(55 137 203 / 0.15);
+  stroke-width: 1;
+}
+
+.impact-network__canvas .propagation-scene__atlas-land {
+  fill: rgb(9 54 96 / 0.24);
+  stroke: rgb(54 145 211 / 0.2);
+  stroke-width: 1;
+}
+
+.impact-network__canvas .propagation-scene__atlas-links {
+  fill: none;
+  stroke: rgb(37 132 210 / 0.26);
+  stroke-dasharray: 2 8;
+  stroke-width: 1;
+}
+
+.impact-network__canvas .propagation-scene__atlas-links circle {
+  fill: #309ee5;
+  stroke: rgb(157 222 255 / 0.48);
+  stroke-width: 1;
+}
+
+.impact-network__canvas .propagation-scene__atlas-orbits {
+  fill: none;
+  stroke: rgb(48 128 190 / 0.12);
+  stroke-dasharray: 2 10;
+  stroke-width: 1;
+}
+
+.impact-network__canvas .propagation-scene__particles {
+  z-index: 2;
+  opacity: 0.76;
+}
+
+.impact-network__canvas .propagation-scene__particles span {
+  width: 1.5px;
+  height: 1.5px;
+  background: rgb(84 174 232 / 0.76);
+  box-shadow: 0 0 5px rgb(58 158 226 / 0.42);
+}
+
+.impact-network__canvas .propagation-scene__sparkles,
+.impact-network__canvas .propagation-scene__tech-stars {
+  z-index: 2;
+  opacity: 0.5;
+}
+
+/* Guía y leyenda */
+.impact-network__canvas .impact-map-guide {
+  position: absolute;
+  z-index: 12;
+  top: 25px;
+  left: 25px;
+  width: 182px;
+  pointer-events: none;
+}
+
+.impact-network__canvas .impact-map-guide h2 {
+  margin: 0;
+  color: #c9dbeb;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.impact-network__canvas .impact-map-guide > p {
+  width: 174px;
+  margin: 12px 0 0;
+  color: #748ba5;
+  font-size: 0.6rem;
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+.impact-network__canvas .impact-map-legend {
+  display: grid;
+  gap: 10px;
+  width: 144px;
+  margin-top: 18px;
+  padding: 13px 14px;
+  border: 1px solid rgb(82 139 190 / 0.18);
+  border-radius: 9px;
+  background: linear-gradient(145deg, rgb(3 14 29 / 0.76), rgb(3 11 24 / 0.58));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.025),
+    0 10px 26px rgb(0 0 0 / 0.12);
+  backdrop-filter: blur(12px);
+}
+
+.impact-network__canvas .impact-map-legend__title {
+  margin-bottom: 1px;
+  color: #6e87a2;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.impact-network__canvas .impact-map-legend > span:not(.impact-map-legend__title) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #b9cadb;
+  font-size: 0.56rem;
+  font-weight: 600;
+}
+
+.impact-network__canvas .impact-map-legend i {
+  display: block;
+  width: 30px;
+  height: 2px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: rgb(var(--legend-rgb));
+  box-shadow: 0 0 8px rgb(var(--legend-rgb) / 0.35);
+}
+
+.impact-network__canvas .impact-map-legend i[data-tone='critical'] {
+  --legend-rgb: var(--map-critical-rgb);
+}
+
+.impact-network__canvas .impact-map-legend i[data-tone='high'] {
+  --legend-rgb: var(--map-high-rgb);
+}
+
+.impact-network__canvas .impact-map-legend i[data-tone='moderate'] {
+  --legend-rgb: var(--map-moderate-rgb);
+}
+
+.impact-network__canvas .impact-map-legend i[data-tone='low'] {
+  --legend-rgb: var(--map-low-rgb);
+  height: 1px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgb(var(--legend-rgb)) 0 4px,
+    transparent 4px 7px
+  );
+  box-shadow: none;
+}
+
+.impact-network__canvas .impact-map-guide__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 14px;
+  color: #607b96;
+  font-size: 0.5rem;
+  font-weight: 600;
+}
+
+.impact-network__canvas .impact-map-guide__live > i {
+  width: 7px;
+  height: 7px;
+  border: 1px solid rgb(60 211 144 / 0.84);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgb(60 211 144 / 0.34);
+}
+
+.impact-network__canvas .impact-map-guide__live > i::after {
+  display: block;
+  width: 3px;
+  height: 3px;
+  margin: 1px;
+  border-radius: 50%;
+  content: '';
+  background: #4bd89b;
+}
+
+.impact-network__canvas .impact-map-recenter {
+  position: absolute;
+  z-index: 13;
+  top: 24px;
+  right: 22px;
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1px solid rgb(92 150 201 / 0.2);
+  border-radius: 10px;
+  color: #c6d7e8;
+  font-size: 0.58rem;
+  font-weight: 700;
+  background: rgb(3 13 27 / 0.68);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.03);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    color 180ms ease,
+    background 180ms ease,
+    transform 180ms ease;
+}
+
+.impact-network__canvas .impact-map-recenter:hover {
+  border-color: rgb(82 176 235 / 0.46);
+  color: #eff8ff;
+  background: rgb(5 22 42 / 0.86);
+  transform: translateY(-1px);
+}
+
+.impact-network__canvas .impact-map-recenter:focus-visible {
+  outline: 2px solid rgb(100 205 255 / 0.72);
+  outline-offset: 2px;
+}
+
+.impact-network__canvas .impact-map-recenter svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1.6;
+}
+
+/* Escena y conexiones */
+.impact-network__canvas .propagation-scene__stage {
+  z-index: 3;
+}
+
+.impact-network__canvas .propagation-scene__halos {
+  z-index: 2;
+}
+
+.impact-network__canvas .propagation-scene__edges {
+  z-index: 3 !important;
+  overflow: visible;
+}
+
+.impact-network__canvas .propagation-scene__islands {
+  z-index: 5;
+}
+
+.impact-network__canvas .propagation-scene__ambient-halo {
+  border-radius: 50%;
+  opacity: 0.34;
+  background: radial-gradient(
+    ellipse at center,
+    rgb(40 130 210 / 0.08),
+    transparent 70%
+  );
+  filter: blur(15px);
+}
+
+.impact-network__canvas .propagation-scene__ambient-halo[data-role='origin'] {
+  opacity: 0.72;
+  background: radial-gradient(
+    ellipse at center,
+    rgb(var(--map-critical-rgb) / 0.24),
+    rgb(var(--map-critical-rgb) / 0.05) 48%,
+    transparent 72%
+  );
+  filter: blur(18px);
+}
+
+.impact-network__canvas .propagation-island[data-tone='critical'] {
+  --island-glow-rgb: var(--map-critical-rgb);
+  --island-hue: 158deg;
+  --island-saturation: 1.52;
+  --island-brightness: 0.84;
+}
+
+.impact-network__canvas .propagation-island[data-tone='high'] {
+  --island-glow-rgb: var(--map-high-rgb);
+  --island-hue: 198deg;
+  --island-saturation: 1.36;
+  --island-brightness: 0.88;
+}
+
+.impact-network__canvas .propagation-island[data-tone='moderate'] {
+  --island-glow-rgb: var(--map-moderate-rgb);
+  --island-hue: 214deg;
+  --island-saturation: 1.22;
+  --island-brightness: 0.96;
+}
+
+.impact-network__canvas .propagation-island[data-tone='low'] {
+  --island-glow-rgb: var(--map-low-rgb);
+  --island-hue: 0deg;
+  --island-saturation: 1.12;
+  --island-brightness: 0.92;
+}
+
+.impact-network__canvas .propagation-scene__island.propagation-island {
+  overflow: visible;
+  filter: none;
+}
+
+.impact-network__canvas .propagation-island__body {
+  inset: -7%;
+  overflow: visible;
+}
+
+.impact-network__canvas .propagation-island--origin .propagation-island__body {
+  inset: -10%;
+}
+
+.impact-network__canvas .propagation-island__halo {
+  z-index: 0;
+  inset: 13%;
+  border-radius: 50%;
+  opacity: 0.78;
+  background: radial-gradient(
+    ellipse at 50% 58%,
+    rgb(var(--island-glow-rgb) / 0.3),
+    rgb(var(--island-glow-rgb) / 0.08) 46%,
+    transparent 72%
+  );
+  filter: blur(14px);
+  animation: impact-reference-island-breathe 4.8s ease-in-out infinite;
+}
+
+.impact-network__canvas .propagation-island__ring {
+  z-index: 1;
+  inset: auto 5% 10%;
+  height: 29%;
+  border: 1.5px solid rgb(var(--island-glow-rgb) / 0.92);
+  border-radius: 50%;
+  opacity: 0.88;
+  background: radial-gradient(
+    ellipse at center,
+    rgb(var(--island-glow-rgb) / 0.12),
+    transparent 66%
+  );
+  box-shadow:
+    0 0 0 4px rgb(var(--island-glow-rgb) / 0.055),
+    0 0 18px rgb(var(--island-glow-rgb) / 0.58),
+    inset 0 0 12px rgb(var(--island-glow-rgb) / 0.26);
+  transform: none;
+}
+
+.impact-network__canvas .propagation-island__ring::before,
+.impact-network__canvas .propagation-island__ring::after {
+  position: absolute;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border: 1px solid rgb(var(--island-glow-rgb) / 0.84);
+  border-radius: 50%;
+  content: '';
+  background: #e9fbff;
+  box-shadow: 0 0 8px rgb(var(--island-glow-rgb));
+  transform: translateY(-50%);
+}
+
+.impact-network__canvas .propagation-island__ring::before {
+  left: 9%;
+}
+
+.impact-network__canvas .propagation-island__ring::after {
+  right: 9%;
+}
+
+.impact-network__canvas .propagation-island__image,
+.impact-network__canvas .propagation-island--origin .propagation-island__image,
+.impact-network__canvas .propagation-island--illuminated .propagation-island__image,
+.impact-network__canvas .propagation-island--impacted .propagation-island__image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 1;
+  filter:
+    hue-rotate(var(--island-hue))
+    saturate(var(--island-saturation))
+    brightness(var(--island-brightness))
+    contrast(1.06)
+    drop-shadow(0 0 8px rgb(var(--island-glow-rgb) / 0.46))
+    drop-shadow(0 10px 16px rgb(0 0 0 / 0.66)) !important;
+  transform: translateZ(0);
+  transition:
+    filter 240ms ease,
+    transform 240ms ease;
+}
+
+.impact-network__canvas .propagation-island--origin .propagation-island__image {
+  filter:
+    hue-rotate(var(--island-hue))
+    saturate(var(--island-saturation))
+    brightness(var(--island-brightness))
+    contrast(1.08)
+    drop-shadow(0 0 15px rgb(var(--island-glow-rgb) / 0.72))
+    drop-shadow(0 13px 20px rgb(0 0 0 / 0.7)) !important;
+}
+
+.impact-network__canvas
+  .propagation-island:is(:hover, :focus-visible, [data-selected='true'])
+  .propagation-island__image {
+  transform: translate3d(0, -4px, 0) scale(1.035);
+  filter:
+    hue-rotate(var(--island-hue))
+    saturate(var(--island-saturation))
+    brightness(var(--island-brightness))
+    contrast(1.08)
+    drop-shadow(0 0 20px rgb(var(--island-glow-rgb) / 0.82))
+    drop-shadow(0 15px 22px rgb(0 0 0 / 0.7)) !important;
+}
+
+.impact-network__canvas .propagation-island__emitter {
+  top: 8%;
+  width: 5px;
+  height: 5px;
+  opacity: 0.72;
+  background: #f4fcff;
+  box-shadow:
+    0 0 5px #fff,
+    0 0 12px rgb(var(--island-glow-rgb));
+}
+
+.impact-network__canvas .propagation-island__wave {
+  border-color: rgb(var(--island-glow-rgb) / 0.7);
+}
+
+/* Etiqueta persistente de cada isla */
+.impact-network__canvas .propagation-island__label {
+  top: -25px;
+  bottom: auto;
+  left: 50%;
+  display: grid;
+  width: max-content;
+  min-width: 108px;
+  max-width: 156px;
+  gap: 2px;
+  overflow: visible;
+  padding: 12px 10px 6px;
+  border: 1px solid rgb(var(--island-glow-rgb) / 0.28);
+  border-radius: 8px;
+  color: #edf6ff;
+  text-align: center;
+  white-space: normal;
+  background:
+    linear-gradient(180deg, rgb(5 13 25 / 0.93), rgb(8 12 19 / 0.83)),
+    radial-gradient(circle at 50% 0%, rgb(var(--island-glow-rgb) / 0.16), transparent 70%);
+  box-shadow:
+    0 7px 18px rgb(0 0 0 / 0.4),
+    inset 0 1px 0 rgb(255 255 255 / 0.035);
+  backdrop-filter: blur(10px);
+  transform: translate(-50%, -100%);
+}
+
+.impact-network__canvas .propagation-island--origin .propagation-island__label {
+  top: auto;
+  bottom: -27px;
+  transform: translate(-50%, 100%);
+}
+
+.impact-network__canvas .propagation-island__label b {
+  overflow: hidden;
+  color: #eef7ff;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 0.035em;
+  line-height: 1.28;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+}
+
+.impact-network__canvas .propagation-island__label small {
+  color: #8ea3b7;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.45rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-transform: none;
+}
+
+.impact-network__canvas .propagation-island__label small em {
+  color: rgb(var(--island-glow-rgb));
+  font-style: normal;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.impact-network__canvas .propagation-island__badge {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border: 1px solid rgb(var(--island-glow-rgb) / 0.74);
+  border-radius: 50%;
+  color: #fff;
+  background:
+    radial-gradient(circle at 35% 30%, rgb(255 255 255 / 0.2), transparent 42%),
+    rgb(var(--island-glow-rgb) / 0.84);
+  box-shadow:
+    0 0 0 3px rgb(var(--island-glow-rgb) / 0.08),
+    0 0 12px rgb(var(--island-glow-rgb) / 0.64);
+  transform: translateX(-50%);
+}
+
+.impact-network__canvas .propagation-island__badge svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.45;
+}
+
+.impact-network__canvas .propagation-island__state {
+  display: none;
+}
+
+.impact-network__canvas .propagation-island__tooltip {
+  border-color: rgb(var(--island-glow-rgb) / 0.3);
+  background: rgb(2 10 22 / 0.96);
+}
+
+/* Aristas principales y arcos secundarios */
+.impact-network__canvas .propagation-edge[data-risk='critical'] {
+  --edge-flow-rgb: var(--map-critical-rgb);
+}
+
+.impact-network__canvas .propagation-edge[data-risk='high'] {
+  --edge-flow-rgb: var(--map-high-rgb);
+}
+
+.impact-network__canvas .propagation-edge[data-risk='moderate'] {
+  --edge-flow-rgb: var(--map-moderate-rgb);
+}
+
+.impact-network__canvas .propagation-edge[data-risk='low'] {
+  --edge-flow-rgb: var(--map-low-rgb);
+}
+
+.impact-network__canvas .propagation-edge .propagation-edge__track,
+.impact-network__canvas
+  .propagation-edge[data-state='dormant']
+  .propagation-edge__track,
+.impact-network__canvas
+  .propagation-edge[data-state='active']
+  .propagation-edge__track,
+.impact-network__canvas
+  .propagation-edge[data-state='completed']
+  .propagation-edge__track {
+  fill: none;
+  stroke: rgb(var(--edge-flow-rgb) / 0.9);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: none;
+  filter: drop-shadow(0 0 4px rgb(var(--edge-flow-rgb) / 0.62));
+}
+
+.impact-network__canvas
+  .propagation-edge[data-state='dormant']
+  .propagation-edge__track {
+  opacity: 0.72;
+}
+
+.impact-network__canvas .propagation-edge .propagation-edge__glow {
+  fill: none;
+  stroke: rgb(var(--edge-flow-rgb) / 0.5);
+  stroke-width: 11;
+  opacity: 0.4;
+  filter: blur(6px);
+}
+
+.impact-network__canvas .propagation-edge__flow {
+  stroke-width: 2.5;
+  stroke-dasharray: 0.025 0.055;
+  opacity: 1;
+}
+
+.impact-network__canvas .propagation-edge__particle {
+  fill: #f7fcff;
+  filter:
+    drop-shadow(0 0 3px #fff)
+    drop-shadow(0 0 8px rgb(var(--edge-flow-rgb)));
+}
+
+.impact-network__canvas .propagation-edge__junction {
+  fill: #fff;
+  stroke: rgb(var(--junction-rgb));
+  stroke-width: 2;
+  filter:
+    drop-shadow(0 0 3px #fff)
+    drop-shadow(0 0 8px rgb(var(--junction-rgb)));
+}
+
+.impact-network__canvas .propagation-edge__junction[data-tone='critical'] {
+  --junction-rgb: var(--map-critical-rgb);
+}
+
+.impact-network__canvas .propagation-edge__junction[data-tone='high'] {
+  --junction-rgb: var(--map-high-rgb);
+}
+
+.impact-network__canvas .propagation-edge__junction[data-tone='moderate'] {
+  --junction-rgb: var(--map-moderate-rgb);
+}
+
+.impact-network__canvas .propagation-edge__junction[data-tone='low'] {
+  --junction-rgb: var(--map-low-rgb);
+}
+
+.impact-network__canvas .propagation-relay {
+  --relay-rgb: var(--map-low-rgb);
+}
+
+.impact-network__canvas .propagation-relay[data-tone='critical'] {
+  --relay-rgb: var(--map-critical-rgb);
+}
+
+.impact-network__canvas .propagation-relay[data-tone='high'] {
+  --relay-rgb: var(--map-high-rgb);
+}
+
+.impact-network__canvas .propagation-relay[data-tone='moderate'] {
+  --relay-rgb: var(--map-moderate-rgb);
+}
+
+.impact-network__canvas .propagation-relay[data-tone='low'] {
+  --relay-rgb: var(--map-low-rgb);
+}
+
+.impact-network__canvas .propagation-relay__line,
+.impact-network__canvas .propagation-relay__glow {
+  fill: none;
+  stroke: rgb(var(--relay-rgb) / 0.7);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+}
+
+.impact-network__canvas .propagation-relay__glow {
+  stroke-width: 8;
+  opacity: 0.24;
+  filter: blur(5px);
+}
+
+.impact-network__canvas .propagation-relay[data-kind='return'] .propagation-relay__line {
+  stroke-dasharray: 0.01 0.028;
+}
+
+.impact-network__canvas .propagation-relay__particle {
+  fill: #efffff;
+  filter:
+    drop-shadow(0 0 3px #fff)
+    drop-shadow(0 0 7px rgb(var(--relay-rgb)));
+}
+
+/* Tarjeta de situación seleccionada */
+.impact-network__canvas .impact-map-selection {
+  position: absolute;
+  z-index: 11;
+  bottom: calc(var(--map-summary-height) + 34px);
+  left: 24px;
+  display: grid;
+  width: 260px;
+  min-height: 98px;
+  align-content: center;
+  gap: 8px;
+  overflow: hidden;
+  padding: 15px 58px 14px 16px;
+  border: 1px solid rgb(84 139 188 / 0.2);
+  border-radius: 10px;
+  color: #eaf4ff;
+  background:
+    linear-gradient(135deg, rgb(4 17 33 / 0.9), rgb(4 11 23 / 0.82)),
+    radial-gradient(circle at 85% 50%, rgb(var(--selection-rgb) / 0.13), transparent 46%);
+  box-shadow:
+    0 14px 32px rgb(0 0 0 / 0.22),
+    inset 0 1px 0 rgb(255 255 255 / 0.03);
+  pointer-events: none;
+  backdrop-filter: blur(13px);
+}
+
+.impact-network__canvas .impact-map-selection[data-risk='critical'] {
+  --selection-rgb: var(--map-critical-rgb);
+}
+
+.impact-network__canvas .impact-map-selection[data-risk='high'] {
+  --selection-rgb: var(--map-high-rgb);
+}
+
+.impact-network__canvas .impact-map-selection[data-risk='moderate'] {
+  --selection-rgb: var(--map-moderate-rgb);
+}
+
+.impact-network__canvas .impact-map-selection[data-risk='low'] {
+  --selection-rgb: var(--map-low-rgb);
+}
+
+.impact-network__canvas .impact-map-selection::after {
+  position: absolute;
+  top: 14px;
+  right: 42px;
+  bottom: 14px;
+  width: 1px;
+  content: '';
+  background: linear-gradient(transparent, rgb(91 144 190 / 0.16), transparent);
+}
+
+.impact-network__canvas .impact-map-selection__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #738ca6;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.48rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.impact-network__canvas .impact-map-selection__eyebrow i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgb(var(--selection-rgb));
+  box-shadow: 0 0 9px rgb(var(--selection-rgb) / 0.72);
+}
+
+.impact-network__canvas .impact-map-selection > strong {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 0.7rem;
+  font-weight: 720;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.impact-network__canvas .impact-map-selection__meta {
+  color: #7e95ad;
+  font-size: 0.53rem;
+  font-weight: 550;
+}
+
+.impact-network__canvas .impact-map-selection__meta b {
+  margin: 0 4px;
+  color: #496984;
+}
+
+.impact-network__canvas .impact-map-selection__bell {
+  position: absolute;
+  right: 8px;
+  bottom: 13px;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid rgb(var(--selection-rgb) / 0.2);
+  border-radius: 50%;
+  color: rgb(var(--selection-rgb) / 0.5);
+  background: rgb(var(--selection-rgb) / 0.04);
+}
+
+.impact-network__canvas .impact-map-selection__bell svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+
+.impact-network__canvas .impact-map-selection__arrow {
+  position: absolute;
+  right: 12px;
+  bottom: 5px;
+  color: #6b849c;
+  font-size: 0.9rem;
+}
+
+/* Barra inferior de métricas */
+.impact-network__canvas .impact-map-summary {
+  position: absolute;
+  z-index: 11;
+  right: 22px;
+  bottom: 18px;
+  left: 22px;
+  display: grid;
+  min-height: var(--map-summary-height);
+  grid-template-columns: 1.24fr 0.86fr 0.9fr 1.12fr 1.05fr;
+  overflow: hidden;
+  border: 1px solid rgb(61 119 169 / 0.13);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgb(4 17 31 / 0.92), rgb(3 13 25 / 0.86)),
+    radial-gradient(circle at 50% 0%, rgb(39 122 183 / 0.08), transparent 48%);
+  box-shadow:
+    0 18px 38px rgb(0 0 0 / 0.26),
+    inset 0 1px 0 rgb(255 255 255 / 0.025);
+  pointer-events: none;
+  backdrop-filter: blur(14px);
+}
+
+.impact-network__canvas .impact-map-summary::before {
+  position: absolute;
+  top: 0;
+  right: 7%;
+  left: 7%;
+  height: 1px;
+  content: '';
+  background: linear-gradient(90deg, transparent, rgb(74 158 218 / 0.2), transparent);
+}
+
+.impact-network__canvas .impact-map-summary[data-risk='critical'] {
+  --summary-risk-rgb: var(--map-critical-rgb);
+}
+
+.impact-network__canvas .impact-map-summary[data-risk='high'] {
+  --summary-risk-rgb: var(--map-high-rgb);
+}
+
+.impact-network__canvas .impact-map-summary[data-risk='moderate'] {
+  --summary-risk-rgb: var(--map-moderate-rgb);
+}
+
+.impact-network__canvas .impact-map-summary[data-risk='low'] {
+  --summary-risk-rgb: var(--map-low-rgb);
+}
+
+.impact-network__canvas .impact-map-summary__metric {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 11px;
+  padding: 18px 17px;
+}
+
+.impact-network__canvas .impact-map-summary__metric:not(:last-child)::after {
+  position: absolute;
+  top: 22%;
+  right: 0;
+  bottom: 22%;
+  width: 1px;
+  content: '';
+  background: linear-gradient(
+    transparent,
+    rgb(80 133 180 / 0.16),
+    transparent
+  );
+}
+
+.impact-network__canvas .impact-map-summary__metric > span:not(.impact-map-summary__icon, .impact-map-summary__signal, .impact-map-summary__clock) {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
+.impact-network__canvas .impact-map-summary__metric small {
+  overflow: hidden;
+  color: #647d96;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.46rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.impact-network__canvas .impact-map-summary__metric strong {
+  overflow: hidden;
+  color: #dcebf8;
+  font-size: 0.76rem;
+  font-weight: 760;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.impact-network__canvas .impact-map-summary__metric em {
+  overflow: hidden;
+  color: #71879d;
+  font-size: 0.5rem;
+  font-style: normal;
+  font-weight: 550;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.impact-network__canvas .impact-map-summary__icon {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: rgb(var(--summary-risk-rgb));
+}
+
+.impact-network__canvas .impact-map-summary__icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.45;
+}
+
+.impact-network__canvas .impact-map-summary__signal {
+  align-self: flex-start;
+  width: 7px;
+  height: 7px;
+  margin-top: 6px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #46de8d;
+  box-shadow:
+    0 0 4px #46de8d,
+    0 0 11px rgb(70 222 141 / 0.62);
+}
+
+.impact-network__canvas .impact-map-summary__metric--impact strong,
+.impact-network__canvas .impact-map-summary__metric--risk strong {
+  color: rgb(var(--summary-risk-rgb));
+  font-size: 0.9rem;
+}
+
+.impact-network__canvas .impact-map-summary__metric--risk strong b {
+  margin-left: 4px;
+  color: #8aa0b4;
+  font-size: 0.52rem;
+}
+
+.impact-network__canvas .impact-map-summary__bars {
+  display: flex;
+  gap: 3px;
+  margin-top: 2px;
+}
+
+.impact-network__canvas .impact-map-summary__bars i {
+  display: block;
+  width: 8px;
+  height: 5px;
+  border-radius: 2px;
+  background: rgb(88 108 128 / 0.24);
+}
+
+.impact-network__canvas .impact-map-summary__bars i[data-active='true'] {
+  background: rgb(var(--summary-risk-rgb));
+  box-shadow: 0 0 5px rgb(var(--summary-risk-rgb) / 0.35);
+}
+
+.impact-network__canvas .impact-map-summary__metric--risk {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(68px, 0.7fr);
+}
+
+.impact-network__canvas .impact-map-summary__sparkline {
+  width: 100%;
+  min-width: 68px;
+  max-width: 116px;
+  color: rgb(var(--summary-risk-rgb));
+  overflow: visible;
+}
+
+.impact-network__canvas .impact-map-summary__spark-fill {
+  fill: url(#impact-spark-fill);
+}
+
+.impact-network__canvas .impact-map-summary__spark-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.3;
+}
+
+.impact-network__canvas .impact-map-summary__spark-dots {
+  fill: currentColor;
+}
+
+.impact-network__canvas .impact-map-summary__metric--time {
+  justify-content: space-between;
+}
+
+.impact-network__canvas .impact-map-summary__metric--time strong {
+  font-size: 0.92rem;
+}
+
+.impact-network__canvas .impact-map-summary__clock {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgb(58 164 172 / 0.14);
+  border-radius: 50%;
+  color: #75d1cd;
+  background:
+    conic-gradient(from 20deg, rgb(56 195 186 / 0.42) 0 18%, transparent 18% 100%),
+    rgb(7 28 40 / 0.62);
+  box-shadow: 0 0 14px rgb(54 181 180 / 0.08);
+}
+
+.impact-network__canvas .impact-map-summary__clock svg {
+  width: 17px;
+  height: 17px;
+  fill: rgb(2 12 23 / 0.78);
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.4;
+}
+
+/* Zoom en el mismo orden visual de la referencia: pantalla, −, escala, + */
+.impact-network__canvas .propagation-scene__zoom-controls {
+  z-index: 13;
+  right: 23px;
+  bottom: calc(var(--map-summary-height) + 38px);
+  display: flex;
+  gap: 9px;
+  align-items: center;
+}
+
+.impact-network__canvas .propagation-scene__zoom-btn,
+.impact-network__canvas .propagation-scene__zoom-level {
+  height: 38px;
+  border: 1px solid rgb(83 139 188 / 0.18);
+  border-radius: 9px;
+  color: #c9d9e8;
+  background: rgb(3 14 29 / 0.76);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.025);
+  backdrop-filter: blur(10px);
+}
+
+.impact-network__canvas .propagation-scene__zoom-btn {
+  display: grid;
+  width: 38px;
+  place-items: center;
+  padding: 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.impact-network__canvas .propagation-scene__zoom-btn svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.65;
+}
+
+.impact-network__canvas .propagation-scene__zoom-level {
+  display: grid;
+  min-width: 76px;
+  place-items: center;
+  padding: 0 12px;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.58rem;
+  font-weight: 800;
+}
+
+.impact-network__canvas .propagation-scene__zoom-btn:hover:not(:disabled) {
+  border-color: rgb(82 176 235 / 0.46);
+  color: #fff;
+  background: rgb(6 23 43 / 0.9);
+}
+
+.impact-network__canvas .propagation-scene__zoom-btn:focus-visible {
+  outline: 2px solid rgb(100 205 255 / 0.72);
+  outline-offset: 2px;
+}
+
+.impact-network__canvas .propagation-scene--island-focus :is(
+  .impact-map-guide,
+  .impact-map-recenter,
+  .impact-map-selection,
+  .impact-map-summary,
+  .propagation-scene__zoom-controls
+) {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.impact-network--propagation .impact-network__skip {
+  top: 68px;
+  right: calc(min(380px, 32vw) + 22px);
+}
+
+.impact-network__canvas .propagation-scene__status {
+  z-index: 10;
+  max-width: 340px;
+  border: 1px solid rgb(76 141 194 / 0.16);
+  border-radius: 12px;
+  padding: 14px 18px;
+  background: rgb(3 15 29 / 0.58);
+  box-shadow:
+    0 14px 32px rgb(0 0 0 / 0.16),
+    inset 0 1px 0 rgb(255 255 255 / 0.025);
+  backdrop-filter: blur(12px);
+}
+
+.impact-network__canvas .propagation-scene__empty-copy {
+  color: #7890a8;
+  font-size: 0.66rem;
+}
+
+@keyframes impact-reference-grid-drift {
+  from {
+    background-position: 0 0, 0 0, 0 0;
+  }
+  to {
+    background-position: 84px 48px, -84px 48px, 84px 0;
+  }
+}
+
+@keyframes impact-reference-island-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 0.88;
+    transform: scale(1.06);
+  }
+}
+
+@media (max-width: 1500px) {
+  .impact-network__canvas .impact-map-summary {
+    grid-template-columns: 1.24fr 0.72fr 0.78fr 0.78fr 0.9fr;
+  }
+
+  .impact-network__canvas .impact-map-summary__metric {
+    gap: 8px;
+    padding-inline: 12px;
+  }
+
+  .impact-network__canvas .impact-map-summary__sparkline {
+    display: none;
+  }
+
+  .impact-network__canvas .impact-map-summary__clock {
+    display: none;
+  }
+
+  .impact-network__canvas .impact-map-summary__metric--risk {
+    display: flex;
+  }
+
+  .impact-network__canvas .impact-map-summary__metric small,
+  .impact-network__canvas .impact-map-summary__metric--origin strong {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 1200px) {
+  .impact-network__canvas .impact-map-selection {
+    display: none;
+  }
+
+  .impact-network__canvas .impact-map-summary {
+    right: 14px;
+    bottom: 12px;
+    left: 14px;
+    min-height: 92px;
+  }
+
+  .impact-network__canvas .propagation-scene {
+    --map-summary-height: 92px;
+  }
+
+  .impact-network__canvas .impact-map-summary__metric {
+    padding: 13px 10px;
+  }
+
+  .impact-network__canvas .impact-map-summary__metric small {
+    font-size: 0.42rem;
+  }
+
+  .impact-network__canvas .impact-map-summary__metric strong {
+    font-size: 0.68rem;
+  }
+
+  .impact-network__canvas .impact-map-summary__sparkline,
+  .impact-network__canvas .impact-map-summary__clock {
+    display: none;
+  }
+
+  .impact-network__canvas .impact-map-summary__metric--risk {
+    display: flex;
+  }
+
+  .impact-network--propagation .impact-network__skip {
+    top: 66px;
+    right: 14px;
+  }
+
+  .impact-network__canvas .propagation-island__label {
+    min-width: 82px;
+    max-width: 96px;
+    gap: 1px;
+    padding: 10px 6px 5px;
+  }
+
+  .impact-network__canvas .propagation-island__label b {
+    font-size: 0.43rem;
+  }
+
+  .impact-network__canvas .propagation-island__label small {
+    font-size: 0.37rem;
+  }
+
+  .impact-network__canvas .propagation-island__badge {
+    top: -11px;
+    width: 19px;
+    height: 19px;
+  }
+
+  .impact-network__canvas .propagation-island__badge svg {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+@media (max-width: 720px) {
+  .impact-network__canvas .propagation-scene {
+    --map-summary-height: 106px;
+  }
+
+  .impact-network__canvas .impact-map-guide {
+    top: 14px;
+    left: 14px;
+    width: 150px;
+  }
+
+  .impact-network__canvas .impact-map-guide > p {
+    display: none;
+  }
+
+  .impact-network__canvas .impact-map-legend {
+    width: 128px;
+    margin-top: 10px;
+    padding: 10px 11px;
+  }
+
+  .impact-network__canvas .impact-map-guide__live {
+    margin-top: 9px;
+  }
+
+  .impact-network__canvas .impact-map-recenter {
+    top: 12px;
+    right: 12px;
+    min-height: 32px;
+    padding-inline: 10px;
+    font-size: 0;
+  }
+
+  .impact-network__canvas .impact-map-recenter svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .impact-network__canvas .impact-map-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .impact-network__canvas .impact-map-summary__metric:nth-child(2),
+  .impact-network__canvas .impact-map-summary__metric--time {
+    display: none;
+  }
+
+  .impact-network__canvas .impact-map-summary__metric--origin,
+  .impact-network__canvas .impact-map-summary__metric--impact,
+  .impact-network__canvas .impact-map-summary__metric--risk {
+    display: flex;
+  }
+
+  .impact-network__canvas .impact-map-summary__metric {
+    padding: 12px 8px;
+  }
+
+  .impact-network__canvas .impact-map-summary__metric--origin .impact-map-summary__icon {
+    display: none;
+  }
+
+  .impact-network__canvas .impact-map-summary__bars i {
+    width: 5px;
+  }
+
+  .impact-network__canvas .propagation-scene__zoom-controls {
+    right: 12px;
+    bottom: calc(var(--map-summary-height) + 24px);
+    gap: 5px;
+  }
+
+  .impact-network__canvas .propagation-scene__zoom-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .impact-network__canvas .propagation-scene__zoom-level {
+    display: none;
+  }
+
+  .impact-network__canvas .propagation-island__label {
+    min-width: 72px;
+    max-width: 88px;
+    padding-inline: 5px;
+  }
+
+  .impact-network__canvas .propagation-island__label b {
+    font-size: 0.4rem;
+  }
+
+  .impact-network__canvas .propagation-island__label small {
+    font-size: 0.34rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .impact-network__canvas .propagation-scene__grid,
+  .impact-network__canvas .propagation-island__halo {
+    animation: none;
+  }
+}

@@ -33,7 +33,7 @@ function PropagationEdgeView({
       className="propagation-edge"
       data-edge-id={id}
       data-state={state}
-      data-risk={state === 'dormant' ? 'dormant' : risk}
+      data-risk={risk}
     >
       <defs>
         <path id={pathId} d={path} />

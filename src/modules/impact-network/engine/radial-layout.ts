@@ -42,6 +42,12 @@ const ISLAND_BODY_RADIUS_X_RATIO = 0.43
 const ISLAND_BODY_RADIUS_Y_RATIO = 0.28
 const LABEL_PADDING = 32
 const SCENE_PADDING = 20
+const FOCUSED_UPPER_ARC_ANGLES: Readonly<Record<number, readonly number[]>> = {
+  1: [-90],
+  2: [-150, -30],
+  3: [-155, -90, -25],
+  4: [-165, -115, -65, -15],
+}
 
 interface LayoutMetrics {
   nodeSize: number
@@ -147,13 +153,7 @@ function distributeSatellites(
   if (count === 0) return []
 
   if (ringRadii.length === 1) {
-    const focusedAngles: Record<number, readonly number[]> = {
-      1: [-35],
-      2: [-150, -30],
-      3: [-150, -30, 90],
-      4: [-135, -45, 45, 135],
-    }
-    const angles = focusedAngles[count]
+    const angles = FOCUSED_UPPER_ARC_ANGLES[count]
 
     if (angles) {
       return angles.map((angleDeg) => ({ ring: 0, angleDeg }))

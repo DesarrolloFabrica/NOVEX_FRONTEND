@@ -7,7 +7,10 @@ import {
   type CSSProperties,
   type PointerEvent,
 } from 'react'
-import type { CoordinationId } from '@/modules/impact-network/data/coordination-islands.config'
+import {
+  resolveCoordinationId,
+  type CoordinationId,
+} from '@/modules/impact-network/data/coordination-islands.config'
 import {
   computeEdgeAnchors,
   computeRadialLayout,
@@ -15,8 +18,10 @@ import {
   nodeVisualSize,
 } from '@/modules/impact-network/engine/radial-layout'
 import type { FocusedPropagation } from '@/modules/impact-network/types/impact-network.types'
-import type { OperationalEvent } from '@/modules/operational-events/types/operational-event.types'
-import type { RiskLevel } from '@/modules/operational-events/types/operational-event.types'
+import type {
+  OperationalEvent,
+  RiskLevel,
+} from '@/modules/operational-events/types/operational-event.types'
 import {
   computeFocusCamera,
   IslandFocusDossier,
@@ -25,6 +30,10 @@ import {
   useIslandFocusCamera,
   type SceneView,
 } from '@/modules/impact-network/components/island-focus'
+import {
+  ImpactMapGuide,
+  ImpactMapTelemetry,
+} from './ImpactMapChrome'
 import { IslandNode, type IslandImpactState } from './IslandNode'
 import {
   PropagationEdge,
@@ -128,6 +137,81 @@ function SceneBackdrop() {
     <div className="propagation-scene__backdrop" aria-hidden="true">
       <div className="propagation-scene__fog" />
       <div className="propagation-scene__grid" />
+      <svg
+        className="propagation-scene__atlas"
+        viewBox="0 0 1200 760"
+        preserveAspectRatio="xMidYMid slice"
+      >
+        <defs>
+          <radialGradient id="impact-atlas-glow" cx="50%" cy="48%" r="54%">
+            <stop offset="0%" stopColor="#17477c" stopOpacity=".3" />
+            <stop offset="58%" stopColor="#08274b" stopOpacity=".12" />
+            <stop offset="100%" stopColor="#020a15" stopOpacity="0" />
+          </radialGradient>
+          <filter id="impact-atlas-soft-glow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="3.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <clipPath id="impact-atlas-clip">
+            <ellipse cx="600" cy="400" rx="520" ry="310" />
+          </clipPath>
+        </defs>
+
+        <ellipse
+          className="propagation-scene__atlas-glow"
+          cx="600"
+          cy="400"
+          rx="520"
+          ry="310"
+          fill="url(#impact-atlas-glow)"
+        />
+
+        <g className="propagation-scene__atlas-sphere" clipPath="url(#impact-atlas-clip)">
+          <ellipse cx="600" cy="400" rx="520" ry="310" />
+          <ellipse cx="600" cy="400" rx="520" ry="228" />
+          <ellipse cx="600" cy="400" rx="520" ry="142" />
+          <ellipse cx="600" cy="400" rx="520" ry="62" />
+          <path d="M600 89C451 163 389 265 389 400s62 237 211 310" />
+          <path d="M600 89C749 163 811 265 811 400s-62 237-211 310" />
+          <path d="M600 89C522 184 489 286 489 400s33 216 111 310" />
+          <path d="M600 89C678 184 711 286 711 400s-33 216-111 310" />
+        </g>
+
+        <g className="propagation-scene__atlas-land">
+          <path d="M178 290 218 238 276 218 329 237 346 270 325 297 291 301 270 334 225 337 199 316Z" />
+          <path d="m300 350 49 18 32 44-8 57-34 38-19 67-29-24 5-65-23-45 12-51Z" />
+          <path d="m498 265 42-25 53 10 30 30-19 25-48 5-22-16-42 6Z" />
+          <path d="m542 322 63-13 67 30 7 54-29 44-20 81-48 31-35-64-37-42 12-69Z" />
+          <path d="m628 250 65-31 99 13 61 35 77 5 76 38-30 42-84 6-51 44-45-10-34-40-55-9-35-38-54-14Z" />
+          <path d="m878 485 49-25 58 23-5 45-51 20-57-24Z" />
+          <path d="m986 390 28-8 18 18-16 18-31-8Z" />
+        </g>
+
+        <g className="propagation-scene__atlas-links" filter="url(#impact-atlas-soft-glow)">
+          <path d="M205 311 318 378 520 292 664 355 850 293 970 500" />
+          <path d="M315 492 542 399 704 276 926 314" />
+          <path d="M359 260 520 292 605 475 878 505" />
+          <circle cx="205" cy="311" r="3" />
+          <circle cx="318" cy="378" r="2.5" />
+          <circle cx="520" cy="292" r="3.2" />
+          <circle cx="605" cy="475" r="2.7" />
+          <circle cx="664" cy="355" r="3" />
+          <circle cx="704" cy="276" r="2.4" />
+          <circle cx="850" cy="293" r="3.1" />
+          <circle cx="878" cy="505" r="2.6" />
+          <circle cx="970" cy="500" r="3" />
+        </g>
+
+        <g className="propagation-scene__atlas-orbits">
+          <ellipse cx="600" cy="400" rx="575" ry="346" transform="rotate(-8 600 400)" />
+          <ellipse cx="600" cy="400" rx="448" ry="350" transform="rotate(18 600 400)" />
+          <path d="M92 537C304 645 826 684 1112 458" />
+          <path d="M126 195C378 75 868 83 1088 220" />
+        </g>
+      </svg>
       <div className="propagation-scene__scanlines" />
       <div className="propagation-scene__orbits">
         <span className="propagation-scene__orbit propagation-scene__orbit--outer" />
@@ -143,6 +227,21 @@ function SceneBackdrop() {
       <div className="propagation-scene__tech-stars" />
     </div>
   )
+}
+
+const RISK_LADDER: readonly RiskLevel[] = [
+  'low',
+  'moderate',
+  'high',
+  'critical',
+]
+
+function attenuateRisk(
+  risk: RiskLevel | null,
+  steps: number,
+): RiskLevel {
+  const index = RISK_LADDER.indexOf(risk ?? 'moderate')
+  return RISK_LADDER[Math.max(0, index - steps)]
 }
 
 export function PropagationScene({
@@ -168,6 +267,7 @@ export function PropagationScene({
   const [pan, setPan] = useState<PanOffset>({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(DEFAULT_ZOOM)
   const [isDragging, setIsDragging] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const [focusIslandId, setFocusIslandId] = useState<CoordinationId | null>(null)
   const [islandFocusOpen, setIslandFocusOpen] = useState(false)
   const [dossierVisible, setDossierVisible] = useState(false)
@@ -213,6 +313,16 @@ export function PropagationScene({
     return () => observer.disconnect()
   }, [updateSize])
 
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(document.fullscreenElement === containerRef.current)
+      window.requestAnimationFrame(updateSize)
+    }
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    return () =>
+      document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  }, [updateSize])
+
   const layout = useMemo(() => {
     if (!propagation) return null
     return computeRadialLayout(
@@ -224,6 +334,39 @@ export function PropagationScene({
   }, [propagation, size])
 
   const nodeSize = layout?.nodeSize ?? 120
+
+  const assessedRiskByCoordination = useMemo(() => {
+    const result = new Map<CoordinationId, RiskLevel>()
+    const assessments =
+      focusedEvent?.interpretation?.executiveReport?.affectedAreas ?? []
+
+    for (const assessment of assessments) {
+      const coordinationId = resolveCoordinationId(assessment.name)
+      if (coordinationId) {
+        result.set(coordinationId, assessment.affectationLevel)
+      }
+    }
+
+    return result
+  }, [focusedEvent])
+
+  const getVisualRisk = useCallback(
+    (
+      coordinationId: CoordinationId,
+      role: 'origin' | 'affected' | 'ambient',
+      order = 0,
+    ): RiskLevel => {
+      const assessedRisk = assessedRiskByCoordination.get(coordinationId)
+      if (assessedRisk) return assessedRisk
+      if (role === 'origin') return riskLevel ?? 'moderate'
+
+      // Replay can reveal areas that were not part of the first AI assessment.
+      // Represent that additional reach as an attenuated ring of impact. The
+      // first newly discovered hop is visually separated from assessed areas.
+      return attenuateRisk(riskLevel, order === 0 || order > 2 ? 2 : 1)
+    },
+    [assessedRiskByCoordination, riskLevel],
+  )
 
   useEffect(() => {
     panRef.current = pan
@@ -569,6 +712,28 @@ export function PropagationScene({
     element.style.setProperty('--scene-parallax-y', '0px')
   }, [])
 
+  const recenterMap = useCallback(() => {
+    setPan({ x: 0, y: 0 })
+    setZoom(DEFAULT_ZOOM)
+    resetParallax()
+  }, [resetParallax])
+
+  const toggleFullscreen = useCallback(async () => {
+    const element = containerRef.current
+    if (!element) return
+
+    try {
+      if (document.fullscreenElement === element) {
+        await document.exitFullscreen()
+      } else {
+        await element.requestFullscreen()
+      }
+    } catch {
+      // Fullscreen can be denied by the browser or embedding host. The map
+      // remains fully usable with pan and zoom when that happens.
+    }
+  }, [])
+
   const edgePaths = useMemo(() => {
     if (!propagation || !layout) return []
     const originNode = layout.nodes.find((node) => node.role === 'origin')
@@ -597,6 +762,12 @@ export function PropagationScene({
           ),
           targetCoordinationId: edge.targetCoordinationId,
           order: edge.order,
+          tone: getVisualRisk(
+            edge.targetCoordinationId as CoordinationId,
+            'affected',
+            edge.order,
+          ),
+          target: anchors.target,
         }
       })
       .filter(Boolean) as Array<{
@@ -604,8 +775,52 @@ export function PropagationScene({
       path: string
       targetCoordinationId: CoordinationId
       order: number
+      tone: RiskLevel
+      target: { x: number; y: number }
     }>
-  }, [layout, nodeSize, propagation])
+  }, [getVisualRisk, layout, nodeSize, propagation])
+
+  const relayPaths = useMemo(() => {
+    if (!layout) return []
+    const affectedNodes = layout.nodes
+      .filter((node) => node.role === 'affected')
+      .sort((a, b) => (a.slotIndex ?? 0) - (b.slotIndex ?? 0))
+
+    if (affectedNodes.length < 2) return []
+
+    const paths: Array<{
+      id: string
+      path: string
+      tone: RiskLevel
+      kind: 'upper' | 'return'
+    }> = affectedNodes.slice(0, -1).map((node, index) => {
+      const next = affectedNodes[index + 1]
+      const lift = Math.max(36, Math.abs(next.x - node.x) * 0.18)
+      const controlX = (node.x + next.x) / 2
+      const controlY = Math.min(node.y, next.y) - lift
+      return {
+        id: `relay-${node.coordinationId}-${next.coordinationId}`,
+        path: `M ${node.x} ${node.y + nodeSize * 0.08} Q ${controlX} ${controlY} ${next.x} ${next.y + nodeSize * 0.08}`,
+        tone: getVisualRisk(
+          next.coordinationId,
+          'affected',
+          next.slotIndex ?? index + 1,
+        ),
+        kind: 'upper',
+      }
+    })
+
+    const first = affectedNodes[0]
+    const last = affectedNodes[affectedNodes.length - 1]
+    paths.push({
+      id: `relay-return-${last.coordinationId}-${first.coordinationId}`,
+      path: `M ${last.x} ${last.y + nodeSize * 0.16} Q ${layout.center.x} ${layout.center.y + nodeSize * 1.5} ${first.x} ${first.y + nodeSize * 0.16}`,
+      tone: 'low',
+      kind: 'return',
+    })
+
+    return paths
+  }, [getVisualRisk, layout, nodeSize])
 
   const getEdgeState = useCallback(
     (edgeId: string): PropagationEdgeState => {
@@ -634,6 +849,7 @@ export function PropagationScene({
         className="propagation-scene propagation-scene--empty"
       >
         <SceneBackdrop />
+        <ImpactMapGuide onRecenter={recenterMap} />
         <div
           className={[
             'propagation-scene__status',
@@ -692,13 +908,7 @@ export function PropagationScene({
       }}
     >
       <SceneBackdrop />
-
-      <div className="propagation-scene__hud" aria-hidden="true">
-        <span className="propagation-scene__hud-kicker">IMPACT NETWORK / LIVE FIELD</span>
-        <span className="propagation-scene__hud-status">
-          <i /> SIGNAL LOCKED · {layout.nodes.length.toString().padStart(2, '0')} NODES
-        </span>
-      </div>
+      <ImpactMapGuide onRecenter={recenterMap} />
 
       <div
         className="propagation-scene__zoom-controls"
@@ -707,17 +917,15 @@ export function PropagationScene({
       >
         <button
           type="button"
-          className="propagation-scene__zoom-btn"
-          aria-label="Acercar mapa"
-          title="Acercar (rueda del mouse)"
-          disabled={zoom >= MAX_ZOOM - 0.01}
-          onClick={() => applyZoomAtCenter(zoom + ZOOM_BUTTON_STEP)}
+          className="propagation-scene__zoom-btn propagation-scene__zoom-btn--fullscreen"
+          aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Ver mapa en pantalla completa'}
+          title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+          onClick={() => void toggleFullscreen()}
         >
-          +
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 4H4v4M16 4h4v4M20 16v4h-4M8 20H4v-4" />
+          </svg>
         </button>
-        <span className="propagation-scene__zoom-level" aria-live="polite">
-          {Math.round(zoom * 100)}%
-        </span>
         <button
           type="button"
           className="propagation-scene__zoom-btn"
@@ -728,26 +936,20 @@ export function PropagationScene({
         >
           −
         </button>
+        <span className="propagation-scene__zoom-level" aria-live="polite">
+          {Math.round(zoom * 100)}%
+        </span>
+        <button
+          type="button"
+          className="propagation-scene__zoom-btn"
+          aria-label="Acercar mapa"
+          title="Acercar (rueda del mouse)"
+          disabled={zoom >= MAX_ZOOM - 0.01}
+          onClick={() => applyZoomAtCenter(zoom + ZOOM_BUTTON_STEP)}
+        >
+          +
+        </button>
       </div>
-
-      <aside className="propagation-scene__focus-overlay" aria-label="Resumen de propagación">
-        <div>
-          <span>Origen</span>
-          <strong>{propagation.originName}</strong>
-        </div>
-        <div>
-          <span>Impacto</span>
-          <strong>{propagation.affectedCoordinationIds.length} coordinaciones</strong>
-        </div>
-        <div>
-          <span>Riesgo</span>
-          <strong data-risk={riskLevel ?? 'moderate'}>{riskLevel ?? 'moderate'}</strong>
-        </div>
-        <div>
-          <span>Tiempo</span>
-          <strong>{propagationDurationLabel}</strong>
-        </div>
-      </aside>
 
       <div className="propagation-scene__stage" style={stageStyle}>
         <div className="propagation-scene__halos" aria-hidden="true">
@@ -778,16 +980,62 @@ export function PropagationScene({
           viewBox={`0 0 ${size.width} ${size.height}`}
           aria-hidden="true"
         >
+          <g className="propagation-scene__relay-network">
+            {relayPaths.map((relay, index) => (
+              <g
+                key={relay.id}
+                className="propagation-relay"
+                data-tone={relay.tone}
+                data-kind={relay.kind}
+              >
+                <path
+                  id={relay.id}
+                  className="propagation-relay__glow"
+                  d={relay.path}
+                  pathLength={1}
+                  vectorEffect="non-scaling-stroke"
+                />
+                <path
+                  className="propagation-relay__line"
+                  d={relay.path}
+                  pathLength={1}
+                  vectorEffect="non-scaling-stroke"
+                />
+                {!reducedMotion ? (
+                  <circle
+                    className="propagation-relay__particle"
+                    r={index === relayPaths.length - 1 ? 2.4 : 2.8}
+                  >
+                    <animateMotion
+                      begin={`${index * 0.45}s`}
+                      dur={`${3.4 + index * 0.35}s`}
+                      repeatCount="indefinite"
+                    >
+                      <mpath href={`#${relay.id}`} />
+                    </animateMotion>
+                  </circle>
+                ) : null}
+              </g>
+            ))}
+          </g>
           {edgePaths.map((edge) => (
-            <PropagationEdge
-              key={edge.id}
-              id={edge.id}
-              path={edge.path}
-              state={getEdgeState(edge.id)}
-              riskLevel={riskLevel}
-              reducedMotion={reducedMotion}
-              order={edge.order}
-            />
+            <g key={edge.id}>
+              <PropagationEdge
+                id={edge.id}
+                path={edge.path}
+                state={getEdgeState(edge.id)}
+                riskLevel={edge.tone}
+                reducedMotion={reducedMotion}
+                order={edge.order}
+              />
+              <circle
+                className="propagation-edge__junction"
+                data-tone={edge.tone}
+                cx={edge.target.x}
+                cy={edge.target.y}
+                r="3.2"
+              />
+            </g>
           ))}
         </svg>
 
@@ -811,6 +1059,11 @@ export function PropagationScene({
                 coordinationId={node.coordinationId}
                 role={node.role}
                 riskLevel={riskLevel}
+                visualRisk={getVisualRisk(
+                  node.coordinationId,
+                  node.role,
+                  node.slotIndex ?? 0,
+                )}
                 impactState={impactState}
                 selected={isFocusedIsland && islandFocusOpen}
                 onSelect={handleSelectIsland}
@@ -837,6 +1090,14 @@ export function PropagationScene({
           })}
         </div>
       </div>
+
+      <ImpactMapTelemetry
+        propagation={propagation}
+        event={focusedEvent ?? null}
+        riskLevel={riskLevel}
+        riskScore={focusedEvent?.interpretation?.riskScore ?? 0}
+        propagationDurationLabel={propagationDurationLabel}
+      />
 
       {focusedEvent && focusIslandId && propagation ? (
         <IslandFocusDossier
