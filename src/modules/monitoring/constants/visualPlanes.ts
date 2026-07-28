@@ -1,4 +1,4 @@
-// Escala de planos visuales O.M.E.G.A. (Sprint 4.2).
+// Escala de planos visuales Cunmark (Sprint 4.2).
 // Fondo → ciudad → marco → cristal → contenido grabado.
 // Solo presentación: z-index, sombras y opacidad — sin alterar layout.
 
@@ -7,7 +7,7 @@ export const PLANE_ROOM = 'isolate'
 
 /**
  * Ciudad ambiental — delante del fondo CSS del contenedor y detrás de las
- * capas atmosféricas. El orden DOM dentro de OmegaRoom resuelve el apilado
+ * capas atmosféricas. El orden DOM dentro de CunmarkRoom resuelve el apilado
  * entre elementos del mismo plano 0.
  */
 export const PLANE_CITY =

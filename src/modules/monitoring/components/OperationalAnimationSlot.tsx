@@ -1,7 +1,7 @@
 export function OperationalAnimationSlot() {
   return (
     <section
-      className="omega-subpanel operational-animation-slot relative h-full min-h-0 w-full overflow-hidden border"
+      className="cunmark-subpanel operational-animation-slot relative h-full min-h-0 w-full overflow-hidden border"
       aria-label="Espacio reservado para animación operativa"
     >
       <div className="absolute inset-3" aria-hidden="true">

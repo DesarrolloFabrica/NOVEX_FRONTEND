@@ -10,7 +10,10 @@
 import type { Commitment } from '@/modules/commitments/types/commitment.types'
 
 /** Clave de almacenamiento versionada (permite migraciones futuras). */
-export const COMMITMENTS_STORAGE_KEY = 'omega.commitments.v4'
+export const COMMITMENTS_STORAGE_KEY = 'cunmark.commitments.v4'
+
+/** Clave legacy del rebrand Omega → Cunmark. */
+export const LEGACY_COMMITMENTS_STORAGE_KEY = 'omega.commitments.v4'
 
 /** Obtiene localStorage si existe; null en cualquier otro caso. */
 function getStorage(): Storage | null {
@@ -40,35 +43,68 @@ function isValidCommitmentArray(value: unknown): value is Commitment[] {
   )
 }
 
+function parseCommitments(raw: string | null): Commitment[] | null {
+  if (!raw) return null
+  try {
+    const parsed: unknown = JSON.parse(raw)
+    return isValidCommitmentArray(parsed) ? parsed : null
+  } catch {
+    return null
+  }
+}
+
 /**
  * Lee los compromisos persistidos.
  * - Si no hay datos => null (el contexto cargará mocks).
  * - Si el JSON es inválido o no cumple la forma => limpia y devuelve null.
+ * - Migra automáticamente desde la clave legacy `omega.commitments.v4`.
  */
 export function loadStoredCommitments(): Commitment[] | null {
   const storage = getStorage()
   if (!storage) return null
 
-  let raw: string | null
+  let currentRaw: string | null
+  let legacyRaw: string | null
   try {
-    raw = storage.getItem(COMMITMENTS_STORAGE_KEY)
+    currentRaw = storage.getItem(COMMITMENTS_STORAGE_KEY)
+    legacyRaw = storage.getItem(LEGACY_COMMITMENTS_STORAGE_KEY)
   } catch {
     return null
   }
-  if (!raw) return null
 
-  try {
-    const parsed: unknown = JSON.parse(raw)
-    if (!isValidCommitmentArray(parsed)) {
-      clearStoredCommitments()
-      return null
+  const current = parseCommitments(currentRaw)
+  if (current) {
+    if (legacyRaw) {
+      try {
+        storage.removeItem(LEGACY_COMMITMENTS_STORAGE_KEY)
+      } catch {
+        // Ignorar.
+      }
     }
-    return parsed
-  } catch {
-    // JSON corrupto: se limpia para no volver a fallar en cada carga.
+    return current
+  }
+
+  if (currentRaw) {
+    // JSON presente pero inválido en la clave nueva.
     clearStoredCommitments()
     return null
   }
+
+  const legacy = parseCommitments(legacyRaw)
+  if (!legacy) {
+    if (legacyRaw) {
+      clearStoredCommitments()
+    }
+    return null
+  }
+
+  try {
+    storage.setItem(COMMITMENTS_STORAGE_KEY, JSON.stringify(legacy))
+    storage.removeItem(LEGACY_COMMITMENTS_STORAGE_KEY)
+  } catch {
+    // Si no se puede migrar, igual devolvemos los datos leídos.
+  }
+  return legacy
 }
 
 /** Persiste la lista de compromisos (best-effort, silencioso ante errores). */
@@ -77,6 +113,7 @@ export function saveStoredCommitments(commitments: Commitment[]): void {
   if (!storage) return
   try {
     storage.setItem(COMMITMENTS_STORAGE_KEY, JSON.stringify(commitments))
+    storage.removeItem(LEGACY_COMMITMENTS_STORAGE_KEY)
   } catch {
     // Cuota llena o almacenamiento no escribible: se ignora (capa temporal).
   }
@@ -88,6 +125,7 @@ export function clearStoredCommitments(): void {
   if (!storage) return
   try {
     storage.removeItem(COMMITMENTS_STORAGE_KEY)
+    storage.removeItem(LEGACY_COMMITMENTS_STORAGE_KEY)
   } catch {
     // Se ignora intencionalmente.
   }

@@ -20,7 +20,7 @@ function SummaryCard({ label, value, tone }: SummaryCardProps) {
   return (
     <div
       data-tone={tone}
-      className={`omega-status-card risk-summary-card flex min-w-0 flex-col gap-1 border px-2 py-1.5 ${toneClasses}`}
+      className={`cunmark-status-card risk-summary-card flex min-w-0 flex-col gap-1 border px-2 py-1.5 ${toneClasses}`}
     >
       <span className="truncate text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-600">
         {label}

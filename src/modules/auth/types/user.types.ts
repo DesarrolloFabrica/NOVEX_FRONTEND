@@ -1,4 +1,4 @@
-/** Usuario autenticado en O.M.E.G.A. */
+/** usuario autenticado en Cunmark */
 export type UserRole = 'supervisor' | 'ejecutor'
 
 export interface User {

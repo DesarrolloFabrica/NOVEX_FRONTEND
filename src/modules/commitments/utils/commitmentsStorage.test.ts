@@ -81,4 +81,17 @@ describe('commitmentsStorage', () => {
     localStorage.setItem(COMMITMENTS_STORAGE_KEY, JSON.stringify({ a: 1 }))
     expect(loadStoredCommitments()).toBeNull()
   })
+
+  it('migra compromisos desde la clave legacy omega.commitments.v4', () => {
+    const commitments = [makeCommitment('legacy-1')]
+    localStorage.setItem(
+      'omega.commitments.v4',
+      JSON.stringify(commitments),
+    )
+    expect(loadStoredCommitments()).toEqual(commitments)
+    expect(localStorage.getItem(COMMITMENTS_STORAGE_KEY)).toEqual(
+      JSON.stringify(commitments),
+    )
+    expect(localStorage.getItem('omega.commitments.v4')).toBeNull()
+  })
 })

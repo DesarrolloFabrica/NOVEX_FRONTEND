@@ -5,13 +5,9 @@ import {
   useRef,
   useState,
   type MouseEvent,
-  type ReactNode,
 } from 'react'
 import { createPortal } from 'react-dom'
 import type {
-  ActionPriority,
-  CertaintyLevel,
-  ExecutiveUrgency,
   IndicatorTrend,
   OperationalEvent,
   RiskLevel,
@@ -23,31 +19,18 @@ import {
   formatEventDate,
   timelineTypeLabel,
 } from '@/modules/operational-events/components/eventPresentation'
-import { OmegaIcon } from '@/shared/components/OmegaIcon'
+import { CunmarkIcon } from '@/shared/components/CunmarkIcon'
+import {
+  CertaintyRing,
+  EXEC_CERTAINTY_LABEL,
+  EXEC_PRIORITY_LABEL,
+  EXEC_URGENCY_LABEL,
+  ExecutiveSection,
+} from '@/modules/operational-events/components/situation-executive-report.shared'
 
 interface SituationDetailModalProps {
   event: OperationalEvent
   onClose: () => void
-}
-
-const PRIORITY_LABEL: Record<ActionPriority, string> = {
-  immediate: 'Inmediata',
-  high: 'Alta',
-  medium: 'Media',
-  scheduled: 'Programada',
-}
-
-const URGENCY_LABEL: Record<ExecutiveUrgency, string> = {
-  immediate: 'Inmediata',
-  high: 'Alta',
-  medium: 'Media',
-  low: 'Baja',
-}
-
-const CERTAINTY_LABEL: Record<CertaintyLevel, string> = {
-  high: 'Alta',
-  medium: 'Media',
-  low: 'Baja',
 }
 
 const TREND_LABEL: Record<IndicatorTrend, string> = {
@@ -66,68 +49,6 @@ function formatEventDateTime(iso: string): string {
     hour: '2-digit',
     minute: '2-digit',
   }).format(date)
-}
-
-function CertaintyRing({
-  percentage,
-  level,
-}: {
-  percentage: number
-  level: CertaintyLevel
-}) {
-  const radius = 34
-  const circumference = 2 * Math.PI * radius
-  const offset = circumference * (1 - Math.min(1, Math.max(0, percentage / 100)))
-
-  return (
-    <div
-      className="omega-sit-ring"
-      aria-label={`Nivel de certeza ${percentage}% (${CERTAINTY_LABEL[level]})`}
-    >
-      <svg viewBox="0 0 88 88" aria-hidden="true">
-        <circle className="omega-sit-ring__track" cx="44" cy="44" r={radius} />
-        <circle
-          className="omega-sit-ring__value"
-          cx="44"
-          cy="44"
-          r={radius}
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-        />
-      </svg>
-      <div className="omega-sit-ring__label">
-        <strong>{percentage}%</strong>
-        <span>Certeza</span>
-      </div>
-    </div>
-  )
-}
-
-function ExecutiveSection({
-  number,
-  question,
-  hint,
-  children,
-}: {
-  number: number
-  question: string
-  hint?: string
-  children: ReactNode
-}) {
-  return (
-    <section className="omega-sit-section">
-      <header className="omega-sit-section__head">
-        <span className="omega-sit-section__num" aria-hidden="true">
-          {String(number).padStart(2, '0')}
-        </span>
-        <div className="min-w-0">
-          <h3 className="omega-sit-section__title">{question}</h3>
-          {hint ? <p className="omega-sit-section__hint">{hint}</p> : null}
-        </div>
-      </header>
-      <div className="omega-sit-section__body">{children}</div>
-    </section>
-  )
 }
 
 export function SituationDetailModal({
@@ -199,34 +120,34 @@ export function SituationDetailModal({
   }
 
   return createPortal(
-    <div className="omega-situation-modal" role="presentation">
+    <div className="cunmark-situation-modal" role="presentation">
       <button
         type="button"
-        className="omega-situation-modal__backdrop"
-        aria-label="Cerrar detalle"
+        className="cunmark-situation-modal__backdrop"
+        aria-label="Cerrar"
         onClick={onClose}
       />
 
       <div
-        className="omega-situation-modal__dialog"
+        className="cunmark-situation-modal__dialog"
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         data-risk={risk}
       >
-        <header className="omega-sit-header">
-          <div className="omega-sit-header__lead">
-            <span className="omega-sit-header__icon" aria-hidden="true">
-              <OmegaIcon name="alert" size={16} strokeWidth={1.7} />
+        <header className="cunmark-sit-header">
+          <div className="cunmark-sit-header__lead">
+            <span className="cunmark-sit-header__icon" aria-hidden="true">
+              <CunmarkIcon name="alert" size={16} strokeWidth={1.7} />
             </span>
             <div className="min-w-0">
-              <p className="omega-sit-header__eyebrow">
+              <p className="cunmark-sit-header__eyebrow">
                 Análisis ejecutivo de la situación
               </p>
-              <h2 id={titleId} className="omega-sit-header__title">
+              <h2 id={titleId} className="cunmark-sit-header__title">
                 {report?.incidentSummary.executiveTitle ?? event.title}
               </h2>
-              <p className="omega-sit-header__meta">
+              <p className="cunmark-sit-header__meta">
                 <span>{eventRef(event.id)}</span>
                 <span aria-hidden="true">·</span>
                 <span>{where}</span>
@@ -236,24 +157,24 @@ export function SituationDetailModal({
             </div>
           </div>
 
-          <div className="omega-sit-header__aside">
+          <div className="cunmark-sit-header__aside">
             <button
               ref={closeRef}
               type="button"
-              className="omega-sit-header__close"
+              className="cunmark-sit-header__close"
               aria-label="Cerrar"
               onClick={onClose}
             >
-              <OmegaIcon name="x" size={15} strokeWidth={1.7} />
+              <CunmarkIcon name="x" size={15} strokeWidth={1.7} />
             </button>
-            <div className="omega-sit-header__status" data-status={event.status}>
-              <span className="omega-sit-header__status-dot" aria-hidden="true" />
+            <div className="cunmark-sit-header__status" data-status={event.status}>
+              <span className="cunmark-sit-header__status-dot" aria-hidden="true" />
               <strong>
                 {EVENT_STATUS_LABEL[event.status]} · {RISK_LEVEL_LABEL[risk]}
               </strong>
             </div>
-            <p className="omega-sit-header__date">
-              <OmegaIcon name="calendar" size={12} strokeWidth={1.6} />
+            <p className="cunmark-sit-header__date">
+              <CunmarkIcon name="calendar" size={12} strokeWidth={1.6} />
               <time dateTime={event.reportedAt}>
                 {formatEventDateTime(event.reportedAt)}
               </time>
@@ -261,47 +182,47 @@ export function SituationDetailModal({
           </div>
         </header>
 
-        <div className="omega-sit-scroll">
+        <div className="cunmark-sit-scroll">
           {report ? (
-            <div className="omega-sit-report">
+            <div className="cunmark-sit-report">
               {/* 1. ¿Qué ocurrió? */}
               <ExecutiveSection
                 number={1}
                 question="¿Qué ocurrió?"
                 hint="Resumen ejecutivo y causa raíz sobre el contexto recibido"
               >
-                <div className="omega-sit-grid">
-                  <article className="omega-sit-card">
+                <div className="cunmark-sit-grid">
+                  <article className="cunmark-sit-card">
                     <header>
                       <h3>Resumen para dirección</h3>
                     </header>
-                    <p className="omega-sit-narrative">
+                    <p className="cunmark-sit-narrative">
                       {report.incidentSummary.executiveSummary}
                     </p>
                     {interpretation?.narrative ? (
-                      <p className="omega-sit-card__hint" style={{ marginTop: 10 }}>
+                      <p className="cunmark-sit-card__hint" style={{ marginTop: 10 }}>
                         {interpretation.narrative}
                       </p>
                     ) : null}
                   </article>
-                  <article className="omega-sit-card">
+                  <article className="cunmark-sit-card">
                     <header>
                       <h3>¿Por qué ocurrió?</h3>
                     </header>
-                    <div className="omega-sit-cause">
-                      <p className="omega-sit-cause__label">Causas detectadas</p>
+                    <div className="cunmark-sit-cause">
+                      <p className="cunmark-sit-cause__label">Causas detectadas</p>
                       <ul>
                         {report.rootCause.detectedCauses.map((cause) => (
                           <li key={cause}>{cause}</li>
                         ))}
                       </ul>
-                      <p className="omega-sit-cause__label">Hipótesis</p>
+                      <p className="cunmark-sit-cause__label">Hipótesis</p>
                       <ul data-variant="hypothesis">
                         {report.rootCause.hypotheses.map((hypothesis) => (
                           <li key={hypothesis}>{hypothesis}</li>
                         ))}
                       </ul>
-                      <p className="omega-sit-cause__label">Dependencias</p>
+                      <p className="cunmark-sit-cause__label">Dependencias</p>
                       <ul>
                         {report.rootCause.dependencies.map((dependency) => (
                           <li key={dependency}>{dependency}</li>
@@ -318,21 +239,21 @@ export function SituationDetailModal({
                 question="¿Qué tan grave es?"
                 hint="Riesgo, severidad y nivel de certeza del análisis"
               >
-                <div className="omega-sit-grid">
-                  <article className="omega-sit-card omega-sit-card--risk">
+                <div className="cunmark-sit-grid">
+                  <article className="cunmark-sit-card cunmark-sit-card--risk">
                     <header>
                       <h3>Riesgo actual</h3>
-                      <span className="omega-sit-pill" data-risk={risk}>
+                      <span className="cunmark-sit-pill" data-risk={risk}>
                         {RISK_LEVEL_LABEL[risk]}
                       </span>
                     </header>
-                    <div className="omega-sit-risk">
-                      <p className="omega-sit-risk__score">
+                    <div className="cunmark-sit-risk">
+                      <p className="cunmark-sit-risk__score">
                         <strong>{report.riskAssessment.riskScore}</strong>
                         <span>/ 100</span>
                       </p>
                       <div
-                        className="omega-sit-risk__bar"
+                        className="cunmark-sit-risk__bar"
                         role="meter"
                         aria-label="Nivel de riesgo"
                         aria-valuemin={0}
@@ -343,17 +264,17 @@ export function SituationDetailModal({
                           style={{ width: `${report.riskAssessment.riskScore}%` }}
                         />
                       </div>
-                      <p className="omega-sit-card__hint">
+                      <p className="cunmark-sit-card__hint">
                         Severidad {report.riskAssessment.severity}/5 · Categoría:{' '}
                         {interpretation?.categoryName ?? 'Sin clasificar'}
                       </p>
                     </div>
                   </article>
-                  <article className="omega-sit-card">
+                  <article className="cunmark-sit-card">
                     <header>
                       <h3>Nivel de certeza</h3>
                       <span
-                        className="omega-sit-pill"
+                        className="cunmark-sit-pill"
                         data-risk={
                           report.riskAssessment.certainty.level === 'high'
                             ? 'low'
@@ -362,11 +283,11 @@ export function SituationDetailModal({
                               : 'high'
                         }
                       >
-                        {CERTAINTY_LABEL[report.riskAssessment.certainty.level]}
+                        {EXEC_CERTAINTY_LABEL[report.riskAssessment.certainty.level]}
                       </span>
                     </header>
-                    <div className="omega-sit-tech">
-                      <p className="omega-sit-card__hint">
+                    <div className="cunmark-sit-tech">
+                      <p className="cunmark-sit-card__hint">
                         {report.riskAssessment.certainty.explanation}
                       </p>
                       <CertaintyRing
@@ -384,12 +305,12 @@ export function SituationDetailModal({
                 question="¿Por qué es grave?"
                 hint="Factores que determinaron la clasificación de la IA"
               >
-                <article className="omega-sit-card">
-                  <ul className="omega-sit-factors">
+                <article className="cunmark-sit-card">
+                  <ul className="cunmark-sit-factors">
                     {report.decisionFactors.map((factor) => (
                       <li key={factor}>
                         <span aria-hidden="true">
-                          <OmegaIcon name="check" size={12} strokeWidth={2} />
+                          <CunmarkIcon name="check" size={12} strokeWidth={2} />
                         </span>
                         {factor}
                       </li>
@@ -404,12 +325,12 @@ export function SituationDetailModal({
                 question="¿Quién está siendo afectado?"
                 hint="Impacto cuantificado y áreas afectadas con su motivo"
               >
-                <div className="omega-sit-grid">
-                  <article className="omega-sit-card">
+                <div className="cunmark-sit-grid">
+                  <article className="cunmark-sit-card">
                     <header>
                       <h3>Distribución del impacto</h3>
                     </header>
-                    <ul className="omega-sit-dist">
+                    <ul className="cunmark-sit-dist">
                       <li data-tone="cyan">
                         <strong>
                           {report.impactAnalysis.internalImpactPercentage}%
@@ -432,7 +353,7 @@ export function SituationDetailModal({
                         <p>Experiencia y continuidad académica</p>
                       </li>
                     </ul>
-                    <dl className="omega-sit-impact-facts">
+                    <dl className="cunmark-sit-impact-facts">
                       <div>
                         <dt>Estudiantes afectados (estimado)</dt>
                         <dd>
@@ -447,24 +368,24 @@ export function SituationDetailModal({
                         <dd>{report.impactAnalysis.estimatedAffectedAreas}</dd>
                       </div>
                     </dl>
-                    <p className="omega-sit-cause__label">Procesos afectados</p>
-                    <ul className="omega-sit-chips">
+                    <p className="cunmark-sit-cause__label">Procesos afectados</p>
+                    <ul className="cunmark-sit-chips">
                       {report.impactAnalysis.affectedProcesses.map((process) => (
                         <li key={process}>{process}</li>
                       ))}
                     </ul>
                   </article>
-                  <article className="omega-sit-card">
+                  <article className="cunmark-sit-card">
                     <header>
                       <h3>Áreas afectadas</h3>
                     </header>
-                    <ul className="omega-sit-areas">
+                    <ul className="cunmark-sit-areas">
                       {report.affectedAreas.map((area) => (
                         <li key={area.name}>
-                          <div className="omega-sit-areas__head">
+                          <div className="cunmark-sit-areas__head">
                             <strong>{area.name}</strong>
                             <span
-                              className="omega-sit-pill"
+                              className="cunmark-sit-pill"
                               data-risk={area.affectationLevel}
                             >
                               {RISK_LEVEL_LABEL[area.affectationLevel]}
@@ -484,31 +405,31 @@ export function SituationDetailModal({
                 question="¿Qué recomienda la IA?"
                 hint="Acciones priorizadas con motivo, área y tiempo recomendado"
               >
-                <ol className="omega-sit-actions">
+                <ol className="cunmark-sit-actions">
                   {report.recommendedActions.map((action, index) => (
                     <li
                       key={`${action.action}-${index}`}
-                      className="omega-sit-card omega-sit-action"
+                      className="cunmark-sit-card cunmark-sit-action"
                       data-priority={action.priority}
                     >
-                      <div className="omega-sit-action__head">
+                      <div className="cunmark-sit-action__head">
                         <span
-                          className="omega-sit-action__priority"
+                          className="cunmark-sit-action__priority"
                           data-priority={action.priority}
                         >
-                          {PRIORITY_LABEL[action.priority]}
+                          {EXEC_PRIORITY_LABEL[action.priority]}
                         </span>
-                        <span className="omega-sit-action__time">
-                          <OmegaIcon name="clock" size={11} strokeWidth={1.8} />
+                        <span className="cunmark-sit-action__time">
+                          <CunmarkIcon name="clock" size={11} strokeWidth={1.8} />
                           {action.recommendedTime}
                         </span>
                       </div>
-                      <strong className="omega-sit-action__title">
+                      <strong className="cunmark-sit-action__title">
                         {action.action}
                       </strong>
-                      <p className="omega-sit-action__reason">{action.reason}</p>
-                      <p className="omega-sit-action__area">
-                        <OmegaIcon name="users" size={11} strokeWidth={1.8} />
+                      <p className="cunmark-sit-action__reason">{action.reason}</p>
+                      <p className="cunmark-sit-action__area">
+                        <CunmarkIcon name="users" size={11} strokeWidth={1.8} />
                         {action.suggestedArea}
                       </p>
                     </li>
@@ -522,12 +443,12 @@ export function SituationDetailModal({
                 question="¿Qué pasa si no actuamos?"
                 hint="Consecuencias operacionales proyectadas por la IA"
               >
-                <article className="omega-sit-card">
-                  <ul className="omega-sit-factors" data-variant="warning">
+                <article className="cunmark-sit-card">
+                  <ul className="cunmark-sit-factors" data-variant="warning">
                     {report.operationalConsequences.map((consequence) => (
                       <li key={consequence}>
                         <span aria-hidden="true">
-                          <OmegaIcon name="alert" size={12} strokeWidth={1.8} />
+                          <CunmarkIcon name="alert" size={12} strokeWidth={1.8} />
                         </span>
                         {consequence}
                       </li>
@@ -542,28 +463,28 @@ export function SituationDetailModal({
                 question="Indicadores afectados"
                 hint="Qué medir, en qué unidad y hacia dónde debe moverse"
               >
-                <div className="omega-sit-indicators">
+                <div className="cunmark-sit-indicators">
                   {report.operationalIndicators.map((indicator) => (
                     <article
                       key={indicator.name}
-                      className="omega-sit-card omega-sit-indicator"
+                      className="cunmark-sit-card cunmark-sit-indicator"
                     >
                       <header>
                         <h3>{indicator.name}</h3>
                         <span
-                          className="omega-sit-indicator__trend"
+                          className="cunmark-sit-indicator__trend"
                           data-trend={indicator.trend}
                         >
                           {TREND_LABEL[indicator.trend]}
                         </span>
                       </header>
-                      <p className="omega-sit-indicator__value">
+                      <p className="cunmark-sit-indicator__value">
                         <strong>
                           {indicator.suggestedValue.toLocaleString('es-CO')}
                         </strong>
                         <span>{indicator.unit}</span>
                       </p>
-                      <p className="omega-sit-card__hint">
+                      <p className="cunmark-sit-card__hint">
                         {indicator.explanation}
                       </p>
                     </article>
@@ -577,11 +498,11 @@ export function SituationDetailModal({
                 question="Áreas responsables"
                 hint="Quién debe intervenir y con qué mandato inicial"
               >
-                <article className="omega-sit-card">
-                  <ul className="omega-sit-areas">
+                <article className="cunmark-sit-card">
+                  <ul className="cunmark-sit-areas">
                     {responsibleAreas.map(({ area, mandate }) => (
                       <li key={area}>
-                        <div className="omega-sit-areas__head">
+                        <div className="cunmark-sit-areas__head">
                           <strong>{area}</strong>
                         </div>
                         <p>{mandate}</p>
@@ -597,12 +518,12 @@ export function SituationDetailModal({
                 question="Cronología sugerida"
                 hint="Hitos de seguimiento propuestos y registro del evento"
               >
-                <div className="omega-sit-grid">
-                  <article className="omega-sit-card">
+                <div className="cunmark-sit-grid">
+                  <article className="cunmark-sit-card">
                     <header>
                       <h3>Próximos hitos</h3>
                     </header>
-                    <ol className="omega-sit-timeline">
+                    <ol className="cunmark-sit-timeline">
                       {report.timelineSuggestions.map((milestone) => (
                         <li key={milestone.horizon}>
                           <time>{milestone.horizon}</time>
@@ -614,14 +535,14 @@ export function SituationDetailModal({
                       ))}
                     </ol>
                   </article>
-                  <article className="omega-sit-card">
+                  <article className="cunmark-sit-card">
                     <header>
                       <h3>Registro del evento</h3>
                     </header>
                     {timeline.length === 0 ? (
-                      <p className="omega-sit-card__empty">Sin entradas.</p>
+                      <p className="cunmark-sit-card__empty">Sin entradas.</p>
                     ) : (
-                      <ol className="omega-sit-timeline">
+                      <ol className="cunmark-sit-timeline">
                         {timeline.map((entry) => (
                           <li key={entry.id}>
                             <time dateTime={entry.at}>
@@ -646,32 +567,32 @@ export function SituationDetailModal({
                 hint="Lectura final dirigida a la Dirección de Operaciones"
               >
                 <article
-                  className="omega-sit-card omega-sit-conclusion"
+                  className="cunmark-sit-card cunmark-sit-conclusion"
                   data-risk={risk}
                 >
-                  <div className="omega-sit-conclusion__grid">
+                  <div className="cunmark-sit-conclusion__grid">
                     <div>
-                      <p className="omega-sit-cause__label">Gravedad</p>
-                      <p className="omega-sit-conclusion__text">
+                      <p className="cunmark-sit-cause__label">Gravedad</p>
+                      <p className="cunmark-sit-conclusion__text">
                         {report.executiveConclusion.gravity}
                       </p>
                     </div>
                     <div>
-                      <p className="omega-sit-cause__label">Urgencia</p>
-                      <p className="omega-sit-conclusion__urgency">
-                        {URGENCY_LABEL[report.executiveConclusion.urgency]}
+                      <p className="cunmark-sit-cause__label">Urgencia</p>
+                      <p className="cunmark-sit-conclusion__urgency">
+                        {EXEC_URGENCY_LABEL[report.executiveConclusion.urgency]}
                       </p>
                     </div>
                     <div>
-                      <p className="omega-sit-cause__label">Recomendación general</p>
-                      <p className="omega-sit-conclusion__text">
+                      <p className="cunmark-sit-cause__label">Recomendación general</p>
+                      <p className="cunmark-sit-conclusion__text">
                         {report.executiveConclusion.recommendation}
                       </p>
                     </div>
                   </div>
                   {report.dataGaps.length > 0 ? (
-                    <div className="omega-sit-gaps">
-                      <p className="omega-sit-cause__label">
+                    <div className="cunmark-sit-gaps">
+                      <p className="cunmark-sit-cause__label">
                         Vacíos de información declarados por la IA
                       </p>
                       <ul>
@@ -685,15 +606,15 @@ export function SituationDetailModal({
               </ExecutiveSection>
             </div>
           ) : (
-            <div className="omega-sit-grid">
-              <article className="omega-sit-card">
+            <div className="cunmark-sit-grid">
+              <article className="cunmark-sit-card">
                 <header>
                   <h3>Descripción</h3>
                 </header>
-                <p className="omega-sit-narrative">
+                <p className="cunmark-sit-narrative">
                   {interpretation?.narrative ?? event.description}
                 </p>
-                <p className="omega-sit-card__hint" style={{ marginTop: 10 }}>
+                <p className="cunmark-sit-card__hint" style={{ marginTop: 10 }}>
                   Esta situación no cuenta con reporte ejecutivo de inteligencia
                   (contrato v2). Registrada el {formatEventDate(event.reportedAt)}.
                 </p>
@@ -702,15 +623,15 @@ export function SituationDetailModal({
           )}
         </div>
 
-        <footer className="omega-sit-footer">
+        <footer className="cunmark-sit-footer">
           <button
             type="button"
-            className="omega-sit-footer__secondary"
+            className="cunmark-sit-footer__secondary"
             onClick={(clickEvent) => void handleExport(clickEvent)}
             disabled={exportState === 'generating'}
             aria-busy={exportState === 'generating'}
           >
-            <OmegaIcon name="download" size={14} />
+            <CunmarkIcon name="download" size={14} />
             {exportState === 'generating'
               ? 'Generando PDF…'
               : exportState === 'error'
@@ -719,11 +640,11 @@ export function SituationDetailModal({
           </button>
           <button
             type="button"
-            className="omega-sit-footer__primary"
+            className="cunmark-sit-footer__primary"
             onClick={onClose}
           >
             Cerrar detalle
-            <OmegaIcon name="chevron-right" size={14} />
+            <CunmarkIcon name="chevron-right" size={14} />
           </button>
         </footer>
       </div>

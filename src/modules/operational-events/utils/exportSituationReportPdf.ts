@@ -129,8 +129,8 @@ export async function exportSituationReportPdf(
   doc.setProperties({
     title: pdfText(`Reporte ejecutivo ${reference} - ${reportTitle}`),
     subject: 'Analisis ejecutivo de inteligencia operacional',
-    author: 'Centro de Inteligencia Operacional OMEGA',
-    creator: 'Plataforma OMEGA',
+    author: 'Visión general Cunmark',
+    creator: 'Plataforma Cunmark',
   })
 
   const setText = (color: RGB) => doc.setTextColor(...color)
@@ -143,7 +143,7 @@ export async function exportSituationReportPdf(
     setText(COLORS.white)
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(10)
-    doc.text('OMEGA', margin, 8)
+    doc.text('CUNMARK', margin, 8)
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(7)
     doc.text(pdfText(`REPORTE EJECUTIVO  /  ${reference}`), margin, 13)
@@ -256,10 +256,10 @@ export async function exportSituationReportPdf(
   doc.setFontSize(8)
   doc.text('O', margin + 4.4, 16)
   doc.setFontSize(14)
-  doc.text('OMEGA', margin + 16, 12)
+  doc.text('CUNMARK', margin + 16, 12)
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(6.5)
-  doc.text('CENTRO DE INTELIGENCIA OPERACIONAL', margin + 16, 17)
+  doc.text('VISIÓN GENERAL', margin + 16, 17)
 
   setFill(accent)
   doc.roundedRect(pageWidth - 58, 9, 42, 9, 2, 2, 'F')
@@ -645,7 +645,7 @@ export async function exportSituationReportPdf(
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(6.5)
     doc.text(
-      'Documento generado por OMEGA - Centro de Inteligencia Operacional',
+      'Documento generado por Cunmark - Visión general',
       margin,
       pageHeight - 7,
     )

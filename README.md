@@ -1,11 +1,11 @@
-# O.M.E.G.A. Frontend
+# Cunmark Frontend
 
 Centro de Monitoreo Operativo — frontend en **React + TypeScript + Vite + Tailwind CSS v4**.
 
 ## Estructura del repositorio
 
 ```
-OMEGA_FRONTEND/
+CUNMARK_FRONTEND/
 ├── src/              # Código fuente de la aplicación
 ├── public/           # Assets estáticos (capas, escenas, favicon)
 ├── DOCS/             # Documentación de producto y dirección de arte
@@ -35,4 +35,4 @@ npm run lint       # Oxlint
 ## Documentación
 
 - [Estado del MVP](DOCS/mvp-estado-actual.md)
-- [Dirección de arte](DOCS/omega-direccion-arte-estado-actual.md)
+- [Dirección de arte](DOCS/cunmark-direccion-arte-estado-actual.md)

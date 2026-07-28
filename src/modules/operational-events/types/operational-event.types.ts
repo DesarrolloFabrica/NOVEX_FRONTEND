@@ -1,5 +1,5 @@
 // Capa: dominio (tipos) del módulo "operational-events".
-// Responsabilidad: contratos del Centro de Inteligencia Operacional.
+// Responsabilidad: contratos de Visión general.
 // Sin lógica: son el contrato que consumen servicios, reducers, motor y selectores.
 //
 // Este módulo convive temporalmente con "commitments". No lo reemplaza.
@@ -99,7 +99,7 @@ export interface OperationalIndicator {
 }
 
 // ---------------------------------------------------------------------------
-// CONTRATO DEFINITIVO DE INTELIGENCIA OPERACIONAL — omega.intelligence.v2
+// CONTRATO DEFINITIVO DE INTELIGENCIA OPERACIONAL — cunmark.intelligence.v2
 //
 // La IA no clasifica incidentes: asiste decisiones. Este contrato responde
 // las preguntas de un Director de Operaciones. Cuando se conecte Gemini real,
@@ -107,7 +107,26 @@ export interface OperationalIndicator {
 // ---------------------------------------------------------------------------
 
 /** Versión estable del contrato de inteligencia. */
-export const INTELLIGENCE_CONTRACT_VERSION = 'omega.intelligence.v2'
+export const INTELLIGENCE_CONTRACT_VERSION = 'cunmark.intelligence.v2'
+
+/** Versiones legacy aceptadas en lectura tras el rebrand Omega → Cunmark. */
+export const LEGACY_INTELLIGENCE_CONTRACT_VERSIONS = [
+  'omega.intelligence.v2',
+] as const
+
+export type IntelligenceContractVersion =
+  | typeof INTELLIGENCE_CONTRACT_VERSION
+  | (typeof LEGACY_INTELLIGENCE_CONTRACT_VERSIONS)[number]
+
+export function isSupportedIntelligenceContractVersion(
+  version: string | undefined | null,
+): version is IntelligenceContractVersion {
+  if (!version) return false
+  if (version === INTELLIGENCE_CONTRACT_VERSION) return true
+  return (LEGACY_INTELLIGENCE_CONTRACT_VERSIONS as readonly string[]).includes(
+    version,
+  )
+}
 
 /** Nivel cualitativo de certeza del análisis (reemplaza "Confianza IA"). */
 export type CertaintyLevel = 'low' | 'medium' | 'high'
@@ -213,7 +232,7 @@ export interface ExecutiveConclusion {
  * Operacional. Todo proveedor de IA (mock o Gemini real) produce esta forma.
  */
 export interface ExecutiveIntelligenceReport {
-  contractVersion: typeof INTELLIGENCE_CONTRACT_VERSION
+  contractVersion: IntelligenceContractVersion
   incidentSummary: IncidentSummary
   riskAssessment: RiskAssessment
   impactAnalysis: ImpactAnalysis
@@ -289,7 +308,7 @@ export interface AIInterpretation {
   /** Confianza opcional 0..1. */
   confidence?: number
   /**
-   * Reporte ejecutivo definitivo (contrato omega.intelligence.v2).
+   * Reporte ejecutivo definitivo (contrato cunmark.intelligence.v2).
    * Opcional por compatibilidad: interpretaciones antiguas no lo traen.
    * El proveedor de IA (mock hoy, Gemini mañana) siempre debe producirlo.
    */

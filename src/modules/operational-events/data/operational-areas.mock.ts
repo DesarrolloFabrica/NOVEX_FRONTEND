@@ -5,7 +5,7 @@
 import type { OperationalArea } from '@/modules/operational-events/types/operational-event.types'
 
 /**
- * Catálogo de áreas del Centro de Inteligencia Operacional.
+ * Catálogo de áreas de Visión general.
  *
  * - VGO es el agregador global (isGlobal: true).
  * - El resto son áreas operativas que reportan y/o resultan afectadas.

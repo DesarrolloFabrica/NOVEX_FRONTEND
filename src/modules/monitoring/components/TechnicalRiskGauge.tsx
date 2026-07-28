@@ -1,4 +1,4 @@
-// Gauge técnico O.M.E.G.A. — SVG nativo, animable, sin librerías externas.
+// Gauge técnico Cunmark — SVG nativo, animable, sin librerías externas.
 
 import type { CSSProperties } from 'react'
 

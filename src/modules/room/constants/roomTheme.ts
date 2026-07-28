@@ -1,4 +1,4 @@
-// Sistema visual de la Sala física O.M.E.G.A. (capa de escenario).
+// Sistema visual de la Sala física Cunmark (capa de escenario).
 // Responsabilidad: centralizar las clases de la ESTRUCTURA externa (fondo,
 // profundidad, marco y superficie principal) para que el Centro de Monitoreo
 // deje de leerse como una página web y se sienta como una Sala Operativa.
@@ -24,7 +24,7 @@ export const roomDepth =
   'bg-[radial-gradient(ellipse_130%_88%_at_50%_-14%,rgba(226,232,240,0.1)_0%,rgba(148,163,184,0.045)_28%,transparent_52%),radial-gradient(ellipse_68%_42%_at_50%_96%,rgba(15,23,42,0.06)_0%,transparent_62%),radial-gradient(ellipse_120%_100%_at_50%_50%,#1a2230_0%,#151b25_48%,#121820_100%)]'
 
 /**
- * Unidad videowall — ancho y composición; la altura física la controla omega-room.css:
+ * Unidad videowall — ancho y composición; la altura física la controla cunmark-room.css:
  *   --screen-max-height  → alto del monitor (portátil ≤900px alto: ~80vh)
  *   --screen-top-space   → reserva vertical en cálculos de altura
  *   --screen-stage-offset → desplazamiento visual del monitor (solo portátil)

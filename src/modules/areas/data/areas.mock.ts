@@ -5,7 +5,7 @@
 import type { Area } from '@/modules/areas/types/area.types'
 
 /**
- * Catálogo oficial de áreas de O.M.E.G.A.
+ * Catálogo oficial de áreas de Cunmark
  *
  * Regla de negocio:
  * - "Visión General Operaciones" es el área GLOBAL (isGlobal: true) y no posee

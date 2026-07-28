@@ -7,7 +7,7 @@ import {
   eventRef,
   formatEventDate,
 } from '@/modules/operational-events/components/eventPresentation'
-import { OmegaIcon } from '@/shared/components/OmegaIcon'
+import { CunmarkIcon } from '@/shared/components/CunmarkIcon'
 
 interface OperationalEventRowProps {
   event: OperationalEvent
@@ -28,19 +28,19 @@ export function OperationalEventRow({
 
   return (
     <tr
-      className="omega-events-row"
+      className="cunmark-events-row"
       data-selected={selected || undefined}
       onClick={() => onSelect(event.id)}
     >
       <td data-label="Riesgo">
-        <span className="omega-events-row__score" data-risk={risk}>
+        <span className="cunmark-events-row__score" data-risk={risk}>
           {score ?? '—'}
         </span>
       </td>
       <td data-label="Situación">
         <button
           type="button"
-          className={`omega-events-row__title ${FOCUS_VISIBLE}`}
+          className={`cunmark-events-row__title ${FOCUS_VISIBLE}`}
           onClick={(clickEvent) => {
             clickEvent.stopPropagation()
             onSelect(event.id)
@@ -48,28 +48,28 @@ export function OperationalEventRow({
         >
           {event.title}
         </button>
-        <span className="omega-events-row__ref">{eventRef(event.id)}</span>
+        <span className="cunmark-events-row__ref">{eventRef(event.id)}</span>
       </td>
       <td data-label="Área">
-        <span className="omega-events-row__text">{where}</span>
+        <span className="cunmark-events-row__text">{where}</span>
       </td>
       <td data-label="Categoría">
-        <span className="omega-events-row__text">{category}</span>
+        <span className="cunmark-events-row__text">{category}</span>
       </td>
       <td data-label="Estado">
-        <span className="omega-events-row__status" data-status={event.status}>
+        <span className="cunmark-events-row__status" data-status={event.status}>
           {EVENT_STATUS_LABEL[event.status]}
         </span>
       </td>
       <td data-label="Reportada">
-        <time dateTime={event.reportedAt} className="omega-events-row__date">
+        <time dateTime={event.reportedAt} className="cunmark-events-row__date">
           {formatEventDate(event.reportedAt)}
         </time>
       </td>
       <td data-label="Acción">
-        <span className="omega-events-row__action" aria-hidden="true">
+        <span className="cunmark-events-row__action" aria-hidden="true">
           Ver detalle
-          <OmegaIcon name="arrow-up-right" size={11} />
+          <CunmarkIcon name="arrow-up-right" size={11} />
         </span>
       </td>
     </tr>

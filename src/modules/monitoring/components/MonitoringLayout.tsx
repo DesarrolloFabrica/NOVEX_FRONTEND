@@ -31,9 +31,9 @@ export function MonitoringLayout({
   const hasRight = right != null && right !== false
   const isFullMain = !hasLeft && !hasRight
   const layoutClass = [
-    hasLeft ? '' : 'omega-workstation--no-left',
-    hasRight ? '' : 'omega-workstation--no-right',
-    isFullMain ? 'omega-workstation--full-main' : '',
+    hasLeft ? '' : 'cunmark-workstation--no-left',
+    hasRight ? '' : 'cunmark-workstation--no-right',
+    isFullMain ? 'cunmark-workstation--full-main' : '',
   ]
     .filter(Boolean)
     .join(' ')
@@ -49,23 +49,23 @@ export function MonitoringLayout({
   return (
     <div className={`${ROOM_CONTAINER} relative max-lg:overflow-visible lg:overflow-hidden`}>
       <div
-        className={`omega-workstation ${plateClass} relative flex min-h-0 flex-1 flex-col ${isFullMain ? 'lg:grid lg:min-h-0 lg:flex-1 lg:overflow-hidden lg:grid-cols-1 lg:grid-rows-[minmax(0,1fr)]' : CRYSTAL_GRID} ${layoutClass}`}
+        className={`cunmark-workstation ${plateClass} relative flex min-h-0 flex-1 flex-col ${isFullMain ? 'lg:grid lg:min-h-0 lg:flex-1 lg:overflow-hidden lg:grid-cols-1 lg:grid-rows-[minmax(0,1fr)]' : CRYSTAL_GRID} ${layoutClass}`}
       >
         {isFullMain || !showFieldAnchors ? null : <CrystalFieldAnchors />}
 
         {hasLeft ? (
-          <div className="omega-workstation__left relative order-2 z-[2] min-w-0 max-lg:pt-3 lg:order-1 lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden lg:pt-0">
+          <div className="cunmark-workstation__left relative order-2 z-[2] min-w-0 max-lg:pt-3 lg:order-1 lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden lg:pt-0">
             <CrystalRowGroove className="absolute inset-x-0 top-0 z-[2] lg:hidden" />
             {left}
           </div>
         ) : null}
 
-        <div className={`omega-workstation__main ${mainClass} order-1 z-[2] lg:order-2`}>
+        <div className={`cunmark-workstation__main ${mainClass} order-1 z-[2] lg:order-2`}>
           {main}
         </div>
 
         {hasRight ? (
-          <div className="omega-workstation__right relative order-3 z-[2] min-w-0 max-lg:pt-3 lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden lg:pt-0">
+          <div className="cunmark-workstation__right relative order-3 z-[2] min-w-0 max-lg:pt-3 lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden lg:pt-0">
             <CrystalRowGroove className="absolute inset-x-0 top-0 z-[2] lg:hidden" />
             {right}
           </div>

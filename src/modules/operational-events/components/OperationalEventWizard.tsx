@@ -27,7 +27,9 @@ import {
 } from '@/modules/operational-events/utils/simulateAIInterpretation'
 
 function todayDateInput(): string {
-  return new Date().toISOString().slice(0, 10)
+  const now = new Date()
+  const offset = now.getTimezoneOffset() * 60_000
+  return new Date(now.getTime() - offset).toISOString().slice(0, 16)
 }
 
 function createEmptyDraft(defaultAreaId: string): OperationalEventDraft {
@@ -55,6 +57,13 @@ export function OperationalEventWizard() {
   const [draft, setDraft] = useState<OperationalEventDraft>(() =>
     createEmptyDraft(defaultAreaId),
   )
+  const [captureContext, setCaptureContext] = useState({
+    urgency: 'Normal',
+    affectedAreas: [] as string[],
+    otherAffectedArea: '',
+  })
+  const [analysisDraft, setAnalysisDraft] =
+    useState<OperationalEventDraft | null>(null)
   const [eventId, setEventId] = useState(() => createDraftEventId())
   const [interpretation, setInterpretation] = useState<AIInterpretation | null>(
     null,
@@ -73,8 +82,25 @@ export function OperationalEventWizard() {
     setAnalyzing(true)
     try {
       const nextId = eventId || createDraftEventId()
+      const contextNotes = [
+        `Urgencia percibida por quien reporta: ${captureContext.urgency}.`,
+        captureContext.affectedAreas.length > 0
+          ? `Personas o áreas afectadas: ${captureContext.affectedAreas.join(', ')}.`
+          : null,
+        captureContext.otherAffectedArea.trim()
+          ? `Otra área afectada: ${captureContext.otherAffectedArea.trim()}.`
+          : null,
+        draft.observations?.trim()
+          ? `Evidencias adicionales: ${draft.observations.trim()}`
+          : null,
+      ].filter((entry): entry is string => Boolean(entry))
+      const nextAnalysisDraft = {
+        ...draft,
+        observations: contextNotes.join('\n'),
+      }
       setEventId(nextId)
-      const result = await simulateAIInterpretation(draft, nextId)
+      setAnalysisDraft(nextAnalysisDraft)
+      const result = await simulateAIInterpretation(nextAnalysisDraft, nextId)
       setInterpretation(result)
       setStep(2)
     } catch (analyzeError) {
@@ -91,7 +117,7 @@ export function OperationalEventWizard() {
     try {
       const event = buildOperationalEventFromCapture({
         eventId,
-        draft,
+        draft: analysisDraft ?? draft,
         interpretation,
         actor: CAPTURE_DEFAULT_ACTOR,
       })
@@ -106,6 +132,12 @@ export function OperationalEventWizard() {
 
   function handleRegisterAnother() {
     setDraft(createEmptyDraft(defaultAreaId))
+    setCaptureContext({
+      urgency: 'Normal',
+      affectedAreas: [],
+      otherAffectedArea: '',
+    })
+    setAnalysisDraft(null)
     setEventId(createDraftEventId())
     setInterpretation(null)
     setSaved(false)
@@ -115,19 +147,21 @@ export function OperationalEventWizard() {
 
   return (
     <div
-      className={`omega-operational-event-wizard omega-wizard-station ${CRYSTAL_ZONE}`}
+      className={`cunmark-operational-event-wizard cunmark-wizard-station ${CRYSTAL_ZONE}`}
     >
-      <div className="omega-wizard-station__rail">
+      <div className="cunmark-wizard-station__rail">
         <WizardStepRail currentStep={step} />
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto pr-1">
         {step === 1 ? (
-          <div className="space-y-3">
+          <div className="flex h-full min-h-0 flex-col gap-3">
             <EventCaptureForm
               draft={draft}
               areas={areas}
-              submitLabel={analyzing ? 'Analizando…' : 'Analizar con IA'}
+              captureContext={captureContext}
+              onCaptureContextChange={setCaptureContext}
+              submitLabel={analyzing ? 'Generando análisis…' : 'Generar análisis IA'}
               submitDisabled={analyzing}
               onChange={setDraft}
               onSubmit={() => {
@@ -156,7 +190,7 @@ export function OperationalEventWizard() {
         ) : null}
 
         {step === 2 && saved ? (
-          <section className="omega-event-saved space-y-5">
+          <section className="cunmark-event-saved space-y-5">
             <header className="space-y-1">
               <h2 className="text-sm font-semibold tracking-tight text-emerald-800">
                 Situación guardada
@@ -178,16 +212,16 @@ export function OperationalEventWizard() {
 
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-400/15 pt-4">
               <Link
-                to="/operational-events"
+                to="/situaciones"
                 viewTransition
-                className={`text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-indigo-700 hover:text-indigo-900 ${FOCUS_VISIBLE}`}
+                className={`text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-emerald-700 hover:text-emerald-900 ${FOCUS_VISIBLE}`}
               >
                 Situaciones registradas
               </Link>
               <button
                 type="button"
                 onClick={handleRegisterAnother}
-                className={`bg-indigo-600/90 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-600 ${FOCUS_VISIBLE}`}
+                className={`bg-emerald-600/90 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600 ${FOCUS_VISIBLE}`}
               >
                 Registrar otra
               </button>

@@ -1,4 +1,4 @@
-// Componente: pantalla principal (Cristal Maestro) de la Sala O.M.E.G.A.
+// Componente: pantalla principal (Cristal Maestro) de la Sala Cunmark
 // Lámina técnica con material estratificado, espesor y tinte ambiental.
 // Solo presentación — no altera layout ni composición del Centro.
 
@@ -13,7 +13,7 @@ interface MainScreenProps {
 
 export function MainScreen({ children, environment }: MainScreenProps) {
   return (
-    <div className="omega-os-surface" data-environment={environment}>
+    <div className="cunmark-os-surface" data-environment={environment}>
       {children}
     </div>
   )

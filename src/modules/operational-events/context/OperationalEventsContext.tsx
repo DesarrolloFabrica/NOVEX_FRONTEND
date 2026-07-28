@@ -9,6 +9,7 @@ import {
   useCallback,
   useMemo,
   useReducer,
+  useRef,
 } from 'react'
 import type { ReactNode } from 'react'
 import {
@@ -45,30 +46,44 @@ export function OperationalEventsProvider({
     operationalEventsReducer,
     initialOperationalEventsState,
   )
+  const hasLoadedRef = useRef(false)
+  const loadInProgressRef = useRef(false)
 
   const loadOperationalEvents = useCallback(async () => {
+    // El provider es global: conserva la lista entre rutas y evita mostrar un
+    // loader completo cada vez que el usuario cambia de sección.
+    if (hasLoadedRef.current || loadInProgressRef.current) return
+
+    loadInProgressRef.current = true
     dispatch({ type: 'OPERATIONAL_EVENTS_LOADING' })
     try {
       const items = await fetchOperationalEventsRequest()
+      hasLoadedRef.current = true
       dispatch({ type: 'OPERATIONAL_EVENTS_LOADED', items })
     } catch (error) {
       dispatch({
         type: 'OPERATIONAL_EVENTS_ERROR',
         error: getErrorMessage(error),
       })
+    } finally {
+      loadInProgressRef.current = false
     }
   }, [])
 
   const resetOperationalEvents = useCallback(async () => {
+    loadInProgressRef.current = true
     dispatch({ type: 'OPERATIONAL_EVENTS_LOADING' })
     try {
       const items = await fetchOperationalEventsRequest()
+      hasLoadedRef.current = true
       dispatch({ type: 'OPERATIONAL_EVENTS_LOADED', items })
     } catch (error) {
       dispatch({
         type: 'OPERATIONAL_EVENTS_ERROR',
         error: getErrorMessage(error),
       })
+    } finally {
+      loadInProgressRef.current = false
     }
   }, [])
 
@@ -77,6 +92,7 @@ export function OperationalEventsProvider({
       dispatch({ type: 'OPERATIONAL_EVENTS_LOADING' })
       try {
         const saved = await registerOperationalEventRequest(event)
+        hasLoadedRef.current = true
         dispatch({ type: 'OPERATIONAL_EVENT_REGISTERED', event: saved })
         return saved
       } catch (error) {

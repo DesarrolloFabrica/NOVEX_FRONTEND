@@ -1,4 +1,4 @@
-// Sistema visual de la Sala O.M.E.G.A. (solo presentación).
+// Sistema visual de la Sala Cunmark (solo presentación).
 // Responsabilidad: centralizar superficies, paneles, tipografía institucional y
 // el tema por estado de entorno, para que toda la pantalla se sienta como una
 // sola sala de operaciones, sobria y unificada. No contiene lógica de negocio.
@@ -18,8 +18,8 @@ import {
 
 /**
  * Superficie de pantalla completa autónoma (p. ej. Login).
- * Dentro de la Sala O.M.E.G.A. el "suelo" lo aporta `modules/room`
- * (OmegaRoom/OmegaFrame/MainScreen), por eso el Centro NO la usa.
+ * Dentro de la Sala Cunmark el "suelo" lo aporta `modules/room`
+ * (CunmarkRoom/CunmarkFrame/MainScreen), por eso el Centro NO la usa.
  */
 export const ROOM_SURFACE = 'min-h-screen bg-slate-950 text-slate-200'
 
@@ -32,7 +32,7 @@ export const SCREEN_DECK =
 
 /** Separación interior del cristal — máxima ocupación del videowall. */
 export const ROOM_CONTAINER =
-  'omega-room-container px-1.5 py-1 sm:px-2 sm:py-1.5 lg:flex lg:h-full lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden lg:px-2 lg:py-1'
+  'cunmark-room-container px-1.5 py-1 sm:px-2 sm:py-1.5 lg:flex lg:h-full lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden lg:px-2 lg:py-1'
 
 // --- Ritmo y respiración del Cristal ---------------------------------------
 
@@ -73,7 +73,7 @@ export const CRYSTAL_CONSOLE_ZONE = 'relative'
 
 /** Sprint 10.2 — ventana fija de compromisos con scroll interno cuando desborda. */
 export const CONSOLE_LIST_VIEWPORT =
-  'omega-console-list-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto'
+  'cunmark-console-list-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto'
 
 /** Padding interior de cada módulo operativo. */
 export const CRYSTAL_MODULE_PAD = 'px-4 py-3.5 sm:px-5 sm:py-4'
@@ -140,13 +140,13 @@ export const CONSOLE_SURFACE = 'relative bg-transparent shadow-none ring-0'
 // --- Foco principal (compromiso seleccionado) -------------------------------
 
 /** Anillo de foco para el elemento principal seleccionado. */
-export const FOCUS_RING = 'ring-1 ring-inset ring-indigo-400/55'
+export const FOCUS_RING = 'ring-1 ring-inset ring-emerald-500/55'
 
 /** Riel de acento del foco. */
-export const FOCUS_RAIL = 'bg-indigo-400/52'
+export const FOCUS_RAIL = 'bg-emerald-500/52'
 
 /** Riel de módulo operativo activado (franja de áreas). */
-export const MODULE_ACTIVE_RAIL = 'bg-indigo-400/52'
+export const MODULE_ACTIVE_RAIL = 'bg-emerald-500/52'
 
 /** Iluminación interna de módulo activado (fresado grabado, no caja). */
 export const MODULE_ACTIVE_GLOW = CRYSTAL_MODULE_ACTIVE_ETCH
@@ -159,23 +159,23 @@ export const DOSSIER_PROJECTED_GLOW = CRYSTAL_DOSSIER_PROJECT_ETCH
 
 /** Riel del expediente seleccionado — canal visible. */
 export const DOSSIER_PROJECT_RAIL =
-  'bg-gradient-to-b from-indigo-600/68 via-indigo-500/54 to-indigo-600/68'
+  'bg-gradient-to-b from-emerald-600/68 via-emerald-500/54 to-emerald-600/68'
 
 /** Acento lateral del expediente seleccionado. */
 export const DOSSIER_PROJECT_BEAM =
-  'pointer-events-none absolute inset-y-0 right-0 w-5 bg-gradient-to-l from-indigo-400/9 to-transparent'
+  'pointer-events-none absolute inset-y-0 right-0 w-5 bg-gradient-to-l from-emerald-400/9 to-transparent'
 
 /**
  * Anillo de foco de teclado consistente para elementos interactivos.
  * Mantiene la accesibilidad (focus-visible) sin depender solo del color.
  */
 export const FOCUS_VISIBLE =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950'
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950'
 
 // --- Tipografía institucional ----------------------------------------------
 
 export const TEXT_LABEL =
-  'omega-section-title omega-type-meta font-medium tracking-normal text-slate-400'
+  'cunmark-section-title cunmark-type-meta font-medium tracking-normal text-slate-400'
 export const TEXT_HEADING = 'text-slate-800'
 export const TEXT_MUTED = 'text-slate-500'
 export const TEXT_METRIC =

@@ -16,7 +16,7 @@ import {
   EVENT_STATUS_LABEL,
   RISK_LEVEL_LABEL,
 } from '@/modules/operational-events/components/eventPresentation'
-import { OmegaIcon } from '@/shared/components/OmegaIcon'
+import { CunmarkIcon } from '@/shared/components/CunmarkIcon'
 
 interface EventsConsoleProps {
   events: OperationalEvent[]
@@ -39,7 +39,7 @@ function ConsoleNotice({
 }) {
   return (
     <p
-      className="omega-events-table__notice"
+      className="cunmark-events-table__notice"
       data-state={state}
       role={state === 'error' ? 'alert' : state === 'loading' ? 'status' : undefined}
       aria-live={state === 'loading' ? 'polite' : undefined}
@@ -99,23 +99,23 @@ export function EventsConsole({
         : null
 
   return (
-    <section className="omega-events-table" aria-labelledby="events-table-heading">
-      <header className="omega-events-table__header">
-        <div className="omega-events-table__heading">
-          <div className="omega-events-table__title-row">
+    <section className="cunmark-events-table" aria-labelledby="events-table-heading">
+      <header className="cunmark-events-table__header">
+        <div className="cunmark-events-table__heading">
+          <div className="cunmark-events-table__title-row">
             <h2 id="events-table-heading">Listado de situaciones</h2>
-            <span className="omega-table-help">
+            <span className="cunmark-table-help">
               <button
                 type="button"
-                className="omega-table-help__trigger"
+                className="cunmark-table-help__trigger"
                 aria-label="Qué muestra esta tabla"
                 aria-describedby="events-table-help-tip"
               >
-                <OmegaIcon name="help" size={11} strokeWidth={1.6} />
+                <CunmarkIcon name="help" size={11} strokeWidth={1.6} />
               </button>
               <span
                 id="events-table-help-tip"
-                className="omega-table-help__tip"
+                className="cunmark-table-help__tip"
                 role="tooltip"
               >
                 Cada fila es una situación registrada: riesgo, área, categoría,
@@ -126,9 +126,9 @@ export function EventsConsole({
           <p>Seleccione una fila para abrir el análisis completo.</p>
         </div>
 
-        <div className="omega-events-table__controls">
-          <span className="omega-events-table__search">
-            <OmegaIcon name="search" size={13} />
+        <div className="cunmark-events-table__controls">
+          <span className="cunmark-events-table__search">
+            <CunmarkIcon name="search" size={13} />
             <input
               type="search"
               aria-label="Buscar situaciones"
@@ -198,26 +198,26 @@ export function EventsConsole({
             <option value="date-asc">Más antiguos</option>
           </select>
 
-          <span className="omega-events-table__count">
+          <span className="cunmark-events-table__count">
             {visible.length} de {events.length}
           </span>
         </div>
       </header>
 
       {events.length === 0 && !loading && !error ? (
-        <p className="omega-events-table__notice">
+        <p className="cunmark-events-table__notice">
           Aún no hay situaciones registradas.{' '}
           <Link
-            to="/operational-events/register"
+            to="/situaciones/nueva"
             viewTransition
-            className={`font-semibold text-indigo-300 hover:text-indigo-200 ${FOCUS_VISIBLE}`}
+            className={`font-semibold text-emerald-300 hover:text-emerald-200 ${FOCUS_VISIBLE}`}
           >
             Registre la primera
           </Link>
         </p>
       ) : (
-        <div className="omega-events-table__scroll" tabIndex={0}>
-          <table className="omega-events-table__grid">
+        <div className="cunmark-events-table__scroll" tabIndex={0}>
+          <table className="cunmark-events-table__grid">
             <thead>
               <tr>
                 <th scope="col">Riesgo</th>
@@ -254,8 +254,8 @@ export function EventsConsole({
       )}
 
       {!notice && visible.length > 0 ? (
-        <footer className="omega-events-table__footer">
-          <div className="omega-events-table__pagesize">
+        <footer className="cunmark-events-table__footer">
+          <div className="cunmark-events-table__pagesize">
             <label htmlFor="events-page-size">Filas por página</label>
             <select
               id="events-page-size"
@@ -271,11 +271,11 @@ export function EventsConsole({
             </select>
           </div>
 
-          <p className="omega-events-table__range" aria-live="polite">
+          <p className="cunmark-events-table__range" aria-live="polite">
             {rangeStart}–{rangeEnd} de {visible.length}
           </p>
 
-          <nav className="omega-events-table__pager" aria-label="Paginación de situaciones">
+          <nav className="cunmark-events-table__pager" aria-label="Paginación de situaciones">
             <button
               type="button"
               className={FOCUS_VISIBLE}
@@ -283,9 +283,9 @@ export function EventsConsole({
               disabled={page <= 1}
               aria-label="Página anterior"
             >
-              <OmegaIcon name="chevron-left" size={14} />
+              <CunmarkIcon name="chevron-left" size={14} />
             </button>
-            <span className="omega-events-table__pager-status">
+            <span className="cunmark-events-table__pager-status">
               Página {page} de {pageCount}
             </span>
             <button
@@ -295,7 +295,7 @@ export function EventsConsole({
               disabled={page >= pageCount}
               aria-label="Página siguiente"
             >
-              <OmegaIcon name="chevron-right" size={14} />
+              <CunmarkIcon name="chevron-right" size={14} />
             </button>
           </nav>
         </footer>

@@ -4,8 +4,8 @@ import { useAuth } from '@/modules/auth/hooks/useAuth'
 const FLOW_STEPS = [
   'Registrar',
   'Situaciones',
-  'Análisis IA',
-  'Seguimiento',
+  'Dashboard',
+  'Gestión',
 ] as const
 
 /**
@@ -21,24 +21,24 @@ export function CommandOrientation() {
 
   return (
     <section
-      className="omega-command-orientation"
-      aria-labelledby="omega-command-heading"
+      className="cunmark-command-orientation"
+      aria-labelledby="cunmark-command-heading"
     >
-      <div className="omega-command-orientation__copy">
-        <p className="omega-section-eyebrow mb-2">Bienvenida</p>
-        <h2 id="omega-command-heading" className="omega-command-orientation__title">
-          O.M.E.G.A. convierte lo que ocurre en el frente operativo en
+      <div className="cunmark-command-orientation__copy">
+        <p className="cunmark-section-eyebrow mb-2">Bienvenida</p>
+        <h2 id="cunmark-command-heading" className="cunmark-command-orientation__title">
+          Cunmark convierte lo que ocurre en el frente operativo en
           decisiones claras con apoyo de IA.
         </h2>
-        <p className="omega-command-orientation__hint">
+        <p className="cunmark-command-orientation__hint">
           Empiece registrando una situación. Luego verá el análisis y podrá
           dar seguimiento a lo que importa.
         </p>
         <div className="flex flex-wrap items-center gap-3">
           <Link
-            to="/operational-events/register"
+            to="/situaciones/nueva"
             viewTransition
-            className="omega-register-cta omega-register-cta--command"
+            className="cunmark-register-cta cunmark-register-cta--command"
             onClick={() => {
               void handleStart()
             }}
@@ -57,12 +57,12 @@ export function CommandOrientation() {
         </div>
       </div>
 
-      <ol className="omega-command-flow" aria-label="Recorrido operacional">
+      <ol className="cunmark-command-flow" aria-label="Recorrido operacional">
         {FLOW_STEPS.map((step, index) => (
-          <li key={step} className="omega-command-flow__step">
-            <span className="omega-command-flow__label">{step}</span>
+          <li key={step} className="cunmark-command-flow__step">
+            <span className="cunmark-command-flow__label">{step}</span>
             {index < FLOW_STEPS.length - 1 ? (
-              <span className="omega-command-flow__arrow" aria-hidden="true">
+              <span className="cunmark-command-flow__arrow" aria-hidden="true">
                 ↓
               </span>
             ) : null}

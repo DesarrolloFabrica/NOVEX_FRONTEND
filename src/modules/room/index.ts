@@ -1,8 +1,8 @@
-// Punto de entrada del módulo `room`: arquitectura física de la Sala O.M.E.G.A.
+// Punto de entrada del módulo `room`: arquitectura física de la Sala Cunmark
 // Expone la estructura de escenario (Sala -> Marco -> Pantalla) y su tema.
 
-export { OmegaRoom } from '@/modules/room/components/OmegaRoom'
-export { OmegaFrame } from '@/modules/room/components/OmegaFrame'
+export { CunmarkRoom } from '@/modules/room/components/CunmarkRoom'
+export { CunmarkFrame } from '@/modules/room/components/CunmarkFrame'
 export { MainScreen } from '@/modules/room/components/MainScreen'
 /** Reservado para assets Blender futuros — no montado en la escena actual. */
 export { RoomConsoleLayer } from '@/modules/room/components/RoomConsoleLayer'

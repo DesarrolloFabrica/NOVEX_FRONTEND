@@ -1,89 +1,21 @@
-// Componente: registro de evaluación en la consola compacta (Sprint 10.1).
-// Fila de alta densidad para navegación — detalle en la columna derecha.
+import type { ExecutionAction } from '@/modules/execution-actions/types/execution-action.types'
+import { PRIORITY_LABELS } from '@/modules/execution-actions/types/execution-action.types'
+import { FOCUS_VISIBLE } from '@/modules/monitoring/constants/monitoringTheme'
+import { CunmarkIcon } from '@/shared/components/CunmarkIcon'
 
-import type { Commitment } from '@/modules/commitments/types/commitment.types'
-import { getCommitmentDisplayStatus } from '@/modules/commitments/utils/commitmentValidation.utils'
-import { STATUS_BADGE_CLASSES } from '@/modules/monitoring/components/presentation'
-import {
-  FOCUS_VISIBLE,
-} from '@/modules/monitoring/constants/monitoringTheme'
-import { OmegaIcon } from '@/shared/components/OmegaIcon'
+interface Props { action: ExecutionAction; selected: boolean; onSelect: (actionId: string) => void }
+const statusLabels: Record<ExecutionAction['executionStatus'], string> = { pending: 'En espera', in_progress: 'En proceso', executed: 'Resuelta', not_executable: 'No fue posible resolver' }
+const formatDate = (iso: string) => new Date(iso).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })
 
-interface CommitmentEvaluationCardProps {
-  commitment: Commitment
-  selected: boolean
-  onSelect: (commitmentId: string) => void
-}
-
-function expeditionRef(id: string): string {
-  return id.replace(/^cmt-/i, 'EXP-').toUpperCase()
-}
-
-function formatDueDate(iso: string): string {
-  const date = new Date(iso)
-  return Number.isNaN(date.getTime()) ? iso : date.toLocaleDateString('es-CO')
-}
-
-export function CommitmentEvaluationCard({
-  commitment,
-  selected,
-  onSelect,
-}: CommitmentEvaluationCardProps) {
-  const displayStatus = getCommitmentDisplayStatus(commitment)
-
-  return (
-    <button
-      type="button"
-      onClick={() => onSelect(commitment.id)}
-      aria-pressed={selected}
-      data-status={displayStatus}
-      className={`omega-commitment-row group relative w-full text-left ${FOCUS_VISIBLE}`}
-    >
-      <span
-        aria-hidden="true"
-        className={`omega-commitment-row__rail absolute inset-y-0 left-0 w-0.5 transition-colors duration-200 ${
-          selected ? 'omega-commitment-row__rail--active' : 'bg-transparent'
-        }`}
-      />
-
-      <div className="omega-commitment-row__layout relative z-10">
-        <span className="omega-commitment-row__identity">
-          {expeditionRef(commitment.id)}
-        </span>
-
-        <span className="omega-commitment-row__main">
-          <span className="omega-commitment-row__title" title={commitment.title}>
-            {commitment.title}
-          </span>
-          <span className="omega-commitment-row__meta">
-            Impacto {commitment.operationalImpact}/5
-          </span>
-        </span>
-
-        <span
-          data-status={displayStatus}
-          className={`omega-commitment-row__status ${STATUS_BADGE_CLASSES[displayStatus]}`}
-        >
-          {displayStatus === 'Pendiente de validación'
-            ? 'En proceso'
-            : displayStatus === 'Incumplido'
-              ? 'No cumplido'
-              : displayStatus}
-        </span>
-
-        <time
-          dateTime={commitment.dueDate}
-          className="omega-commitment-row__date"
-        >
-          <OmegaIcon name="calendar" size={14} />
-          {formatDueDate(commitment.dueDate)}
-        </time>
-        <OmegaIcon
-          name="chevron-right"
-          size={18}
-          className="omega-commitment-row__chevron"
-        />
-      </div>
-    </button>
-  )
+export function CommitmentEvaluationCard({ action, selected, onSelect }: Props) {
+  return <button type="button" onClick={() => onSelect(action.id)} aria-pressed={selected} data-status={action.executionStatus} data-priority={action.priority} className={`cunmark-action-row group relative w-full text-left ${FOCUS_VISIBLE}`}>
+    <div className="cunmark-action-row__layout relative z-10">
+      <span className="cunmark-action-row__priority"><i aria-hidden="true" />{PRIORITY_LABELS[action.priority]}</span>
+      <span className="cunmark-action-row__main"><span className="cunmark-action-row__title" title={action.eventTitle}>{action.eventTitle}</span></span>
+      <span className="cunmark-action-row__responsible"><small>Área responsable</small>{action.suggestedAreaName}</span>
+      <span className="cunmark-action-row__status"><i aria-hidden="true" />{statusLabels[action.executionStatus]}</span>
+      <time dateTime={action.suggestedAt} className="cunmark-action-row__date"><CunmarkIcon name="calendar" size={13} />{formatDate(action.suggestedAt)}</time>
+      <CunmarkIcon name="chevron-right" size={18} className="cunmark-action-row__chevron" />
+    </div>
+  </button>
 }

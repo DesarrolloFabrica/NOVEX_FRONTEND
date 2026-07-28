@@ -40,13 +40,13 @@ export function EventConfirmSave({
 
   if (saved) {
     return (
-      <section className="omega-event-saved space-y-5">
+      <section className="cunmark-event-saved space-y-5">
         <header className="space-y-1">
           <h2 className="text-sm font-semibold tracking-tight text-emerald-800">
             Situación guardada
           </h2>
           <p className="text-[0.8rem] leading-relaxed text-slate-500">
-            La situación ya alimenta Situaciones registradas y Análisis IA.
+            La situación ya alimenta Situaciones registradas y el Dashboard.
           </p>
         </header>
 
@@ -60,16 +60,16 @@ export function EventConfirmSave({
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-400/15 pt-4">
           <div className="flex flex-wrap gap-4 text-[0.7rem] font-semibold uppercase tracking-[0.12em]">
             <Link
-              to="/intelligence"
+              to="/dashboard"
               viewTransition
               className={`text-slate-500 hover:text-slate-800 ${FOCUS_VISIBLE}`}
             >
-              Análisis IA
+              Dashboard
             </Link>
             <Link
-              to="/operational-events"
+              to="/situaciones"
               viewTransition
-              className={`text-indigo-700 hover:text-indigo-900 ${FOCUS_VISIBLE}`}
+              className={`text-emerald-700 hover:text-emerald-900 ${FOCUS_VISIBLE}`}
             >
               Situaciones registradas
             </Link>
@@ -77,7 +77,7 @@ export function EventConfirmSave({
           <button
             type="button"
             onClick={onRegisterAnother}
-            className={`bg-indigo-600/90 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-600 ${FOCUS_VISIBLE}`}
+            className={`bg-emerald-600/90 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600 ${FOCUS_VISIBLE}`}
           >
             Registrar otra
           </button>
@@ -87,7 +87,7 @@ export function EventConfirmSave({
   }
 
   return (
-    <section className="omega-event-confirm space-y-5">
+    <section className="cunmark-event-confirm space-y-5">
       <header className="space-y-1">
         <h2 className="text-sm font-semibold tracking-tight text-slate-800">
           Confirmar y guardar
@@ -148,8 +148,8 @@ export function EventConfirmSave({
           aria-busy={saving}
           className={`px-4 py-2 text-sm font-semibold text-white ${FOCUS_VISIBLE} ${
             saving
-              ? 'cursor-wait bg-indigo-500/60'
-              : 'bg-indigo-600/90 hover:bg-indigo-600'
+              ? 'cursor-wait bg-emerald-500/60'
+              : 'bg-emerald-600/90 hover:bg-emerald-600'
           }`}
         >
           {saving ? 'Guardando…' : 'Guardar situación'}

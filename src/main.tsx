@@ -2,7 +2,9 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from '@/app/App'
 import '@/index.css'
-import '@/styles/omega-os.css'
+import '@/styles/cunmark-os.css'
+import '@/styles/login.css'
+import '@/styles/platform-backgrounds.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

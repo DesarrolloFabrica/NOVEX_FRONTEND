@@ -27,7 +27,7 @@ export function EventAnalyzeStep({
   )
 
   return (
-    <section className="omega-event-analyze space-y-5">
+    <section className="cunmark-event-analyze space-y-5">
       <header className="space-y-1">
         <h2 className="text-sm font-semibold tracking-tight text-slate-800">
           Analizar
@@ -71,13 +71,13 @@ export function EventAnalyzeStep({
           onClick={onAnalyze}
           disabled={analyzing}
           aria-busy={analyzing}
-          className={`omega-console-action px-4 py-2 text-sm font-semibold text-white ${FOCUS_VISIBLE} ${
+          className={`cunmark-console-action px-4 py-2 text-sm font-semibold text-white ${FOCUS_VISIBLE} ${
             analyzing
-              ? 'cursor-wait bg-indigo-500/60'
-              : 'bg-indigo-600/90 hover:bg-indigo-600'
+              ? 'cursor-wait bg-emerald-500/60'
+              : 'bg-emerald-600/90 hover:bg-emerald-600'
           }`}
         >
-          {analyzing ? 'Analizando…' : 'Analizar con IA'}
+          {analyzing ? 'Generando análisis…' : 'Generar análisis IA'}
         </button>
       </div>
     </section>

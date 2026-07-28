@@ -1,5 +1,5 @@
 // Tests del motor operativo (funciones puras). Verifican las reglas centrales
-// de salud/riesgo que no deben romperse al seguir desarrollando O.M.E.G.A.
+// de salud/riesgo que no deben romperse al seguir desarrollando Cunmark
 
 import { describe, expect, it } from 'vitest'
 import type {

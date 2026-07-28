@@ -23,8 +23,8 @@ export function EventsCenterSummary({ metrics }: EventsCenterSummaryProps) {
       className={`left-operational-panel relative flex h-full min-h-0 flex-col overflow-hidden ${INTEL_ZONE} ${CRYSTAL_ZONE_SUPPORT}`}
     >
       <div>
-        <p className="omega-section-eyebrow mb-1">Resumen operacional</p>
-        <p className="omega-section-hint mb-2">
+        <p className="cunmark-section-eyebrow mb-1">Resumen operacional</p>
+        <p className="cunmark-section-hint mb-2">
           Vista rápida del riesgo y la carga actual.
         </p>
       </div>
@@ -39,28 +39,28 @@ export function EventsCenterSummary({ metrics }: EventsCenterSummaryProps) {
           </p>
         </div>
 
-        <div className="omega-exec-stat-grid">
+        <div className="cunmark-exec-stat-grid">
           <div>
-            <p className="omega-exec-stat__value">{metrics.averageRiskScore}</p>
-            <p className="omega-exec-stat__label">Riesgo</p>
+            <p className="cunmark-exec-stat__value">{metrics.averageRiskScore}</p>
+            <p className="cunmark-exec-stat__label">Riesgo</p>
           </div>
           <div>
-            <p className="omega-exec-stat__value">{metrics.criticalCount}</p>
-            <p className="omega-exec-stat__label">Críticos</p>
+            <p className="cunmark-exec-stat__value">{metrics.criticalCount}</p>
+            <p className="cunmark-exec-stat__label">Críticos</p>
           </div>
           <div>
-            <p className="omega-exec-stat__value">{metrics.openCount}</p>
-            <p className="omega-exec-stat__label">Abiertos</p>
+            <p className="cunmark-exec-stat__value">{metrics.openCount}</p>
+            <p className="cunmark-exec-stat__label">Abiertos</p>
           </div>
           <div>
-            <p className="omega-exec-stat__value">{metrics.totalEvents}</p>
-            <p className="omega-exec-stat__label">Total</p>
+            <p className="cunmark-exec-stat__value">{metrics.totalEvents}</p>
+            <p className="cunmark-exec-stat__label">Total</p>
           </div>
         </div>
 
         {metrics.dominantAreaName ? (
           <div>
-            <p className="omega-section-eyebrow">Dónde</p>
+            <p className="cunmark-section-eyebrow">Dónde</p>
             <p className="text-[0.9rem] font-semibold leading-snug text-slate-800">
               {metrics.dominantAreaName}
             </p>
@@ -69,20 +69,20 @@ export function EventsCenterSummary({ metrics }: EventsCenterSummaryProps) {
 
         <div className="flex flex-col gap-3">
           <div className="flex items-baseline justify-between gap-2">
-            <span className="omega-cmd-context__label">Interno</span>
-            <span className="omega-cmd-context__value">
+            <span className="cunmark-cmd-context__label">Interno</span>
+            <span className="cunmark-cmd-context__value">
               {metrics.averageImpactInternal}%
             </span>
           </div>
           <div className="flex items-baseline justify-between gap-2">
-            <span className="omega-cmd-context__label">Externo</span>
-            <span className="omega-cmd-context__value">
+            <span className="cunmark-cmd-context__label">Externo</span>
+            <span className="cunmark-cmd-context__value">
               {metrics.averageImpactExternal}%
             </span>
           </div>
           <div className="flex items-baseline justify-between gap-2">
-            <span className="omega-cmd-context__label">Estudiantes</span>
-            <span className="omega-cmd-context__value">
+            <span className="cunmark-cmd-context__label">Estudiantes</span>
+            <span className="cunmark-cmd-context__value">
               {metrics.averageImpactStudents}%
             </span>
           </div>

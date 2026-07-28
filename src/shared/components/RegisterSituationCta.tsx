@@ -17,14 +17,14 @@ export function RegisterSituationCta({
 }: RegisterSituationCtaProps) {
   return (
     <Link
-      to="/operational-events/register"
+      to="/situaciones/nueva"
       viewTransition
-      className={`omega-register-cta omega-register-cta--${variant} ${className}`.trim()}
+      className={`cunmark-register-cta cunmark-register-cta--${variant} ${className}`.trim()}
       aria-label="Registrar nueva situación"
     >
-      <span className="omega-register-cta__label">{label}</span>
+      <span className="cunmark-register-cta__label">{label}</span>
       {variant === 'rail' ? (
-        <span className="omega-register-cta__mark" aria-hidden="true">
+        <span className="cunmark-register-cta__mark" aria-hidden="true">
           +
         </span>
       ) : null}

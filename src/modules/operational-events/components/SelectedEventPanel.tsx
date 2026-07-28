@@ -23,18 +23,18 @@ export function SelectedEventPanel({ event }: SelectedEventPanelProps) {
   if (!event) {
     return (
       <aside
-        className={`operations-intelligence-panel omega-brief is-empty relative ${INTEL_ZONE} ${CRYSTAL_ZONE_SUPPORT}`}
+        className={`operations-intelligence-panel cunmark-brief is-empty relative ${INTEL_ZONE} ${CRYSTAL_ZONE_SUPPORT}`}
       >
-        <p className="omega-section-eyebrow">Detalle de la situación</p>
+        <p className="cunmark-section-eyebrow">Detalle de la situación</p>
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 px-3">
-          <p className="omega-empty-signal text-center text-sm leading-relaxed text-slate-400">
+          <p className="cunmark-empty-signal text-center text-sm leading-relaxed text-slate-400">
             Elija una situación del feed para ver su análisis y decidir qué
             hacer.
           </p>
           <Link
-            to="/operational-events/register"
+            to="/situaciones/nueva"
             viewTransition
-            className="text-[0.72rem] font-semibold text-indigo-600 hover:text-indigo-800"
+            className="text-[0.72rem] font-semibold text-emerald-600 hover:text-emerald-800"
           >
             Registrar una situación
           </Link>
@@ -53,13 +53,13 @@ export function SelectedEventPanel({ event }: SelectedEventPanelProps) {
 
   return (
     <aside
-      className={`operations-intelligence-panel omega-brief relative ${INTEL_ZONE} ${CRYSTAL_ZONE_SUPPORT}`}
+      className={`operations-intelligence-panel cunmark-brief relative ${INTEL_ZONE} ${CRYSTAL_ZONE_SUPPORT}`}
     >
-      <div className="omega-brief__hero">
+      <div className="cunmark-brief__hero">
         <div className="flex flex-wrap items-end justify-between gap-2">
           <div>
-            <p className="omega-section-eyebrow mb-1">Riesgo</p>
-            <p className="omega-brief__score">
+            <p className="cunmark-section-eyebrow mb-1">Riesgo</p>
+            <p className="cunmark-brief__score">
               {interpretation?.riskScore ?? '—'}
             </p>
           </div>
@@ -80,39 +80,39 @@ export function SelectedEventPanel({ event }: SelectedEventPanelProps) {
           </div>
         </div>
 
-        <h3 className="omega-brief__title">{event.title}</h3>
-        <p className="omega-brief__where">{where}</p>
+        <h3 className="cunmark-brief__title">{event.title}</h3>
+        <p className="cunmark-brief__where">{where}</p>
         {interpretation ? (
-          <p className="omega-brief__summary">
+          <p className="cunmark-brief__summary">
             {interpretation.executiveSummary}
           </p>
         ) : null}
 
         {interpretation ? (
-          <div className="omega-brief__impacts" aria-label="Impactos">
-            <div className="omega-exec-metric">
-              <p className="omega-exec-metric__value">
+          <div className="cunmark-brief__impacts" aria-label="Impactos">
+            <div className="cunmark-exec-metric">
+              <p className="cunmark-exec-metric__value">
                 {interpretation.impactInternal}%
               </p>
-              <p className="omega-exec-metric__label">Interno</p>
+              <p className="cunmark-exec-metric__label">Interno</p>
             </div>
-            <div className="omega-exec-metric">
-              <p className="omega-exec-metric__value">
+            <div className="cunmark-exec-metric">
+              <p className="cunmark-exec-metric__value">
                 {interpretation.impactExternal}%
               </p>
-              <p className="omega-exec-metric__label">Externo</p>
+              <p className="cunmark-exec-metric__label">Externo</p>
             </div>
-            <div className="omega-exec-metric">
-              <p className="omega-exec-metric__value">
+            <div className="cunmark-exec-metric">
+              <p className="cunmark-exec-metric__value">
                 {interpretation.impactStudents}%
               </p>
-              <p className="omega-exec-metric__label">Estudiantes</p>
+              <p className="cunmark-exec-metric__label">Estudiantes</p>
             </div>
           </div>
         ) : null}
       </div>
 
-      <div className="omega-brief__body">
+      <div className="cunmark-brief__body">
         {interpretation ? (
           <>
             <details>

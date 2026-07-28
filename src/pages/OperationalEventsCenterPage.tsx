@@ -5,9 +5,9 @@ import { useCallback, useState } from 'react'
 import { ScreenDeck } from '@/modules/monitoring/components/ScreenDeck'
 import { OperationalEventsCenter } from '@/modules/operational-events/components/OperationalEventsCenter'
 import type { OperationalEnvironmentStatus } from '@/modules/operational-events/types/operational-event.types'
-import { MainScreen, OmegaFrame, OmegaRoom } from '@/modules/room'
+import { MainScreen, CunmarkFrame, CunmarkRoom } from '@/modules/room'
 import type { EnvironmentStatus } from '@/modules/monitoring/types/monitoring.types'
-import { OmegaProductHeader } from '@/shared/components/OmegaProductHeader'
+import { CunmarkProductHeader } from '@/shared/components/CunmarkProductHeader'
 
 function toRoomEnvironment(
   status: OperationalEnvironmentStatus,
@@ -27,13 +27,27 @@ export function OperationalEventsCenterPage() {
   )
 
   return (
-    <OmegaRoom environment={environment} scene="events">
-      <OmegaFrame environment={environment}>
+    <CunmarkRoom environment={environment} scene="events">
+      <CunmarkFrame environment={environment}>
         <MainScreen environment={environment}>
           <ScreenDeck
             environment={environment}
             header={
-              <OmegaProductHeader title="Situaciones registradas" />
+              <CunmarkProductHeader
+                title="Situaciones registradas"
+                help={
+                  <>
+                    <p>
+                      Aquí encuentra el historial de situaciones operacionales
+                      reportadas, con su estado y la interpretación vigente.
+                    </p>
+                    <p>
+                      Abra una situación para revisar el detalle, el análisis de
+                      la IA y las acciones recomendadas.
+                    </p>
+                  </>
+                }
+              />
             }
           >
             <OperationalEventsCenter
@@ -41,7 +55,7 @@ export function OperationalEventsCenterPage() {
             />
           </ScreenDeck>
         </MainScreen>
-      </OmegaFrame>
-    </OmegaRoom>
+      </CunmarkFrame>
+    </CunmarkRoom>
   )
 }

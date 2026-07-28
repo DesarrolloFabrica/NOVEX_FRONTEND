@@ -31,9 +31,9 @@ function MetricCell({
   value: string
 }) {
   return (
-    <div className="omega-exec-metric">
-      <p className="omega-exec-metric__value">{value}</p>
-      <p className="omega-exec-metric__label">{label}</p>
+    <div className="cunmark-exec-metric">
+      <p className="cunmark-exec-metric__value">{value}</p>
+      <p className="cunmark-exec-metric__label">{label}</p>
     </div>
   )
 }
@@ -51,7 +51,7 @@ export function EventInterpretationView({
       : '—'
 
   return (
-    <section className="omega-event-interpretation space-y-5">
+    <section className="cunmark-event-interpretation space-y-5">
       <header className="space-y-1">
         <h2 className="text-sm font-semibold tracking-tight text-slate-800">
           Interpretación
@@ -164,8 +164,8 @@ export function EventInterpretationView({
           aria-busy={saving}
           className={`px-4 py-2 text-sm font-semibold text-white ${FOCUS_VISIBLE} ${
             saving
-              ? 'cursor-wait bg-indigo-500/60'
-              : 'bg-indigo-600/90 hover:bg-indigo-600'
+              ? 'cursor-wait bg-emerald-500/60'
+              : 'bg-emerald-600/90 hover:bg-emerald-600'
           }`}
         >
           {saving ? 'Guardando…' : 'Guardar situación'}

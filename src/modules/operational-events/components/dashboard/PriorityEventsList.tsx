@@ -7,7 +7,7 @@ import {
   EVENT_STATUS_LABEL,
   eventRef,
 } from '@/modules/operational-events/components/eventPresentation'
-import { OmegaIcon } from '@/shared/components/OmegaIcon'
+import { CunmarkIcon } from '@/shared/components/CunmarkIcon'
 
 interface PriorityEventsListProps {
   events: OperationalEvent[]
@@ -32,12 +32,12 @@ function formatRelativeTime(event: OperationalEvent): string {
 export function PriorityEventsList({ events }: PriorityEventsListProps) {
   return (
     <section
-      className="omega-intel-priority"
+      className="cunmark-intel-priority"
       aria-labelledby="intel-priority-heading"
     >
-      <div className="omega-intel-priority__heading">
-        <div className="omega-intel-priority__heading-copy">
-          <div className="omega-intel-priority__title-row">
+      <div className="cunmark-intel-priority__heading">
+        <div className="cunmark-intel-priority__heading-copy">
+          <div className="cunmark-intel-priority__title-row">
             <h3 id="intel-priority-heading">Cola de atención</h3>
           </div>
           <p>
@@ -45,29 +45,29 @@ export function PriorityEventsList({ events }: PriorityEventsListProps) {
           </p>
         </div>
         <Link
-          to="/operational-events"
+          to="/situaciones"
           viewTransition
-          className={`omega-intel-priority__view-all ${FOCUS_VISIBLE}`}
+          className={`cunmark-intel-priority__view-all ${FOCUS_VISIBLE}`}
         >
           Ver todas
-          <OmegaIcon name="arrow-up-right" size={12} />
+          <CunmarkIcon name="arrow-up-right" size={12} />
         </Link>
       </div>
 
       {events.length === 0 ? (
-        <p className="omega-empty-signal py-3 text-sm leading-relaxed text-slate-400">
+        <p className="cunmark-empty-signal py-3 text-sm leading-relaxed text-slate-400">
           Todavía no hay nada que priorizar.{' '}
           <Link
-            to="/operational-events/register"
+            to="/situaciones/nueva"
             viewTransition
-            className={`font-semibold text-indigo-300 hover:text-indigo-200 ${FOCUS_VISIBLE}`}
+            className={`font-semibold text-emerald-300 hover:text-emerald-200 ${FOCUS_VISIBLE}`}
           >
             Registre la primera situación
           </Link>
         </p>
       ) : (
-        <div className="omega-intel-priority__table-wrap">
-          <table className="omega-intel-priority__table">
+        <div className="cunmark-intel-priority__table-wrap">
+          <table className="cunmark-intel-priority__table">
             <thead>
               <tr>
                 <th scope="col">Prioridad</th>
@@ -89,19 +89,19 @@ export function PriorityEventsList({ events }: PriorityEventsListProps) {
                   <tr key={event.id}>
                     <td data-label="Prioridad">
                       <span
-                        className="omega-intel-priority__score"
+                        className="cunmark-intel-priority__score"
                         data-risk={event.interpretation?.riskLevel ?? 'moderate'}
                       >
                         {score ?? '—'}
                       </span>
                     </td>
                     <td data-label="Situación">
-                      <strong className="omega-intel-priority__event-title">
+                      <strong className="cunmark-intel-priority__event-title">
                         {event.title}
                       </strong>
                     </td>
                     <td data-label="Área / Proceso">
-                      <span className="omega-intel-priority__area">
+                      <span className="cunmark-intel-priority__area">
                         {where}
                         {category ? ` · ${category}` : ''}
                         {' · '}
@@ -110,7 +110,7 @@ export function PriorityEventsList({ events }: PriorityEventsListProps) {
                     </td>
                     <td data-label="Estado">
                       <span
-                        className="omega-intel-priority__status"
+                        className="cunmark-intel-priority__status"
                         data-status={event.status}
                       >
                         {EVENT_STATUS_LABEL[event.status]}
@@ -123,12 +123,12 @@ export function PriorityEventsList({ events }: PriorityEventsListProps) {
                     </td>
                     <td data-label="Acción">
                       <Link
-                        to={`/operational-events?event=${encodeURIComponent(event.id)}`}
+                        to={`/situaciones?event=${encodeURIComponent(event.id)}`}
                         viewTransition
-                        className={`omega-intel-priority__detail ${FOCUS_VISIBLE}`}
+                        className={`cunmark-intel-priority__detail ${FOCUS_VISIBLE}`}
                       >
                         Ver detalle
-                        <OmegaIcon name="arrow-up-right" size={11} />
+                        <CunmarkIcon name="arrow-up-right" size={11} />
                       </Link>
                     </td>
                   </tr>

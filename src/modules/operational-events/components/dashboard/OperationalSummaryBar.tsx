@@ -2,7 +2,7 @@ import type {
   DashboardMetrics,
   OperationalEvent,
 } from '@/modules/operational-events/types/operational-event.types'
-import { OmegaIcon, type OmegaIconName } from '@/shared/components/OmegaIcon'
+import { CunmarkIcon, type CunmarkIconName } from '@/shared/components/CunmarkIcon'
 
 interface OperationalSummaryBarProps {
   events: OperationalEvent[]
@@ -36,7 +36,7 @@ export function OperationalSummaryBar({
   ).length
 
   const cards: Array<{
-    icon: OmegaIconName
+    icon: CunmarkIconName
     tone: string
     value: string | number
     label: string
@@ -73,19 +73,19 @@ export function OperationalSummaryBar({
   ]
 
   return (
-    <section className="omega-summary-bar" aria-label="Resumen operacional">
+    <section className="cunmark-summary-bar" aria-label="Resumen operacional">
       {cards.map((card) => (
         <article
-          className="omega-summary-bar__item"
+          className="cunmark-summary-bar__item"
           data-tone={card.tone}
           key={card.label}
         >
-          <span className="omega-summary-bar__icon" aria-hidden="true">
-            <OmegaIcon name={card.icon} size={17} strokeWidth={1.45} />
+          <span className="cunmark-summary-bar__icon" aria-hidden="true">
+            <CunmarkIcon name={card.icon} size={17} strokeWidth={1.45} />
           </span>
-          <div className="omega-summary-bar__content">
+          <div className="cunmark-summary-bar__content">
             <strong>{card.value}</strong>
-            <span className="omega-summary-bar__label">{card.label}</span>
+            <span className="cunmark-summary-bar__label">{card.label}</span>
             <small>{card.detail}</small>
           </div>
         </article>

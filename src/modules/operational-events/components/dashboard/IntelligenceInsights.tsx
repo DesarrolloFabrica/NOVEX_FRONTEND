@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { DashboardMetrics } from '@/modules/operational-events/types/operational-event.types'
-import { OmegaIcon, type OmegaIconName } from '@/shared/components/OmegaIcon'
+import { CunmarkIcon, type CunmarkIconName } from '@/shared/components/CunmarkIcon'
 
 interface IntelligenceInsightsProps {
   metrics: DashboardMetrics
@@ -15,7 +15,7 @@ const TREND_LABEL: Record<DashboardMetrics['trend'], string> = {
 
 export function IntelligenceInsights({ metrics }: IntelligenceInsightsProps) {
   const insights: Array<{
-    icon: OmegaIconName
+    icon: CunmarkIconName
     tone: string
     title: string
     copy: string
@@ -47,20 +47,20 @@ export function IntelligenceInsights({ metrics }: IntelligenceInsightsProps) {
   ]
 
   return (
-    <section className="omega-insight-grid" aria-label="Insights operativos">
+    <section className="cunmark-insight-grid" aria-label="Insights operativos">
       {insights.map((insight, index) => (
-        <article className="omega-insight-card" data-tone={insight.tone} key={insight.title}>
-          <div className="omega-insight-card__icon"><OmegaIcon name={insight.icon} size={17} /></div>
-          <div className="omega-insight-card__body">
-            <p className="omega-insight-card__title">{insight.title}</p>
-            <p className="omega-insight-card__copy">{insight.copy}</p>
+        <article className="cunmark-insight-card" data-tone={insight.tone} key={insight.title}>
+          <div className="cunmark-insight-card__icon"><CunmarkIcon name={insight.icon} size={17} /></div>
+          <div className="cunmark-insight-card__body">
+            <p className="cunmark-insight-card__title">{insight.title}</p>
+            <p className="cunmark-insight-card__copy">{insight.copy}</p>
             <Link
-              to={index === 2 ? '/operational-events/register' : '/operational-events'}
+              to={index === 2 ? '/situaciones/nueva' : '/situaciones'}
               viewTransition
-              className="omega-insight-card__action"
+              className="cunmark-insight-card__action"
             >
               {insight.action}
-              <OmegaIcon name="arrow-up-right" size={13} />
+              <CunmarkIcon name="arrow-up-right" size={13} />
             </Link>
           </div>
         </article>

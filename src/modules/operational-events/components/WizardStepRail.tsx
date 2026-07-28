@@ -13,8 +13,8 @@ interface WizardStepRailProps {
 
 export function WizardStepRail({ currentStep }: WizardStepRailProps) {
   return (
-    <nav aria-label="Pasos del registro" className="omega-wizard-steps">
-      <ol className="omega-wizard-steps__rail">
+    <nav aria-label="Pasos del registro" className="cunmark-wizard-steps">
+      <ol className="cunmark-wizard-steps__rail">
         {STEPS.map((step, index) => {
           const active = step.id === currentStep
           const done = step.id < currentStep
@@ -27,15 +27,15 @@ export function WizardStepRail({ currentStep }: WizardStepRailProps) {
                 />
               ) : null}
               <span
-                className={`omega-wizard-steps__step ${
+                className={`cunmark-wizard-steps__step ${
                   active
-                    ? 'omega-wizard-steps__step--active'
+                    ? 'cunmark-wizard-steps__step--active'
                     : done
-                      ? 'omega-wizard-steps__step--done'
+                      ? 'cunmark-wizard-steps__step--done'
                       : ''
                 }`}
               >
-                <span className="omega-wizard-steps__index" aria-hidden="true">
+                <span className="cunmark-wizard-steps__index" aria-hidden="true">
                   0{step.id}
                 </span>
                 {step.label}

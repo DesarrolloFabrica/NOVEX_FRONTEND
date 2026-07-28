@@ -3,13 +3,20 @@
 // acciones de alto nivel a la app. Aquí vive la lógica async (llama servicios
 // y despacha acciones); el reducer permanece puro.
 
-import { createContext, useCallback, useMemo, useReducer } from 'react'
+import {
+  createContext,
+  useCallback,
+  useMemo,
+  useReducer,
+  useState,
+} from 'react'
 import type { ReactNode } from 'react'
 import type { User } from '@/modules/auth/types/user.types'
 import {
   completeOnboardingRequest,
   loginAsEjecutorRequest,
   loginAsSupervisorRequest,
+  loginWithEmailRequest,
   logoutRequest,
 } from '@/modules/auth/services/auth.service'
 import {
@@ -81,8 +88,13 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 }
 
 export interface AuthContextValue extends AuthState {
+  /** Splash post-login a nivel de app (sobrevive el cambio de ruta). */
+  bootSplashActive: boolean
+  beginBootSplash: () => void
+  endBootSplash: () => void
   loginAsSupervisor: () => Promise<void>
   loginAsEjecutor: (areaId: string) => Promise<void>
+  loginWithEmail: (email: string) => Promise<void>
   logout: () => Promise<void>
   completeOnboarding: () => Promise<void>
 }
@@ -91,6 +103,15 @@ export const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, undefined, createInitialState)
+  const [bootSplashActive, setBootSplashActive] = useState(false)
+
+  const beginBootSplash = useCallback(() => {
+    setBootSplashActive(true)
+  }, [])
+
+  const endBootSplash = useCallback(() => {
+    setBootSplashActive(false)
+  }, [])
 
   const loginAsSupervisor = useCallback(async () => {
     dispatch({ type: 'AUTH_START' })
@@ -114,12 +135,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const loginWithEmail = useCallback(async (email: string) => {
+    dispatch({ type: 'AUTH_START' })
+    try {
+      const user = await loginWithEmailRequest(email)
+      writeAuthSession(user)
+      dispatch({ type: 'AUTH_SUCCESS', user })
+    } catch (error) {
+      dispatch({ type: 'AUTH_ERROR', error: getErrorMessage(error) })
+    }
+  }, [])
+
   const logout = useCallback(async () => {
     dispatch({ type: 'AUTH_START' })
     try {
       await logoutRequest()
     } finally {
       clearAuthSession()
+      setBootSplashActive(false)
       dispatch({ type: 'AUTH_LOGOUT' })
     }
   }, [])
@@ -148,12 +181,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       ...state,
+      bootSplashActive,
+      beginBootSplash,
+      endBootSplash,
       loginAsSupervisor,
       loginAsEjecutor,
+      loginWithEmail,
       logout,
       completeOnboarding,
     }),
-    [state, loginAsSupervisor, loginAsEjecutor, logout, completeOnboarding],
+    [
+      state,
+      bootSplashActive,
+      beginBootSplash,
+      endBootSplash,
+      loginAsSupervisor,
+      loginAsEjecutor,
+      loginWithEmail,
+      logout,
+      completeOnboarding,
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

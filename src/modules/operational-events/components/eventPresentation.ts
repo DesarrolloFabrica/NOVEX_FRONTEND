@@ -6,7 +6,7 @@ import type {
   RiskLevel,
 } from '@/modules/operational-events/types/operational-event.types'
 
-const CHIP = 'omega-exec-chip'
+const CHIP = 'cunmark-exec-chip'
 
 export const EVENT_STATUS_LABEL: Record<OperationalEventStatus, string> = {
   open: 'Abierto',

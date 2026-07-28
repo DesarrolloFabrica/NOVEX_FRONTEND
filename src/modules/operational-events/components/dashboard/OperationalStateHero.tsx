@@ -25,15 +25,15 @@ export function OperationalStateHero({ metrics }: OperationalStateHeroProps) {
     '—'
 
   return (
-    <section className="omega-cmd-band" aria-labelledby="intel-state-heading">
+    <section className="cunmark-cmd-band" aria-labelledby="intel-state-heading">
       <div>
-        <p className="omega-section-eyebrow mb-1">Estado</p>
-        <p className="omega-section-hint mb-2">
+        <p className="cunmark-section-eyebrow mb-1">Estado</p>
+        <p className="cunmark-section-hint mb-2">
           Muestra el nivel actual de riesgo operacional.
         </p>
         <h2
           id="intel-state-heading"
-          className="omega-cmd-band__status flex items-center gap-3"
+          className="cunmark-cmd-band__status flex items-center gap-3"
         >
           <span
             className={`h-3 w-3 shrink-0 rounded-full ${theme.dot}`}
@@ -43,31 +43,31 @@ export function OperationalStateHero({ metrics }: OperationalStateHeroProps) {
         </h2>
       </div>
 
-      <div className="omega-cmd-band__risk">
-        <p className="omega-cmd-band__risk-value">{metrics.averageRiskScore}</p>
-        <p className="omega-cmd-band__risk-label">
+      <div className="cunmark-cmd-band__risk">
+        <p className="cunmark-cmd-band__risk-value">{metrics.averageRiskScore}</p>
+        <p className="cunmark-cmd-band__risk-label">
           Riesgo · {RISK_LEVEL_LABEL[metrics.operationalRiskLevel]}
         </p>
       </div>
 
-      <dl className="omega-cmd-band__satellites" aria-label="Indicadores satélite">
+      <dl className="cunmark-cmd-band__satellites" aria-label="Indicadores satélite">
         <div>
-          <dd className="omega-cmd-sat__value">{metrics.criticalCount}</dd>
-          <dt className="omega-cmd-sat__label">Críticos</dt>
+          <dd className="cunmark-cmd-sat__value">{metrics.criticalCount}</dd>
+          <dt className="cunmark-cmd-sat__label">Críticos</dt>
         </div>
         <div>
-          <dd className="omega-cmd-sat__value">{metrics.openCount}</dd>
-          <dt className="omega-cmd-sat__label">Abiertos</dt>
+          <dd className="cunmark-cmd-sat__value">{metrics.openCount}</dd>
+          <dt className="cunmark-cmd-sat__label">Abiertos</dt>
         </div>
         <div>
-          <dd className="omega-cmd-sat__value truncate" title={where}>
+          <dd className="cunmark-cmd-sat__value truncate" title={where}>
             {where}
           </dd>
-          <dt className="omega-cmd-sat__label">Dónde</dt>
+          <dt className="cunmark-cmd-sat__label">Dónde</dt>
         </div>
       </dl>
 
-      <details className="omega-cmd-narrative lg:col-span-3">
+      <details className="cunmark-cmd-narrative lg:col-span-3">
         <summary>Narrativa ejecutiva</summary>
         <p>{metrics.executiveNarrative}</p>
       </details>
@@ -81,40 +81,40 @@ export function OperationalContextStrip({
   metrics: DashboardMetrics
 }) {
   return (
-    <div className="omega-cmd-context" aria-label="Contexto operacional">
-      <div className="omega-cmd-context__item">
-        <span className="omega-cmd-context__value">
+    <div className="cunmark-cmd-context" aria-label="Contexto operacional">
+      <div className="cunmark-cmd-context__item">
+        <span className="cunmark-cmd-context__value">
           {metrics.averageImpactInternal}%
         </span>
-        <span className="omega-cmd-context__label">Interno</span>
+        <span className="cunmark-cmd-context__label">Interno</span>
       </div>
-      <div className="omega-cmd-context__item">
-        <span className="omega-cmd-context__value">
+      <div className="cunmark-cmd-context__item">
+        <span className="cunmark-cmd-context__value">
           {metrics.averageImpactExternal}%
         </span>
-        <span className="omega-cmd-context__label">Externo</span>
+        <span className="cunmark-cmd-context__label">Externo</span>
       </div>
-      <div className="omega-cmd-context__item">
-        <span className="omega-cmd-context__value">
+      <div className="cunmark-cmd-context__item">
+        <span className="cunmark-cmd-context__value">
           {metrics.averageImpactStudents}%
         </span>
-        <span className="omega-cmd-context__label">Estudiantes</span>
+        <span className="cunmark-cmd-context__label">Estudiantes</span>
       </div>
-      <div className="omega-cmd-context__item">
-        <span className="omega-cmd-context__value">
+      <div className="cunmark-cmd-context__item">
+        <span className="cunmark-cmd-context__value">
           {TREND_SHORT[metrics.trend]}
         </span>
-        <span className="omega-cmd-context__label">Tendencia</span>
+        <span className="cunmark-cmd-context__label">Tendencia</span>
       </div>
       {metrics.dominantCategoryName ? (
-        <div className="omega-cmd-context__item min-w-0">
+        <div className="cunmark-cmd-context__item min-w-0">
           <span
-            className="omega-cmd-context__value truncate text-[0.95rem]"
+            className="cunmark-cmd-context__value truncate text-[0.95rem]"
             title={metrics.dominantCategoryName}
           >
             {metrics.dominantCategoryName}
           </span>
-          <span className="omega-cmd-context__label">Categoría</span>
+          <span className="cunmark-cmd-context__label">Categoría</span>
         </div>
       ) : null}
     </div>

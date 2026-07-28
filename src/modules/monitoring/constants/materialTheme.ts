@@ -1,4 +1,4 @@
-// Separación de materiales de la Sala O.M.E.G.A.
+// Separación de materiales de la Sala Cunmark
 // Marco sólido → lámina de cristal → contenido grabado.
 // Sprint 4.3: lenguaje de superficies grabadas sin cajas flotantes.
 
@@ -71,15 +71,15 @@ export const CRYSTAL_CONTROL_FIELD =
 
 /** Módulo activo: canal grabado — acento operativo visible. */
 export const CRYSTAL_MODULE_ACTIVE_ETCH =
-  'shadow-[inset_0_1px_0_0_rgba(79,70,229,0.35),inset_0_0_0_1px_rgba(99,102,241,0.22),inset_0_0_20px_-14px_rgba(99,102,241,0.08)]'
+  'shadow-[inset_0_1px_0_0_rgba(47,158,58,0.35),inset_0_0_0_1px_rgba(63,194,74,0.22),inset_0_0_20px_-14px_rgba(163,255,92,0.08)]'
 
 /** Módulo global activo. */
 export const CRYSTAL_MODULE_GLOBAL_ACTIVE_ETCH =
-  'shadow-[inset_0_1px_0_0_rgba(79,70,229,0.4),inset_0_0_0_1px_rgba(99,102,241,0.28),inset_0_0_24px_-12px_rgba(99,102,241,0.1)]'
+  'shadow-[inset_0_1px_0_0_rgba(47,158,58,0.4),inset_0_0_0_1px_rgba(63,194,74,0.28),inset_0_0_24px_-12px_rgba(163,255,92,0.1)]'
 
 /** Expediente proyectado: surco de envío. */
 export const CRYSTAL_DOSSIER_PROJECT_ETCH =
-  'shadow-[inset_3px_0_0_0_rgba(79,70,229,0.32),inset_0_1px_0_0_rgba(71,85,105,0.12)]'
+  'shadow-[inset_3px_0_0_0_rgba(47,158,58,0.32),inset_0_1px_0_0_rgba(71,85,105,0.12)]'
 
 // --- Sprint 5.1 / 6.2: Grabado arquitectónico — tinta sobre cristal ----------
 
@@ -89,11 +89,11 @@ export const CRYSTAL_MODULE_CELL_IDLE =
 
 /** Celda activa — estación activada, acento operativo claro. */
 export const CRYSTAL_MODULE_CELL_ACTIVE =
-  'shadow-[inset_0_1px_0_0_rgba(79,70,229,0.38),inset_0_0_0_1px_rgba(99,102,241,0.28),inset_3px_0_0_0_rgba(79,70,229,0.22)]'
+  'shadow-[inset_0_1px_0_0_rgba(47,158,58,0.38),inset_0_0_0_1px_rgba(63,194,74,0.28),inset_3px_0_0_0_rgba(47,158,58,0.22)]'
 
 /** Canal de activación lateral del módulo. */
 export const CRYSTAL_MODULE_ACTIVE_CHANNEL =
-  'bg-gradient-to-b from-indigo-600/72 via-indigo-500/58 to-indigo-600/72'
+  'bg-gradient-to-b from-emerald-600/72 via-emerald-500/58 to-emerald-600/72'
 
 /** Registro de expediente en reposo. */
 export const CRYSTAL_DOSSIER_INSCRIPTION_IDLE =
@@ -113,11 +113,11 @@ export const CRYSTAL_STATUS_CHIP_BASE =
 
 /** Monograma seleccionado. */
 export const CRYSTAL_MONOGRAM_SELECTED =
-  'bg-transparent text-indigo-700 shadow-[inset_0_0_0_1px_rgba(79,70,229,0.38)]'
+  'bg-transparent text-emerald-700 shadow-[inset_0_0_0_1px_rgba(47,158,58,0.38)]'
 
 /** Monograma global seleccionado. */
 export const CRYSTAL_MONOGRAM_GLOBAL_SELECTED =
-  'bg-transparent text-indigo-700 shadow-[inset_0_0_0_1px_rgba(79,70,229,0.42)]'
+  'bg-transparent text-emerald-700 shadow-[inset_0_0_0_1px_rgba(47,158,58,0.42)]'
 
 // --- Sprint 6.3 / 7.2: Tinta técnica sobre cristal blanco -------------------
 
@@ -188,4 +188,4 @@ export const WORKSTATION_MODULE_CONSOLE_CHANNEL =
 
 /** Pulso de carga: surco grabado, no bloque de relleno. */
 export const CRYSTAL_SKELETON_PULSE =
-  'omega-scan-skeleton__bar shadow-[inset_0_1px_0_0_rgba(203,213,225,0.1)]'
+  'cunmark-scan-skeleton__bar shadow-[inset_0_1px_0_0_rgba(203,213,225,0.1)]'

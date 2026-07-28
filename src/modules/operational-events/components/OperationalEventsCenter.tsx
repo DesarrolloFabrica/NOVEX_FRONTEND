@@ -70,7 +70,7 @@ export function OperationalEventsCenter({
   }, [searchParams, setSearchParams])
 
   return (
-    <div className="omega-events-center omega-events-center--feed flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="cunmark-events-center cunmark-events-center--feed flex min-h-0 flex-1 flex-col overflow-hidden">
       <MonitoringLayout
         main={
           <EventsConsole

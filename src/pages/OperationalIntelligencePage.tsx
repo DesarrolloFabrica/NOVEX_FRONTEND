@@ -1,4 +1,4 @@
-// Página principal: Tablero ejecutivo del Centro de Inteligencia Operacional.
+// Página principal: Tablero ejecutivo de Visión general.
 // Consume el OperationalEventsProvider global (app/providers).
 
 import { useCallback, useState } from 'react'
@@ -6,8 +6,8 @@ import { ScreenDeck } from '@/modules/monitoring/components/ScreenDeck'
 import type { EnvironmentStatus } from '@/modules/monitoring/types/monitoring.types'
 import { OperationalIntelligenceDashboard } from '@/modules/operational-events/components/OperationalIntelligenceDashboard'
 import type { OperationalEnvironmentStatus } from '@/modules/operational-events/types/operational-event.types'
-import { MainScreen, OmegaFrame, OmegaRoom } from '@/modules/room'
-import { OmegaProductHeader } from '@/shared/components/OmegaProductHeader'
+import { MainScreen, CunmarkFrame, CunmarkRoom } from '@/modules/room'
+import { CunmarkProductHeader } from '@/shared/components/CunmarkProductHeader'
 
 export function OperationalIntelligencePage() {
   const [environment, setEnvironment] =
@@ -21,19 +21,35 @@ export function OperationalIntelligencePage() {
   )
 
   return (
-    <OmegaRoom environment={environment} scene="intelligence">
-      <OmegaFrame environment={environment}>
+    <CunmarkRoom environment={environment} scene="intelligence">
+      <CunmarkFrame environment={environment}>
         <MainScreen environment={environment}>
           <ScreenDeck
             environment={environment}
-            header={<OmegaProductHeader title="Análisis IA" showHelp />}
+            header={
+              <CunmarkProductHeader
+                title="Dashboard"
+                help={
+                  <>
+                    <p>
+                      Aquí puede consultar el estado general, identificar
+                      prioridades y abrir cada situación para tomar una decisión.
+                    </p>
+                    <p>
+                      Use <b>Registrar situación</b> cuando ocurra un nuevo evento
+                      operativo que deba analizarse.
+                    </p>
+                  </>
+                }
+              />
+            }
           >
             <OperationalIntelligenceDashboard
               onEnvironmentChange={handleEnvironmentChange}
             />
           </ScreenDeck>
         </MainScreen>
-      </OmegaFrame>
-    </OmegaRoom>
+      </CunmarkFrame>
+    </CunmarkRoom>
   )
 }

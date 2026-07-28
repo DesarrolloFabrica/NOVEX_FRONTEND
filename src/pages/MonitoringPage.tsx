@@ -1,249 +1,89 @@
-// Capa: página Legacy — Centro de Monitoreo de compromisos.
-// Conservada como referencia hasta finalizar la migración.
-// Ruta: /legacy-monitoring (ya no es la experiencia principal).
-// Responsabilidad: conectar auth + CommitmentsProvider con MonitoringCenter.
+// Capa: página Gestión de situaciones — Centro de Gestión Operativa.
+// Ruta: /legacy-monitoring
+// Responsabilidad: administrar el ciclo de vida de situaciones analizadas por IA.
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
-import { useCommitments } from '@/modules/commitments/hooks/useCommitments'
-import type { CommitmentStatus } from '@/modules/commitments/types/commitment.types'
-import {
-  canApplyAreaValidation,
-  getCommitmentDisplayStatus,
-} from '@/modules/commitments/utils/commitmentValidation.utils'
-import {
-  AREAS,
-  GLOBAL_AREA,
-  OPERATIONAL_AREAS,
-} from '@/modules/areas/data/areas.mock'
-import { findAreaById } from '@/modules/areas/utils/areas.utils'
-import {
-  selectAllAreasHealth,
-  selectAllOperationalCommitments,
-  selectAreaHealth,
-  selectFocusedAreaCommitments,
-  selectGlobalAreaHealth,
-} from '@/modules/monitoring/selectors/areaHealth.selectors'
+import { useExecutionActions } from '@/modules/execution-actions/hooks/useExecutionActions'
+import type { ExecutionActionStatus } from '@/modules/execution-actions/types/execution-action.types'
 import { MonitoringCenter } from '@/modules/monitoring/components/MonitoringCenter'
-import { MainScreen, OmegaFrame, OmegaRoom } from '@/modules/room'
+import { MainScreen, CunmarkFrame, CunmarkRoom } from '@/modules/room'
+import type { EnvironmentStatus } from '@/modules/monitoring/types/monitoring.types'
+
+function resolveEnvironment(
+  actions: { executionStatus: ExecutionActionStatus }[],
+): EnvironmentStatus {
+  if (actions.length === 0) return 'pending'
+  const blocked = actions.filter(
+    (action) => action.executionStatus === 'not_executable',
+  ).length
+  const pending = actions.filter(
+    (action) =>
+      action.executionStatus === 'pending' ||
+      action.executionStatus === 'in_progress',
+  ).length
+  if (blocked > 0) return 'critical'
+  if (pending > actions.length / 2) return 'attention'
+  if (pending > 0) return 'attention'
+  return 'healthy'
+}
 
 export function MonitoringPage() {
   const { user, logout } = useAuth()
+  const canUpdate = user != null
+
   const {
-    items,
+    actions,
+    selectedAction,
+    selectedActionId,
+    setSelectedActionId,
     loading,
     error,
-    loadCommitments,
-    updateCommitmentDraftStatus,
-    applyAreaValidation,
-  } = useCommitments()
+    isUpdating,
+    updateStatus,
+  } = useExecutionActions()
 
-  const isEjecutor = user?.role === 'ejecutor'
-  // Caso límite de presentación: un ejecutor sin área operativa asignada.
-  const executorWithoutArea = isEjecutor && !user?.selectedAreaId
-  // El ejecutor califica el avance; el supervisor consolida el área.
-  const canValidate = user != null
-  const canApplyValidationForRole = user?.role === 'supervisor'
-
-  // Estado local de la UI: el supervisor arranca en la Vista General (global);
-  // el ejecutor arranca (y queda fijado) en su propia área operativa.
-  const [selectedAreaId, setSelectedAreaId] = useState<string>(() => {
-    if (isEjecutor && user?.selectedAreaId) return user.selectedAreaId
-    return GLOBAL_AREA?.id ?? OPERATIONAL_AREAS[0]?.id ?? ''
-  })
-  const [selectedCommitmentId, setSelectedCommitmentId] = useState<string | null>(
-    null,
-  )
-  // Feedback local mientras se persiste una calificación o aplicación de área.
-  const [isUpdating, setIsUpdating] = useState(false)
-  const [isApplyingValidation, setIsApplyingValidation] = useState(false)
-
-  // Carga inicial de compromisos al entrar a la pantalla.
-  useEffect(() => {
-    void loadCommitments()
-  }, [loadCommitments])
-
-  // Áreas visibles en la franja superior: el ejecutor solo ve su área.
-  const visibleAreas = useMemo(
-    () =>
-      isEjecutor
-        ? OPERATIONAL_AREAS.filter((area) => area.id === user?.selectedAreaId)
-        : AREAS,
-    [isEjecutor, user?.selectedAreaId],
+  const environment = useMemo(
+    () => resolveEnvironment(actions),
+    [actions],
   )
 
-  const selectedArea = useMemo(
-    () => findAreaById(AREAS, selectedAreaId),
-    [selectedAreaId],
-  )
-  const isGlobal = selectedArea?.isGlobal === true
-
-  // Salud de cada área visible (para los focos superiores).
-  const areaEntries = useMemo(
-    () => selectAllAreasHealth(items, visibleAreas),
-    [items, visibleAreas],
-  )
-
-  // Salud del área enfocada: si es global, agrega todos los compromisos.
-  const areaHealth = useMemo(
-    () =>
-      isGlobal
-        ? selectGlobalAreaHealth(items)
-        : selectAreaHealth(items, selectedAreaId),
-    [isGlobal, items, selectedAreaId],
-  )
-
-  // Compromisos a mostrar: global => todas las áreas operativas; si no, filtrado por área.
-  const areaCommitments = useMemo(
-    () => selectFocusedAreaCommitments(items, selectedArea),
-    [items, selectedArea],
-  )
-
-  // Mantiene una acción disponible desde la entrada y al cambiar de área.
-  useEffect(() => {
-    if (loading) return
-    setSelectedCommitmentId((currentId) => {
-      if (currentId && areaCommitments.some(({ id }) => id === currentId)) {
-        return currentId
-      }
-      return (
-        areaCommitments.find(
-          (commitment) =>
-            getCommitmentDisplayStatus(commitment) ===
-            'Pendiente de validación',
-        )?.id ?? areaCommitments[0]?.id ?? null
-      )
-    })
-  }, [areaCommitments, loading])
-
-  // Compromiso enfocado: en vista global busca en todos los operativos.
-  const selectedCommitment = useMemo(() => {
-    if (!selectedCommitmentId) return null
-
-    const pool = isGlobal
-      ? selectAllOperationalCommitments(items)
-      : areaCommitments
-
-    return pool.find((commitment) => commitment.id === selectedCommitmentId) ?? null
-  }, [selectedCommitmentId, isGlobal, items, areaCommitments])
-
-  // Inteligencia mínima: conteo de incumplimientos críticos (impacto 5).
-  const criticalCount = useMemo(
-    () =>
-      areaCommitments.filter(
-        (c) => c.status === 'Incumplido' && c.operationalImpact === 5,
-      ).length,
-    [areaCommitments],
-  )
-
-  // Compromiso "proyectado": el pendiente de mayor impacto y vencimiento más
-  // próximo. Es un dato derivado de presentación (no altera el dominio).
-  const projectedTitle = useMemo(() => {
-    const pending = areaCommitments.filter(
-      (c) =>
-        c.status === 'Pendiente de validación' &&
-        (c.draftStatus !== 'Cumplido' && c.draftStatus !== 'Incumplido'),
-    )
-    if (pending.length === 0) return null
-    const [first] = [...pending].sort((a, b) =>
-      b.operationalImpact !== a.operationalImpact
-        ? b.operationalImpact - a.operationalImpact
-        : a.dueDate.localeCompare(b.dueDate),
-    )
-    return first?.title ?? null
-  }, [areaCommitments])
-
-  const canApplyValidation = useMemo(
-    () =>
-      canApplyValidationForRole &&
-      !isGlobal &&
-      canApplyAreaValidation(areaCommitments),
-    [canApplyValidationForRole, isGlobal, areaCommitments],
-  )
-
-  const handleSelectArea = useCallback(
-    (areaId: string) => {
-      // El ejecutor no puede enfocar la Vista General (global).
-      const target = findAreaById(AREAS, areaId)
-      if (isEjecutor && target?.isGlobal) return
-      setSelectedAreaId(areaId)
-      // Al cambiar de área se limpia el compromiso seleccionado.
-      setSelectedCommitmentId(null)
-    },
-    [isEjecutor],
-  )
-
-  const handleSelectCommitment = useCallback((commitmentId: string) => {
-    setSelectedCommitmentId(commitmentId)
-  }, [])
-
-  // Califica el compromiso enfocado en borrador; el área no cambia hasta aplicar.
-  const handleValidateCommitment = useCallback(
-    async (status: CommitmentStatus) => {
-      if (!selectedCommitment || !user || !canValidate) return
-      const focusedCommitmentId = selectedCommitment.id
-      setIsUpdating(true)
-      try {
-        await updateCommitmentDraftStatus(focusedCommitmentId, status)
-        setSelectedCommitmentId(focusedCommitmentId)
-      } finally {
-        setIsUpdating(false)
-      }
-    },
-    [selectedCommitment, user, canValidate, updateCommitmentDraftStatus],
-  )
-
-  const handleApplyAreaValidation = useCallback(async () => {
-    if (!user || !canApplyValidationForRole || isGlobal || !canApplyValidation) return
-    setIsApplyingValidation(true)
-    try {
-      await applyAreaValidation(selectedAreaId, {
-        id: user.id,
-        name: user.name,
+  const handleUpdateStatus = useCallback(
+    async (input: {
+      status: ExecutionActionStatus
+      note?: string
+      observation?: string
+    }) => {
+      if (!user || !canUpdate) return
+      await updateStatus({
+        ...input,
+        byUserId: user.id,
+        byUserName: user.name,
       })
-    } finally {
-      setIsApplyingValidation(false)
-    }
-  }, [
-    user,
-    canApplyValidationForRole,
-    isGlobal,
-    canApplyValidation,
-    applyAreaValidation,
-    selectedAreaId,
-  ])
+    },
+    [user, canUpdate, updateStatus],
+  )
 
   return (
-    <OmegaRoom environment={areaHealth.environment} scene="commitments">
-      <OmegaFrame environment={areaHealth.environment}>
-        <MainScreen environment={areaHealth.environment}>
+    <CunmarkRoom environment={environment} scene="commitments">
+      <CunmarkFrame environment={environment}>
+        <MainScreen environment={environment}>
           <MonitoringCenter
             user={user}
-            areaEntries={areaEntries}
-            selectedArea={selectedArea}
-            selectedAreaId={selectedAreaId}
-            areaHealth={areaHealth}
-            isGlobal={isGlobal}
-            areaCommitments={areaCommitments}
-            selectedCommitment={selectedCommitment}
-            selectedCommitmentId={selectedCommitmentId}
+            actions={actions}
+            selectedAction={selectedAction}
+            selectedActionId={selectedActionId}
             loading={loading}
             error={error}
-            executorWithoutArea={executorWithoutArea}
-            criticalCount={criticalCount}
-            projectedTitle={projectedTitle}
-            canValidate={canValidate}
+            canUpdate={canUpdate}
             isUpdating={isUpdating}
-            canApplyValidation={canApplyValidation}
-            isApplyingValidation={isApplyingValidation}
-            onSelectArea={handleSelectArea}
-            onSelectCommitment={handleSelectCommitment}
-            onValidateCommitment={handleValidateCommitment}
-            onApplyAreaValidation={handleApplyAreaValidation}
+            environment={environment}
+            onSelectAction={setSelectedActionId}
+            onUpdateStatus={handleUpdateStatus}
             onLogout={() => void logout()}
           />
         </MainScreen>
-      </OmegaFrame>
-    </OmegaRoom>
+      </CunmarkFrame>
+    </CunmarkRoom>
   )
 }
