@@ -3569,6 +3569,36 @@
   line-height: 1.45;
 }
 
+.situation-command-panel__mock-notice {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  margin: 0 16px 10px;
+  padding: 8px 10px;
+  border: 1px dashed rgb(255 196 86 / 0.42);
+  border-radius: 8px;
+  color: #d8c08a;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  background: rgb(255 196 86 / 0.08);
+}
+
+.situation-command-panel__mock-notice span {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  padding: 2px 6px;
+  border: 1px solid rgb(255 196 86 / 0.5);
+  border-radius: 4px;
+  color: #ffc456;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: rgb(255 196 86 / 0.12);
+}
+
 .situation-command-panel__content {
   display: flex;
   min-height: 0;

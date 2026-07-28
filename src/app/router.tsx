@@ -1,6 +1,6 @@
 // Capa: app (enrutado).
 // Responsabilidad: declarar las rutas y su protección. Sin lógica de negocio.
-// Experiencia principal: Visión general.
+// Experiencia principal: Red de impacto.
 
 import { createBrowserRouter, Navigate, useLocation } from 'react-router-dom'
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute'
@@ -20,7 +20,7 @@ export const router = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
-      { path: '/', element: <Navigate to="/dashboard" replace /> },
+      { path: '/', element: <Navigate to="/red-impacto" replace /> },
       { path: '/login', element: <LoginPage /> },
       // Alias legados para no romper enlaces anteriores.
       { path: '/monitoring', element: <RedirectPreservingSearch to="/gestion" /> },

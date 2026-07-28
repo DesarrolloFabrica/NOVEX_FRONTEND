@@ -440,11 +440,12 @@
 }
 
 .cunmark-login__google-action {
+  position: relative;
   display: flex;
   width: 100%;
   min-height: 3.2rem;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 0.75rem;
   border: 1px solid rgb(210 220 214 / 0.28) !important;
   border-radius: 0.72rem;
@@ -455,27 +456,53 @@
   font-weight: 650;
   background: linear-gradient(180deg, rgb(18 34 28 / 0.92), rgb(8 20 16 / 0.94)) !important;
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
-  cursor: not-allowed;
-  opacity: 0.72;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease, background 200ms ease;
+}
+
+.cunmark-login__google-action[data-loading='true'] {
+  pointer-events: none;
 }
 
 .cunmark-login__google-action-main {
+  position: relative;
+  z-index: 0;
   display: inline-flex;
   align-items: center;
   gap: 0.7rem;
+  pointer-events: none;
+}
+
+.cunmark-login__google-action-trigger {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.011;
+}
+
+.cunmark-login__google-action-trigger > div,
+.cunmark-login__google-action-trigger iframe {
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
 }
 
 .cunmark-login__google-action svg {
   flex: 0 0 auto;
 }
 
-.cunmark-login__google-action em {
-  color: rgb(170 205 182 / 0.72);
-  font-size: 0.62rem;
-  font-style: normal;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+@media (hover: hover) {
+  .cunmark-login__google-action:not([data-loading='true']):hover {
+    transform: translateY(-2px);
+    border-color: rgb(191 255 175 / 0.42) !important;
+    box-shadow:
+      0 10px 24px rgb(47 174 62 / 0.12),
+      inset 0 1px 0 rgb(255 255 255 / 0.06);
+  }
 }
 
 .cunmark-login__email-form {
@@ -641,11 +668,6 @@
 .cunmark-login :is(button, select, input):disabled {
   cursor: not-allowed;
   opacity: 0.58;
-}
-
-.cunmark-login__google-action:disabled {
-  cursor: not-allowed;
-  opacity: 0.72;
 }
 
 .cunmark-login__primary-action:disabled {

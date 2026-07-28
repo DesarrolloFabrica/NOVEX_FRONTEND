@@ -1,10 +1,11 @@
-// Componente: riel de pasos del wizard (captura → interpretación).
+// Componente: riel de pasos del wizard (captura → resumen → interpretación).
 
-export type WizardStepId = 1 | 2
+export type WizardStepId = 1 | 2 | 3
 
 const STEPS: Array<{ id: WizardStepId; label: string }> = [
   { id: 1, label: 'Registrar' },
-  { id: 2, label: 'Interpretar' },
+  { id: 2, label: 'Resumen' },
+  { id: 3, label: 'Interpretar' },
 ]
 
 interface WizardStepRailProps {

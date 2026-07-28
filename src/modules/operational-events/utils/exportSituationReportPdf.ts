@@ -5,6 +5,7 @@ import type {
   ExecutiveUrgency,
   IndicatorTrend,
   OperationalEvent,
+  RecommendedAction,
   RiskLevel,
 } from '@/modules/operational-events/types/operational-event.types'
 import {
@@ -16,21 +17,59 @@ import {
 
 type RGB = [number, number, number]
 
+/** px @ 96dpi → mm (jsPDF unit) */
+const PX = 0.264583
+/** px @ 96dpi → pt (jsPDF font size) */
+const PT = 0.75
+
+const LAYOUT = {
+  marginTop: 32 * PX,
+  marginBottom: 32 * PX,
+  marginLeft: 40 * PX,
+  marginRight: 40 * PX,
+  headerHeight: 120 * PX,
+  continuationHeaderHeight: 14 * PX,
+  footerHeight: 22 * PX,
+  gapTitleContent: 16 * PX,
+  gapBlocks: 24 * PX,
+  gapSections: 24 * PX,
+  cardRadius: 2.5,
+  cardPadding: 12 * PX,
+  cardGap: 10 * PX,
+  cardShadowOffset: 0.4,
+} as const
+
+const FONT = {
+  titleMain: 28 * PT,
+  section: 16 * PT,
+  subtitle: 13 * PT,
+  body: 11 * PT,
+  note: 9 * PT,
+} as const
+
 const COLORS = {
   ink: [25, 38, 58] as RGB,
   muted: [100, 116, 139] as RGB,
-  line: [221, 228, 238] as RGB,
+  subtle: [92, 109, 134] as RGB,
+  line: [214, 222, 234] as RGB,
   panel: [246, 248, 252] as RGB,
-  navy: [7, 17, 37] as RGB,
-  navySoft: [16, 34, 65] as RGB,
   white: [255, 255, 255] as RGB,
+  navy: [3, 7, 16] as RGB,
+  navyMid: [7, 14, 28] as RGB,
+  green: [47, 158, 58] as RGB,
+  greenMid: [63, 194, 74] as RGB,
+  greenBright: [163, 255, 92] as RGB,
+  blue: [77, 125, 255] as RGB,
+  cyan: [56, 217, 255] as RGB,
+  danger: [255, 70, 91] as RGB,
+  shadow: [228, 234, 242] as RGB,
 }
 
 const RISK_COLOR: Record<RiskLevel, RGB> = {
-  critical: [224, 63, 89],
-  high: [224, 145, 38],
-  moderate: [24, 139, 190],
-  low: [27, 158, 102],
+  critical: COLORS.danger,
+  high: COLORS.blue,
+  moderate: COLORS.cyan,
+  low: COLORS.green,
 }
 
 const PRIORITY_LABEL: Record<ActionPriority, string> = {
@@ -38,6 +77,13 @@ const PRIORITY_LABEL: Record<ActionPriority, string> = {
   high: 'ALTA',
   medium: 'MEDIA',
   scheduled: 'PROGRAMADA',
+}
+
+const EFFORT_LABEL: Record<ActionPriority, string> = {
+  immediate: 'Alto',
+  high: 'Medio-alto',
+  medium: 'Medio',
+  scheduled: 'Bajo',
 }
 
 const URGENCY_LABEL: Record<ExecutiveUrgency, string> = {
@@ -58,6 +104,15 @@ const TREND_LABEL: Record<IndicatorTrend, string> = {
   down: 'Debe bajar',
   stable: 'Debe mantenerse',
 }
+
+const PRIORITY_LEVEL_LABEL: Record<string, string> = {
+  CRITICA: 'CRITICA',
+  ALTA: 'ALTA',
+  MEDIA: 'MEDIA',
+  BAJA: 'BAJA',
+}
+
+const LOGO_PATH = 'cunmark-mark.png'
 
 /** Helvetica de jsPDF solo soporta WinAnsi; normalizamos tipografía tipográfica. */
 function pdfText(value: string | null | undefined): string {
@@ -86,13 +141,32 @@ function formatDateTime(iso: string): string {
   )
 }
 
-function safeFileName(value: string): string {
-  return value
-    .normalize('NFD')
-    .replace(/\p{M}/gu, '')
-    .replace(/[^a-zA-Z0-9-_]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .toLowerCase()
+function formatShortDate(iso: string): string {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return pdfText(iso)
+  return pdfText(
+    new Intl.DateTimeFormat('es-CO', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).format(date),
+  )
+}
+
+function formatReportDate(iso: string): string {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return ''
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${day}-${month}-${year}-${hours}${minutes}`
+}
+
+function buildReportFileName(_title: string, reportedAt: string): string {
+  const stamp = formatReportDate(reportedAt)
+  return stamp ? `reporte-ejecutivo-${stamp}.pdf` : 'reporte-ejecutivo.pdf'
 }
 
 function downloadPdfBlob(doc: jsPDF, filename: string): void {
@@ -106,302 +180,1340 @@ function downloadPdfBlob(doc: jsPDF, filename: string): void {
   document.body.appendChild(anchor)
   anchor.click()
   anchor.remove()
-  // Revoca después de un tick para no cortar la descarga en algunos navegadores.
   window.setTimeout(() => URL.revokeObjectURL(url), 1500)
+}
+
+async function loadLogoAsset(): Promise<{
+  dataUrl: string
+  width: number
+  height: number
+} | null> {
+  try {
+    const base = import.meta.env.BASE_URL ?? '/'
+    const url = `${base}${LOGO_PATH}`
+    const response = await fetch(url)
+    if (!response.ok) return null
+    const blob = await response.blob()
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = () => reject(reader.error)
+      reader.readAsDataURL(blob)
+    })
+    const bitmap = await createImageBitmap(blob)
+    return { dataUrl, width: bitmap.width, height: bitmap.height }
+  } catch {
+    return null
+  }
+}
+
+function lineHeightMm(fontSizePt: number, factor = 1.42): number {
+  return fontSizePt * 0.352778 * factor
+}
+
+class PdfReportLayout {
+  private readonly doc: jsPDF
+  private readonly pageWidth: number
+  private readonly pageHeight: number
+  readonly contentWidth: number
+  private y = 0
+  private sectionStarted = false
+  private readonly logo: { dataUrl: string; width: number; height: number } | null
+
+  constructor(
+    doc: jsPDF,
+    logo: { dataUrl: string; width: number; height: number } | null,
+  ) {
+    this.doc = doc
+    this.pageWidth = doc.internal.pageSize.getWidth()
+    this.pageHeight = doc.internal.pageSize.getHeight()
+    this.contentWidth =
+      this.pageWidth - LAYOUT.marginLeft - LAYOUT.marginRight
+    this.logo = logo
+  }
+
+  get cursorY(): number {
+    return this.y
+  }
+
+  set cursorY(value: number) {
+    this.y = value
+  }
+
+  private contentBottom(): number {
+    return this.pageHeight - LAYOUT.marginBottom - LAYOUT.footerHeight
+  }
+
+  private setColor(
+    kind: 'text' | 'fill' | 'draw',
+    color: RGB,
+  ): void {
+    if (kind === 'text') this.doc.setTextColor(...color)
+    else if (kind === 'fill') this.doc.setFillColor(...color)
+    else this.doc.setDrawColor(...color)
+  }
+
+  private setFont(style: 'normal' | 'bold' | 'italic', sizePt: number): void {
+    this.doc.setFont('helvetica', style)
+    this.doc.setFontSize(sizePt)
+  }
+
+  /** Renderiza lineas envueltas sin el bug de espaciado de jsPDF con arrays. */
+  private drawLines(
+    lines: string[],
+    x: number,
+    y: number,
+    fontSizePt: number,
+  ): number {
+    const lh = lineHeightMm(fontSizePt)
+    let cy = y
+    for (const line of lines) {
+      if (line) this.doc.text(line, x, cy)
+      cy += lh
+    }
+    return cy - y
+  }
+
+  splitText(text: string, maxWidth: number): string[] {
+    return this.doc.splitTextToSize(pdfText(text), maxWidth) as string[]
+  }
+
+  textBlockHeight(
+    text: string,
+    maxWidth: number,
+    fontSizePt: number,
+  ): number {
+    const lines = this.splitText(text, maxWidth)
+    return lines.length * lineHeightMm(fontSizePt)
+  }
+
+  ensureSpace(requiredHeight: number): void {
+    if (this.y + requiredHeight <= this.contentBottom()) return
+    this.newPage()
+  }
+
+  /** Evita títulos huérfanos: mueve bloque completo si no cabe. */
+  ensureSectionFits(sectionHeight: number): void {
+    if (this.y + sectionHeight > this.contentBottom()) {
+      this.newPage()
+    }
+  }
+
+  advance(mm: number): void {
+    this.y += mm
+  }
+
+  newPage(): void {
+    this.doc.addPage()
+    this.drawContinuationHeader()
+    this.y = LAYOUT.marginTop + LAYOUT.continuationHeaderHeight + 2 * PX
+  }
+
+  private drawInstitutionalLine(y: number): void {
+    this.setColor('fill', COLORS.green)
+    this.doc.rect(0, y, this.pageWidth, 1.2, 'F')
+  }
+
+  drawCoverHeader(meta: {
+    title: string
+    status: string
+    priority: string
+    date: string
+    reference: string
+  }): void {
+    const metaColW = 54
+    const titleMaxW = this.contentWidth - metaColW - 2
+    const titleFont = FONT.section
+    const titleLines = this.splitText(meta.title, titleMaxW).slice(0, 3)
+    const titleBlockH = titleLines.length * lineHeightMm(titleFont)
+    const headerH = Math.max(LAYOUT.headerHeight, 22 + titleBlockH + 6)
+
+    this.setColor('fill', COLORS.navy)
+    this.doc.rect(0, 0, this.pageWidth, headerH, 'F')
+
+    const logoBox = 9
+    const logoX = LAYOUT.marginLeft
+    const topY = 7
+    if (this.logo) {
+      const aspect = this.logo.width / this.logo.height
+      const logoH = logoBox
+      const logoW = logoH * aspect
+      this.doc.addImage(
+        this.logo.dataUrl,
+        'PNG',
+        logoX,
+        topY,
+        logoW,
+        logoH,
+        undefined,
+        'FAST',
+      )
+    }
+
+    const brandX = logoX + (this.logo ? logoBox + 3 : 0)
+    this.setColor('text', COLORS.white)
+    this.setFont('bold', 12)
+    this.doc.text('CUNMARK', brandX, topY + 3.8)
+    this.setFont('normal', FONT.note)
+    this.setColor('text', [163, 180, 204])
+    this.doc.text('Sistema de Inteligencia Operacional', brandX, topY + 7.5)
+
+    const metaRight = this.pageWidth - LAYOUT.marginRight
+    const metaLeft = metaRight - metaColW
+    const metaRows: Array<[string, string]> = [
+      ['Estado', meta.status],
+      ['Prioridad', meta.priority],
+      ['Fecha', meta.date],
+      ['Codigo', meta.reference],
+    ]
+    metaRows.forEach(([label, value], index) => {
+      const rowY = topY + 1.5 + index * 4.2
+      this.setFont('bold', FONT.note - 0.5)
+      this.setColor('text', [130, 150, 176])
+      this.doc.text(pdfText(`${label}:`), metaLeft, rowY)
+      this.setFont('normal', FONT.note)
+      this.setColor('text', COLORS.white)
+      const valueLines = this.splitText(value, metaColW - 16)
+      this.doc.text(valueLines[0] ?? '', metaRight, rowY, { align: 'right' })
+    })
+
+    const titleY = topY + logoBox + 5
+    this.setColor('text', COLORS.white)
+    this.setFont('bold', titleFont)
+    this.drawLines(titleLines, LAYOUT.marginLeft, titleY, titleFont)
+
+    this.drawInstitutionalLine(headerH)
+    this.y = headerH + LAYOUT.marginTop
+  }
+
+  private drawContinuationHeader(): void {
+    const h = LAYOUT.continuationHeaderHeight
+    this.setColor('fill', COLORS.navyMid)
+    this.doc.rect(0, 0, this.pageWidth, h, 'F')
+    this.setColor('text', COLORS.white)
+    this.setFont('bold', FONT.subtitle)
+    this.doc.text('CUNMARK', LAYOUT.marginLeft, h - 4.5)
+    this.setFont('normal', FONT.note)
+    this.setColor('text', [163, 180, 204])
+    this.doc.text(
+      'Sistema de Inteligencia Operacional',
+      LAYOUT.marginLeft + 22,
+      h - 4.5,
+    )
+    this.drawInstitutionalLine(h)
+  }
+
+  drawFooters(): void {
+    const pages = this.doc.getNumberOfPages()
+    for (let page = 1; page <= pages; page += 1) {
+      this.doc.setPage(page)
+      const footerTop = this.pageHeight - LAYOUT.footerHeight
+      this.setColor('draw', COLORS.line)
+      this.doc.setLineWidth(0.2)
+      this.doc.line(
+        LAYOUT.marginLeft,
+        footerTop,
+        this.pageWidth - LAYOUT.marginRight,
+        footerTop,
+      )
+
+      const textY = footerTop + 5
+      this.setColor('text', COLORS.ink)
+      this.setFont('bold', FONT.note)
+      this.doc.text('CUNMARK', LAYOUT.marginLeft, textY)
+      this.setFont('normal', FONT.note)
+      this.setColor('text', COLORS.muted)
+      this.doc.text(
+        'Sistema de Inteligencia Operacional',
+        LAYOUT.marginLeft,
+        textY + 3.2,
+      )
+
+      this.setColor('text', COLORS.muted)
+      this.setFont('normal', FONT.note)
+      const centerX = this.pageWidth / 2
+      this.doc.text(
+        'Analisis generado automaticamente mediante IA.',
+        centerX,
+        textY,
+        { align: 'center' },
+      )
+      this.doc.text(
+        'Documento de apoyo para la toma de decisiones.',
+        centerX,
+        textY + 3.2,
+        { align: 'center' },
+      )
+
+      this.setFont('normal', FONT.note)
+      this.doc.text(
+        `Pagina ${page} de ${pages}`,
+        this.pageWidth - LAYOUT.marginRight,
+        textY + 1.6,
+        { align: 'right' },
+      )
+    }
+  }
+
+  private drawCardShell(
+    x: number,
+    top: number,
+    width: number,
+    height: number,
+    options?: { fill?: RGB; border?: RGB },
+  ): void {
+    const fill = options?.fill ?? COLORS.white
+    const border = options?.border ?? COLORS.line
+    this.setColor('fill', COLORS.shadow)
+    this.doc.roundedRect(
+      x + LAYOUT.cardShadowOffset,
+      top + LAYOUT.cardShadowOffset,
+      width,
+      height,
+      LAYOUT.cardRadius,
+      LAYOUT.cardRadius,
+      'F',
+    )
+    this.setColor('fill', fill)
+    this.setColor('draw', border)
+    this.doc.setLineWidth(0.25)
+    this.doc.roundedRect(
+      x,
+      top,
+      width,
+      height,
+      LAYOUT.cardRadius,
+      LAYOUT.cardRadius,
+      'FD',
+    )
+  }
+
+  private renderSectionTitle(number: number | null, title: string): number {
+    const titleH = 8
+    this.setColor('text', COLORS.ink)
+    this.setFont('bold', FONT.section)
+    if (number !== null) {
+      const badgeW = 7
+      this.setColor('fill', COLORS.green)
+      this.doc.roundedRect(
+        LAYOUT.marginLeft,
+        this.y,
+        badgeW,
+        5.5,
+        1,
+        1,
+        'F',
+      )
+      this.setColor('text', COLORS.white)
+      this.setFont('bold', FONT.note)
+      this.doc.text(
+        String(number).padStart(2, '0'),
+        LAYOUT.marginLeft + badgeW / 2,
+        this.y + 3.8,
+        { align: 'center' },
+      )
+      this.setColor('text', COLORS.ink)
+      this.setFont('bold', FONT.section)
+      this.doc.text(
+        pdfText(title).toUpperCase(),
+        LAYOUT.marginLeft + badgeW + 3,
+        this.y + 4.2,
+      )
+    } else {
+      this.doc.text(pdfText(title).toUpperCase(), LAYOUT.marginLeft, this.y + 4.2)
+    }
+    return titleH + LAYOUT.gapTitleContent
+  }
+
+  section(
+    number: number | null,
+    title: string,
+    followingHeight = 0,
+  ): void {
+    const titleBlockH = 8 + LAYOUT.gapTitleContent
+    const gap = this.sectionStarted ? LAYOUT.gapSections : 0
+    this.ensureSectionFits(gap + titleBlockH + followingHeight)
+    this.y += gap
+    this.y += this.renderSectionTitle(number, title)
+    this.sectionStarted = true
+  }
+
+  measureParagraph(text: string): number {
+    const innerW = this.contentWidth - LAYOUT.cardPadding * 2
+    const lines = this.splitText(text || 'Sin informacion.', innerW)
+    return (
+      LAYOUT.cardPadding * 2 +
+      lines.length * lineHeightMm(FONT.body) +
+      LAYOUT.gapBlocks / 2
+    )
+  }
+
+  measureBulletList(items: string[]): number {
+    if (items.length === 0) return this.measureParagraph('Sin informacion declarada.')
+    const innerW = this.contentWidth - LAYOUT.cardPadding - 4
+    let h = 0
+    for (const item of items) {
+      const lines = this.splitText(item, innerW)
+      h += lines.length * lineHeightMm(FONT.body) + 2
+    }
+    return h + LAYOUT.gapBlocks / 3
+  }
+
+  measureDecisionMatrixHeight(
+    sections: Array<[string, RecommendedAction[]]>,
+    firstRowOnly = true,
+  ): number {
+    const gap = LAYOUT.cardGap / 2
+    const colW = (this.contentWidth - gap) / 2
+    const activeSections = sections.filter(([, actions]) => actions.length > 0)
+    if (activeSections.length === 0) return 0
+
+    const rows: Array<typeof activeSections> = []
+    for (let i = 0; i < activeSections.length; i += 2) {
+      rows.push(activeSections.slice(i, i + 2))
+    }
+
+    const measureRow = (row: typeof activeSections): number =>
+      Math.max(
+        ...row.map(([, actions]) => {
+          const innerW = colW - LAYOUT.cardPadding * 2
+          const actionsH = actions.reduce(
+            (sum, action) => sum + this.measureDecisionAction(action, innerW) + 4,
+            0,
+          )
+          return (
+            LAYOUT.cardPadding * 2 +
+            lineHeightMm(FONT.subtitle) +
+            actionsH +
+            2
+          )
+        }),
+      )
+
+    if (firstRowOnly) return measureRow(rows[0]!) + LAYOUT.gapBlocks
+
+    let total = 0
+    for (const row of rows) {
+      total += measureRow(row) + LAYOUT.gapBlocks
+    }
+    return total
+  }
+
+  measureIndicatorRows(
+    indicators: Array<{
+      name: string
+      explanation: string
+      unit: string
+      suggestedValue: number
+      trend: IndicatorTrend
+    }>,
+  ): number {
+    if (indicators.length === 0) {
+      return this.measureParagraph('No hay indicadores afectados identificados.')
+    }
+    const innerW = this.contentWidth - LAYOUT.cardPadding * 2
+    const first = indicators[0]!
+    const explanationLines = this.splitText(first.explanation, innerW)
+    return (
+      LAYOUT.cardPadding * 2 +
+      lineHeightMm(FONT.subtitle) +
+      explanationLines.length * lineHeightMm(FONT.body) +
+      2 +
+      LAYOUT.cardGap / 2
+    )
+  }
+
+  subLabel(text: string): void {
+    this.ensureSpace(8)
+    this.setColor('text', COLORS.muted)
+    this.setFont('bold', FONT.subtitle)
+    this.doc.text(pdfText(text).toUpperCase(), LAYOUT.marginLeft, this.y + 3)
+    this.y += 6 + LAYOUT.gapTitleContent / 2
+  }
+
+  paragraph(text: string, options?: { muted?: boolean; fill?: RGB }): void {
+    const innerW = this.contentWidth - LAYOUT.cardPadding * 2
+    const lines = this.splitText(text || 'Sin informacion.', innerW)
+    const bodyH = lines.length * lineHeightMm(FONT.body)
+    const cardH = LAYOUT.cardPadding * 2 + bodyH
+    this.ensureSpace(cardH + LAYOUT.gapBlocks / 2)
+    this.drawCardShell(
+      LAYOUT.marginLeft,
+      this.y,
+      this.contentWidth,
+      cardH,
+      { fill: options?.fill ?? COLORS.panel },
+    )
+    this.setColor('text', options?.muted ? COLORS.muted : COLORS.ink)
+    this.setFont('normal', FONT.body)
+    this.drawLines(
+      lines,
+      LAYOUT.marginLeft + LAYOUT.cardPadding,
+      this.y + LAYOUT.cardPadding + 3,
+      FONT.body,
+    )
+    this.y += cardH + LAYOUT.gapBlocks / 2
+  }
+
+  bulletList(items: string[], options?: { muted?: boolean }): void {
+    if (items.length === 0) {
+      this.paragraph('Sin informacion declarada.', { muted: true })
+      return
+    }
+    const innerW = this.contentWidth - LAYOUT.cardPadding - 4
+    for (const item of items) {
+      const lines = this.splitText(item, innerW)
+      const rowH = lines.length * lineHeightMm(FONT.body) + 2
+      this.ensureSpace(rowH)
+      this.setColor('fill', COLORS.green)
+      this.doc.circle(LAYOUT.marginLeft + 1.5, this.y + 2, 0.8, 'F')
+      this.setColor('text', options?.muted ? COLORS.muted : COLORS.ink)
+      this.setFont('normal', FONT.body)
+      this.drawLines(
+        lines,
+        LAYOUT.marginLeft + LAYOUT.cardPadding,
+        this.y + 2.8,
+        FONT.body,
+      )
+      this.y += rowH
+    }
+    this.y += LAYOUT.gapBlocks / 3
+  }
+
+  drawProgressIndicator(
+    label: string,
+    percentage: number,
+    options?: { accent?: RGB; showBar?: boolean },
+  ): number {
+    const accent = options?.accent ?? COLORS.green
+    const barW = this.contentWidth - LAYOUT.cardPadding * 2
+    const pct = Math.min(100, Math.max(0, percentage))
+    const labelH = lineHeightMm(FONT.subtitle)
+    const valueH = lineHeightMm(FONT.section)
+    const barH = options?.showBar === false ? 0 : 3
+    const cardH =
+      LAYOUT.cardPadding * 2 + labelH + valueH + (barH ? barH + 2 : 0)
+
+    this.ensureSpace(cardH + LAYOUT.cardGap / 2)
+    this.drawCardShell(LAYOUT.marginLeft, this.y, this.contentWidth, cardH)
+    const x = LAYOUT.marginLeft + LAYOUT.cardPadding
+    let innerY = this.y + LAYOUT.cardPadding + 2
+
+    this.setColor('text', COLORS.muted)
+    this.setFont('bold', FONT.subtitle)
+    this.doc.text(pdfText(label).toUpperCase(), x, innerY)
+    innerY += labelH + 1
+
+    this.setColor('text', COLORS.ink)
+    this.setFont('bold', FONT.section)
+    this.doc.text(`${Math.round(pct)}%`, x, innerY)
+    innerY += valueH
+
+    if (barH > 0) {
+      this.setColor('fill', COLORS.line)
+      this.doc.roundedRect(x, innerY, barW, barH, 0.8, 0.8, 'F')
+      if (pct > 0) {
+        this.setColor('fill', accent)
+        this.doc.roundedRect(
+          x,
+          innerY,
+          (barW * pct) / 100,
+          barH,
+          0.8,
+          0.8,
+          'F',
+        )
+      }
+    }
+
+    this.y += cardH + LAYOUT.cardGap / 2
+    return cardH
+  }
+
+  drawSummaryIndicators(
+    cards: Array<{ label: string; value: string; percentage?: number }>,
+  ): void {
+    const gap = LAYOUT.cardGap / 2
+    const cardW = (this.contentWidth - gap * (cards.length - 1)) / cards.length
+    let maxH = 0
+
+    const measurements = cards.map((card) => {
+      const innerW = cardW - LAYOUT.cardPadding * 2
+      const labelH = lineHeightMm(FONT.note)
+      const valueH = lineHeightMm(FONT.section)
+      const barH = card.percentage !== undefined ? 3.5 : 0
+      const h = LAYOUT.cardPadding * 2 + labelH + valueH + (barH ? barH + 2 : 0)
+      maxH = Math.max(maxH, h)
+      return { card, innerW, barH, h }
+    })
+
+    this.ensureSpace(maxH + LAYOUT.gapBlocks)
+    const top = this.y
+
+    measurements.forEach(({ card, innerW, barH }, index) => {
+      const x = LAYOUT.marginLeft + index * (cardW + gap)
+      this.drawCardShell(x, top, cardW, maxH, {
+        fill: index === 0 ? COLORS.navyMid : COLORS.panel,
+        border: index === 0 ? COLORS.green : COLORS.line,
+      })
+      const textX = x + LAYOUT.cardPadding
+      let innerY = top + LAYOUT.cardPadding + 2
+      this.setColor('text', index === 0 ? [180, 196, 216] : COLORS.muted)
+      this.setFont('bold', FONT.note)
+      this.doc.text(pdfText(card.label).toUpperCase(), textX, innerY)
+      innerY += lineHeightMm(FONT.note) + 1
+      this.setColor('text', index === 0 ? COLORS.white : COLORS.ink)
+      this.setFont('bold', FONT.section)
+      const valueLines = this.splitText(card.value, innerW)
+      this.drawLines(valueLines, textX, innerY, FONT.section)
+      innerY += valueLines.length * lineHeightMm(FONT.section)
+      if (barH > 0 && card.percentage !== undefined) {
+        const pct = Math.min(100, Math.max(0, card.percentage))
+        this.setColor('fill', index === 0 ? [40, 70, 110] : COLORS.line)
+        this.doc.roundedRect(textX, innerY, innerW, barH, 0.8, 0.8, 'F')
+        this.setColor('fill', index === 0 ? COLORS.greenBright : COLORS.green)
+        if (pct > 0) {
+          this.doc.roundedRect(
+            textX,
+            innerY,
+            (innerW * pct) / 100,
+            barH,
+            0.8,
+            0.8,
+            'F',
+          )
+        }
+      }
+    })
+
+    this.y = top + maxH + LAYOUT.gapBlocks
+  }
+
+  drawMetadataStrip(rows: Array<[string, string]>): void {
+    const cols = rows.length
+    const gap = LAYOUT.cardGap / 2
+    const colW = (this.contentWidth - gap * (cols - 1)) / cols
+    let maxH = 0
+    const measured = rows.map(([label, value]) => {
+      const innerW = colW - LAYOUT.cardPadding * 2
+      const h =
+        LAYOUT.cardPadding * 2 +
+        lineHeightMm(FONT.note) +
+        this.textBlockHeight(value, innerW, FONT.body)
+      maxH = Math.max(maxH, h)
+      return { label, value, innerW }
+    })
+
+    this.ensureSpace(maxH + LAYOUT.gapBlocks)
+    const top = this.y
+    measured.forEach(({ label, value, innerW }, index) => {
+      const x = LAYOUT.marginLeft + index * (colW + gap)
+      this.drawCardShell(x, top, colW, maxH)
+      const textX = x + LAYOUT.cardPadding
+      this.setColor('text', COLORS.muted)
+      this.setFont('bold', FONT.note)
+      this.doc.text(pdfText(label).toUpperCase(), textX, top + LAYOUT.cardPadding + 2)
+      this.setColor('text', COLORS.ink)
+      this.setFont('normal', FONT.body)
+      const lines = this.splitText(value, innerW)
+      this.drawLines(
+        lines,
+        textX,
+        top + LAYOUT.cardPadding + lineHeightMm(FONT.note) + 3,
+        FONT.body,
+      )
+    })
+    this.y = top + maxH + LAYOUT.gapBlocks
+  }
+
+  private measureDecisionAction(
+    action: RecommendedAction,
+    innerW: number,
+  ): number {
+    const fields: Array<[string, string]> = [
+      ['Prioridad', PRIORITY_LABEL[action.priority]],
+      ['Tiempo', action.recommendedTime],
+      ['Impacto esperado', action.reason],
+      ['Esfuerzo', EFFORT_LABEL[action.priority]],
+      ['Accion', action.action],
+    ]
+    let h = 4
+    for (const [, value] of fields) {
+      h += lineHeightMm(FONT.note) + 0.8
+      h += this.textBlockHeight(value, innerW, FONT.body)
+      h += 2
+    }
+    return h
+  }
+
+  private renderDecisionAction(
+    action: RecommendedAction,
+    x: number,
+    innerY: number,
+    innerW: number,
+  ): number {
+    const fields: Array<[string, string]> = [
+      ['Prioridad', PRIORITY_LABEL[action.priority]],
+      ['Tiempo', action.recommendedTime],
+      ['Impacto esperado', action.reason],
+      ['Esfuerzo', EFFORT_LABEL[action.priority]],
+      ['Accion', action.action],
+    ]
+    let cursor = innerY
+    for (const [label, value] of fields) {
+      this.setColor('text', COLORS.muted)
+      this.setFont('bold', FONT.note)
+      this.doc.text(pdfText(label).toUpperCase(), x, cursor)
+      cursor += lineHeightMm(FONT.note) + 0.8
+      this.setColor('text', COLORS.ink)
+      this.setFont(label === 'Accion' ? 'bold' : 'normal', FONT.body)
+      const lines = this.splitText(value, innerW)
+      this.drawLines(lines, x, cursor, FONT.body)
+      cursor += lines.length * lineHeightMm(FONT.body) + 2
+    }
+    return cursor - innerY
+  }
+
+  drawDecisionMatrix(
+    sections: Array<[string, RecommendedAction[]]>,
+  ): void {
+    const gap = LAYOUT.cardGap / 2
+    const colW = (this.contentWidth - gap) / 2
+    const activeSections = sections.filter(([, actions]) => actions.length > 0)
+    if (activeSections.length === 0) return
+
+    const rows: Array<typeof activeSections> = []
+    for (let i = 0; i < activeSections.length; i += 2) {
+      rows.push(activeSections.slice(i, i + 2))
+    }
+
+    for (const row of rows) {
+      const cellLayouts = row.map(([label, actions]) => {
+        const innerW = colW - LAYOUT.cardPadding * 2
+        const actionsH = actions.reduce(
+          (sum, action) => sum + this.measureDecisionAction(action, innerW) + 4,
+          0,
+        )
+        const totalH =
+          LAYOUT.cardPadding * 2 +
+          lineHeightMm(FONT.subtitle) +
+          actionsH +
+          2
+        return { label, actions, innerW, totalH }
+      })
+
+      const rowH = Math.max(...cellLayouts.map((c) => c.totalH))
+      this.ensureSpace(rowH + LAYOUT.gapBlocks)
+      const top = this.y
+
+      cellLayouts.forEach((cell, index) => {
+        const x = LAYOUT.marginLeft + index * (colW + gap)
+        this.drawCardShell(x, top, colW, rowH, { fill: COLORS.panel })
+        const textX = x + LAYOUT.cardPadding
+        this.setColor('text', COLORS.ink)
+        this.setFont('bold', FONT.subtitle)
+        this.doc.text(
+          pdfText(cell.label).toUpperCase(),
+          textX,
+          top + LAYOUT.cardPadding + 2,
+        )
+        let actionY =
+          top + LAYOUT.cardPadding + lineHeightMm(FONT.subtitle) + 5
+        for (const action of cell.actions) {
+          actionY += this.renderDecisionAction(action, textX, actionY, cell.innerW) + 4
+        }
+      })
+
+      this.y = top + rowH + LAYOUT.gapBlocks
+    }
+  }
+
+  drawRecommendationCard(action: RecommendedAction): void {
+    const innerW = this.contentWidth - LAYOUT.cardPadding * 2
+    const fields: Array<[string, string]> = [
+      ['Prioridad', PRIORITY_LABEL[action.priority]],
+      ['Responsable sugerido', action.suggestedArea],
+      ['Tiempo estimado', action.recommendedTime],
+      ['Beneficio esperado', action.reason],
+    ]
+    let contentH = this.textBlockHeight(action.action, innerW, FONT.body) + 4
+    for (const [label, value] of fields) {
+      contentH += lineHeightMm(FONT.note) + 0.8
+      contentH += this.textBlockHeight(value, innerW, FONT.body)
+      contentH += 2
+      void label
+    }
+    const cardH = LAYOUT.cardPadding * 2 + contentH
+    this.ensureSpace(cardH + LAYOUT.cardGap / 2)
+    this.drawCardShell(LAYOUT.marginLeft, this.y, this.contentWidth, cardH)
+    let innerY = this.y + LAYOUT.cardPadding + 2
+    const x = LAYOUT.marginLeft + LAYOUT.cardPadding
+    this.setColor('text', COLORS.ink)
+    this.setFont('bold', FONT.body)
+    const actionLines = this.splitText(action.action, innerW)
+    this.drawLines(actionLines, x, innerY, FONT.body)
+    innerY += actionLines.length * lineHeightMm(FONT.body) + 4
+    for (const [label, value] of fields) {
+      this.setColor('text', COLORS.muted)
+      this.setFont('bold', FONT.note)
+      this.doc.text(pdfText(label).toUpperCase(), x, innerY)
+      innerY += lineHeightMm(FONT.note) + 0.8
+      this.setColor('text', COLORS.ink)
+      this.setFont('normal', FONT.body)
+      const lines = this.splitText(value, innerW)
+      this.drawLines(lines, x, innerY, FONT.body)
+      innerY += lines.length * lineHeightMm(FONT.body) + 2
+    }
+    this.y += cardH + LAYOUT.cardGap / 2
+  }
+
+  drawAffectedAreasGrid(
+    areas: Array<{ name: string; affectationLevel: RiskLevel; reason: string }>,
+  ): void {
+    const gap = LAYOUT.cardGap / 2
+    const cardW = (this.contentWidth - gap) / 2
+
+    for (let i = 0; i < areas.length; i += 2) {
+      const pair = areas.slice(i, i + 2)
+      const layouts = pair.map((area) => {
+        const innerW = cardW - LAYOUT.cardPadding * 2
+        const reasonH = this.textBlockHeight(area.reason, innerW, FONT.body)
+        const h =
+          LAYOUT.cardPadding * 2 +
+          lineHeightMm(FONT.subtitle) +
+          lineHeightMm(FONT.body) +
+          reasonH +
+          2
+        return { area, innerW, h }
+      })
+      const rowH = Math.max(...layouts.map((l) => l.h))
+      this.ensureSpace(rowH + LAYOUT.cardGap / 2)
+      const top = this.y
+
+      layouts.forEach(({ area, innerW }, index) => {
+        const x = LAYOUT.marginLeft + index * (cardW + gap)
+        this.drawCardShell(x, top, cardW, rowH)
+        const textX = x + LAYOUT.cardPadding
+        let innerY = top + LAYOUT.cardPadding + 2
+        this.setColor('text', COLORS.ink)
+        this.setFont('bold', FONT.subtitle)
+        this.doc.text(pdfText(area.name), textX, innerY)
+        innerY += lineHeightMm(FONT.subtitle) + 1
+        this.setColor('text', RISK_COLOR[area.affectationLevel])
+        this.setFont('bold', FONT.body)
+        this.doc.text(
+          pdfText(
+            `Impacto ${RISK_LEVEL_LABEL[area.affectationLevel].toLowerCase()}`,
+          ),
+          textX,
+          innerY,
+        )
+        innerY += lineHeightMm(FONT.body) + 1.5
+        this.setColor('text', COLORS.muted)
+        this.setFont('normal', FONT.body)
+        const lines = this.splitText(area.reason, innerW)
+        this.drawLines(lines, textX, innerY, FONT.body)
+      })
+
+      this.y = top + rowH + LAYOUT.cardGap / 2
+    }
+    this.y += LAYOUT.gapBlocks / 3
+  }
+
+  drawTimelineEvent(
+    dateLabel: string,
+    timeLabel: string,
+    title: string,
+    description: string,
+    options?: { isLast?: boolean },
+  ): number {
+    const descW = this.contentWidth - 28
+    const titleLines = this.splitText(title, descW)
+    const descLines = this.splitText(description, descW)
+    const hasDateRow = Boolean(dateLabel || timeLabel)
+    const rowH =
+      (hasDateRow ? lineHeightMm(FONT.note) + 2 : 0) +
+      titleLines.length * lineHeightMm(FONT.subtitle) +
+      descLines.length * lineHeightMm(FONT.body) +
+      8
+
+    this.ensureSpace(rowH + 2)
+    const top = this.y
+    const dotX = LAYOUT.marginLeft + 2
+    const contentX = LAYOUT.marginLeft + 10
+
+    this.setColor('fill', COLORS.green)
+    this.doc.circle(dotX, top + 3, 1.2, 'F')
+    if (!options?.isLast) {
+      this.setColor('draw', COLORS.line)
+      this.doc.setLineWidth(0.3)
+      this.doc.line(dotX, top + 5, dotX, top + rowH - 1)
+    }
+
+    let innerY = top + 3
+    if (dateLabel || timeLabel) {
+      this.setColor('text', COLORS.muted)
+      this.setFont('bold', FONT.note)
+      if (dateLabel) this.doc.text(pdfText(dateLabel), contentX, innerY)
+      if (timeLabel) this.doc.text(pdfText(timeLabel), contentX + 36, innerY)
+      innerY += lineHeightMm(FONT.note) + 2
+    }
+
+    this.setColor('text', COLORS.ink)
+    this.setFont('bold', FONT.subtitle)
+    this.drawLines(titleLines, contentX, innerY, FONT.subtitle)
+    innerY += titleLines.length * lineHeightMm(FONT.subtitle) + 1
+    this.setColor('text', COLORS.muted)
+    this.setFont('normal', FONT.body)
+    this.drawLines(descLines, contentX, innerY, FONT.body)
+
+    this.y = top + rowH
+    return rowH
+  }
+
+  drawRiskBreakdownGrid(
+    components: Array<{ name: string; score: number; explanation: string }>,
+  ): void {
+    const gap = LAYOUT.cardGap / 2
+    const colW = (this.contentWidth - gap) / 2
+
+    for (let i = 0; i < components.length; i += 2) {
+      const pair = components.slice(i, i + 2)
+      const layouts = pair.map((component) => {
+        const innerW = colW - LAYOUT.cardPadding * 2
+        const title = `${component.name} (${component.score})`
+        const h =
+          LAYOUT.cardPadding * 2 +
+          lineHeightMm(FONT.subtitle) +
+          this.textBlockHeight(component.explanation, innerW, FONT.body) +
+          2
+        return { component, innerW, title, h }
+      })
+      const rowH = Math.max(...layouts.map((l) => l.h), 18)
+      this.ensureSpace(rowH + LAYOUT.cardGap / 2)
+      const top = this.y
+      layouts.forEach(({ component, innerW, title, h }, index) => {
+        const x = LAYOUT.marginLeft + index * (colW + gap)
+        this.drawCardShell(x, top, colW, rowH)
+        const textX = x + LAYOUT.cardPadding
+        this.setColor('text', COLORS.ink)
+        this.setFont('bold', FONT.subtitle)
+        this.doc.text(pdfText(title), textX, top + LAYOUT.cardPadding + 2)
+        this.setColor('text', COLORS.muted)
+        this.setFont('normal', FONT.body)
+        const lines = this.splitText(component.explanation, innerW)
+        this.drawLines(
+          lines,
+          textX,
+          top + LAYOUT.cardPadding + lineHeightMm(FONT.subtitle) + 3,
+          FONT.body,
+        )
+        void h
+      })
+      this.y = top + rowH + LAYOUT.cardGap / 2
+    }
+  }
+
+  drawHypothesisCard(
+    probability: number,
+    hypothesis: string,
+    justification: string,
+  ): void {
+    const innerW = this.contentWidth - LAYOUT.cardPadding * 2 - 14
+    const text = `${hypothesis}: ${justification}`
+    const lines = this.splitText(text, innerW)
+    const cardH =
+      LAYOUT.cardPadding * 2 + lineHeightMm(FONT.body) + lines.length * lineHeightMm(FONT.body)
+    this.ensureSpace(cardH + LAYOUT.cardGap / 2)
+    this.drawCardShell(LAYOUT.marginLeft, this.y, this.contentWidth, cardH)
+    this.setColor('fill', COLORS.green)
+    this.doc.roundedRect(
+      LAYOUT.marginLeft + LAYOUT.cardPadding,
+      this.y + LAYOUT.cardPadding,
+      12,
+      5,
+      1,
+      1,
+      'F',
+    )
+    this.setColor('text', COLORS.white)
+    this.setFont('bold', FONT.note)
+    this.doc.text(
+      `${probability}%`,
+      LAYOUT.marginLeft + LAYOUT.cardPadding + 6,
+      this.y + LAYOUT.cardPadding + 3.5,
+      { align: 'center' },
+    )
+    this.setColor('text', COLORS.ink)
+    this.setFont('normal', FONT.body)
+    this.drawLines(
+      lines,
+      LAYOUT.marginLeft + LAYOUT.cardPadding + 14,
+      this.y + LAYOUT.cardPadding + 3.5,
+      FONT.body,
+    )
+    this.y += cardH + LAYOUT.cardGap / 2
+  }
+
+  drawExecutiveDecisionCard(decision: {
+    decision: string
+    urgencyLevel: ExecutiveUrgency
+    recommendedActionTime: string
+    initialResponsible: string
+  }): void {
+    const innerW = this.contentWidth - LAYOUT.cardPadding * 2
+    const decisionLines = this.splitText(decision.decision, innerW)
+    const meta = `Urgencia: ${URGENCY_LABEL[decision.urgencyLevel]}  |  Tiempo: ${decision.recommendedActionTime}  |  Responsable: ${decision.initialResponsible}`
+    const metaLines = this.splitText(meta, innerW)
+    const cardH =
+      LAYOUT.cardPadding * 2 +
+      decisionLines.length * lineHeightMm(FONT.subtitle) +
+      metaLines.length * lineHeightMm(FONT.body) +
+      4
+    this.ensureSpace(cardH + LAYOUT.gapBlocks / 2)
+    this.drawCardShell(LAYOUT.marginLeft, this.y, this.contentWidth, cardH, {
+      fill: COLORS.panel,
+      border: COLORS.green,
+    })
+    const x = LAYOUT.marginLeft + LAYOUT.cardPadding
+    this.setColor('text', COLORS.ink)
+    this.setFont('bold', FONT.subtitle)
+    this.drawLines(
+      decisionLines,
+      x,
+      this.y + LAYOUT.cardPadding + 3,
+      FONT.subtitle,
+    )
+    this.setColor('text', COLORS.muted)
+    this.setFont('normal', FONT.body)
+    this.drawLines(
+      metaLines,
+      x,
+      this.y +
+        LAYOUT.cardPadding +
+        3 +
+        decisionLines.length * lineHeightMm(FONT.subtitle) +
+        2,
+      FONT.body,
+    )
+    this.y += cardH + LAYOUT.gapBlocks / 2
+  }
+
+  drawIndicatorRow(indicator: {
+    name: string
+    explanation: string
+    unit: string
+    suggestedValue: number
+    trend: IndicatorTrend
+  }): void {
+    const innerW = this.contentWidth - LAYOUT.cardPadding * 2
+    const explanationLines = this.splitText(indicator.explanation, innerW)
+    const cardH =
+      LAYOUT.cardPadding * 2 +
+      lineHeightMm(FONT.subtitle) +
+      explanationLines.length * lineHeightMm(FONT.body) +
+      2
+    this.ensureSpace(cardH + LAYOUT.cardGap / 2)
+    this.drawCardShell(LAYOUT.marginLeft, this.y, this.contentWidth, cardH)
+    const x = LAYOUT.marginLeft + LAYOUT.cardPadding
+    this.setColor('text', COLORS.ink)
+    this.setFont('bold', FONT.subtitle)
+    this.doc.text(pdfText(indicator.name), x, this.y + LAYOUT.cardPadding + 2)
+    this.setColor('text', COLORS.green)
+    this.setFont('bold', FONT.body)
+    this.doc.text(
+      pdfText(
+        `${indicator.suggestedValue.toLocaleString('es-CO')} ${indicator.unit}  ·  ${TREND_LABEL[indicator.trend]}`,
+      ),
+      this.pageWidth - LAYOUT.marginRight - LAYOUT.cardPadding,
+      this.y + LAYOUT.cardPadding + 2,
+      { align: 'right' },
+    )
+    this.setColor('text', COLORS.muted)
+    this.setFont('normal', FONT.body)
+    this.drawLines(
+      explanationLines,
+      x,
+      this.y + LAYOUT.cardPadding + lineHeightMm(FONT.subtitle) + 3,
+      FONT.body,
+    )
+    this.y += cardH + LAYOUT.cardGap / 2
+  }
+
+  measureTimelineEvents(
+    events: Array<{
+      dateLabel: string
+      timeLabel: string
+      title: string
+      description: string
+    }>,
+    firstEventOnly = true,
+  ): number {
+    if (events.length === 0) {
+      return this.measureParagraph('No existen movimientos registrados.')
+    }
+    const descW = this.contentWidth - 28
+    const measureOne = (event: (typeof events)[number]): number => {
+      const titleLines = this.splitText(event.title, descW)
+      const descLines = this.splitText(event.description, descW)
+      const hasDateRow = Boolean(event.dateLabel || event.timeLabel)
+      return (
+        (hasDateRow ? lineHeightMm(FONT.note) + 2 : 0) +
+        titleLines.length * lineHeightMm(FONT.subtitle) +
+        descLines.length * lineHeightMm(FONT.body) +
+        10
+      )
+    }
+    if (firstEventOnly) return measureOne(events[0]!) + LAYOUT.gapBlocks / 3
+    let total = 0
+    for (const event of events) total += measureOne(event)
+    return total + LAYOUT.gapBlocks / 3
+  }
+
+  drawPropagationChain(
+    chain: Array<{ stage: string; description: string }>,
+  ): void {
+    chain.forEach((step, index) => {
+      const isLast = index === chain.length - 1
+      this.drawTimelineEvent('', '', step.stage, step.description, { isLast })
+    })
+    this.y += LAYOUT.gapBlocks / 3
+  }
+}
+
+function parseTimelineDateTime(iso: string): { date: string; time: string } {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) {
+    return { date: pdfText(iso), time: '' }
+  }
+  const dateLabel = pdfText(
+    new Intl.DateTimeFormat('es-CO', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).format(date),
+  )
+  const timeLabel = pdfText(
+    new Intl.DateTimeFormat('es-CO', {
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date),
+  )
+  return { date: dateLabel, time: timeLabel }
 }
 
 export async function exportSituationReportPdf(
   event: OperationalEvent,
 ): Promise<void> {
-  const doc = new jsPDF({ unit: 'mm', format: 'a4', compress: true })
-  const pageWidth = doc.internal.pageSize.getWidth()
-  const pageHeight = doc.internal.pageSize.getHeight()
-  const margin = 16
-  const contentWidth = pageWidth - margin * 2
   const interpretation = event.interpretation
   const report = interpretation?.executiveReport ?? null
-  const risk = report?.riskAssessment.riskLevel ?? interpretation?.riskLevel ?? 'moderate'
-  const accent = RISK_COLOR[risk]
+  const risk =
+    report?.riskAssessment.riskLevel ?? interpretation?.riskLevel ?? 'moderate'
   const reference = eventRef(event.id)
   const reportTitle = report?.incidentSummary.executiveTitle ?? event.title
-  let y = 0
+  const logo = await loadLogoAsset()
+
+  const doc = new jsPDF({ unit: 'mm', format: 'a4', compress: true })
+  const layout = new PdfReportLayout(doc, logo)
 
   doc.setProperties({
     title: pdfText(`Reporte ejecutivo ${reference} - ${reportTitle}`),
     subject: 'Analisis ejecutivo de inteligencia operacional',
-    author: 'Visión general Cunmark',
-    creator: 'Plataforma Cunmark',
+    author: 'CUNMARK - Sistema de Inteligencia Operacional',
+    creator: 'Plataforma CUNMARK',
   })
 
-  const setText = (color: RGB) => doc.setTextColor(...color)
-  const setFill = (color: RGB) => doc.setFillColor(...color)
-  const setDraw = (color: RGB) => doc.setDrawColor(...color)
+  const priorityLabel = report?.executivePriority?.level
+    ? (PRIORITY_LEVEL_LABEL[report.executivePriority.level] ??
+      report.executivePriority.level)
+    : RISK_LEVEL_LABEL[risk].toUpperCase()
 
-  function continuationHeader(): void {
-    setFill(COLORS.navy)
-    doc.rect(0, 0, pageWidth, 18, 'F')
-    setText(COLORS.white)
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(10)
-    doc.text('CUNMARK', margin, 8)
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(7)
-    doc.text(pdfText(`REPORTE EJECUTIVO  /  ${reference}`), margin, 13)
-    setFill(accent)
-    doc.rect(0, 18, pageWidth, 1.2, 'F')
-    y = 27
-  }
+  layout.drawCoverHeader({
+    title: reportTitle,
+    status: EVENT_STATUS_LABEL[event.status],
+    priority: priorityLabel,
+    date: formatShortDate(event.reportedAt ?? event.createdAt),
+    reference,
+  })
 
-  function addPageIfNeeded(requiredHeight: number): void {
-    if (y + requiredHeight <= pageHeight - 18) return
-    doc.addPage()
-    continuationHeader()
-  }
+  layout.drawMetadataStrip([
+    ['Reportado', formatDateTime(event.reportedAt)],
+    ['Area de origen', event.sourceAreaName],
+    ['Responsable', event.reportedBy.name],
+  ])
 
-  function sectionTitle(number: number | null, title: string): void {
-    addPageIfNeeded(14)
-    setFill(accent)
-    if (number !== null) {
-      doc.roundedRect(margin, y, 8, 6, 1.2, 1.2, 'F')
-      setText(COLORS.white)
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(7)
-      doc.text(String(number).padStart(2, '0'), margin + 4, y + 4.2, {
-        align: 'center',
-      })
-      setText(COLORS.ink)
-      doc.setFontSize(9)
-      doc.text(pdfText(title).toUpperCase(), margin + 11, y + 4.6)
-    } else {
-      doc.roundedRect(margin, y, 2.2, 6, 1, 1, 'F')
-      setText(COLORS.ink)
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(9)
-      doc.text(pdfText(title).toUpperCase(), margin + 5, y + 4.6)
-    }
-    y += 10
-  }
+  const certaintyPct =
+    report?.riskAssessment.certainty.percentage ??
+    (interpretation?.confidence !== undefined
+      ? Math.round(interpretation.confidence * 100)
+      : undefined)
 
-  function paragraph(text: string, options?: { muted?: boolean }): void {
-    const lines = doc.splitTextToSize(
-      pdfText(text || 'Sin informacion.'),
-      contentWidth - 10,
-    )
-    const height = lines.length * 4.6 + 8
-    addPageIfNeeded(height)
-    setFill(COLORS.panel)
-    setDraw(COLORS.line)
-    doc.roundedRect(margin, y, contentWidth, height, 2.5, 2.5, 'FD')
-    setText(options?.muted ? COLORS.muted : COLORS.ink)
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(8.5)
-    doc.text(lines, margin + 5, y + 6)
-    y += height + 5
-  }
-
-  function bulletList(items: string[], options?: { muted?: boolean }): void {
-    if (items.length === 0) {
-      paragraph('Sin informacion declarada.', { muted: true })
-      return
-    }
-    for (const item of items) {
-      const lines = doc.splitTextToSize(pdfText(item), contentWidth - 12)
-      const height = lines.length * 4.4 + 3
-      addPageIfNeeded(height)
-      setFill(accent)
-      doc.circle(margin + 2.2, y + 1.6, 0.9, 'F')
-      setText(options?.muted ? COLORS.muted : COLORS.ink)
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(8.2)
-      doc.text(lines, margin + 6, y + 2.8)
-      y += height
-    }
-    y += 4
-  }
-
-  function subLabel(text: string): void {
-    addPageIfNeeded(8)
-    setText(COLORS.muted)
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(6.8)
-    doc.text(pdfText(text).toUpperCase(), margin, y + 3)
-    y += 6
-  }
-
-  function labelValue(label: string, value: string, x: number, top: number): void {
-    setText(COLORS.muted)
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(6.5)
-    doc.text(pdfText(label).toUpperCase(), x, top)
-    setText(COLORS.ink)
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(8)
-    const lines = doc.splitTextToSize(pdfText(value), 52)
-    doc.text(lines, x, top + 4.2)
-  }
-
-  // Encabezado institucional.
-  setFill(COLORS.navy)
-  doc.rect(0, 0, pageWidth, 47, 'F')
-  setFill(COLORS.navySoft)
-  doc.circle(pageWidth - 12, 2, 34, 'F')
-  setFill(accent)
-  doc.rect(0, 47, pageWidth, 1.5, 'F')
-
-  setDraw(accent)
-  doc.setLineWidth(0.7)
-  doc.circle(margin + 6, 14, 6, 'S')
-  setText(COLORS.white)
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(8)
-  doc.text('O', margin + 4.4, 16)
-  doc.setFontSize(14)
-  doc.text('CUNMARK', margin + 16, 12)
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(6.5)
-  doc.text('VISIÓN GENERAL', margin + 16, 17)
-
-  setFill(accent)
-  doc.roundedRect(pageWidth - 58, 9, 42, 9, 2, 2, 'F')
-  setText(COLORS.white)
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(7)
-  doc.text(
-    pdfText(
-      `${EVENT_STATUS_LABEL[event.status]} · ${RISK_LEVEL_LABEL[risk]}`,
-    ).toUpperCase(),
-    pageWidth - 37,
-    14.7,
-    { align: 'center' },
-  )
-
-  setText(COLORS.white)
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(15)
-  const titleLines = doc.splitTextToSize(pdfText(reportTitle), 135)
-  doc.text(titleLines.slice(0, 2), margin, 29)
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(7)
-  doc.setTextColor(188, 202, 222)
-  doc.text(
-    pdfText(`${reference}  -  Analisis ejecutivo de inteligencia operacional`),
-    margin,
-    42,
-  )
-
-  y = 56
-
-  // Identificación del reporte.
-  setFill(COLORS.white)
-  setDraw(COLORS.line)
-  doc.roundedRect(margin, y, contentWidth, 23, 3, 3, 'FD')
-  labelValue('Reportado', formatDateTime(event.reportedAt), margin + 6, y + 7)
-  labelValue('Area de origen', event.sourceAreaName, margin + 66, y + 7)
-  labelValue('Responsable', event.reportedBy.name, margin + 126, y + 7)
-  y += 30
-
-  // Resumen de riesgo, severidad, certeza y urgencia.
-  const gap = 4
-  const cardWidth = (contentWidth - gap * 3) / 4
-  const summaryCards = [
-    [
-      'Riesgo',
-      `${report?.riskAssessment.riskScore ?? interpretation?.riskScore ?? '-'} / 100`,
-    ],
-    [
-      'Severidad',
-      report
+  layout.drawSummaryIndicators([
+    {
+      label: 'Riesgo',
+      value: `${report?.riskAssessment.riskScore ?? interpretation?.riskScore ?? '-'} / 100`,
+      percentage: report?.riskAssessment.riskScore ?? interpretation?.riskScore,
+    },
+    {
+      label: 'Severidad',
+      value: report
         ? `${report.riskAssessment.severity} / 5`
         : interpretation
           ? `${interpretation.impactSeverity} / 5`
           : '-',
-    ],
-    [
-      'Nivel de certeza',
-      report
+      percentage: report
+        ? (report.riskAssessment.severity / 5) * 100
+        : interpretation
+          ? (interpretation.impactSeverity / 5) * 100
+          : undefined,
+    },
+    {
+      label: 'Confianza IA',
+      value: report
         ? `${report.riskAssessment.certainty.percentage}% (${CERTAINTY_LABEL[report.riskAssessment.certainty.level]})`
-        : interpretation?.confidence !== undefined
-          ? `${Math.round(interpretation.confidence * 100)}%`
+        : certaintyPct !== undefined
+          ? `${certaintyPct}%`
           : '-',
-    ],
-    [
-      'Urgencia',
-      report ? URGENCY_LABEL[report.executiveConclusion.urgency] : '-',
-    ],
-  ]
-
-  summaryCards.forEach(([label, value], index) => {
-    const x = margin + index * (cardWidth + gap)
-    setFill(index === 0 ? accent : COLORS.panel)
-    setDraw(index === 0 ? accent : COLORS.line)
-    doc.roundedRect(x, y, cardWidth, 22, 2.5, 2.5, 'FD')
-    setText(index === 0 ? COLORS.white : COLORS.muted)
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(6.5)
-    doc.text(pdfText(label).toUpperCase(), x + 4, y + 6)
-    setText(index === 0 ? COLORS.white : COLORS.ink)
-    doc.setFontSize(11)
-    doc.text(pdfText(value), x + 4, y + 15)
-  })
-  y += 30
+      percentage: certaintyPct,
+    },
+    {
+      label: 'Urgencia',
+      value: report ? URGENCY_LABEL[report.executiveConclusion.urgency] : '-',
+    },
+  ])
 
   if (report) {
-    // 1. ¿Qué ocurrió?
-    sectionTitle(1, 'Que ocurrio')
-    paragraph(report.incidentSummary.executiveSummary)
-    subLabel('Causas detectadas (evidencia del relato)')
-    bulletList(report.rootCause.detectedCauses)
-    subLabel('Hipotesis de la IA')
-    bulletList(report.rootCause.hypotheses, { muted: true })
-    subLabel('Dependencias involucradas')
-    bulletList(report.rootCause.dependencies)
+    if (report.executiveNarrative) {
+      layout.section(null, 'Lectura ejecutiva CUNMARK')
+      layout.paragraph(report.executiveNarrative)
+    }
 
-    // 2. ¿Qué tan grave es?
-    sectionTitle(2, 'Que tan grave es')
-    paragraph(
+    if (report.executiveDecision) {
+      layout.section(1, 'Decision ejecutiva')
+      layout.drawExecutiveDecisionCard(report.executiveDecision)
+    }
+
+    if (report.executivePriority || report.criticalWindow) {
+      layout.section(null, 'Prioridad y ventana critica')
+      const priorityCards: Array<{ label: string; value: string }> = []
+      if (report.executivePriority) {
+        priorityCards.push({
+          label: 'Prioridad',
+          value:
+            PRIORITY_LEVEL_LABEL[report.executivePriority.level] ??
+            report.executivePriority.level,
+        })
+      }
+      if (report.criticalWindow) {
+        priorityCards.push({
+          label: 'Ventana critica',
+          value: report.criticalWindow.timeBeforeEscalation,
+        })
+      }
+      if (priorityCards.length > 0) {
+        layout.drawSummaryIndicators(priorityCards)
+      }
+      if (report.executivePriority?.justification) {
+        layout.paragraph(report.executivePriority.justification, { muted: true })
+      }
+      if (report.criticalWindow?.explanation) {
+        layout.paragraph(report.criticalWindow.explanation)
+      }
+    }
+
+    if (report.riskBreakdown) {
+      layout.section(null, 'Desglose de riesgo')
+      layout.drawRiskBreakdownGrid(report.riskBreakdown.components)
+    }
+
+    layout.section(1, 'Que ocurrio')
+    layout.paragraph(report.incidentSummary.executiveSummary)
+    layout.subLabel('Causas detectadas (evidencia del relato)')
+    layout.bulletList(report.rootCause.detectedCauses)
+    layout.subLabel('Hipotesis de la IA')
+    if (report.probableCauses?.length) {
+      for (const cause of report.probableCauses) {
+        layout.drawHypothesisCard(
+          cause.probability,
+          cause.hypothesis,
+          cause.justification,
+        )
+      }
+    } else {
+      layout.bulletList(report.rootCause.hypotheses, { muted: true })
+    }
+
+    if (report.operationalPropagation?.chain.length) {
+      layout.subLabel('Propagacion operacional')
+      layout.drawPropagationChain(report.operationalPropagation.chain)
+    } else {
+      layout.subLabel('Dependencias involucradas')
+      layout.bulletList(report.rootCause.dependencies)
+    }
+
+    layout.section(2, 'Que tan grave es')
+    layout.paragraph(
       `Riesgo ${RISK_LEVEL_LABEL[report.riskAssessment.riskLevel]} (${report.riskAssessment.riskScore}/100) con severidad ${report.riskAssessment.severity}/5. ` +
         `Categoria: ${interpretation?.categoryName ?? 'Sin clasificar'}.`,
     )
-    subLabel(
+    layout.subLabel(
       `Nivel de certeza: ${CERTAINTY_LABEL[report.riskAssessment.certainty.level]} (${report.riskAssessment.certainty.percentage}%)`,
     )
-    paragraph(report.riskAssessment.certainty.explanation, { muted: true })
-
-    // 3. ¿Por qué es grave?
-    sectionTitle(3, 'Por que es grave')
-    bulletList(report.decisionFactors)
-
-    // 4. ¿Quién está siendo afectado?
-    sectionTitle(4, 'Quien esta siendo afectado')
-    addPageIfNeeded(29)
-    const impactCards = [
-      ['INTERNO', `${report.impactAnalysis.internalImpactPercentage}%`],
-      ['EXTERNO', `${report.impactAnalysis.externalImpactPercentage}%`],
-      ['ESTUDIANTES', `${report.impactAnalysis.studentImpactPercentage}%`],
-    ]
-    const impactWidth = (contentWidth - gap * 2) / 3
-    impactCards.forEach(([label, value], index) => {
-      const x = margin + index * (impactWidth + gap)
-      setFill(COLORS.panel)
-      setDraw(
-        index === 0
-          ? [178, 221, 238]
-          : index === 1
-            ? [213, 198, 238]
-            : [238, 216, 175],
+    layout.drawProgressIndicator(
+      'Confianza del analisis',
+      report.riskAssessment.certainty.percentage,
+      { accent: COLORS.green },
+    )
+    layout.paragraph(report.riskAssessment.certainty.explanation, { muted: true })
+    if (report.confidenceExplanation) {
+      layout.bulletList(
+        [
+          ...report.confidenceExplanation.supportingFactors.map((f) => `+ ${f}`),
+          ...report.confidenceExplanation.reducingFactors.map((f) => `- ${f}`),
+        ],
+        { muted: true },
       )
-      doc.roundedRect(x, y, impactWidth, 22, 2.5, 2.5, 'FD')
-      setText(COLORS.ink)
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(13)
-      doc.text(pdfText(value), x + 5, y + 9)
-      setText(COLORS.muted)
-      doc.setFontSize(6.5)
-      doc.text(pdfText(label), x + 5, y + 16)
-    })
-    y += 29
+    }
 
-    paragraph(
+    if (report.decisionMatrix) {
+      const matrixSections = [
+        ['Resolver ahora', report.decisionMatrix.resolveNow],
+        ['Resolver hoy', report.decisionMatrix.resolveToday],
+        ['Monitorear', report.decisionMatrix.monitor],
+        ['Escalar', report.decisionMatrix.escalate],
+      ] as const
+      const matrixHeight = layout.measureDecisionMatrixHeight(
+        matrixSections.map(([label, actions]) => [label, actions]),
+      )
+      layout.section(null, 'Matriz de decisiones', matrixHeight)
+      layout.drawDecisionMatrix(
+        matrixSections.map(([label, actions]) => [label, actions]),
+      )
+    }
+
+    layout.section(3, 'Por que es grave')
+    layout.bulletList(report.decisionFactors)
+
+    layout.section(4, 'Quien esta siendo afectado')
+    layout.drawSummaryIndicators([
+      {
+        label: 'Impacto interno',
+        value: `${report.impactAnalysis.internalImpactPercentage}%`,
+        percentage: report.impactAnalysis.internalImpactPercentage,
+      },
+      {
+        label: 'Impacto externo',
+        value: `${report.impactAnalysis.externalImpactPercentage}%`,
+        percentage: report.impactAnalysis.externalImpactPercentage,
+      },
+      {
+        label: 'Estudiantes',
+        value: `${report.impactAnalysis.studentImpactPercentage}%`,
+        percentage: report.impactAnalysis.studentImpactPercentage,
+      },
+    ])
+
+    layout.paragraph(
       [
         `Estudiantes afectados (estimado): ${
           report.impactAnalysis.estimatedAffectedStudents !== null
@@ -413,155 +1525,59 @@ export async function exportSituationReportPdf(
       ].join('\n'),
     )
 
-    subLabel('Areas afectadas y motivo')
-    for (const area of report.affectedAreas) {
-      const reasonLines = doc.splitTextToSize(
-        pdfText(area.reason),
-        contentWidth - 14,
-      )
-      const rowHeight = reasonLines.length * 4.2 + 10
-      addPageIfNeeded(rowHeight)
-      setFill(RISK_COLOR[area.affectationLevel])
-      doc.circle(margin + 2.2, y + 2, 1.3, 'F')
-      setText(COLORS.ink)
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(8.2)
-      doc.text(
-        pdfText(
-          `${area.name}  -  Afectacion ${RISK_LEVEL_LABEL[area.affectationLevel].toLowerCase()}`,
-        ),
-        margin + 6,
-        y + 3,
-      )
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(7.6)
-      setText(COLORS.muted)
-      doc.text(reasonLines, margin + 6, y + 8)
-      y += rowHeight
-    }
-    y += 4
+    layout.subLabel('Areas afectadas y motivo')
+    layout.drawAffectedAreasGrid(report.affectedAreas)
 
-    // 5. ¿Qué recomienda la IA?
-    sectionTitle(5, 'Que recomienda la IA')
+    layout.section(5, 'Que recomienda la IA')
     for (const action of report.recommendedActions) {
-      const actionLines = doc.splitTextToSize(
-        pdfText(action.action),
-        contentWidth - 14,
-      )
-      const reasonLines = doc.splitTextToSize(
-        pdfText(`Motivo: ${action.reason}`),
-        contentWidth - 14,
-      )
-      const rowHeight = actionLines.length * 4.4 + reasonLines.length * 4 + 15
-      addPageIfNeeded(rowHeight)
-      setFill(COLORS.panel)
-      setDraw(COLORS.line)
-      doc.roundedRect(margin, y, contentWidth, rowHeight - 3, 2.5, 2.5, 'FD')
-      setFill(accent)
-      doc.roundedRect(margin + 4, y + 3.5, 24, 5, 1.5, 1.5, 'F')
-      setText(COLORS.white)
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(6)
-      doc.text(PRIORITY_LABEL[action.priority], margin + 16, y + 7, {
-        align: 'center',
+      layout.drawRecommendationCard(action)
+    }
+
+    layout.section(6, 'Que pasa si no actuamos')
+    layout.bulletList(report.operationalConsequences)
+
+    const indicatorsHeight = layout.measureIndicatorRows(
+      report.operationalIndicators,
+    )
+    layout.section(7, 'Indicadores afectados', indicatorsHeight)
+    if (report.operationalIndicators.length === 0) {
+      layout.paragraph('No hay indicadores afectados identificados.', {
+        muted: true,
       })
-      setText(COLORS.muted)
-      doc.setFontSize(6.5)
-      doc.text(
-        pdfText(`${action.suggestedArea}  ·  ${action.recommendedTime}`),
-        margin + contentWidth - 5,
-        y + 7,
-        { align: 'right' },
-      )
-      setText(COLORS.ink)
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(8.4)
-      doc.text(actionLines, margin + 5, y + 14)
-      setText(COLORS.muted)
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(7.4)
-      doc.text(reasonLines, margin + 5, y + 14 + actionLines.length * 4.4)
-      y += rowHeight
+    } else {
+      for (const indicator of report.operationalIndicators) {
+        layout.drawIndicatorRow(indicator)
+      }
     }
-    y += 3
 
-    // 6. ¿Qué pasa si no actuamos?
-    sectionTitle(6, 'Que pasa si no actuamos')
-    bulletList(report.operationalConsequences)
-
-    // 7. Indicadores afectados
-    sectionTitle(7, 'Indicadores afectados')
-    for (const indicator of report.operationalIndicators) {
-      const explanationLines = doc.splitTextToSize(
-        pdfText(indicator.explanation),
-        contentWidth - 14,
-      )
-      const rowHeight = explanationLines.length * 4 + 12
-      addPageIfNeeded(rowHeight)
-      setDraw(COLORS.line)
-      doc.line(margin, y + rowHeight - 3, margin + contentWidth, y + rowHeight - 3)
-      setText(COLORS.ink)
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(8.2)
-      doc.text(pdfText(indicator.name), margin + 2, y + 4)
-      doc.text(
-        pdfText(
-          `${indicator.suggestedValue.toLocaleString('es-CO')} ${indicator.unit}  ·  ${TREND_LABEL[indicator.trend]}`,
-        ),
-        margin + contentWidth - 2,
-        y + 4,
-        { align: 'right' },
-      )
-      setText(COLORS.muted)
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(7.4)
-      doc.text(explanationLines, margin + 2, y + 9)
-      y += rowHeight
-    }
-    y += 3
-
-    // 8. Áreas responsables
-    sectionTitle(8, 'Areas responsables')
+    layout.section(8, 'Areas responsables')
     const responsibles = new Map<string, string>()
     for (const action of report.recommendedActions) {
       if (!responsibles.has(action.suggestedArea)) {
         responsibles.set(action.suggestedArea, action.action)
       }
     }
-    bulletList(
+    layout.bulletList(
       [...responsibles.entries()].map(
         ([area, mandate]) => `${area}: ${mandate}`,
       ),
     )
 
-    // 9. Cronología sugerida
-    sectionTitle(9, 'Cronologia sugerida')
-    for (const milestone of report.timelineSuggestions) {
-      const checkpointLines = doc.splitTextToSize(
-        pdfText(milestone.checkpoint),
-        contentWidth - 44,
+    layout.section(9, 'Cronologia sugerida')
+    report.timelineSuggestions.forEach((milestone, index) => {
+      const isLast = index === report.timelineSuggestions.length - 1
+      layout.drawTimelineEvent(
+        milestone.horizon,
+        '',
+        'Hito de seguimiento',
+        milestone.checkpoint,
+        { isLast },
       )
-      const rowHeight = Math.max(11, checkpointLines.length * 4 + 6)
-      addPageIfNeeded(rowHeight)
-      setFill(accent)
-      doc.circle(margin + 2.5, y + 3, 1.6, 'F')
-      setDraw(COLORS.line)
-      doc.line(margin + 2.5, y + 5, margin + 2.5, y + rowHeight - 1)
-      setText(COLORS.ink)
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(8)
-      doc.text(pdfText(milestone.horizon), margin + 7, y + 4)
-      setText(COLORS.muted)
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(7.4)
-      doc.text(checkpointLines, margin + 40, y + 4)
-      y += rowHeight
-    }
-    y += 4
+    })
+    layout.advance(LAYOUT.gapBlocks / 3)
 
-    // 10. Conclusión ejecutiva
-    sectionTitle(10, 'Conclusion ejecutiva')
-    paragraph(
+    layout.section(10, 'Conclusion ejecutiva')
+    layout.paragraph(
       [
         `Gravedad: ${report.executiveConclusion.gravity}`,
         `Urgencia: ${URGENCY_LABEL[report.executiveConclusion.urgency]}`,
@@ -569,93 +1585,75 @@ export async function exportSituationReportPdf(
       ].join('\n'),
     )
     if (report.dataGaps.length > 0) {
-      subLabel('Vacios de informacion declarados por la IA')
-      bulletList(report.dataGaps, { muted: true })
+      layout.subLabel('Vacios de informacion declarados por la IA')
+      layout.bulletList(report.dataGaps, { muted: true })
     }
   } else {
-    // Compatibilidad: interpretaciones sin reporte ejecutivo (contrato previo).
-    sectionTitle(null, 'Resumen ejecutivo')
-    paragraph(interpretation?.executiveSummary ?? event.description)
+    layout.section(null, 'Resumen ejecutivo')
+    layout.paragraph(interpretation?.executiveSummary ?? event.description)
     if (interpretation) {
-      sectionTitle(null, 'Narrativa y lectura tecnica')
-      paragraph(interpretation.narrative)
+      layout.section(null, 'Narrativa y lectura tecnica')
+      layout.paragraph(interpretation.narrative)
     }
   }
 
-  sectionTitle(null, 'Descripcion reportada')
-  paragraph(event.description)
+  layout.section(null, 'Descripcion reportada')
+  layout.paragraph(event.description)
 
-  sectionTitle(null, 'Registro del evento')
   const timeline = [...event.timeline.entries].sort((a, b) =>
     a.at.localeCompare(b.at),
   )
-  if (timeline.length === 0) {
-    paragraph('No existen movimientos registrados.', { muted: true })
+  const timelineEvents =
+    timeline.length === 0
+      ? []
+      : timeline.map((entry) => {
+          const { date, time } = parseTimelineDateTime(entry.at)
+          return {
+            dateLabel: date,
+            timeLabel: time,
+            title: timelineTypeLabel(entry.type),
+            description: entry.description,
+          }
+        })
+  layout.section(
+    null,
+    'Registro del evento',
+    layout.measureTimelineEvents(timelineEvents),
+  )
+  if (timelineEvents.length === 0) {
+    layout.paragraph('No existen movimientos registrados.', { muted: true })
   } else {
-    for (const entry of timeline) {
-      const descriptionLines = doc.splitTextToSize(
-        pdfText(entry.description),
-        contentWidth - 44,
+    timelineEvents.forEach((entry, index) => {
+      layout.drawTimelineEvent(
+        entry.dateLabel,
+        entry.timeLabel,
+        entry.title,
+        entry.description,
+        { isLast: index === timelineEvents.length - 1 },
       )
-      const rowHeight = Math.max(14, descriptionLines.length * 4 + 8)
-      addPageIfNeeded(rowHeight)
-      setFill(accent)
-      doc.circle(margin + 2.5, y + 5, 1.6, 'F')
-      setDraw(COLORS.line)
-      doc.line(margin + 2.5, y + 7, margin + 2.5, y + rowHeight)
-      setText(COLORS.muted)
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(6.5)
-      doc.text(formatDateTime(entry.at), margin + 7, y + 4)
-      setText(COLORS.ink)
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(8)
-      doc.text(
-        pdfText(timelineTypeLabel(entry.type)).toUpperCase(),
-        margin + 43,
-        y + 4,
-      )
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(7.5)
-      doc.text(descriptionLines, margin + 43, y + 9)
-      y += rowHeight
-    }
-  }
-
-  sectionTitle(null, 'Informacion complementaria')
-  const complementary = [
-    `Observaciones: ${event.observations?.trim() || 'Ninguna'}`,
-    `Adjuntos: ${
-      event.attachmentNames?.length
-        ? event.attachmentNames.join(', ')
-        : 'Ninguno'
-    }`,
-    `Modelo de analisis: ${interpretation?.modelLabel ?? '-'}`,
-    `Ultima actualizacion: ${formatDateTime(event.lastUpdateAt ?? event.createdAt)}`,
-  ]
-  paragraph(complementary.join('\n'), { muted: true })
-
-  // Pie institucional y numeración en todas las páginas.
-  const pages = doc.getNumberOfPages()
-  for (let page = 1; page <= pages; page += 1) {
-    doc.setPage(page)
-    setDraw(COLORS.line)
-    doc.line(margin, pageHeight - 12, pageWidth - margin, pageHeight - 12)
-    setText(COLORS.muted)
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(6.5)
-    doc.text(
-      'Documento generado por Cunmark - Visión general',
-      margin,
-      pageHeight - 7,
-    )
-    doc.text(`Pagina ${page} de ${pages}`, pageWidth - margin, pageHeight - 7, {
-      align: 'right',
     })
+    layout.advance(LAYOUT.gapBlocks / 3)
   }
+
+  layout.section(null, 'Informacion complementaria')
+  layout.paragraph(
+    [
+      `Observaciones: ${event.observations?.trim() || 'Ninguna'}`,
+      `Adjuntos: ${
+        event.attachmentNames?.length
+          ? event.attachmentNames.join(', ')
+          : 'Ninguno'
+      }`,
+      `Modelo de analisis: ${interpretation?.modelLabel ?? '-'}`,
+      `Ultima actualizacion: ${formatDateTime(event.lastUpdateAt ?? event.createdAt)}`,
+    ].join('\n'),
+    { muted: true },
+  )
+
+  layout.drawFooters()
 
   downloadPdfBlob(
     doc,
-    `${safeFileName(reference)}-reporte-ejecutivo.pdf`,
+    buildReportFileName(reportTitle, event.reportedAt ?? event.createdAt),
   )
 }

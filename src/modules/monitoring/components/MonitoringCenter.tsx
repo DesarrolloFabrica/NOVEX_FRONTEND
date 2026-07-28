@@ -1,57 +1,47 @@
+import { useState } from 'react'
 import type { User } from '@/modules/auth/types/user.types'
-import type {
-  ExecutionAction,
-  ExecutionActionStatus,
-} from '@/modules/execution-actions/types/execution-action.types'
+import type { SituationManagementSummary } from '@/modules/api/types/situation-management.types'
 import type { EnvironmentStatus } from '@/modules/monitoring/types/monitoring.types'
+import { ConnectedSituationDetailModal } from '@/modules/operational-events/components/ConnectedSituationDetailModal'
 import { MonitoringHeader } from '@/modules/monitoring/components/MonitoringHeader'
 import { ScreenDeck } from '@/modules/monitoring/components/ScreenDeck'
-import { SelectedCommitmentPanel } from '@/modules/monitoring/components/SelectedCommitmentPanel'
-import { EvaluationConsole } from '@/modules/monitoring/components/EvaluationConsole'
-import { IntelligencePanel } from '@/modules/monitoring/components/IntelligencePanel'
-import { SituationDetailModal } from '@/modules/operational-events/components/SituationDetailModal'
-import { OPERATIONAL_EVENTS } from '@/modules/operational-events/data/operational-events.mock'
-import { useState } from 'react'
+import { SituationDossierPanel } from '@/modules/monitoring/components/SituationDossierPanel'
+import { SituationIntelligencePanel } from '@/modules/monitoring/components/SituationIntelligencePanel'
+import { SituationQueueConsole } from '@/modules/monitoring/components/SituationQueueConsole'
+import type { SituationDossier } from '@/modules/api/types/situation-management.types'
+import type { SituationListItem } from '@/modules/api/types/situation-management.types'
+import type { SituationResponse } from '@/modules/situations/types/situation.types'
+import { sortSituationsForQueue } from '@/modules/monitoring/utils/situation-management.presentation'
 
 interface MonitoringCenterProps {
   user: User | null
-  actions: ExecutionAction[]
-  selectedAction: ExecutionAction | null
-  selectedActionId: string | null
-  loading: boolean
-  error: string | null
+  situations: SituationListItem[]
+  summary: SituationManagementSummary
+  selectedSituationId: string | null
+  dossier: SituationDossier | null
+  listLoading: boolean
+  dossierLoading: boolean
+  listError: string | null
+  dossierError: string | null
   canUpdate: boolean
   isUpdating: boolean
   environment: EnvironmentStatus
-  onSelectAction: (actionId: string) => void
-  onUpdateStatus: (input: {
-    status: ExecutionActionStatus
-    note?: string
-    observation?: string
-  }) => Promise<void> | void
+  onSelectSituation: (situationId: string) => void
+  onUpdateSituationStatus: (status: SituationResponse['status']) => Promise<void>
+  onUpdateRecommendationStatus: (
+    recommendationId: string,
+    status: string,
+  ) => Promise<void>
   onLogout: () => void
 }
 
-function ExecutionSummary({ actions }: { actions: ExecutionAction[] }) {
-  const counts = {
-    pending: actions.filter((item) => item.executionStatus === 'pending').length,
-    inProgress: actions.filter(
-      (item) => item.executionStatus === 'in_progress',
-    ).length,
-    executed: actions.filter((item) => item.executionStatus === 'executed')
-      .length,
-    notExecutable: actions.filter(
-      (item) => item.executionStatus === 'not_executable',
-    ).length,
-    critical: actions.filter((item) => item.priority === 'immediate').length,
-  }
-
+function SituationSummary({ summary }: { summary: SituationManagementSummary }) {
   const indicators = [
-    ['En espera', counts.pending],
-    ['En proceso', counts.inProgress],
-    ['Resueltas', counts.executed],
-    ['No fue posible resolver', counts.notExecutable],
-    ['Atención inmediata', counts.critical],
+    ['Abiertas', summary.open],
+    ['En progreso', summary.inProgress],
+    ['Resueltas', summary.resolved],
+    ['Cerradas', summary.closed],
+    ['Atención prioritaria', summary.critical],
   ] as const
 
   return (
@@ -68,22 +58,25 @@ function ExecutionSummary({ actions }: { actions: ExecutionAction[] }) {
 
 export function MonitoringCenter({
   user,
-  actions,
-  selectedAction,
-  selectedActionId,
-  loading,
-  error,
+  situations,
+  summary,
+  selectedSituationId,
+  dossier,
+  listLoading,
+  dossierLoading,
+  listError,
+  dossierError,
   canUpdate,
   isUpdating,
   environment,
-  onSelectAction,
-  onUpdateStatus,
+  onSelectSituation,
+  onUpdateSituationStatus,
+  onUpdateRecommendationStatus,
   onLogout,
 }: MonitoringCenterProps) {
   const [showAnalysis, setShowAnalysis] = useState(false)
-  const executiveEvent = selectedAction
-    ? OPERATIONAL_EVENTS.find((event) => event.id === selectedAction.eventId) ?? OPERATIONAL_EVENTS[0]
-    : null
+  const sortedSituations = sortSituationsForQueue(situations)
+
   return (
     <ScreenDeck
       environment={environment}
@@ -97,30 +90,43 @@ export function MonitoringCenter({
       }
     >
       <main className="cunmark-execution-flow">
-        <ExecutionSummary actions={actions} />
+        <SituationSummary summary={summary} />
 
-        <EvaluationConsole
-          actions={actions}
-          selectedActionId={selectedActionId}
-          loading={loading}
-          error={error}
-          onSelectAction={onSelectAction}
+        <SituationQueueConsole
+          situations={sortedSituations}
+          selectedSituationId={selectedSituationId}
+          loading={listLoading}
+          error={listError}
+          onSelectSituation={onSelectSituation}
         />
 
         <section
           className="cunmark-execution-detail"
           aria-label="Expediente operativo de la situación"
         >
-          <SelectedCommitmentPanel
-            action={selectedAction}
+          <SituationDossierPanel
+            dossier={dossier}
+            loading={dossierLoading}
+            error={dossierError}
             canUpdate={canUpdate}
             isUpdating={isUpdating}
-            onUpdateStatus={onUpdateStatus}
+            onUpdateSituationStatus={onUpdateSituationStatus}
+            onUpdateRecommendationStatus={onUpdateRecommendationStatus}
           />
-          <IntelligencePanel action={selectedAction} onOpenAnalysis={() => setShowAnalysis(true)} />
+          <SituationIntelligencePanel
+            dossier={dossier}
+            loading={dossierLoading}
+            onOpenAnalysis={() => setShowAnalysis(true)}
+          />
         </section>
       </main>
-      {showAnalysis && executiveEvent ? <SituationDetailModal event={executiveEvent} onClose={() => setShowAnalysis(false)} /> : null}
+
+      {showAnalysis && selectedSituationId ? (
+        <ConnectedSituationDetailModal
+          situationId={selectedSituationId}
+          onClose={() => setShowAnalysis(false)}
+        />
+      ) : null}
     </ScreenDeck>
   )
 }

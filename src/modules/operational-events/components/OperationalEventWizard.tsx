@@ -1,30 +1,34 @@
-// Componente: orquestador del wizard — 2 pasos: capturar e interpretar/guardar.
+// Componente: orquestador del wizard — capturar, confirmar y analizar.
 
-import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import {
-  CRYSTAL_ZONE,
-  FOCUS_VISIBLE,
-} from '@/modules/monitoring/constants/monitoringTheme'
+import { useEffect, useState } from 'react'
+import { useAuth } from '@/modules/auth/hooks/useAuth'
+import { CRYSTAL_ZONE } from '@/modules/monitoring/constants/monitoringTheme'
+import { SituationAnalysisPanel } from '@/modules/operational-events/components/analysis/SituationAnalysisPanel'
+import { ConnectedSituationDetailModal } from '@/modules/operational-events/components/ConnectedSituationDetailModal'
 import { EventCaptureForm } from '@/modules/operational-events/components/EventCaptureForm'
-import { EventInterpretationView } from '@/modules/operational-events/components/EventInterpretationView'
+import { SituationCaptureSummary } from '@/modules/operational-events/components/SituationCaptureSummary'
 import {
   WizardStepRail,
   type WizardStepId,
 } from '@/modules/operational-events/components/WizardStepRail'
-import { useOperationalEvents } from '@/modules/operational-events/hooks/useOperationalEvents'
+import { registerSituationWithEvidences } from '@/modules/services/situationRegistration.service'
+import { fetchCoordinationsRequest } from '@/modules/situations/services/coordinations.service'
+import { fetchIncidentCategoriesRequest } from '@/modules/situations/services/situations.service'
+import type { SituationCaptureDraft } from '@/modules/situations/types/situation-capture.types'
 import type {
-  AIInterpretation,
-  OperationalEventDraft,
-} from '@/modules/operational-events/types/operational-event.types'
-import { buildOperationalEventFromCapture } from '@/modules/operational-events/utils/buildOperationalEvent'
-import { getErrorMessage } from '@/shared/utils/error'
+  CoordinationSummary,
+  IncidentCategorySummary,
+  SituationResponse,
+} from '@/modules/situations/types/situation.types'
 import {
-  CAPTURE_DEFAULT_ACTOR,
-  createDraftEventId,
-  listCaptureAreas,
-  simulateAIInterpretation,
-} from '@/modules/operational-events/utils/simulateAIInterpretation'
+  clearSituationCapturePersistence,
+  readSituationCaptureDraft,
+  readSituationCaptureWizardStep,
+  writeSituationCaptureDraft,
+  writeSituationCaptureWizardStep,
+} from '@/modules/operational-events/utils/situationCaptureDraftStorage'
+import { getErrorMessage } from '@/shared/utils/error'
+import { isValidUuid } from '@/shared/utils/uuid'
 
 function todayDateInput(): string {
   const now = new Date()
@@ -32,117 +36,138 @@ function todayDateInput(): string {
   return new Date(now.getTime() - offset).toISOString().slice(0, 16)
 }
 
-function createEmptyDraft(defaultAreaId: string): OperationalEventDraft {
+function createEmptyDraft(defaultCoordinationId = ''): SituationCaptureDraft {
   return {
     title: '',
     description: '',
-    sourceAreaId: defaultAreaId,
+    coordinationId: defaultCoordinationId,
     reportedAt: todayDateInput(),
-    observations: '',
-    attachmentNames: [],
+    detectionMethod: '',
+    detectionMethodOther: '',
+    affectedParties: [],
+    affectedPartyOther: '',
+    relatedCoordinationIds: [],
+    additionalNotes: '',
+    attachments: [],
   }
 }
 
+function resolveDefaultCoordinationId(
+  coordinations: CoordinationSummary[],
+  coordinationId?: string,
+  coordinationCode?: string,
+): string {
+  if (coordinationId && coordinations.some((item) => item.id === coordinationId)) {
+    return coordinationId
+  }
+
+  if (coordinationCode) {
+    const byCode = coordinations.find((item) => item.code === coordinationCode)
+    if (byCode) return byCode.id
+  }
+
+  return coordinations[0]?.id ?? ''
+}
+
 export function OperationalEventWizard() {
-  const {
-    loadOperationalEvents,
-    registerOperationalEvent,
-    loading: storeLoading,
-  } = useOperationalEvents()
-
-  const areas = useMemo(() => listCaptureAreas(), [])
-  const defaultAreaId = areas[0]?.id ?? ''
-
-  const [step, setStep] = useState<WizardStepId>(1)
-  const [draft, setDraft] = useState<OperationalEventDraft>(() =>
-    createEmptyDraft(defaultAreaId),
+  const { user } = useAuth()
+  const [step, setStep] = useState<WizardStepId>(
+    () => readSituationCaptureWizardStep() ?? 1,
   )
-  const [captureContext, setCaptureContext] = useState({
-    urgency: 'Normal',
-    affectedAreas: [] as string[],
-    otherAffectedArea: '',
+  const [draft, setDraft] = useState<SituationCaptureDraft>(() => {
+    return readSituationCaptureDraft() ?? createEmptyDraft()
   })
-  const [analysisDraft, setAnalysisDraft] =
-    useState<OperationalEventDraft | null>(null)
-  const [eventId, setEventId] = useState(() => createDraftEventId())
-  const [interpretation, setInterpretation] = useState<AIInterpretation | null>(
-    null,
-  )
-  const [analyzing, setAnalyzing] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
+  const [coordinations, setCoordinations] = useState<CoordinationSummary[]>([])
+  const [categories, setCategories] = useState<IncidentCategorySummary[]>([])
+  const [loadingCatalogs, setLoadingCatalogs] = useState(true)
+  const [situation, setSituation] = useState<SituationResponse | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [showExecutiveModal, setShowExecutiveModal] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const registeredSituationId =
+    situation && isValidUuid(situation.id) ? situation.id : null
+
   useEffect(() => {
-    void loadOperationalEvents()
-  }, [loadOperationalEvents])
+    writeSituationCaptureDraft(draft)
+  }, [draft])
 
-  async function handleAnalyze() {
-    setError(null)
-    setAnalyzing(true)
-    try {
-      const nextId = eventId || createDraftEventId()
-      const contextNotes = [
-        `Urgencia percibida por quien reporta: ${captureContext.urgency}.`,
-        captureContext.affectedAreas.length > 0
-          ? `Personas o áreas afectadas: ${captureContext.affectedAreas.join(', ')}.`
-          : null,
-        captureContext.otherAffectedArea.trim()
-          ? `Otra área afectada: ${captureContext.otherAffectedArea.trim()}.`
-          : null,
-        draft.observations?.trim()
-          ? `Evidencias adicionales: ${draft.observations.trim()}`
-          : null,
-      ].filter((entry): entry is string => Boolean(entry))
-      const nextAnalysisDraft = {
-        ...draft,
-        observations: contextNotes.join('\n'),
+  useEffect(() => {
+    writeSituationCaptureWizardStep(step)
+  }, [step])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadCatalogs() {
+      setLoadingCatalogs(true)
+      setError(null)
+      try {
+        const [coordinationsResponse, categoriesResponse] = await Promise.all([
+          fetchCoordinationsRequest(),
+          fetchIncidentCategoriesRequest(),
+        ])
+
+        if (cancelled) return
+
+        const sortedCoordinations = [...coordinationsResponse].sort(
+          (left, right) => left.displayOrder - right.displayOrder,
+        )
+
+        setCoordinations(sortedCoordinations)
+        setCategories(categoriesResponse)
+        setDraft((current) => ({
+          ...current,
+          coordinationId:
+            current.coordinationId ||
+            resolveDefaultCoordinationId(
+              sortedCoordinations,
+              user?.coordinationId,
+              user?.selectedAreaId,
+            ),
+        }))
+      } catch (loadError) {
+        if (!cancelled) {
+          setError(getErrorMessage(loadError))
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingCatalogs(false)
+        }
       }
-      setEventId(nextId)
-      setAnalysisDraft(nextAnalysisDraft)
-      const result = await simulateAIInterpretation(nextAnalysisDraft, nextId)
-      setInterpretation(result)
-      setStep(2)
-    } catch (analyzeError) {
-      setError(getErrorMessage(analyzeError))
-    } finally {
-      setAnalyzing(false)
     }
-  }
 
-  async function handleSave() {
-    if (!interpretation) return
+    void loadCatalogs()
+
+    return () => {
+      cancelled = true
+    }
+  }, [user?.coordinationId, user?.selectedAreaId])
+
+  async function handleConfirmAndRegister() {
     setError(null)
-    setSaving(true)
+
+    if (registeredSituationId) {
+      setStep(3)
+      return
+    }
+
+    setSubmitting(true)
+
     try {
-      const event = buildOperationalEventFromCapture({
-        eventId,
-        draft: analysisDraft ?? draft,
-        interpretation,
-        actor: CAPTURE_DEFAULT_ACTOR,
+      const created = await registerSituationWithEvidences({
+        draft,
+        coordinations,
+        categories,
       })
-      await registerOperationalEvent(event)
-      setSaved(true)
-    } catch (saveError) {
-      setError(getErrorMessage(saveError))
+      clearSituationCapturePersistence()
+      setSituation(created)
+      setStep(3)
+    } catch (submitError) {
+      setError(getErrorMessage(submitError))
     } finally {
-      setSaving(false)
+      setSubmitting(false)
     }
-  }
-
-  function handleRegisterAnother() {
-    setDraft(createEmptyDraft(defaultAreaId))
-    setCaptureContext({
-      urgency: 'Normal',
-      affectedAreas: [],
-      otherAffectedArea: '',
-    })
-    setAnalysisDraft(null)
-    setEventId(createDraftEventId())
-    setInterpretation(null)
-    setSaved(false)
-    setError(null)
-    setStep(1)
   }
 
   return (
@@ -153,19 +178,19 @@ export function OperationalEventWizard() {
         <WizardStepRail currentStep={step} />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+      <div className="min-h-0 flex-1 overflow-hidden pr-1">
         {step === 1 ? (
-          <div className="flex h-full min-h-0 flex-col gap-3">
+          <div className="cunmark-wizard-step-pane flex min-h-0 flex-1 flex-col gap-3">
             <EventCaptureForm
               draft={draft}
-              areas={areas}
-              captureContext={captureContext}
-              onCaptureContextChange={setCaptureContext}
-              submitLabel={analyzing ? 'Generando análisis…' : 'Generar análisis IA'}
-              submitDisabled={analyzing}
+              coordinations={coordinations}
+              loadingCoordinations={loadingCatalogs}
               onChange={setDraft}
+              submitLabel="Continuar"
+              submitDisabled={loadingCatalogs}
               onSubmit={() => {
-                void handleAnalyze()
+                setError(null)
+                setStep(2)
               }}
             />
             {error ? (
@@ -176,59 +201,47 @@ export function OperationalEventWizard() {
           </div>
         ) : null}
 
-        {step === 2 && interpretation && !saved ? (
-          <EventInterpretationView
-            interpretation={interpretation}
-            saving={saving || storeLoading}
-            error={error}
-            onBack={() => {
-              setError(null)
-              setStep(1)
-            }}
-            onSave={() => void handleSave()}
-          />
+        {step === 2 ? (
+          <div className="cunmark-wizard-step-pane cunmark-wizard-step-pane--dossier">
+            <SituationCaptureSummary
+              draft={draft}
+              coordinations={coordinations}
+              confirming={submitting}
+              canConfirm={!loadingCatalogs && Boolean(draft.coordinationId)}
+              onBack={() => {
+                setError(null)
+                setStep(1)
+              }}
+              onConfirm={() => {
+                void handleConfirmAndRegister()
+              }}
+            />
+            {error ? (
+              <p role="alert" className="text-sm text-red-700">
+                {error}
+              </p>
+            ) : null}
+          </div>
         ) : null}
 
-        {step === 2 && saved ? (
-          <section className="cunmark-event-saved space-y-5">
-            <header className="space-y-1">
-              <h2 className="text-sm font-semibold tracking-tight text-emerald-800">
-                Situación guardada
-              </h2>
-              <p className="text-[0.8rem] leading-relaxed text-slate-500">
-                Ya está disponible en Situaciones registradas.
-              </p>
-            </header>
-
-            <div className="py-1 text-sm">
-              <p className="font-medium text-slate-800">{draft.title}</p>
-              {interpretation ? (
-                <p className="mt-1 text-[0.8rem] text-slate-500">
-                  {interpretation.categoryName} · Riesgo{' '}
-                  {interpretation.riskScore}
-                </p>
-              ) : null}
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-400/15 pt-4">
-              <Link
-                to="/situaciones"
-                viewTransition
-                className={`text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-emerald-700 hover:text-emerald-900 ${FOCUS_VISIBLE}`}
-              >
-                Situaciones registradas
-              </Link>
-              <button
-                type="button"
-                onClick={handleRegisterAnother}
-                className={`bg-emerald-600/90 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600 ${FOCUS_VISIBLE}`}
-              >
-                Registrar otra
-              </button>
-            </div>
-          </section>
+        {step === 3 && registeredSituationId ? (
+          <div className="cunmark-wizard-step-pane cunmark-wizard-step-pane--intelligence flex min-h-0 flex-1 flex-col">
+            <SituationAnalysisPanel
+              situationId={registeredSituationId}
+              situationTitle={situation?.title ?? draft.title}
+              situation={situation}
+              onViewExecutiveReport={() => setShowExecutiveModal(true)}
+            />
+          </div>
         ) : null}
       </div>
+
+      {showExecutiveModal && registeredSituationId ? (
+        <ConnectedSituationDetailModal
+          situationId={registeredSituationId}
+          onClose={() => setShowExecutiveModal(false)}
+        />
+      ) : null}
     </div>
   )
 }

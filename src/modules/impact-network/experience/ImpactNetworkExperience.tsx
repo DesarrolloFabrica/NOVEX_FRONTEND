@@ -22,6 +22,10 @@ import {
   type ImpactTopology,
   type IncidentReplay,
 } from '@/modules/impact-network'
+import {
+  IMPACT_NETWORK_MOCK_EVENTS,
+  IMPACT_NETWORK_MOCK_FALLBACK_ENABLED,
+} from '@/modules/impact-network/data/impact-network-events.mock'
 import { ImpactNetworkToolbar } from '@/modules/impact-network/experience/ImpactNetworkToolbar'
 import { usePropagationSequence } from '@/modules/impact-network/hooks/usePropagationSequence'
 import { useOperationalEvents } from '@/modules/operational-events'
@@ -159,9 +163,17 @@ export function ImpactNetworkExperience() {
     }
   }, [loadOperationalEvents])
 
+  const usingMockEvents =
+    IMPACT_NETWORK_MOCK_FALLBACK_ENABLED && !eventsLoading && items.length === 0
+
+  const operationalEventItems = useMemo(
+    () => (usingMockEvents ? IMPACT_NETWORK_MOCK_EVENTS : items),
+    [items, usingMockEvents],
+  )
+
   const incidents = useMemo(
-    () => selectImpactIncidents(items, filters, topology),
-    [filters, items, topology],
+    () => selectImpactIncidents(operationalEventItems, filters, topology),
+    [filters, operationalEventItems, topology],
   )
   const activeIncidents = useMemo(
     () => incidents.filter((incident) => incident.active),
@@ -176,8 +188,9 @@ export function ImpactNetworkExperience() {
     [focusedEventId, incidents],
   )
   const focusedEvent = useMemo(
-    () => items.find((item) => item.id === focusedEventId) ?? null,
-    [focusedEventId, items],
+    () =>
+      operationalEventItems.find((item) => item.id === focusedEventId) ?? null,
+    [focusedEventId, operationalEventItems],
   )
   const networkStatus = useMemo(
     () => deriveNetworkStatus(incidents),
@@ -408,6 +421,7 @@ export function ImpactNetworkExperience() {
 
           <SituationCommandPanel
             incidents={activeIncidents}
+            mockDataActive={usingMockEvents}
             selectedEventId={focusedEventId}
             originCoordinationId={
               propagation?.originCoordinationId as CoordinationId | null

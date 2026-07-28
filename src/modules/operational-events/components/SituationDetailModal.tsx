@@ -113,8 +113,7 @@ export function SituationDetailModal({
       )
       await exportSituationReportPdf(event)
       setExportState('idle')
-    } catch (error) {
-      console.error('No fue posible generar el reporte PDF.', error)
+    } catch {
       setExportState('error')
     }
   }

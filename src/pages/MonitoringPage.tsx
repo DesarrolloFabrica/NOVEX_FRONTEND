@@ -1,30 +1,19 @@
 // Capa: página Gestión de situaciones — Centro de Gestión Operativa.
-// Ruta: /legacy-monitoring
-// Responsabilidad: administrar el ciclo de vida de situaciones analizadas por IA.
+// Ruta: /gestion
 
 import { useCallback, useMemo } from 'react'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
-import { useExecutionActions } from '@/modules/execution-actions/hooks/useExecutionActions'
-import type { ExecutionActionStatus } from '@/modules/execution-actions/types/execution-action.types'
+import { useSituationManagement } from '@/modules/monitoring/hooks/useSituationManagement'
 import { MonitoringCenter } from '@/modules/monitoring/components/MonitoringCenter'
 import { MainScreen, CunmarkFrame, CunmarkRoom } from '@/modules/room'
 import type { EnvironmentStatus } from '@/modules/monitoring/types/monitoring.types'
+import type { SituationManagementSummary } from '@/modules/api/types/situation-management.types'
 
-function resolveEnvironment(
-  actions: { executionStatus: ExecutionActionStatus }[],
-): EnvironmentStatus {
-  if (actions.length === 0) return 'pending'
-  const blocked = actions.filter(
-    (action) => action.executionStatus === 'not_executable',
-  ).length
-  const pending = actions.filter(
-    (action) =>
-      action.executionStatus === 'pending' ||
-      action.executionStatus === 'in_progress',
-  ).length
-  if (blocked > 0) return 'critical'
-  if (pending > actions.length / 2) return 'attention'
-  if (pending > 0) return 'attention'
+function resolveEnvironment(summary: SituationManagementSummary): EnvironmentStatus {
+  if (summary.total === 0) return 'pending'
+  if (summary.critical > 0) return 'critical'
+  if (summary.open + summary.inProgress > summary.total / 2) return 'attention'
+  if (summary.open + summary.inProgress > 0) return 'attention'
   return 'healthy'
 }
 
@@ -33,35 +22,28 @@ export function MonitoringPage() {
   const canUpdate = user != null
 
   const {
-    actions,
-    selectedAction,
-    selectedActionId,
-    setSelectedActionId,
-    loading,
-    error,
+    situations,
+    summary,
+    selectedSituationId,
+    dossier,
+    listLoading,
+    dossierLoading,
+    listError,
+    dossierError,
     isUpdating,
-    updateStatus,
-  } = useExecutionActions()
+    setSelectedSituationId,
+    updateSituation,
+    updateRecommendation,
+  } = useSituationManagement()
 
-  const environment = useMemo(
-    () => resolveEnvironment(actions),
-    [actions],
-  )
+  const environment = useMemo(() => resolveEnvironment(summary), [summary])
 
-  const handleUpdateStatus = useCallback(
-    async (input: {
-      status: ExecutionActionStatus
-      note?: string
-      observation?: string
-    }) => {
-      if (!user || !canUpdate) return
-      await updateStatus({
-        ...input,
-        byUserId: user.id,
-        byUserName: user.name,
-      })
+  const handleUpdateRecommendationStatus = useCallback(
+    async (recommendationId: string, status: string) => {
+      if (!canUpdate) return
+      await updateRecommendation(recommendationId, { status })
     },
-    [user, canUpdate, updateStatus],
+    [canUpdate, updateRecommendation],
   )
 
   return (
@@ -70,16 +52,20 @@ export function MonitoringPage() {
         <MainScreen environment={environment}>
           <MonitoringCenter
             user={user}
-            actions={actions}
-            selectedAction={selectedAction}
-            selectedActionId={selectedActionId}
-            loading={loading}
-            error={error}
+            situations={situations}
+            summary={summary}
+            selectedSituationId={selectedSituationId}
+            dossier={dossier}
+            listLoading={listLoading}
+            dossierLoading={dossierLoading}
+            listError={listError}
+            dossierError={dossierError}
             canUpdate={canUpdate}
             isUpdating={isUpdating}
             environment={environment}
-            onSelectAction={setSelectedActionId}
-            onUpdateStatus={handleUpdateStatus}
+            onSelectSituation={setSelectedSituationId}
+            onUpdateSituationStatus={updateSituation}
+            onUpdateRecommendationStatus={handleUpdateRecommendationStatus}
             onLogout={() => void logout()}
           />
         </MainScreen>

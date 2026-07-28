@@ -12,6 +12,8 @@ export type SimulationControlState = 'idle' | 'loading' | 'showing' | 'visible'
 
 export interface SituationCommandPanelProps {
   incidents: readonly ImpactIncident[]
+  /** Muestra aviso cuando la vista usa datos mock temporales. */
+  mockDataActive?: boolean
   selectedEventId: string | null
   originCoordinationId?: CoordinationId | null
   originName?: string | null
@@ -58,6 +60,7 @@ const REPLAY_ACTION_LABELS: Record<ReplayControlState, string> = {
 
 export function SituationCommandPanel({
   incidents,
+  mockDataActive = false,
   selectedEventId,
   originCoordinationId = null,
   originName = null,
@@ -95,6 +98,17 @@ export function SituationCommandPanel({
       <p className="situation-command-panel__intro">
         Selecciona una situación para observar su propagación focalizada.
       </p>
+
+      {mockDataActive ? (
+        <p
+          className="situation-command-panel__mock-notice"
+          role="status"
+          aria-label="Vista con datos mock"
+        >
+          <span>Mock</span>
+          Datos de demostración — sin conexión al backend
+        </p>
+      ) : null}
 
       <div className="situation-command-panel__content">
         <div className="situation-command-panel__list" aria-label="Lista de situaciones">

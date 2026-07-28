@@ -6,6 +6,7 @@ import {
   CertaintyRing,
   EXEC_CERTAINTY_LABEL,
   EXEC_PRIORITY_LABEL,
+  EXEC_PRIORITY_LEVEL_LABEL,
   EXEC_URGENCY_LABEL,
   ExecutiveSection,
   riskFromEvent,
@@ -42,8 +43,7 @@ export function SituationExecutiveReportBody({
       )
       await exportSituationReportPdf(event)
       setExportState('idle')
-    } catch (error) {
-      console.error('No fue posible generar el reporte PDF.', error)
+    } catch {
       setExportState('error')
     }
   }
@@ -65,10 +65,50 @@ export function SituationExecutiveReportBody({
 
   const sections = variant === 'compact' ? (
     <>
+      {report.executiveNarrative ? (
+        <ExecutiveSection
+          number={1}
+          question="Lectura ejecutiva"
+          hint="Análisis de inteligencia operacional CUNMARK"
+        >
+          <article className="cunmark-sit-card cunmark-sit-card--narrative">
+            <p className="cunmark-sit-narrative">{report.executiveNarrative}</p>
+          </article>
+        </ExecutiveSection>
+      ) : null}
+
+      {report.executiveDecision ? (
+        <ExecutiveSection
+          number={report.executiveNarrative ? 2 : 1}
+          question="¿Qué debe decidir la dirección?"
+          hint="Decisión inmediata recomendada"
+        >
+          <article className="cunmark-sit-card cunmark-sit-card--decision" data-risk={risk}>
+            <p className="cunmark-sit-narrative">{report.executiveDecision.decision}</p>
+            <div className="cunmark-sit-grid" style={{ marginTop: 12 }}>
+              <div>
+                <p className="cunmark-sit-cause__label">Urgencia</p>
+                <span className="cunmark-sit-pill">
+                  {EXEC_URGENCY_LABEL[report.executiveDecision.urgencyLevel]}
+                </span>
+              </div>
+              <div>
+                <p className="cunmark-sit-cause__label">Tiempo para actuar</p>
+                <strong>{report.executiveDecision.recommendedActionTime}</strong>
+              </div>
+              <div>
+                <p className="cunmark-sit-cause__label">Responsable inicial</p>
+                <strong>{report.executiveDecision.initialResponsible}</strong>
+              </div>
+            </div>
+          </article>
+        </ExecutiveSection>
+      ) : null}
+
       <ExecutiveSection
-        number={1}
+        number={report.executiveNarrative ? (report.executiveDecision ? 3 : 2) : 1}
         question="¿Qué ocurrió?"
-        hint="Resumen ejecutivo de la situación origen"
+        hint="Estado actual de la situación"
       >
         <article className="cunmark-sit-card">
           <p className="cunmark-sit-narrative">
@@ -83,11 +123,24 @@ export function SituationExecutiveReportBody({
       </ExecutiveSection>
 
       <ExecutiveSection
-        number={2}
+        number={report.executiveNarrative ? (report.executiveDecision ? 4 : 3) : 2}
         question="¿Qué tan grave es?"
-        hint="Riesgo y certeza del análisis"
+        hint="Riesgo, prioridad y certeza del análisis"
       >
         <div className="cunmark-sit-grid">
+          {report.executivePriority ? (
+            <article className="cunmark-sit-card">
+              <header>
+                <h3>Prioridad ejecutiva</h3>
+                <span className="cunmark-sit-pill" data-risk={risk}>
+                  {EXEC_PRIORITY_LEVEL_LABEL[report.executivePriority.level]}
+                </span>
+              </header>
+              <p className="cunmark-sit-card__hint">
+                {report.executivePriority.justification}
+              </p>
+            </article>
+          ) : null}
           <article className="cunmark-sit-card cunmark-sit-card--risk">
             <header>
               <h3>Riesgo actual</h3>
@@ -111,13 +164,68 @@ export function SituationExecutiveReportBody({
               percentage={report.riskAssessment.certainty.percentage}
               level={report.riskAssessment.certainty.level}
             />
+            {report.confidenceExplanation ? (
+              <div className="cunmark-sit-cause" style={{ marginTop: 10 }}>
+                {report.confidenceExplanation.supportingFactors.length > 0 ? (
+                  <ul>
+                    {report.confidenceExplanation.supportingFactors.map((factor) => (
+                      <li key={factor}>✓ {factor}</li>
+                    ))}
+                  </ul>
+                ) : null}
+                {report.confidenceExplanation.reducingFactors.length > 0 ? (
+                  <ul>
+                    {report.confidenceExplanation.reducingFactors.map((factor) => (
+                      <li key={factor}>• {factor}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            ) : null}
           </article>
+          {report.riskBreakdown ? (
+            <article className="cunmark-sit-card">
+              <header>
+                <h3>Desglose de riesgo</h3>
+                <span className="cunmark-sit-pill">
+                  {report.riskBreakdown.totalScore}/100
+                </span>
+              </header>
+              <ul className="cunmark-sit-areas">
+                {report.riskBreakdown.components.map((component) => (
+                  <li key={component.name}>
+                    <div className="cunmark-sit-areas__head">
+                      <strong>{component.name}</strong>
+                      <span>{component.score}</span>
+                    </div>
+                    <p>{component.explanation}</p>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ) : null}
         </div>
       </ExecutiveSection>
 
+      {report.criticalWindow ? (
+        <ExecutiveSection
+          number={report.executiveNarrative ? 5 : 3}
+          question="¿Qué pasa si no actuamos?"
+          hint="Ventana crítica de impacto"
+        >
+          <article className="cunmark-sit-card">
+            <p className="cunmark-sit-narrative">
+              <strong>{report.criticalWindow.timeBeforeEscalation}</strong>
+              {' — '}
+              {report.criticalWindow.explanation}
+            </p>
+          </article>
+        </ExecutiveSection>
+      ) : null}
+
       <ExecutiveSection
-        number={3}
-        question="Causa raíz"
+        number={report.executiveNarrative ? (report.criticalWindow ? 6 : 5) : 3}
+        question="Causa raíz e hipótesis"
         hint="Evidencia y dependencias detectadas"
       >
         <article className="cunmark-sit-card">
@@ -128,18 +236,82 @@ export function SituationExecutiveReportBody({
                 <li key={cause}>{cause}</li>
               ))}
             </ul>
-            <p className="cunmark-sit-cause__label">Dependencias</p>
+            <p className="cunmark-sit-cause__label">Hipótesis más probables</p>
             <ul>
-              {report.rootCause.dependencies.map((dependency) => (
-                <li key={dependency}>{dependency}</li>
+              {(report.probableCauses ?? []).map((cause) => (
+                <li key={cause.hypothesis}>
+                  <strong>{cause.hypothesis}</strong> ({cause.probability}%):{' '}
+                  {cause.justification}
+                </li>
               ))}
+              {!(report.probableCauses?.length) &&
+                report.rootCause.hypotheses.map((hypothesis) => (
+                  <li key={hypothesis}>{hypothesis}</li>
+                ))}
             </ul>
+            {report.operationalPropagation ? (
+              <>
+                <p className="cunmark-sit-cause__label">Propagación operacional</p>
+                <ol className="cunmark-sit-propagation">
+                  {report.operationalPropagation.chain.map((step) => (
+                    <li key={step.stage}>
+                      <strong>{step.stage}</strong>
+                      <span>{step.description}</span>
+                    </li>
+                  ))}
+                </ol>
+              </>
+            ) : (
+              <>
+                <p className="cunmark-sit-cause__label">Dependencias</p>
+                <ul>
+                  {report.rootCause.dependencies.map((dependency) => (
+                    <li key={dependency}>{dependency}</li>
+                  ))}
+                </ul>
+              </>
+            )}
           </div>
         </article>
       </ExecutiveSection>
 
+      {report.decisionMatrix ? (
+        <ExecutiveSection
+          number={7}
+          question="Matriz de decisiones"
+          hint="Clasificación de acciones por horizonte"
+        >
+          <div className="cunmark-sit-grid">
+            {(
+              [
+                ['Resolver ahora', report.decisionMatrix.resolveNow],
+                ['Resolver hoy', report.decisionMatrix.resolveToday],
+                ['Monitorear', report.decisionMatrix.monitor],
+                ['Escalar', report.decisionMatrix.escalate],
+              ] as const
+            ).map(([label, actions]) =>
+              actions.length > 0 ? (
+                <article key={label} className="cunmark-sit-card">
+                  <header>
+                    <h3>{label}</h3>
+                  </header>
+                  <ul>
+                    {actions.map((action) => (
+                      <li key={action.action}>
+                        <strong>{action.action}</strong>
+                        <p className="cunmark-sit-card__hint">{action.reason}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              ) : null,
+            )}
+          </div>
+        </ExecutiveSection>
+      ) : null}
+
       <ExecutiveSection
-        number={4}
+        number={report.decisionMatrix ? 8 : 4}
         question="Áreas afectadas"
         hint="Coordinaciones impactadas y motivo"
       >
@@ -159,7 +331,7 @@ export function SituationExecutiveReportBody({
       </ExecutiveSection>
 
       <ExecutiveSection
-        number={5}
+        number={report.decisionMatrix ? 9 : 5}
         question="Recomendaciones prioritarias"
         hint="Acciones sugeridas por la IA"
       >
@@ -186,7 +358,7 @@ export function SituationExecutiveReportBody({
       </ExecutiveSection>
 
       <ExecutiveSection
-        number={6}
+        number={report.decisionMatrix ? 10 : 6}
         question="Conclusión ejecutiva"
         hint="Lectura final para dirección"
       >

@@ -6,6 +6,7 @@ import type { ReactNode } from 'react'
 interface CunmarkProductHeaderProps {
   title: string
   eyebrow?: string
+  context?: string
   /** Contenido del popover de ayuda. Si se omite, no se muestra el botón. */
   help?: ReactNode
   helpTitle?: string
@@ -14,6 +15,7 @@ interface CunmarkProductHeaderProps {
 export function CunmarkProductHeader({
   title,
   eyebrow = 'Visión general',
+  context,
   help,
   helpTitle,
 }: CunmarkProductHeaderProps) {
@@ -26,7 +28,7 @@ export function CunmarkProductHeader({
         <h1>{title}</h1>
         <p className="cunmark-os-topbar__route">
           <span aria-hidden="true" />
-          {user?.name ?? 'Sesión activa'}
+          {context ?? user?.name ?? 'Sesión activa'}
         </p>
       </div>
 

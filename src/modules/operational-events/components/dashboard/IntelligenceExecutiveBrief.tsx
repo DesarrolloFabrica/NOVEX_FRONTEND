@@ -1,12 +1,11 @@
-import type { DashboardMetrics } from '@/modules/operational-events/types/operational-event.types'
 import { CunmarkIcon } from '@/shared/components/CunmarkIcon'
 
 interface IntelligenceExecutiveBriefProps {
-  metrics: DashboardMetrics
+  narrative: string
 }
 
 export function IntelligenceExecutiveBrief({
-  metrics,
+  narrative,
 }: IntelligenceExecutiveBriefProps) {
   return (
     <section
@@ -19,10 +18,10 @@ export function IntelligenceExecutiveBrief({
       <div className="cunmark-intel-brief__content">
         <div className="cunmark-intel-brief__heading">
           <p className="cunmark-intel-brief__label" id="intel-brief-heading">
-            Orientación operacional
+            Panorama actual
           </p>
         </div>
-        <p className="cunmark-intel-brief__lead">{metrics.executiveNarrative}</p>
+        <p className="cunmark-intel-brief__lead">{narrative}</p>
       </div>
     </section>
   )

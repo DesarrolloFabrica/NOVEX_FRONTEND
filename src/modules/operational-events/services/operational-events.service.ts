@@ -2,7 +2,6 @@
 // Responsabilidad: comunicación con la API de eventos.
 
 import { apiRequest } from '@/shared/api/http'
-import { OPERATIONAL_EVENTS } from '@/modules/operational-events/data/operational-events.mock'
 import type { OperationalEvent } from '@/modules/operational-events/types/operational-event.types'
 
 interface ApiListResponse<T> {
@@ -80,14 +79,10 @@ interface ApiTimelineEntry {
 export async function fetchOperationalEventsRequest(): Promise<
   OperationalEvent[]
 > {
-  try {
-    const response = await apiRequest<ApiListResponse<ApiOperationalEvent>>(
-      '/operational-events',
-    )
-    return response.items.map(mapOperationalEventFromApi)
-  } catch {
-    return OPERATIONAL_EVENTS.map(cloneOperationalEvent)
-  }
+  const response = await apiRequest<ApiListResponse<ApiOperationalEvent>>(
+    '/operational-events',
+  )
+  return response.items.map(mapOperationalEventFromApi)
 }
 
 /**
@@ -96,24 +91,20 @@ export async function fetchOperationalEventsRequest(): Promise<
 export async function registerOperationalEventRequest(
   event: OperationalEvent,
 ): Promise<OperationalEvent> {
-  try {
-    const saved = await apiRequest<ApiOperationalEvent>('/operational-events', {
-      method: 'POST',
-      body: JSON.stringify({
-        title: event.title,
-        description: event.description,
-        sourceAreaId: event.sourceAreaId,
-        reportedAt: event.reportedAt,
-        observations: event.observations,
-        attachmentNames: event.attachmentNames,
-        reportedById: event.reportedBy.id,
-        reportedByName: event.reportedBy.name,
-      }),
-    })
-    return mapOperationalEventFromApi(saved)
-  } catch {
-    return cloneOperationalEvent(event)
-  }
+  const saved = await apiRequest<ApiOperationalEvent>('/operational-events', {
+    method: 'POST',
+    body: JSON.stringify({
+      title: event.title,
+      description: event.description,
+      sourceAreaId: event.sourceAreaId,
+      reportedAt: event.reportedAt,
+      observations: event.observations,
+      attachmentNames: event.attachmentNames,
+      reportedById: event.reportedBy.id,
+      reportedByName: event.reportedBy.name,
+    }),
+  })
+  return mapOperationalEventFromApi(saved)
 }
 
 function mapOperationalEventFromApi(event: ApiOperationalEvent): OperationalEvent {
@@ -185,83 +176,5 @@ function mapInterpretationFromApi(
     interpretedAt: interpretation.interpretedAt,
     confidence: interpretation.confidence ?? undefined,
     executiveReport: interpretation.executiveReport,
-  }
-}
-
-function cloneOperationalEvent(event: OperationalEvent): OperationalEvent {
-  return {
-    ...event,
-    reportedBy: { ...event.reportedBy },
-    attachmentNames: event.attachmentNames
-      ? [...event.attachmentNames]
-      : undefined,
-    interpretation: event.interpretation
-      ? {
-          ...event.interpretation,
-          affectedAreaIds: [...event.interpretation.affectedAreaIds],
-          affectedAreaNames: [...event.interpretation.affectedAreaNames],
-          detectedPatterns: [...event.interpretation.detectedPatterns],
-          suggestedIndicators: event.interpretation.suggestedIndicators.map(
-            (indicator) => ({ ...indicator }),
-          ),
-          executiveReport: event.interpretation.executiveReport
-            ? {
-                ...event.interpretation.executiveReport,
-                impactAnalysis: {
-                  ...event.interpretation.executiveReport.impactAnalysis,
-                  affectedProcesses: [
-                    ...event.interpretation.executiveReport.impactAnalysis
-                      .affectedProcesses,
-                  ],
-                },
-                affectedAreas:
-                  event.interpretation.executiveReport.affectedAreas.map(
-                    (area) => ({ ...area }),
-                  ),
-                rootCause: {
-                  detectedCauses: [
-                    ...event.interpretation.executiveReport.rootCause
-                      .detectedCauses,
-                  ],
-                  hypotheses: [
-                    ...event.interpretation.executiveReport.rootCause
-                      .hypotheses,
-                  ],
-                  dependencies: [
-                    ...event.interpretation.executiveReport.rootCause
-                      .dependencies,
-                  ],
-                },
-                decisionFactors: [
-                  ...event.interpretation.executiveReport.decisionFactors,
-                ],
-                recommendedActions:
-                  event.interpretation.executiveReport.recommendedActions.map(
-                    (action) => ({ ...action }),
-                  ),
-                operationalConsequences: [
-                  ...event.interpretation.executiveReport
-                    .operationalConsequences,
-                ],
-                operationalIndicators:
-                  event.interpretation.executiveReport.operationalIndicators.map(
-                    (indicator) => ({ ...indicator }),
-                  ),
-                timelineSuggestions:
-                  event.interpretation.executiveReport.timelineSuggestions.map(
-                    (suggestion) => ({ ...suggestion }),
-                  ),
-                executiveConclusion: {
-                  ...event.interpretation.executiveReport.executiveConclusion,
-                },
-                dataGaps: [...event.interpretation.executiveReport.dataGaps],
-              }
-            : undefined,
-        }
-      : null,
-    timeline: {
-      ...event.timeline,
-      entries: event.timeline.entries.map((entry) => ({ ...entry })),
-    },
   }
 }

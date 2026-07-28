@@ -73,10 +73,6 @@ export function CunmarkUserMenu({ onLogout }: CunmarkUserMenuProps) {
               Perfil
             </button>
             <button type="button" role="menuitem" onClick={() => setOpen(false)}>
-              <CunmarkIcon name="grid" />
-              Cambiar rol <span className="cunmark-user-menu__mock">mock</span>
-            </button>
-            <button type="button" role="menuitem" onClick={() => setOpen(false)}>
               <CunmarkIcon name="settings" />
               Preferencias
             </button>

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type {
   ActionPriority,
   CertaintyLevel,
+  ExecutivePriorityLevel,
   ExecutiveUrgency,
   RiskLevel,
 } from '@/modules/operational-events/types/operational-event.types'
@@ -11,6 +12,13 @@ export const EXEC_PRIORITY_LABEL: Record<ActionPriority, string> = {
   high: 'Alta',
   medium: 'Media',
   scheduled: 'Programada',
+}
+
+export const EXEC_PRIORITY_LEVEL_LABEL: Record<ExecutivePriorityLevel, string> = {
+  CRITICA: 'Crítica',
+  ALTA: 'Alta',
+  MEDIA: 'Media',
+  BAJA: 'Baja',
 }
 
 export const EXEC_URGENCY_LABEL: Record<ExecutiveUrgency, string> = {

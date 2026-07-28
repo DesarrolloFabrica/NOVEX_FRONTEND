@@ -32,12 +32,12 @@ export function OperationalIntelligencePage() {
                 help={
                   <>
                     <p>
-                      Aquí puede consultar el estado general, identificar
-                      prioridades y abrir cada situación para tomar una decisión.
+                      Aquí puede consultar el registro de situaciones, su estado
+                      y el historial de seguimiento institucional.
                     </p>
                     <p>
                       Use <b>Registrar situación</b> cuando ocurra un nuevo evento
-                      operativo que deba analizarse.
+                      operativo que deba documentarse.
                     </p>
                   </>
                 }

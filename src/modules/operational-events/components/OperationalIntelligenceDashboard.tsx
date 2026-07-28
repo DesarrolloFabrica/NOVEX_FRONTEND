@@ -1,18 +1,20 @@
 // Componente: tablero ejecutivo — un objetivo: decidir qué atender.
 
-import { useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { ROOM_CONTAINER } from '@/modules/monitoring/constants/monitoringTheme'
+import { DashboardOperationalSummary } from '@/modules/operational-events/components/dashboard/DashboardOperationalSummary'
+import {
+  DashboardEmptyState,
+  DashboardErrorState,
+  DashboardLoadingState,
+} from '@/modules/operational-events/components/dashboard/DashboardStateViews'
 import { IntelligenceExecutiveBrief } from '@/modules/operational-events/components/dashboard/IntelligenceExecutiveBrief'
-import { OperationalSummaryBar } from '@/modules/operational-events/components/dashboard/OperationalSummaryBar'
-import { PriorityEventsList } from '@/modules/operational-events/components/dashboard/PriorityEventsList'
-import { useOperationalEvents } from '@/modules/operational-events/hooks/useOperationalEvents'
-import { selectGlobalDashboardMetrics } from '@/modules/operational-events/selectors/operationalIntelligence.selectors'
-import { selectPriorityEvents } from '@/modules/operational-events/selectors/priorityEvents.selectors'
+import { PrioritySituationsList } from '@/modules/operational-events/components/dashboard/PrioritySituationsList'
+import { useExecutiveDashboard } from '@/modules/operational-events/hooks/useExecutiveDashboard'
 import type { OperationalEnvironmentStatus } from '@/modules/operational-events/types/operational-event.types'
 import { RegisterSituationCta } from '@/shared/components/RegisterSituationCta'
 import { CunmarkIcon } from '@/shared/components/CunmarkIcon'
-import { CunmarkSectionLoader } from '@/shared/components/CunmarkSectionLoader'
 
 interface OperationalIntelligenceDashboardProps {
   onEnvironmentChange?: (environment: OperationalEnvironmentStatus) => void
@@ -22,42 +24,26 @@ export function OperationalIntelligenceDashboard({
   onEnvironmentChange,
 }: OperationalIntelligenceDashboardProps) {
   const { bootSplashActive } = useAuth()
-  const { items, loading, error, loadOperationalEvents } = useOperationalEvents()
+  const { data, loading, error, isEmpty, reload } = useExecutiveDashboard()
 
-  useEffect(() => {
-    void loadOperationalEvents()
-  }, [loadOperationalEvents])
-
-  // Tras el login el splash de app cubre la transición; el loader de sección
-  // solo debe verse en recargas internas (F5), no como segunda pantalla.
   const showSectionLoader = loading && !bootSplashActive
 
-  const metrics = useMemo(
-    () => selectGlobalDashboardMetrics(items),
-    [items],
-  )
-
-  const priorityEvents = useMemo(
-    () => selectPriorityEvents(items, 5),
-    [items],
-  )
-
   useEffect(() => {
-    onEnvironmentChange?.(metrics.environment)
-  }, [metrics.environment, onEnvironmentChange])
+    if (data) {
+      onEnvironmentChange?.(data.environment)
+    }
+  }, [data, onEnvironmentChange])
 
   return (
-    <div
-      className={`${ROOM_CONTAINER} relative max-lg:overflow-visible lg:overflow-hidden`}
-    >
-      <div className="cunmark-workstation relative flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div className={`${ROOM_CONTAINER} relative min-h-0 flex-1`}>
+      <div className="cunmark-workstation relative flex min-h-0 flex-1 flex-col">
         {showSectionLoader ? (
-          <CunmarkSectionLoader />
+          <DashboardLoadingState />
         ) : loading ? null : error ? (
-          <p role="alert" className="cunmark-ai-state cunmark-ai-state--error">
-            {error}
-          </p>
-        ) : (
+          <DashboardErrorState message={error} onRetry={() => void reload()} />
+        ) : isEmpty ? (
+          <DashboardEmptyState />
+        ) : data ? (
           <div className="cunmark-intel-shell cunmark-intelligence-v2">
             <section
               className="cunmark-intel-create"
@@ -73,8 +59,8 @@ export function OperationalIntelligenceDashboard({
                   </h2>
                 </div>
                 <p>
-                  Capture un evento o incidente para que la IA lo analice,
-                  priorice y recomiende acciones.
+                  Capture un evento o incidente para documentarlo y llevar
+                  seguimiento de su evolución.
                 </p>
               </div>
               <RegisterSituationCta
@@ -83,19 +69,15 @@ export function OperationalIntelligenceDashboard({
               />
             </section>
 
-            <IntelligenceExecutiveBrief metrics={metrics} />
+            <IntelligenceExecutiveBrief narrative={data.executiveNarrative} />
 
-            <OperationalSummaryBar
-              events={items}
-              metrics={metrics}
-              topPriority={priorityEvents[0] ?? null}
-            />
+            <DashboardOperationalSummary data={data} />
 
-            <div className="cunmark-intel-focus">
-              <PriorityEventsList events={priorityEvents} />
+            <div className="cunmark-intel-board">
+              <PrioritySituationsList situations={data.prioritySituations} />
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   )

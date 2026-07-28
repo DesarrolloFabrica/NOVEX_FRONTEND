@@ -6,24 +6,29 @@
 import {
   createContext,
   useCallback,
+  useEffect,
   useMemo,
   useReducer,
   useState,
 } from 'react'
 import type { ReactNode } from 'react'
+import {
+  bootstrapAuthSessionRequest,
+} from '@/modules/auth/services/auth-session.service'
 import type { User } from '@/modules/auth/types/user.types'
 import {
   completeOnboardingRequest,
-  loginAsEjecutorRequest,
-  loginAsSupervisorRequest,
   loginWithEmailRequest,
   logoutRequest,
 } from '@/modules/auth/services/auth.service'
+import { loginWithGoogleRequest } from '@/modules/auth/services/google-auth.service'
 import {
   clearAuthSession,
   readAuthSession,
   writeAuthSession,
 } from '@/modules/auth/utils/authSessionStorage'
+import { clearAccessToken, readAccessToken } from '@/modules/auth/utils/accessTokenStorage'
+import { setUnauthorizedHandler } from '@/shared/api/http'
 import { getErrorMessage } from '@/shared/utils/error'
 
 interface AuthState {
@@ -35,13 +40,18 @@ interface AuthState {
 
 type AuthAction =
   | { type: 'AUTH_START' }
+  | { type: 'AUTH_BOOTSTRAP_START' }
   | { type: 'AUTH_SUCCESS'; user: User }
   | { type: 'AUTH_ERROR'; error: string }
   | { type: 'AUTH_LOGOUT' }
 
 function createInitialState(): AuthState {
-  const session = readAuthSession()
-  if (!session) {
+  const token = readAccessToken()
+  if (!token) {
+    const staleSession = readAuthSession()
+    if (staleSession) {
+      clearAuthSession()
+    }
     return {
       user: null,
       isAuthenticated: false,
@@ -51,9 +61,9 @@ function createInitialState(): AuthState {
   }
 
   return {
-    user: session,
-    isAuthenticated: true,
-    loading: false,
+    user: readAuthSession(),
+    isAuthenticated: false,
+    loading: true,
     error: null,
   }
 }
@@ -61,6 +71,7 @@ function createInitialState(): AuthState {
 function authReducer(state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
     case 'AUTH_START':
+    case 'AUTH_BOOTSTRAP_START':
       return { ...state, loading: true, error: null }
 
     case 'AUTH_SUCCESS':
@@ -92,9 +103,8 @@ export interface AuthContextValue extends AuthState {
   bootSplashActive: boolean
   beginBootSplash: () => void
   endBootSplash: () => void
-  loginAsSupervisor: () => Promise<void>
-  loginAsEjecutor: (areaId: string) => Promise<void>
   loginWithEmail: (email: string) => Promise<void>
+  loginWithGoogle: (credential: string) => Promise<void>
   logout: () => Promise<void>
   completeOnboarding: () => Promise<void>
 }
@@ -105,34 +115,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, undefined, createInitialState)
   const [bootSplashActive, setBootSplashActive] = useState(false)
 
+  const clearSession = useCallback(() => {
+    clearAccessToken()
+    clearAuthSession()
+    setBootSplashActive(false)
+    dispatch({ type: 'AUTH_LOGOUT' })
+  }, [])
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      clearSession()
+    })
+
+    return () => {
+      setUnauthorizedHandler(null)
+    }
+  }, [clearSession])
+
+  useEffect(() => {
+    const token = readAccessToken()
+    if (!token) return
+
+    let cancelled = false
+
+    async function bootstrap() {
+      dispatch({ type: 'AUTH_BOOTSTRAP_START' })
+      try {
+        const user = await bootstrapAuthSessionRequest()
+        if (cancelled) return
+        writeAuthSession(user)
+        dispatch({ type: 'AUTH_SUCCESS', user })
+      } catch {
+        if (cancelled) return
+        clearAccessToken()
+        clearAuthSession()
+        dispatch({ type: 'AUTH_LOGOUT' })
+      }
+    }
+
+    void bootstrap()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const beginBootSplash = useCallback(() => {
     setBootSplashActive(true)
   }, [])
 
   const endBootSplash = useCallback(() => {
     setBootSplashActive(false)
-  }, [])
-
-  const loginAsSupervisor = useCallback(async () => {
-    dispatch({ type: 'AUTH_START' })
-    try {
-      const user = await loginAsSupervisorRequest()
-      writeAuthSession(user)
-      dispatch({ type: 'AUTH_SUCCESS', user })
-    } catch (error) {
-      dispatch({ type: 'AUTH_ERROR', error: getErrorMessage(error) })
-    }
-  }, [])
-
-  const loginAsEjecutor = useCallback(async (areaId: string) => {
-    dispatch({ type: 'AUTH_START' })
-    try {
-      const user = await loginAsEjecutorRequest(areaId)
-      writeAuthSession(user)
-      dispatch({ type: 'AUTH_SUCCESS', user })
-    } catch (error) {
-      dispatch({ type: 'AUTH_ERROR', error: getErrorMessage(error) })
-    }
   }, [])
 
   const loginWithEmail = useCallback(async (email: string) => {
@@ -146,16 +179,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const loginWithGoogle = useCallback(async (credential: string) => {
+    dispatch({ type: 'AUTH_START' })
+    try {
+      const user = await loginWithGoogleRequest(credential)
+      writeAuthSession(user)
+      dispatch({ type: 'AUTH_SUCCESS', user })
+    } catch (error) {
+      dispatch({ type: 'AUTH_ERROR', error: getErrorMessage(error) })
+    }
+  }, [])
+
   const logout = useCallback(async () => {
     dispatch({ type: 'AUTH_START' })
     try {
       await logoutRequest()
     } finally {
-      clearAuthSession()
-      setBootSplashActive(false)
-      dispatch({ type: 'AUTH_LOGOUT' })
+      clearSession()
     }
-  }, [])
+  }, [clearSession])
 
   const completeOnboarding = useCallback(async () => {
     if (!state.user || state.user.onboardingCompleted) return
@@ -164,17 +206,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const updated = await completeOnboardingRequest(current)
       writeAuthSession(updated)
       dispatch({ type: 'AUTH_SUCCESS', user: updated })
-    } catch {
-      const fallback: User = {
-        ...current,
-        onboardingCompleted: true,
-        onboardingSeenAt: new Date().toISOString(),
-      }
-      writeAuthSession(fallback)
-      dispatch({
-        type: 'AUTH_SUCCESS',
-        user: fallback,
-      })
+    } catch (error) {
+      dispatch({ type: 'AUTH_ERROR', error: getErrorMessage(error) })
     }
   }, [state.user])
 
@@ -184,9 +217,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       bootSplashActive,
       beginBootSplash,
       endBootSplash,
-      loginAsSupervisor,
-      loginAsEjecutor,
       loginWithEmail,
+      loginWithGoogle,
       logout,
       completeOnboarding,
     }),
@@ -195,9 +227,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       bootSplashActive,
       beginBootSplash,
       endBootSplash,
-      loginAsSupervisor,
-      loginAsEjecutor,
       loginWithEmail,
+      loginWithGoogle,
       logout,
       completeOnboarding,
     ],

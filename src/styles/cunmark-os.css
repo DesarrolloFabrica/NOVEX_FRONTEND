@@ -1913,6 +1913,13 @@ textarea {
   box-shadow: none !important;
 }
 
+.cunmark-os[data-scene='events'] .cunmark-os-deck__content {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding-top: 10px;
+}
+
 .cunmark-os .cunmark-events-center :is(
   .cunmark-workstation__left,
   .cunmark-workstation__main,
@@ -2170,6 +2177,15 @@ textarea {
   flex-direction: column;
   padding: 16px 22px 18px;
   overflow: hidden;
+  min-height: 0;
+}
+
+.cunmark-os .cunmark-wizard-step-pane {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .cunmark-os .cunmark-wizard-steps,
@@ -2237,7 +2253,7 @@ textarea {
   width: 100%;
   height: 100%;
   min-height: 0;
-  flex: 1;
+  flex: 1 1 auto;
   grid-template-columns: minmax(0, 1.55fr) minmax(240px, 0.7fr);
   gap: 20px 28px;
   align-items: stretch;
@@ -2246,19 +2262,20 @@ textarea {
 .cunmark-os .cunmark-capture-desk__primary,
 .cunmark-os .cunmark-capture-desk__context {
   min-width: 0;
-  height: 100%;
+  min-height: 0;
 }
 
 .cunmark-os .cunmark-capture-desk__primary {
-  display: grid;
-  grid-template-rows: auto minmax(12rem, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 12px;
+  min-height: 0;
+  flex: 1 1 auto;
 }
 
 .cunmark-os .cunmark-capture-desk__context {
-  display: grid;
-  grid-template-rows: auto auto auto minmax(7rem, 1fr) auto;
-  align-content: stretch;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
   padding-left: 22px;
   border-left: 1px solid rgb(163 255 92 / 0.08);
@@ -2321,7 +2338,7 @@ textarea {
 
 .cunmark-os .cunmark-event-capture-form textarea {
   min-height: 0;
-  height: 100%;
+  height: auto;
   max-height: none;
 }
 
@@ -2329,49 +2346,55 @@ textarea {
   min-height: 0;
 }
 
-.cunmark-os .cunmark-capture-desk__primary > label:last-child {
-  display: grid;
+.cunmark-os .cunmark-capture-desk__primary > label:last-child,
+.cunmark-os .cunmark-capture-description-block {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
   min-height: 0;
-  grid-template-rows: auto minmax(0, 1fr) auto;
 }
 
-.cunmark-os .cunmark-capture-desk__primary > label:last-child textarea {
-  min-height: 8rem;
-  height: 100%;
-}
-
-.cunmark-os .cunmark-capture-desk__context > label:nth-of-type(3) {
-  display: grid;
-  min-height: 0;
-  grid-template-rows: auto minmax(0, 1fr);
-}
-
-.cunmark-os .cunmark-capture-desk__context > label:nth-of-type(3) textarea {
-  min-height: 5rem;
-  height: 100%;
+.cunmark-os .cunmark-capture-desk__primary > label:last-child textarea,
+.cunmark-os .cunmark-capture-description {
+  flex: 1 1 0;
+  min-height: 9.5rem;
+  height: auto;
   max-height: none;
+  resize: none;
 }
 
-.cunmark-os .cunmark-event-capture-form {
-  height: 100%;
+.cunmark-os .cunmark-capture-description-block > .flex {
+  flex-shrink: 0;
 }
 
-.cunmark-os .cunmark-capture-actions {
-  margin-top: 14px;
-  padding-top: 13px;
+.cunmark-os .cunmark-capture-desk__context > label:nth-of-type(2) textarea {
+  min-height: 4.5rem;
+  height: auto;
+  max-height: 6rem;
+  resize: vertical;
 }
 
 /* Registro guiado: el contexto se captura como una entrevista operacional. */
 .cunmark-os .cunmark-capture-desk__context {
-  grid-template-rows: none;
-  align-content: start;
-  overflow: visible;
+  overflow-x: hidden;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.cunmark-os .cunmark-capture-related-coordinations {
+  flex: 0 0 auto;
 }
 
 .cunmark-os .cunmark-capture-date-time {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(6.75rem, 0.8fr);
   gap: 8px;
+}
+
+.cunmark-os .cunmark-capture-affected-parties .cunmark-capture-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .cunmark-os .cunmark-capture-affected-areas {
@@ -2385,14 +2408,15 @@ textarea {
 }
 
 .cunmark-os .cunmark-capture-chip {
-  min-height: 26px;
-  padding: 4px 8px;
+  min-height: 28px;
+  padding: 5px 10px;
   border: 1px solid rgb(111 178 255 / 0.18);
   border-radius: 999px;
   color: #8fa2ba;
   background: rgb(7 19 33 / 0.55);
-  font-size: 0.62rem;
-  line-height: 1;
+  font-size: 0.68rem;
+  line-height: 1.2;
+  cursor: pointer;
   transition: border-color 140ms ease, color 140ms ease, background 140ms ease;
 }
 
@@ -2408,13 +2432,14 @@ textarea {
   box-shadow: inset 0 0 0 1px rgb(126 204 94 / 0.08);
 }
 
-.cunmark-os .cunmark-capture-desk__context > label:nth-of-type(3) {
+.cunmark-os .cunmark-capture-desk__context > label:nth-of-type(2) {
   display: block;
 }
 
-.cunmark-os .cunmark-capture-desk__context > label:nth-of-type(3) textarea {
-  min-height: 6.5rem;
-  height: 6.5rem;
+.cunmark-os .cunmark-capture-desk__context > label:nth-of-type(2) textarea {
+  min-height: 4.5rem;
+  height: auto;
+  max-height: 6rem;
 }
 
 .cunmark-os .cunmark-capture-actions__context {
@@ -4212,12 +4237,10 @@ textarea {
 
   .cunmark-os .cunmark-capture-desk__primary {
     height: auto;
-    grid-template-rows: auto minmax(11rem, auto);
   }
 
   .cunmark-os .cunmark-capture-desk__context {
     height: auto;
-    grid-template-rows: auto;
     padding-top: 22px;
     padding-left: 0;
     border-top: 1px solid rgb(105 160 255 / 0.1);
@@ -5309,66 +5332,60 @@ textarea {
 }
 
 /* Ajuste final del layout del formulario guiado.
-   El contenido debe crecer de forma natural: el relato mantiene una altura
-   cómoda y el panel contextual ya no queda oculto detrás del pie de acciones. */
+   El contenido crece de forma natural sin forzar scroll innecesario. */
 .cunmark-os .cunmark-wizard-station > div:last-child {
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 
 .cunmark-os .cunmark-event-capture-form {
-  height: auto;
-  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
 }
 
 .cunmark-os .cunmark-capture-desk {
   height: auto;
   min-height: 0;
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   align-items: stretch;
+  overflow: hidden;
 }
 
 .cunmark-os .cunmark-capture-desk__primary,
 .cunmark-os .cunmark-capture-desk__context {
-  height: auto;
+  min-height: 0;
 }
 
 .cunmark-os .cunmark-capture-desk__primary {
-  height: 100%;
-  grid-template-rows: auto minmax(12rem, 1fr);
-}
-
-.cunmark-os .cunmark-capture-desk__primary > label:last-child {
-  display: grid;
-  min-height: 0;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-}
-
-.cunmark-os .cunmark-capture-desk__primary > label:last-child textarea {
-  height: 100%;
-  min-height: 18rem;
-  max-height: none;
+  flex: 1 1 auto;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .cunmark-os .cunmark-capture-desk__context {
-  grid-template-rows: none;
-  align-content: start;
-  overflow: visible;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
-.cunmark-os .cunmark-capture-desk__context > label:nth-of-type(3) textarea {
-  height: 7rem;
-  min-height: 7rem;
-  max-height: none;
+.cunmark-os .cunmark-capture-desk__context > label:nth-of-type(2) textarea {
+  height: 4.5rem;
+  min-height: 4.5rem;
+  max-height: 6rem;
   overflow-y: auto;
 }
 
 .cunmark-os .cunmark-capture-actions {
-  position: static;
-  z-index: auto;
-  margin-top: 18px;
+  position: relative;
+  z-index: 2;
+  margin-top: 12px;
   padding: 12px 0 4px;
-  background: transparent;
+  border-top: 1px solid rgb(111 178 255 / 0.14);
+  background: linear-gradient(180deg, rgb(2 7 17 / 0.72), rgb(2 7 17 / 0.96));
+  flex-shrink: 0;
 }
 
 .cunmark-os .cunmark-capture-actions__context {
@@ -5390,17 +5407,27 @@ textarea {
   .cunmark-os .cunmark-capture-desk {
     height: auto;
     flex: 0 0 auto;
+    align-items: start;
   }
 
   .cunmark-os .cunmark-capture-desk__primary {
-    height: auto;
-    grid-template-rows: auto auto;
+    flex: 0 0 auto;
   }
 
-  .cunmark-os .cunmark-capture-desk__primary > label:last-child textarea {
-    height: 22rem;
-    min-height: 18rem;
-    max-height: none;
+  .cunmark-os .cunmark-wizard-station > div:last-child {
+    overflow-y: auto;
+  }
+
+  .cunmark-os .cunmark-capture-description-block {
+    flex: 0 0 auto;
+  }
+
+  .cunmark-os .cunmark-capture-desk__primary > label:last-child textarea,
+  .cunmark-os .cunmark-capture-description {
+    flex: 0 0 auto;
+    min-height: 10rem;
+    max-height: 14rem;
+    resize: vertical;
   }
 
   .cunmark-os .cunmark-capture-actions {
@@ -5416,6 +5443,570 @@ textarea {
   .cunmark-os .cunmark-capture-actions > button {
     width: 100%;
     align-self: stretch;
+  }
+}
+
+.cunmark-os .cunmark-capture-quality.is-insuficiente strong {
+  color: #b45309;
+}
+
+.cunmark-os .cunmark-capture-quality.is-bueno strong {
+  color: #047857;
+}
+
+.cunmark-os .cunmark-capture-quality.is-excelente strong {
+  color: #065f46;
+}
+
+.cunmark-os .cunmark-capture-quality.is-excelente i {
+  background: #10b981;
+}
+
+.cunmark-os .cunmark-capture-autocomplete {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.cunmark-os .cunmark-capture-autocomplete__control {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.cunmark-os .cunmark-capture-autocomplete__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 4.5rem;
+  overflow-y: auto;
+  padding-top: 2px;
+}
+
+.cunmark-os .cunmark-capture-autocomplete__list {
+  position: absolute;
+  z-index: 20;
+  margin-top: 4px;
+  width: 100%;
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid rgb(126 204 94 / 0.22);
+  border-radius: 8px;
+  background: rgb(7 16 28 / 0.98);
+  box-shadow:
+    0 14px 32px -16px rgb(0 0 0 / 0.75),
+    inset 0 1px 0 rgb(255 255 255 / 0.04);
+}
+
+.cunmark-os .cunmark-capture-autocomplete__option {
+  display: block;
+  width: 100%;
+  padding: 9px 12px;
+  border: 0;
+  background: transparent;
+  color: #b8c8dc;
+  text-align: left;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.cunmark-os .cunmark-capture-autocomplete__option:hover,
+.cunmark-os .cunmark-capture-autocomplete__option:focus-visible {
+  background: rgb(16 185 129 / 0.12);
+  outline: none;
+}
+
+.cunmark-os .cunmark-capture-autocomplete__code {
+  color: #e8f2ff;
+  font-weight: 650;
+}
+
+.cunmark-os .cunmark-capture-autocomplete__name {
+  color: #8fa3bf;
+}
+
+.cunmark-os .cunmark-capture-autocomplete__empty {
+  padding: 10px 12px;
+  color: #7d90ab;
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.cunmark-os .cunmark-capture-dropzone {
+  border: 1px dashed rgb(111 178 255 / 0.28);
+  border-radius: 10px;
+  padding: 8px 12px;
+  text-align: center;
+  background: rgb(7 19 33 / 0.42);
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.cunmark-os .cunmark-capture-dropzone__text {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: #8fa2ba;
+}
+
+.cunmark-os .cunmark-capture-dropzone__action {
+  font-weight: 600;
+  color: #7ecc94;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.cunmark-os .cunmark-capture-dropzone__action:hover {
+  color: #a8e8b0;
+}
+
+.cunmark-os .cunmark-capture-dropzone.is-dragging {
+  border-color: rgb(126 204 94 / 0.55);
+  background: rgb(45 128 59 / 0.18);
+}
+
+.cunmark-os .cunmark-capture-file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid rgb(111 178 255 / 0.16);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: rgb(7 19 33 / 0.55);
+}
+
+.cunmark-os .cunmark-capture-file-item p {
+  color: #d8e4f2;
+}
+
+.cunmark-os .cunmark-capture-file-item__name {
+  color: #d8e4f2;
+}
+
+.cunmark-os .cunmark-capture-file-item__meta,
+.cunmark-os .cunmark-capture-file-item p:last-child {
+  color: #7a8fa8;
+}
+
+.cunmark-os .cunmark-capture-file-item__remove {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #b91c1c;
+}
+
+/* Expediente ejecutivo — paso Resumen del wizard */
+.cunmark-os .cunmark-executive-dossier {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cunmark-os .cunmark-wizard-step-pane--dossier {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cunmark-os .cunmark-executive-dossier__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 4px 6px 18px 2px;
+  scrollbar-gutter: stable;
+}
+
+.cunmark-os .cunmark-executive-dossier__header {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-bottom: 28px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgb(126 204 94 / 0.14);
+}
+
+.cunmark-os .cunmark-executive-dossier__eyebrow {
+  margin: 0 0 10px;
+  color: #8fa3bf;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cunmark-os .cunmark-executive-dossier__title {
+  margin: 0;
+  color: #f3f7fc;
+  font-size: clamp(1.35rem, 2vw, 1.85rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.cunmark-os .cunmark-executive-dossier__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.cunmark-os .cunmark-executive-dossier__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #b8c8dc;
+  font-size: 0.78rem;
+}
+
+.cunmark-os .cunmark-executive-dossier__meta-item svg {
+  color: #7ec85e;
+  opacity: 0.9;
+}
+
+.cunmark-os .cunmark-executive-dossier__status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 12px;
+  border: 1px solid rgb(234 179 8 / 0.28);
+  border-radius: 999px;
+  color: #fde68a;
+  background: rgb(120 90 10 / 0.18);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cunmark-os .cunmark-executive-dossier__section-title {
+  margin: 0 0 14px;
+  color: #9eb4d0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.cunmark-os .cunmark-executive-dossier__narrative {
+  margin-bottom: 28px;
+}
+
+.cunmark-os .cunmark-executive-dossier__narrative-text {
+  margin: 0;
+  padding: 22px 24px;
+  border: 1px solid rgb(126 204 94 / 0.16);
+  border-radius: 14px;
+  color: #e8f0fa;
+  background:
+    linear-gradient(145deg, rgb(47 158 58 / 0.06), transparent 42%),
+    rgb(5 14 28 / 0.72);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.03);
+  font-size: 0.95rem;
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+
+.cunmark-os .cunmark-executive-dossier__context {
+  margin-bottom: 28px;
+}
+
+.cunmark-os .cunmark-executive-dossier__context-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.cunmark-os .cunmark-executive-dossier__fact {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgb(7 16 30 / 0.42);
+}
+
+.cunmark-os .cunmark-executive-dossier__fact svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #7ec85e;
+}
+
+.cunmark-os .cunmark-executive-dossier__fact span {
+  display: block;
+  margin-bottom: 4px;
+  color: #7d90ab;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cunmark-os .cunmark-executive-dossier__fact strong {
+  display: block;
+  color: #e8f0fa;
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.cunmark-os .cunmark-executive-dossier__fact--wide {
+  grid-column: 1 / -1;
+}
+
+.cunmark-os .cunmark-executive-dossier__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.cunmark-os .cunmark-executive-dossier__chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 10px;
+  border: 1px solid rgb(126 204 94 / 0.22);
+  border-radius: 999px;
+  color: #dff5d8;
+  background: rgb(45 128 59 / 0.16);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.cunmark-os .cunmark-executive-dossier__notes {
+  margin-bottom: 28px;
+}
+
+.cunmark-os .cunmark-executive-dossier__notes p {
+  margin: 0;
+  padding: 16px 18px;
+  border-left: 2px solid rgb(126 204 94 / 0.35);
+  color: #c5d4e8;
+  background: rgb(7 16 30 / 0.28);
+  font-size: 0.86rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.cunmark-os .cunmark-executive-dossier__evidence {
+  margin-bottom: 28px;
+}
+
+.cunmark-os .cunmark-executive-dossier__evidence-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cunmark-os .cunmark-executive-dossier__evidence-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid rgb(111 178 255 / 0.12);
+  border-radius: 10px;
+  background: rgb(7 16 30 / 0.38);
+}
+
+.cunmark-os .cunmark-executive-dossier__evidence-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 8px;
+  color: #9eb4d0;
+  background: rgb(12 24 44 / 0.8);
+}
+
+.cunmark-os .cunmark-executive-dossier__evidence-copy {
+  min-width: 0;
+}
+
+.cunmark-os .cunmark-executive-dossier__evidence-copy strong {
+  display: block;
+  overflow: hidden;
+  color: #eef4fd;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cunmark-os .cunmark-executive-dossier__evidence-copy span {
+  display: block;
+  margin-top: 2px;
+  color: #7d90ab;
+  font-size: 0.68rem;
+}
+
+.cunmark-os .cunmark-executive-dossier__evidence-empty {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px dashed rgb(111 178 255 / 0.18);
+  border-radius: 10px;
+  color: #7d90ab;
+  background: rgb(7 16 30 / 0.22);
+  font-size: 0.8rem;
+}
+
+.cunmark-os .cunmark-executive-dossier__ai-brief {
+  margin-bottom: 8px;
+  padding: 20px 22px;
+  border: 1px solid rgb(126 204 94 / 0.28);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at top right, rgb(47 158 58 / 0.16), transparent 38%),
+    linear-gradient(180deg, rgb(8 22 18 / 0.92), rgb(5 14 28 / 0.92));
+  box-shadow:
+    0 18px 40px -28px rgb(126 204 94 / 0.45),
+    inset 0 1px 0 rgb(255 255 255 / 0.04);
+}
+
+.cunmark-os .cunmark-executive-dossier__ai-brief-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.cunmark-os .cunmark-executive-dossier__ai-brief-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 12px;
+  color: #dff5d8;
+  background: rgb(45 128 59 / 0.28);
+  box-shadow: 0 0 24px rgb(126 204 94 / 0.12);
+}
+
+.cunmark-os .cunmark-executive-dossier__ai-brief-head h3 {
+  margin: 0 0 6px;
+  color: #f3f7fc;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.cunmark-os .cunmark-executive-dossier__ai-brief-head p {
+  margin: 0;
+  color: #9eb4d0;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.cunmark-os .cunmark-executive-dossier__ai-points {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cunmark-os .cunmark-executive-dossier__ai-points li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #d7e6f8;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.cunmark-os .cunmark-executive-dossier__ai-points svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #7ec85e;
+}
+
+.cunmark-os .cunmark-executive-dossier__actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 2px 2px;
+  border-top: 1px solid rgb(111 178 255 / 0.14);
+  background: linear-gradient(180deg, rgb(2 7 17 / 0.72), rgb(2 7 17 / 0.98));
+}
+
+.cunmark-os .cunmark-executive-dossier__back {
+  border: 0;
+  background: transparent;
+  color: #8fa3bf;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cunmark-os .cunmark-executive-dossier__back:hover:not(:disabled) {
+  color: #d7e6f8;
+}
+
+.cunmark-os .cunmark-executive-dossier__confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.cunmark-os .cunmark-executive-dossier__submit {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid rgb(126 204 94 / 0.34);
+  border-radius: 10px;
+  color: #edf8e9;
+  background: linear-gradient(135deg, rgb(35 113 52 / 0.94), rgb(44 126 61 / 0.88));
+  box-shadow: 0 10px 24px -16px rgb(163 255 92 / 0.45);
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cunmark-os .cunmark-executive-dossier__submit:hover:not(:disabled) {
+  filter: brightness(1.04);
+  transform: translateY(-1px);
+}
+
+.cunmark-os .cunmark-executive-dossier__submit:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.cunmark-os .cunmark-executive-dossier__confirm-note {
+  margin: 0;
+  max-width: 34ch;
+  color: #6f849f;
+  font-size: 0.62rem;
+  line-height: 1.4;
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .cunmark-os .cunmark-executive-dossier__context-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cunmark-os .cunmark-executive-dossier__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cunmark-os .cunmark-executive-dossier__confirm {
+    align-items: stretch;
+  }
+
+  .cunmark-os .cunmark-executive-dossier__confirm-note {
+    text-align: left;
   }
 }
 
@@ -5438,7 +6029,15 @@ textarea {
 }
 
 .cunmark-os[data-scene='intelligence'] .cunmark-os-deck__content {
+  overflow-x: hidden;
+  overflow-y: auto;
   padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.cunmark-os[data-scene='intelligence'] .cunmark-room-container {
+  min-height: 0;
+  height: 100%;
 }
 
 .cunmark-os[data-scene='intelligence'] .cunmark-workstation {
@@ -5581,8 +6180,211 @@ textarea {
   gap: 12px;
   overflow-x: hidden;
   overflow-y: auto;
-  padding: 0 2px 2px;
+  padding: 0 2px 28px;
   scrollbar-gutter: stable;
+}
+
+.cunmark-os .cunmark-dashboard-status {
+  display: grid;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+
+.cunmark-os .cunmark-dashboard-status__alert {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 18px;
+  padding: 14px 16px;
+  border: 1px solid rgb(255 91 116 / 0.22);
+  border-radius: 11px;
+  background:
+    linear-gradient(100deg, rgb(151 34 61 / 0.12), transparent 58%),
+    rgb(8 16 34 / 0.82);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.025);
+}
+
+.cunmark-os .cunmark-dashboard-status__alert[data-risk='low'] {
+  border-color: rgb(53 214 131 / 0.22);
+  background:
+    linear-gradient(100deg, rgb(26 139 82 / 0.1), transparent 58%),
+    rgb(8 16 34 / 0.82);
+}
+
+.cunmark-os .cunmark-dashboard-status__alert--clear {
+  border-color: rgb(112 164 239 / 0.18);
+  background:
+    linear-gradient(100deg, rgb(47 158 58 / 0.08), transparent 58%),
+    rgb(8 16 34 / 0.82);
+}
+
+.cunmark-os .cunmark-dashboard-status__alert-main {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 18rem;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.cunmark-os .cunmark-dashboard-status__alert-badge {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgb(251 191 36 / 0.28);
+  border-radius: 9px;
+  color: #f6c64f;
+  background: rgb(129 84 12 / 0.16);
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+.cunmark-os .cunmark-dashboard-status__alert[data-risk='critical'] .cunmark-dashboard-status__alert-badge {
+  border-color: rgb(255 91 116 / 0.3);
+  color: #ff6d83;
+  background: rgb(151 34 61 / 0.18);
+}
+
+.cunmark-os .cunmark-dashboard-status__alert--clear .cunmark-dashboard-status__alert-badge {
+  border-color: rgb(53 214 131 / 0.28);
+  color: #45dc90;
+  background: rgb(26 139 82 / 0.13);
+}
+
+.cunmark-os .cunmark-dashboard-status__alert-copy {
+  min-width: 0;
+}
+
+.cunmark-os .cunmark-dashboard-status__alert-label {
+  margin: 0;
+  color: #ff8ea0;
+  font-size: 0.58rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cunmark-os .cunmark-dashboard-status__alert--clear .cunmark-dashboard-status__alert-label {
+  color: #8fd66f;
+}
+
+.cunmark-os .cunmark-dashboard-status__alert-title {
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: #eef4fd;
+  font-size: 0.86rem;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cunmark-os .cunmark-dashboard-status__alert-meta {
+  margin: 5px 0 0;
+  color: #7d90ab;
+  font-size: 0.64rem;
+  line-height: 1.4;
+}
+
+.cunmark-os .cunmark-dashboard-status__alert-action {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid rgb(112 164 239 / 0.24);
+  border-radius: 8px;
+  color: #d9e8ff;
+  background: rgb(14 28 53 / 0.72);
+  font-size: 0.64rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    color 160ms ease,
+    background-color 160ms ease;
+}
+
+.cunmark-os .cunmark-dashboard-status__alert-action:hover {
+  border-color: rgb(88 214 62 / 0.38);
+  color: #d9ffc0;
+  background: rgb(35 96 38 / 0.26);
+}
+
+.cunmark-os .cunmark-dashboard-status__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.cunmark-os .cunmark-dashboard-status__stat {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid rgb(112 164 239 / 0.14);
+  border-radius: 10px;
+  background: rgb(7 16 34 / 0.76);
+}
+
+.cunmark-os .cunmark-dashboard-status__stat strong {
+  color: #eef4fd;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 1.35rem;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.cunmark-os .cunmark-dashboard-status__stat[data-tone='critical'] strong {
+  color: #ff6d83;
+}
+
+.cunmark-os .cunmark-dashboard-status__stat[data-tone='action'] strong {
+  color: #ad82ff;
+}
+
+.cunmark-os .cunmark-dashboard-status__stat[data-tone='resolved'] strong {
+  color: #39d884;
+}
+
+.cunmark-os .cunmark-dashboard-status__stat[data-tone='impact'] strong {
+  color: #64d8ff;
+}
+
+.cunmark-os .cunmark-dashboard-status__stat-label {
+  color: #dce7f6;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.cunmark-os .cunmark-dashboard-status__stat small {
+  color: #7d90ab;
+  font-size: 0.58rem;
+  line-height: 1.35;
+}
+
+@media (max-width: 960px) {
+  .cunmark-os .cunmark-dashboard-status__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .cunmark-os .cunmark-dashboard-status__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cunmark-os .cunmark-dashboard-status__alert-title {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
 }
 
 .cunmark-os .cunmark-intel-create {
@@ -6028,6 +6830,54 @@ textarea {
   background: rgb(35 96 38 / 0.26);
 }
 
+.cunmark-os .cunmark-intelligence-v2 .cunmark-intel-board {
+  display: block;
+  flex: 0 0 auto;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+  padding: 8px 0 0;
+}
+
+.cunmark-os .cunmark-intel-shell.cunmark-intelligence-v2 > .cunmark-intel-board {
+  flex: 0 0 auto;
+  height: auto;
+  overflow: visible;
+}
+
+.cunmark-os .cunmark-intelligence-v2 .cunmark-intel-focus {
+  min-width: 0;
+}
+
+.cunmark-os .cunmark-intelligence-v2 .cunmark-intel-priority__table-wrap {
+  overflow-x: hidden;
+}
+
+.cunmark-os .cunmark-intelligence-v2 .cunmark-intel-priority__table {
+  width: 100%;
+  min-width: 0;
+}
+
+.cunmark-os .cunmark-intelligence-v2 .cunmark-intel-priority__table th:nth-child(1) {
+  width: 34%;
+}
+
+.cunmark-os .cunmark-intelligence-v2 .cunmark-intel-priority__table th:nth-child(2) {
+  width: 30%;
+}
+
+.cunmark-os .cunmark-intelligence-v2 .cunmark-intel-priority__table th:nth-child(3) {
+  width: 12%;
+}
+
+.cunmark-os .cunmark-intelligence-v2 .cunmark-intel-priority__table th:nth-child(4) {
+  width: 14%;
+}
+
+.cunmark-os .cunmark-intelligence-v2 .cunmark-intel-priority__table th:nth-child(5) {
+  width: 10%;
+}
+
 @media (max-width: 940px) {
   .cunmark-os .cunmark-summary-bar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -6092,7 +6942,21 @@ textarea {
 /* --- Situaciones: feed a pantalla completa + modal de detalle ------------ */
 
 .cunmark-os .cunmark-events-center--feed {
-  padding-top: 10px;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.cunmark-os .cunmark-events-center.cunmark-events-center--feed {
+  padding-top: 6px;
+}
+
+.cunmark-os .cunmark-events-center--feed .cunmark-room-container {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .cunmark-os .cunmark-events-center--feed .cunmark-workstation,
@@ -6105,7 +6969,7 @@ textarea {
 }
 
 .cunmark-os .cunmark-events-center--feed .cunmark-workstation__main {
-  padding: 4px 2px 0;
+  padding: 2px 0 0;
 }
 
 .cunmark-os .cunmark-events-center--feed .cunmark-workstation::before,
@@ -8606,9 +9470,9 @@ textarea {
 .cunmark-os[data-scene='commitments'] .cunmark-action-outcome { padding-left: 18px; border-left-color: rgb(148 163 184 / .08); }
 .cunmark-os[data-scene='commitments'] .cunmark-action-outcome dl { gap: 16px; margin-top: 22px; }
 .cunmark-os[data-scene='commitments'] .cunmark-action-outcome dd { color: #aebbd0; font-size: .67rem; }
- .cunmark-sit-section__head { padding-block: 20px 12px; }
- .cunmark-sit-section__num { box-shadow: 0 0 0 4px rgb(124 108 255 / .08); }
- .cunmark-sit-section__body { padding-bottom: 24px; }
+.cunmark-os[data-scene='commitments'] .cunmark-sit-section__head { padding-block: 20px 12px; }
+.cunmark-os[data-scene='commitments'] .cunmark-sit-section__num { box-shadow: 0 0 0 4px rgb(124 108 255 / .08); }
+.cunmark-os[data-scene='commitments'] .cunmark-sit-section__body { padding-bottom: 24px; }
 @keyframes cunmark-situation-field-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 1050px) {
   .cunmark-os[data-scene='commitments'] .cunmark-execution-detail { grid-template-columns: 1fr; }
@@ -8646,7 +9510,92 @@ textarea {
   width: 100%; margin-top: 18px; padding: 11px 14px; border: 1px solid rgb(150 132 255 / .5);
   border-radius: 7px; background: rgb(100 78 220 / .22); color: #e5e0ff; cursor: pointer; font-weight: 700;
 }
-.cunmark-os[data-scene='commitments'] .cunmark-action-outcome__cta:hover { background: rgb(119 94 246 / .35); }
+.cunmark-os[data-scene='commitments'] .cunmark-action-outcome__meta {
+  margin: 12px 0 0;
+  color: #8ea5c2;
+  font-size: 0.68rem;
+}
+
+.cunmark-os[data-scene='commitments'] .cunmark-recommendations-list,
+.cunmark-os[data-scene='commitments'] .cunmark-analysis-history-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cunmark-os[data-scene='commitments'] .cunmark-recommendation-item,
+.cunmark-os[data-scene='commitments'] .cunmark-analysis-history-item {
+  padding: 12px;
+  border: 1px solid rgb(148 163 184 / 0.12);
+  border-radius: 10px;
+  background: rgb(6 14 28 / 0.28);
+}
+
+.cunmark-os[data-scene='commitments'] .cunmark-recommendation-item__head,
+.cunmark-os[data-scene='commitments'] .cunmark-analysis-history-item > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cunmark-os[data-scene='commitments'] .cunmark-recommendation-item p,
+.cunmark-os[data-scene='commitments'] .cunmark-analysis-history-item p {
+  margin: 6px 0 0;
+  color: #aebbd0;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.cunmark-os[data-scene='commitments'] .cunmark-recommendation-item__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 8px;
+  color: #7f91ad;
+  font-size: 0.66rem;
+}
+
+.cunmark-os[data-scene='commitments'] .cunmark-recommendation-item__status {
+  display: grid;
+  gap: 4px;
+  margin-top: 10px;
+  color: #9eb4d0;
+  font-size: 0.68rem;
+}
+
+.cunmark-os[data-scene='commitments'] .cunmark-recommendation-item__status select {
+  max-width: 14rem;
+  padding: 6px 8px;
+  border: 1px solid rgb(148 163 184 / 0.2);
+  border-radius: 8px;
+  background: rgb(8 18 36 / 0.85);
+  color: #e8f2ff;
+}
+
+.cunmark-os[data-scene='commitments'] .cunmark-analysis-history-item__compare {
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #9b8cff;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cunmark-os[data-scene='commitments'] .cunmark-analysis-history-item__compare:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.cunmark-os[data-scene='commitments'] .cunmark-recommendations-block,
+.cunmark-os[data-scene='commitments'] .cunmark-analysis-history-block {
+  margin-top: 18px;
+}
+
 @media (max-width: 800px) {
   .cunmark-os[data-scene='commitments'] .cunmark-situation-context { grid-template-columns: 1fr; }
   .cunmark-os[data-scene='commitments'] .cunmark-ai-access { align-items: flex-start; flex-direction: column; }
@@ -10629,4 +11578,1191 @@ textarea {
 
 .cunmark-os[data-scene='commitments'] .cunmark-action-update__confirm {
   margin-top: 14px;
+}
+
+.cunmark-analysis-state {
+  display: flex;
+  min-height: 220px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+}
+
+.cunmark-analysis-state__spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid rgb(148 163 184 / 0.25);
+  border-top-color: rgb(5 150 105 / 0.9);
+  border-radius: 999px;
+  animation: cunmark-analysis-spin 0.9s linear infinite;
+}
+
+@keyframes cunmark-analysis-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.cunmark-os .cunmark-wizard-step-pane--intelligence {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+}
+
+.cunmark-intel-center {
+  display: flex;
+  min-height: 100%;
+  flex: 1;
+  padding: 0.5rem 0.25rem 1rem;
+}
+
+.cunmark-intel-center__main {
+  display: flex;
+  width: 100%;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.cunmark-intel-center__header {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.cunmark-intel-center__pulse {
+  position: relative;
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+.cunmark-intel-center__pulse-ring,
+.cunmark-intel-center__pulse-core {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+}
+
+.cunmark-intel-center__pulse-ring {
+  border: 1px solid rgb(52 211 153 / 0.35);
+  animation: cunmark-intel-pulse 1.8s ease-out infinite;
+}
+
+.cunmark-intel-center__pulse-core {
+  inset: 0.55rem;
+  background: linear-gradient(145deg, rgb(16 185 129 / 0.95), rgb(5 150 105 / 0.85));
+  box-shadow: 0 0 24px rgb(16 185 129 / 0.45);
+}
+
+.cunmark-intel-center__headline h2 {
+  margin: 0;
+  color: #e8f2ff;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.cunmark-intel-center__headline p {
+  margin: 0.35rem 0 0;
+  color: #8ea5c2;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.cunmark-intel-center__elapsed {
+  margin: 0;
+  color: #6f89aa;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cunmark-intel-center__body {
+  display: grid;
+  min-height: 0;
+  flex: 1;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+}
+
+.cunmark-intel-center__timeline,
+.cunmark-intel-center__preview {
+  border: 1px solid rgb(111 178 255 / 0.14);
+  border-radius: 14px;
+  background: rgb(4 12 27 / 0.72);
+  padding: 1rem 1.1rem;
+}
+
+.cunmark-intel-center__timeline h3,
+.cunmark-intel-center__preview h3 {
+  margin: 0 0 0.85rem;
+  color: #9eb6d4;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.cunmark-intel-center__timeline ol {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cunmark-intel-center__step {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: #6f89aa;
+  font-size: 0.8rem;
+  transition: color 0.25s ease;
+}
+
+.cunmark-intel-center__step--done {
+  color: #86efac;
+}
+
+.cunmark-intel-center__step--active {
+  color: #e8f2ff;
+  font-weight: 600;
+}
+
+.cunmark-intel-center__step-marker {
+  width: 1rem;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.cunmark-intel-center__status-message {
+  margin: 1rem 0 0;
+  color: #7dd3fc;
+  font-size: 0.76rem;
+  animation: cunmark-intel-fade 0.45s ease;
+}
+
+.cunmark-intel-center__preview {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.cunmark-intel-center__skeleton-card {
+  display: grid;
+  gap: 0.45rem;
+  border: 1px solid rgb(111 178 255 / 0.1);
+  border-radius: 10px;
+  background: rgb(6 14 28 / 0.55);
+  padding: 0.75rem;
+}
+
+.cunmark-intel-center__skeleton-title {
+  margin: 0;
+  color: #9eb6d4;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cunmark-intel-center__skeleton-line {
+  display: block;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgb(111 178 255 / 0.08) 0%,
+    rgb(111 178 255 / 0.22) 50%,
+    rgb(111 178 255 / 0.08) 100%
+  );
+  background-size: 200% 100%;
+  animation: cunmark-intel-shimmer 1.4s ease-in-out infinite;
+}
+
+.cunmark-intel-complete-transition {
+  display: flex;
+  min-height: 280px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  opacity: 1;
+  transition: opacity 0.25s ease;
+}
+
+.cunmark-intel-complete-transition--done {
+  opacity: 0;
+}
+
+.cunmark-intel-complete-transition__spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid rgb(148 163 184 / 0.25);
+  border-top-color: rgb(52 211 153 / 0.95);
+  border-radius: 999px;
+  animation: cunmark-analysis-spin 0.9s linear infinite;
+}
+
+.cunmark-intel-complete-transition__success {
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  place-items: center;
+  border-radius: 999px;
+  background: linear-gradient(145deg, rgb(16 185 129), rgb(5 150 105));
+  color: #fff;
+  box-shadow: 0 0 28px rgb(16 185 129 / 0.45);
+  animation: cunmark-intel-pop 0.35s ease;
+}
+
+.cunmark-intel-complete-transition__label {
+  margin: 0;
+  color: #d9e7f8;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.cunmark-intel-complete {
+  display: flex;
+  min-height: 100%;
+  flex: 1;
+  flex-direction: column;
+  gap: 1.25rem;
+  animation: cunmark-intel-fade 0.55s ease;
+}
+
+.cunmark-intel-complete__hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.cunmark-intel-complete__icon {
+  display: grid;
+  width: 3.25rem;
+  height: 3.25rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 999px;
+  background: linear-gradient(145deg, rgb(16 185 129), rgb(5 150 105));
+  color: #fff;
+  box-shadow: 0 0 24px rgb(16 185 129 / 0.35);
+}
+
+.cunmark-intel-complete__hero h2 {
+  margin: 0;
+  color: #e8f2ff;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.cunmark-intel-complete__hero p {
+  margin: 0.4rem 0 0;
+  color: #8ea5c2;
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.cunmark-intel-complete__summary {
+  border: 1px solid rgb(111 178 255 / 0.14);
+  border-radius: 14px;
+  background: rgb(4 12 27 / 0.72);
+  padding: 1rem 1.1rem;
+}
+
+.cunmark-intel-complete__metrics {
+  display: grid;
+  gap: 0.85rem 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+}
+
+.cunmark-intel-complete__metrics div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.cunmark-intel-complete__metrics dt {
+  color: #7f97b5;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.cunmark-intel-complete__metrics dd {
+  margin: 0;
+  color: #e8f2ff;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.cunmark-intel-complete__actions {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: auto;
+}
+
+.cunmark-intel-complete__primary,
+.cunmark-intel-complete__secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cunmark-intel-complete__primary {
+  min-height: 3rem;
+  background: linear-gradient(145deg, rgb(16 185 129), rgb(5 150 105));
+  color: #fff;
+  box-shadow: 0 12px 28px -16px rgb(16 185 129 / 0.8);
+}
+
+.cunmark-intel-complete__secondary {
+  min-height: 2.75rem;
+  border: 1px solid rgb(111 178 255 / 0.2);
+  background: rgb(6 14 28 / 0.55);
+  color: #d9e7f8;
+}
+
+.cunmark-intel-complete__tertiary {
+  justify-self: center;
+  color: #7f97b5;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.cunmark-intel-complete__primary:hover,
+.cunmark-intel-complete__secondary:hover {
+  transform: translateY(-1px);
+}
+
+@keyframes cunmark-intel-pulse {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.85;
+  }
+
+  70% {
+    transform: scale(1.18);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1.18);
+    opacity: 0;
+  }
+}
+
+@keyframes cunmark-intel-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes cunmark-intel-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cunmark-intel-pop {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 900px) {
+  .cunmark-intel-center__body {
+    grid-template-columns: 1fr;
+  }
+
+  .cunmark-intel-complete__metrics {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cunmark-situation-modal__dialog--state {
+  display: flex;
+  max-width: 36rem;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.cunmark-os .cunmark-summary-bar--executive {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.cunmark-os .cunmark-intel-board__aside {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.cunmark-coord-impact__list,
+.cunmark-activity-feed__list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cunmark-coord-impact__item,
+.cunmark-activity-feed__item {
+  padding: 10px 12px;
+  border: 1px solid rgb(114 164 255 / 0.14);
+  border-radius: 10px;
+  background: rgb(6 14 28 / 0.35);
+}
+
+.cunmark-coord-impact__header,
+.cunmark-activity-feed__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cunmark-coord-impact__header strong {
+  color: #e8f2ff;
+  font-size: 0.78rem;
+}
+
+.cunmark-coord-impact__header span {
+  color: #8ea5c2;
+  font-size: 0.62rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cunmark-coord-impact__name,
+.cunmark-activity-feed__copy {
+  margin: 4px 0 0;
+  color: #9eb4d0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.cunmark-coord-impact__meter {
+  height: 4px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(114 164 255 / 0.12);
+}
+
+.cunmark-coord-impact__meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgb(56 217 255 / 0.85), rgb(16 185 129 / 0.85));
+}
+
+.cunmark-coord-impact__meta {
+  margin: 6px 0 0;
+  color: #6f85a5;
+  font-size: 0.66rem;
+}
+
+.cunmark-activity-feed__type {
+  color: #7eb8e8;
+  font-size: 0.62rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cunmark-activity-feed__meta time {
+  color: #6f85a5;
+  font-size: 0.66rem;
+}
+
+.cunmark-activity-feed__title {
+  margin: 6px 0 0;
+  color: #e8f2ff;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.cunmark-dashboard-state {
+  display: grid;
+  place-content: center;
+  min-height: 280px;
+  gap: 10px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.cunmark-dashboard-state h2 {
+  margin: 0;
+  color: #e8f2ff;
+  font-size: 1rem;
+}
+
+.cunmark-dashboard-state p {
+  margin: 0;
+  color: #9eb4d0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.cunmark-dashboard-state__action {
+  justify-self: center;
+  margin-top: 8px;
+  padding: 0.55rem 1rem;
+  border: 0;
+  border-radius: 8px;
+  background: rgb(5 150 105 / 0.9);
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (max-width: 1200px) {
+  .cunmark-os .cunmark-summary-bar--executive {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.cunmark-registry-console {
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  max-width: none;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-execution-summary {
+  display: grid;
+  flex-shrink: 0;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-execution-summary__item {
+  position: relative;
+  display: flex;
+  min-height: 78px;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+  padding: 13px 15px;
+  border: 1px solid rgb(112 159 222 / 0.14);
+  border-radius: 11px;
+  background:
+    linear-gradient(135deg, rgb(52 103 154 / 0.07), transparent 58%),
+    rgb(6 14 29 / 0.72);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.025),
+    0 14px 32px -28px rgb(0 0 0 / 0.85);
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-execution-summary__item::after {
+  content: '';
+  position: absolute;
+  inset: auto 14px 0;
+  height: 1px;
+  opacity: 0.45;
+  background: linear-gradient(90deg, var(--registry-summary-accent), transparent);
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-execution-summary__item[data-tone='open'] {
+  --registry-summary-accent: #a3ff5c;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-execution-summary__item[data-tone='resolved'] {
+  --registry-summary-accent: #45dc90;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-execution-summary__item[data-tone='ai'] {
+  --registry-summary-accent: #67d8ff;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-execution-summary__item[data-tone='recommendations'] {
+  --registry-summary-accent: #b49cff;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-execution-summary__icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--registry-summary-accent) 28%, transparent);
+  border-radius: 9px;
+  color: var(--registry-summary-accent);
+  background: color-mix(in srgb, var(--registry-summary-accent) 8%, transparent);
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-execution-summary__content {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-execution-summary__label {
+  color: #8296b3;
+  font-size: 0.57rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-execution-summary__value-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-execution-summary__value-row strong {
+  color: #f2f7ff;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 1.2rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-execution-summary__badge {
+  overflow: hidden;
+  padding: 2px 6px;
+  border: 1px solid rgb(103 216 255 / 0.18);
+  border-radius: 999px;
+  color: #82cde5;
+  background: rgb(46 137 171 / 0.1);
+  font-size: 0.51rem;
+  font-weight: 650;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-execution-summary__detail {
+  overflow: hidden;
+  margin-top: 5px;
+  color: #6f84a2;
+  font-size: 0.57rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cunmark-os .cunmark-events-center--feed .cunmark-registry-console .cunmark-events-table {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  max-width: none;
+}
+
+.cunmark-os .cunmark-events-table--registry .cunmark-events-table__header--registry {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  padding: 16px 18px;
+}
+
+.cunmark-os .cunmark-registry-table-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-width: 0;
+}
+
+.cunmark-os .cunmark-registry-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+}
+
+.cunmark-os .cunmark-registry-toolbar__primary {
+  display: flex;
+  min-width: 0;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.cunmark-os .cunmark-registry-toolbar__search {
+  min-height: 40px;
+  min-width: 0;
+  flex: 1 1 28rem;
+  border-radius: 9px;
+  padding-inline: 12px 8px;
+  background: rgb(5 14 30 / 0.82);
+}
+
+.cunmark-os .cunmark-registry-toolbar__search input,
+.cunmark-os .cunmark-registry-toolbar__search input[type='search'] {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+}
+
+.cunmark-os .cunmark-registry-toolbar__clear-search {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  color: #7589a5;
+  background: rgb(119 148 187 / 0.07);
+  cursor: pointer;
+  transition: color 140ms ease, background-color 140ms ease;
+}
+
+.cunmark-os .cunmark-registry-toolbar__clear-search:hover {
+  color: #dce8f7;
+  background: rgb(119 148 187 / 0.14);
+}
+
+.cunmark-os .cunmark-registry-toolbar__actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.cunmark-os .cunmark-registry-toolbar__sort {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 8px;
+  padding-left: 11px;
+  border: 1px solid rgb(112 159 222 / 0.14);
+  border-radius: 9px;
+  color: #7085a3;
+  background: rgb(6 15 31 / 0.68);
+  font-size: 0.56rem;
+  white-space: nowrap;
+}
+
+.cunmark-os .cunmark-registry-toolbar__sort > span {
+  font-weight: 650;
+}
+
+.cunmark-os .cunmark-registry-toolbar__sort .cunmark-registry-toolbar__select {
+  width: 9.5rem;
+  height: 38px;
+  min-width: 0;
+  border: 0;
+  border-left: 1px solid rgb(112 159 222 / 0.1);
+  border-radius: 0 8px 8px 0;
+  background-color: transparent;
+}
+
+.cunmark-os .cunmark-registry-toolbar__filter-toggle {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 11px;
+  border: 1px solid rgb(126 204 94 / 0.2);
+  border-radius: 9px;
+  color: #aac0d9;
+  background:
+    linear-gradient(120deg, rgb(47 158 58 / 0.08), transparent 58%),
+    rgb(6 16 31 / 0.78);
+  font-size: 0.63rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease;
+}
+
+.cunmark-os .cunmark-registry-toolbar__filter-toggle:hover,
+.cunmark-os .cunmark-registry-toolbar__filter-toggle[aria-expanded='true'] {
+  border-color: rgb(163 255 92 / 0.34);
+  color: #d7edce;
+  background-color: rgb(15 40 31 / 0.76);
+}
+
+.cunmark-os .cunmark-registry-toolbar__filter-toggle > strong {
+  display: grid;
+  min-width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 999px;
+  color: #07110d;
+  background: #a3ff5c;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.53rem;
+}
+
+.cunmark-os .cunmark-registry-toolbar__filter-chevron {
+  transition: transform 160ms ease;
+}
+
+.cunmark-os .cunmark-registry-toolbar__filter-toggle[aria-expanded='true']
+  .cunmark-registry-toolbar__filter-chevron {
+  transform: rotate(180deg);
+}
+
+.cunmark-os .cunmark-registry-toolbar__filter-panel {
+  padding: 13px;
+  border: 1px solid rgb(112 159 222 / 0.13);
+  border-radius: 10px;
+  background:
+    linear-gradient(100deg, rgb(47 158 58 / 0.04), transparent 38%),
+    rgb(4 12 27 / 0.72);
+  animation: cunmark-registry-filters-in 160ms ease-out both;
+}
+
+.cunmark-os .cunmark-registry-toolbar__filter-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.cunmark-os .cunmark-registry-toolbar__filter-heading > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cunmark-os .cunmark-registry-toolbar__filter-heading strong {
+  color: #dce8f7;
+  font-size: 0.65rem;
+  font-weight: 650;
+}
+
+.cunmark-os .cunmark-registry-toolbar__filter-heading span {
+  color: #7186a3;
+  font-size: 0.56rem;
+}
+
+.cunmark-os .cunmark-registry-toolbar__filter-heading button {
+  border: 0;
+  padding: 2px 0;
+  color: #9bc787;
+  background: transparent;
+  font-size: 0.57rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.cunmark-os .cunmark-registry-toolbar__filter-heading button:hover {
+  color: #c3f2ad;
+}
+
+.cunmark-os .cunmark-registry-toolbar__filters {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+.cunmark-os .cunmark-registry-toolbar__select {
+  width: 100%;
+  height: 36px;
+  min-width: 0;
+  max-width: none;
+  padding: 0 28px 0 10px;
+  border: 1px solid rgb(112 159 222 / 0.16);
+  border-radius: 8px;
+  color: #b8c9de;
+  background:
+    rgb(7 17 34 / 0.92)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%237d90ab' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+    no-repeat right 10px center;
+  font-size: 0.61rem;
+  line-height: 1;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color 120ms ease, color 120ms ease;
+}
+
+.cunmark-os .cunmark-registry-toolbar__select:hover {
+  border-color: rgb(126 204 94 / 0.26);
+  color: #e8f2ff;
+}
+
+.cunmark-os .cunmark-registry-toolbar__select:focus-visible {
+  border-color: rgb(163 255 92 / 0.38);
+  outline: none;
+}
+
+.cunmark-os .cunmark-events-table--registry .cunmark-events-table__count {
+  flex-shrink: 0;
+  padding: 5px 9px;
+  border: 1px solid rgb(112 159 222 / 0.12);
+  border-radius: 999px;
+  background: rgb(7 17 34 / 0.56);
+  white-space: nowrap;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-events-table__scroll {
+  overflow: auto;
+  width: 100%;
+  min-width: 0;
+  flex: 1;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-events-table__grid--registry {
+  width: 100%;
+  min-width: 860px;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-events-table__grid--registry th,
+.cunmark-os .cunmark-registry-console .cunmark-events-table__grid--registry td {
+  box-sizing: border-box;
+  padding: 11px 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-events-table__grid--registry th {
+  font-size: 0.55rem;
+  letter-spacing: 0.06em;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-events-table__grid--registry th:nth-child(1) { width: 33%; }
+.cunmark-os .cunmark-registry-console .cunmark-events-table__grid--registry th:nth-child(2) { width: 25%; }
+.cunmark-os .cunmark-registry-console .cunmark-events-table__grid--registry th:nth-child(3) { width: 11%; }
+.cunmark-os .cunmark-registry-console .cunmark-events-table__grid--registry th:nth-child(4) { width: 8%; }
+.cunmark-os .cunmark-registry-console .cunmark-events-table__grid--registry th:nth-child(5) { width: 7%; }
+.cunmark-os .cunmark-registry-console .cunmark-events-table__grid--registry th:nth-child(6) { width: 9%; }
+.cunmark-os .cunmark-registry-console .cunmark-events-table__grid--registry th:nth-child(7) { width: 7%; }
+
+.cunmark-os .cunmark-registry-console .cunmark-events-table__grid--registry td:last-child {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-events-row__ref {
+  margin-top: 5px;
+  color: #617695;
+  font-size: 0.57rem;
+  letter-spacing: 0.035em;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-events-row__title {
+  color: #e3edf9;
+  font-size: 0.72rem;
+  line-height: 1.25;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-events-row__text,
+.cunmark-os .cunmark-registry-console .cunmark-events-row__date {
+  font-size: 0.65rem;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-events-row__identity,
+.cunmark-os .cunmark-registry-console .cunmark-events-row__context {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-events-row__context > span {
+  overflow: hidden;
+  color: #a9bdd6;
+  font-size: 0.65rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-events-row__context > small {
+  overflow: hidden;
+  margin-top: 5px;
+  color: #637998;
+  font-size: 0.56rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-events-row__status--compact {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 2px 7px;
+  font-size: 0.58rem;
+  line-height: 1.2;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-events-row__score--compact {
+  min-width: 2.25rem;
+  min-height: 1.3rem;
+  font-size: 0.66rem;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-events-row__action {
+  display: inline-flex;
+  width: auto;
+  justify-content: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.cunmark-os .cunmark-registry-console .cunmark-events-row__action--detail {
+  padding: 5px 8px;
+  font-size: 0.58rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+@keyframes cunmark-registry-filters-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cunmark-os[data-scene='events'] .cunmark-events-table__controls {
+  flex-wrap: wrap;
+}
+
+.cunmark-os[data-scene='events'] .cunmark-os-topbar {
+  min-height: 88px;
+  padding-bottom: 15px;
+}
+
+.cunmark-os[data-scene='events'] .cunmark-os-deck__content {
+  padding-top: 14px;
+}
+
+@media (max-width: 860px) {
+  .cunmark-os .cunmark-registry-console .cunmark-execution-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cunmark-os .cunmark-registry-toolbar__primary {
+    flex-direction: column;
+  }
+
+  .cunmark-os .cunmark-registry-toolbar__search {
+    flex-basis: auto;
+  }
+
+  .cunmark-os .cunmark-registry-toolbar__actions {
+    justify-content: flex-end;
+  }
+
+  .cunmark-os .cunmark-registry-toolbar__filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .cunmark-registry-console {
+    gap: 10px;
+  }
+
+  .cunmark-os .cunmark-registry-console .cunmark-execution-summary__item {
+    min-height: 72px;
+    padding: 11px;
+  }
+
+  .cunmark-os .cunmark-events-table--registry .cunmark-events-table__header--registry {
+    padding: 13px;
+  }
+
+  .cunmark-os .cunmark-registry-table-head {
+    align-items: flex-start;
+  }
+
+  .cunmark-os .cunmark-events-table__heading p {
+    display: none;
+  }
+
+  .cunmark-os .cunmark-registry-toolbar__actions {
+    justify-content: stretch;
+  }
+
+  .cunmark-os .cunmark-registry-toolbar__sort {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .cunmark-os .cunmark-registry-toolbar__sort > span {
+    display: none;
+  }
+
+  .cunmark-os .cunmark-registry-toolbar__sort .cunmark-registry-toolbar__select {
+    width: 100%;
+    border-left: 0;
+    border-radius: 8px;
+  }
+
+  .cunmark-os .cunmark-registry-toolbar__filter-toggle {
+    flex: 0 0 auto;
+  }
+
+  .cunmark-os .cunmark-registry-toolbar__filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .cunmark-os .cunmark-registry-console .cunmark-execution-summary {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scroll-snap-type: x proximity;
+  }
+
+  .cunmark-os .cunmark-registry-console .cunmark-execution-summary__item {
+    min-width: min(78vw, 260px);
+    scroll-snap-align: start;
+  }
+
+  .cunmark-os .cunmark-registry-toolbar__filters {
+    grid-template-columns: 1fr;
+  }
 }

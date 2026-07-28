@@ -10,6 +10,8 @@ export interface User {
   role: UserRole
   /** Área seleccionada (relevante sobre todo para el rol ejecutor). */
   selectedAreaId?: string
+  /** Coordinación asignada al usuario (UUID del backend). */
+  coordinationId?: string
   /** Preferencia: onboarding de primera vez completado. */
   onboardingCompleted: boolean
   /** Timestamp ISO de la primera finalización del onboarding. */

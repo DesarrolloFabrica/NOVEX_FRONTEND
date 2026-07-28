@@ -31,7 +31,7 @@ export function PostLoginBootSplash() {
   }, [bootSplashActive, loadOperationalEvents])
 
   const handleEnter = useCallback(() => {
-    navigate('/dashboard', { replace: true })
+    navigate('/red-impacto', { replace: true })
   }, [navigate])
 
   if (!bootSplashActive) return null

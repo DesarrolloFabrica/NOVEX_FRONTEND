@@ -1,4 +1,14 @@
+import { readAccessToken } from '@/modules/auth/utils/accessTokenStorage'
+
 const DEFAULT_API_BASE = 'http://localhost:3001/api/v1'
+
+type UnauthorizedHandler = () => void
+
+let unauthorizedHandler: UnauthorizedHandler | null = null
+
+export function setUnauthorizedHandler(handler: UnauthorizedHandler | null): void {
+  unauthorizedHandler = handler
+}
 
 export function getApiBaseUrl(): string {
   const fromEnv = import.meta.env.VITE_API_BASE_URL as string | undefined
@@ -15,15 +25,22 @@ export class ApiError extends Error {
   }
 }
 
+function shouldHandleUnauthorized(path: string, status: number): boolean {
+  if (status !== 401) return false
+  return !path.startsWith('/auth/google') && !path.startsWith('/auth/email')
+}
+
 export async function apiRequest<T>(
   path: string,
   init?: RequestInit,
 ): Promise<T> {
+  const accessToken = readAccessToken()
   const response = await fetch(`${getApiBaseUrl()}${path}`, {
     ...init,
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...(init?.headers ?? {}),
     },
   })
@@ -37,6 +54,11 @@ export async function apiRequest<T>(
     } catch {
       // ignore parse errors
     }
+
+    if (shouldHandleUnauthorized(path, response.status)) {
+      unauthorizedHandler?.()
+    }
+
     throw new ApiError(message, response.status)
   }
 

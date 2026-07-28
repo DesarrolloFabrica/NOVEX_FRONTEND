@@ -44,10 +44,6 @@ export {
   calculateOperationalDashboardMetrics,
   resolveRoomEnvironment,
 } from '@/modules/operational-events/engine/operational-intelligence.engine'
-export {
-  calculateDashboardMetrics,
-  resolveOperationalEnvironment,
-} from '@/modules/operational-events/engine/dashboardMetrics.engine'
 export { buildExecutiveNarrative } from '@/modules/operational-events/engine/executiveNarrative'
 export { resolveOperationalTrend } from '@/modules/operational-events/engine/operationalTrend'
 
@@ -70,8 +66,3 @@ export {
   selectRoomEnvironment,
 } from '@/modules/operational-events/selectors/operationalIntelligence.selectors'
 export { selectPriorityEvents } from '@/modules/operational-events/selectors/priorityEvents.selectors'
-
-export {
-  simulateAIInterpretation,
-  selectMockInterpretationTemplate,
-} from '@/modules/operational-events/utils/simulateAIInterpretation'

@@ -35,6 +35,8 @@ export function OperationalEventsCenterPage() {
             header={
               <CunmarkProductHeader
                 title="Situaciones registradas"
+                eyebrow="Gestión operativa"
+                context="Historial y seguimiento operacional"
                 help={
                   <>
                     <p>

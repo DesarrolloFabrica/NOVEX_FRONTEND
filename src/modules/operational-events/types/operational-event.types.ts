@@ -140,6 +140,9 @@ export type IndicatorTrend = 'up' | 'down' | 'stable'
 /** Urgencia institucional expresada en la conclusión ejecutiva. */
 export type ExecutiveUrgency = 'immediate' | 'high' | 'medium' | 'low'
 
+/** Prioridad ejecutiva del incidente (inteligencia operacional v2). */
+export type ExecutivePriorityLevel = 'CRITICA' | 'ALTA' | 'MEDIA' | 'BAJA'
+
 /** 1. ¿Qué ocurrió? */
 export interface IncidentSummary {
   /** Título ejecutivo normalizado por la IA (no el título crudo). */
@@ -247,6 +250,59 @@ export interface ExecutiveIntelligenceReport {
   executiveConclusion: ExecutiveConclusion
   /** Vacíos de información que la IA declara explícitamente (no inventa). */
   dataGaps: string[]
+  /** Decisión ejecutiva inmediata (inteligencia operacional v2). */
+  executiveDecision?: {
+    decision: string
+    urgencyLevel: ExecutiveUrgency
+    recommendedActionTime: string
+    initialResponsible: string
+  }
+  /** Prioridad institucional del incidente. */
+  executivePriority?: {
+    level: ExecutivePriorityLevel
+    justification: string
+  }
+  /** Ventana crítica antes de escalamiento del impacto. */
+  criticalWindow?: {
+    timeBeforeEscalation: string
+    explanation: string
+  }
+  /** Desglose compuesto del riesgo. */
+  riskBreakdown?: {
+    totalScore: number
+    components: Array<{
+      name: string
+      score: number
+      explanation: string
+    }>
+  }
+  /** Hipótesis causales con probabilidad. */
+  probableCauses?: Array<{
+    hypothesis: string
+    probability: number
+    justification: string
+  }>
+  /** Cadena de propagación operacional. */
+  operationalPropagation?: {
+    chain: Array<{
+      stage: string
+      description: string
+    }>
+  }
+  /** Matriz de decisiones clasificadas. */
+  decisionMatrix?: {
+    resolveNow: RecommendedAction[]
+    resolveToday: RecommendedAction[]
+    monitor: RecommendedAction[]
+    escalate: RecommendedAction[]
+  }
+  /** Lectura ejecutiva analítica (no repetir resumen). */
+  executiveNarrative?: string
+  /** Explicación cualitativa de la confianza. */
+  confidenceExplanation?: {
+    supportingFactors: string[]
+    reducingFactors: string[]
+  }
 }
 
 /**
@@ -399,7 +455,9 @@ export interface OperationalEvent {
 export interface OperationalEventDraft {
   title: string
   description: string
-  sourceAreaId: string
+  coordinationId: string
+  /** Compatibilidad con mocks históricos. */
+  sourceAreaId?: string
   /** Fecha del evento (YYYY-MM-DD o ISO 8601). */
   reportedAt: string
   observations?: string

@@ -1,6 +1,7 @@
 // Capa: página de acceso de la plataforma Cunmark
-// Responsabilidad: presentar acceso por Google (próximamente) y correo.
+// Responsabilidad: presentar acceso por Google y correo.
 
+import { GoogleLogin } from '@react-oauth/google'
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -14,29 +15,48 @@ export function LoginPage() {
     bootSplashActive,
     beginBootSplash,
     loginWithEmail,
+    loginWithGoogle,
   } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const loginAttemptedRef = useRef(false)
-  const hadSessionOnMountRef = useRef(isAuthenticated)
+  const googleButtonRef = useRef<HTMLDivElement>(null)
+  const [googleButtonWidth, setGoogleButtonWidth] = useState(360)
+  const googleButtonReadyRef = useRef(false)
 
   useEffect(() => {
+    if (loading) return
     if (!isAuthenticated) return
-
-    if (hadSessionOnMountRef.current && !loginAttemptedRef.current) {
-      navigate('/dashboard', { replace: true })
-      return
-    }
 
     if (loginAttemptedRef.current) {
       beginBootSplash()
+      return
     }
-  }, [beginBootSplash, isAuthenticated, navigate])
+
+    navigate('/red-impacto', { replace: true })
+  }, [beginBootSplash, isAuthenticated, loading, navigate])
+
+  useEffect(() => {
+    const element = googleButtonRef.current
+    if (!element || googleButtonReadyRef.current) return
+
+    const width = element.offsetWidth
+    if (width > 0) {
+      setGoogleButtonWidth(width)
+      googleButtonReadyRef.current = true
+    }
+  }, [])
 
   const handleEmailSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     loginAttemptedRef.current = true
     void loginWithEmail(email)
+  }
+
+  const handleGoogleSuccess = (credential?: string) => {
+    if (!credential) return
+    loginAttemptedRef.current = true
+    void loginWithGoogle(credential)
   }
 
   const isBusy = loading || bootSplashActive
@@ -110,15 +130,13 @@ export function LoginPage() {
           )}
 
           <div className="cunmark-login__auth-stack">
-            <button
-              type="button"
+            <div
+              ref={googleButtonRef}
               className="cunmark-login__google-action"
-              disabled
-              title="Próximamente"
-              aria-disabled="true"
+              data-loading={isBusy ? 'true' : 'false'}
             >
-              <span className="cunmark-login__google-action-main">
-                <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18">
+              <span className="cunmark-login__google-action-main" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18">
                   <path
                     fill="#4285F4"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -138,8 +156,20 @@ export function LoginPage() {
                 </svg>
                 Entrar con Google
               </span>
-              <em>Próximamente</em>
-            </button>
+
+              <div className="cunmark-login__google-action-trigger">
+                <GoogleLogin
+                  onSuccess={(response) => handleGoogleSuccess(response.credential)}
+                  onError={() => undefined}
+                  useOneTap={false}
+                  theme="outline"
+                  size="large"
+                  text="signin_with"
+                  shape="rectangular"
+                  width={googleButtonWidth}
+                />
+              </div>
+            </div>
 
             <div className="cunmark-login__separator" aria-hidden="true">
               <span />
