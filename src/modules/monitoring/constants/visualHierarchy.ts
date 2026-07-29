@@ -23,7 +23,7 @@ export const INK_BODY = 'text-sm text-slate-600'
 
 /** Tinta de leyenda — etiquetas, subtítulos, pies de campo. */
 export const INK_CAPTION =
-  'cunmark-section-title cunmark-type-meta font-medium tracking-normal text-slate-400'
+  'novex-section-title novex-type-meta font-medium tracking-normal text-slate-400'
 
 /** Tinta auxiliar — contadores, apoyo, metadata menor. */
 export const INK_AUXILIARY = 'font-mono text-[10px] text-slate-600'
@@ -122,7 +122,7 @@ export const CONTEXT_ZONE = ''
 export const CONTEXT_STATION_TITLE = INK_CAPTION
 
 export const CONTEXT_SUBTITLE =
-  'cunmark-section-label text-[11px] font-medium uppercase tracking-[0.16em] text-slate-600'
+  'novex-section-label text-[11px] font-medium uppercase tracking-[0.16em] text-slate-600'
 
 export const CONTEXT_AREA_NAME =
   `text-sm font-semibold leading-snug ${INK_PRIMARY}`

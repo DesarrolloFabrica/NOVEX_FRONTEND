@@ -14,6 +14,8 @@ export type IslandImpactState =
 
 export type IslandNodeRole = 'origin' | 'affected' | 'ambient'
 
+export type IslandLabelPlacement = 'top' | 'bottom'
+
 export interface IslandNodeProps {
   coordinationId: CoordinationId
   role: IslandNodeRole
@@ -24,6 +26,8 @@ export interface IslandNodeProps {
   onSelect?: (coordinationId: CoordinationId) => void
   scale?: number
   sceneZoom?: number
+  disabled?: boolean
+  labelPlacement?: IslandLabelPlacement
   style?: CSSProperties
   className?: string
 }
@@ -38,6 +42,8 @@ function IslandNodeView({
   onSelect,
   scale: _scale = 1,
   sceneZoom = 1,
+  disabled = false,
+  labelPlacement = 'top',
   style,
   className = '',
 }: IslandNodeProps) {
@@ -52,8 +58,9 @@ function IslandNodeView({
     useSmartTooltipPlacement(tooltipActive, sceneZoom)
 
   const handleSelect = useCallback(() => {
+    if (disabled) return
     onSelect?.(coordinationId)
-  }, [coordinationId, onSelect])
+  }, [coordinationId, disabled, onSelect])
 
   const displayState = isAmbient && impactState === 'idle' ? 'ambient' : impactState
 
@@ -79,10 +86,13 @@ function IslandNodeView({
       data-tone={displayState === 'ambient' ? 'low' : tone}
       data-impact-state={displayState}
       data-selected={selected}
+      data-disabled={disabled}
+      data-label-placement={labelPlacement}
       style={style}
       role="button"
       aria-label={`Enfocar ${coordination.name}`}
-      tabIndex={0}
+      aria-disabled={disabled}
+      tabIndex={disabled ? -1 : 0}
       onClick={handleSelect}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') {
@@ -119,11 +129,18 @@ function IslandNodeView({
           <b>{coordination.shortName}</b>
           {!isAmbient ? (
             <small>
-              Impacto: <em>{tone === 'critical' ? 'Muy alto' : tone === 'moderate' ? 'Medio' : tone === 'high' ? 'Alto' : 'Bajo'}</em>
+              Impacto:{' '}
+              <em>
+                {tone === 'critical'
+                  ? 'Muy alto'
+                  : tone === 'moderate'
+                    ? 'Medio'
+                    : tone === 'high'
+                      ? 'Alto'
+                      : 'Bajo'}
+              </em>
             </small>
-          ) : (
-            <small>Coordinación en red</small>
-          )}
+          ) : null}
         </span>
         {!isAmbient ? (
           <span className="propagation-island__state" aria-hidden="true">

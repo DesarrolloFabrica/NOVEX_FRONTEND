@@ -27,20 +27,20 @@ export function AiIndicatorsPanel({ indicators }: AiIndicatorsPanelProps) {
 
   return (
     <section
-      className="cunmark-intel-change cunmark-ai-indicators"
+      className="novex-intel-change novex-ai-indicators"
       aria-labelledby="ai-indicators-heading"
     >
-      <h3 id="ai-indicators-heading" className="cunmark-section-eyebrow mb-0">
+      <h3 id="ai-indicators-heading" className="novex-section-eyebrow mb-0">
         Indicadores IA
       </h3>
-      <p className="cunmark-section-hint mb-2">
+      <p className="novex-section-hint mb-2">
         Desempeño del motor de análisis ejecutivo.
       </p>
 
       {!hasData ? (
         <DashboardNoDataState label="Aún no hay análisis IA registrados." />
       ) : (
-        <ul className="cunmark-intel-change__facts">
+        <ul className="novex-intel-change__facts">
           <li>
             <span>Análisis realizados</span>
             <strong>{indicators.totalAnalyses}</strong>

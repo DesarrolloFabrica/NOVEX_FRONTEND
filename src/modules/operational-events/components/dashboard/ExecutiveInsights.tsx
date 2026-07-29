@@ -1,6 +1,6 @@
 import type { ExecutiveDashboardData } from '@/modules/api/types/dashboard.types'
 import { Link } from 'react-router-dom'
-import { CunmarkIcon, type CunmarkIconName } from '@/shared/components/CunmarkIcon'
+import { NovexIcon, type NovexIconName } from '@/shared/components/NovexIcon'
 
 interface ExecutiveInsightsProps {
   data: ExecutiveDashboardData
@@ -11,7 +11,7 @@ export function ExecutiveInsights({ data }: ExecutiveInsightsProps) {
   const top = data.prioritySituations[0]
 
   const insights: Array<{
-    icon: CunmarkIconName
+    icon: NovexIconName
     tone: string
     title: string
     copy: string
@@ -50,22 +50,22 @@ export function ExecutiveInsights({ data }: ExecutiveInsightsProps) {
   ]
 
   return (
-    <section className="cunmark-insight-grid" aria-label="Insights operativos">
+    <section className="novex-insight-grid" aria-label="Insights operativos">
       {insights.map((insight) => (
-        <article className="cunmark-insight-card" data-tone={insight.tone} key={insight.title}>
-          <div className="cunmark-insight-card__icon">
-            <CunmarkIcon name={insight.icon} size={17} />
+        <article className="novex-insight-card" data-tone={insight.tone} key={insight.title}>
+          <div className="novex-insight-card__icon">
+            <NovexIcon name={insight.icon} size={17} />
           </div>
-          <div className="cunmark-insight-card__body">
-            <p className="cunmark-insight-card__title">{insight.title}</p>
-            <p className="cunmark-insight-card__copy">{insight.copy}</p>
+          <div className="novex-insight-card__body">
+            <p className="novex-insight-card__title">{insight.title}</p>
+            <p className="novex-insight-card__copy">{insight.copy}</p>
             <Link
               to={insight.href}
               viewTransition
-              className="cunmark-insight-card__action"
+              className="novex-insight-card__action"
             >
               {insight.action}
-              <CunmarkIcon name="arrow-up-right" size={13} />
+              <NovexIcon name="arrow-up-right" size={13} />
             </Link>
           </div>
         </article>

@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { CunmarkIcon } from '@/shared/components/CunmarkIcon'
+import { NovexIcon } from '@/shared/components/NovexIcon'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 
-interface CunmarkUserMenuProps {
+interface NovexUserMenuProps {
   onLogout?: () => void
 }
 
-export function CunmarkUserMenu({ onLogout }: CunmarkUserMenuProps) {
+export function NovexUserMenu({ onLogout }: NovexUserMenuProps) {
   const { user, logout } = useAuth()
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -39,51 +39,51 @@ export function CunmarkUserMenu({ onLogout }: CunmarkUserMenuProps) {
   }
 
   return (
-    <div className="cunmark-user-menu" ref={rootRef}>
+    <div className="novex-user-menu" ref={rootRef}>
       <button
         type="button"
-        className="cunmark-user-menu__trigger"
+        className="novex-user-menu__trigger"
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={`Menú de usuario: ${user?.name ?? 'Operador Cunmark'}`}
+        aria-label={`Menú de usuario: ${user?.name ?? 'Operador Novex'}`}
         onClick={() => setOpen((value) => !value)}
       >
-        <span className="cunmark-user-menu__avatar" aria-hidden="true">
+        <span className="novex-user-menu__avatar" aria-hidden="true">
           {firstName.slice(0, 1)}
         </span>
-        <span className="cunmark-user-menu__identity">
-          <strong>{user?.name ?? 'Operador Cunmark'}</strong>
+        <span className="novex-user-menu__identity">
+          <strong>{user?.name ?? 'Operador Novex'}</strong>
           <small>{role}</small>
         </span>
-        <CunmarkIcon name="chevron-down" size={15} className="cunmark-user-menu__chevron" />
+        <NovexIcon name="chevron-down" size={15} className="novex-user-menu__chevron" />
       </button>
 
       {open ? (
-        <div className="cunmark-user-menu__popover" role="menu">
-          <div className="cunmark-user-menu__popover-head">
-            <span className="cunmark-user-menu__status-dot" aria-hidden="true" />
+        <div className="novex-user-menu__popover" role="menu">
+          <div className="novex-user-menu__popover-head">
+            <span className="novex-user-menu__status-dot" aria-hidden="true" />
             <div>
               <strong>Sesión activa</strong>
-              <small>Acceso protegido · Cunmark</small>
+              <small>Acceso protegido · Novex</small>
             </div>
           </div>
-          <div className="cunmark-user-menu__items">
+          <div className="novex-user-menu__items">
             <button type="button" role="menuitem" onClick={() => setOpen(false)}>
-              <CunmarkIcon name="user" />
+              <NovexIcon name="user" />
               Perfil
             </button>
             <button type="button" role="menuitem" onClick={() => setOpen(false)}>
-              <CunmarkIcon name="settings" />
+              <NovexIcon name="settings" />
               Preferencias
             </button>
           </div>
           <button
             type="button"
             role="menuitem"
-            className="cunmark-user-menu__logout"
+            className="novex-user-menu__logout"
             onClick={() => void handleLogout()}
           >
-            <CunmarkIcon name="log-out" />
+            <NovexIcon name="log-out" />
             Cerrar sesión
           </button>
         </div>

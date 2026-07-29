@@ -3,9 +3,12 @@
 
 import type { User } from '@/modules/auth/types/user.types'
 
-const AUTH_SESSION_KEY = 'cunmark.auth.session.v1'
-/** Clave legacy del rebrand Omega → Cunmark. */
-const LEGACY_AUTH_SESSION_KEY = 'omega.auth.session.v1'
+const AUTH_SESSION_KEY = 'novex.auth.session.v1'
+/** Claves legacy del rebrand Omega → Cunmark -> NOVEX. */
+const LEGACY_AUTH_SESSION_KEYS = [
+  'cunmark.auth.session.v1',
+  'omega.auth.session.v1',
+] as const
 
 function getStorage(): Storage | null {
   try {
@@ -36,6 +39,12 @@ function parseUser(raw: string | null): User | null {
   }
 }
 
+function clearLegacyAuthSessions(storage: Storage): void {
+  for (const key of LEGACY_AUTH_SESSION_KEYS) {
+    storage.removeItem(key)
+  }
+}
+
 export function readAuthSession(): User | null {
   const storage = getStorage()
   if (!storage) return null
@@ -44,13 +53,17 @@ export function readAuthSession(): User | null {
     const current = parseUser(storage.getItem(AUTH_SESSION_KEY))
     if (current) return current
 
-    const legacy = parseUser(storage.getItem(LEGACY_AUTH_SESSION_KEY))
-    if (!legacy) return null
+    for (const legacyKey of LEGACY_AUTH_SESSION_KEYS) {
+      const legacy = parseUser(storage.getItem(legacyKey))
+      if (!legacy) continue
 
-    // Migración one-shot: reescribe en la clave nueva y limpia la legacy.
-    storage.setItem(AUTH_SESSION_KEY, JSON.stringify(legacy))
-    storage.removeItem(LEGACY_AUTH_SESSION_KEY)
-    return legacy
+      // Migración one-shot: reescribe en la clave nueva y limpia las legacy.
+      storage.setItem(AUTH_SESSION_KEY, JSON.stringify(legacy))
+      clearLegacyAuthSessions(storage)
+      return legacy
+    }
+
+    return null
   } catch {
     return null
   }
@@ -62,7 +75,7 @@ export function writeAuthSession(user: User): void {
 
   try {
     storage.setItem(AUTH_SESSION_KEY, JSON.stringify(user))
-    storage.removeItem(LEGACY_AUTH_SESSION_KEY)
+    clearLegacyAuthSessions(storage)
   } catch {
     // Ignorar cuotas/privacidad del navegador.
   }
@@ -74,7 +87,7 @@ export function clearAuthSession(): void {
 
   try {
     storage.removeItem(AUTH_SESSION_KEY)
-    storage.removeItem(LEGACY_AUTH_SESSION_KEY)
+    clearLegacyAuthSessions(storage)
   } catch {
     // Ignorar.
   }

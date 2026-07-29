@@ -1,15 +1,15 @@
 import { Link } from 'react-router-dom'
 import type { PrioritySituationCard } from '@/modules/api/types/dashboard.types'
 import { FOCUS_VISIBLE } from '@/modules/monitoring/constants/monitoringTheme'
-import { CunmarkIcon } from '@/shared/components/CunmarkIcon'
+import { NovexIcon } from '@/shared/components/NovexIcon'
 
 interface PrioritySituationsListProps {
   situations: PrioritySituationCard[]
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  OPEN: 'Abierta',
-  IN_PROGRESS: 'En progreso',
+  OPEN: 'Registrada',
+  IN_PROGRESS: 'En atención',
   RESOLVED: 'Resuelta',
   CLOSED: 'Cerrada',
 }
@@ -38,12 +38,12 @@ export function PrioritySituationsList({
 }: PrioritySituationsListProps) {
   return (
     <section
-      className="cunmark-intel-priority"
+      className="novex-intel-priority"
       aria-labelledby="intel-priority-heading"
     >
-      <div className="cunmark-intel-priority__heading">
-        <div className="cunmark-intel-priority__heading-copy">
-          <div className="cunmark-intel-priority__title-row">
+      <div className="novex-intel-priority__heading">
+        <div className="novex-intel-priority__heading-copy">
+          <div className="novex-intel-priority__title-row">
             <h3 id="intel-priority-heading">Situaciones recientes</h3>
           </div>
           <p>
@@ -53,15 +53,15 @@ export function PrioritySituationsList({
         <Link
           to="/situaciones"
           viewTransition
-          className={`cunmark-intel-priority__view-all ${FOCUS_VISIBLE}`}
+          className={`novex-intel-priority__view-all ${FOCUS_VISIBLE}`}
         >
           Ver todas
-          <CunmarkIcon name="arrow-up-right" size={12} />
+          <NovexIcon name="arrow-up-right" size={12} />
         </Link>
       </div>
 
       {situations.length === 0 ? (
-        <p className="cunmark-empty-signal py-3 text-sm leading-relaxed text-slate-400">
+        <p className="novex-empty-signal py-3 text-sm leading-relaxed text-slate-400">
           No hay situaciones registradas todavía.{' '}
           <Link
             to="/situaciones/nueva"
@@ -72,8 +72,8 @@ export function PrioritySituationsList({
           </Link>
         </p>
       ) : (
-        <div className="cunmark-intel-priority__table-wrap">
-          <table className="cunmark-intel-priority__table">
+        <div className="novex-intel-priority__table-wrap">
+          <table className="novex-intel-priority__table">
             <thead>
               <tr>
                 <th scope="col">Situación</th>
@@ -87,12 +87,12 @@ export function PrioritySituationsList({
               {situations.map((situation) => (
                 <tr key={situation.id}>
                   <td data-label="Situación">
-                    <strong className="cunmark-intel-priority__event-title">
+                    <strong className="novex-intel-priority__event-title">
                       {situation.title}
                     </strong>
                   </td>
                   <td data-label="Área / Proceso">
-                    <span className="cunmark-intel-priority__area">
+                    <span className="novex-intel-priority__area">
                       {situation.coordinationName}
                       {situation.categoryName ? ` · ${situation.categoryName}` : ''}
                       {' · '}
@@ -101,7 +101,7 @@ export function PrioritySituationsList({
                   </td>
                   <td data-label="Estado">
                     <span
-                      className="cunmark-intel-priority__status"
+                      className="novex-intel-priority__status"
                       data-status={situation.status.toLowerCase()}
                     >
                       {STATUS_LABEL[situation.status] ?? situation.status}
@@ -116,10 +116,10 @@ export function PrioritySituationsList({
                     <Link
                       to={`/situaciones?situation=${situation.id}`}
                       viewTransition
-                      className={`cunmark-intel-priority__detail ${FOCUS_VISIBLE}`}
+                      className={`novex-intel-priority__detail ${FOCUS_VISIBLE}`}
                     >
                       Ver detalle
-                      <CunmarkIcon name="arrow-up-right" size={11} />
+                      <NovexIcon name="arrow-up-right" size={11} />
                     </Link>
                   </td>
                 </tr>

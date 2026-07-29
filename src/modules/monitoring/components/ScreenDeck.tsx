@@ -23,9 +23,9 @@ export function ScreenDeck({
   className = '',
 }: ScreenDeckProps) {
   return (
-    <div className={`cunmark-os-deck ${className}`} data-environment={environment}>
+    <div className={`novex-os-deck ${className}`} data-environment={environment}>
       {header}
-      <div className="cunmark-os-deck__content">{children}</div>
+      <div className="novex-os-deck__content">{children}</div>
     </div>
   )
 }

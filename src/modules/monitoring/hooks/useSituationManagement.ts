@@ -4,14 +4,12 @@ import type {
   SituationListItem,
   SituationManagementSummary,
 } from '@/modules/api/types/situation-management.types'
-import type { UpdateSituationRecommendationPayload } from '@/modules/api/recommendations.api'
 import {
   loadSituationDossier,
   loadSituationManagementList,
-  updateRecommendationStatus,
   updateSituationStatus,
 } from '@/modules/services/situationManagementData.service'
-import type { SituationResponse } from '@/modules/situations/types/situation.types'
+import type { UpdateSituationStatusInput } from '@/modules/monitoring/utils/situation-lifecycle'
 import { getErrorMessage } from '@/shared/utils/error'
 
 export function useSituationManagement() {
@@ -82,45 +80,18 @@ export function useSituationManagement() {
   )
 
   const updateSituation = useCallback(
-    async (status: SituationResponse['status']) => {
+    async (input: UpdateSituationStatusInput) => {
       if (!selectedSituationId) return
       setIsUpdating(true)
       try {
-        const updated = await updateSituationStatus(selectedSituationId, status)
-        setSituations((current) =>
-          current.map((item) =>
-            item.id === updated.id
-              ? {
-                  ...item,
-                  status: updated.status,
-                  updatedAt: updated.updatedAt,
-                }
-              : item,
-          ),
-        )
+        await updateSituationStatus(selectedSituationId, input)
+        await loadList()
         await loadDossier(selectedSituationId)
       } finally {
         setIsUpdating(false)
       }
     },
-    [loadDossier, selectedSituationId],
-  )
-
-  const updateRecommendation = useCallback(
-    async (
-      recommendationId: string,
-      payload: UpdateSituationRecommendationPayload,
-    ) => {
-      if (!selectedSituationId) return
-      setIsUpdating(true)
-      try {
-        await updateRecommendationStatus(recommendationId, payload)
-        await loadDossier(selectedSituationId)
-      } finally {
-        setIsUpdating(false)
-      }
-    },
-    [loadDossier, selectedSituationId],
+    [loadDossier, loadList, selectedSituationId],
   )
 
   return {
@@ -139,6 +110,5 @@ export function useSituationManagement() {
     reloadDossier: () =>
       selectedSituationId ? loadDossier(selectedSituationId) : Promise.resolve(),
     updateSituation,
-    updateRecommendation,
   }
 }

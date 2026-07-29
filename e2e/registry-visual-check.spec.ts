@@ -95,8 +95,8 @@ const situations = [
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(
     ({ user }) => {
-      localStorage.setItem('cunmark.auth.accessToken.v1', 'e2e-token')
-      localStorage.setItem('cunmark.auth.session.v1', JSON.stringify(user))
+      localStorage.setItem('novex.auth.accessToken.v1', 'e2e-token')
+      localStorage.setItem('novex.auth.session.v1', JSON.stringify(user))
     },
     { user: session },
   )
@@ -155,8 +155,8 @@ test('valida la nueva jerarquía visual del registro', async ({ page }) => {
   await page.goto('/situaciones')
 
   await expect(page.getByRole('heading', { name: 'Situaciones registradas' })).toBeVisible()
-  await expect(page.locator('.cunmark-execution-summary__item')).toHaveCount(4)
-  await expect(page.locator('.cunmark-events-table__grid--registry th')).toHaveCount(7)
+  await expect(page.locator('.novex-execution-summary__item')).toHaveCount(4)
+  await expect(page.locator('.novex-events-table__grid--registry th')).toHaveCount(7)
   await expect(page.locator('#registry-filter-panel')).toBeHidden()
 
   await page.screenshot({

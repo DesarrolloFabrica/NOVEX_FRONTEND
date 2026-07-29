@@ -19,12 +19,12 @@ export function RegisterSituationCta({
     <Link
       to="/situaciones/nueva"
       viewTransition
-      className={`cunmark-register-cta cunmark-register-cta--${variant} ${className}`.trim()}
+      className={`novex-register-cta novex-register-cta--${variant} ${className}`.trim()}
       aria-label="Registrar nueva situación"
     >
-      <span className="cunmark-register-cta__label">{label}</span>
+      <span className="novex-register-cta__label">{label}</span>
       {variant === 'rail' ? (
-        <span className="cunmark-register-cta__mark" aria-hidden="true">
+        <span className="novex-register-cta__mark" aria-hidden="true">
           +
         </span>
       ) : null}

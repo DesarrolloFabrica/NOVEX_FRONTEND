@@ -99,7 +99,7 @@ export interface OperationalIndicator {
 }
 
 // ---------------------------------------------------------------------------
-// CONTRATO DEFINITIVO DE INTELIGENCIA OPERACIONAL — cunmark.intelligence.v2
+// CONTRATO DEFINITIVO DE INTELIGENCIA OPERACIONAL — novex.intelligence.v2
 //
 // La IA no clasifica incidentes: asiste decisiones. Este contrato responde
 // las preguntas de un Director de Operaciones. Cuando se conecte Gemini real,
@@ -107,10 +107,11 @@ export interface OperationalIndicator {
 // ---------------------------------------------------------------------------
 
 /** Versión estable del contrato de inteligencia. */
-export const INTELLIGENCE_CONTRACT_VERSION = 'cunmark.intelligence.v2'
+export const INTELLIGENCE_CONTRACT_VERSION = 'novex.intelligence.v2'
 
-/** Versiones legacy aceptadas en lectura tras el rebrand Omega → Cunmark. */
+/** Versiones legacy aceptadas en lectura tras el rebrand Omega → Cunmark -> NOVEX. */
 export const LEGACY_INTELLIGENCE_CONTRACT_VERSIONS = [
+  'cunmark.intelligence.v2',
   'omega.intelligence.v2',
 ] as const
 
@@ -364,7 +365,7 @@ export interface AIInterpretation {
   /** Confianza opcional 0..1. */
   confidence?: number
   /**
-   * Reporte ejecutivo definitivo (contrato cunmark.intelligence.v2).
+   * Reporte ejecutivo definitivo (contrato novex.intelligence.v2).
    * Opcional por compatibilidad: interpretaciones antiguas no lo traen.
    * El proveedor de IA (mock hoy, Gemini mañana) siempre debe producirlo.
    */

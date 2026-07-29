@@ -10,8 +10,11 @@ import {
   type SituationCaptureDraft,
 } from '@/modules/situations/types/situation-capture.types'
 
-const DRAFT_KEY = 'cunmark.situationCapture.draft.v1'
-const STEP_KEY = 'cunmark.situationCapture.step.v1'
+const DRAFT_KEY = 'novex.situationCapture.draft.v1'
+const STEP_KEY = 'novex.situationCapture.step.v1'
+/** Claves legacy del rebrand Cunmark -> NOVEX. */
+const LEGACY_DRAFT_KEYS = ['cunmark.situationCapture.draft.v1'] as const
+const LEGACY_STEP_KEYS = ['cunmark.situationCapture.step.v1'] as const
 
 const DETECTION_METHODS = new Set<DetectionMethod>(
   DETECTION_METHOD_OPTIONS.map((option) => option.value),
@@ -75,12 +78,32 @@ function parseWizardStep(raw: string | null): WizardStepId | null {
   return null
 }
 
+function clearLegacyDraftKeys(storage: Storage): void {
+  for (const key of LEGACY_DRAFT_KEYS) storage.removeItem(key)
+}
+
+function clearLegacyStepKeys(storage: Storage): void {
+  for (const key of LEGACY_STEP_KEYS) storage.removeItem(key)
+}
+
 export function readSituationCaptureDraft(): SituationCaptureDraft | null {
   const storage = getStorage()
   if (!storage) return null
 
   try {
-    const stored = parseStoredDraft(storage.getItem(DRAFT_KEY))
+    let stored = parseStoredDraft(storage.getItem(DRAFT_KEY))
+
+    if (!stored) {
+      for (const legacyKey of LEGACY_DRAFT_KEYS) {
+        const legacy = parseStoredDraft(storage.getItem(legacyKey))
+        if (!legacy) continue
+        storage.setItem(DRAFT_KEY, JSON.stringify(legacy))
+        clearLegacyDraftKeys(storage)
+        stored = legacy
+        break
+      }
+    }
+
     if (!stored) return null
 
     return {
@@ -111,6 +134,7 @@ export function writeSituationCaptureDraft(draft: SituationCaptureDraft): void {
 
   try {
     storage.setItem(DRAFT_KEY, JSON.stringify(serializable))
+    clearLegacyDraftKeys(storage)
   } catch {
     // Ignorar cuotas/privacidad del navegador.
   }
@@ -121,7 +145,18 @@ export function readSituationCaptureWizardStep(): WizardStepId | null {
   if (!storage) return null
 
   try {
-    return parseWizardStep(storage.getItem(STEP_KEY))
+    const current = parseWizardStep(storage.getItem(STEP_KEY))
+    if (current) return current
+
+    for (const legacyKey of LEGACY_STEP_KEYS) {
+      const legacy = parseWizardStep(storage.getItem(legacyKey))
+      if (!legacy) continue
+      storage.setItem(STEP_KEY, String(legacy))
+      clearLegacyStepKeys(storage)
+      return legacy
+    }
+
+    return null
   } catch {
     return null
   }
@@ -134,10 +169,12 @@ export function writeSituationCaptureWizardStep(step: WizardStepId): void {
   try {
     if (step === 3) {
       storage.removeItem(STEP_KEY)
+      clearLegacyStepKeys(storage)
       return
     }
 
     storage.setItem(STEP_KEY, String(step))
+    clearLegacyStepKeys(storage)
   } catch {
     // Ignorar.
   }
@@ -150,6 +187,8 @@ export function clearSituationCapturePersistence(): void {
   try {
     storage.removeItem(DRAFT_KEY)
     storage.removeItem(STEP_KEY)
+    clearLegacyDraftKeys(storage)
+    clearLegacyStepKeys(storage)
   } catch {
     // Ignorar.
   }

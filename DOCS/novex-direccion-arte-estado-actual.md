@@ -1,4 +1,4 @@
-# CUNMARK — Dirección de Arte: estado actual
+# NOVEX — Dirección de Arte: estado actual
 
 > Referencia de la capa visual implementada en el Centro de Monitoreo.
 > Solo documenta **presentación** (Tailwind, composición, constantes visuales). No describe lógica de negocio.
@@ -14,8 +14,8 @@ Stack visual: **React + TypeScript + Tailwind CSS v4**. Animaciones de microacti
 La experiencia se compone en capas físicas anidadas, montadas en `MonitoringPage`:
 
 ```
-CunmarkRoom          → escenario exterior (fondo, profundidad, viñeta)
-  CunmarkFrame       → marco metálico de gran pantalla operativa
+NovexRoom          → escenario exterior (fondo, profundidad, viñeta)
+  NovexFrame       → marco metálico de gran pantalla operativa
     MainScreen     → Cristal Maestro (lámina técnica)
       ScreenDeck   → cabecera + deck operativo
         MonitoringLayout → rejilla grabada + overlay de proyección
@@ -23,8 +23,8 @@ CunmarkRoom          → escenario exterior (fondo, profundidad, viñeta)
 
 | Componente | Ruta | Responsabilidad |
 |---|---|---|
-| `CunmarkRoom` | `src/modules/room/components/CunmarkRoom.tsx` | Suelo, profundidad radial, iluminación ambiental reactiva |
-| `CunmarkFrame` | `src/modules/room/components/CunmarkFrame.tsx` | Chasis metálico, bisel, sombra proyectada |
+| `NovexRoom` | `src/modules/room/components/NovexRoom.tsx` | Suelo, profundidad radial, iluminación ambiental reactiva |
+| `NovexFrame` | `src/modules/room/components/NovexFrame.tsx` | Chasis metálico, bisel, sombra proyectada |
 | `MainScreen` | `src/modules/room/components/MainScreen.tsx` | Lámina de cristal con material estratificado |
 | `ScreenDeck` | `src/modules/monitoring/components/ScreenDeck.tsx` | Cabecera incrustada y región operativa |
 | `MonitoringLayout` | `src/modules/monitoring/components/MonitoringLayout.tsx` | Rejilla de estaciones + overlay del holograma |
@@ -103,7 +103,7 @@ Cada material tiene tokens propios de sombra, gradiente y bisel. No se mezclan l
 Iluminación direccional reactiva al estado operativo del área (Sprint 5.1).
 
 - Mapa de estados: `operationalRoomState.ts` (`neutral`, `healthy`, `attention`, `risk`, `critical`)
-- Consumo: `CunmarkRoom`, `CunmarkFrame`, `MainScreen`, `ScreenDeck`, consolas, paneles, plataforma
+- Consumo: `NovexRoom`, `NovexFrame`, `MainScreen`, `ScreenDeck`, consolas, paneles, plataforma
 - Principio: **la Sala comunica el estado del área; el Holograma comunica el expediente**
 - No son overlays planos de color: gradientes direccionales en fondo, bisel del marco, tinte del cristal, pools de luz en estaciones y rieles de plataforma
 - Transiciones: `ambientLighting.ts` (`AMBIENT_LIGHT_TRANSITION`, ~700 ms)
@@ -119,7 +119,7 @@ Respiración institucional mínima (Sprint 5.2) — solo CSS, sin alterar conten
 - Clases: `operationalBreathing.ts`
 - Keyframes: `src/index.css` (ciclos 11–18 s, desincronizados)
 - Ámbitos: sala, marco, cristal, plataforma, material del holograma (no el texto del expediente)
-- Accesibilidad: `@media (prefers-reduced-motion: reduce)` desactiva todas las animaciones `cunmark-breath-*`
+- Accesibilidad: `@media (prefers-reduced-motion: reduce)` desactiva todas las animaciones `novex-breath-*`
 
 ---
 
@@ -222,7 +222,7 @@ Objetivo: recuperar presencia cinematográfica en desktop **sin scroll vertical*
 
 ## 14. Comandos de verificación
 
-Ejecutar desde la raíz del repositorio (`CUNMARK_FRONTEND/`):
+Ejecutar desde la raíz del repositorio (`NOVEX_FRONTEND/`):
 
 ```bash
 npm run test

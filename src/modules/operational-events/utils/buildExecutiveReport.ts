@@ -1,5 +1,5 @@
 // Capa: utilidades — constructor del reporte ejecutivo mock.
-// Responsabilidad: producir el contrato cunmark.intelligence.v2 a partir del
+// Responsabilidad: producir el contrato novex.intelligence.v2 a partir del
 // contexto del evento SIN inventar datos ajenos a él. Cuando Gemini real esté
 // disponible, este builder se reemplaza por la respuesta del proveedor:
 // el resto del sistema no cambia.

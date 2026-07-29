@@ -6,7 +6,7 @@ import type {
   AIInterpretation,
   OperationalEvent,
 } from '@/modules/operational-events/types/operational-event.types'
-import { CunmarkIcon } from '@/shared/components/CunmarkIcon'
+import { NovexIcon } from '@/shared/components/NovexIcon'
 import { FOCUS_VISIBLE } from '@/modules/monitoring/constants/monitoringTheme'
 
 interface AnalysisCompletedStateProps {
@@ -70,12 +70,12 @@ export function AnalysisCompletedState({
 
   return (
     <section
-      className="cunmark-intel-complete"
+      className="novex-intel-complete"
       aria-labelledby="analysis-complete-title"
     >
-      <header className="cunmark-intel-complete__hero">
-        <div className="cunmark-intel-complete__icon" aria-hidden="true">
-          <CunmarkIcon name="check" size={30} />
+      <header className="novex-intel-complete__hero">
+        <div className="novex-intel-complete__icon" aria-hidden="true">
+          <NovexIcon name="check" size={30} />
         </div>
         <div>
           <h2 id="analysis-complete-title">Análisis Ejecutivo completado</h2>
@@ -86,8 +86,8 @@ export function AnalysisCompletedState({
         </div>
       </header>
 
-      <article className="cunmark-intel-complete__summary">
-        <dl className="cunmark-intel-complete__metrics">
+      <article className="novex-intel-complete__summary">
+        <dl className="novex-intel-complete__metrics">
           <div>
             <dt>Situación</dt>
             <dd>{situationTitle}</dd>
@@ -126,24 +126,24 @@ export function AnalysisCompletedState({
         </dl>
       </article>
 
-      <div className="cunmark-intel-complete__actions">
+      <div className="novex-intel-complete__actions">
         <button
           type="button"
-          className={`cunmark-intel-complete__primary ${FOCUS_VISIBLE}`}
+          className={`novex-intel-complete__primary ${FOCUS_VISIBLE}`}
           onClick={onViewExecutiveReport}
         >
           <span>Ver informe ejecutivo</span>
-          <CunmarkIcon name="chevron-right" size={18} />
+          <NovexIcon name="chevron-right" size={18} />
         </button>
 
         <button
           type="button"
-          className={`cunmark-intel-complete__secondary ${FOCUS_VISIBLE}`}
+          className={`novex-intel-complete__secondary ${FOCUS_VISIBLE}`}
           onClick={() => void handleDownloadPdf()}
           disabled={exportState === 'generating'}
           aria-busy={exportState === 'generating'}
         >
-          <CunmarkIcon name="download" size={16} />
+          <NovexIcon name="download" size={16} />
           <span>
             {exportState === 'generating'
               ? 'Generando PDF…'
@@ -156,7 +156,7 @@ export function AnalysisCompletedState({
         <Link
           to={`/situaciones?situation=${situationId}`}
           viewTransition
-          className={`cunmark-intel-complete__tertiary ${FOCUS_VISIBLE}`}
+          className={`novex-intel-complete__tertiary ${FOCUS_VISIBLE}`}
         >
           Volver al historial
         </Link>

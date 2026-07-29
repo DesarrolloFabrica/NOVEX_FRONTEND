@@ -1,12 +1,12 @@
 // Capa: componente compartido (host del splash post-login).
-// Responsabilidad: montar CunmarkBootSplash a nivel de router para que no se
+// Responsabilidad: montar NovexBootSplash a nivel de router para que no se
 // desmonte con LoginPage. Prefarga datos operacionales para evitar un segundo loader.
 
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { useOperationalEvents } from '@/modules/operational-events/hooks/useOperationalEvents'
-import { CunmarkBootSplash } from '@/shared/components/CunmarkBootSplash'
+import { NovexBootSplash } from '@/shared/components/NovexBootSplash'
 
 export function PostLoginBootSplash() {
   const { bootSplashActive, endBootSplash } = useAuth()
@@ -37,7 +37,7 @@ export function PostLoginBootSplash() {
   if (!bootSplashActive) return null
 
   return (
-    <CunmarkBootSplash
+    <NovexBootSplash
       ready={prefetchDone}
       onEnter={handleEnter}
       onComplete={endBootSplash}

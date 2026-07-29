@@ -13,7 +13,7 @@ export function AnalysisErrorState({
 }: AnalysisErrorStateProps) {
   return (
     <section
-      className="cunmark-analysis-state cunmark-analysis-state--error space-y-4"
+      className="novex-analysis-state novex-analysis-state--error space-y-4"
       role="alert"
     >
       <header className="space-y-1">

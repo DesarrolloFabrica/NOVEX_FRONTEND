@@ -63,32 +63,32 @@ export function AnalysisIntelligenceCenter({
 
   return (
     <section
-      className="cunmark-intel-center"
+      className="novex-intel-center"
       aria-live="polite"
       aria-busy="true"
       aria-label="Centro de inteligencia operacional"
     >
-      <div className="cunmark-intel-center__main">
-        <header className="cunmark-intel-center__header">
-          <div className="cunmark-intel-center__pulse" aria-hidden="true">
-            <span className="cunmark-intel-center__pulse-ring" />
-            <span className="cunmark-intel-center__pulse-core" />
+      <div className="novex-intel-center__main">
+        <header className="novex-intel-center__header">
+          <div className="novex-intel-center__pulse" aria-hidden="true">
+            <span className="novex-intel-center__pulse-ring" />
+            <span className="novex-intel-center__pulse-core" />
           </div>
-          <div className="cunmark-intel-center__headline">
+          <div className="novex-intel-center__headline">
             <h2>Analizando situación…</h2>
             <p>
-              CUNMARK está interpretando el expediente operativo.
+              NOVEX está interpretando el expediente operativo.
               <br />
               Esto puede tardar algunos segundos.
             </p>
           </div>
-          <p className="cunmark-intel-center__elapsed">
+          <p className="novex-intel-center__elapsed">
             Tiempo transcurrido · {formatElapsed(elapsedMs)}
           </p>
         </header>
 
-        <div className="cunmark-intel-center__body">
-          <div className="cunmark-intel-center__timeline">
+        <div className="novex-intel-center__body">
+          <div className="novex-intel-center__timeline">
             <h3>Procesamiento</h3>
             <ol>
               {PROCESSING_STEPS.map((step, index) => {
@@ -102,9 +102,9 @@ export function AnalysisIntelligenceCenter({
                 return (
                   <li
                     key={step}
-                    className={`cunmark-intel-center__step cunmark-intel-center__step--${state}`}
+                    className={`novex-intel-center__step novex-intel-center__step--${state}`}
                   >
-                    <span className="cunmark-intel-center__step-marker" aria-hidden="true">
+                    <span className="novex-intel-center__step-marker" aria-hidden="true">
                       {state === 'done' ? '✓' : state === 'active' ? '●' : '○'}
                     </span>
                     <span>{step}</span>
@@ -112,20 +112,20 @@ export function AnalysisIntelligenceCenter({
                 )
               })}
             </ol>
-            <p className="cunmark-intel-center__status-message" key={messageIndex}>
+            <p className="novex-intel-center__status-message" key={messageIndex}>
               {ROTATING_MESSAGES[messageIndex]}
             </p>
           </div>
 
-          <aside className="cunmark-intel-center__preview" aria-hidden="true">
+          <aside className="novex-intel-center__preview" aria-hidden="true">
             <h3>Construyendo informe</h3>
             {SKELETON_SECTIONS.map((section) => (
-              <article key={section.title} className="cunmark-intel-center__skeleton-card">
-                <p className="cunmark-intel-center__skeleton-title">{section.title}</p>
+              <article key={section.title} className="novex-intel-center__skeleton-card">
+                <p className="novex-intel-center__skeleton-title">{section.title}</p>
                 {section.lines.map((width, index) => (
                   <span
                     key={`${section.title}-${index}`}
-                    className="cunmark-intel-center__skeleton-line"
+                    className="novex-intel-center__skeleton-line"
                     style={{ width: `${Math.round(width * 100)}%` }}
                   />
                 ))}

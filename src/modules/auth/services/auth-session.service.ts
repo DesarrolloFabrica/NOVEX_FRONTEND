@@ -24,7 +24,7 @@ interface AuthMeResponse {
 }
 
 export const AUTH_UNAUTHORIZED_MESSAGE =
-  'Tu cuenta no está autorizada para acceder a CUNMARK.'
+  'Tu cuenta no está autorizada para acceder a NOVEX.'
 export const AUTH_INACTIVE_MESSAGE = 'Tu usuario se encuentra inactivo.'
 
 export function mapAuthError(error: unknown): Error {

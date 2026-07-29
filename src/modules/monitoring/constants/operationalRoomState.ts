@@ -1,4 +1,4 @@
-// Sistema de estados operativos visuales de la Sala Cunmark (solo presentación).
+// Sistema de estados operativos visuales de la Sala Novex (solo presentación).
 // Sprint 4.4.1: temperatura de luz perceptible — iluminar, no pintar.
 // La Sala comunica el estado del área; el videowall presenta el expediente.
 import type { EnvironmentStatus } from '@/modules/monitoring/types/monitoring.types'

@@ -3,7 +3,7 @@ import type { CoordinationSummary } from '@/modules/situations/types/situation.t
 import { TEXT_LABEL } from '@/modules/monitoring/constants/monitoringTheme'
 
 const FIELD =
-  'cunmark-capture-field w-full min-w-0 border-0 bg-transparent px-3 py-2 text-sm text-slate-800 shadow-[inset_0_-1px_0_0_rgba(100,116,139,0.28)] placeholder:text-slate-500/65'
+  'novex-capture-field w-full min-w-0 border-0 bg-transparent px-3 py-2 text-sm text-slate-800 shadow-[inset_0_-1px_0_0_rgba(100,116,139,0.28)] placeholder:text-slate-500/65'
 
 interface CoordinationAutocompleteProps {
   coordinations: CoordinationSummary[]
@@ -76,10 +76,10 @@ export function CoordinationAutocomplete({
   }
 
   return (
-    <div className="cunmark-capture-autocomplete">
+    <div className="novex-capture-autocomplete">
       <div
         ref={rootRef}
-        className="cunmark-capture-autocomplete__control"
+        className="novex-capture-autocomplete__control"
         onBlur={handleBlur}
       >
         <input
@@ -100,7 +100,7 @@ export function CoordinationAutocomplete({
         {open ? (
           <ul
             id="coordination-autocomplete-list"
-            className="cunmark-capture-autocomplete__list"
+            className="novex-capture-autocomplete__list"
             role="listbox"
             aria-label="Coordinaciones disponibles"
           >
@@ -109,14 +109,14 @@ export function CoordinationAutocomplete({
                 <li key={item.id}>
                   <button
                     type="button"
-                    className="cunmark-capture-autocomplete__option"
+                    className="novex-capture-autocomplete__option"
                     onMouseDown={(event) => event.preventDefault()}
                     onClick={() => addCoordination(item.id)}
                   >
-                    <span className="cunmark-capture-autocomplete__code">
+                    <span className="novex-capture-autocomplete__code">
                       {item.code}
                     </span>
-                    <span className="cunmark-capture-autocomplete__name">
+                    <span className="novex-capture-autocomplete__name">
                       {' '}
                       · {item.name}
                     </span>
@@ -124,7 +124,7 @@ export function CoordinationAutocomplete({
                 </li>
               ))
             ) : (
-              <li className="cunmark-capture-autocomplete__empty" aria-live="polite">
+              <li className="novex-capture-autocomplete__empty" aria-live="polite">
                 {available.length === 0
                   ? 'Ya seleccionó todas las coordinaciones disponibles.'
                   : 'Ninguna coordinación coincide con la búsqueda.'}
@@ -136,14 +136,14 @@ export function CoordinationAutocomplete({
 
       {selected.length > 0 ? (
         <div
-          className="cunmark-capture-autocomplete__chips"
+          className="novex-capture-autocomplete__chips"
           aria-label="Coordinaciones seleccionadas"
         >
           {selected.map((item) => (
             <button
               key={item.id}
               type="button"
-              className="cunmark-capture-chip is-selected"
+              className="novex-capture-chip is-selected"
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => removeCoordination(item.id)}
               title="Quitar selección"

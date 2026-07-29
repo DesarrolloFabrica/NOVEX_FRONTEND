@@ -1,4 +1,4 @@
-// Separación de materiales de la Sala Cunmark
+// Separación de materiales de la Sala Novex
 // Marco sólido → lámina de cristal → contenido grabado.
 // Sprint 4.3: lenguaje de superficies grabadas sin cajas flotantes.
 
@@ -188,4 +188,4 @@ export const WORKSTATION_MODULE_CONSOLE_CHANNEL =
 
 /** Pulso de carga: surco grabado, no bloque de relleno. */
 export const CRYSTAL_SKELETON_PULSE =
-  'cunmark-scan-skeleton__bar shadow-[inset_0_1px_0_0_rgba(203,213,225,0.1)]'
+  'novex-scan-skeleton__bar shadow-[inset_0_1px_0_0_rgba(203,213,225,0.1)]'

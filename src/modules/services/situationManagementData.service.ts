@@ -14,6 +14,7 @@ import type {
   SituationManagementSummary,
 } from '@/modules/api/types/situation-management.types'
 import type { SituationResponse } from '@/modules/situations/types/situation.types'
+import type { UpdateSituationStatusInput } from '@/modules/monitoring/utils/situation-lifecycle'
 
 function mapSituationToListItem(situation: SituationResponse): SituationListItem {
   return {
@@ -28,6 +29,7 @@ function mapSituationToListItem(situation: SituationResponse): SituationListItem
     updatedAt: situation.updatedAt,
     occurredAt: situation.occurredAt,
     createdByUserName: situation.createdByUserName,
+    assignedUserName: situation.assignedUserName ?? null,
   }
 }
 
@@ -98,11 +100,19 @@ export async function loadSituationDossier(
 
 export async function updateSituationStatus(
   situationId: string,
-  status: SituationResponse['status'],
+  input: UpdateSituationStatusInput,
 ): Promise<SituationResponse> {
-  return updateSituation(situationId, { status })
+  return updateSituation(situationId, {
+    status: input.status,
+    statusComment: input.statusComment,
+    evidenceIds: input.evidenceIds,
+  })
 }
 
+/**
+ * @deprecated Conservado por compatibilidad. La UI de Gestión Operativa ya no
+ * administra recomendaciones individuales.
+ */
 export async function updateRecommendationStatus(
   recommendationId: string,
   payload: UpdateSituationRecommendationPayload,

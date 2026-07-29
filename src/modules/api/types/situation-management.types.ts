@@ -35,6 +35,7 @@ export interface SituationListItem {
   updatedAt: string
   occurredAt: string
   createdByUserName: string
+  assignedUserName?: string | null
 }
 
 export interface SituationDossier {

@@ -37,6 +37,10 @@ export async function fetchSituationRecommendations(
   )
 }
 
+/**
+ * @deprecated La UI de Gestión Operativa ya no administra recomendaciones
+ * individuales. Conservado por compatibilidad de API.
+ */
 export async function updateSituationRecommendation(
   recommendationId: string,
   payload: UpdateSituationRecommendationPayload,

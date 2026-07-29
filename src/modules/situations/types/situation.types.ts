@@ -38,11 +38,16 @@ export interface SituationResponse {
   coordinationName: string
   createdByUserId: string
   createdByUserName: string
+  assignedUserId?: string | null
+  assignedUserName?: string | null
   categoryId: string
   categoryCode: string
   categoryName: string
   severity: SituationSeverity
   status: string
+  lastStatusComment?: string | null
+  resolvedAt?: string | null
+  closedAt?: string | null
   occurredAt: string
   createdAt: string
   updatedAt: string

@@ -19,17 +19,17 @@ export function RecentOperationalChange({
 }: RecentOperationalChangeProps) {
   return (
     <section
-      className="cunmark-intel-change"
+      className="novex-intel-change"
       aria-labelledby="intel-change-heading"
     >
-      <h3 id="intel-change-heading" className="cunmark-section-eyebrow mb-0">
+      <h3 id="intel-change-heading" className="novex-section-eyebrow mb-0">
         Contexto
       </h3>
-      <p className="cunmark-section-hint mb-2">
+      <p className="novex-section-hint mb-2">
         Cambios recientes del entorno operacional.
       </p>
 
-      <ul className="cunmark-intel-change__facts">
+      <ul className="novex-intel-change__facts">
         <li>
           <span>Tendencia</span>
           <strong>{TREND_WORD[metrics.trend]}</strong>

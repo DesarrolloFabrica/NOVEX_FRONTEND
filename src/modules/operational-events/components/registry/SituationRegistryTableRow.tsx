@@ -5,7 +5,7 @@ import {
   formatRegistryTableDate,
   SITUATION_STATUS_LABEL,
 } from '@/modules/monitoring/utils/situation-management.presentation'
-import { CunmarkIcon } from '@/shared/components/CunmarkIcon'
+import { NovexIcon } from '@/shared/components/NovexIcon'
 
 interface SituationRegistryRowProps {
   row: SituationRegistryRow
@@ -25,15 +25,15 @@ export function SituationRegistryTableRow({
 }: SituationRegistryRowProps) {
   return (
     <tr
-      className="cunmark-events-row"
+      className="novex-events-row"
       data-selected={selected || undefined}
       onClick={() => onSelect(row.id)}
     >
       <td data-label="Situación">
-        <div className="cunmark-events-row__identity">
+        <div className="novex-events-row__identity">
           <button
             type="button"
-            className={`cunmark-events-row__title ${FOCUS_VISIBLE}`}
+            className={`novex-events-row__title ${FOCUS_VISIBLE}`}
             onClick={(clickEvent) => {
               clickEvent.stopPropagation()
               onSelect(row.id)
@@ -41,12 +41,12 @@ export function SituationRegistryTableRow({
           >
             {row.title}
           </button>
-          <span className="cunmark-events-row__ref">{row.code}</span>
+          <span className="novex-events-row__ref">{row.code}</span>
         </div>
       </td>
       <td data-label="Contexto">
         <div
-          className="cunmark-events-row__context"
+          className="novex-events-row__context"
           title={`${row.categoryName} · ${row.coordinationName}`}
         >
           <span>{row.categoryName}</span>
@@ -55,7 +55,7 @@ export function SituationRegistryTableRow({
       </td>
       <td data-label="Estado">
         <span
-          className="cunmark-events-row__status cunmark-events-row__status--compact"
+          className="novex-events-row__status novex-events-row__status--compact"
           data-status={row.status.toLowerCase()}
         >
           {SITUATION_STATUS_LABEL[row.status] ?? row.status}
@@ -63,7 +63,7 @@ export function SituationRegistryTableRow({
       </td>
       <td data-label="Riesgo">
         <span
-          className="cunmark-events-row__score cunmark-events-row__score--compact"
+          className="novex-events-row__score novex-events-row__score--compact"
           data-risk={row.riskLevel ?? 'moderate'}
           title={`Severidad ${row.severity}`}
         >
@@ -71,12 +71,12 @@ export function SituationRegistryTableRow({
         </span>
       </td>
       <td data-label="IA">
-        <span className="cunmark-events-row__text">{formatConfidence(row.aiConfidence)}</span>
+        <span className="novex-events-row__text">{formatConfidence(row.aiConfidence)}</span>
       </td>
       <td data-label="Fecha">
         <time
           dateTime={row.occurredAt}
-          className="cunmark-events-row__date"
+          className="novex-events-row__date"
           title={formatManagementDate(row.occurredAt)}
         >
           {formatRegistryTableDate(row.occurredAt)}
@@ -85,14 +85,14 @@ export function SituationRegistryTableRow({
       <td data-label="Detalle">
         <button
           type="button"
-          className={`cunmark-events-row__action cunmark-events-row__action--detail ${FOCUS_VISIBLE}`}
+          className={`novex-events-row__action novex-events-row__action--detail ${FOCUS_VISIBLE}`}
           onClick={(clickEvent) => {
             clickEvent.stopPropagation()
             onSelect(row.id)
           }}
         >
           <span>Abrir</span>
-          <CunmarkIcon name="arrow-up-right" size={13} />
+          <NovexIcon name="arrow-up-right" size={13} />
         </button>
       </td>
     </tr>

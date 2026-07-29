@@ -1,4 +1,4 @@
-# CUNMARK — Estado actual del MVP
+# NOVEX — Estado actual del MVP
 
 > Centro de Monitoreo Operativo para validar compromisos institucionales por área durante el precomité.
 > Documento de referencia del MVP en desarrollo (frontend con datos mock, sin backend).

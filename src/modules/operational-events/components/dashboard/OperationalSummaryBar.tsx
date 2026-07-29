@@ -2,7 +2,7 @@ import type {
   DashboardMetrics,
   OperationalEvent,
 } from '@/modules/operational-events/types/operational-event.types'
-import { CunmarkIcon, type CunmarkIconName } from '@/shared/components/CunmarkIcon'
+import { NovexIcon, type NovexIconName } from '@/shared/components/NovexIcon'
 
 interface OperationalSummaryBarProps {
   events: OperationalEvent[]
@@ -36,7 +36,7 @@ export function OperationalSummaryBar({
   ).length
 
   const cards: Array<{
-    icon: CunmarkIconName
+    icon: NovexIconName
     tone: string
     value: string | number
     label: string
@@ -73,19 +73,19 @@ export function OperationalSummaryBar({
   ]
 
   return (
-    <section className="cunmark-summary-bar" aria-label="Resumen operacional">
+    <section className="novex-summary-bar" aria-label="Resumen operacional">
       {cards.map((card) => (
         <article
-          className="cunmark-summary-bar__item"
+          className="novex-summary-bar__item"
           data-tone={card.tone}
           key={card.label}
         >
-          <span className="cunmark-summary-bar__icon" aria-hidden="true">
-            <CunmarkIcon name={card.icon} size={17} strokeWidth={1.45} />
+          <span className="novex-summary-bar__icon" aria-hidden="true">
+            <NovexIcon name={card.icon} size={17} strokeWidth={1.45} />
           </span>
-          <div className="cunmark-summary-bar__content">
+          <div className="novex-summary-bar__content">
             <strong>{card.value}</strong>
-            <span className="cunmark-summary-bar__label">{card.label}</span>
+            <span className="novex-summary-bar__label">{card.label}</span>
             <small>{card.detail}</small>
           </div>
         </article>

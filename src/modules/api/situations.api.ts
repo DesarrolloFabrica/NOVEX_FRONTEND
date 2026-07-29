@@ -66,6 +66,9 @@ export interface UpdateSituationPayload {
   categoryId?: string
   severity?: SituationResponse['severity']
   status?: SituationResponse['status']
+  statusComment?: string
+  /** Estructura preparada para evidencias futuras. */
+  evidenceIds?: string[]
   occurredAt?: string
 }
 

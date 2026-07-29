@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
-import { CunmarkBrandMark } from '@/shared/components/CunmarkBrandMark'
+import { NovexBrandMark } from '@/shared/components/NovexBrandMark'
 import { RegisterSituationCta } from '@/shared/components/RegisterSituationCta'
 
 type IconName = 'intelligence' | 'impact' | 'events' | 'monitoring' | 'logout'
@@ -41,7 +41,7 @@ const NAV_ITEMS: Array<{
   },
 ]
 
-function CunmarkRailIcon({ name }: { name: IconName }) {
+function NovexRailIcon({ name }: { name: IconName }) {
   const paths: Record<IconName, React.ReactNode> = {
     intelligence: (
       <>
@@ -96,24 +96,24 @@ function CunmarkRailIcon({ name }: { name: IconName }) {
   )
 }
 
-export function CunmarkSystemRail() {
+export function NovexSystemRail() {
   const { user, logout } = useAuth()
 
   return (
-    <aside className="cunmark-os-rail" aria-label="Navegación principal">
-      <div className="cunmark-os-rail__brand">
-        <CunmarkBrandMark size="rail" className="cunmark-os-mark" />
-        <div className="cunmark-os-rail__brand-copy">
-          <strong>CUNMARK</strong>
+    <aside className="novex-os-rail" aria-label="Navegación principal">
+      <div className="novex-os-rail__brand">
+        <NovexBrandMark size="rail" className="novex-os-mark" />
+        <div className="novex-os-rail__brand-copy">
+          <strong>NOVEX</strong>
           <span>Visión general</span>
         </div>
       </div>
 
-      <div className="cunmark-os-rail__primary">
+      <div className="novex-os-rail__primary">
         <RegisterSituationCta variant="rail" />
       </div>
 
-      <nav className="cunmark-os-rail__nav">
+      <nav className="novex-os-rail__nav">
         {NAV_ITEMS.map((item) => (
           <NavLink
             key={item.to}
@@ -122,50 +122,50 @@ export function CunmarkSystemRail() {
             viewTransition
             aria-label={item.label}
             className={({ isActive }) =>
-              `cunmark-os-rail__link ${isActive ? 'is-active' : ''}`
+              `novex-os-rail__link ${isActive ? 'is-active' : ''}`
             }
           >
-            <span className="cunmark-os-rail__icon">
-              <CunmarkRailIcon name={item.icon} />
+            <span className="novex-os-rail__icon">
+              <NovexRailIcon name={item.icon} />
             </span>
-            <span className="cunmark-os-rail__link-copy">
+            <span className="novex-os-rail__link-copy">
               <strong>{item.label}</strong>
               <small>{item.eyebrow}</small>
             </span>
-            <span className="cunmark-os-rail__signal" aria-hidden="true" />
+            <span className="novex-os-rail__signal" aria-hidden="true" />
           </NavLink>
         ))}
         <button
           type="button"
-          className="cunmark-os-rail__link cunmark-os-rail__mobile-logout"
+          className="novex-os-rail__link novex-os-rail__mobile-logout"
           onClick={() => void logout()}
           aria-label="Cerrar sesión"
           title="Cerrar sesión"
         >
-          <span className="cunmark-os-rail__icon">
-            <CunmarkRailIcon name="logout" />
+          <span className="novex-os-rail__icon">
+            <NovexRailIcon name="logout" />
           </span>
         </button>
       </nav>
 
-      <div className="cunmark-os-rail__footer">
-        <div className="cunmark-os-rail__identity">
-          <span className="cunmark-os-rail__avatar" aria-hidden="true">
+      <div className="novex-os-rail__footer">
+        <div className="novex-os-rail__identity">
+          <span className="novex-os-rail__avatar" aria-hidden="true">
             {(user?.name ?? 'O').slice(0, 1)}
           </span>
-          <span className="cunmark-os-rail__identity-copy">
+          <span className="novex-os-rail__identity-copy">
             <strong>{user?.name ?? 'Sesión activa'}</strong>
             <small>{user?.role ?? 'operador'}</small>
           </span>
         </div>
         <button
           type="button"
-          className="cunmark-os-rail__logout"
+          className="novex-os-rail__logout"
           onClick={() => void logout()}
           aria-label="Cerrar sesión"
           title="Cerrar sesión"
         >
-          <CunmarkRailIcon name="logout" />
+          <NovexRailIcon name="logout" />
         </button>
       </div>
     </aside>

@@ -7,7 +7,7 @@ import {
   EVENT_STATUS_LABEL,
   eventRef,
 } from '@/modules/operational-events/components/eventPresentation'
-import { CunmarkIcon } from '@/shared/components/CunmarkIcon'
+import { NovexIcon } from '@/shared/components/NovexIcon'
 
 interface PriorityEventsListProps {
   events: OperationalEvent[]
@@ -32,12 +32,12 @@ function formatRelativeTime(event: OperationalEvent): string {
 export function PriorityEventsList({ events }: PriorityEventsListProps) {
   return (
     <section
-      className="cunmark-intel-priority"
+      className="novex-intel-priority"
       aria-labelledby="intel-priority-heading"
     >
-      <div className="cunmark-intel-priority__heading">
-        <div className="cunmark-intel-priority__heading-copy">
-          <div className="cunmark-intel-priority__title-row">
+      <div className="novex-intel-priority__heading">
+        <div className="novex-intel-priority__heading-copy">
+          <div className="novex-intel-priority__title-row">
             <h3 id="intel-priority-heading">Cola de atención</h3>
           </div>
           <p>
@@ -47,15 +47,15 @@ export function PriorityEventsList({ events }: PriorityEventsListProps) {
         <Link
           to="/situaciones"
           viewTransition
-          className={`cunmark-intel-priority__view-all ${FOCUS_VISIBLE}`}
+          className={`novex-intel-priority__view-all ${FOCUS_VISIBLE}`}
         >
           Ver todas
-          <CunmarkIcon name="arrow-up-right" size={12} />
+          <NovexIcon name="arrow-up-right" size={12} />
         </Link>
       </div>
 
       {events.length === 0 ? (
-        <p className="cunmark-empty-signal py-3 text-sm leading-relaxed text-slate-400">
+        <p className="novex-empty-signal py-3 text-sm leading-relaxed text-slate-400">
           Todavía no hay nada que priorizar.{' '}
           <Link
             to="/situaciones/nueva"
@@ -66,8 +66,8 @@ export function PriorityEventsList({ events }: PriorityEventsListProps) {
           </Link>
         </p>
       ) : (
-        <div className="cunmark-intel-priority__table-wrap">
-          <table className="cunmark-intel-priority__table">
+        <div className="novex-intel-priority__table-wrap">
+          <table className="novex-intel-priority__table">
             <thead>
               <tr>
                 <th scope="col">Prioridad</th>
@@ -89,19 +89,19 @@ export function PriorityEventsList({ events }: PriorityEventsListProps) {
                   <tr key={event.id}>
                     <td data-label="Prioridad">
                       <span
-                        className="cunmark-intel-priority__score"
+                        className="novex-intel-priority__score"
                         data-risk={event.interpretation?.riskLevel ?? 'moderate'}
                       >
                         {score ?? '—'}
                       </span>
                     </td>
                     <td data-label="Situación">
-                      <strong className="cunmark-intel-priority__event-title">
+                      <strong className="novex-intel-priority__event-title">
                         {event.title}
                       </strong>
                     </td>
                     <td data-label="Área / Proceso">
-                      <span className="cunmark-intel-priority__area">
+                      <span className="novex-intel-priority__area">
                         {where}
                         {category ? ` · ${category}` : ''}
                         {' · '}
@@ -110,7 +110,7 @@ export function PriorityEventsList({ events }: PriorityEventsListProps) {
                     </td>
                     <td data-label="Estado">
                       <span
-                        className="cunmark-intel-priority__status"
+                        className="novex-intel-priority__status"
                         data-status={event.status}
                       >
                         {EVENT_STATUS_LABEL[event.status]}
@@ -125,10 +125,10 @@ export function PriorityEventsList({ events }: PriorityEventsListProps) {
                       <Link
                         to={`/situaciones?event=${encodeURIComponent(event.id)}`}
                         viewTransition
-                        className={`cunmark-intel-priority__detail ${FOCUS_VISIBLE}`}
+                        className={`novex-intel-priority__detail ${FOCUS_VISIBLE}`}
                       >
                         Ver detalle
-                        <CunmarkIcon name="arrow-up-right" size={11} />
+                        <NovexIcon name="arrow-up-right" size={11} />
                       </Link>
                     </td>
                   </tr>

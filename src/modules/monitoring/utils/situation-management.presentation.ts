@@ -1,10 +1,15 @@
 import type { SituationListItem } from '@/modules/api/types/situation-management.types'
+import type { SituationRecommendation } from '@/modules/api/recommendations.api'
+import {
+  OPERATIONAL_STATUS_LABEL,
+  type SituationOperationalStatus,
+} from '@/modules/monitoring/utils/situation-lifecycle'
 
 export const SITUATION_STATUS_LABEL: Record<string, string> = {
-  OPEN: 'Abierta',
-  IN_PROGRESS: 'En progreso',
-  RESOLVED: 'Resuelta',
-  CLOSED: 'Cerrada',
+  OPEN: OPERATIONAL_STATUS_LABEL.OPEN,
+  IN_PROGRESS: OPERATIONAL_STATUS_LABEL.IN_PROGRESS,
+  RESOLVED: OPERATIONAL_STATUS_LABEL.RESOLVED,
+  CLOSED: OPERATIONAL_STATUS_LABEL.CLOSED,
 }
 
 export const SITUATION_SEVERITY_LABEL: Record<string, string> = {
@@ -14,6 +19,7 @@ export const SITUATION_SEVERITY_LABEL: Record<string, string> = {
   CRITICAL: 'Crítica',
 }
 
+/** @deprecated La UI ya no administra estados de recomendación. */
 export const RECOMMENDATION_STATUS_LABEL: Record<string, string> = {
   PENDING: 'Pendiente',
   IN_PROGRESS: 'En progreso',
@@ -25,12 +31,36 @@ export const RECOMMENDATION_PRIORITY_LABEL: Record<string, string> = {
   LOW: 'Baja',
   MEDIUM: 'Media',
   HIGH: 'Alta',
-  CRITICAL: 'Crítica',
+  CRITICAL: 'Inmediata',
+}
+
+export const RECOMMENDATION_PRIORITY_ORDER = [
+  'CRITICAL',
+  'HIGH',
+  'MEDIUM',
+  'LOW',
+] as const
+
+export type RecommendationPriorityGroup =
+  (typeof RECOMMENDATION_PRIORITY_ORDER)[number]
+
+export function groupRecommendationsByPriority(
+  recommendations: SituationRecommendation[],
+): Array<{
+  priority: RecommendationPriorityGroup
+  label: string
+  items: SituationRecommendation[]
+}> {
+  return RECOMMENDATION_PRIORITY_ORDER.map((priority) => ({
+    priority,
+    label: RECOMMENDATION_PRIORITY_LABEL[priority] ?? priority,
+    items: recommendations.filter((item) => item.priority === priority),
+  })).filter((group) => group.items.length > 0)
 }
 
 export const TIMELINE_EVENT_LABEL: Record<string, string> = {
   SITUATION_CREATED: 'Situación registrada',
-  STATUS_CHANGED: 'Cambio de estado',
+  STATUS_CHANGED: 'Estado actualizado',
   SEVERITY_CHANGED: 'Cambio de severidad',
   UPDATED: 'Actualización',
   COMMENT_ADDED: 'Comentario',
@@ -72,6 +102,15 @@ export function formatManagementDateShort(value: string): string {
   })
 }
 
+export function formatManagementTime(value: string): string {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleTimeString('es-CO', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 /** Fecha compacta para tablas densas (ej. 28/07/26). */
 export function formatRegistryTableDate(value: string): string {
   const date = new Date(value)
@@ -93,7 +132,19 @@ export function sortSituationsForQueue(
     LOW: 1,
   }
 
+  const statusWeight: Record<SituationOperationalStatus, number> = {
+    IN_PROGRESS: 4,
+    OPEN: 3,
+    RESOLVED: 2,
+    CLOSED: 1,
+  }
+
   return [...situations].sort((left, right) => {
+    const statusDiff =
+      (statusWeight[right.status as SituationOperationalStatus] ?? 0) -
+      (statusWeight[left.status as SituationOperationalStatus] ?? 0)
+    if (statusDiff !== 0) return statusDiff
+
     const severityDiff =
       (severityWeight[right.severity] ?? 0) -
       (severityWeight[left.severity] ?? 0)

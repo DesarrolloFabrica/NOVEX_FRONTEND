@@ -184,7 +184,7 @@ export function OperationalEventsCenter({
 
   return (
 
-    <div className="cunmark-events-center cunmark-events-center--feed flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="novex-events-center novex-events-center--feed flex min-h-0 flex-1 flex-col overflow-hidden">
 
       <MonitoringLayout
 

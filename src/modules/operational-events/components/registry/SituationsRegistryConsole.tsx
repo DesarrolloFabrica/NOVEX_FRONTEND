@@ -23,7 +23,7 @@ import {
   SITUATION_STATUS_LABEL,
 } from '@/modules/monitoring/utils/situation-management.presentation'
 import type { CoordinationSummary } from '@/modules/situations/types/situation.types'
-import { CunmarkIcon } from '@/shared/components/CunmarkIcon'
+import { NovexIcon } from '@/shared/components/NovexIcon'
 
 interface SituationsRegistryConsoleProps {
   rows: SituationRegistryRow[]
@@ -50,7 +50,7 @@ function ConsoleNotice({
 }) {
   return (
     <p
-      className="cunmark-events-table__notice"
+      className="novex-events-table__notice"
       data-state={state}
       role={state === 'error' ? 'alert' : state === 'loading' ? 'status' : undefined}
       aria-live={state === 'loading' ? 'polite' : undefined}
@@ -141,30 +141,30 @@ export function SituationsRegistryConsole({
         : null
 
   return (
-    <div className="cunmark-registry-console">
+    <div className="novex-registry-console">
       <SituationRegistrySummaryBar summary={summary} indicators={indicators} />
 
       <section
-        className="cunmark-events-table cunmark-events-table--registry"
+        className="novex-events-table novex-events-table--registry"
         aria-labelledby="events-table-heading"
       >
-        <header className="cunmark-events-table__header cunmark-events-table__header--registry">
-          <div className="cunmark-registry-table-head">
-            <div className="cunmark-events-table__heading">
-              <div className="cunmark-events-table__title-row">
+        <header className="novex-events-table__header novex-events-table__header--registry">
+          <div className="novex-registry-table-head">
+            <div className="novex-events-table__heading">
+              <div className="novex-events-table__title-row">
                 <h2 id="events-table-heading">Listado de situaciones</h2>
-                <span className="cunmark-table-help">
+                <span className="novex-table-help">
                   <button
                     type="button"
-                    className="cunmark-table-help__trigger"
+                    className="novex-table-help__trigger"
                     aria-label="Qué muestra esta tabla"
                     aria-describedby="events-table-help-tip"
                   >
-                    <CunmarkIcon name="help" size={11} strokeWidth={1.6} />
+                    <NovexIcon name="help" size={11} strokeWidth={1.6} />
                   </button>
                   <span
                     id="events-table-help-tip"
-                    className="cunmark-table-help__tip"
+                    className="novex-table-help__tip"
                     role="tooltip"
                   >
                     Cada fila es una situación registrada. Seleccione una para abrir su
@@ -174,7 +174,7 @@ export function SituationsRegistryConsole({
               </div>
               <p>Seleccione una fila para abrir el análisis ejecutivo.</p>
             </div>
-            <span className="cunmark-events-table__count" aria-live="polite">
+            <span className="novex-events-table__count" aria-live="polite">
               {visible.length === 1
                 ? '1 resultado'
                 : `${visible.length} resultados`}
@@ -182,10 +182,10 @@ export function SituationsRegistryConsole({
             </span>
           </div>
 
-          <div className="cunmark-registry-toolbar">
-            <div className="cunmark-registry-toolbar__primary">
-              <span className="cunmark-events-table__search cunmark-registry-toolbar__search">
-                <CunmarkIcon name="search" size={15} />
+          <div className="novex-registry-toolbar">
+            <div className="novex-registry-toolbar__primary">
+              <span className="novex-events-table__search novex-registry-toolbar__search">
+                <NovexIcon name="search" size={15} />
                 <input
                   type="search"
                   aria-label="Buscar situaciones"
@@ -198,17 +198,17 @@ export function SituationsRegistryConsole({
                 {query.search ? (
                   <button
                     type="button"
-                    className="cunmark-registry-toolbar__clear-search"
+                    className="novex-registry-toolbar__clear-search"
                     onClick={() => onQueryChange({ ...query, search: '' })}
                     aria-label="Limpiar búsqueda"
                   >
-                    <CunmarkIcon name="x" size={13} />
+                    <NovexIcon name="x" size={13} />
                   </button>
                 ) : null}
               </span>
 
-              <div className="cunmark-registry-toolbar__actions">
-                <label className="cunmark-registry-toolbar__sort">
+              <div className="novex-registry-toolbar__actions">
+                <label className="novex-registry-toolbar__sort">
                   <span>Ordenar por</span>
                   <select
                     aria-label="Ordenar situaciones"
@@ -219,7 +219,7 @@ export function SituationsRegistryConsole({
                         sort: event.target.value as RegistrySortOrder,
                       })
                     }
-                    className={`cunmark-registry-toolbar__select ${FOCUS_VISIBLE}`}
+                    className={`novex-registry-toolbar__select ${FOCUS_VISIBLE}`}
                   >
                     <option value="date-desc">Más recientes</option>
                     <option value="date-asc">Más antiguas</option>
@@ -232,22 +232,22 @@ export function SituationsRegistryConsole({
 
                 <button
                   type="button"
-                  className={`cunmark-registry-toolbar__filter-toggle ${FOCUS_VISIBLE}`}
+                  className={`novex-registry-toolbar__filter-toggle ${FOCUS_VISIBLE}`}
                   aria-expanded={filtersOpen}
                   aria-controls="registry-filter-panel"
                   onClick={() => setFiltersOpen((current) => !current)}
                 >
-                  <CunmarkIcon name="settings" size={14} />
+                  <NovexIcon name="settings" size={14} />
                   <span>Filtros</span>
                   {activeFilterCount > 0 ? (
                     <strong aria-label={`${activeFilterCount} filtros activos`}>
                       {activeFilterCount}
                     </strong>
                   ) : null}
-                  <CunmarkIcon
+                  <NovexIcon
                     name="chevron-down"
                     size={13}
-                    className="cunmark-registry-toolbar__filter-chevron"
+                    className="novex-registry-toolbar__filter-chevron"
                   />
                 </button>
               </div>
@@ -255,10 +255,10 @@ export function SituationsRegistryConsole({
 
             <div
               id="registry-filter-panel"
-              className="cunmark-registry-toolbar__filter-panel"
+              className="novex-registry-toolbar__filter-panel"
               hidden={!filtersOpen}
             >
-              <div className="cunmark-registry-toolbar__filter-heading">
+              <div className="novex-registry-toolbar__filter-heading">
                 <div>
                   <strong>Filtrar situaciones</strong>
                   <span>Refine el registro con uno o varios criterios.</span>
@@ -270,7 +270,7 @@ export function SituationsRegistryConsole({
                 ) : null}
               </div>
 
-              <div className="cunmark-registry-toolbar__filters">
+              <div className="novex-registry-toolbar__filters">
               <select
                 aria-label="Filtrar por estado"
                 value={query.status}
@@ -280,7 +280,7 @@ export function SituationsRegistryConsole({
                     status: event.target.value as RegistryStatusFilter,
                   })
                 }
-                className={`cunmark-registry-toolbar__select ${FOCUS_VISIBLE}`}
+                className={`novex-registry-toolbar__select ${FOCUS_VISIBLE}`}
               >
                 <option value="all">Todos los estados</option>
                 {Object.entries(SITUATION_STATUS_LABEL).map(([value, label]) => (
@@ -296,7 +296,7 @@ export function SituationsRegistryConsole({
                 onChange={(event) =>
                   onQueryChange({ ...query, coordinationId: event.target.value })
                 }
-                className={`cunmark-registry-toolbar__select ${FOCUS_VISIBLE}`}
+                className={`novex-registry-toolbar__select ${FOCUS_VISIBLE}`}
               >
                 <option value="all">Todas las coordinaciones</option>
                 {coordinations.map((coordination) => (
@@ -312,7 +312,7 @@ export function SituationsRegistryConsole({
                 onChange={(event) =>
                   onQueryChange({ ...query, categoryId: event.target.value })
                 }
-                className={`cunmark-registry-toolbar__select ${FOCUS_VISIBLE}`}
+                className={`novex-registry-toolbar__select ${FOCUS_VISIBLE}`}
               >
                 <option value="all">Todas las categorías</option>
                 {categories.map((category) => (
@@ -331,7 +331,7 @@ export function SituationsRegistryConsole({
                     severity: event.target.value as RegistrySeverityFilter,
                   })
                 }
-                className={`cunmark-registry-toolbar__select ${FOCUS_VISIBLE}`}
+                className={`novex-registry-toolbar__select ${FOCUS_VISIBLE}`}
               >
                 <option value="all">Todas las severidades</option>
                 {Object.entries(SITUATION_SEVERITY_LABEL).map(([value, label]) => (
@@ -350,7 +350,7 @@ export function SituationsRegistryConsole({
                     date: event.target.value as RegistryDateFilter,
                   })
                 }
-                className={`cunmark-registry-toolbar__select ${FOCUS_VISIBLE}`}
+                className={`novex-registry-toolbar__select ${FOCUS_VISIBLE}`}
               >
                 <option value="all">Cualquier fecha</option>
                 <option value="today">Hoy</option>
@@ -363,7 +363,7 @@ export function SituationsRegistryConsole({
         </header>
 
         {rows.length === 0 && !loading && !error ? (
-          <p className="cunmark-events-table__notice" data-state="empty">
+          <p className="novex-events-table__notice" data-state="empty">
             Aún no hay situaciones registradas.{' '}
             <Link
               to="/situaciones/nueva"
@@ -374,8 +374,8 @@ export function SituationsRegistryConsole({
             </Link>
           </p>
         ) : (
-          <div className="cunmark-events-table__scroll" tabIndex={0}>
-            <table className="cunmark-events-table__grid cunmark-events-table__grid--registry">
+          <div className="novex-events-table__scroll" tabIndex={0}>
+            <table className="novex-events-table__grid novex-events-table__grid--registry">
               <thead>
                 <tr>
                   <th scope="col">Situación</th>
@@ -410,8 +410,8 @@ export function SituationsRegistryConsole({
         )}
 
         {!notice && visible.length > 0 ? (
-          <footer className="cunmark-events-table__footer">
-            <div className="cunmark-events-table__pagesize">
+          <footer className="novex-events-table__footer">
+            <div className="novex-events-table__pagesize">
               <label htmlFor="events-page-size">Filas por página</label>
               <select
                 id="events-page-size"
@@ -427,11 +427,11 @@ export function SituationsRegistryConsole({
               </select>
             </div>
 
-            <p className="cunmark-events-table__range" aria-live="polite">
+            <p className="novex-events-table__range" aria-live="polite">
               {rangeStart}–{rangeEnd} de {visible.length}
             </p>
 
-            <nav className="cunmark-events-table__pager" aria-label="Paginación de situaciones">
+            <nav className="novex-events-table__pager" aria-label="Paginación de situaciones">
               <button
                 type="button"
                 className={FOCUS_VISIBLE}
@@ -439,9 +439,9 @@ export function SituationsRegistryConsole({
                 disabled={page <= 1}
                 aria-label="Página anterior"
               >
-                <CunmarkIcon name="chevron-left" size={14} />
+                <NovexIcon name="chevron-left" size={14} />
               </button>
-              <span className="cunmark-events-table__pager-status">
+              <span className="novex-events-table__pager-status">
                 Página {page} de {pageCount}
               </span>
               <button
@@ -451,7 +451,7 @@ export function SituationsRegistryConsole({
                 disabled={page >= pageCount}
                 aria-label="Página siguiente"
               >
-                <CunmarkIcon name="chevron-right" size={14} />
+                <NovexIcon name="chevron-right" size={14} />
               </button>
             </nav>
           </footer>

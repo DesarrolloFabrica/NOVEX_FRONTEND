@@ -1,7 +1,7 @@
 import { useState, type MouseEvent } from 'react'
 import type { OperationalEvent } from '@/modules/operational-events/types/operational-event.types'
 import { RISK_LEVEL_LABEL } from '@/modules/operational-events/components/eventPresentation'
-import { CunmarkIcon } from '@/shared/components/CunmarkIcon'
+import { NovexIcon } from '@/shared/components/NovexIcon'
 import {
   CertaintyRing,
   EXEC_CERTAINTY_LABEL,
@@ -50,12 +50,12 @@ export function SituationExecutiveReportBody({
 
   if (!report) {
     return (
-      <div className={['cunmark-sit-grid', className].filter(Boolean).join(' ')}>
-        <article className="cunmark-sit-card">
+      <div className={['novex-sit-grid', className].filter(Boolean).join(' ')}>
+        <article className="novex-sit-card">
           <header>
             <h3>Resumen operacional</h3>
           </header>
-          <p className="cunmark-sit-narrative">
+          <p className="novex-sit-narrative">
             {interpretation?.executiveSummary ?? event.description}
           </p>
         </article>
@@ -69,10 +69,10 @@ export function SituationExecutiveReportBody({
         <ExecutiveSection
           number={1}
           question="Lectura ejecutiva"
-          hint="Análisis de inteligencia operacional CUNMARK"
+          hint="Análisis de inteligencia operacional NOVEX"
         >
-          <article className="cunmark-sit-card cunmark-sit-card--narrative">
-            <p className="cunmark-sit-narrative">{report.executiveNarrative}</p>
+          <article className="novex-sit-card novex-sit-card--narrative">
+            <p className="novex-sit-narrative">{report.executiveNarrative}</p>
           </article>
         </ExecutiveSection>
       ) : null}
@@ -83,21 +83,21 @@ export function SituationExecutiveReportBody({
           question="¿Qué debe decidir la dirección?"
           hint="Decisión inmediata recomendada"
         >
-          <article className="cunmark-sit-card cunmark-sit-card--decision" data-risk={risk}>
-            <p className="cunmark-sit-narrative">{report.executiveDecision.decision}</p>
-            <div className="cunmark-sit-grid" style={{ marginTop: 12 }}>
+          <article className="novex-sit-card novex-sit-card--decision" data-risk={risk}>
+            <p className="novex-sit-narrative">{report.executiveDecision.decision}</p>
+            <div className="novex-sit-grid" style={{ marginTop: 12 }}>
               <div>
-                <p className="cunmark-sit-cause__label">Urgencia</p>
-                <span className="cunmark-sit-pill">
+                <p className="novex-sit-cause__label">Urgencia</p>
+                <span className="novex-sit-pill">
                   {EXEC_URGENCY_LABEL[report.executiveDecision.urgencyLevel]}
                 </span>
               </div>
               <div>
-                <p className="cunmark-sit-cause__label">Tiempo para actuar</p>
+                <p className="novex-sit-cause__label">Tiempo para actuar</p>
                 <strong>{report.executiveDecision.recommendedActionTime}</strong>
               </div>
               <div>
-                <p className="cunmark-sit-cause__label">Responsable inicial</p>
+                <p className="novex-sit-cause__label">Responsable inicial</p>
                 <strong>{report.executiveDecision.initialResponsible}</strong>
               </div>
             </div>
@@ -110,12 +110,12 @@ export function SituationExecutiveReportBody({
         question="¿Qué ocurrió?"
         hint="Estado actual de la situación"
       >
-        <article className="cunmark-sit-card">
-          <p className="cunmark-sit-narrative">
+        <article className="novex-sit-card">
+          <p className="novex-sit-narrative">
             {report.incidentSummary.executiveSummary}
           </p>
           {interpretation?.narrative ? (
-            <p className="cunmark-sit-card__hint" style={{ marginTop: 10 }}>
+            <p className="novex-sit-card__hint" style={{ marginTop: 10 }}>
               {interpretation.narrative}
             </p>
           ) : null}
@@ -127,36 +127,36 @@ export function SituationExecutiveReportBody({
         question="¿Qué tan grave es?"
         hint="Riesgo, prioridad y certeza del análisis"
       >
-        <div className="cunmark-sit-grid">
+        <div className="novex-sit-grid">
           {report.executivePriority ? (
-            <article className="cunmark-sit-card">
+            <article className="novex-sit-card">
               <header>
                 <h3>Prioridad ejecutiva</h3>
-                <span className="cunmark-sit-pill" data-risk={risk}>
+                <span className="novex-sit-pill" data-risk={risk}>
                   {EXEC_PRIORITY_LEVEL_LABEL[report.executivePriority.level]}
                 </span>
               </header>
-              <p className="cunmark-sit-card__hint">
+              <p className="novex-sit-card__hint">
                 {report.executivePriority.justification}
               </p>
             </article>
           ) : null}
-          <article className="cunmark-sit-card cunmark-sit-card--risk">
+          <article className="novex-sit-card novex-sit-card--risk">
             <header>
               <h3>Riesgo actual</h3>
-              <span className="cunmark-sit-pill" data-risk={risk}>
+              <span className="novex-sit-pill" data-risk={risk}>
                 {RISK_LEVEL_LABEL[risk]}
               </span>
             </header>
-            <p className="cunmark-sit-risk__score">
+            <p className="novex-sit-risk__score">
               <strong>{report.riskAssessment.riskScore}</strong>
               <span>/ 100</span>
             </p>
           </article>
-          <article className="cunmark-sit-card">
+          <article className="novex-sit-card">
             <header>
               <h3>Certeza</h3>
-              <span className="cunmark-sit-pill">
+              <span className="novex-sit-pill">
                 {EXEC_CERTAINTY_LABEL[report.riskAssessment.certainty.level]}
               </span>
             </header>
@@ -165,7 +165,7 @@ export function SituationExecutiveReportBody({
               level={report.riskAssessment.certainty.level}
             />
             {report.confidenceExplanation ? (
-              <div className="cunmark-sit-cause" style={{ marginTop: 10 }}>
+              <div className="novex-sit-cause" style={{ marginTop: 10 }}>
                 {report.confidenceExplanation.supportingFactors.length > 0 ? (
                   <ul>
                     {report.confidenceExplanation.supportingFactors.map((factor) => (
@@ -184,17 +184,17 @@ export function SituationExecutiveReportBody({
             ) : null}
           </article>
           {report.riskBreakdown ? (
-            <article className="cunmark-sit-card">
+            <article className="novex-sit-card">
               <header>
                 <h3>Desglose de riesgo</h3>
-                <span className="cunmark-sit-pill">
+                <span className="novex-sit-pill">
                   {report.riskBreakdown.totalScore}/100
                 </span>
               </header>
-              <ul className="cunmark-sit-areas">
+              <ul className="novex-sit-areas">
                 {report.riskBreakdown.components.map((component) => (
                   <li key={component.name}>
-                    <div className="cunmark-sit-areas__head">
+                    <div className="novex-sit-areas__head">
                       <strong>{component.name}</strong>
                       <span>{component.score}</span>
                     </div>
@@ -213,8 +213,8 @@ export function SituationExecutiveReportBody({
           question="¿Qué pasa si no actuamos?"
           hint="Ventana crítica de impacto"
         >
-          <article className="cunmark-sit-card">
-            <p className="cunmark-sit-narrative">
+          <article className="novex-sit-card">
+            <p className="novex-sit-narrative">
               <strong>{report.criticalWindow.timeBeforeEscalation}</strong>
               {' — '}
               {report.criticalWindow.explanation}
@@ -228,15 +228,15 @@ export function SituationExecutiveReportBody({
         question="Causa raíz e hipótesis"
         hint="Evidencia y dependencias detectadas"
       >
-        <article className="cunmark-sit-card">
-          <div className="cunmark-sit-cause">
-            <p className="cunmark-sit-cause__label">Causas detectadas</p>
+        <article className="novex-sit-card">
+          <div className="novex-sit-cause">
+            <p className="novex-sit-cause__label">Causas detectadas</p>
             <ul>
               {report.rootCause.detectedCauses.map((cause) => (
                 <li key={cause}>{cause}</li>
               ))}
             </ul>
-            <p className="cunmark-sit-cause__label">Hipótesis más probables</p>
+            <p className="novex-sit-cause__label">Hipótesis más probables</p>
             <ul>
               {(report.probableCauses ?? []).map((cause) => (
                 <li key={cause.hypothesis}>
@@ -251,8 +251,8 @@ export function SituationExecutiveReportBody({
             </ul>
             {report.operationalPropagation ? (
               <>
-                <p className="cunmark-sit-cause__label">Propagación operacional</p>
-                <ol className="cunmark-sit-propagation">
+                <p className="novex-sit-cause__label">Propagación operacional</p>
+                <ol className="novex-sit-propagation">
                   {report.operationalPropagation.chain.map((step) => (
                     <li key={step.stage}>
                       <strong>{step.stage}</strong>
@@ -263,7 +263,7 @@ export function SituationExecutiveReportBody({
               </>
             ) : (
               <>
-                <p className="cunmark-sit-cause__label">Dependencias</p>
+                <p className="novex-sit-cause__label">Dependencias</p>
                 <ul>
                   {report.rootCause.dependencies.map((dependency) => (
                     <li key={dependency}>{dependency}</li>
@@ -281,7 +281,7 @@ export function SituationExecutiveReportBody({
           question="Matriz de decisiones"
           hint="Clasificación de acciones por horizonte"
         >
-          <div className="cunmark-sit-grid">
+          <div className="novex-sit-grid">
             {(
               [
                 ['Resolver ahora', report.decisionMatrix.resolveNow],
@@ -291,7 +291,7 @@ export function SituationExecutiveReportBody({
               ] as const
             ).map(([label, actions]) =>
               actions.length > 0 ? (
-                <article key={label} className="cunmark-sit-card">
+                <article key={label} className="novex-sit-card">
                   <header>
                     <h3>{label}</h3>
                   </header>
@@ -299,7 +299,7 @@ export function SituationExecutiveReportBody({
                     {actions.map((action) => (
                       <li key={action.action}>
                         <strong>{action.action}</strong>
-                        <p className="cunmark-sit-card__hint">{action.reason}</p>
+                        <p className="novex-sit-card__hint">{action.reason}</p>
                       </li>
                     ))}
                   </ul>
@@ -315,12 +315,12 @@ export function SituationExecutiveReportBody({
         question="Áreas afectadas"
         hint="Coordinaciones impactadas y motivo"
       >
-        <ul className="cunmark-sit-areas">
+        <ul className="novex-sit-areas">
           {report.affectedAreas.map((area) => (
             <li key={area.name}>
-              <div className="cunmark-sit-areas__head">
+              <div className="novex-sit-areas__head">
                 <strong>{area.name}</strong>
-                <span className="cunmark-sit-pill" data-risk={area.affectationLevel}>
+                <span className="novex-sit-pill" data-risk={area.affectationLevel}>
                   {RISK_LEVEL_LABEL[area.affectationLevel]}
                 </span>
               </div>
@@ -335,23 +335,23 @@ export function SituationExecutiveReportBody({
         question="Recomendaciones prioritarias"
         hint="Acciones sugeridas por la IA"
       >
-        <ol className="cunmark-sit-actions">
+        <ol className="novex-sit-actions">
           {report.recommendedActions.slice(0, 3).map((action, index) => (
             <li
               key={`${action.action}-${index}`}
-              className="cunmark-sit-card cunmark-sit-action"
+              className="novex-sit-card novex-sit-action"
               data-priority={action.priority}
             >
-              <div className="cunmark-sit-action__head">
+              <div className="novex-sit-action__head">
                 <span
-                  className="cunmark-sit-action__priority"
+                  className="novex-sit-action__priority"
                   data-priority={action.priority}
                 >
                   {EXEC_PRIORITY_LABEL[action.priority]}
                 </span>
               </div>
-              <strong className="cunmark-sit-action__title">{action.action}</strong>
-              <p className="cunmark-sit-action__reason">{action.reason}</p>
+              <strong className="novex-sit-action__title">{action.action}</strong>
+              <p className="novex-sit-action__reason">{action.reason}</p>
             </li>
           ))}
         </ol>
@@ -362,14 +362,14 @@ export function SituationExecutiveReportBody({
         question="Conclusión ejecutiva"
         hint="Lectura final para dirección"
       >
-        <article className="cunmark-sit-card cunmark-sit-conclusion" data-risk={risk}>
-          <p className="cunmark-sit-conclusion__text">
+        <article className="novex-sit-card novex-sit-conclusion" data-risk={risk}>
+          <p className="novex-sit-conclusion__text">
             {report.executiveConclusion.gravity}
           </p>
-          <p className="cunmark-sit-conclusion__urgency">
+          <p className="novex-sit-conclusion__urgency">
             Urgencia: {EXEC_URGENCY_LABEL[report.executiveConclusion.urgency]}
           </p>
-          <p className="cunmark-sit-conclusion__text">
+          <p className="novex-sit-conclusion__text">
             {report.executiveConclusion.recommendation}
           </p>
         </article>
@@ -378,22 +378,22 @@ export function SituationExecutiveReportBody({
   ) : (
     <>
       <ExecutiveSection number={1} question="¿Qué ocurrió?">
-        <article className="cunmark-sit-card">
-          <p className="cunmark-sit-narrative">
+        <article className="novex-sit-card">
+          <p className="novex-sit-narrative">
             {report.incidentSummary.executiveSummary}
           </p>
         </article>
       </ExecutiveSection>
       <ExecutiveSection number={2} question="Recomendaciones">
-        <ol className="cunmark-sit-actions">
+        <ol className="novex-sit-actions">
           {report.recommendedActions.map((action, index) => (
             <li
               key={`${action.action}-${index}`}
-              className="cunmark-sit-card cunmark-sit-action"
+              className="novex-sit-card novex-sit-action"
               data-priority={action.priority}
             >
-              <strong className="cunmark-sit-action__title">{action.action}</strong>
-              <p className="cunmark-sit-action__reason">{action.reason}</p>
+              <strong className="novex-sit-action__title">{action.action}</strong>
+              <p className="novex-sit-action__reason">{action.reason}</p>
             </li>
           ))}
         </ol>
@@ -402,7 +402,7 @@ export function SituationExecutiveReportBody({
   )
 
   return (
-    <div className={['cunmark-sit-report', className].filter(Boolean).join(' ')}>
+    <div className={['novex-sit-report', className].filter(Boolean).join(' ')}>
       {sections}
       <footer className="island-focus-panel__footer">
         <button
@@ -412,7 +412,7 @@ export function SituationExecutiveReportBody({
           disabled={exportState === 'generating'}
           aria-busy={exportState === 'generating'}
         >
-          <CunmarkIcon name="download" size={14} />
+          <NovexIcon name="download" size={14} />
           {exportState === 'generating'
             ? 'Generando PDF…'
             : exportState === 'error'

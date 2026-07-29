@@ -1,7 +1,7 @@
 export function AnalysisEmptyState() {
   return (
     <section
-      className="cunmark-analysis-state cunmark-analysis-state--empty space-y-3"
+      className="novex-analysis-state novex-analysis-state--empty space-y-3"
       aria-live="polite"
     >
       <header className="space-y-1">

@@ -54,6 +54,7 @@ export interface PropagationSceneProps {
   error?: string | null
   viewResetKey?: number
   focusedEvent?: OperationalEvent | null
+  allowIslandFocus?: boolean
   onIslandFocusChange?: (active: boolean) => void
 }
 
@@ -132,7 +133,7 @@ function getIslandImpactState(
   return 'idle'
 }
 
-function SceneBackdrop() {
+export function SceneBackdrop() {
   return (
     <div className="propagation-scene__backdrop" aria-hidden="true">
       <div className="propagation-scene__fog" />
@@ -257,6 +258,7 @@ export function PropagationScene({
   error = null,
   viewResetKey = 0,
   focusedEvent = null,
+  allowIslandFocus = true,
   onIslandFocusChange,
 }: PropagationSceneProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -609,7 +611,13 @@ export function PropagationScene({
 
   const handleSelectIsland = useCallback(
     (coordinationId: CoordinationId) => {
-      if (dragRef.current?.moved || !propagation || !layout || !focusedEvent) {
+      if (
+        !allowIslandFocus ||
+        dragRef.current?.moved ||
+        !propagation ||
+        !layout ||
+        !focusedEvent
+      ) {
         return
       }
 
@@ -639,6 +647,7 @@ export function PropagationScene({
       }, 420)
     },
     [
+      allowIslandFocus,
       closeIslandFocus,
       focusIslandId,
       focusedEvent,
@@ -953,20 +962,24 @@ export function PropagationScene({
 
       <div className="propagation-scene__stage" style={stageStyle}>
         <div className="propagation-scene__halos" aria-hidden="true">
-          {layout.nodes.map((node) => {
+          {layout.nodes.map((node, index) => {
             const visual = nodeVisualSize(node, nodeSize)
             return (
               <span
                 key={`halo-${node.coordinationId}`}
                 className="propagation-scene__ambient-halo"
                 data-role={node.role}
-                style={{
-                  left: node.x,
-                  top: node.y,
-                  width: visual,
-                  height: visual,
-                  transform: 'translate3d(-50%, -50%, 0)',
-                }}
+                style={
+                  {
+                    left: node.x,
+                    top: node.y,
+                    width: visual,
+                    height: visual,
+                    transform: 'translate3d(-50%, -50%, 0)',
+                    '--island-order': index,
+                    '--island-enter-delay': `${130 + index * 75}ms`,
+                  } as CSSProperties
+                }
               />
             )
           })}
@@ -1040,7 +1053,7 @@ export function PropagationScene({
         </svg>
 
         <div className="propagation-scene__islands">
-          {layout.nodes.map((node) => {
+          {layout.nodes.map((node, index) => {
             const impactState = getIslandImpactState(
               node.coordinationId,
               propagation,
@@ -1066,7 +1079,8 @@ export function PropagationScene({
                 )}
                 impactState={impactState}
                 selected={isFocusedIsland && islandFocusOpen}
-                onSelect={handleSelectIsland}
+                onSelect={allowIslandFocus ? handleSelectIsland : undefined}
+                disabled={!allowIslandFocus}
                 scale={node.scale}
                 sceneZoom={zoom}
                 className={[
@@ -1078,13 +1092,17 @@ export function PropagationScene({
                 ]
                   .filter(Boolean)
                   .join(' ')}
-                style={{
-                  left: node.x,
-                  top: node.y,
-                  width: visual,
-                  height: visual,
-                  transform: 'translate3d(-50%, -50%, 0)',
-                }}
+                style={
+                  {
+                    left: node.x,
+                    top: node.y,
+                    width: visual,
+                    height: visual,
+                    transform: 'translate3d(-50%, -50%, 0)',
+                    '--island-order': index,
+                    '--island-enter-delay': `${130 + index * 75}ms`,
+                  } as CSSProperties
+                }
               />
             )
           })}

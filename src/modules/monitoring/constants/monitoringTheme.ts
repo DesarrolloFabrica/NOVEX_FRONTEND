@@ -1,4 +1,4 @@
-// Sistema visual de la Sala Cunmark (solo presentación).
+// Sistema visual de la Sala Novex (solo presentación).
 // Responsabilidad: centralizar superficies, paneles, tipografía institucional y
 // el tema por estado de entorno, para que toda la pantalla se sienta como una
 // sola sala de operaciones, sobria y unificada. No contiene lógica de negocio.
@@ -18,8 +18,8 @@ import {
 
 /**
  * Superficie de pantalla completa autónoma (p. ej. Login).
- * Dentro de la Sala Cunmark el "suelo" lo aporta `modules/room`
- * (CunmarkRoom/CunmarkFrame/MainScreen), por eso el Centro NO la usa.
+ * Dentro de la Sala Novex el "suelo" lo aporta `modules/room`
+ * (NovexRoom/NovexFrame/MainScreen), por eso el Centro NO la usa.
  */
 export const ROOM_SURFACE = 'min-h-screen bg-slate-950 text-slate-200'
 
@@ -32,7 +32,7 @@ export const SCREEN_DECK =
 
 /** Separación interior del cristal — máxima ocupación del videowall. */
 export const ROOM_CONTAINER =
-  'cunmark-room-container px-1.5 py-1 sm:px-2 sm:py-1.5 lg:flex lg:h-full lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden lg:px-2 lg:py-1'
+  'novex-room-container px-1.5 py-1 sm:px-2 sm:py-1.5 lg:flex lg:h-full lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden lg:px-2 lg:py-1'
 
 // --- Ritmo y respiración del Cristal ---------------------------------------
 
@@ -73,7 +73,7 @@ export const CRYSTAL_CONSOLE_ZONE = 'relative'
 
 /** Sprint 10.2 — ventana fija de compromisos con scroll interno cuando desborda. */
 export const CONSOLE_LIST_VIEWPORT =
-  'cunmark-console-list-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto'
+  'novex-console-list-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto'
 
 /** Padding interior de cada módulo operativo. */
 export const CRYSTAL_MODULE_PAD = 'px-4 py-3.5 sm:px-5 sm:py-4'
@@ -175,7 +175,7 @@ export const FOCUS_VISIBLE =
 // --- Tipografía institucional ----------------------------------------------
 
 export const TEXT_LABEL =
-  'cunmark-section-title cunmark-type-meta font-medium tracking-normal text-slate-400'
+  'novex-section-title novex-type-meta font-medium tracking-normal text-slate-400'
 export const TEXT_HEADING = 'text-slate-800'
 export const TEXT_MUTED = 'text-slate-500'
 export const TEXT_METRIC =

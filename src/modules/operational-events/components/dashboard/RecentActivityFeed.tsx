@@ -38,32 +38,32 @@ function formatTimestamp(value: string): string {
 export function RecentActivityFeed({ activity }: RecentActivityFeedProps) {
   return (
     <section
-      className="cunmark-intel-change cunmark-activity-feed"
+      className="novex-intel-change novex-activity-feed"
       aria-labelledby="activity-feed-heading"
     >
-      <h3 id="activity-feed-heading" className="cunmark-section-eyebrow mb-0">
+      <h3 id="activity-feed-heading" className="novex-section-eyebrow mb-0">
         Actividad reciente
       </h3>
-      <p className="cunmark-section-hint mb-2">
+      <p className="novex-section-hint mb-2">
         Línea de tiempo consolidada de situaciones.
       </p>
 
       {activity.length === 0 ? (
         <DashboardNoDataState label="Sin actividad registrada en el periodo." />
       ) : (
-        <ol className="cunmark-activity-feed__list">
+        <ol className="novex-activity-feed__list">
           {activity.map((entry) => (
-            <li key={entry.id} className="cunmark-activity-feed__item">
-              <div className="cunmark-activity-feed__meta">
-                <span className="cunmark-activity-feed__type">
+            <li key={entry.id} className="novex-activity-feed__item">
+              <div className="novex-activity-feed__meta">
+                <span className="novex-activity-feed__type">
                   {EVENT_LABEL[entry.eventType] ?? entry.eventType}
                 </span>
                 <time dateTime={entry.createdAt}>
                   {formatTimestamp(entry.createdAt)}
                 </time>
               </div>
-              <p className="cunmark-activity-feed__title">{entry.title}</p>
-              <p className="cunmark-activity-feed__copy">
+              <p className="novex-activity-feed__title">{entry.title}</p>
+              <p className="novex-activity-feed__copy">
                 {entry.situationTitle}
                 {entry.userName ? ` · ${entry.userName}` : ''}
               </p>

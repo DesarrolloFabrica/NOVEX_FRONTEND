@@ -50,6 +50,35 @@ export async function fetchAnalysisHistory(
   )
 }
 
+export interface AnalysisVersionComparisonResponse {
+  situationId: string
+  fromVersion: number
+  toVersion: number
+  differences: {
+    confidence: {
+      fromOverall: number
+      toOverall: number
+      delta: number
+    }
+    executiveSummaryChanged: boolean
+    classificationChanged: boolean
+  }
+}
+
+export async function compareAnalysisVersions(
+  situationId: string,
+  fromVersion: number,
+  toVersion: number,
+): Promise<AnalysisVersionComparisonResponse> {
+  const params = new URLSearchParams({
+    fromVersion: String(fromVersion),
+    toVersion: String(toVersion),
+  })
+  return apiRequest<AnalysisVersionComparisonResponse>(
+    `/situations/${situationId}/analysis/compare?${params.toString()}`,
+  )
+}
+
 export async function tryFetchSituationAnalysis(
   situationId: string,
 ): Promise<SituationAIAnalysisResponse | null> {

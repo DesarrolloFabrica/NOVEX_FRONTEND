@@ -31,9 +31,9 @@ function MetricCell({
   value: string
 }) {
   return (
-    <div className="cunmark-exec-metric">
-      <p className="cunmark-exec-metric__value">{value}</p>
-      <p className="cunmark-exec-metric__label">{label}</p>
+    <div className="novex-exec-metric">
+      <p className="novex-exec-metric__value">{value}</p>
+      <p className="novex-exec-metric__label">{label}</p>
     </div>
   )
 }
@@ -51,7 +51,7 @@ export function EventInterpretationView({
       : '—'
 
   return (
-    <section className="cunmark-event-interpretation space-y-5">
+    <section className="novex-event-interpretation space-y-5">
       <header className="space-y-1">
         <h2 className="text-sm font-semibold tracking-tight text-slate-800">
           Interpretación

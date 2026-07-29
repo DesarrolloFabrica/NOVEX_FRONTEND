@@ -66,15 +66,15 @@ export function ConnectedSituationDetailModal({
 
   if (loading) {
     return (
-      <div className="cunmark-situation-modal" role="presentation">
+      <div className="novex-situation-modal" role="presentation">
         <button
           type="button"
-          className="cunmark-situation-modal__backdrop"
+          className="novex-situation-modal__backdrop"
           aria-label="Cerrar"
           onClick={onClose}
         />
         <div
-          className="cunmark-situation-modal__dialog cunmark-situation-modal__dialog--state"
+          className="novex-situation-modal__dialog novex-situation-modal__dialog--state"
           role="dialog"
           aria-modal="true"
           aria-label="Cargando análisis"
@@ -87,15 +87,15 @@ export function ConnectedSituationDetailModal({
 
   if (error || !event) {
     return (
-      <div className="cunmark-situation-modal" role="presentation">
+      <div className="novex-situation-modal" role="presentation">
         <button
           type="button"
-          className="cunmark-situation-modal__backdrop"
+          className="novex-situation-modal__backdrop"
           aria-label="Cerrar"
           onClick={onClose}
         />
         <div
-          className="cunmark-situation-modal__dialog cunmark-situation-modal__dialog--state"
+          className="novex-situation-modal__dialog novex-situation-modal__dialog--state"
           role="dialog"
           aria-modal="true"
           aria-label="Error de análisis"

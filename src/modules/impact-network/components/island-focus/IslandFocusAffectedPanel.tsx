@@ -1,4 +1,4 @@
-import { CunmarkIcon } from '@/shared/components/CunmarkIcon'
+import { NovexIcon } from '@/shared/components/NovexIcon'
 import type { IslandAffectedBriefing } from './island-focus.selectors'
 
 interface IslandFocusAffectedPanelProps {
@@ -41,7 +41,7 @@ export function IslandFocusAffectedPanel({
                   <strong>{action.action}</strong>
                   <p>{action.reason}</p>
                   <span>
-                    <CunmarkIcon name="clock" size={11} strokeWidth={1.8} />
+                    <NovexIcon name="clock" size={11} strokeWidth={1.8} />
                     {action.recommendedTime}
                   </span>
                 </li>

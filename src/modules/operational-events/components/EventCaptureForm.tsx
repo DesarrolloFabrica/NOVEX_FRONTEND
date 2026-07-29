@@ -24,7 +24,7 @@ import {
 } from '@/modules/monitoring/constants/monitoringTheme'
 
 const FIELD =
-  'cunmark-capture-field w-full min-w-0 border-0 bg-transparent px-3 py-2 text-sm text-slate-800 shadow-[inset_0_-1px_0_0_rgba(100,116,139,0.28)] placeholder:text-slate-500/65'
+  'novex-capture-field w-full min-w-0 border-0 bg-transparent px-3 py-2 text-sm text-slate-800 shadow-[inset_0_-1px_0_0_rgba(100,116,139,0.28)] placeholder:text-slate-500/65'
 const FIELD_AREA = `${FIELD} resize-none`
 
 const TITLE_MIN_LENGTH = 8
@@ -111,11 +111,11 @@ export function EventCaptureForm({
 
   return (
     <form
-      className="cunmark-event-capture-form flex min-h-0 flex-1 flex-col"
+      className="novex-event-capture-form flex min-h-0 flex-1 flex-col"
       onSubmit={handleSubmit}
     >
-      <div className="cunmark-capture-desk min-h-0 flex-1">
-        <div className="cunmark-capture-desk__primary">
+      <div className="novex-capture-desk min-h-0 flex-1">
+        <div className="novex-capture-desk__primary">
           <label className="block space-y-1.5">
             <span className={TEXT_LABEL}>Título de la situación</span>
             <input
@@ -167,10 +167,10 @@ export function EventCaptureForm({
             ) : null}
           </fieldset>
 
-          <label className="cunmark-capture-description-block block min-h-0 flex-1 space-y-1.5">
+          <label className="novex-capture-description-block block min-h-0 flex-1 space-y-1.5">
             <span className={TEXT_LABEL}>Describa la situación</span>
             <textarea
-              className={`${FIELD_AREA} cunmark-capture-description`}
+              className={`${FIELD_AREA} novex-capture-description`}
               value={draft.description}
               onChange={(event) =>
                 onChange({ ...draft, description: event.target.value })
@@ -180,11 +180,11 @@ export function EventCaptureForm({
               required
             />
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="cunmark-capture-field__hint">
+              <span className="novex-capture-field__hint">
                 {descriptionLength} caracteres
               </span>
               <div
-                className={`cunmark-capture-quality is-${qualityClass}`}
+                className={`novex-capture-quality is-${qualityClass}`}
                 aria-live="polite"
               >
                 <span>Calidad del contexto</span>
@@ -197,7 +197,7 @@ export function EventCaptureForm({
           </label>
         </div>
 
-        <aside className="cunmark-capture-desk__context">
+        <aside className="novex-capture-desk__context">
           <label className="block space-y-1.5">
             <span className={TEXT_LABEL}>Coordinación responsable</span>
             <select
@@ -229,14 +229,14 @@ export function EventCaptureForm({
                 </option>
               ))}
             </select>
-            <span className="cunmark-capture-field__hint">
+            <span className="novex-capture-field__hint">
               Coordinación donde se originó principalmente la situación.
             </span>
           </label>
 
           <fieldset className="block space-y-1.5">
             <legend className={TEXT_LABEL}>Fecha y hora</legend>
-            <div className="cunmark-capture-date-time">
+            <div className="novex-capture-date-time">
               <input
                 type="date"
                 className={FIELD}
@@ -258,7 +258,7 @@ export function EventCaptureForm({
             </div>
           </fieldset>
 
-          <fieldset className="cunmark-capture-related-coordinations block space-y-1.5">
+          <fieldset className="novex-capture-related-coordinations block space-y-1.5">
             <CoordinationAutocompleteLegend />
             <CoordinationAutocomplete
               coordinations={coordinations}
@@ -269,18 +269,18 @@ export function EventCaptureForm({
             />
           </fieldset>
 
-          <fieldset className="cunmark-capture-affected-parties space-y-2">
+          <fieldset className="novex-capture-affected-parties space-y-2">
             <legend className={TEXT_LABEL}>
               ¿Quiénes considera que están siendo afectados?
             </legend>
-            <div className="cunmark-capture-chips">
+            <div className="novex-capture-chips">
               {AFFECTED_PARTY_OPTIONS.map((option) => {
                 const checked = draft.affectedParties.includes(option.value)
                 return (
                   <button
                     key={option.value}
                     type="button"
-                    className={`cunmark-capture-chip${checked ? ' is-selected' : ''}`}
+                    className={`novex-capture-chip${checked ? ' is-selected' : ''}`}
                     aria-pressed={checked}
                     onClick={() => toggleAffectedParty(option.value)}
                   >
@@ -300,7 +300,7 @@ export function EventCaptureForm({
                 required
               />
             ) : null}
-            <span className="cunmark-capture-field__hint">
+            <span className="novex-capture-field__hint">
               Percepción inicial del reportante. La IA validará el impacto real.
             </span>
           </fieldset>
@@ -324,8 +324,8 @@ export function EventCaptureForm({
         </aside>
       </div>
 
-      <div className="cunmark-capture-actions flex shrink-0 items-center justify-between gap-4 pt-2.5">
-        <p className="cunmark-capture-validation" aria-live="polite">
+      <div className="novex-capture-actions flex shrink-0 items-center justify-between gap-4 pt-2.5">
+        <p className="novex-capture-validation" aria-live="polite">
           {canContinue
             ? 'Revise el resumen antes de continuar con el análisis de IA.'
             : missingRequirements.length === 1
@@ -335,7 +335,7 @@ export function EventCaptureForm({
         <button
           type="submit"
           disabled={!canContinue || submitDisabled}
-          className={`cunmark-console-action px-4 py-2 text-sm font-semibold ${FOCUS_VISIBLE} ${
+          className={`novex-console-action px-4 py-2 text-sm font-semibold ${FOCUS_VISIBLE} ${
             canContinue && !submitDisabled
               ? 'bg-emerald-600/90 text-white hover:bg-emerald-600'
               : 'cursor-not-allowed bg-slate-300/50 text-slate-500'

@@ -172,15 +172,15 @@ export function OperationalEventWizard() {
 
   return (
     <div
-      className={`cunmark-operational-event-wizard cunmark-wizard-station ${CRYSTAL_ZONE}`}
+      className={`novex-operational-event-wizard novex-wizard-station ${CRYSTAL_ZONE}`}
     >
-      <div className="cunmark-wizard-station__rail">
+      <div className="novex-wizard-station__rail">
         <WizardStepRail currentStep={step} />
       </div>
 
       <div className="min-h-0 flex-1 overflow-hidden pr-1">
         {step === 1 ? (
-          <div className="cunmark-wizard-step-pane flex min-h-0 flex-1 flex-col gap-3">
+          <div className="novex-wizard-step-pane flex min-h-0 flex-1 flex-col gap-3">
             <EventCaptureForm
               draft={draft}
               coordinations={coordinations}
@@ -202,7 +202,7 @@ export function OperationalEventWizard() {
         ) : null}
 
         {step === 2 ? (
-          <div className="cunmark-wizard-step-pane cunmark-wizard-step-pane--dossier">
+          <div className="novex-wizard-step-pane novex-wizard-step-pane--dossier">
             <SituationCaptureSummary
               draft={draft}
               coordinations={coordinations}
@@ -225,7 +225,7 @@ export function OperationalEventWizard() {
         ) : null}
 
         {step === 3 && registeredSituationId ? (
-          <div className="cunmark-wizard-step-pane cunmark-wizard-step-pane--intelligence flex min-h-0 flex-1 flex-col">
+          <div className="novex-wizard-step-pane novex-wizard-step-pane--intelligence flex min-h-0 flex-1 flex-col">
             <SituationAnalysisPanel
               situationId={registeredSituationId}
               situationTitle={situation?.title ?? draft.title}

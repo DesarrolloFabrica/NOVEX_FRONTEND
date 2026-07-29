@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { CunmarkIcon } from '@/shared/components/CunmarkIcon'
+import { NovexIcon } from '@/shared/components/NovexIcon'
 
-interface CunmarkViewHelpProps {
+interface NovexViewHelpProps {
   title?: string
   children: ReactNode
 }
@@ -10,10 +10,10 @@ interface CunmarkViewHelpProps {
  * Botón circular de información contextual de la vista activa.
  * Misma interacción en Inteligencia, Situaciones, Registro y Seguimiento.
  */
-export function CunmarkViewHelp({
+export function NovexViewHelp({
   title = 'Información sobre esta vista',
   children,
-}: CunmarkViewHelpProps) {
+}: NovexViewHelpProps) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
 
@@ -37,21 +37,21 @@ export function CunmarkViewHelp({
   }, [open])
 
   return (
-    <div className="cunmark-help-menu" ref={rootRef}>
+    <div className="novex-help-menu" ref={rootRef}>
       <button
         type="button"
-        className="cunmark-help-menu__trigger"
+        className="novex-help-menu__trigger"
         aria-label={title}
         aria-expanded={open}
-        aria-controls="cunmark-view-help"
+        aria-controls="novex-view-help"
         onClick={() => setOpen((value) => !value)}
       >
-        <CunmarkIcon name="help" size={14} strokeWidth={1.5} />
+        <NovexIcon name="help" size={14} strokeWidth={1.5} />
       </button>
       {open ? (
         <aside
-          id="cunmark-view-help"
-          className="cunmark-help-menu__popover"
+          id="novex-view-help"
+          className="novex-help-menu__popover"
           aria-label={title}
         >
           <strong>{title}</strong>

@@ -10,7 +10,7 @@ import {
 } from '@/modules/situations/services/situation-evidences.service'
 import { FOCUS_VISIBLE } from '@/modules/monitoring/constants/monitoringTheme'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
-import { CunmarkIcon } from '@/shared/components/CunmarkIcon'
+import { NovexIcon } from '@/shared/components/NovexIcon'
 
 interface SituationCaptureSummaryProps {
   draft: SituationCaptureDraft
@@ -85,65 +85,65 @@ export function SituationCaptureSummary({
   const hasNotes = draft.additionalNotes.trim().length > 0
 
   return (
-    <section className="cunmark-executive-dossier" aria-labelledby="executive-dossier-title">
-      <div className="cunmark-executive-dossier__scroll">
-        <header className="cunmark-executive-dossier__header">
-          <div className="cunmark-executive-dossier__header-copy">
-            <p className="cunmark-executive-dossier__eyebrow">
+    <section className="novex-executive-dossier" aria-labelledby="executive-dossier-title">
+      <div className="novex-executive-dossier__scroll">
+        <header className="novex-executive-dossier__header">
+          <div className="novex-executive-dossier__header-copy">
+            <p className="novex-executive-dossier__eyebrow">
               Revise el expediente antes de iniciar el análisis ejecutivo.
             </p>
-            <h2 id="executive-dossier-title" className="cunmark-executive-dossier__title">
+            <h2 id="executive-dossier-title" className="novex-executive-dossier__title">
               {draft.title}
             </h2>
           </div>
 
-          <div className="cunmark-executive-dossier__meta">
-            <div className="cunmark-executive-dossier__meta-item">
-              <CunmarkIcon name="calendar" size={14} />
+          <div className="novex-executive-dossier__meta">
+            <div className="novex-executive-dossier__meta-item">
+              <NovexIcon name="calendar" size={14} />
               <span>{date}</span>
             </div>
-            <div className="cunmark-executive-dossier__meta-item">
-              <CunmarkIcon name="clock" size={14} />
+            <div className="novex-executive-dossier__meta-item">
+              <NovexIcon name="clock" size={14} />
               <span>{time}</span>
             </div>
-            <div className="cunmark-executive-dossier__meta-item">
-              <CunmarkIcon name="user" size={14} />
-              <span>{user?.name ?? 'Operador Cunmark'}</span>
+            <div className="novex-executive-dossier__meta-item">
+              <NovexIcon name="user" size={14} />
+              <span>{user?.name ?? 'Operador Novex'}</span>
             </div>
-            <div className="cunmark-executive-dossier__meta-item">
-              <CunmarkIcon name="grid" size={14} />
+            <div className="novex-executive-dossier__meta-item">
+              <NovexIcon name="grid" size={14} />
               <span>
                 {responsible
                   ? `${responsible.shortName || responsible.name}`
                   : 'Coordinación no definida'}
               </span>
             </div>
-            <span className="cunmark-executive-dossier__status">
+            <span className="novex-executive-dossier__status">
               Pendiente de análisis
             </span>
           </div>
         </header>
 
-        <article className="cunmark-executive-dossier__narrative">
-          <h3 className="cunmark-executive-dossier__section-title">Resumen ejecutivo</h3>
-          <p className="cunmark-executive-dossier__narrative-text">
+        <article className="novex-executive-dossier__narrative">
+          <h3 className="novex-executive-dossier__section-title">Resumen ejecutivo</h3>
+          <p className="novex-executive-dossier__narrative-text">
             {draft.description.trim()}
           </p>
         </article>
 
-        <article className="cunmark-executive-dossier__context">
-          <h3 className="cunmark-executive-dossier__section-title">Contexto operativo</h3>
-          <div className="cunmark-executive-dossier__context-grid">
-            <div className="cunmark-executive-dossier__fact">
-              <CunmarkIcon name="activity" size={15} />
+        <article className="novex-executive-dossier__context">
+          <h3 className="novex-executive-dossier__section-title">Contexto operativo</h3>
+          <div className="novex-executive-dossier__context-grid">
+            <div className="novex-executive-dossier__fact">
+              <NovexIcon name="activity" size={15} />
               <div>
                 <span>Método de detección</span>
                 <strong>{detectionLabel ?? 'No indicado'}</strong>
               </div>
             </div>
 
-            <div className="cunmark-executive-dossier__fact">
-              <CunmarkIcon name="grid" size={15} />
+            <div className="novex-executive-dossier__fact">
+              <NovexIcon name="grid" size={15} />
               <div>
                 <span>Coordinación responsable</span>
                 <strong>
@@ -154,30 +154,30 @@ export function SituationCaptureSummary({
               </div>
             </div>
 
-            <div className="cunmark-executive-dossier__fact">
-              <CunmarkIcon name="calendar" size={15} />
+            <div className="novex-executive-dossier__fact">
+              <NovexIcon name="calendar" size={15} />
               <div>
                 <span>Fecha</span>
                 <strong>{date}</strong>
               </div>
             </div>
 
-            <div className="cunmark-executive-dossier__fact">
-              <CunmarkIcon name="clock" size={15} />
+            <div className="novex-executive-dossier__fact">
+              <NovexIcon name="clock" size={15} />
               <div>
                 <span>Hora</span>
                 <strong>{time}</strong>
               </div>
             </div>
 
-            <div className="cunmark-executive-dossier__fact cunmark-executive-dossier__fact--wide">
-              <CunmarkIcon name="users" size={15} />
+            <div className="novex-executive-dossier__fact novex-executive-dossier__fact--wide">
+              <NovexIcon name="users" size={15} />
               <div>
                 <span>Personas afectadas</span>
                 {affectedLabels.length > 0 ? (
-                  <div className="cunmark-executive-dossier__chips">
+                  <div className="novex-executive-dossier__chips">
                     {affectedLabels.map((label) => (
-                      <span key={label} className="cunmark-executive-dossier__chip">
+                      <span key={label} className="novex-executive-dossier__chip">
                         {label}
                       </span>
                     ))}
@@ -188,14 +188,14 @@ export function SituationCaptureSummary({
               </div>
             </div>
 
-            <div className="cunmark-executive-dossier__fact cunmark-executive-dossier__fact--wide">
-              <CunmarkIcon name="grid" size={15} />
+            <div className="novex-executive-dossier__fact novex-executive-dossier__fact--wide">
+              <NovexIcon name="grid" size={15} />
               <div>
                 <span>Coordinaciones relacionadas</span>
                 {related.length > 0 ? (
-                  <div className="cunmark-executive-dossier__chips">
+                  <div className="novex-executive-dossier__chips">
                     {related.map((item) => (
-                      <span key={item.id} className="cunmark-executive-dossier__chip">
+                      <span key={item.id} className="novex-executive-dossier__chip">
                         {item.shortName}
                       </span>
                     ))}
@@ -209,24 +209,24 @@ export function SituationCaptureSummary({
         </article>
 
         {hasNotes ? (
-          <article className="cunmark-executive-dossier__notes">
-            <h3 className="cunmark-executive-dossier__section-title">Notas adicionales</h3>
+          <article className="novex-executive-dossier__notes">
+            <h3 className="novex-executive-dossier__section-title">Notas adicionales</h3>
             <p>{draft.additionalNotes.trim()}</p>
           </article>
         ) : null}
 
-        <article className="cunmark-executive-dossier__evidence">
-          <h3 className="cunmark-executive-dossier__section-title">Evidencias</h3>
+        <article className="novex-executive-dossier__evidence">
+          <h3 className="novex-executive-dossier__section-title">Evidencias</h3>
           {draft.attachments.length > 0 ? (
-            <ul className="cunmark-executive-dossier__evidence-list">
+            <ul className="novex-executive-dossier__evidence-list">
               {draft.attachments.map((attachment) => {
                 const evidenceType = inferEvidenceType(attachment.file)
                 return (
-                  <li key={attachment.id} className="cunmark-executive-dossier__evidence-item">
-                    <span className="cunmark-executive-dossier__evidence-icon" aria-hidden="true">
-                      <CunmarkIcon name="file" size={16} />
+                  <li key={attachment.id} className="novex-executive-dossier__evidence-item">
+                    <span className="novex-executive-dossier__evidence-icon" aria-hidden="true">
+                      <NovexIcon name="file" size={16} />
                     </span>
-                    <div className="cunmark-executive-dossier__evidence-copy">
+                    <div className="novex-executive-dossier__evidence-copy">
                       <strong>{attachment.file.name}</strong>
                       <span>
                         {EVIDENCE_TYPE_LABEL[evidenceType] ?? 'Archivo'} ·{' '}
@@ -238,16 +238,16 @@ export function SituationCaptureSummary({
               })}
             </ul>
           ) : (
-            <p className="cunmark-executive-dossier__evidence-empty">
+            <p className="novex-executive-dossier__evidence-empty">
               Sin evidencias adjuntas.
             </p>
           )}
         </article>
 
-        <article className="cunmark-executive-dossier__ai-brief">
-          <div className="cunmark-executive-dossier__ai-brief-head">
-            <span className="cunmark-executive-dossier__ai-brief-icon" aria-hidden="true">
-              <CunmarkIcon name="sparkles" size={18} />
+        <article className="novex-executive-dossier__ai-brief">
+          <div className="novex-executive-dossier__ai-brief-head">
+            <span className="novex-executive-dossier__ai-brief-icon" aria-hidden="true">
+              <NovexIcon name="sparkles" size={18} />
             </span>
             <div>
               <h3>Información que analizará la IA</h3>
@@ -257,10 +257,10 @@ export function SituationCaptureSummary({
               </p>
             </div>
           </div>
-          <ul className="cunmark-executive-dossier__ai-points">
+          <ul className="novex-executive-dossier__ai-points">
             {AI_ANALYSIS_POINTS.map((point) => (
               <li key={point}>
-                <CunmarkIcon name="check" size={14} />
+                <NovexIcon name="check" size={14} />
                 <span>{point}</span>
               </li>
             ))}
@@ -268,26 +268,26 @@ export function SituationCaptureSummary({
         </article>
       </div>
 
-      <footer className="cunmark-executive-dossier__actions">
+      <footer className="novex-executive-dossier__actions">
         <button
           type="button"
           onClick={onBack}
           disabled={confirming}
-          className={`cunmark-executive-dossier__back ${FOCUS_VISIBLE}`}
+          className={`novex-executive-dossier__back ${FOCUS_VISIBLE}`}
         >
           Volver a editar
         </button>
 
-        <div className="cunmark-executive-dossier__confirm">
+        <div className="novex-executive-dossier__confirm">
           <button
             type="button"
             onClick={onConfirm}
             disabled={confirming || !canConfirm}
-            className={`cunmark-executive-dossier__submit ${FOCUS_VISIBLE}`}
+            className={`novex-executive-dossier__submit ${FOCUS_VISIBLE}`}
           >
             {confirming ? 'Generando expediente…' : 'Crear expediente e iniciar análisis IA'}
           </button>
-          <p className="cunmark-executive-dossier__confirm-note">
+          <p className="novex-executive-dossier__confirm-note">
             Podrá reanalizar la situación posteriormente si el contexto cambia.
           </p>
         </div>

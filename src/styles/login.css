@@ -1,11 +1,11 @@
-/* Acceso Cunmark — identidad inmersiva, sobria y responsive. */
+/* Acceso Novex — identidad inmersiva, sobria y responsive. */
 
-.cunmark-login,
-.cunmark-login * {
+.novex-login,
+.novex-login * {
   box-sizing: border-box;
 }
 
-.cunmark-login {
+.novex-login {
   position: relative;
   isolation: isolate;
   display: grid;
@@ -20,25 +20,25 @@
     #020711;
 }
 
-.cunmark-login__atmosphere,
-.cunmark-login__atmosphere::before,
-.cunmark-login__atmosphere::after {
+.novex-login__atmosphere,
+.novex-login__atmosphere::before,
+.novex-login__atmosphere::after {
   position: absolute;
   z-index: -1;
   inset: 0;
   pointer-events: none;
 }
 
-.cunmark-login__atmosphere {
+.novex-login__atmosphere {
   overflow: hidden;
   background:
     linear-gradient(90deg, rgb(2 6 15 / 0.9), rgb(3 9 21 / 0.54) 47%, rgb(2 6 15 / 0.88)),
     linear-gradient(180deg, rgb(2 6 15 / 0.52), rgb(2 7 16 / 0.76)),
-    url('/assests/scenes/cunmark-city-intelligence.jpg') 48% 50% / cover no-repeat;
+    url('/assests/scenes/novex-city-intelligence.jpg') 48% 50% / cover no-repeat;
   filter: saturate(0.72) brightness(0.78);
 }
 
-.cunmark-login__atmosphere::before {
+.novex-login__atmosphere::before {
   content: '';
   background:
     radial-gradient(ellipse at 28% 50%, transparent 0 26%, rgb(75 142 235 / 0.1) 26.2%, transparent 26.45%),
@@ -47,7 +47,7 @@
   mask-image: linear-gradient(180deg, rgb(0 0 0 / 0.8), transparent 90%);
 }
 
-.cunmark-login__atmosphere::after {
+.novex-login__atmosphere::after {
   content: '';
   opacity: 0.82;
   background:
@@ -56,7 +56,7 @@
     repeating-linear-gradient(180deg, transparent 0 5px, rgb(104 158 235 / 0.018) 5px 6px);
 }
 
-.cunmark-login__grid {
+.novex-login__grid {
   position: absolute;
   top: -12%;
   left: -6%;
@@ -74,7 +74,7 @@
   mask-image: radial-gradient(ellipse, #000 5%, transparent 69%);
 }
 
-.cunmark-login__constellation {
+.novex-login__constellation {
   position: absolute;
   top: 6%;
   left: 3%;
@@ -92,21 +92,21 @@
     radial-gradient(circle at 83% 78%, rgb(87 153 255 / 0.65) 0 1px, transparent 1.5px);
 }
 
-.cunmark-login__orbital {
+.novex-login__orbital {
   position: absolute;
   border: 1px solid rgb(86 150 235 / 0.13);
   border-radius: 50%;
   filter: drop-shadow(0 0 9px rgb(70 132 224 / 0.09));
 }
 
-.cunmark-login__orbital--outer {
+.novex-login__orbital--outer {
   top: 11%;
   left: -7%;
   width: min(51vw, 51rem);
   height: min(51vw, 51rem);
 }
 
-.cunmark-login__orbital--inner {
+.novex-login__orbital--inner {
   top: 24%;
   left: 6%;
   width: min(33vw, 32rem);
@@ -114,7 +114,7 @@
   border-color: rgb(95 126 225 / 0.08);
 }
 
-.cunmark-login__horizon {
+.novex-login__horizon {
   position: absolute;
   right: -8%;
   bottom: -35%;
@@ -128,7 +128,7 @@
   transform: rotate(-6deg);
 }
 
-.cunmark-login__shell {
+.novex-login__shell {
   display: grid;
   width: min(90rem, 100%);
   min-height: 100dvh;
@@ -139,14 +139,14 @@
   padding: clamp(2rem, 5vh, 4.5rem) clamp(1.5rem, 5.2vw, 5.5rem);
 }
 
-.cunmark-login__intro {
+.novex-login__intro {
   position: relative;
   padding: 2rem 0 0 clamp(0rem, 2vw, 1.3rem);
-  animation: cunmark-login-enter-left 800ms cubic-bezier(0.22, 0.8, 0.25, 1) both;
+  animation: novex-login-enter-left 800ms cubic-bezier(0.22, 0.8, 0.25, 1) both;
 }
 
-.cunmark-login__eyebrow,
-.cunmark-login__panel-kicker {
+.novex-login__eyebrow,
+.novex-login__panel-kicker {
   display: flex;
   align-items: center;
   gap: 0.65rem;
@@ -158,13 +158,13 @@
   text-transform: uppercase;
 }
 
-.cunmark-login__eyebrow > span {
+.novex-login__eyebrow > span {
   width: 1.5rem;
   height: 1px;
   background: linear-gradient(90deg, transparent, #75df54);
 }
 
-.cunmark-login__identity {
+.novex-login__identity {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -173,7 +173,7 @@
   margin: clamp(1.15rem, 3vh, 2.25rem) 0 1.5rem;
 }
 
-.cunmark-login__mark-stage {
+.novex-login__mark-stage {
   position: relative;
   display: grid;
   width: clamp(8.5rem, 15vw, 13rem);
@@ -182,7 +182,7 @@
   place-items: center;
 }
 
-.cunmark-login__mark-stage::before {
+.novex-login__mark-stage::before {
   content: '';
   position: absolute;
   inset: 9%;
@@ -197,7 +197,7 @@
   transform: rotate(-4deg);
 }
 
-.cunmark-login__mark-stage img {
+.novex-login__mark-stage img {
   position: relative;
   z-index: 2;
   width: 90%;
@@ -206,7 +206,7 @@
   filter: drop-shadow(0 0 12px rgb(101 255 135 / 0.26));
 }
 
-.cunmark-login__mark-halo {
+.novex-login__mark-halo {
   position: absolute;
   z-index: -1;
   inset: 15%;
@@ -215,7 +215,7 @@
   filter: blur(2rem);
 }
 
-.cunmark-login__mark-orbit {
+.novex-login__mark-orbit {
   position: absolute;
   z-index: 1;
   width: 118%;
@@ -226,12 +226,12 @@
   transform: rotate(-23deg);
 }
 
-.cunmark-login__wordmark {
+.novex-login__wordmark {
   min-width: 0;
   text-align: center;
 }
 
-.cunmark-login__wordmark h1 {
+.novex-login__wordmark h1 {
   margin: 0;
   color: #f4fbf6;
   font-size: clamp(2.35rem, 5vw, 4.65rem);
@@ -241,11 +241,11 @@
   text-shadow: 0 3px 18px rgb(0 0 0 / 0.45);
 }
 
-.cunmark-login__wordmark h1::first-letter {
+.novex-login__wordmark h1::first-letter {
   color: #dfffe0;
 }
 
-.cunmark-login__wordmark div {
+.novex-login__wordmark div {
   display: flex;
   align-items: center;
   gap: 0.65rem;
@@ -258,17 +258,17 @@
   white-space: nowrap;
 }
 
-.cunmark-login__wordmark div > span {
+.novex-login__wordmark div > span {
   width: clamp(1.2rem, 2.8vw, 2.5rem);
   height: 1px;
   background: linear-gradient(90deg, #7ee361, rgb(126 227 97 / 0.18));
 }
 
-.cunmark-login__wordmark div > span:last-child {
+.novex-login__wordmark div > span:last-child {
   background: linear-gradient(90deg, rgb(126 227 97 / 0.18), #7ee361);
 }
 
-.cunmark-login__intro-copy {
+.novex-login__intro-copy {
   max-width: 33rem;
   margin: 0;
   color: rgb(209 229 216 / 0.78);
@@ -276,14 +276,14 @@
   line-height: 1.75;
 }
 
-.cunmark-login__capabilities {
+.novex-login__capabilities {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   margin: 1.65rem 0 0;
 }
 
-.cunmark-login__capabilities > div {
+.novex-login__capabilities > div {
   min-width: 7.8rem;
   border: 1px solid rgb(138 249 166 / 0.12);
   border-radius: 0.5rem;
@@ -292,7 +292,7 @@
   backdrop-filter: blur(6px);
 }
 
-.cunmark-login__capabilities dt {
+.novex-login__capabilities dt {
   color: #92ed77;
   font-size: 0.5rem;
   font-weight: 700;
@@ -300,13 +300,13 @@
   text-transform: uppercase;
 }
 
-.cunmark-login__capabilities dd {
+.novex-login__capabilities dd {
   margin: 0.2rem 0 0;
   color: rgb(215 233 220 / 0.68);
   font-size: 0.66rem;
 }
 
-.cunmark-login__panel {
+.novex-login__panel {
   position: relative;
   overflow: hidden;
   min-width: 0;
@@ -322,11 +322,11 @@
     0 26px 70px rgb(0 0 0 / 0.4),
     0 0 50px rgb(63 139 230 / 0.055);
   backdrop-filter: blur(22px) saturate(1.04);
-  animation: cunmark-login-enter-right 850ms 100ms cubic-bezier(0.22, 0.8, 0.25, 1) both;
+  animation: novex-login-enter-right 850ms 100ms cubic-bezier(0.22, 0.8, 0.25, 1) both;
 }
 
-.cunmark-login__panel::before,
-.cunmark-login__panel::after {
+.novex-login__panel::before,
+.novex-login__panel::after {
   content: '';
   position: absolute;
   inset: auto;
@@ -337,7 +337,7 @@
   pointer-events: none;
 }
 
-.cunmark-login__panel::before {
+.novex-login__panel::before {
   top: -1px;
   left: -1px;
   border-top: 1px solid rgb(149 196 255 / 0.72);
@@ -345,7 +345,7 @@
   border-radius: 1.45rem 0 0;
 }
 
-.cunmark-login__panel::after {
+.novex-login__panel::after {
   right: -1px;
   bottom: -1px;
   border-right: 1px solid rgb(97 159 238 / 0.62);
@@ -353,7 +353,7 @@
   border-radius: 0 0 1.45rem 0;
 }
 
-.cunmark-login__panel-glow {
+.novex-login__panel-glow {
   position: absolute;
   top: -18%;
   right: -14%;
@@ -365,7 +365,7 @@
   pointer-events: none;
 }
 
-.cunmark-login__panel-header {
+.novex-login__panel-header {
   position: relative;
   z-index: 1;
   display: flex !important;
@@ -379,23 +379,23 @@
   text-align: center;
 }
 
-.cunmark-login__panel-kicker {
+.novex-login__panel-kicker {
   justify-content: center;
   margin: 0 0 0.85rem !important;
   color: #92eb72 !important;
 }
 
-.cunmark-login__panel-kicker > span {
+.novex-login__panel-kicker > span {
   width: 1.25rem;
   height: 1px;
   background: linear-gradient(90deg, transparent, rgb(132 242 104 / 0.75));
 }
 
-.cunmark-login__panel-kicker > span:last-child {
+.novex-login__panel-kicker > span:last-child {
   background: linear-gradient(90deg, rgb(132 242 104 / 0.75), transparent);
 }
 
-.cunmark-login__panel-header h2 {
+.novex-login__panel-header h2 {
   margin: 0 !important;
   color: #f3fbf5 !important;
   font-size: clamp(1.65rem, 2.25vw, 2.15rem) !important;
@@ -404,13 +404,13 @@
   line-height: 1.15;
 }
 
-.cunmark-login__panel-header h2 strong {
+.novex-login__panel-header h2 strong {
   color: #88ed61;
   font-weight: inherit;
 }
 
-.cunmark-login__panel-lead,
-.cunmark-login__panel-header > p.cunmark-login__panel-lead {
+.novex-login__panel-lead,
+.novex-login__panel-header > p.novex-login__panel-lead {
   max-width: 22rem;
   margin: 0.7rem 0 0 !important;
   color: rgb(199 221 207 / 0.78) !important;
@@ -419,7 +419,7 @@
   text-align: center;
 }
 
-.cunmark-login__error {
+.novex-login__error {
   position: relative;
   z-index: 1;
   margin: 1rem 0 0;
@@ -431,7 +431,7 @@
   background: rgb(121 22 37 / 0.2);
 }
 
-.cunmark-login__auth-stack {
+.novex-login__auth-stack {
   position: relative;
   z-index: 1;
   display: flex;
@@ -439,7 +439,7 @@
   margin-top: 1.35rem;
 }
 
-.cunmark-login__google-action {
+.novex-login__google-action {
   position: relative;
   display: flex;
   width: 100%;
@@ -461,11 +461,11 @@
   transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease, background 200ms ease;
 }
 
-.cunmark-login__google-action[data-loading='true'] {
+.novex-login__google-action[data-loading='true'] {
   pointer-events: none;
 }
 
-.cunmark-login__google-action-main {
+.novex-login__google-action-main {
   position: relative;
   z-index: 0;
   display: inline-flex;
@@ -474,7 +474,7 @@
   pointer-events: none;
 }
 
-.cunmark-login__google-action-trigger {
+.novex-login__google-action-trigger {
   position: absolute;
   z-index: 1;
   inset: 0;
@@ -484,19 +484,19 @@
   opacity: 0.011;
 }
 
-.cunmark-login__google-action-trigger > div,
-.cunmark-login__google-action-trigger iframe {
+.novex-login__google-action-trigger > div,
+.novex-login__google-action-trigger iframe {
   width: 100% !important;
   height: 100% !important;
   margin: 0 !important;
 }
 
-.cunmark-login__google-action svg {
+.novex-login__google-action svg {
   flex: 0 0 auto;
 }
 
 @media (hover: hover) {
-  .cunmark-login__google-action:not([data-loading='true']):hover {
+  .novex-login__google-action:not([data-loading='true']):hover {
     transform: translateY(-2px);
     border-color: rgb(191 255 175 / 0.42) !important;
     box-shadow:
@@ -505,12 +505,12 @@
   }
 }
 
-.cunmark-login__email-form {
+.novex-login__email-form {
   display: flex;
   flex-direction: column;
 }
 
-.cunmark-login :is(.cunmark-login__primary-action) {
+.novex-login :is(.novex-login__primary-action) {
   display: flex;
   width: 100%;
   min-height: 3.35rem;
@@ -529,36 +529,36 @@
   transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease, background 200ms ease;
 }
 
-.cunmark-login__primary-action {
+.novex-login__primary-action {
   border-color: rgb(191 255 175 / 0.54) !important;
   background: linear-gradient(105deg, #4da83d, #4ebd51 52%, #6ac46a) !important;
   box-shadow: 0 10px 24px rgb(47 174 62 / 0.2), inset 0 1px 0 rgb(255 255 255 / 0.26);
 }
 
-.cunmark-login__primary-action svg {
+.novex-login__primary-action svg {
   width: 1.18rem;
   height: 1.18rem;
   transition: transform 200ms ease;
 }
 
-.cunmark-login__separator {
+.novex-login__separator {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   margin: 1.25rem 0;
 }
 
-.cunmark-login__separator > span {
+.novex-login__separator > span {
   height: 1px;
   flex: 1;
   background: linear-gradient(90deg, transparent, rgb(146 245 174 / 0.18));
 }
 
-.cunmark-login__separator > span:last-child {
+.novex-login__separator > span:last-child {
   background: linear-gradient(90deg, rgb(146 245 174 / 0.18), transparent);
 }
 
-.cunmark-login__separator b {
+.novex-login__separator b {
   display: grid;
   width: 1.9rem;
   height: 1.9rem;
@@ -571,7 +571,7 @@
   background: rgb(7 28 18 / 0.48);
 }
 
-.cunmark-login__field-label {
+.novex-login__field-label {
   display: block;
   margin: 0 0 0.45rem;
   color: rgb(200 223 208 / 0.82) !important;
@@ -580,12 +580,12 @@
   letter-spacing: 0.04em;
 }
 
-.cunmark-login__input-wrap {
+.novex-login__input-wrap {
   position: relative;
   color: #73df80;
 }
 
-.cunmark-login__input-wrap > svg {
+.novex-login__input-wrap > svg {
   position: absolute;
   z-index: 1;
   top: 50%;
@@ -596,7 +596,7 @@
   transform: translateY(-50%);
 }
 
-.cunmark-login__input {
+.novex-login__input {
   width: 100%;
   min-height: 3.1rem;
   border: 1px solid rgb(127 239 156 / 0.4) !important;
@@ -612,16 +612,16 @@
   transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
 }
 
-.cunmark-login__input::placeholder {
+.novex-login__input::placeholder {
   color: rgb(170 200 180 / 0.45);
 }
 
-.cunmark-login__input:focus {
+.novex-login__input:focus {
   border-color: rgb(165 255 181 / 0.78) !important;
   box-shadow: 0 0 0 3px rgb(88 220 120 / 0.12);
 }
 
-.cunmark-login__panel-footer {
+.novex-login__panel-footer {
   position: relative;
   z-index: 1;
   display: flex;
@@ -637,14 +637,14 @@
   white-space: nowrap;
 }
 
-.cunmark-login__panel-footer svg {
+.novex-login__panel-footer svg {
   flex: 0 0 auto;
   width: 1rem;
   height: 1rem;
   color: #78b5ff;
 }
 
-.cunmark-login__security-copy {
+.novex-login__security-copy {
   width: auto !important;
   height: auto !important;
   margin: 0;
@@ -656,42 +656,42 @@
   animation: none !important;
 }
 
-.cunmark-login__panel-footer[data-state='loading'] svg {
-  animation: cunmark-login-pulse 900ms ease-in-out infinite alternate;
+.novex-login__panel-footer[data-state='loading'] svg {
+  animation: novex-login-pulse 900ms ease-in-out infinite alternate;
 }
 
-.cunmark-login :is(button, select, input):focus-visible {
+.novex-login :is(button, select, input):focus-visible {
   outline: 2px solid rgb(184 255 148 / 0.92);
   outline-offset: 3px;
 }
 
-.cunmark-login :is(button, select, input):disabled {
+.novex-login :is(button, select, input):disabled {
   cursor: not-allowed;
   opacity: 0.58;
 }
 
-.cunmark-login__primary-action:disabled {
+.novex-login__primary-action:disabled {
   cursor: not-allowed;
 }
 
 @media (hover: hover) {
-  .cunmark-login__primary-action:not(:disabled):hover {
+  .novex-login__primary-action:not(:disabled):hover {
     transform: translateY(-2px);
     border-color: #e0ffd7 !important;
     box-shadow: 0 14px 32px rgb(70 202 76 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.32);
   }
 
-  .cunmark-login__primary-action:not(:disabled):hover svg {
+  .novex-login__primary-action:not(:disabled):hover svg {
     transform: translateX(3px);
   }
 
-  .cunmark-login__input:not(:disabled):hover {
+  .novex-login__input:not(:disabled):hover {
     border-color: rgb(165 255 181 / 0.68) !important;
     background-color: rgb(8 34 21 / 0.76) !important;
   }
 }
 
-@keyframes cunmark-login-enter-left {
+@keyframes novex-login-enter-left {
   from {
     opacity: 0;
     transform: translateX(-1.25rem);
@@ -702,7 +702,7 @@
   }
 }
 
-@keyframes cunmark-login-enter-right {
+@keyframes novex-login-enter-right {
   from {
     opacity: 0;
     transform: translateX(1.5rem);
@@ -713,20 +713,20 @@
   }
 }
 
-@keyframes cunmark-login-pulse {
+@keyframes novex-login-pulse {
   from { opacity: 0.45; transform: scale(0.76); }
   to { opacity: 1; transform: scale(1.08); }
 }
 
 @media (max-width: 1040px) {
-  .cunmark-login__shell {
+  .novex-login__shell {
     width: min(42rem, 100%);
     grid-template-columns: 1fr;
     gap: 1.5rem;
     padding-top: 2.5rem;
   }
 
-  .cunmark-login__intro {
+  .novex-login__intro {
     display: flex;
     max-width: 34rem;
     align-items: center;
@@ -735,88 +735,88 @@
     padding: 0;
   }
 
-  .cunmark-login__eyebrow,
-  .cunmark-login__intro-copy,
-  .cunmark-login__capabilities {
+  .novex-login__eyebrow,
+  .novex-login__intro-copy,
+  .novex-login__capabilities {
     display: none;
   }
 
-  .cunmark-login__identity {
+  .novex-login__identity {
     flex-direction: row;
     margin: 0;
   }
 
-  .cunmark-login__wordmark {
+  .novex-login__wordmark {
     text-align: left;
   }
 
-  .cunmark-login__mark-stage {
+  .novex-login__mark-stage {
     width: 6.2rem;
     min-width: 6.2rem;
   }
 
-  .cunmark-login__panel {
+  .novex-login__panel {
     width: 100%;
   }
 }
 
 @media (max-width: 580px) {
-  .cunmark-login__shell {
+  .novex-login__shell {
     padding: 1.5rem 1rem;
   }
 
-  .cunmark-login__intro {
+  .novex-login__intro {
     justify-content: center;
   }
 
-  .cunmark-login__wordmark h1 {
+  .novex-login__wordmark h1 {
     font-size: 2.35rem;
   }
 
-  .cunmark-login__wordmark div {
+  .novex-login__wordmark div {
     font-size: 0.45rem;
   }
 
-  .cunmark-login__panel {
+  .novex-login__panel {
     border-radius: 1.15rem;
     padding: 1.35rem;
   }
 
-  .cunmark-login__panel::before {
+  .novex-login__panel::before {
     border-radius: 1.15rem 0 0;
   }
 
-  .cunmark-login__panel::after {
+  .novex-login__panel::after {
     border-radius: 0 0 1.15rem 0;
   }
 
-  .cunmark-login__panel-header h2 {
+  .novex-login__panel-header h2 {
     font-size: 1.6rem;
   }
 
-  .cunmark-login__panel-footer {
+  .novex-login__panel-footer {
     font-size: 0.63rem;
   }
 }
 
 @media (max-width: 390px) {
-  .cunmark-login__wordmark h1 {
+  .novex-login__wordmark h1 {
     font-size: 2rem;
   }
 
-  .cunmark-login__wordmark div {
+  .novex-login__wordmark div {
     letter-spacing: 0.17em;
   }
 
-  .cunmark-login__panel {
+  .novex-login__panel {
     padding: 1.15rem;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cunmark-login *,
-  .cunmark-login *::before,
-  .cunmark-login *::after {
+  .novex-login *,
+  .novex-login *::before,
+  .novex-login *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

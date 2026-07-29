@@ -3,9 +3,9 @@ import type {
   SituationRegistrySummary,
 } from '@/modules/api/types/situation-registry.types'
 import {
-  CunmarkIcon,
-  type CunmarkIconName,
-} from '@/shared/components/CunmarkIcon'
+  NovexIcon,
+  type NovexIconName,
+} from '@/shared/components/NovexIcon'
 
 interface SituationRegistrySummaryBarProps {
   summary: SituationRegistrySummary
@@ -25,7 +25,7 @@ export function SituationRegistrySummaryBar({
     label: string
     value: string | number
     detail: string
-    icon: CunmarkIconName
+    icon: NovexIconName
     tone: 'open' | 'resolved' | 'ai' | 'recommendations'
     badge?: string
   }> = [
@@ -68,29 +68,29 @@ export function SituationRegistrySummaryBar({
 
   return (
     <section
-      className="cunmark-execution-summary"
+      className="novex-execution-summary"
       aria-label="Resumen del registro"
     >
       {items.map((item) => (
         <article
           key={item.label}
-          className="cunmark-execution-summary__item"
+          className="novex-execution-summary__item"
           data-tone={item.tone}
         >
-          <span className="cunmark-execution-summary__icon" aria-hidden="true">
-            <CunmarkIcon name={item.icon} size={17} />
+          <span className="novex-execution-summary__icon" aria-hidden="true">
+            <NovexIcon name={item.icon} size={17} />
           </span>
-          <span className="cunmark-execution-summary__content">
-            <span className="cunmark-execution-summary__label">{item.label}</span>
-            <span className="cunmark-execution-summary__value-row">
+          <span className="novex-execution-summary__content">
+            <span className="novex-execution-summary__label">{item.label}</span>
+            <span className="novex-execution-summary__value-row">
               <strong>{item.value}</strong>
               {item.badge ? (
-                <span className="cunmark-execution-summary__badge">
+                <span className="novex-execution-summary__badge">
                   {item.badge}
                 </span>
               ) : null}
             </span>
-            <span className="cunmark-execution-summary__detail">
+            <span className="novex-execution-summary__detail">
               {item.detail}
             </span>
           </span>

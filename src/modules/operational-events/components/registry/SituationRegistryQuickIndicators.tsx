@@ -18,9 +18,9 @@ export function SituationRegistryQuickIndicators({
   ]
 
   return (
-    <div className="cunmark-registry-chips" aria-label="Indicadores rápidos">
+    <div className="novex-registry-chips" aria-label="Indicadores rápidos">
       {chips.map((chip) => (
-        <span key={chip.label} className="cunmark-registry-chips__item">
+        <span key={chip.label} className="novex-registry-chips__item">
           <strong>{chip.value}</strong>
           {chip.label}
         </span>

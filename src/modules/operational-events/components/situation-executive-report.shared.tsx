@@ -46,17 +46,17 @@ export function ExecutiveSection({
   children: ReactNode
 }) {
   return (
-    <section className="cunmark-sit-section">
-      <header className="cunmark-sit-section__head">
-        <span className="cunmark-sit-section__num" aria-hidden="true">
+    <section className="novex-sit-section">
+      <header className="novex-sit-section__head">
+        <span className="novex-sit-section__num" aria-hidden="true">
           {String(number).padStart(2, '0')}
         </span>
         <div className="min-w-0">
-          <h3 className="cunmark-sit-section__title">{question}</h3>
-          {hint ? <p className="cunmark-sit-section__hint">{hint}</p> : null}
+          <h3 className="novex-sit-section__title">{question}</h3>
+          {hint ? <p className="novex-sit-section__hint">{hint}</p> : null}
         </div>
       </header>
-      <div className="cunmark-sit-section__body">{children}</div>
+      <div className="novex-sit-section__body">{children}</div>
     </section>
   )
 }
@@ -74,13 +74,13 @@ export function CertaintyRing({
 
   return (
     <div
-      className="cunmark-sit-ring"
+      className="novex-sit-ring"
       aria-label={`Nivel de certeza ${percentage}% (${EXEC_CERTAINTY_LABEL[level]})`}
     >
       <svg viewBox="0 0 88 88" aria-hidden="true">
-        <circle className="cunmark-sit-ring__track" cx="44" cy="44" r={radius} />
+        <circle className="novex-sit-ring__track" cx="44" cy="44" r={radius} />
         <circle
-          className="cunmark-sit-ring__value"
+          className="novex-sit-ring__value"
           cx="44"
           cy="44"
           r={radius}
@@ -88,7 +88,7 @@ export function CertaintyRing({
           strokeDashoffset={offset}
         />
       </svg>
-      <div className="cunmark-sit-ring__label">
+      <div className="novex-sit-ring__label">
         <strong>{percentage}%</strong>
         <span>Certeza</span>
       </div>

@@ -1,4 +1,4 @@
-// Capa: página de acceso de la plataforma Cunmark
+// Capa: página de acceso de la plataforma Novex
 // Responsabilidad: presentar acceso por Google y correo.
 
 import { GoogleLogin } from '@react-oauth/google'
@@ -63,41 +63,41 @@ export function LoginPage() {
   const canSubmitEmail = email.trim().length > 0 && !isBusy
 
   return (
-    <main className="cunmark-login">
-      <div className="cunmark-login__atmosphere" aria-hidden="true">
-        <div className="cunmark-login__grid" />
-        <div className="cunmark-login__constellation" />
-        <div className="cunmark-login__orbital cunmark-login__orbital--outer" />
-        <div className="cunmark-login__orbital cunmark-login__orbital--inner" />
-        <div className="cunmark-login__horizon" />
+    <main className="novex-login">
+      <div className="novex-login__atmosphere" aria-hidden="true">
+        <div className="novex-login__grid" />
+        <div className="novex-login__constellation" />
+        <div className="novex-login__orbital novex-login__orbital--outer" />
+        <div className="novex-login__orbital novex-login__orbital--inner" />
+        <div className="novex-login__horizon" />
       </div>
 
-      <div className="cunmark-login__shell">
-        <section className="cunmark-login__intro" aria-labelledby="cunmark-login-title">
-          <div className="cunmark-login__eyebrow">
+      <div className="novex-login__shell">
+        <section className="novex-login__intro" aria-labelledby="novex-login-title">
+          <div className="novex-login__eyebrow">
             <span aria-hidden="true" />
             Equipo desarrollo de operaciones
           </div>
 
-          <div className="cunmark-login__identity">
-            <div className="cunmark-login__mark-stage" aria-hidden="true">
-              <div className="cunmark-login__mark-halo" />
-              <div className="cunmark-login__mark-orbit" />
-              <img src="/cunmark-mark.png" alt="" draggable={false} />
+          <div className="novex-login__identity">
+            <div className="novex-login__mark-stage" aria-hidden="true">
+              <div className="novex-login__mark-halo" />
+              <div className="novex-login__mark-orbit" />
+              <img src="/novex-mark.png" alt="" draggable={false} />
             </div>
 
-            <div className="cunmark-login__wordmark">
-              <h1 id="cunmark-login-title">CUNMARK</h1>
+            <div className="novex-login__wordmark">
+              <h1 id="novex-login-title">NOVEX</h1>
               <div><span /> Inteligencia para decidir <span /></div>
             </div>
           </div>
 
-          <p className="cunmark-login__intro-copy">
+          <p className="novex-login__intro-copy">
             Plataforma de monitoreo e inteligencia operacional para una gestión
             estratégica y decisiones oportunas.
           </p>
 
-          <dl className="cunmark-login__capabilities" aria-label="Capacidades de la plataforma">
+          <dl className="novex-login__capabilities" aria-label="Capacidades de la plataforma">
             <div>
               <dt>Monitoreo</dt>
               <dd>en tiempo real</dd>
@@ -113,29 +113,29 @@ export function LoginPage() {
           </dl>
         </section>
 
-        <section className="cunmark-login__panel" aria-labelledby="access-title">
-          <div className="cunmark-login__panel-glow" aria-hidden="true" />
-          <header className="cunmark-login__panel-header">
-            <p className="cunmark-login__panel-kicker"><span /> Bienvenido <span /></p>
-            <h2 id="access-title">Accede a <strong>Cunmark</strong></h2>
-            <p className="cunmark-login__panel-lead">
+        <section className="novex-login__panel" aria-labelledby="access-title">
+          <div className="novex-login__panel-glow" aria-hidden="true" />
+          <header className="novex-login__panel-header">
+            <p className="novex-login__panel-kicker"><span /> Bienvenido <span /></p>
+            <h2 id="access-title">Accede a <strong>Novex</strong></h2>
+            <p className="novex-login__panel-lead">
               Ingresa con Google o con tu correo institucional.
             </p>
           </header>
 
           {error && (
-            <p className="cunmark-login__error" role="alert">
+            <p className="novex-login__error" role="alert">
               {error}
             </p>
           )}
 
-          <div className="cunmark-login__auth-stack">
+          <div className="novex-login__auth-stack">
             <div
               ref={googleButtonRef}
-              className="cunmark-login__google-action"
+              className="novex-login__google-action"
               data-loading={isBusy ? 'true' : 'false'}
             >
-              <span className="cunmark-login__google-action-main" aria-hidden="true">
+              <span className="novex-login__google-action-main" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="18" height="18">
                   <path
                     fill="#4285F4"
@@ -157,7 +157,7 @@ export function LoginPage() {
                 Entrar con Google
               </span>
 
-              <div className="cunmark-login__google-action-trigger">
+              <div className="novex-login__google-action-trigger">
                 <GoogleLogin
                   onSuccess={(response) => handleGoogleSuccess(response.credential)}
                   onError={() => undefined}
@@ -171,17 +171,17 @@ export function LoginPage() {
               </div>
             </div>
 
-            <div className="cunmark-login__separator" aria-hidden="true">
+            <div className="novex-login__separator" aria-hidden="true">
               <span />
               <b>o</b>
               <span />
             </div>
 
-            <form className="cunmark-login__email-form" onSubmit={handleEmailSubmit}>
-              <label className="cunmark-login__field-label" htmlFor="login-email">
+            <form className="novex-login__email-form" onSubmit={handleEmailSubmit}>
+              <label className="novex-login__field-label" htmlFor="login-email">
                 Correo electrónico
               </label>
-              <div className="cunmark-login__input-wrap">
+              <div className="novex-login__input-wrap">
                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
                   <path d="M4 6.5h16v11H4z" />
                   <path d="m5 7.5 7 5.5 7-5.5" />
@@ -196,7 +196,7 @@ export function LoginPage() {
                   value={email}
                   disabled={isBusy}
                   onChange={(event) => setEmail(event.target.value)}
-                  className="cunmark-login__input"
+                  className="novex-login__input"
                 />
               </div>
 
@@ -204,7 +204,7 @@ export function LoginPage() {
                 type="submit"
                 disabled={!canSubmitEmail}
                 aria-busy={loading}
-                className="cunmark-login__primary-action"
+                className="novex-login__primary-action"
               >
                 <span>Continuar con correo</span>
                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -215,7 +215,7 @@ export function LoginPage() {
           </div>
 
           <footer
-            className="cunmark-login__panel-footer"
+            className="novex-login__panel-footer"
             aria-live="polite"
             data-state={isBusy ? 'loading' : 'ready'}
           >
@@ -223,7 +223,7 @@ export function LoginPage() {
               <path d="M12 3.5 19 7v5c0 4.3-2.8 7.4-7 8.5C7.8 19.4 5 16.3 5 12V7l7-3.5Z" />
               <path d="m9.2 12 1.8 1.8 3.8-4" />
             </svg>
-            <p className="cunmark-login__security-copy">
+            <p className="novex-login__security-copy">
               {bootSplashActive
                 ? 'Abriendo plataforma…'
                 : loading

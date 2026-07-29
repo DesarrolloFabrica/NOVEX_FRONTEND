@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CunmarkIcon } from '@/shared/components/CunmarkIcon'
+import { NovexIcon } from '@/shared/components/NovexIcon'
 
 type TransitionPhase = 'spinner' | 'check' | 'label' | 'done'
 
@@ -34,18 +34,18 @@ export function AnalysisCompletingTransition({
 
   return (
     <section
-      className={`cunmark-intel-complete-transition cunmark-intel-complete-transition--${phase}`}
+      className={`novex-intel-complete-transition novex-intel-complete-transition--${phase}`}
       aria-live="polite"
       aria-busy={phase !== 'done'}
     >
       {phase === 'spinner' ? (
-        <div className="cunmark-intel-complete-transition__spinner" aria-hidden="true" />
+        <div className="novex-intel-complete-transition__spinner" aria-hidden="true" />
       ) : (
-        <div className="cunmark-intel-complete-transition__success" aria-hidden="true">
-          <CunmarkIcon name="check" size={28} />
+        <div className="novex-intel-complete-transition__success" aria-hidden="true">
+          <NovexIcon name="check" size={28} />
         </div>
       )}
-      <p className="cunmark-intel-complete-transition__label">
+      <p className="novex-intel-complete-transition__label">
         {phase === 'spinner' ? 'Finalizando análisis…' : 'Informe generado'}
       </p>
     </section>

@@ -42,16 +42,16 @@ export function DashboardOperationalSummary({
   ] as const
 
   return (
-    <section className="cunmark-dashboard-status" aria-label="Resumen operativo">
-      <div className="cunmark-dashboard-status__grid">
+    <section className="novex-dashboard-status" aria-label="Resumen operativo">
+      <div className="novex-dashboard-status__grid">
         {stats.map((stat) => (
           <article
             key={stat.id}
-            className="cunmark-dashboard-status__stat"
+            className="novex-dashboard-status__stat"
             data-tone={stat.tone}
           >
             <strong>{stat.value}</strong>
-            <span className="cunmark-dashboard-status__stat-label">
+            <span className="novex-dashboard-status__stat-label">
               {stat.label}
             </span>
             <small>{stat.hint}</small>

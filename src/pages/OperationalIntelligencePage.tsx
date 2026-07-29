@@ -6,8 +6,8 @@ import { ScreenDeck } from '@/modules/monitoring/components/ScreenDeck'
 import type { EnvironmentStatus } from '@/modules/monitoring/types/monitoring.types'
 import { OperationalIntelligenceDashboard } from '@/modules/operational-events/components/OperationalIntelligenceDashboard'
 import type { OperationalEnvironmentStatus } from '@/modules/operational-events/types/operational-event.types'
-import { MainScreen, CunmarkFrame, CunmarkRoom } from '@/modules/room'
-import { CunmarkProductHeader } from '@/shared/components/CunmarkProductHeader'
+import { MainScreen, NovexFrame, NovexRoom } from '@/modules/room'
+import { NovexProductHeader } from '@/shared/components/NovexProductHeader'
 
 export function OperationalIntelligencePage() {
   const [environment, setEnvironment] =
@@ -21,13 +21,13 @@ export function OperationalIntelligencePage() {
   )
 
   return (
-    <CunmarkRoom environment={environment} scene="intelligence">
-      <CunmarkFrame environment={environment}>
+    <NovexRoom environment={environment} scene="intelligence">
+      <NovexFrame environment={environment}>
         <MainScreen environment={environment}>
           <ScreenDeck
             environment={environment}
             header={
-              <CunmarkProductHeader
+              <NovexProductHeader
                 title="Dashboard"
                 help={
                   <>
@@ -49,7 +49,7 @@ export function OperationalIntelligencePage() {
             />
           </ScreenDeck>
         </MainScreen>
-      </CunmarkFrame>
-    </CunmarkRoom>
+      </NovexFrame>
+    </NovexRoom>
   )
 }

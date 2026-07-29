@@ -1,6 +1,6 @@
 import type { SVGProps } from 'react'
 
-export type CunmarkIconName =
+export type NovexIconName =
   | 'activity'
   | 'alert'
   | 'arrow-up-right'
@@ -24,7 +24,7 @@ export type CunmarkIconName =
   | 'users'
   | 'x'
 
-const PATHS: Record<CunmarkIconName, React.ReactNode> = {
+const PATHS: Record<NovexIconName, React.ReactNode> = {
   activity: <path d="M3.5 12h3l2-6 3.3 12 2.2-7h6.5" />,
   alert: (
     <>
@@ -112,12 +112,12 @@ const PATHS: Record<CunmarkIconName, React.ReactNode> = {
   x: <path d="M7 7l10 10M17 7 7 17" />,
 }
 
-export function CunmarkIcon({
+export function NovexIcon({
   name,
   size = 16,
   strokeWidth = 1.7,
   ...props
-}: { name: CunmarkIconName; size?: number; strokeWidth?: number } & Omit<
+}: { name: NovexIconName; size?: number; strokeWidth?: number } & Omit<
   SVGProps<SVGSVGElement>,
   'name'
 >) {

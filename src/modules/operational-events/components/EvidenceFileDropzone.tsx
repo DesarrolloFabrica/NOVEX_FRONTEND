@@ -65,7 +65,7 @@ export function EvidenceFileDropzone({
       <span className={TEXT_LABEL}>Archivos</span>
 
       <div
-        className={`cunmark-capture-dropzone ${dragging ? 'is-dragging' : ''}`}
+        className={`novex-capture-dropzone ${dragging ? 'is-dragging' : ''}`}
         onDragEnter={(event) => {
           event.preventDefault()
           setDragging(true)
@@ -80,11 +80,11 @@ export function EvidenceFileDropzone({
         }}
         onDrop={handleDrop}
       >
-        <p className="cunmark-capture-dropzone__text">
+        <p className="novex-capture-dropzone__text">
           Arrastre archivos aquí o{' '}
           <button
             type="button"
-            className="cunmark-capture-dropzone__action"
+            className="novex-capture-dropzone__action"
             onClick={() => inputRef.current?.click()}
           >
             seleccione archivos
@@ -100,23 +100,23 @@ export function EvidenceFileDropzone({
       </div>
 
       {attachments.length > 0 ? (
-        <ul className="cunmark-capture-file-list space-y-1.5">
+        <ul className="novex-capture-file-list space-y-1.5">
           {attachments.map((attachment) => {
             const evidenceType = inferEvidenceType(attachment.file)
             return (
-              <li key={attachment.id} className="cunmark-capture-file-item">
+              <li key={attachment.id} className="novex-capture-file-item">
                 <div className="min-w-0">
-                  <p className="cunmark-capture-file-item__name truncate text-sm font-medium">
+                  <p className="novex-capture-file-item__name truncate text-sm font-medium">
                     {attachment.file.name}
                   </p>
-                  <p className="cunmark-capture-file-item__meta text-[0.72rem]">
+                  <p className="novex-capture-file-item__meta text-[0.72rem]">
                     {EVIDENCE_TYPE_LABEL[evidenceType] ?? 'Archivo'} ·{' '}
                     {formatFileSize(attachment.file.size)}
                   </p>
                 </div>
                 <button
                   type="button"
-                  className="cunmark-capture-file-item__remove"
+                  className="novex-capture-file-item__remove"
                   onClick={() => removeAttachment(attachment.id)}
                 >
                   Eliminar

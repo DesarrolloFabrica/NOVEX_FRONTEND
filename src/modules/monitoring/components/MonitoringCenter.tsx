@@ -8,10 +8,14 @@ import { ScreenDeck } from '@/modules/monitoring/components/ScreenDeck'
 import { SituationDossierPanel } from '@/modules/monitoring/components/SituationDossierPanel'
 import { SituationIntelligencePanel } from '@/modules/monitoring/components/SituationIntelligencePanel'
 import { SituationQueueConsole } from '@/modules/monitoring/components/SituationQueueConsole'
+import { OperationalStatusPanel } from '@/modules/monitoring/components/OperationalStatusPanel'
+import { AiRecommendationsReadOnly } from '@/modules/monitoring/components/AiRecommendationsReadOnly'
+import { OperationalHistoryTimeline } from '@/modules/monitoring/components/OperationalHistoryTimeline'
+import { AiVersionCard } from '@/modules/monitoring/components/AiVersionCard'
 import type { SituationDossier } from '@/modules/api/types/situation-management.types'
 import type { SituationListItem } from '@/modules/api/types/situation-management.types'
-import type { SituationResponse } from '@/modules/situations/types/situation.types'
 import { sortSituationsForQueue } from '@/modules/monitoring/utils/situation-management.presentation'
+import type { UpdateSituationStatusInput } from '@/modules/monitoring/utils/situation-lifecycle'
 
 interface MonitoringCenterProps {
   user: User | null
@@ -27,27 +31,23 @@ interface MonitoringCenterProps {
   isUpdating: boolean
   environment: EnvironmentStatus
   onSelectSituation: (situationId: string) => void
-  onUpdateSituationStatus: (status: SituationResponse['status']) => Promise<void>
-  onUpdateRecommendationStatus: (
-    recommendationId: string,
-    status: string,
-  ) => Promise<void>
+  onUpdateSituationStatus: (input: UpdateSituationStatusInput) => Promise<void>
   onLogout: () => void
 }
 
 function SituationSummary({ summary }: { summary: SituationManagementSummary }) {
   const indicators = [
-    ['Abiertas', summary.open],
-    ['En progreso', summary.inProgress],
+    ['Registradas', summary.open],
+    ['En atención', summary.inProgress],
     ['Resueltas', summary.resolved],
     ['Cerradas', summary.closed],
     ['Atención prioritaria', summary.critical],
   ] as const
 
   return (
-    <section className="cunmark-execution-summary" aria-label="Resumen ejecutivo">
+    <section className="novex-execution-summary" aria-label="Resumen ejecutivo">
       {indicators.map(([label, value]) => (
-        <div key={label} className="cunmark-execution-summary__item">
+        <div key={label} className="novex-execution-summary__item">
           <strong>{value}</strong>
           <span>{label}</span>
         </div>
@@ -71,7 +71,6 @@ export function MonitoringCenter({
   environment,
   onSelectSituation,
   onUpdateSituationStatus,
-  onUpdateRecommendationStatus,
   onLogout,
 }: MonitoringCenterProps) {
   const [showAnalysis, setShowAnalysis] = useState(false)
@@ -80,7 +79,7 @@ export function MonitoringCenter({
   return (
     <ScreenDeck
       environment={environment}
-      className="cunmark-monitoring-deck"
+      className="novex-monitoring-deck"
       header={
         <MonitoringHeader
           user={user}
@@ -89,7 +88,7 @@ export function MonitoringCenter({
         />
       }
     >
-      <main className="cunmark-execution-flow">
+      <main className="novex-execution-flow">
         <SituationSummary summary={summary} />
 
         <SituationQueueConsole
@@ -100,24 +99,43 @@ export function MonitoringCenter({
           onSelectSituation={onSelectSituation}
         />
 
-        <section
-          className="cunmark-execution-detail"
-          aria-label="Expediente operativo de la situación"
-        >
+        <section className="novex-ops-command-center">
+          <div
+            className="novex-execution-detail"
+            aria-label="Vista ejecutiva de la situación"
+          >
           <SituationDossierPanel
             dossier={dossier}
             loading={dossierLoading}
             error={dossierError}
-            canUpdate={canUpdate}
-            isUpdating={isUpdating}
-            onUpdateSituationStatus={onUpdateSituationStatus}
-            onUpdateRecommendationStatus={onUpdateRecommendationStatus}
           />
           <SituationIntelligencePanel
             dossier={dossier}
             loading={dossierLoading}
             onOpenAnalysis={() => setShowAnalysis(true)}
           />
+          </div>
+
+          {dossier ? (
+            <>
+              <OperationalStatusPanel
+                situation={dossier.situation}
+                canUpdate={canUpdate}
+                isUpdating={isUpdating}
+                onUpdate={onUpdateSituationStatus}
+              />
+              <AiRecommendationsReadOnly
+                recommendations={dossier.recommendations}
+              />
+              <div className="novex-ops-secondary-grid">
+                <OperationalHistoryTimeline timeline={dossier.timeline} />
+                <AiVersionCard
+                  situationId={dossier.situation.id}
+                  history={dossier.analysisHistory}
+                />
+              </div>
+            </>
+          ) : null}
         </section>
       </main>
 

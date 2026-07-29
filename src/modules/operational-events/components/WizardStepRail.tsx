@@ -14,8 +14,8 @@ interface WizardStepRailProps {
 
 export function WizardStepRail({ currentStep }: WizardStepRailProps) {
   return (
-    <nav aria-label="Pasos del registro" className="cunmark-wizard-steps">
-      <ol className="cunmark-wizard-steps__rail">
+    <nav aria-label="Pasos del registro" className="novex-wizard-steps">
+      <ol className="novex-wizard-steps__rail">
         {STEPS.map((step, index) => {
           const active = step.id === currentStep
           const done = step.id < currentStep
@@ -28,15 +28,15 @@ export function WizardStepRail({ currentStep }: WizardStepRailProps) {
                 />
               ) : null}
               <span
-                className={`cunmark-wizard-steps__step ${
+                className={`novex-wizard-steps__step ${
                   active
-                    ? 'cunmark-wizard-steps__step--active'
+                    ? 'novex-wizard-steps__step--active'
                     : done
-                      ? 'cunmark-wizard-steps__step--done'
+                      ? 'novex-wizard-steps__step--done'
                       : ''
                 }`}
               >
-                <span className="cunmark-wizard-steps__index" aria-hidden="true">
+                <span className="novex-wizard-steps__index" aria-hidden="true">
                   0{step.id}
                 </span>
                 {step.label}

@@ -1,20 +1,20 @@
 // Página: captura de eventos operacionales.
 // Consume el OperationalEventsProvider global (app/providers).
 
-import { MainScreen, CunmarkFrame, CunmarkRoom } from '@/modules/room'
+import { MainScreen, NovexFrame, NovexRoom } from '@/modules/room'
 import { OperationalEventWizard } from '@/modules/operational-events/components/OperationalEventWizard'
 import { ScreenDeck } from '@/modules/monitoring/components/ScreenDeck'
-import { CunmarkProductHeader } from '@/shared/components/CunmarkProductHeader'
+import { NovexProductHeader } from '@/shared/components/NovexProductHeader'
 
 export function RegisterOperationalEventPage() {
   return (
-    <CunmarkRoom environment="pending" scene="register">
-      <CunmarkFrame environment="pending">
+    <NovexRoom environment="pending" scene="register">
+      <NovexFrame environment="pending">
         <MainScreen environment="pending">
           <ScreenDeck
             environment="pending"
             header={
-              <CunmarkProductHeader
+              <NovexProductHeader
                 title="Registrar situación"
                 help={
                   <>
@@ -34,7 +34,7 @@ export function RegisterOperationalEventPage() {
             <OperationalEventWizard />
           </ScreenDeck>
         </MainScreen>
-      </CunmarkFrame>
-    </CunmarkRoom>
+      </NovexFrame>
+    </NovexRoom>
   )
 }

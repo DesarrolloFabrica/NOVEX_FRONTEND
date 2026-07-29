@@ -1,7 +1,7 @@
+import { useState } from 'react'
 import type { SituationDossier } from '@/modules/api/types/situation-management.types'
-import { CunmarkIcon } from '@/shared/components/CunmarkIcon'
+import { NovexIcon } from '@/shared/components/NovexIcon'
 import {
-  formatManagementDate,
   SITUATION_SEVERITY_LABEL,
 } from '@/modules/monitoring/utils/situation-management.presentation'
 
@@ -11,11 +11,6 @@ interface SituationIntelligencePanelProps {
   onOpenAnalysis: () => void
 }
 
-function formatConfidence(value: number | null | undefined): string {
-  if (value === null || value === undefined) return '—'
-  return `${Math.round(value * 100)}%`
-}
-
 export function SituationIntelligencePanel({
   dossier,
   loading,
@@ -23,8 +18,8 @@ export function SituationIntelligencePanel({
 }: SituationIntelligencePanelProps) {
   if (loading) {
     return (
-      <aside className="cunmark-action-outcome cunmark-action-outcome--empty">
-        <CunmarkIcon name="sparkles" size={24} />
+      <aside className="novex-action-outcome novex-action-outcome--empty">
+        <NovexIcon name="sparkles" size={24} />
         <h2>Resumen ejecutivo IA</h2>
         <p>Cargando análisis…</p>
       </aside>
@@ -33,8 +28,8 @@ export function SituationIntelligencePanel({
 
   if (!dossier) {
     return (
-      <aside className="cunmark-action-outcome cunmark-action-outcome--empty">
-        <CunmarkIcon name="sparkles" size={24} />
+      <aside className="novex-action-outcome novex-action-outcome--empty">
+        <NovexIcon name="sparkles" size={24} />
         <h2>Resumen ejecutivo IA</h2>
         <p>Selecciona una situación para consultar su lectura ejecutiva.</p>
       </aside>
@@ -45,65 +40,101 @@ export function SituationIntelligencePanel({
 
   if (!analysis) {
     return (
-      <aside className="cunmark-action-outcome cunmark-action-outcome--empty">
-        <CunmarkIcon name="sparkles" size={24} />
+      <aside className="novex-action-outcome novex-action-outcome--empty">
+        <NovexIcon name="sparkles" size={24} />
         <h2>Resumen ejecutivo IA</h2>
         <p>Esta situación aún no tiene un análisis IA disponible.</p>
       </aside>
     )
   }
 
-  const items = [
-    ['Resumen ejecutivo', analysis.executiveSummary.summary],
-    ...(analysis.executiveNarrative
-      ? [['Lectura ejecutiva', analysis.executiveNarrative] as const]
-      : []),
-    ...(analysis.executivePriority
-      ? [
-          [
-            'Prioridad',
-            `${analysis.executivePriority.level}: ${analysis.executivePriority.justification}`,
-          ] as const,
-        ]
-      : []),
-    ['Impacto principal', dossier.impact?.summary ?? analysis.impactAssessment.summary],
-    ['Conclusión', analysis.executiveConclusion.conclusion],
-    ['Confianza', formatConfidence(analysis.confidence.overall)],
-    [
-      'Última versión',
-      dossier.analysis ? `v${dossier.analysis.analysisVersion}` : '—',
-    ],
-    [
-      'Fecha del análisis',
-      formatManagementDate(analysis.analyzedAt),
-    ],
+  const sections = [
+    {
+      id: 'summary',
+      label: 'Resumen ejecutivo',
+      content: analysis.executiveSummary.summary,
+    },
+    {
+      id: 'impact',
+      label: 'Impacto',
+      content: dossier.impact?.summary ?? analysis.impactAssessment.summary,
+    },
+    {
+      id: 'hypotheses',
+      label: 'Hipótesis',
+      content:
+        analysis.rootCause.hypotheses
+          .map((item) => item.statement)
+          .join(' · ') || analysis.rootCause.summary,
+    },
+    {
+      id: 'conclusion',
+      label: 'Conclusión',
+      content: analysis.executiveConclusion.conclusion,
+    },
   ] as const
 
   return (
-    <aside className="cunmark-action-outcome">
+    <ExecutiveBrief
+      sections={sections}
+      severity={
+        SITUATION_SEVERITY_LABEL[
+          analysis.incidentClassification.operationalSeverity
+        ] ?? analysis.incidentClassification.operationalSeverity
+      }
+      onOpenAnalysis={onOpenAnalysis}
+    />
+  )
+}
+
+interface ExecutiveBriefProps {
+  sections: ReadonlyArray<{
+    id: string
+    label: string
+    content: string
+  }>
+  severity: string
+  onOpenAnalysis: () => void
+}
+
+function ExecutiveBrief({
+  sections,
+  severity,
+  onOpenAnalysis,
+}: ExecutiveBriefProps) {
+  const [expanded, setExpanded] = useState('summary')
+
+  return (
+    <aside className="novex-action-outcome novex-ops-brief">
       <header>
-        <CunmarkIcon name="sparkles" size={20} />
+        <NovexIcon name="sparkles" size={20} />
         <div>
-          <p>ANÁLISIS IA</p>
-          <h2>Resumen ejecutivo IA</h2>
+          <p>IA ejecutiva</p>
+          <h2>Executive Brief</h2>
         </div>
+        <span>{severity}</span>
       </header>
-      <dl>
-        {items.map(([label, value]) => (
-          <div key={label}>
-            <dt>{label}</dt>
-            <dd>{value}</dd>
-          </div>
-        ))}
-      </dl>
-      <p className="cunmark-action-outcome__meta">
-        Severidad IA:{' '}
-        {SITUATION_SEVERITY_LABEL[analysis.incidentClassification.operationalSeverity] ??
-          analysis.incidentClassification.operationalSeverity}
-      </p>
+      <div className="novex-ops-brief__accordion">
+        {sections.map((section) => {
+          const open = expanded === section.id
+          return (
+            <section key={section.id}>
+              <button
+                type="button"
+                aria-expanded={open}
+                onClick={() => setExpanded(open ? '' : section.id)}
+              >
+                <span>{section.label}</span>
+                <span aria-hidden="true">{open ? '−' : '+'}</span>
+              </button>
+              {open ? <p>{section.content}</p> : null}
+            </section>
+          )
+        })}
+      </div>
       <button
         type="button"
-        className="cunmark-action-outcome__cta"
+        className="novex-action-outcome__cta"
         onClick={onOpenAnalysis}
       >
         Ver análisis ejecutivo IA

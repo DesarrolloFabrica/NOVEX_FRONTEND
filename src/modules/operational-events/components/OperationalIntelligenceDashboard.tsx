@@ -14,7 +14,7 @@ import { PrioritySituationsList } from '@/modules/operational-events/components/
 import { useExecutiveDashboard } from '@/modules/operational-events/hooks/useExecutiveDashboard'
 import type { OperationalEnvironmentStatus } from '@/modules/operational-events/types/operational-event.types'
 import { RegisterSituationCta } from '@/shared/components/RegisterSituationCta'
-import { CunmarkIcon } from '@/shared/components/CunmarkIcon'
+import { NovexIcon } from '@/shared/components/NovexIcon'
 
 interface OperationalIntelligenceDashboardProps {
   onEnvironmentChange?: (environment: OperationalEnvironmentStatus) => void
@@ -36,7 +36,7 @@ export function OperationalIntelligenceDashboard({
 
   return (
     <div className={`${ROOM_CONTAINER} relative min-h-0 flex-1`}>
-      <div className="cunmark-workstation relative flex min-h-0 flex-1 flex-col">
+      <div className="novex-workstation relative flex min-h-0 flex-1 flex-col">
         {showSectionLoader ? (
           <DashboardLoadingState />
         ) : loading ? null : error ? (
@@ -44,17 +44,17 @@ export function OperationalIntelligenceDashboard({
         ) : isEmpty ? (
           <DashboardEmptyState />
         ) : data ? (
-          <div className="cunmark-intel-shell cunmark-intelligence-v2">
+          <div className="novex-intel-shell novex-intelligence-v2">
             <section
-              className="cunmark-intel-create"
-              aria-labelledby="cunmark-intel-create-title"
+              className="novex-intel-create"
+              aria-labelledby="novex-intel-create-title"
             >
-              <span className="cunmark-intel-create__icon" aria-hidden="true">
-                <CunmarkIcon name="plus" size={17} strokeWidth={1.5} />
+              <span className="novex-intel-create__icon" aria-hidden="true">
+                <NovexIcon name="plus" size={17} strokeWidth={1.5} />
               </span>
-              <div className="cunmark-intel-create__copy">
-                <div className="cunmark-intel-create__heading">
-                  <h2 id="cunmark-intel-create-title">
+              <div className="novex-intel-create__copy">
+                <div className="novex-intel-create__heading">
+                  <h2 id="novex-intel-create-title">
                     Registrar nueva situación
                   </h2>
                 </div>
@@ -73,7 +73,7 @@ export function OperationalIntelligenceDashboard({
 
             <DashboardOperationalSummary data={data} />
 
-            <div className="cunmark-intel-board">
+            <div className="novex-intel-board">
               <PrioritySituationsList situations={data.prioritySituations} />
             </div>
           </div>

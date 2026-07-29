@@ -15,6 +15,7 @@ export interface SituationCommandPanelProps {
   /** Muestra aviso cuando la vista usa datos mock temporales. */
   mockDataActive?: boolean
   selectedEventId: string | null
+  coordinationName?: string | null
   originCoordinationId?: CoordinationId | null
   originName?: string | null
   affectedNames?: readonly string[]
@@ -62,6 +63,7 @@ export function SituationCommandPanel({
   incidents,
   mockDataActive = false,
   selectedEventId,
+  coordinationName = null,
   originCoordinationId = null,
   originName = null,
   affectedNames = [],
@@ -86,17 +88,47 @@ export function SituationCommandPanel({
     : null
 
   return (
-    <aside className="situation-command-panel" aria-label="Centro de comando de situaciones">
+    <aside
+      className={[
+        'situation-command-panel',
+        selectedIncident ? 'situation-command-panel--detail' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      aria-label="Centro de comando de situaciones"
+    >
       <header className="situation-command-panel__header">
         <div>
-          <span className="situation-command-panel__eyebrow">Monitor de situaciones</span>
-          <h2>Impactos activos</h2>
+          <span className="situation-command-panel__eyebrow">
+            {selectedIncident
+              ? 'Coordinación seleccionada'
+              : 'Monitor de situaciones'}
+          </span>
+          <h2>
+            {selectedIncident
+              ? coordinationName ?? originName ?? 'Coordinación operacional'
+              : 'Impactos activos'}
+          </h2>
         </div>
-        <strong className="situation-command-panel__count">{incidents.length}</strong>
+        {selectedIncident && onClearSelection ? (
+          <button
+            type="button"
+            className="situation-command-panel__back"
+            onClick={onClearSelection}
+          >
+            Volver
+          </button>
+        ) : (
+          <strong className="situation-command-panel__count">
+            {incidents.length}
+          </strong>
+        )}
       </header>
 
       <p className="situation-command-panel__intro">
-        Selecciona una situación para observar su propagación focalizada.
+        {selectedIncident
+          ? 'Situación activa. Propagación, impacto y cronología operacional.'
+          : 'Selecciona una situación para observar su propagación focalizada.'}
       </p>
 
       {mockDataActive ? (
@@ -155,16 +187,21 @@ export function SituationCommandPanel({
                 <span className="situation-command-panel__eyebrow">Situación seleccionada</span>
                 <h3 title={selectedIncident.title}>{selectedIncident.title}</h3>
               </div>
-              {onClearSelection ? (
-                <button
-                  type="button"
-                  className="situation-command-panel__close"
-                  onClick={onClearSelection}
-                >
-                  Cerrar
-                </button>
-              ) : null}
+              <span
+                className="situation-command-panel__detail-risk"
+                data-risk={riskLevel ?? 'moderate'}
+              >
+                {Math.round(riskScore)}
+              </span>
             </header>
+
+            <section className="situation-command-panel__impact">
+              <h4>Resumen ejecutivo</h4>
+              <p>
+                {executiveSummary ??
+                  'La interpretación operacional aún no incluye un resumen ejecutivo.'}
+              </p>
+            </section>
 
             <dl className="situation-command-panel__facts">
               <div>
@@ -246,14 +283,6 @@ export function SituationCommandPanel({
               )}
             </section>
 
-            <section className="situation-command-panel__impact">
-              <h4>Impacto esperado</h4>
-              <p>
-                {executiveSummary ??
-                  'La interpretación operacional aún no incluye un resumen ejecutivo.'}
-              </p>
-            </section>
-
             <footer className="situation-command-panel__actions">
               <button
                 type="button"
@@ -288,7 +317,7 @@ export function SituationCommandPanel({
                 to={`/situaciones?event=${encodeURIComponent(selectedIncident.eventId)}`}
                 className="situation-command-panel__record-link"
               >
-                Ver expediente
+                Ver expediente ejecutivo
               </Link>
             </footer>
           </section>

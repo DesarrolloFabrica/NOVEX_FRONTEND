@@ -1,4 +1,4 @@
-/** usuario autenticado en Cunmark */
+/** usuario autenticado en Novex */
 export type UserRole = 'supervisor' | 'ejecutor'
 
 export interface User {

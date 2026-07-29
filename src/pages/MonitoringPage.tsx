@@ -1,11 +1,11 @@
 // Capa: página Gestión de situaciones — Centro de Gestión Operativa.
 // Ruta: /gestion
 
-import { useCallback, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { useSituationManagement } from '@/modules/monitoring/hooks/useSituationManagement'
 import { MonitoringCenter } from '@/modules/monitoring/components/MonitoringCenter'
-import { MainScreen, CunmarkFrame, CunmarkRoom } from '@/modules/room'
+import { MainScreen, NovexFrame, NovexRoom } from '@/modules/room'
 import type { EnvironmentStatus } from '@/modules/monitoring/types/monitoring.types'
 import type { SituationManagementSummary } from '@/modules/api/types/situation-management.types'
 
@@ -33,22 +33,13 @@ export function MonitoringPage() {
     isUpdating,
     setSelectedSituationId,
     updateSituation,
-    updateRecommendation,
   } = useSituationManagement()
 
   const environment = useMemo(() => resolveEnvironment(summary), [summary])
 
-  const handleUpdateRecommendationStatus = useCallback(
-    async (recommendationId: string, status: string) => {
-      if (!canUpdate) return
-      await updateRecommendation(recommendationId, { status })
-    },
-    [canUpdate, updateRecommendation],
-  )
-
   return (
-    <CunmarkRoom environment={environment} scene="commitments">
-      <CunmarkFrame environment={environment}>
+    <NovexRoom environment={environment} scene="commitments">
+      <NovexFrame environment={environment}>
         <MainScreen environment={environment}>
           <MonitoringCenter
             user={user}
@@ -65,11 +56,10 @@ export function MonitoringPage() {
             environment={environment}
             onSelectSituation={setSelectedSituationId}
             onUpdateSituationStatus={updateSituation}
-            onUpdateRecommendationStatus={handleUpdateRecommendationStatus}
             onLogout={() => void logout()}
           />
         </MainScreen>
-      </CunmarkFrame>
-    </CunmarkRoom>
+      </NovexFrame>
+    </NovexRoom>
   )
 }

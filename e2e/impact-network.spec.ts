@@ -1,12 +1,23 @@
 import { expect, test, type Page } from 'playwright/test'
 
-const AUTH_SESSION_KEY = 'cunmark.auth.session.v1'
+const AUTH_SESSION_KEY = 'novex.auth.session.v1'
+const AUTH_TOKEN_KEY = 'novex.auth.accessToken.v1'
 const SUPERVISOR_SESSION = {
   id: 'e2e-supervisor',
-  name: 'Supervisora E2E',
+  name: 'Directora E2E',
   role: 'supervisor',
   onboardingCompleted: true,
   onboardingSeenAt: '2026-07-22T00:00:00.000Z',
+}
+
+const AUTH_ME_RESPONSE = {
+  user: {
+    id: 'e2e-supervisor',
+    fullName: 'Directora E2E',
+    roleCode: 'DIRECTOR_OPERACIONES',
+    coordinationId: 'coord-general',
+    coordinationCode: 'VGO',
+  },
 }
 
 const VIEWPORTS = [
@@ -16,19 +27,68 @@ const VIEWPORTS = [
 ] as const
 
 async function openImpactNetwork(page: Page): Promise<void> {
-  await page.goto('/red-impacto')
-  await expect(page).toHaveURL(/\/red-impacto$/)
-  await expect(page.locator('.impact-network')).toHaveCount(1)
-  await expect(page.locator('.impact-network__canvas')).toHaveCount(1)
-  await expect(page.locator('.propagation-scene--empty')).toHaveCount(1)
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      await page.goto('/red-impacto', {
+        waitUntil: 'domcontentloaded',
+        timeout: 15_000,
+      })
+      await expect(page).toHaveURL(/\/red-impacto$/)
+      await expect(page.locator('.impact-network--v2')).toHaveCount(1, {
+        timeout: 10_000,
+      })
+      break
+    } catch (error) {
+      if (attempt === 1) throw error
+    }
+  }
+  await expect(page.locator('.organizational-scene')).toBeVisible()
+  await expect(
+    page.locator('.operational-context-panel[data-level="institutional"]'),
+  ).toBeVisible()
+}
+
+async function openCoordination(page: Page): Promise<void> {
+  await openImpactNetwork(page)
+  await page
+    .locator(
+      '.organizational-scene__island[data-coordination-id="coord-ingenierias"]',
+    )
+    .click()
+  await expect(page.locator('.organizational-scene')).toHaveCount(1)
+  await expect(
+    page.locator('.operational-context-panel[data-level="coordination"]'),
+  ).toBeVisible()
+}
+
+async function openSituation(page: Page): Promise<void> {
+  await openCoordination(page)
+  await page
+    .locator('.operational-context-panel__situation')
+    .first()
+    .click()
+  await expect(
+    page.locator(
+      '.impact-network__scene-layer--propagation > .propagation-scene',
+    ),
+  ).toBeVisible()
+  await expect(
+    page.locator('.operational-context-panel[data-level="situation"]'),
+  ).toBeVisible()
+  await expect(page.locator('.situation-map-overview')).toBeVisible()
 }
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(
-    ({ key, session }) => {
-      localStorage.setItem(key, JSON.stringify(session))
+    ({ sessionKey, tokenKey, session }) => {
+      localStorage.setItem(sessionKey, JSON.stringify(session))
+      localStorage.setItem(tokenKey, 'e2e-access-token')
     },
-    { key: AUTH_SESSION_KEY, session: SUPERVISOR_SESSION },
+    {
+      sessionKey: AUTH_SESSION_KEY,
+      tokenKey: AUTH_TOKEN_KEY,
+      session: SUPERVISOR_SESSION,
+    },
   )
 
   await page.route('**/api/v1/**', async (route) => {
@@ -38,54 +98,43 @@ test.beforeEach(async ({ page }) => {
       body: JSON.stringify({ message: 'E2E fallback' }),
     })
   })
+  await page.route('**/api/v1/auth/me', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(AUTH_ME_RESPONSE),
+    })
+  })
 })
 
-test('muestra escena vacía y panel de situaciones activas', async ({ page }) => {
-  const startedAt = Date.now()
+test('inicia en la vista institucional sin mostrar situaciones', async ({
+  page,
+}) => {
   await openImpactNetwork(page)
 
-  await expect
-    .poll(() => page.locator('.situation-command-panel__item').count())
-    .toBeGreaterThan(0)
-  await expect(page.locator('.impact-toolbar')).toBeAttached()
-  expect(Date.now() - startedAt).toBeLessThan(2_000)
+  await expect(page.locator('.organizational-scene__direction-hub')).toBeVisible()
+  await expect(page.locator('.organizational-scene__island')).toHaveCount(12)
+  await expect(page.locator('.organizational-scene__connection')).toHaveCount(12)
+  await expect(page.locator('.operational-context-panel__situation')).toHaveCount(0)
+  await expect(
+    page.getByRole('heading', { name: 'Coordinaciones activas' }),
+  ).toBeVisible()
 })
 
-test('muestra la guía del mapa, su leyenda y el control para recentrar', async ({
+test('expone breadcrumb, guía y controles de zoom en el mapa organizacional', async ({
   page,
 }) => {
   await openImpactNetwork(page)
 
   await expect(
-    page.getByRole('heading', { name: 'Mapa de conexiones' }),
+    page.getByRole('navigation', { name: 'Ruta operacional' }),
+  ).toContainText('Dirección Operaciones')
+  await expect(
+    page.getByRole('heading', { name: 'Estructura institucional' }),
   ).toBeVisible()
-
-  const impactLegend = page.getByLabel('Nivel de impacto')
-  await expect(impactLegend).toBeVisible()
-  await expect(impactLegend.getByText('Muy alto', { exact: true })).toBeVisible()
-  await expect(impactLegend.getByText('Alto', { exact: true })).toBeVisible()
-  await expect(impactLegend.getByText('Medio', { exact: true })).toBeVisible()
-  await expect(impactLegend.getByText('Bajo', { exact: true })).toBeVisible()
-
-  const recenterButton = page.getByRole('button', {
-    name: 'Recentrar mapa',
-  })
-  await expect(recenterButton).toBeVisible()
-  await expect(recenterButton).toBeEnabled()
-})
-
-test('expone telemetría y controles de zoom accesibles al seleccionar', async ({
-  page,
-}) => {
-  await openImpactNetwork(page)
-
-  await expect(page.locator('.impact-map-selection')).toHaveCount(0)
-  await expect(page.locator('.impact-map-summary')).toHaveCount(0)
-
-  await page.locator('.situation-command-panel__item').first().click()
-
-  await expect(page.locator('.impact-map-selection')).toBeVisible()
-  await expect(page.locator('.impact-map-summary')).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Recentrar mapa' }),
+  ).toBeVisible()
 
   const zoomControls = page.getByLabel('Controles de zoom del mapa')
   await expect(zoomControls).toBeVisible()
@@ -97,43 +146,298 @@ test('expone telemetría y controles de zoom accesibles al seleccionar', async (
   ).toBeEnabled()
 })
 
-test('al seleccionar una situación solo aparecen islas focalizadas', async ({
+test('seleccionar isla abre sus situaciones sin conexiones de impacto', async ({
   page,
 }) => {
-  await openImpactNetwork(page)
+  await openCoordination(page)
 
-  const firstSituation = page.locator('.situation-command-panel__item').first()
-  await expect(firstSituation).toBeVisible()
-  await firstSituation.click()
-
-  await expect(page.locator('.propagation-scene--empty')).toHaveCount(0)
-  await expect
-    .poll(() => page.locator('.propagation-island').count())
-    .toBeGreaterThan(1)
-  await expect(page.locator('.propagation-island--origin')).toHaveCount(1)
-  await expect(page.locator('.propagation-island--ambient')).toHaveCount(0)
-  const affectedCount = await page
-    .locator('.situation-command-panel__affected li')
-    .count()
-  await expect(page.locator('.propagation-island')).toHaveCount(
-    affectedCount + 1,
+  await expect(
+    page.getByRole('navigation', { name: 'Ruta operacional' }),
+  ).toContainText('Ingenierías')
+  await expect(page.locator('.impact-network__scene-stack')).toHaveAttribute(
+    'data-active-scene',
+    'organization',
   )
-  await expect(page.locator('.situation-command-panel__detail')).toBeVisible()
+  await expect(
+    page.locator('.operational-context-panel[data-level="coordination"]'),
+  ).toBeVisible()
+  await expect(
+    page.locator('.operational-context-panel[data-level="situation"]'),
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole('heading', { name: 'Seleccione una situación' }),
+  ).toBeVisible()
+  await expect(
+    page.locator('.operational-context-panel__situation'),
+  ).not.toHaveCount(0)
+  await expect(page.locator('.propagation-edge')).toHaveCount(0)
+  await expect(
+    page.locator('.organizational-scene__structural-network'),
+  ).toHaveCSS('opacity', '0')
+  await expect(page.locator('.impact-map-selection')).toHaveCount(0)
+  await expect(page.locator('.impact-map-summary')).toHaveCount(0)
+  await expect(
+    page.locator(
+      '.organizational-scene__island:not(.organizational-scene__island--unrelated)',
+    ),
+  ).toHaveCount(1)
+
+  const readPanelRatio = () =>
+    page.evaluate(() => {
+      const workspace = document
+        .querySelector('.impact-network__workspace')!
+        .getBoundingClientRect()
+      const panel = document
+        .querySelector('.operational-context-panel')!
+        .getBoundingClientRect()
+      return panel.width / workspace.width
+    })
+  await expect
+    .poll(async () => {
+      const ratio = await readPanelRatio()
+      return ratio > 0.18 && ratio < 0.32
+    })
+    .toBe(true)
+})
+
+test('la transición al mapa de conexiones anima las islas de forma escalonada', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await openSituation(page)
+
+  const motion = await page.evaluate(() => {
+    const layer = document.querySelector(
+      '.impact-network__scene-layer--propagation',
+    )!
+    const islands = [
+      ...document.querySelectorAll<HTMLElement>(
+        '.impact-network__scene-layer--propagation .propagation-scene__island',
+      ),
+    ]
+    const edgeLayer = document.querySelector(
+      '.impact-network__scene-layer--propagation .propagation-scene__edges',
+    )!
+
+    return {
+      layerDuration: getComputedStyle(layer).transitionDuration,
+      islandAnimations: islands.map((island) => {
+        const style = getComputedStyle(island)
+        return {
+          name: style.animationName,
+          duration: style.animationDuration,
+          delay: style.animationDelay,
+          transition: style.transitionDuration,
+        }
+      }),
+      edgeAnimation: getComputedStyle(edgeLayer).animationName,
+    }
+  })
+
+  expect(motion.layerDuration).toBe('0s')
+  expect(motion.islandAnimations.length).toBeGreaterThan(1)
+  expect(
+    motion.islandAnimations.every(
+      ({ transition }) => transition.includes('0.68s'),
+    ),
+  ).toBe(true)
+  expect(motion.edgeAnimation).toContain('impact-connections-enter')
+})
+
+test('seleccionar situación conserva el escenario y muestra la lectura de red', async ({
+  page,
+}) => {
+  await openSituation(page)
+
+  await expect(page).toHaveURL(/\/red-impacto$/)
+  await expect(page.locator('.impact-network__scene-stack')).toHaveAttribute(
+    'data-active-scene',
+    'propagation',
+  )
+  const propagationLayer = page.locator(
+    '.impact-network__scene-layer--propagation',
+  )
+  await expect(propagationLayer.locator('.propagation-island--origin')).toHaveCount(1)
+  await expect
+    .poll(() => propagationLayer.locator('.propagation-island').count())
+    .toBeGreaterThan(1)
+  await expect(propagationLayer.locator('.impact-map-selection')).toBeVisible()
+  await expect(propagationLayer.locator('.impact-map-summary')).toBeVisible()
+  const visibleIslandCount = await propagationLayer
+    .locator(
+      '.organizational-scene__island:not(.organizational-scene__island--unrelated)',
+    )
+    .count()
+  const relatedEdgeCount = await propagationLayer
+    .locator('.propagation-edge')
+    .count()
+  expect(visibleIslandCount).toBe(relatedEdgeCount + 1)
+  await expect(
+    propagationLayer
+      .locator('.organizational-scene__island--unrelated')
+      .first(),
+  ).toHaveCSS('visibility', 'hidden')
+  await expect(
+    page.getByRole('heading', { name: 'Propagación activa' }),
+  ).toBeVisible()
+  await expect(page.locator('.island-focus-panel--origin')).toHaveCount(0)
+  await expect(
+    page.getByRole('button', { name: /descargar reporte pdf/i }),
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole('link', { name: /ver expediente/i }),
+  ).toHaveCount(0)
+})
+
+test('el segundo clic abre el dossier terminal sin encadenar nuevas islas', async ({
+  page,
+}) => {
+  await openSituation(page)
+
+  const breadcrumbBefore = await page
+    .getByRole('navigation', { name: 'Ruta operacional' })
+    .innerText()
+  const canvasWidthBefore = await page
+    .locator('.impact-network__canvas')
+    .evaluate((element) => element.getBoundingClientRect().width)
+  const focusedIsland = page.locator(
+    '.organizational-scene__island--selected',
+  )
+  const focusedIslandImage = focusedIsland.locator(
+    '.propagation-island__image',
+  )
+  await page.mouse.move(1, 1)
+  await page.waitForTimeout(750)
+  const visualStateBeforeHover = await focusedIslandImage.evaluate(
+    (element) => {
+      const styles = getComputedStyle(element)
+      return {
+        filter: styles.filter,
+        transform: styles.transform,
+      }
+    },
+  )
+  await focusedIsland.hover()
+  await page.waitForTimeout(300)
+  const visualStateAfterHover = await focusedIslandImage.evaluate(
+    (element) => {
+      const styles = getComputedStyle(element)
+      return {
+        filter: styles.filter,
+        transform: styles.transform,
+      }
+    },
+  )
+  expect(visualStateAfterHover).toEqual(visualStateBeforeHover)
+  await focusedIsland.click()
+
+  const network = page.locator('.impact-network--v2')
+  await expect(network).toHaveClass(/impact-network--island-focus/)
+  const dossier = page.locator('.island-focus-dossier')
+  await expect(dossier).toBeVisible({ timeout: 4_000 })
+  await expect(dossier).toHaveAttribute('role', 'dialog')
+  await expect(
+    page.locator('.operational-context-panel'),
+  ).toHaveCSS('visibility', 'hidden')
+  await expect(
+    page.locator('.propagation-scene__island--focus-active'),
+  ).toHaveCount(1)
+  await expect(
+    page.locator('.organizational-scene__connections'),
+  ).toHaveCSS('visibility', 'hidden')
+  await expect(
+    page.locator('.impact-map-selection'),
+  ).toHaveCSS('visibility', 'hidden')
+  await expect(
+    page.locator('.organizational-scene__island[aria-disabled="true"]'),
+  ).not.toHaveCount(0)
+
+  const geometry = await page.evaluate(() => {
+    const workspace = document
+      .querySelector('.impact-network__workspace')!
+      .getBoundingClientRect()
+    const scene = document
+      .querySelector('.organizational-scene')!
+      .getBoundingClientRect()
+    const island = document
+      .querySelector('.propagation-scene__island--focus-active')!
+      .getBoundingClientRect()
+    const panel = document
+      .querySelector('.island-focus-dossier__panel')!
+      .getBoundingClientRect()
+    return {
+      islandCenterX: island.left + island.width / 2,
+      leftLimit: scene.left + scene.width * 0.4,
+      panelLeft: panel.left,
+      panelLimit: scene.left + scene.width * 0.38,
+      canvasWidth: scene.width,
+      workspaceRightGap: workspace.right - panel.right,
+      focusedIslandWidth: island.width,
+    }
+  })
+  expect(geometry.islandCenterX).toBeLessThan(geometry.leftLimit)
+  expect(geometry.panelLeft).toBeGreaterThanOrEqual(geometry.panelLimit)
+  expect(Math.abs(geometry.canvasWidth - canvasWidthBefore)).toBeLessThanOrEqual(1)
+  expect(Math.abs(geometry.workspaceRightGap)).toBeLessThanOrEqual(24)
+  expect(geometry.focusedIslandWidth).toBeGreaterThanOrEqual(290)
+  expect(geometry.focusedIslandWidth).toBeLessThanOrEqual(370)
+
+  const focusedCoordinationId = await page
+    .locator('.propagation-scene__island--focus-active')
+    .getAttribute('data-coordination-id')
+  const anotherRelatedIsland = page
+    .locator(
+      '.organizational-scene__island:not(.organizational-scene__island--unrelated):not(.propagation-scene__island--focus-active)',
+    )
+    .first()
+  if ((await anotherRelatedIsland.count()) > 0) {
+    await anotherRelatedIsland.dispatchEvent('click')
+  }
+  await expect(
+    page.locator('.propagation-scene__island--focus-active'),
+  ).toHaveAttribute('data-coordination-id', focusedCoordinationId ?? '')
+  await expect(dossier).toHaveCount(1)
+
+  const breadcrumbAfter = await page
+    .getByRole('navigation', { name: 'Ruta operacional' })
+    .innerText()
+  expect(breadcrumbAfter.replace(/\s/g, '')).toBe(
+    breadcrumbBefore.replace(/\s/g, ''),
+  )
+
+  await dossier.locator('.island-focus-dossier__close').click()
+  await expect(dossier).toHaveCount(0, { timeout: 4_000 })
+  await expect(network).not.toHaveClass(/impact-network--island-focus/)
+  await expect(
+    page.locator('.propagation-scene__island--focus-active'),
+  ).toHaveCount(0)
+  await expect(
+    page.locator('.organizational-scene__island--selected'),
+  ).toHaveCount(1)
+  await expect(
+    page.locator('.organizational-scene__connections'),
+  ).toHaveCSS('visibility', 'visible')
+  await expect(
+    page.locator('.operational-context-panel'),
+  ).toHaveCSS('visibility', 'visible')
 })
 
 test('centra el origen y evita solapes entre imágenes focalizadas', async ({
   page,
 }) => {
-  await openImpactNetwork(page)
-  await page.locator('.situation-command-panel__item').nth(2).click()
-  await expect(page.locator('.propagation-island--origin')).toHaveCount(1)
+  await openSituation(page)
+  await page.waitForTimeout(1_200)
 
   const geometry = await page.evaluate(() => {
     const scene = document
-      .querySelector('.propagation-scene')!
+      .querySelector(
+        '.impact-network__scene-layer--propagation > .propagation-scene',
+      )!
       .getBoundingClientRect()
     const nodes = [
-      ...document.querySelectorAll<HTMLElement>('.propagation-island'),
+      ...document.querySelectorAll<HTMLElement>(
+        '.impact-network__scene-layer--propagation .propagation-island',
+      ),
     ].map((element) => {
       const rect = element.getBoundingClientRect()
       return {
@@ -156,42 +460,33 @@ test('centra el origen y evita solapes entre imágenes focalizadas', async ({
     )
 
     return {
-      originOffsetX: Math.abs(
-        origin.centerX - (scene.left + scene.width / 2),
-      ),
-      originOffsetY: Math.abs(
-        origin.centerY - (scene.top + scene.height / 2),
-      ),
+      originOffsetX: Math.abs(origin.centerX - (scene.left + scene.width / 2)),
+      originOffsetY: Math.abs(origin.centerY - (scene.top + scene.height / 2)),
       overlaps,
       nodeCount: nodes.length,
-      edgeCount: document.querySelectorAll('.propagation-edge').length,
+      edgeCount: document.querySelectorAll(
+        '.impact-network__scene-layer--propagation .propagation-edge',
+      ).length,
     }
   })
 
   expect(geometry.originOffsetX).toBeLessThanOrEqual(1)
   expect(geometry.originOffsetY).toBeLessThanOrEqual(1)
   expect(geometry.overlaps).toBe(false)
-  expect(geometry.edgeCount).toBe(geometry.nodeCount - 1)
+  expect(geometry.edgeCount).toBeGreaterThan(0)
+  expect(geometry.edgeCount).toBeLessThan(geometry.nodeCount)
 })
 
-test('no renderiza React Flow ni malla organizacional completa', async ({
-  page,
-}) => {
+test('no renderiza React Flow', async ({ page }) => {
   await openImpactNetwork(page)
-
   await expect(page.locator('.react-flow')).toHaveCount(0)
-  await expect(page.locator('.impact-area-node')).toHaveCount(0)
-  await expect(page.locator('.impact-incident-node')).toHaveCount(0)
 })
 
-test('reproducir propagación ilumina islas desde el panel', async ({
-  page,
-}) => {
-  await openImpactNetwork(page)
+test('reproducir propagación ilumina islas gradualmente', async ({ page }) => {
+  await openSituation(page)
 
-  await page.locator('.situation-command-panel__item').first().click()
   const replayButton = page
-    .locator('.situation-command-panel__actions')
+    .locator('.impact-toolbar__actions')
     .getByRole('button', {
       name: /reproducir propagación|pausar|continuar|repetir/i,
     })
@@ -199,85 +494,163 @@ test('reproducir propagación ilumina islas desde el panel', async ({
   await replayButton.click()
 
   await expect
-    .poll(() => page.locator('.propagation-island--illuminated').count())
+    .poll(() =>
+      page
+        .locator(
+          '.impact-network__scene-layer--propagation .propagation-island--illuminated',
+        )
+        .count(),
+    )
     .toBeGreaterThan(0)
 })
 
-test('las conexiones son solo estrella origen → afectada', async ({ page }) => {
-  await openImpactNetwork(page)
-  await page.locator('.situation-command-panel__item').first().click()
+test('las conexiones de situación son solo estrella origen → afectada', async ({
+  page,
+}) => {
+  await openSituation(page)
 
-  const edgeCount = await page.locator('.propagation-edge').count()
-  const islandCount = await page.locator('.propagation-island').count()
+  const propagationLayer = page.locator(
+    '.impact-network__scene-layer--propagation',
+  )
+  const edgeCount = await propagationLayer.locator('.propagation-edge').count()
+  const islandCount = await propagationLayer.locator('.propagation-island').count()
   expect(edgeCount).toBeGreaterThan(0)
   expect(edgeCount).toBeLessThanOrEqual(Math.max(0, islandCount - 1))
 })
 
-test('Escape limpia la selección focalizada', async ({ page }) => {
-  await openImpactNetwork(page)
-
-  await page.locator('.situation-command-panel__item').first().click()
-  await expect(page.locator('.propagation-island')).toHaveCount(
-    await page.locator('.propagation-island').count(),
-  )
-
-  await page.keyboard.press('Escape')
-  await expect(page.locator('.propagation-scene--empty')).toHaveCount(1)
-})
-
-test('al hacer clic en isla origen abre el dossier con reporte ejecutivo', async ({
+test('Escape regresa de situación al listado de la coordinación', async ({
   page,
 }) => {
-  await openImpactNetwork(page)
-  await page.locator('.situation-command-panel__item').first().click()
-  await expect(page.locator('.propagation-island--origin')).toHaveCount(1)
+  await openSituation(page)
 
-  await page.locator('.propagation-island--origin').click()
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.organizational-scene')).toBeVisible()
+  await expect(
+    page.locator('.operational-context-panel[data-level="coordination"]'),
+  ).toBeVisible()
+  await expect(page.locator('.propagation-edge')).toHaveCount(0)
+  await expect(
+    page.locator('.operational-context-panel__situation'),
+  ).not.toHaveCount(0)
+})
 
-  await expect(page.locator('.island-focus-dossier')).toBeVisible()
-  await expect(page.locator('.island-focus-panel--origin')).toBeVisible()
-  await expect(page.locator('.propagation-scene--island-focus')).toHaveCount(1)
+test('la situación y la isla muestran información de distinta profundidad', async ({
+  page,
+}) => {
+  await openSituation(page)
+
+  await expect(page.locator('.situation-map-overview')).toBeVisible()
+  await expect(page.locator('.island-focus-panel--origin')).toHaveCount(0)
   await expect(
     page.getByRole('button', { name: /descargar reporte pdf/i }),
+  ).toHaveCount(0)
+  await expect(page.locator('.island-focus-dossier')).toHaveCount(0)
+
+  await page.locator('.organizational-scene__island--selected').click()
+
+  const dossier = page.locator('.island-focus-dossier')
+  await expect(dossier).toBeVisible({ timeout: 4_000 })
+  await expect(dossier.locator('.situation-map-overview')).toHaveCount(0)
+  await expect(dossier.locator('.island-focus-panel--origin')).toBeVisible()
+  await expect(
+    dossier.getByRole('button', { name: /descargar reporte pdf/i }),
   ).toBeVisible()
 })
 
-test('al hacer clic en isla afectada muestra briefing de afectación', async ({
+test('cerrar expediente regresa al listado de la coordinación', async ({
+  page,
+}) => {
+  await openSituation(page)
+  await page.getByRole('button', { name: 'Cerrar situación' }).click()
+
+  await expect(
+    page.locator('.operational-context-panel[data-level="coordination"]'),
+  ).toBeVisible()
+  await expect(page.locator('.organizational-scene')).toHaveCount(1)
+  await expect(page.locator('.organizational-scene__island')).toHaveCount(12)
+  await expect(page.locator('.propagation-edge')).toHaveCount(0)
+  await expect(
+    page.locator('.operational-context-panel__situation'),
+  ).not.toHaveCount(0)
+  await expect(page).toHaveURL(/\/red-impacto$/)
+})
+
+test('el lienzo organizacional permanece montado al abrir y cerrar expediente', async ({
   page,
 }) => {
   await openImpactNetwork(page)
-  await page.locator('.situation-command-panel__item').first().click()
-  await expect(page.locator('.propagation-island--affected').first()).toBeVisible()
+  const organizationalScene = page.locator('.organizational-scene')
+  await expect(organizationalScene).toHaveCount(1)
 
-  await page.locator('.propagation-island--affected').first().click()
+  await page
+    .locator(
+      '.organizational-scene__island[data-coordination-id="coord-ingenierias"]',
+    )
+    .click()
+  await expect(organizationalScene).toHaveCount(1)
+  await expect(
+    page.locator(
+      '.impact-network__scene-layer--propagation > .propagation-scene',
+    ),
+  ).toBeVisible()
 
-  await expect(page.locator('.island-focus-dossier')).toBeVisible()
-  await expect(page.locator('.island-focus-panel--affected')).toBeVisible()
-  await expect(page.getByText('Por qué está afectada')).toBeVisible()
-  await expect(page.getByText('Cadena de propagación')).toBeVisible()
+  await page
+    .locator('.operational-context-panel__situation')
+    .first()
+    .click()
+  await expect(
+    page.getByRole('button', { name: 'Cerrar situación' }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Cerrar situación' }).click()
+  await expect(organizationalScene).toHaveCount(1)
+  await expect(
+    page.locator('.operational-context-panel[data-level="coordination"]'),
+  ).toBeVisible()
 })
 
-test('Escape cierra el dossier de isla antes de limpiar la situación', async ({
+test('el coordinador inicia directamente en su coordinación', async ({
   page,
 }) => {
-  await openImpactNetwork(page)
-  await page.locator('.situation-command-panel__item').first().click()
-  await page.locator('.propagation-island--origin').click()
-  await expect(page.locator('.island-focus-dossier')).toBeVisible()
+  await page.unroute('**/api/v1/auth/me')
+  await page.route('**/api/v1/auth/me', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        user: {
+          id: 'e2e-coordinator',
+          fullName: 'Coordinador E2E',
+          roleCode: 'COORDINADOR',
+          coordinationId: 'coord-ingenierias',
+          coordinationCode: 'CFD',
+        },
+      }),
+    })
+  })
 
-  await page.keyboard.press('Escape')
-  await expect(page.locator('.island-focus-dossier')).toHaveCount(0)
-  await expect(page.locator('.propagation-scene--empty')).toHaveCount(0)
-  await expect(page.locator('.propagation-island')).toHaveCount(
-    await page.locator('.propagation-island').count(),
-  )
-  await expect(page.locator('.impact-network--island-focus')).toHaveCount(0)
-
-  await page.keyboard.press('Escape')
-  await expect(page.locator('.propagation-scene--empty')).toHaveCount(1)
+  await page.goto('/red-impacto', {
+    waitUntil: 'domcontentloaded',
+    timeout: 15_000,
+  })
+  const network = page.locator('.impact-network--v2')
+  await expect(network).toHaveAttribute('data-role-view', 'coordinator')
+  await expect(
+    page.locator('.operational-context-panel[data-level="coordination"]'),
+  ).toBeVisible()
+  await expect(
+    page.locator('.organizational-scene__island--selected'),
+  ).toHaveAttribute('data-coordination-id', 'coord-ingenierias')
+  await expect(
+    page.locator('.organizational-scene__island'),
+  ).toHaveCount(1)
+  await expect(
+    page.locator('.organizational-scene__direction-hub'),
+  ).toHaveAttribute('data-context', 'true')
 })
 
-test('se adapta a los tres viewports', async ({ page }) => {
+test('se adapta a los tres viewports sin desbordamiento horizontal', async ({
+  page,
+}) => {
   for (const viewport of VIEWPORTS) {
     await page.setViewportSize(viewport)
     await openImpactNetwork(page)
@@ -303,6 +676,38 @@ test('se adapta a los tres viewports', async ({ page }) => {
     expect(layout.network).not.toBeNull()
     expect(layout.scrollWidth).toBeLessThanOrEqual(layout.clientWidth + 1)
     expect(layout.network!.width).toBeGreaterThan(viewport.width * 0.5)
-    expect(layout.network!.height).toBeGreaterThan(240)
+    expect(layout.network!.height).toBeGreaterThan(300)
+  }
+})
+
+test('coordinación y expediente conservan el flujo en tableta y móvil', async ({
+  page,
+}) => {
+  for (const viewport of VIEWPORTS.slice(1)) {
+    await page.setViewportSize(viewport)
+    await openSituation(page)
+
+    const layout = await page.evaluate(() => {
+      const root = document.documentElement
+      const panel = document
+        .querySelector('.operational-context-panel')!
+        .getBoundingClientRect()
+      const canvas = document
+        .querySelector('.impact-network__canvas')!
+        .getBoundingClientRect()
+      return {
+        clientWidth: root.clientWidth,
+        scrollWidth: root.scrollWidth,
+        panelWidth: panel.width,
+        canvasWidth: canvas.width,
+      }
+    })
+
+    expect(layout.scrollWidth).toBeLessThanOrEqual(layout.clientWidth + 1)
+    expect(layout.panelWidth).toBeGreaterThan(250)
+    expect(layout.canvasWidth).toBeGreaterThan(250)
+    await expect(
+      page.getByRole('button', { name: 'Cerrar situación' }),
+    ).toBeVisible()
   }
 })

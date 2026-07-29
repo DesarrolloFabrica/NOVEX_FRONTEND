@@ -1,5 +1,5 @@
 /*
- * Sala Cunmark — ciudad ilustrada integrada con iluminación ambiental.
+ * Sala Novex — ciudad ilustrada integrada con iluminación ambiental.
  *
  * Sin consolas ni modelos. Capas decorativas (todas pointer-events: none):
  *   RoomCityLayer         → ciudad por EnvironmentStatus (plano 0)
@@ -19,7 +19,7 @@
 
 /* --- Atmósfera por estado (no pinta el fondo: tiñe la luz) --------------- */
 
-.cunmark-room.scene--stable {
+.novex-room.scene--stable {
   --scene-accent: #2dd4bf;
   --scene-accent-soft: rgba(45, 212, 191, 0.16);
   --scene-accent-strong: rgba(45, 212, 191, 0.38);
@@ -31,7 +31,7 @@
   --scene-haze: rgba(15, 23, 42, 0.42);
 }
 
-.cunmark-room.scene--attention {
+.novex-room.scene--attention {
   --scene-accent: #fbbf24;
   --scene-accent-soft: rgba(251, 191, 36, 0.16);
   --scene-accent-strong: rgba(251, 191, 36, 0.4);
@@ -43,7 +43,7 @@
   --scene-haze: rgba(20, 16, 10, 0.48);
 }
 
-.cunmark-room.scene--critical {
+.novex-room.scene--critical {
   --scene-accent: #f87171;
   --scene-accent-soft: rgba(248, 113, 113, 0.14);
   --scene-accent-strong: rgba(248, 113, 113, 0.42);
@@ -57,7 +57,7 @@
 
 /* --- Contenedor de sala --------------------------------------------------- */
 
-.cunmark-room {
+.novex-room {
   /* Geometría compartida por marco y vidrio; valores visuales sin cambios. */
   --window-column-width: clamp(3.5rem, 5.5vw, 7.5rem);
   --window-column-outset: clamp(0.75rem, 1.1vw, 1.35rem);
@@ -126,7 +126,7 @@
   padding-top: 0;
 }
 
-.cunmark-room--reference {
+.novex-room--reference {
   --screen-top-space: clamp(68px, 11.6vh, 116px);
   --screen-max-height: min(62.6vh, 35.7rem);
   --screen-floor-reserve: 0rem;
@@ -283,30 +283,30 @@
   opacity: 1;
 }
 
-.cunmark-room--reference .room-city-image,
-.cunmark-room--reference .command-center-floor,
-.cunmark-room--reference .observation-window-glass,
-.cunmark-room--reference .observation-window-frame {
+.novex-room--reference .room-city-image,
+.novex-room--reference .command-center-floor,
+.novex-room--reference .observation-window-glass,
+.novex-room--reference .observation-window-frame {
   display: none;
 }
 
 /* Paleta compartida con OPERATIONAL_ROOM_VISUAL: sky, teal, amber y red. */
-.cunmark-room[data-environment-status='pending'] {
+.novex-room[data-environment-status='pending'] {
   --window-status-reflection-rgb: 125 211 252;
   --window-status-reflection-strength: 0.22;
 }
 
-.cunmark-room[data-environment-status='healthy'] {
+.novex-room[data-environment-status='healthy'] {
   --window-status-reflection-rgb: 45 212 191;
   --window-status-reflection-strength: 0.26;
 }
 
-.cunmark-room[data-environment-status='attention'] {
+.novex-room[data-environment-status='attention'] {
   --window-status-reflection-rgb: 251 191 36;
   --window-status-reflection-strength: 0.34;
 }
 
-.cunmark-room[data-environment-status='critical'] {
+.novex-room[data-environment-status='critical'] {
   --window-status-reflection-rgb: 248 113 113;
   --window-status-reflection-strength: 0.4;
 }
@@ -720,13 +720,13 @@
 
 .crystal-material-layers {
   opacity: var(--screen-emission-strength, var(--main-screen-material-opacity, 0.9));
-  animation: cunmark-panel-luminance
+  animation: novex-panel-luminance
     var(--screen-luminance-duration, 6.8s) linear infinite;
   will-change: opacity;
 }
 
 /* Superficie emisiva del videowall: clara, fría y continua, no papel. */
-.cunmark-screen-surface {
+.novex-screen-surface {
   --screen-emission-strength: 0.94;
   --screen-bloom-strength: 0.03;
   --screen-white-temperature: 252 253 254;
@@ -787,7 +787,7 @@
 }
 
 /* Difusión óptica: bloom contenido y uniformidad imperfecta del panel. */
-.cunmark-screen-surface::before {
+.novex-screen-surface::before {
   content: '';
   position: absolute;
   z-index: 1;
@@ -837,7 +837,7 @@
 }
 
 /* Película frontal: profundidad óptica sin brillo especular dominante. */
-.cunmark-screen-surface::after {
+.novex-screen-surface::after {
   content: '';
   position: absolute;
   z-index: 20;
@@ -857,19 +857,19 @@
 }
 
 /* Intensidad activa por entorno; reutiliza la paleta operativa existente. */
-.cunmark-room[data-environment-status='pending'] .cunmark-screen-surface {
+.novex-room[data-environment-status='pending'] .novex-screen-surface {
   --screen-active-bloom-opacity: 0.026;
 }
 
-.cunmark-room[data-environment-status='healthy'] .cunmark-screen-surface {
+.novex-room[data-environment-status='healthy'] .novex-screen-surface {
   --screen-active-bloom-opacity: 0.03;
 }
 
-.cunmark-room[data-environment-status='attention'] .cunmark-screen-surface {
+.novex-room[data-environment-status='attention'] .novex-screen-surface {
   --screen-active-bloom-opacity: 0.036;
 }
 
-.cunmark-room[data-environment-status='critical'] .cunmark-screen-surface {
+.novex-room[data-environment-status='critical'] .novex-screen-surface {
   --screen-active-bloom-opacity: 0.042;
 }
 
@@ -896,7 +896,7 @@
       rgb(255 255 255 / 0.008),
       transparent 32%
     );
-  animation: cunmark-electrical-field
+  animation: novex-electrical-field
     var(--screen-electrical-field-duration) ease-in-out infinite;
   will-change: opacity, transform;
 }
@@ -918,7 +918,7 @@
     rgb(160 205 220 / 0.006) 56%,
     transparent
   );
-  animation: cunmark-screen-refresh var(--screen-refresh-duration) linear infinite;
+  animation: novex-screen-refresh var(--screen-refresh-duration) linear infinite;
   will-change: transform;
 }
 
@@ -950,11 +950,11 @@
   background-size:
     var(--screen-grain-size) var(--screen-grain-size),
     100% var(--screen-scanline-gap);
-  animation: cunmark-screen-noise var(--screen-noise-duration) steps(2, end) infinite;
+  animation: novex-screen-noise var(--screen-noise-duration) steps(2, end) infinite;
   will-change: transform;
 }
 
-@keyframes cunmark-screen-noise {
+@keyframes novex-screen-noise {
   0%,
   100% {
     transform: translate3d(0, 0, 0);
@@ -973,7 +973,7 @@
   }
 }
 
-@keyframes cunmark-panel-luminance {
+@keyframes novex-panel-luminance {
   0%,
   100% {
     opacity: var(--screen-emission-strength);
@@ -1003,7 +1003,7 @@
   }
 }
 
-@keyframes cunmark-electrical-field {
+@keyframes novex-electrical-field {
   0%,
   100% {
     opacity: calc(var(--screen-electrical-field-opacity) * 0.72);
@@ -1019,7 +1019,7 @@
   }
 }
 
-@keyframes cunmark-screen-refresh {
+@keyframes novex-screen-refresh {
   from {
     transform: translate3d(0, 0, 0);
   }
@@ -1028,7 +1028,7 @@
   }
 }
 
-@keyframes cunmark-detail-refresh {
+@keyframes novex-detail-refresh {
   0% {
     opacity: 0.96;
   }
@@ -1038,7 +1038,7 @@
   }
 }
 
-@keyframes cunmark-detail-refresh-update {
+@keyframes novex-detail-refresh-update {
   0% {
     opacity: 0.97;
   }
@@ -1052,8 +1052,8 @@
  * Retroiluminación activa sin sustituir rings, rieles ni sombras de estado.
  * Los pseudo-elementos también existen en reposo para interpolar la selección.
  */
-.cunmark-module-button[aria-pressed]::after,
-.cunmark-console-list-scroll button[aria-pressed]::after {
+.novex-module-button[aria-pressed]::after,
+.novex-console-list-scroll button[aria-pressed]::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -1081,12 +1081,12 @@
     box-shadow 240ms ease-out;
 }
 
-.cunmark-module-button[aria-pressed='true']::after,
-.cunmark-console-list-scroll button[aria-pressed='true']::after {
+.novex-module-button[aria-pressed='true']::after,
+.novex-console-list-scroll button[aria-pressed='true']::after {
   opacity: 1;
 }
 
-.cunmark-console-list-scroll .cunmark-commitment-row[aria-pressed='true']::after {
+.novex-console-list-scroll .novex-commitment-row[aria-pressed='true']::after {
   box-shadow:
     inset 0 0 var(--screen-active-bloom-radius)
       rgb(var(--commitment-status-rgb) / var(--screen-active-bloom-opacity)),
@@ -1097,7 +1097,7 @@
 }
 
 /* El riel lateral existente permanece como indicador principal de selección. */
-.cunmark-console-list-scroll button[aria-pressed] {
+.novex-console-list-scroll button[aria-pressed] {
   transition:
     box-shadow 240ms ease-out,
     border-color 240ms ease-out,
@@ -1127,12 +1127,12 @@
 
 .selected-commitment-panel:has(> header),
 .selected-commitment-panel[aria-busy='true'] {
-  animation: cunmark-detail-refresh
+  animation: novex-detail-refresh
     var(--screen-detail-refresh-duration) ease-out both;
 }
 
 .selected-commitment-panel[aria-busy='true'] {
-  animation-name: cunmark-detail-refresh-update;
+  animation-name: novex-detail-refresh-update;
 }
 
 /* Volumen base: múltiples fuentes de luz (techo + piso + centro) */
@@ -2461,7 +2461,7 @@
   padding-top: var(--screen-top-space, clamp(32px, 7vh, 76px));
 }
 
-.cunmark-room .main-screen {
+.novex-room .main-screen {
   width: var(--screen-width, min(84vw, 1500px));
   max-width: var(--screen-width, min(84vw, 1500px));
   margin: 0 auto;
@@ -2481,17 +2481,17 @@
   transition: box-shadow 800ms ease;
 }
 
-.cunmark-room--reference .room-screen-stage {
+.novex-room--reference .room-screen-stage {
   z-index: 20;
   padding-top: var(--screen-top-space);
 }
 
-.cunmark-room--reference .room-scene-viewport {
+.novex-room--reference .room-scene-viewport {
   height: var(--screen-max-height);
   max-height: var(--screen-max-height);
 }
 
-.cunmark-room--reference .main-screen {
+.novex-room--reference .main-screen {
   width: var(--screen-width);
   max-width: var(--screen-width);
   height: 100%;
@@ -2505,38 +2505,38 @@
   box-shadow:
     0 0 0 1px rgb(148 163 184 / 0.28),
     0 0 0 2px rgb(255 255 255 / 0.92),
-    0 0 36px -14px rgb(var(--cunmark-state-rgb) / 0.32),
+    0 0 36px -14px rgb(var(--novex-state-rgb) / 0.32),
     0 30px 86px -38px rgb(15 23 42 / 0.22),
     inset 0 1px 0 rgb(255 255 255 / 0.95);
   transition: box-shadow 520ms ease;
 }
 
-.cunmark-room--reference .main-screen::before {
+.novex-room--reference .main-screen::before {
   inset: -1px;
   border-radius: inherit;
   box-shadow:
-    0 0 54px -18px rgb(var(--cunmark-state-rgb) / 0.38),
-    0 0 1px 0 rgb(var(--cunmark-state-rgb) / 0.42);
+    0 0 54px -18px rgb(var(--novex-state-rgb) / 0.38),
+    0 0 1px 0 rgb(var(--novex-state-rgb) / 0.42);
   transition: box-shadow 520ms ease;
 }
 
-.cunmark-room--reference .main-screen > * {
+.novex-room--reference .main-screen > * {
   flex: 1 1 auto;
   min-height: 0;
   height: 100%;
 }
 
-.cunmark-room--reference .screen-deck-ambient {
+.novex-room--reference .screen-deck-ambient {
   opacity: 0.22;
   transition: opacity 520ms ease;
 }
 
-.cunmark-room--reference .room-monitor-reflection {
+.novex-room--reference .room-monitor-reflection {
   display: none;
 }
 
 /* Halo ambiental del marco (instalación física) */
-.cunmark-room .main-screen::before {
+.novex-room .main-screen::before {
   content: '';
   position: absolute;
   inset: -2px;
@@ -2642,14 +2642,14 @@
 
 /* Escritorio grande: monitor ~58vh (solo viewports altos; no portátiles anchos) */
 @media (min-width: 1441px) and (min-height: 901px) {
-  .cunmark-room {
+  .novex-room {
     --screen-top-space: clamp(36px, 7.5vh, 80px);
     --screen-max-height: 58vh;
     --screen-width: min(84vw, 1500px);
     padding-bottom: 0;
   }
 
-  .cunmark-room {
+  .novex-room {
     /* Antes: width clamp(3rem, 4.5vw, 6rem), outset heredado. */
     --window-column-width: clamp(4rem, 5.75vw, 8rem);
     --window-column-outset: clamp(0.75rem, 1vw, 1.5rem);
@@ -2665,13 +2665,13 @@
     padding-top: var(--screen-top-space);
   }
 
-  .cunmark-room .room-scene-viewport {
+  .novex-room .room-scene-viewport {
     height: var(--screen-max-height);
     max-height: var(--screen-max-height);
     flex: 0 0 auto;
   }
 
-  .cunmark-room .main-screen {
+  .novex-room .main-screen {
     width: var(--screen-width);
     max-width: var(--screen-width);
     height: 100%;
@@ -2680,7 +2680,7 @@
     flex-direction: column;
   }
 
-  .cunmark-room .main-screen > * {
+  .novex-room .main-screen > * {
     flex: 1 1 auto;
     min-height: 0;
     height: 100%;
@@ -2698,7 +2698,7 @@
  * Usa max-height del viewport, no max-width: portátiles 1920px caían en escritorio.
  */
 @media (min-width: 1024px) and (max-height: 900px) {
-  .cunmark-room {
+  .novex-room {
     --window-bottom-height: clamp(0.625rem, 1.4vh, 1rem);
     --window-threshold-height: clamp(0.1875rem, 0.45vh, 0.375rem);
     --window-bottom-shadow-depth: clamp(0.25rem, 0.55vh, 0.5rem);
@@ -2719,7 +2719,7 @@
     padding-bottom: 0;
   }
 
-  .cunmark-room {
+  .novex-room {
     /* Antes: width clamp(2rem, 3.25vw, 4.5rem), outset 0.625–1rem. */
     --window-column-width: clamp(3rem, 4vw, 5.5rem);
     --window-column-outset: clamp(0.5rem, 0.7vw, 0.75rem);
@@ -2727,7 +2727,7 @@
     --window-beam-depth: clamp(6px, 0.65vh, 9px);
   }
 
-  .cunmark-screen-surface {
+  .novex-screen-surface {
     --screen-signal-opacity: 0.017;
     --screen-front-reflection-opacity: 0.028;
     --screen-electrical-field-opacity: 0.5;
@@ -2749,7 +2749,7 @@
     overflow: visible;
   }
 
-  .cunmark-room .room-scene-viewport {
+  .novex-room .room-scene-viewport {
     height: var(--screen-max-height);
     min-height: max(var(--screen-min-height), var(--screen-max-height));
     max-height: none;
@@ -2757,7 +2757,7 @@
     overflow: visible;
   }
 
-  .cunmark-room .main-screen {
+  .novex-room .main-screen {
     width: var(--screen-width);
     max-width: var(--screen-width);
     height: 100%;
@@ -2768,7 +2768,7 @@
     flex-direction: column;
   }
 
-  .cunmark-room .main-screen > * {
+  .novex-room .main-screen > * {
     flex: 1 1 auto;
     min-height: 0;
     height: 100%;
@@ -2807,7 +2807,7 @@
 
 /* Tablet / móvil: más ancho, escena simplificada, piso visible */
 @media (max-width: 1023px) and (min-width: 901px) {
-  .cunmark-room {
+  .novex-room {
     --window-bottom-height: clamp(0.5rem, 1.2vh, 0.875rem);
     --window-threshold-height: clamp(0.125rem, 0.35vh, 0.25rem);
     --window-bottom-shadow-depth: clamp(0.1875rem, 0.4vh, 0.375rem);
@@ -2825,7 +2825,7 @@
     clip-path: polygon(2% 0, 98% 0, 100% 100%, 0 100%);
   }
 
-  .cunmark-room {
+  .novex-room {
     /* Antes: width clamp(1.25rem, 2.5vw, 2rem), outset 0.625rem. */
     --window-column-width: clamp(1.75rem, 3vw, 2.75rem);
     --window-column-outset: clamp(0.375rem, 0.75vw, 0.5rem);
@@ -2833,7 +2833,7 @@
     --window-beam-depth: clamp(6px, 0.65vh, 8px);
   }
 
-  .cunmark-screen-surface {
+  .novex-screen-surface {
     --screen-signal-opacity: 0.014;
     --screen-front-reflection-opacity: 0.022;
     --screen-electrical-field-opacity: 0;
@@ -2846,7 +2846,7 @@
     display: none;
   }
 
-  .cunmark-screen-surface::after {
+  .novex-screen-surface::after {
     display: none;
   }
 
@@ -2863,7 +2863,7 @@
     left: 50%;
   }
 
-  .cunmark-room .main-screen {
+  .novex-room .main-screen {
     width: var(--screen-width);
     max-width: var(--screen-width);
     min-height: 0;
@@ -2875,7 +2875,7 @@
       0 0 36px -16px var(--scene-glow, rgba(45, 212, 191, 0.14));
   }
 
-  .cunmark-room .main-screen::before {
+  .novex-room .main-screen::before {
     display: none;
   }
 
@@ -2965,7 +2965,7 @@
 
 /* Móvil / pantallas estrechas: ocultar paredes laterales */
 @media (max-width: 900px) {
-  .cunmark-room {
+  .novex-room {
     --screen-top-space: clamp(16px, 3vh, 28px);
     --screen-width: min(94vw, 100%);
     overflow-x: hidden;
@@ -2977,7 +2977,7 @@
     display: none;
   }
 
-  .cunmark-room {
+  .novex-room {
     /* Antes: width clamp(0.375rem, 1.25vw, 0.75rem), outset 0.25rem. */
     --window-column-width: clamp(0.75rem, 1.75vw, 1.125rem);
     --window-column-outset: 0.25rem;
@@ -2990,7 +2990,7 @@
     --command-floor-height: 0rem;
   }
 
-  .cunmark-screen-surface {
+  .novex-screen-surface {
     --screen-signal-opacity: 0.01;
     --screen-electrical-field-opacity: 0;
     --screen-refresh-opacity: 0;
@@ -3012,7 +3012,7 @@
     animation: none;
   }
 
-  .cunmark-screen-surface::after {
+  .novex-screen-surface::after {
     display: none;
   }
 
@@ -3027,7 +3027,7 @@
     display: none;
   }
 
-  .cunmark-room .main-screen {
+  .novex-room .main-screen {
     width: var(--screen-width);
     max-width: var(--screen-width);
     min-height: 0;
@@ -3039,7 +3039,7 @@
       0 0 36px -16px var(--scene-glow, rgba(45, 212, 191, 0.14));
   }
 
-  .cunmark-room .main-screen::before {
+  .novex-room .main-screen::before {
     display: none;
   }
 
@@ -3123,7 +3123,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cunmark-room,
+  .novex-room,
   .room-city-image,
   .observation-window-frame__top,
   .observation-window-frame__top::before,
@@ -3148,8 +3148,8 @@
   .room-floor-reflect,
   .room-floor-rings,
   .room-floor-lines,
-  .cunmark-room .main-screen,
-  .cunmark-room .main-screen::before {
+  .novex-room .main-screen,
+  .novex-room .main-screen::before {
     transition: none;
   }
 
@@ -3187,7 +3187,7 @@
   }
 
   @media (min-width: 1024px) {
-    .cunmark-room .main-screen {
+    .novex-room .main-screen {
       transform: none;
     }
   }
@@ -3195,126 +3195,126 @@
 
 /* --- Firma cromática del módulo activo ----------------------------------- */
 
-.cunmark-room[data-environment-status='pending'] {
-  --cunmark-state-rgb: 56 189 248;
-  --cunmark-state-strength: 0.72;
+.novex-room[data-environment-status='pending'] {
+  --novex-state-rgb: 56 189 248;
+  --novex-state-strength: 0.72;
 }
 
-.cunmark-room[data-environment-status='healthy'] {
-  --cunmark-state-rgb: 52 211 153;
-  --cunmark-state-strength: 0.9;
+.novex-room[data-environment-status='healthy'] {
+  --novex-state-rgb: 52 211 153;
+  --novex-state-strength: 0.9;
 }
 
-.cunmark-room[data-environment-status='attention'] {
-  --cunmark-state-rgb: 251 191 36;
-  --cunmark-state-strength: 0.94;
+.novex-room[data-environment-status='attention'] {
+  --novex-state-rgb: 251 191 36;
+  --novex-state-strength: 0.94;
 }
 
-.cunmark-room[data-environment-status='critical'] {
-  --cunmark-state-rgb: 248 113 113;
-  --cunmark-state-strength: 1;
+.novex-room[data-environment-status='critical'] {
+  --novex-state-rgb: 248 113 113;
+  --novex-state-strength: 1;
 }
 
-.cunmark-state-ornaments {
+.novex-state-ornaments {
   position: absolute;
   z-index: 24;
   inset: 5px;
   overflow: hidden;
   pointer-events: none;
   border-radius: inherit;
-  opacity: var(--cunmark-state-strength, 0.8);
+  opacity: var(--novex-state-strength, 0.8);
   background:
     radial-gradient(
       ellipse 28% 12% at 50% 0%,
-      rgb(var(--cunmark-state-rgb) / 0.16),
+      rgb(var(--novex-state-rgb) / 0.16),
       transparent 72%
     ),
     linear-gradient(
       90deg,
-      rgb(var(--cunmark-state-rgb) / 0.08),
+      rgb(var(--novex-state-rgb) / 0.08),
       transparent 10% 90%,
-      rgb(var(--cunmark-state-rgb) / 0.08)
+      rgb(var(--novex-state-rgb) / 0.08)
     );
   transition:
     opacity 520ms ease,
     background 520ms ease;
 }
 
-.cunmark-state-corner {
+.novex-state-corner {
   position: absolute;
   width: 2rem;
   height: 2rem;
-  border-color: rgb(var(--cunmark-state-rgb) / 0.68);
-  filter: drop-shadow(0 0 5px rgb(var(--cunmark-state-rgb) / 0.48));
+  border-color: rgb(var(--novex-state-rgb) / 0.68);
+  filter: drop-shadow(0 0 5px rgb(var(--novex-state-rgb) / 0.48));
   transition:
     border-color 520ms ease,
     filter 520ms ease;
 }
 
-.cunmark-state-corner::after {
+.novex-state-corner::after {
   content: '';
   position: absolute;
   width: 0.34rem;
   height: 0.34rem;
   border-radius: 50%;
-  background: rgb(var(--cunmark-state-rgb) / 0.92);
+  background: rgb(var(--novex-state-rgb) / 0.92);
   box-shadow:
-    0 0 5px rgb(var(--cunmark-state-rgb) / 0.92),
-    0 0 12px rgb(var(--cunmark-state-rgb) / 0.46);
+    0 0 5px rgb(var(--novex-state-rgb) / 0.92),
+    0 0 12px rgb(var(--novex-state-rgb) / 0.46);
   transition:
     background-color 520ms ease,
     box-shadow 520ms ease;
 }
 
-.cunmark-state-corner--tl {
+.novex-state-corner--tl {
   top: 0.45rem;
   left: 0.45rem;
   border-top: 1px solid;
   border-left: 1px solid;
 }
 
-.cunmark-state-corner--tl::after {
+.novex-state-corner--tl::after {
   top: -0.18rem;
   left: -0.18rem;
 }
 
-.cunmark-state-corner--tr {
+.novex-state-corner--tr {
   top: 0.45rem;
   right: 0.45rem;
   border-top: 1px solid;
   border-right: 1px solid;
 }
 
-.cunmark-state-corner--tr::after {
+.novex-state-corner--tr::after {
   top: -0.18rem;
   right: -0.18rem;
 }
 
-.cunmark-state-corner--bl {
+.novex-state-corner--bl {
   bottom: 0.45rem;
   left: 0.45rem;
   border-bottom: 1px solid;
   border-left: 1px solid;
 }
 
-.cunmark-state-corner--bl::after {
+.novex-state-corner--bl::after {
   bottom: -0.18rem;
   left: -0.18rem;
 }
 
-.cunmark-state-corner--br {
+.novex-state-corner--br {
   right: 0.45rem;
   bottom: 0.45rem;
   border-right: 1px solid;
   border-bottom: 1px solid;
 }
 
-.cunmark-state-corner--br::after {
+.novex-state-corner--br::after {
   right: -0.18rem;
   bottom: -0.18rem;
 }
 
-.cunmark-state-rail {
+.novex-state-rail {
   position: absolute;
   right: 12%;
   bottom: 2px;
@@ -3325,52 +3325,52 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgb(var(--cunmark-state-rgb) / 0.72) 24%,
-    rgb(var(--cunmark-state-rgb) / 0.96) 50%,
-    rgb(var(--cunmark-state-rgb) / 0.72) 76%,
+    rgb(var(--novex-state-rgb) / 0.72) 24%,
+    rgb(var(--novex-state-rgb) / 0.96) 50%,
+    rgb(var(--novex-state-rgb) / 0.72) 76%,
     transparent
   );
   box-shadow:
-    0 0 7px rgb(var(--cunmark-state-rgb) / 0.56),
-    0 0 18px rgb(var(--cunmark-state-rgb) / 0.22);
+    0 0 7px rgb(var(--novex-state-rgb) / 0.56),
+    0 0 18px rgb(var(--novex-state-rgb) / 0.22);
   transition:
     background 520ms ease,
     box-shadow 520ms ease;
 }
 
-.cunmark-room--reference .main-screen {
+.novex-room--reference .main-screen {
   box-shadow:
-    0 0 0 1px rgb(var(--cunmark-state-rgb) / 0.48),
+    0 0 0 1px rgb(var(--novex-state-rgb) / 0.48),
     0 0 0 2px rgb(2 6 23 / 0.52),
-    0 0 38px -12px rgb(var(--cunmark-state-rgb) / 0.42),
+    0 0 38px -12px rgb(var(--novex-state-rgb) / 0.42),
     0 30px 86px -38px rgb(0 0 0 / 0.78),
     inset 0 1px 0 rgb(226 232 240 / 0.12);
   transition: box-shadow 520ms ease;
 }
 
-.cunmark-room--reference .room-reference-projector {
+.novex-room--reference .room-reference-projector {
   background: linear-gradient(
     90deg,
     transparent,
-    rgb(var(--cunmark-state-rgb) / 0.08) 30%,
-    rgb(var(--cunmark-state-rgb) / 0.22) 50%,
-    rgb(var(--cunmark-state-rgb) / 0.08) 70%,
+    rgb(var(--novex-state-rgb) / 0.08) 30%,
+    rgb(var(--novex-state-rgb) / 0.22) 50%,
+    rgb(var(--novex-state-rgb) / 0.08) 70%,
     transparent
   );
   transition: background 520ms ease;
 }
 
-.cunmark-room--reference .room-reference-projector::before {
-  border-color: rgb(var(--cunmark-state-rgb) / 0.52);
+.novex-room--reference .room-reference-projector::before {
+  border-color: rgb(var(--novex-state-rgb) / 0.52);
   background: radial-gradient(
     ellipse,
-    rgb(var(--cunmark-state-rgb) / 0.38),
-    rgb(var(--cunmark-state-rgb) / 0.15) 38%,
+    rgb(var(--novex-state-rgb) / 0.38),
+    rgb(var(--novex-state-rgb) / 0.15) 38%,
     transparent 70%
   );
   box-shadow:
-    0 0 8px rgb(var(--cunmark-state-rgb) / 0.56),
-    0 0 22px rgb(var(--cunmark-state-rgb) / 0.3);
+    0 0 8px rgb(var(--novex-state-rgb) / 0.56),
+    0 0 22px rgb(var(--novex-state-rgb) / 0.3);
   transition:
     border-color 520ms ease,
     background 520ms ease,
@@ -3383,7 +3383,7 @@
  * nunca se desplacen entre sí cuando cambia la proporción del viewport.
  */
 @media (min-width: 1024px) {
-  .cunmark-room.cunmark-room--reference {
+  .novex-room.novex-room--reference {
     --screen-top-space: 12.5cqh;
     --screen-max-height: 58.8cqh;
     --screen-min-height: 0px;
@@ -3395,7 +3395,7 @@
     overflow: hidden;
   }
 
-  .cunmark-room--reference .room-reference-canvas {
+  .novex-room--reference .room-reference-canvas {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -3406,17 +3406,17 @@
     container-type: size;
   }
 
-  .cunmark-room--reference .room-reference-layer {
+  .novex-room--reference .room-reference-layer {
     object-fit: fill;
   }
 
-  .cunmark-room--reference .room-screen-stage {
+  .novex-room--reference .room-screen-stage {
     width: 100%;
     padding-top: var(--screen-top-space);
     overflow: visible;
   }
 
-  .cunmark-room--reference .room-scene-viewport {
+  .novex-room--reference .room-scene-viewport {
     width: 100%;
     max-width: none;
     height: var(--screen-max-height);
@@ -3426,7 +3426,7 @@
     overflow: visible;
   }
 
-  .cunmark-room.cunmark-room--reference .main-screen {
+  .novex-room.novex-room--reference .main-screen {
     width: var(--screen-width);
     max-width: var(--screen-width);
     height: 100%;
@@ -3436,7 +3436,7 @@
     overflow: hidden;
   }
 
-  .cunmark-room--reference .cunmark-screen-content {
+  .novex-room--reference .novex-screen-content {
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -3448,7 +3448,7 @@
     transform: none;
   }
 
-  .cunmark-room--reference .cunmark-workstation {
+  .novex-room--reference .novex-workstation {
     grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr);
     flex: 1 1 0%;
@@ -3458,11 +3458,11 @@
   }
 }
 
-.cunmark-room--reference .cunmark-screen-surface {
-  animation: cunmark-screen-power-on 980ms cubic-bezier(0.22, 0.78, 0.18, 1) both;
+.novex-room--reference .novex-screen-surface {
+  animation: novex-screen-power-on 980ms cubic-bezier(0.22, 0.78, 0.18, 1) both;
 }
 
-.cunmark-screen-boot {
+.novex-screen-boot {
   position: absolute;
   z-index: 50;
   inset: 0;
@@ -3471,10 +3471,10 @@
   background:
     radial-gradient(ellipse at center, rgb(153 246 228 / 0.12), transparent 54%),
     rgb(2 12 18 / 0.28);
-  animation: cunmark-screen-boot-overlay 1.15s ease-out both;
+  animation: novex-screen-boot-overlay 1.15s ease-out both;
 }
 
-.cunmark-screen-boot::after {
+.novex-screen-boot::after {
   content: '';
   position: absolute;
   right: 5%;
@@ -3492,10 +3492,10 @@
   box-shadow:
     0 0 8px rgb(94 234 212 / 0.7),
     0 0 24px rgb(45 212 191 / 0.44);
-  animation: cunmark-screen-boot-line 820ms ease-out both;
+  animation: novex-screen-boot-line 820ms ease-out both;
 }
 
-@keyframes cunmark-screen-power-on {
+@keyframes novex-screen-power-on {
   0% {
     opacity: 0;
     filter: brightness(2.4) saturate(0.4);
@@ -3516,7 +3516,7 @@
   }
 }
 
-@keyframes cunmark-screen-boot-overlay {
+@keyframes novex-screen-boot-overlay {
   0%,
   42% {
     opacity: 0.82;
@@ -3526,7 +3526,7 @@
   }
 }
 
-@keyframes cunmark-screen-boot-line {
+@keyframes novex-screen-boot-line {
   0% {
     opacity: 0;
     transform: scaleX(0.02);
@@ -3545,9 +3545,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cunmark-room--reference .cunmark-screen-surface,
-  .cunmark-screen-boot,
-  .cunmark-screen-boot::after {
+  .novex-room--reference .novex-screen-surface,
+  .novex-screen-boot,
+  .novex-screen-boot::after {
     animation: none;
   }
 
@@ -3557,7 +3557,7 @@
     transition: none;
   }
 
-  .cunmark-screen-boot {
+  .novex-screen-boot {
     display: none;
   }
 }
@@ -3568,13 +3568,13 @@
    de ella y deja de comportarse como una ventana clara superpuesta.
    ========================================================================== */
 
-.cunmark-room.cunmark-room--reference {
-  --cunmark-scene-cyan: 56 189 248;
-  --cunmark-scene-blue: 59 130 246;
-  --cunmark-scene-violet: 139 92 246;
+.novex-room.novex-room--reference {
+  --novex-scene-cyan: 56 189 248;
+  --novex-scene-blue: 59 130 246;
+  --novex-scene-violet: 139 92 246;
   background:
-    radial-gradient(circle at 50% 44%, rgb(var(--cunmark-scene-blue) / 0.11), transparent 36%),
-    radial-gradient(circle at 57% 54%, rgb(var(--cunmark-scene-violet) / 0.09), transparent 42%),
+    radial-gradient(circle at 50% 44%, rgb(var(--novex-scene-blue) / 0.11), transparent 36%),
+    radial-gradient(circle at 57% 54%, rgb(var(--novex-scene-violet) / 0.09), transparent 42%),
     linear-gradient(
       180deg,
       rgb(4 6 12 / 0.82) 0%,
@@ -3585,36 +3585,36 @@
   color: rgb(219 234 254);
 }
 
-.cunmark-room--reference .room-reference-layers,
-.cunmark-room--reference .room-reference-base-stack,
-.cunmark-room--reference .room-reference-projector,
-.cunmark-room--reference .room-depth-haze,
-.cunmark-room--reference .room-monitor-reflection {
+.novex-room--reference .room-reference-layers,
+.novex-room--reference .room-reference-base-stack,
+.novex-room--reference .room-reference-projector,
+.novex-room--reference .room-depth-haze,
+.novex-room--reference .room-monitor-reflection {
   opacity: 0;
 }
 
-.cunmark-room--reference .room-atmosphere {
+.novex-room--reference .room-atmosphere {
   opacity: 0.12;
   background-image:
     radial-gradient(circle, rgb(125 211 252 / 0.34) 0 1px, transparent 1.5px),
     radial-gradient(circle, rgb(196 181 253 / 0.28) 0 1px, transparent 1.5px);
   background-position: 0 0, 47px 83px;
   background-size: 137px 137px, 193px 193px;
-  animation: cunmark-particle-drift 36s linear infinite;
+  animation: novex-particle-drift 36s linear infinite;
 }
 
-.cunmark-room--reference .room-atmosphere::before,
-.cunmark-room--reference .room-atmosphere::after {
+.novex-room--reference .room-atmosphere::before,
+.novex-room--reference .room-atmosphere::after {
   opacity: 0;
 }
 
-.cunmark-room--reference .room-ambient-vignette {
+.novex-room--reference .room-ambient-vignette {
   background:
     linear-gradient(180deg, rgb(2 4 12 / 0.2), transparent 22% 70%, rgb(2 4 12 / 0.48)),
     radial-gradient(ellipse at center, transparent 56%, rgb(2 4 12 / 0.38) 100%);
 }
 
-.cunmark-room.cunmark-room--reference .main-screen {
+.novex-room.novex-room--reference .main-screen {
   border: 1px solid rgb(110 170 255 / 0.08);
   border-radius: 22px;
   background: rgb(8 12 20 / 0.32);
@@ -3628,7 +3628,7 @@
     filter 350ms ease-out;
 }
 
-.cunmark-room.cunmark-room--reference .main-screen:hover {
+.novex-room.novex-room--reference .main-screen:hover {
   border-color: rgb(110 170 255 / 0.092);
   background: rgb(9 13 22 / 0.34);
   box-shadow:
@@ -3637,7 +3637,7 @@
   filter: brightness(1.015);
 }
 
-.cunmark-room.cunmark-room--reference .main-screen::before {
+.novex-room.novex-room--reference .main-screen::before {
   z-index: 25;
   inset: 0;
   border-radius: 22px;
@@ -3657,58 +3657,58 @@
     filter 350ms ease-out;
 }
 
-.cunmark-room.cunmark-room--reference .main-screen:hover::before {
+.novex-room.novex-room--reference .main-screen:hover::before {
   opacity: 0.84;
   filter: drop-shadow(0 0 5px rgb(56 189 248 / 0.14));
 }
 
-.cunmark-room--reference .cunmark-screen-surface {
-  --cunmark-panel-bg: rgb(10 15 28 / 0.18);
-  --cunmark-panel-bg-subtle: rgb(9 14 28 / 0.12);
-  --cunmark-panel-bg-active: rgb(var(--cunmark-state-rgb) / 0.1);
-  --cunmark-panel-border: rgb(110 170 255 / 0.08);
-  --cunmark-panel-border-strong: rgb(110 190 255 / 0.18);
-  --cunmark-panel-divider: rgb(110 170 255 / 0.1);
-  --cunmark-panel-shadow:
+.novex-room--reference .novex-screen-surface {
+  --novex-panel-bg: rgb(10 15 28 / 0.18);
+  --novex-panel-bg-subtle: rgb(9 14 28 / 0.12);
+  --novex-panel-bg-active: rgb(var(--novex-state-rgb) / 0.1);
+  --novex-panel-border: rgb(110 170 255 / 0.08);
+  --novex-panel-border-strong: rgb(110 190 255 / 0.18);
+  --novex-panel-divider: rgb(110 170 255 / 0.1);
+  --novex-panel-shadow:
     0 0 40px rgb(90 140 255 / 0.05),
     inset 0 1px 0 rgb(147 197 253 / 0.04);
-  --cunmark-section-title-color: rgb(186 230 253 / 0.78);
-  --cunmark-section-label-color: rgb(148 163 184);
+  --novex-section-title-color: rgb(186 230 253 / 0.78);
+  --novex-section-label-color: rgb(148 163 184);
   color: rgb(219 234 254);
   background:
-    radial-gradient(circle at 52% 30%, rgb(var(--cunmark-scene-blue) / 0.08), transparent 42%),
+    radial-gradient(circle at 52% 30%, rgb(var(--novex-scene-blue) / 0.08), transparent 42%),
     rgb(5 9 20 / 0.1);
   backdrop-filter: none;
-  animation: cunmark-command-surface-in 480ms ease-out both;
+  animation: novex-command-surface-in 480ms ease-out both;
 }
 
-.cunmark-room--reference .cunmark-screen-content {
+.novex-room--reference .novex-screen-content {
   box-sizing: border-box;
   padding: 32px;
   color: rgb(219 234 254);
 }
 
-.cunmark-room--reference .cunmark-state-ornaments {
+.novex-room--reference .novex-state-ornaments {
   opacity: 0;
   background: none;
 }
 
-.cunmark-room--reference .cunmark-state-corner {
-  border-color: rgb(var(--cunmark-state-rgb) / 0.48);
+.novex-room--reference .novex-state-corner {
+  border-color: rgb(var(--novex-state-rgb) / 0.48);
   filter: drop-shadow(0 0 6px rgb(139 92 246 / 0.22));
 }
 
-.cunmark-room--reference .cunmark-state-corner::after {
+.novex-room--reference .novex-state-corner::after {
   opacity: 0;
 }
 
-.cunmark-room--reference .cunmark-state-rail,
-.cunmark-room--reference .cunmark-screen-surface > .h-\[3px\],
-.cunmark-room--reference .screen-deck-ambient + .cunmark-product-chrome + .h-\[3px\] {
+.novex-room--reference .novex-state-rail,
+.novex-room--reference .novex-screen-surface > .h-\[3px\],
+.novex-room--reference .screen-deck-ambient + .novex-product-chrome + .h-\[3px\] {
   opacity: 0;
 }
 
-@keyframes cunmark-command-surface-in {
+@keyframes novex-command-surface-in {
   from {
     opacity: 0;
   }
@@ -3717,32 +3717,32 @@
   }
 }
 
-@keyframes cunmark-particle-drift {
+@keyframes novex-particle-drift {
   to {
     background-position: 90px 150px, -70px 18px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cunmark-room--reference .room-atmosphere,
-  .cunmark-room--reference .cunmark-screen-surface {
+  .novex-room--reference .room-atmosphere,
+  .novex-room--reference .novex-screen-surface {
     animation: none;
   }
 }
 
 /* ======================================================================
    Composición fullscreen — el escenario rodea la interfaz, no la encierra.
-   Los wrappers de CunmarkFrame/MainScreen permanecen en el DOM por contrato,
+   Los wrappers de NovexFrame/MainScreen permanecen en el DOM por contrato,
    pero dejan de dibujar un monitor, marco o tarjeta alrededor del contenido.
    ====================================================================== */
 
-.cunmark-room.cunmark-room--reference {
+.novex-room.novex-room--reference {
   min-height: 100vh;
   height: 100vh;
   overflow: hidden;
 }
 
-.cunmark-room--reference .room-reference-canvas {
+.novex-room--reference .room-reference-canvas {
   position: relative;
   inset: auto;
   width: 100%;
@@ -3751,7 +3751,7 @@
   transform: none;
 }
 
-.cunmark-room--reference .room-screen-stage {
+.novex-room--reference .room-screen-stage {
   width: 100%;
   height: 100vh;
   min-height: 0;
@@ -3760,7 +3760,7 @@
   justify-content: flex-start;
 }
 
-.cunmark-room--reference .room-scene-viewport {
+.novex-room--reference .room-scene-viewport {
   width: 100%;
   max-width: none;
   height: 100%;
@@ -3769,7 +3769,7 @@
   align-self: stretch;
 }
 
-.cunmark-room.cunmark-room--reference .main-screen {
+.novex-room.novex-room--reference .main-screen {
   width: 100%;
   max-width: none;
   height: 100%;
@@ -3785,20 +3785,20 @@
   transition: none;
 }
 
-.cunmark-room.cunmark-room--reference .main-screen:hover {
+.novex-room.novex-room--reference .main-screen:hover {
   background: transparent;
   border-color: transparent;
   box-shadow: none;
   filter: none;
 }
 
-.cunmark-room.cunmark-room--reference .main-screen::before {
+.novex-room.novex-room--reference .main-screen::before {
   display: none;
 }
 
-/* Neutraliza el chasis y la cavidad de CunmarkFrame, sin desmontar el árbol. */
-.cunmark-room--reference .main-screen > .relative.z-10,
-.cunmark-room--reference .main-screen > .relative.z-10 > .relative {
+/* Neutraliza el chasis y la cavidad de NovexFrame, sin desmontar el árbol. */
+.novex-room--reference .main-screen > .relative.z-10,
+.novex-room--reference .main-screen > .relative.z-10 > .relative {
   width: 100%;
   height: 100%;
   min-height: 0;
@@ -3813,7 +3813,7 @@
   -webkit-backdrop-filter: none;
 }
 
-.cunmark-room--reference .cunmark-screen-surface {
+.novex-room--reference .novex-screen-surface {
   border: 0;
   border-radius: 0;
   clip-path: none;
@@ -3824,19 +3824,19 @@
   animation: none;
 }
 
-.cunmark-room--reference .cunmark-screen-content {
+.novex-room--reference .novex-screen-content {
   padding: 0;
   background: transparent;
 }
 
-.cunmark-room--reference .screen-deck-ambient,
-.cunmark-room--reference .cunmark-screen-surface > div[class*='h-[3px]'],
-.cunmark-room--reference .cunmark-state-ornaments {
+.novex-room--reference .screen-deck-ambient,
+.novex-room--reference .novex-screen-surface > div[class*='h-[3px]'],
+.novex-room--reference .novex-state-ornaments {
   opacity: 0;
 }
 
 @media (max-width: 767px) {
-  .cunmark-room--reference .room-screen-stage {
+  .novex-room--reference .room-screen-stage {
     padding: 24px;
   }
 }

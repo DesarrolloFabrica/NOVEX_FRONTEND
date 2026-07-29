@@ -1,12 +1,12 @@
 /*
- * Fondos de plataforma Cunmark
+ * Fondos de plataforma Novex
  *
  * Esta hoja se carga al final para unificar el entorno visual sin alterar
  * las tarjetas ni los colores semánticos de cada estado. Las ilustraciones
  * viven en una capa independiente y deliberadamente tenue.
  */
 
-.cunmark-os {
+.novex-os {
   --platform-scene-opacity: 0.2;
   --platform-scene-saturation: 0.82;
   --platform-scene-brightness: 0.58;
@@ -19,32 +19,32 @@
     linear-gradient(145deg, #020611 0%, #050b18 48%, #030712 100%) !important;
 }
 
-.cunmark-os[data-scene='intelligence'] {
-  --os-scene-image: url('/assests/scenes/cunmark-city-intelligence.jpg');
+.novex-os[data-scene='intelligence'] {
+  --os-scene-image: url('/assests/scenes/novex-city-intelligence.jpg');
   --os-scene-position: 54% 48%;
   --platform-scene-opacity: 0.18;
   --platform-ambient-rgb: 55 126 255;
   --platform-secondary-rgb: 78 82 205;
 }
 
-.cunmark-os[data-scene='events'] {
-  --os-scene-image: url('/assests/scenes/cunmark-city-events.jpg');
+.novex-os[data-scene='events'] {
+  --os-scene-image: url('/assests/scenes/novex-city-events.jpg');
   --os-scene-position: 55% 50%;
   --platform-scene-opacity: 0.2;
   --platform-ambient-rgb: 49 139 255;
   --platform-secondary-rgb: 83 76 220;
 }
 
-.cunmark-os[data-scene='register'] {
-  --os-scene-image: url('/assests/scenes/cunmark-city-register.jpg');
+.novex-os[data-scene='register'] {
+  --os-scene-image: url('/assests/scenes/novex-city-register.jpg');
   --os-scene-position: 54% 47%;
   --platform-scene-opacity: 0.19;
   --platform-ambient-rgb: 45 132 224;
   --platform-secondary-rgb: 86 78 194;
 }
 
-.cunmark-os[data-scene='commitments'] {
-  --os-scene-image: url('/assests/scenes/cunmark-city-commitments.jpg');
+.novex-os[data-scene='commitments'] {
+  --os-scene-image: url('/assests/scenes/novex-city-commitments.jpg');
   --os-scene-position: 53% 50%;
   --platform-scene-opacity: 0.2;
   --platform-ambient-rgb: 61 123 240;
@@ -52,12 +52,12 @@
 }
 
 /* Recupera el backdrop que una regla heredada reducía a 8 %. */
-.cunmark-os .cunmark-os__backdrop {
+.novex-os .novex-os__backdrop {
   opacity: 1 !important;
   background: #030817;
 }
 
-.cunmark-os .cunmark-os__backdrop::before {
+.novex-os .novex-os__backdrop::before {
   inset: -18px;
   opacity: var(--platform-scene-opacity) !important;
   background:
@@ -83,7 +83,7 @@
   transform: scale(1.025);
 }
 
-.cunmark-os .cunmark-os__backdrop::after {
+.novex-os .novex-os__backdrop::after {
   opacity: 1 !important;
   background:
     radial-gradient(
@@ -101,20 +101,20 @@
   animation: none;
 }
 
-.cunmark-os .cunmark-os__aurora {
+.novex-os .novex-os__aurora {
   opacity: 0.075 !important;
   filter: blur(150px);
 }
 
-.cunmark-os .cunmark-os__aurora--one {
+.novex-os .novex-os__aurora--one {
   background: rgb(var(--platform-ambient-rgb));
 }
 
-.cunmark-os .cunmark-os__aurora--two {
+.novex-os .novex-os__aurora--two {
   background: rgb(var(--platform-secondary-rgb));
 }
 
-.cunmark-os .cunmark-os__grid {
+.novex-os .novex-os__grid {
   opacity: 0.055 !important;
   background-image:
     linear-gradient(rgb(95 143 224 / 0.12) 1px, transparent 1px),
@@ -123,7 +123,7 @@
   mask-image: radial-gradient(ellipse 74% 64% at 66% 48%, black, transparent 78%);
 }
 
-.cunmark-os .cunmark-os__grid::before {
+.novex-os .novex-os__grid::before {
   opacity: 0.12;
   background: linear-gradient(
     90deg,
@@ -133,16 +133,16 @@
   );
 }
 
-.cunmark-os .cunmark-os__grid::after {
+.novex-os .novex-os__grid::after {
   opacity: 0.16;
 }
 
-.cunmark-os .cunmark-os__noise {
+.novex-os .novex-os__noise {
   opacity: 0.025 !important;
 }
 
 /* Cristal oscuro y neutro: acompaña las tarjetas azul marino existentes. */
-.cunmark-os .cunmark-os-rail {
+.novex-os .novex-os-rail {
   border-right-color: rgb(104 148 218 / 0.12);
   background:
     linear-gradient(180deg, rgb(3 8 18 / 0.95), rgb(3 8 17 / 0.88)),
@@ -151,36 +151,36 @@
   backdrop-filter: blur(28px) saturate(1.05);
 }
 
-.cunmark-os .cunmark-os__stage {
+.novex-os .novex-os__stage {
   background:
     radial-gradient(ellipse 68% 54% at 64% 42%, rgb(20 45 83 / 0.055), transparent 74%),
     linear-gradient(180deg, rgb(2 7 16 / 0.08), rgb(2 7 16 / 0.2));
 }
 
-.cunmark-os .cunmark-os-topbar {
+.novex-os .novex-os-topbar {
   border-bottom-color: rgb(105 151 224 / 0.11);
   background: linear-gradient(180deg, rgb(3 8 18 / 0.46), transparent);
 }
 
 /* Evita que el estado operativo vuelva a teñir toda la escena de verde. */
-.cunmark-os[data-environment-status] {
+.novex-os[data-environment-status] {
   --window-status-reflection-strength: 0.16;
 }
 
 @media (max-width: 760px) {
-  .cunmark-os {
+  .novex-os {
     --platform-scene-opacity: 0.14;
   }
 
-  .cunmark-os .cunmark-os__backdrop::before {
+  .novex-os .novex-os__backdrop::before {
     background-position: 62% center !important;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cunmark-os .cunmark-os__backdrop::before,
-  .cunmark-os .cunmark-os__aurora,
-  .cunmark-os .cunmark-os__grid::before {
+  .novex-os .novex-os__backdrop::before,
+  .novex-os .novex-os__aurora,
+  .novex-os .novex-os__grid::before {
     animation: none !important;
   }
 }

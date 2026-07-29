@@ -5,7 +5,7 @@ import type { CoordinationId } from '@/modules/impact-network/data/coordination-
 import type { FocusedPropagation } from '@/modules/impact-network/types/impact-network.types'
 import type { OperationalEvent } from '@/modules/operational-events/types/operational-event.types'
 import { RISK_LEVEL_LABEL } from '@/modules/operational-events/components/eventPresentation'
-import { CunmarkIcon } from '@/shared/components/CunmarkIcon'
+import { NovexIcon } from '@/shared/components/NovexIcon'
 import {
   isIslandFocusOrigin,
   resolveIslandAffectedBriefing,
@@ -145,7 +145,7 @@ export function IslandFocusDossier({
                 aria-label="Cerrar enfoque de isla"
                 onClick={onClose}
               >
-                <CunmarkIcon name="x" size={15} strokeWidth={1.7} />
+                <NovexIcon name="x" size={15} strokeWidth={1.7} />
                 <span>Cerrar</span>
               </button>
             </motion.header>

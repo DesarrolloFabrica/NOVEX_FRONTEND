@@ -5,9 +5,9 @@ import { useCallback, useState } from 'react'
 import { ScreenDeck } from '@/modules/monitoring/components/ScreenDeck'
 import { OperationalEventsCenter } from '@/modules/operational-events/components/OperationalEventsCenter'
 import type { OperationalEnvironmentStatus } from '@/modules/operational-events/types/operational-event.types'
-import { MainScreen, CunmarkFrame, CunmarkRoom } from '@/modules/room'
+import { MainScreen, NovexFrame, NovexRoom } from '@/modules/room'
 import type { EnvironmentStatus } from '@/modules/monitoring/types/monitoring.types'
-import { CunmarkProductHeader } from '@/shared/components/CunmarkProductHeader'
+import { NovexProductHeader } from '@/shared/components/NovexProductHeader'
 
 function toRoomEnvironment(
   status: OperationalEnvironmentStatus,
@@ -27,13 +27,13 @@ export function OperationalEventsCenterPage() {
   )
 
   return (
-    <CunmarkRoom environment={environment} scene="events">
-      <CunmarkFrame environment={environment}>
+    <NovexRoom environment={environment} scene="events">
+      <NovexFrame environment={environment}>
         <MainScreen environment={environment}>
           <ScreenDeck
             environment={environment}
             header={
-              <CunmarkProductHeader
+              <NovexProductHeader
                 title="Situaciones registradas"
                 eyebrow="Gestión operativa"
                 context="Historial y seguimiento operacional"
@@ -57,7 +57,7 @@ export function OperationalEventsCenterPage() {
             />
           </ScreenDeck>
         </MainScreen>
-      </CunmarkFrame>
-    </CunmarkRoom>
+      </NovexFrame>
+    </NovexRoom>
   )
 }

@@ -19,7 +19,7 @@ import {
   formatEventDate,
   timelineTypeLabel,
 } from '@/modules/operational-events/components/eventPresentation'
-import { CunmarkIcon } from '@/shared/components/CunmarkIcon'
+import { NovexIcon } from '@/shared/components/NovexIcon'
 import {
   CertaintyRing,
   EXEC_CERTAINTY_LABEL,
@@ -119,34 +119,34 @@ export function SituationDetailModal({
   }
 
   return createPortal(
-    <div className="cunmark-situation-modal" role="presentation">
+    <div className="novex-situation-modal" role="presentation">
       <button
         type="button"
-        className="cunmark-situation-modal__backdrop"
+        className="novex-situation-modal__backdrop"
         aria-label="Cerrar"
         onClick={onClose}
       />
 
       <div
-        className="cunmark-situation-modal__dialog"
+        className="novex-situation-modal__dialog"
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         data-risk={risk}
       >
-        <header className="cunmark-sit-header">
-          <div className="cunmark-sit-header__lead">
-            <span className="cunmark-sit-header__icon" aria-hidden="true">
-              <CunmarkIcon name="alert" size={16} strokeWidth={1.7} />
+        <header className="novex-sit-header">
+          <div className="novex-sit-header__lead">
+            <span className="novex-sit-header__icon" aria-hidden="true">
+              <NovexIcon name="alert" size={16} strokeWidth={1.7} />
             </span>
             <div className="min-w-0">
-              <p className="cunmark-sit-header__eyebrow">
+              <p className="novex-sit-header__eyebrow">
                 Análisis ejecutivo de la situación
               </p>
-              <h2 id={titleId} className="cunmark-sit-header__title">
+              <h2 id={titleId} className="novex-sit-header__title">
                 {report?.incidentSummary.executiveTitle ?? event.title}
               </h2>
-              <p className="cunmark-sit-header__meta">
+              <p className="novex-sit-header__meta">
                 <span>{eventRef(event.id)}</span>
                 <span aria-hidden="true">·</span>
                 <span>{where}</span>
@@ -156,24 +156,24 @@ export function SituationDetailModal({
             </div>
           </div>
 
-          <div className="cunmark-sit-header__aside">
+          <div className="novex-sit-header__aside">
             <button
               ref={closeRef}
               type="button"
-              className="cunmark-sit-header__close"
+              className="novex-sit-header__close"
               aria-label="Cerrar"
               onClick={onClose}
             >
-              <CunmarkIcon name="x" size={15} strokeWidth={1.7} />
+              <NovexIcon name="x" size={15} strokeWidth={1.7} />
             </button>
-            <div className="cunmark-sit-header__status" data-status={event.status}>
-              <span className="cunmark-sit-header__status-dot" aria-hidden="true" />
+            <div className="novex-sit-header__status" data-status={event.status}>
+              <span className="novex-sit-header__status-dot" aria-hidden="true" />
               <strong>
                 {EVENT_STATUS_LABEL[event.status]} · {RISK_LEVEL_LABEL[risk]}
               </strong>
             </div>
-            <p className="cunmark-sit-header__date">
-              <CunmarkIcon name="calendar" size={12} strokeWidth={1.6} />
+            <p className="novex-sit-header__date">
+              <NovexIcon name="calendar" size={12} strokeWidth={1.6} />
               <time dateTime={event.reportedAt}>
                 {formatEventDateTime(event.reportedAt)}
               </time>
@@ -181,47 +181,47 @@ export function SituationDetailModal({
           </div>
         </header>
 
-        <div className="cunmark-sit-scroll">
+        <div className="novex-sit-scroll">
           {report ? (
-            <div className="cunmark-sit-report">
+            <div className="novex-sit-report">
               {/* 1. ¿Qué ocurrió? */}
               <ExecutiveSection
                 number={1}
                 question="¿Qué ocurrió?"
                 hint="Resumen ejecutivo y causa raíz sobre el contexto recibido"
               >
-                <div className="cunmark-sit-grid">
-                  <article className="cunmark-sit-card">
+                <div className="novex-sit-grid">
+                  <article className="novex-sit-card">
                     <header>
                       <h3>Resumen para dirección</h3>
                     </header>
-                    <p className="cunmark-sit-narrative">
+                    <p className="novex-sit-narrative">
                       {report.incidentSummary.executiveSummary}
                     </p>
                     {interpretation?.narrative ? (
-                      <p className="cunmark-sit-card__hint" style={{ marginTop: 10 }}>
+                      <p className="novex-sit-card__hint" style={{ marginTop: 10 }}>
                         {interpretation.narrative}
                       </p>
                     ) : null}
                   </article>
-                  <article className="cunmark-sit-card">
+                  <article className="novex-sit-card">
                     <header>
                       <h3>¿Por qué ocurrió?</h3>
                     </header>
-                    <div className="cunmark-sit-cause">
-                      <p className="cunmark-sit-cause__label">Causas detectadas</p>
+                    <div className="novex-sit-cause">
+                      <p className="novex-sit-cause__label">Causas detectadas</p>
                       <ul>
                         {report.rootCause.detectedCauses.map((cause) => (
                           <li key={cause}>{cause}</li>
                         ))}
                       </ul>
-                      <p className="cunmark-sit-cause__label">Hipótesis</p>
+                      <p className="novex-sit-cause__label">Hipótesis</p>
                       <ul data-variant="hypothesis">
                         {report.rootCause.hypotheses.map((hypothesis) => (
                           <li key={hypothesis}>{hypothesis}</li>
                         ))}
                       </ul>
-                      <p className="cunmark-sit-cause__label">Dependencias</p>
+                      <p className="novex-sit-cause__label">Dependencias</p>
                       <ul>
                         {report.rootCause.dependencies.map((dependency) => (
                           <li key={dependency}>{dependency}</li>
@@ -238,21 +238,21 @@ export function SituationDetailModal({
                 question="¿Qué tan grave es?"
                 hint="Riesgo, severidad y nivel de certeza del análisis"
               >
-                <div className="cunmark-sit-grid">
-                  <article className="cunmark-sit-card cunmark-sit-card--risk">
+                <div className="novex-sit-grid">
+                  <article className="novex-sit-card novex-sit-card--risk">
                     <header>
                       <h3>Riesgo actual</h3>
-                      <span className="cunmark-sit-pill" data-risk={risk}>
+                      <span className="novex-sit-pill" data-risk={risk}>
                         {RISK_LEVEL_LABEL[risk]}
                       </span>
                     </header>
-                    <div className="cunmark-sit-risk">
-                      <p className="cunmark-sit-risk__score">
+                    <div className="novex-sit-risk">
+                      <p className="novex-sit-risk__score">
                         <strong>{report.riskAssessment.riskScore}</strong>
                         <span>/ 100</span>
                       </p>
                       <div
-                        className="cunmark-sit-risk__bar"
+                        className="novex-sit-risk__bar"
                         role="meter"
                         aria-label="Nivel de riesgo"
                         aria-valuemin={0}
@@ -263,17 +263,17 @@ export function SituationDetailModal({
                           style={{ width: `${report.riskAssessment.riskScore}%` }}
                         />
                       </div>
-                      <p className="cunmark-sit-card__hint">
+                      <p className="novex-sit-card__hint">
                         Severidad {report.riskAssessment.severity}/5 · Categoría:{' '}
                         {interpretation?.categoryName ?? 'Sin clasificar'}
                       </p>
                     </div>
                   </article>
-                  <article className="cunmark-sit-card">
+                  <article className="novex-sit-card">
                     <header>
                       <h3>Nivel de certeza</h3>
                       <span
-                        className="cunmark-sit-pill"
+                        className="novex-sit-pill"
                         data-risk={
                           report.riskAssessment.certainty.level === 'high'
                             ? 'low'
@@ -285,8 +285,8 @@ export function SituationDetailModal({
                         {EXEC_CERTAINTY_LABEL[report.riskAssessment.certainty.level]}
                       </span>
                     </header>
-                    <div className="cunmark-sit-tech">
-                      <p className="cunmark-sit-card__hint">
+                    <div className="novex-sit-tech">
+                      <p className="novex-sit-card__hint">
                         {report.riskAssessment.certainty.explanation}
                       </p>
                       <CertaintyRing
@@ -304,12 +304,12 @@ export function SituationDetailModal({
                 question="¿Por qué es grave?"
                 hint="Factores que determinaron la clasificación de la IA"
               >
-                <article className="cunmark-sit-card">
-                  <ul className="cunmark-sit-factors">
+                <article className="novex-sit-card">
+                  <ul className="novex-sit-factors">
                     {report.decisionFactors.map((factor) => (
                       <li key={factor}>
                         <span aria-hidden="true">
-                          <CunmarkIcon name="check" size={12} strokeWidth={2} />
+                          <NovexIcon name="check" size={12} strokeWidth={2} />
                         </span>
                         {factor}
                       </li>
@@ -324,12 +324,12 @@ export function SituationDetailModal({
                 question="¿Quién está siendo afectado?"
                 hint="Impacto cuantificado y áreas afectadas con su motivo"
               >
-                <div className="cunmark-sit-grid">
-                  <article className="cunmark-sit-card">
+                <div className="novex-sit-grid">
+                  <article className="novex-sit-card">
                     <header>
                       <h3>Distribución del impacto</h3>
                     </header>
-                    <ul className="cunmark-sit-dist">
+                    <ul className="novex-sit-dist">
                       <li data-tone="cyan">
                         <strong>
                           {report.impactAnalysis.internalImpactPercentage}%
@@ -352,7 +352,7 @@ export function SituationDetailModal({
                         <p>Experiencia y continuidad académica</p>
                       </li>
                     </ul>
-                    <dl className="cunmark-sit-impact-facts">
+                    <dl className="novex-sit-impact-facts">
                       <div>
                         <dt>Estudiantes afectados (estimado)</dt>
                         <dd>
@@ -367,24 +367,24 @@ export function SituationDetailModal({
                         <dd>{report.impactAnalysis.estimatedAffectedAreas}</dd>
                       </div>
                     </dl>
-                    <p className="cunmark-sit-cause__label">Procesos afectados</p>
-                    <ul className="cunmark-sit-chips">
+                    <p className="novex-sit-cause__label">Procesos afectados</p>
+                    <ul className="novex-sit-chips">
                       {report.impactAnalysis.affectedProcesses.map((process) => (
                         <li key={process}>{process}</li>
                       ))}
                     </ul>
                   </article>
-                  <article className="cunmark-sit-card">
+                  <article className="novex-sit-card">
                     <header>
                       <h3>Áreas afectadas</h3>
                     </header>
-                    <ul className="cunmark-sit-areas">
+                    <ul className="novex-sit-areas">
                       {report.affectedAreas.map((area) => (
                         <li key={area.name}>
-                          <div className="cunmark-sit-areas__head">
+                          <div className="novex-sit-areas__head">
                             <strong>{area.name}</strong>
                             <span
-                              className="cunmark-sit-pill"
+                              className="novex-sit-pill"
                               data-risk={area.affectationLevel}
                             >
                               {RISK_LEVEL_LABEL[area.affectationLevel]}
@@ -404,31 +404,31 @@ export function SituationDetailModal({
                 question="¿Qué recomienda la IA?"
                 hint="Acciones priorizadas con motivo, área y tiempo recomendado"
               >
-                <ol className="cunmark-sit-actions">
+                <ol className="novex-sit-actions">
                   {report.recommendedActions.map((action, index) => (
                     <li
                       key={`${action.action}-${index}`}
-                      className="cunmark-sit-card cunmark-sit-action"
+                      className="novex-sit-card novex-sit-action"
                       data-priority={action.priority}
                     >
-                      <div className="cunmark-sit-action__head">
+                      <div className="novex-sit-action__head">
                         <span
-                          className="cunmark-sit-action__priority"
+                          className="novex-sit-action__priority"
                           data-priority={action.priority}
                         >
                           {EXEC_PRIORITY_LABEL[action.priority]}
                         </span>
-                        <span className="cunmark-sit-action__time">
-                          <CunmarkIcon name="clock" size={11} strokeWidth={1.8} />
+                        <span className="novex-sit-action__time">
+                          <NovexIcon name="clock" size={11} strokeWidth={1.8} />
                           {action.recommendedTime}
                         </span>
                       </div>
-                      <strong className="cunmark-sit-action__title">
+                      <strong className="novex-sit-action__title">
                         {action.action}
                       </strong>
-                      <p className="cunmark-sit-action__reason">{action.reason}</p>
-                      <p className="cunmark-sit-action__area">
-                        <CunmarkIcon name="users" size={11} strokeWidth={1.8} />
+                      <p className="novex-sit-action__reason">{action.reason}</p>
+                      <p className="novex-sit-action__area">
+                        <NovexIcon name="users" size={11} strokeWidth={1.8} />
                         {action.suggestedArea}
                       </p>
                     </li>
@@ -442,12 +442,12 @@ export function SituationDetailModal({
                 question="¿Qué pasa si no actuamos?"
                 hint="Consecuencias operacionales proyectadas por la IA"
               >
-                <article className="cunmark-sit-card">
-                  <ul className="cunmark-sit-factors" data-variant="warning">
+                <article className="novex-sit-card">
+                  <ul className="novex-sit-factors" data-variant="warning">
                     {report.operationalConsequences.map((consequence) => (
                       <li key={consequence}>
                         <span aria-hidden="true">
-                          <CunmarkIcon name="alert" size={12} strokeWidth={1.8} />
+                          <NovexIcon name="alert" size={12} strokeWidth={1.8} />
                         </span>
                         {consequence}
                       </li>
@@ -462,28 +462,28 @@ export function SituationDetailModal({
                 question="Indicadores afectados"
                 hint="Qué medir, en qué unidad y hacia dónde debe moverse"
               >
-                <div className="cunmark-sit-indicators">
+                <div className="novex-sit-indicators">
                   {report.operationalIndicators.map((indicator) => (
                     <article
                       key={indicator.name}
-                      className="cunmark-sit-card cunmark-sit-indicator"
+                      className="novex-sit-card novex-sit-indicator"
                     >
                       <header>
                         <h3>{indicator.name}</h3>
                         <span
-                          className="cunmark-sit-indicator__trend"
+                          className="novex-sit-indicator__trend"
                           data-trend={indicator.trend}
                         >
                           {TREND_LABEL[indicator.trend]}
                         </span>
                       </header>
-                      <p className="cunmark-sit-indicator__value">
+                      <p className="novex-sit-indicator__value">
                         <strong>
                           {indicator.suggestedValue.toLocaleString('es-CO')}
                         </strong>
                         <span>{indicator.unit}</span>
                       </p>
-                      <p className="cunmark-sit-card__hint">
+                      <p className="novex-sit-card__hint">
                         {indicator.explanation}
                       </p>
                     </article>
@@ -497,11 +497,11 @@ export function SituationDetailModal({
                 question="Áreas responsables"
                 hint="Quién debe intervenir y con qué mandato inicial"
               >
-                <article className="cunmark-sit-card">
-                  <ul className="cunmark-sit-areas">
+                <article className="novex-sit-card">
+                  <ul className="novex-sit-areas">
                     {responsibleAreas.map(({ area, mandate }) => (
                       <li key={area}>
-                        <div className="cunmark-sit-areas__head">
+                        <div className="novex-sit-areas__head">
                           <strong>{area}</strong>
                         </div>
                         <p>{mandate}</p>
@@ -517,12 +517,12 @@ export function SituationDetailModal({
                 question="Cronología sugerida"
                 hint="Hitos de seguimiento propuestos y registro del evento"
               >
-                <div className="cunmark-sit-grid">
-                  <article className="cunmark-sit-card">
+                <div className="novex-sit-grid">
+                  <article className="novex-sit-card">
                     <header>
                       <h3>Próximos hitos</h3>
                     </header>
-                    <ol className="cunmark-sit-timeline">
+                    <ol className="novex-sit-timeline">
                       {report.timelineSuggestions.map((milestone) => (
                         <li key={milestone.horizon}>
                           <time>{milestone.horizon}</time>
@@ -534,14 +534,14 @@ export function SituationDetailModal({
                       ))}
                     </ol>
                   </article>
-                  <article className="cunmark-sit-card">
+                  <article className="novex-sit-card">
                     <header>
                       <h3>Registro del evento</h3>
                     </header>
                     {timeline.length === 0 ? (
-                      <p className="cunmark-sit-card__empty">Sin entradas.</p>
+                      <p className="novex-sit-card__empty">Sin entradas.</p>
                     ) : (
-                      <ol className="cunmark-sit-timeline">
+                      <ol className="novex-sit-timeline">
                         {timeline.map((entry) => (
                           <li key={entry.id}>
                             <time dateTime={entry.at}>
@@ -566,32 +566,32 @@ export function SituationDetailModal({
                 hint="Lectura final dirigida a la Dirección de Operaciones"
               >
                 <article
-                  className="cunmark-sit-card cunmark-sit-conclusion"
+                  className="novex-sit-card novex-sit-conclusion"
                   data-risk={risk}
                 >
-                  <div className="cunmark-sit-conclusion__grid">
+                  <div className="novex-sit-conclusion__grid">
                     <div>
-                      <p className="cunmark-sit-cause__label">Gravedad</p>
-                      <p className="cunmark-sit-conclusion__text">
+                      <p className="novex-sit-cause__label">Gravedad</p>
+                      <p className="novex-sit-conclusion__text">
                         {report.executiveConclusion.gravity}
                       </p>
                     </div>
                     <div>
-                      <p className="cunmark-sit-cause__label">Urgencia</p>
-                      <p className="cunmark-sit-conclusion__urgency">
+                      <p className="novex-sit-cause__label">Urgencia</p>
+                      <p className="novex-sit-conclusion__urgency">
                         {EXEC_URGENCY_LABEL[report.executiveConclusion.urgency]}
                       </p>
                     </div>
                     <div>
-                      <p className="cunmark-sit-cause__label">Recomendación general</p>
-                      <p className="cunmark-sit-conclusion__text">
+                      <p className="novex-sit-cause__label">Recomendación general</p>
+                      <p className="novex-sit-conclusion__text">
                         {report.executiveConclusion.recommendation}
                       </p>
                     </div>
                   </div>
                   {report.dataGaps.length > 0 ? (
-                    <div className="cunmark-sit-gaps">
-                      <p className="cunmark-sit-cause__label">
+                    <div className="novex-sit-gaps">
+                      <p className="novex-sit-cause__label">
                         Vacíos de información declarados por la IA
                       </p>
                       <ul>
@@ -605,15 +605,15 @@ export function SituationDetailModal({
               </ExecutiveSection>
             </div>
           ) : (
-            <div className="cunmark-sit-grid">
-              <article className="cunmark-sit-card">
+            <div className="novex-sit-grid">
+              <article className="novex-sit-card">
                 <header>
                   <h3>Descripción</h3>
                 </header>
-                <p className="cunmark-sit-narrative">
+                <p className="novex-sit-narrative">
                   {interpretation?.narrative ?? event.description}
                 </p>
-                <p className="cunmark-sit-card__hint" style={{ marginTop: 10 }}>
+                <p className="novex-sit-card__hint" style={{ marginTop: 10 }}>
                   Esta situación no cuenta con reporte ejecutivo de inteligencia
                   (contrato v2). Registrada el {formatEventDate(event.reportedAt)}.
                 </p>
@@ -622,15 +622,15 @@ export function SituationDetailModal({
           )}
         </div>
 
-        <footer className="cunmark-sit-footer">
+        <footer className="novex-sit-footer">
           <button
             type="button"
-            className="cunmark-sit-footer__secondary"
+            className="novex-sit-footer__secondary"
             onClick={(clickEvent) => void handleExport(clickEvent)}
             disabled={exportState === 'generating'}
             aria-busy={exportState === 'generating'}
           >
-            <CunmarkIcon name="download" size={14} />
+            <NovexIcon name="download" size={14} />
             {exportState === 'generating'
               ? 'Generando PDF…'
               : exportState === 'error'
@@ -639,11 +639,11 @@ export function SituationDetailModal({
           </button>
           <button
             type="button"
-            className="cunmark-sit-footer__primary"
+            className="novex-sit-footer__primary"
             onClick={onClose}
           >
             Cerrar detalle
-            <CunmarkIcon name="chevron-right" size={14} />
+            <NovexIcon name="chevron-right" size={14} />
           </button>
         </footer>
       </div>

@@ -112,7 +112,7 @@ const PRIORITY_LEVEL_LABEL: Record<string, string> = {
   BAJA: 'BAJA',
 }
 
-const LOGO_PATH = 'cunmark-mark.png'
+const LOGO_PATH = 'novex-mark.png'
 
 /** Helvetica de jsPDF solo soporta WinAnsi; normalizamos tipografía tipográfica. */
 function pdfText(value: string | null | undefined): string {
@@ -353,7 +353,7 @@ class PdfReportLayout {
     const brandX = logoX + (this.logo ? logoBox + 3 : 0)
     this.setColor('text', COLORS.white)
     this.setFont('bold', 12)
-    this.doc.text('CUNMARK', brandX, topY + 3.8)
+    this.doc.text('NOVEX', brandX, topY + 3.8)
     this.setFont('normal', FONT.note)
     this.setColor('text', [163, 180, 204])
     this.doc.text('Sistema de Inteligencia Operacional', brandX, topY + 7.5)
@@ -392,7 +392,7 @@ class PdfReportLayout {
     this.doc.rect(0, 0, this.pageWidth, h, 'F')
     this.setColor('text', COLORS.white)
     this.setFont('bold', FONT.subtitle)
-    this.doc.text('CUNMARK', LAYOUT.marginLeft, h - 4.5)
+    this.doc.text('NOVEX', LAYOUT.marginLeft, h - 4.5)
     this.setFont('normal', FONT.note)
     this.setColor('text', [163, 180, 204])
     this.doc.text(
@@ -420,7 +420,7 @@ class PdfReportLayout {
       const textY = footerTop + 5
       this.setColor('text', COLORS.ink)
       this.setFont('bold', FONT.note)
-      this.doc.text('CUNMARK', LAYOUT.marginLeft, textY)
+      this.doc.text('NOVEX', LAYOUT.marginLeft, textY)
       this.setFont('normal', FONT.note)
       this.setColor('text', COLORS.muted)
       this.doc.text(
@@ -1319,8 +1319,8 @@ export async function exportSituationReportPdf(
   doc.setProperties({
     title: pdfText(`Reporte ejecutivo ${reference} - ${reportTitle}`),
     subject: 'Analisis ejecutivo de inteligencia operacional',
-    author: 'CUNMARK - Sistema de Inteligencia Operacional',
-    creator: 'Plataforma CUNMARK',
+    author: 'NOVEX - Sistema de Inteligencia Operacional',
+    creator: 'Plataforma NOVEX',
   })
 
   const priorityLabel = report?.executivePriority?.level
@@ -1384,7 +1384,7 @@ export async function exportSituationReportPdf(
 
   if (report) {
     if (report.executiveNarrative) {
-      layout.section(null, 'Lectura ejecutiva CUNMARK')
+      layout.section(null, 'Lectura ejecutiva NOVEX')
       layout.paragraph(report.executiveNarrative)
     }
 

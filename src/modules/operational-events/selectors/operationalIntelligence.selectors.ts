@@ -118,7 +118,7 @@ export function selectExecutiveNarrative(metrics: DashboardMetrics): string {
   return metrics.executiveNarrative
 }
 
-/** Estado de sala listo para CunmarkRoom. */
+/** Estado de sala listo para NovexRoom. */
 export function selectRoomEnvironment(
   metrics: DashboardMetrics,
 ): DashboardMetrics['environment'] {

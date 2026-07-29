@@ -14,7 +14,7 @@ export const ISLAND_RESTORE_ANIMATION_MS = 620
 export const ISLAND_REFOCUS_ANIMATION_MS = 560
 
 function clampZoom(value: number): number {
-  return Math.min(2.5, Math.max(0.45, value))
+  return Math.min(4, Math.max(0.45, value))
 }
 
 export function computeFocusCamera(
