@@ -116,7 +116,8 @@ export function SituationCommandPanel({
             className="situation-command-panel__back"
             onClick={onClearSelection}
           >
-            Volver
+            <span aria-hidden="true">←</span>
+            Volver a situaciones
           </button>
         ) : (
           <strong className="situation-command-panel__count">

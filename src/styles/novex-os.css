@@ -4699,6 +4699,11 @@ textarea {
   gap: 8px;
 }
 
+.novex-os-topbar__middle {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
 .novex-os-topbar__quick-action,
 .novex-os-topbar__system-status,
 .novex-os-topbar__date,

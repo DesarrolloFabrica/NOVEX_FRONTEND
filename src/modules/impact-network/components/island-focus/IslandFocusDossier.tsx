@@ -5,7 +5,6 @@ import type { CoordinationId } from '@/modules/impact-network/data/coordination-
 import type { FocusedPropagation } from '@/modules/impact-network/types/impact-network.types'
 import type { OperationalEvent } from '@/modules/operational-events/types/operational-event.types'
 import { RISK_LEVEL_LABEL } from '@/modules/operational-events/components/eventPresentation'
-import { NovexIcon } from '@/shared/components/NovexIcon'
 import {
   isIslandFocusOrigin,
   resolveIslandAffectedBriefing,
@@ -91,7 +90,7 @@ export function IslandFocusDossier({
           <button
             type="button"
             className="island-focus-dossier__backdrop"
-            aria-label="Cerrar enfoque de isla"
+            aria-label="Volver al mapa"
             onClick={onClose}
           />
 
@@ -141,12 +140,12 @@ export function IslandFocusDossier({
               <button
                 ref={closeRef}
                 type="button"
-                className="island-focus-dossier__close"
-                aria-label="Cerrar enfoque de isla"
+                className="island-focus-dossier__close island-focus-dossier__close--back"
+                aria-label="Volver al mapa"
                 onClick={onClose}
               >
-                <NovexIcon name="x" size={15} strokeWidth={1.7} />
-                <span>Cerrar</span>
+                <span aria-hidden="true">←</span>
+                <span>Volver al mapa</span>
               </button>
             </motion.header>
 

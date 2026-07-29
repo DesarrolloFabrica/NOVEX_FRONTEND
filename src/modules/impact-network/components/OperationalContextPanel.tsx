@@ -11,7 +11,6 @@ import type {
   OperationalEvent,
   RiskLevel,
 } from '@/modules/operational-events/types/operational-event.types'
-import { NovexIcon } from '@/shared/components/NovexIcon'
 
 type PanelLevel = 'institutional' | 'coordination' | 'situation'
 
@@ -23,15 +22,14 @@ interface OperationalContextPanelProps {
   globalRiskScore: number
   networkStatus: ImpactNetworkStatus
   lastSynchronizedAt: string
-  coordinatorMode?: boolean
   focusedEvent?: OperationalEvent | null
   originCoordinationId?: CoordinationId | null
   affectedNames?: readonly string[]
+  predictedNames?: readonly string[]
+  predictionVisible?: boolean
   propagationDurationLabel?: string
   reducedMotion?: boolean
   onSelectSituation: (eventId: string) => void
-  onCloseSituation?: () => void
-  onClearCoordination?: () => void
 }
 
 const RISK_LABEL: Record<RiskLevel, string> = {
@@ -113,15 +111,14 @@ function OperationalContextPanelView({
   globalRiskScore,
   networkStatus,
   lastSynchronizedAt,
-  coordinatorMode = false,
   focusedEvent = null,
   originCoordinationId = null,
   affectedNames = [],
+  predictedNames = [],
+  predictionVisible = false,
   propagationDurationLabel = '—',
   reducedMotion = false,
   onSelectSituation,
-  onCloseSituation,
-  onClearCoordination,
 }: OperationalContextPanelProps) {
   const panelLevel: PanelLevel = focusedEvent
     ? 'situation'
@@ -129,7 +126,6 @@ function OperationalContextPanelView({
       ? 'coordination'
       : 'institutional'
   const previousLevelRef = useRef<PanelLevel>(panelLevel)
-  const closeRef = useRef<HTMLButtonElement>(null)
   const direction =
     PANEL_DEPTH[panelLevel] >= PANEL_DEPTH[previousLevelRef.current] ? 1 : -1
   const coordinationRisk = strongestRisk(incidents)
@@ -138,12 +134,6 @@ function OperationalContextPanelView({
   useEffect(() => {
     previousLevelRef.current = panelLevel
   }, [panelLevel])
-
-  useEffect(() => {
-    if (panelLevel === 'situation') {
-      closeRef.current?.focus({ preventScroll: true })
-    }
-  }, [focusedEvent?.id, panelLevel])
 
   let content
 
@@ -179,16 +169,6 @@ function OperationalContextPanelView({
               {RISK_LABEL[focusedRisk]} {Math.round(focusedScore)}/100
             </span>
           </div>
-          <button
-            ref={closeRef}
-            type="button"
-            className="island-focus-dossier__close"
-            aria-label="Cerrar situación"
-            onClick={onCloseSituation}
-          >
-            <NovexIcon name="x" size={15} strokeWidth={1.7} />
-            <span>Cerrar</span>
-          </button>
         </motion.header>
 
         <div className="island-focus-dossier__content operational-context-panel__dossier-content">
@@ -196,6 +176,8 @@ function OperationalContextPanelView({
             event={focusedEvent}
             originCoordinationId={originCoordinationId}
             affectedNames={affectedNames}
+            predictedNames={predictedNames}
+            predictionVisible={predictionVisible}
             propagationDurationLabel={propagationDurationLabel}
           />
         </div>
@@ -205,14 +187,9 @@ function OperationalContextPanelView({
     content = (
       <>
         <header className="operational-context-panel__hero">
-          <span>Situaciones de la coordinación</span>
+          <span>Nivel 02 · Situaciones de la coordinación</span>
           <div>
             <h2>{coordination.name}</h2>
-            {onClearCoordination && !coordinatorMode ? (
-              <button type="button" onClick={onClearCoordination}>
-                Volver
-              </button>
-            ) : null}
           </div>
           <p>
             Abra una situación para consultar su expediente IA sin abandonar el
@@ -325,7 +302,7 @@ function OperationalContextPanelView({
     content = (
       <>
         <header className="operational-context-panel__hero">
-          <span>Vista institucional</span>
+          <span>Nivel 01 · Vista institucional</span>
           <div>
             <h2>Coordinaciones activas</h2>
             <strong>{coordinationsCount}</strong>

@@ -6,7 +6,8 @@ import type {
 } from '@/modules/operational-events/types/operational-event.types'
 
 interface ImpactMapGuideProps {
-  onRecenter: () => void
+  title?: string
+  description?: string
 }
 
 interface ImpactMapTelemetryProps {
@@ -42,16 +43,6 @@ function BuildingIcon() {
   )
 }
 
-function RecenterIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="12" cy="12" r="3.2" />
-      <path d="M12 3v3M12 18v3M3 12h3M18 12h3" />
-      <path d="M5.6 5.6 7.7 7.7M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" />
-    </svg>
-  )
-}
-
 function GaugeIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -70,52 +61,40 @@ function ClockIcon() {
   )
 }
 
-export function ImpactMapGuide({ onRecenter }: ImpactMapGuideProps) {
+export function ImpactMapGuide({
+  title = 'Mapa de conexiones',
+  description = 'Cada línea representa el nivel de impacto entre áreas. El grosor y color indican la magnitud del impacto.',
+}: ImpactMapGuideProps) {
   return (
-    <>
-      <section className="impact-map-guide" aria-labelledby="impact-map-title">
-        <h2 id="impact-map-title">Mapa de conexiones</h2>
-        <p>
-          Cada línea representa el nivel de impacto entre áreas. El grosor y
-          color indican la magnitud del impacto.
-        </p>
+    <section className="impact-map-guide" aria-labelledby="impact-map-title">
+      <h2 id="impact-map-title">{title}</h2>
+      <p>{description}</p>
 
-        <div className="impact-map-legend" aria-label="Nivel de impacto">
-          <span className="impact-map-legend__title">Nivel de impacto</span>
-          <span>
-            <i data-tone="critical" />
-            Muy alto
-          </span>
-          <span>
-            <i data-tone="high" />
-            Alto
-          </span>
-          <span>
-            <i data-tone="moderate" />
-            Medio
-          </span>
-          <span>
-            <i data-tone="low" />
-            Bajo
-          </span>
-        </div>
-
-        <span className="impact-map-guide__live">
-          <i aria-hidden="true" />
-          Actualizado en tiempo real
+      <div className="impact-map-legend" aria-label="Nivel de impacto">
+        <span className="impact-map-legend__title">Nivel de impacto</span>
+        <span>
+          <i data-tone="critical" />
+          Muy alto
         </span>
-      </section>
+        <span>
+          <i data-tone="high" />
+          Alto
+        </span>
+        <span>
+          <i data-tone="moderate" />
+          Medio
+        </span>
+        <span>
+          <i data-tone="low" />
+          Bajo
+        </span>
+      </div>
 
-      <button
-        type="button"
-        className="impact-map-recenter"
-        onClick={onRecenter}
-        onPointerDown={(event) => event.stopPropagation()}
-      >
-        <RecenterIcon />
-        Recentrar mapa
-      </button>
-    </>
+      <span className="impact-map-guide__live">
+        <i aria-hidden="true" />
+        Actualizado en tiempo real
+      </span>
+    </section>
   )
 }
 

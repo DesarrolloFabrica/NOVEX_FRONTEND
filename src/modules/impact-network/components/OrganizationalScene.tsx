@@ -14,6 +14,7 @@ import {
   getCoordinationIslandAsset,
   type CoordinationId,
 } from '@/modules/impact-network/data/coordination-islands.config'
+import { CoordinationSituationNodes } from '@/modules/impact-network/components/CoordinationSituationNodes'
 import { ImpactMapTelemetry } from '@/modules/impact-network/components/ImpactMapChrome'
 import { IslandNode } from '@/modules/impact-network/components/IslandNode'
 import {
@@ -31,7 +32,10 @@ import {
 } from '@/modules/impact-network/components/island-focus'
 import { SceneBackdrop } from '@/modules/impact-network/components/PropagationScene'
 import { buildStructureLayout } from '@/modules/impact-network/engine/structure-layout'
-import type { FocusedPropagation } from '@/modules/impact-network/types/impact-network.types'
+import type {
+  FocusedPropagation,
+  ImpactIncident,
+} from '@/modules/impact-network/types/impact-network.types'
 import type {
   OperationalEvent,
   RiskLevel,
@@ -49,13 +53,17 @@ interface OrganizationalSceneProps {
   propagation?: FocusedPropagation | null
   focusedEvent?: OperationalEvent | null
   illuminatedCoordinationIds?: readonly CoordinationId[]
+  predictedCoordinationIds?: readonly CoordinationId[]
+  predictionVisible?: boolean
   activeEdgeId?: string | null
   propagatingCoordinationId?: CoordinationId | null
   riskLevel?: RiskLevel | null
   showAllIlluminated?: boolean
   propagationDurationLabel?: string
+  coordinationSituations?: readonly ImpactIncident[]
   onIslandFocusChange?: (active: boolean) => void
   onSelectCoordination: (coordinationId: CoordinationId) => void
+  onSelectSituation?: (eventId: string) => void
 }
 
 interface DragState {
@@ -69,20 +77,26 @@ interface DragState {
 const MIN_ZOOM = 0.48
 const MAX_ZOOM = 2.4
 const ZOOM_STEP = 0.2
-const STRUCTURE_TONES = [
-  '69 222 160',
-  '64 179 255',
-  '149 105 255',
-  '255 79 142',
-  '255 181 64',
-  '35 214 218',
-  '88 135 255',
-  '205 92 255',
-  '255 111 94',
-  '246 203 65',
-  '53 211 133',
-  '42 185 255',
-] as const
+interface StructureVisual {
+  rgb: string
+  hue: string
+}
+
+const STRUCTURE_VISUALS: Record<CoordinationId, StructureVisual> = {
+  'coord-general': { rgb: '88 135 255', hue: '28deg' },
+  'coord-b2b': { rgb: '35 214 218', hue: '-12deg' },
+  'coord-bellas-artes': { rgb: '255 111 94', hue: '174deg' },
+  'coord-desarrollo-profesional': { rgb: '42 185 255', hue: '10deg' },
+  'coord-social-lab': { rgb: '246 203 65', hue: '-144deg' },
+  'coord-empresarial': { rgb: '255 79 142', hue: '148deg' },
+  'coord-especializaciones': { rgb: '47 185 145', hue: '-34deg' },
+  'coord-ingenierias': { rgb: '109 178 92', hue: '-62deg' },
+  'coord-operaciones-academicas': { rgb: '149 105 255', hue: '70deg' },
+  'coord-proyeccion-social': { rgb: '205 92 255', hue: '102deg' },
+  'coord-saber-pro': { rgb: '255 181 64', hue: '-154deg' },
+  'coord-transversales': { rgb: '64 197 255', hue: '0deg' },
+  'coord-negocios': { rgb: '44 220 190', hue: '-22deg' },
+}
 
 function clampZoom(value: number): number {
   return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value))
@@ -116,15 +130,6 @@ function FullscreenIcon() {
   )
 }
 
-function RecenterIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="12" cy="12" r="3.2" />
-      <path d="M12 3v3M12 18v3M3 12h3M18 12h3" />
-    </svg>
-  )
-}
-
 function OrganizationalSceneView({
   coordinationIds,
   selectedCoordinationId,
@@ -137,13 +142,17 @@ function OrganizationalSceneView({
   propagation = null,
   focusedEvent = null,
   illuminatedCoordinationIds = [],
+  predictedCoordinationIds = [],
+  predictionVisible = false,
   activeEdgeId = null,
   propagatingCoordinationId = null,
   riskLevel = null,
   showAllIlluminated = false,
   propagationDurationLabel = '—',
+  coordinationSituations = [],
   onIslandFocusChange,
   onSelectCoordination,
+  onSelectSituation,
 }: OrganizationalSceneProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const dragRef = useRef<DragState | null>(null)
@@ -335,6 +344,49 @@ function OrganizationalSceneView({
       path: string
     }>
   }, [nodes, propagation, selectedCoordinationId])
+
+  const predictedEdges = useMemo(() => {
+    if (
+      !predictionVisible ||
+      !propagation ||
+      !selectedCoordinationId ||
+      predictedCoordinationIds.length === 0
+    ) {
+      return []
+    }
+
+    const origin = nodes.find(
+      (node) => node.coordinationId === propagation.originCoordinationId,
+    )
+    if (!origin) return []
+
+    return predictedCoordinationIds
+      .map((targetCoordinationId, order) => {
+        const target = nodes.find(
+          (node) => node.coordinationId === targetCoordinationId,
+        )
+        if (!target) return null
+        const curvature = (order % 2 === 0 ? -1 : 1) * (0.16 + (order % 3) * 0.04)
+        return {
+          id: `predicted:${propagation.originCoordinationId}-->${targetCoordinationId}`,
+          targetCoordinationId,
+          order,
+          path: buildPropagationEdgePath(origin, target, curvature),
+        }
+      })
+      .filter(Boolean) as Array<{
+      id: string
+      targetCoordinationId: CoordinationId
+      order: number
+      path: string
+    }>
+  }, [
+    nodes,
+    predictedCoordinationIds,
+    predictionVisible,
+    propagation,
+    selectedCoordinationId,
+  ])
 
   const getEdgeState = useCallback(
     (edgeId: string, targetCoordinationId: CoordinationId): PropagationEdgeState => {
@@ -532,7 +584,13 @@ function OrganizationalSceneView({
       onPointerDown={(event: PointerEvent<HTMLDivElement>) => {
         if (event.button !== 0 || islandFocusOpen) return
         const target = event.target as HTMLElement
-        if (target.closest('.propagation-island, button')) return
+        if (
+          target.closest(
+            '.propagation-island, .coordination-situation-node, button',
+          )
+        ) {
+          return
+        }
         event.preventDefault()
         dragRef.current = {
           pointerId: event.pointerId,
@@ -569,40 +627,43 @@ function OrganizationalSceneView({
 
       <section className="organizational-scene__guide" aria-live="polite">
         <span>
-          {selectedCoordinationId ? 'Mapa de conexiones' : 'Mapa organizacional'}
+          {focusedEvent
+            ? 'Nivel 03 · Mapa de impacto'
+            : selectedCoordinationId
+              ? 'Nivel 02 · Mapa de conexiones'
+              : 'Nivel 01 · Mapa organizacional'}
         </span>
         <h2>
-          {selectedCoordinationId
-            ? 'Coordinación focalizada'
-            : 'Estructura institucional'}
+          {focusedEvent
+            ? 'Propagación de la situación'
+            : selectedCoordinationId
+              ? 'Coordinación focalizada'
+              : 'Estructura institucional'}
         </h2>
         <p>
           {focusedEvent
-            ? 'Las conexiones se iluminan sin abandonar la estructura institucional.'
+            ? 'Use Volver para regresar a la coordinación sin perder el contexto.'
             : selectedCoordinationId
-              ? 'Abra una situación en el panel para desplegar su expediente y propagación.'
-            : 'Seleccione una coordinación para explorar su estado operacional.'}
+              ? coordinationSituations.length > 0
+                ? 'Pulse una mini isla debajo para abrir la situación, o use el panel derecho.'
+                : 'Esta coordinación no tiene situaciones activas. Use Volver a la Dirección.'
+              : 'Seleccione una coordinación para avanzar al siguiente nivel del flujo.'}
         </p>
         <div>
           <i aria-hidden="true" />
-          {visibleNodeCount}{' '}
           {focusedEvent
-            ? 'nodos relacionados visibles'
+            ? `${visibleNodeCount} nodos relacionados visibles`
             : selectedCoordinationId
-              ? 'coordinación focalizada'
-            : 'coordinaciones sincronizadas'}
+              ? coordinationSituations.length > 0
+                ? `${coordinationSituations.length} ${
+                    coordinationSituations.length === 1
+                      ? 'situación seleccionable'
+                      : 'situaciones seleccionables'
+                  }`
+                : 'coordinación sin situaciones activas'
+              : `${visibleNodeCount} coordinaciones sincronizadas`}
         </div>
       </section>
-
-      <button
-        type="button"
-        className="impact-map-recenter"
-        onClick={recenter}
-        onPointerDown={(event) => event.stopPropagation()}
-      >
-        <RecenterIcon />
-        Recentrar mapa
-      </button>
 
       <div
         className="propagation-scene__zoom-controls"
@@ -668,13 +729,27 @@ function OrganizationalSceneView({
               const controlY = (center.y + node.y) / 2
               const path = `M ${center.x} ${center.y} C ${center.x} ${controlY} ${node.x} ${controlY} ${node.x} ${node.y}`
               const pathId = `structure-link-${node.coordinationId}`
+              const visual = STRUCTURE_VISUALS[node.coordinationId]
               return (
                 <g
                   key={node.coordinationId}
                   data-selected={node.selected}
+                  style={
+                    {
+                      '--island-glow-rgb': visual.rgb,
+                    } as CSSProperties
+                  }
                 >
                   <motion.path
                     className="organizational-scene__connection-glow"
+                    animate={{ d: path }}
+                    transition={{
+                      duration: reducedMotion ? 0 : 0.68,
+                      ease: [0.22, 0.61, 0.36, 1],
+                    }}
+                  />
+                  <motion.path
+                    className="organizational-scene__connection-rail"
                     animate={{ d: path }}
                     transition={{
                       duration: reducedMotion ? 0 : 0.68,
@@ -689,6 +764,18 @@ function OrganizationalSceneView({
                       duration: reducedMotion ? 0 : 0.68,
                       ease: [0.22, 0.61, 0.36, 1],
                     }}
+                  />
+                  <circle
+                    className="organizational-scene__connection-node"
+                    cx={node.x}
+                    cy={node.y}
+                    r="8"
+                  />
+                  <circle
+                    className="organizational-scene__connection-node-core"
+                    cx={node.x}
+                    cy={node.y}
+                    r="2.6"
                   />
                   {!reducedMotion ? (
                     <circle
@@ -721,6 +808,17 @@ function OrganizationalSceneView({
                 order={edge.order}
               />
             ))}
+            {predictedEdges.map((edge) => (
+              <PropagationEdge
+                key={edge.id}
+                id={edge.id}
+                path={edge.path}
+                state="predicted"
+                riskLevel={riskLevel}
+                reducedMotion={reducedMotion}
+                order={edge.order}
+              />
+            ))}
           </g>
         </svg>
 
@@ -733,6 +831,8 @@ function OrganizationalSceneView({
         >
           <span className="organizational-scene__direction-orbit" aria-hidden="true" />
           <span className="organizational-scene__direction-pulse" aria-hidden="true" />
+          <span className="organizational-scene__direction-base" aria-hidden="true" />
+          <span className="organizational-scene__direction-scan" aria-hidden="true" />
           <img src={directionAsset} alt="" aria-hidden="true" draggable={false} />
           <span className="organizational-scene__direction-label">
             <small>Nodo institucional</small>
@@ -742,6 +842,7 @@ function OrganizationalSceneView({
 
         <div className="propagation-scene__islands organizational-scene__islands">
           {nodes.map((node, index) => {
+            const visual = STRUCTURE_VISUALS[node.coordinationId]
             const isAssigned =
               !coordinatorMode || node.coordinationId === assignedCoordinationId
             const role = !propagation
@@ -752,18 +853,25 @@ function OrganizationalSceneView({
                       node.coordinationId,
                     )
                   ? 'affected'
-                  : 'ambient'
-            const impactState = getImpactState(
-              node.coordinationId,
-              propagation,
-              illuminatedCoordinationIds,
-              propagatingCoordinationId,
-              showAllIlluminated,
-            )
+                  : predictionVisible &&
+                      predictedCoordinationIds.includes(node.coordinationId)
+                    ? 'predicted'
+                    : 'ambient'
+            const impactState =
+              role === 'predicted'
+                ? 'illuminated'
+                : getImpactState(
+                    node.coordinationId,
+                    propagation,
+                    illuminatedCoordinationIds,
+                    propagatingCoordinationId,
+                    showAllIlluminated,
+                  )
             const isDimmed =
               Boolean(selectedCoordinationId) &&
               !node.selected &&
-              impactState === 'idle'
+              impactState === 'idle' &&
+              role !== 'predicted'
             const isUnrelated =
               Boolean(selectedCoordinationId) &&
               !node.selected &&
@@ -778,7 +886,13 @@ function OrganizationalSceneView({
                 coordinationId={node.coordinationId}
                 role={role}
                 riskLevel={riskLevel}
-                visualRisk={role === 'ambient' ? 'low' : riskLevel}
+                visualRisk={
+                  role === 'ambient'
+                    ? 'low'
+                    : role === 'predicted'
+                      ? 'moderate'
+                      : riskLevel
+                }
                 impactState={impactState}
                 selected={isFocusedIsland}
                 sceneZoom={zoom}
@@ -814,14 +928,35 @@ function OrganizationalSceneView({
                     transform: 'translate3d(-50%, -50%, 0)',
                     '--island-order': index,
                     '--island-enter-delay': `${index * 35}ms`,
-                    '--island-glow-rgb':
-                      STRUCTURE_TONES[index % STRUCTURE_TONES.length],
+                    '--island-glow-rgb': visual.rgb,
+                    '--island-hue': visual.hue,
                   } as CSSProperties
                 }
               />
             )
           })}
         </div>
+
+        {selectedCoordinationId &&
+        !focusedEvent &&
+        !islandFocusOpen &&
+        onSelectSituation &&
+        coordinationSituations.length > 0
+          ? (() => {
+              const selectedNode = nodes.find((node) => node.selected)
+              if (!selectedNode) return null
+              return (
+                <CoordinationSituationNodes
+                  incidents={coordinationSituations}
+                  origin={{ x: selectedNode.x, y: selectedNode.y }}
+                  islandSize={selectedNode.size}
+                  stageSize={size}
+                  reducedMotion={reducedMotion}
+                  onSelectSituation={onSelectSituation}
+                />
+              )
+            })()
+          : null}
       </div>
 
       {propagation && focusedEvent ? (

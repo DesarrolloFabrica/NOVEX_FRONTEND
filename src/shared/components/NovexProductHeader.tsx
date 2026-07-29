@@ -7,6 +7,7 @@ interface NovexProductHeaderProps {
   title: string
   eyebrow?: string
   context?: string
+  middle?: ReactNode
   /** Contenido del popover de ayuda. Si se omite, no se muestra el botón. */
   help?: ReactNode
   helpTitle?: string
@@ -16,6 +17,7 @@ export function NovexProductHeader({
   title,
   eyebrow = 'Visión general',
   context,
+  middle,
   help,
   helpTitle,
 }: NovexProductHeaderProps) {
@@ -31,6 +33,10 @@ export function NovexProductHeader({
           {context ?? user?.name ?? 'Sesión activa'}
         </p>
       </div>
+
+      {middle ? (
+        <div className="novex-os-topbar__middle">{middle}</div>
+      ) : null}
 
       <div className="novex-os-topbar__actions" aria-label="Acciones del encabezado">
         <NovexUserMenu />

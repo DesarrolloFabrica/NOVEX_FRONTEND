@@ -226,6 +226,12 @@ export function SceneBackdrop() {
       </div>
       <div className="propagation-scene__sparkles" />
       <div className="propagation-scene__tech-stars" />
+      <div className="propagation-scene__coordinates">
+        <span>LAT 04.7109 N</span>
+        <span>RED NEX / 01</span>
+        <span>ALT 2.640 M</span>
+        <span>SYNC 12 / 12</span>
+      </div>
     </div>
   )
 }
@@ -721,12 +727,6 @@ export function PropagationScene({
     element.style.setProperty('--scene-parallax-y', '0px')
   }, [])
 
-  const recenterMap = useCallback(() => {
-    setPan({ x: 0, y: 0 })
-    setZoom(DEFAULT_ZOOM)
-    resetParallax()
-  }, [resetParallax])
-
   const toggleFullscreen = useCallback(async () => {
     const element = containerRef.current
     if (!element) return
@@ -858,7 +858,7 @@ export function PropagationScene({
         className="propagation-scene propagation-scene--empty"
       >
         <SceneBackdrop />
-        <ImpactMapGuide onRecenter={recenterMap} />
+        <ImpactMapGuide />
         <div
           className={[
             'propagation-scene__status',
@@ -917,7 +917,10 @@ export function PropagationScene({
       }}
     >
       <SceneBackdrop />
-      <ImpactMapGuide onRecenter={recenterMap} />
+      <ImpactMapGuide
+        title="Nivel 03 · Mapa de impacto"
+        description="Las conexiones iluminadas muestran la propagación. Use Volver en el encabezado o en el panel para regresar."
+      />
 
       <div
         className="propagation-scene__zoom-controls"

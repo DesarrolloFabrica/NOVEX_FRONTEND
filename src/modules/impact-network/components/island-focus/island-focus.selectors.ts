@@ -9,10 +9,9 @@ import type {
   RecommendedAction,
   RiskLevel,
 } from '@/modules/operational-events/types/operational-event.types'
-import type { IslandNodeRole } from '@/modules/impact-network/components/IslandNode'
 import { RISK_LEVEL_LABEL } from '@/modules/operational-events/components/eventPresentation'
 
-export type IslandFocusRole = IslandNodeRole
+export type IslandFocusRole = 'origin' | 'affected' | 'ambient'
 
 export interface IslandAffectedBriefing {
   coordinationId: CoordinationId

@@ -137,3 +137,49 @@ for (const viewport of VIEWPORTS) {
     }
   })
 }
+
+test('la etiqueta de la isla focalizada no queda detrás de sus situaciones', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/red-impacto', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.organizational-scene')).toBeVisible()
+
+  const selectedIsland = page.locator(
+    '.organizational-scene__island[data-coordination-id="coord-ingenierias"]',
+  )
+  await selectedIsland.click()
+  await expect(
+    page.locator('.operational-context-panel[data-level="coordination"]'),
+  ).toBeVisible()
+
+  const situationNodes = page.locator('.coordination-situation-node')
+  await expect(situationNodes.first()).toBeVisible()
+
+  const labelBox = await selectedIsland
+    .locator('.propagation-island__label')
+    .boundingBox()
+  expect(labelBox).not.toBeNull()
+
+  for (let index = 0; index < (await situationNodes.count()); index += 1) {
+    const situationBox = await situationNodes.nth(index).boundingBox()
+    expect(situationBox).not.toBeNull()
+    expect(
+      intersects(
+        {
+          left: labelBox!.x,
+          right: labelBox!.x + labelBox!.width,
+          top: labelBox!.y,
+          bottom: labelBox!.y + labelBox!.height,
+        },
+        {
+          left: situationBox!.x,
+          right: situationBox!.x + situationBox!.width,
+          top: situationBox!.y,
+          bottom: situationBox!.y + situationBox!.height,
+        },
+      ),
+      `la etiqueta seleccionada se solapa con la situación ${index + 1}`,
+    ).toBe(false)
+  }
+})

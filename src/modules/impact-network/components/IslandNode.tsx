@@ -12,7 +12,7 @@ export type IslandImpactState =
   | 'impacted'
   | 'illuminated'
 
-export type IslandNodeRole = 'origin' | 'affected' | 'ambient'
+export type IslandNodeRole = 'origin' | 'affected' | 'ambient' | 'predicted'
 
 export type IslandLabelPlacement = 'top' | 'bottom'
 
@@ -107,6 +107,12 @@ function IslandNodeView({
       onPointerDown={(event) => event.stopPropagation()}
     >
       <div className="propagation-island__body" aria-hidden="true">
+        <span className="propagation-island__ground-glow" />
+        <span className="propagation-island__platform">
+          {Array.from({ length: 8 }, (_, index) => (
+            <i key={index} style={{ '--platform-led': index } as CSSProperties} />
+          ))}
+        </span>
         <span className="propagation-island__halo" />
         <span className="propagation-island__ring" />
         <span className="propagation-island__wave" />

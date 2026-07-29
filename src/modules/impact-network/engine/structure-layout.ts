@@ -31,12 +31,12 @@ export interface StructureBounds {
  * correcto.
  */
 const COMPACT_BREAKPOINT = 720
-const LABEL_BOX_WIDTH = 132
-const LABEL_BOX_HEIGHT = 28
-const LABEL_GAP = 10
-const COMPACT_LABEL_BOX_WIDTH = 86
-const COMPACT_LABEL_BOX_HEIGHT = 22
-const COMPACT_LABEL_GAP = 7
+const LABEL_BOX_WIDTH = 142
+const LABEL_BOX_HEIGHT = 30
+const LABEL_GAP = 12
+const COMPACT_LABEL_BOX_WIDTH = 96
+const COMPACT_LABEL_BOX_HEIGHT = 24
+const COMPACT_LABEL_GAP = 8
 
 interface LabelMetrics {
   width: number
@@ -56,6 +56,8 @@ const STAGE_PADDING = 8
 const NODE_CLEARANCE = 8
 const RELAX_PASSES = 14
 const MAX_RADIAL_SHIFT = 72
+/** `.propagation-island__body` se extiende 9% por cada lado del nodo. */
+const NODE_VISUAL_SCALE = 1.18
 
 /** Caja del nodo institucional central, incluida su etiqueta inferior. */
 const HUB_HALF_SIZE = 106
@@ -83,18 +85,18 @@ export function structureNodeBounds(
   stageWidth: number,
 ): StructureBounds {
   const metrics = labelMetrics(stageWidth)
-  const halfWidth = Math.max(node.size, metrics.width) / 2
+  const visualSize = node.size * NODE_VISUAL_SCALE
+  const visualHalfSize = visualSize / 2
+  const halfWidth = Math.max(visualSize, metrics.width) / 2
+  const labelTopReach =
+    node.labelPlacement === 'top' ? node.size / 2 + metrics.reach : 0
+  const labelBottomReach =
+    node.labelPlacement === 'bottom' ? node.size / 2 + metrics.reach : 0
   return {
     left: node.x - halfWidth,
     right: node.x + halfWidth,
-    top:
-      node.y -
-      node.size / 2 -
-      (node.labelPlacement === 'top' ? metrics.reach : 0),
-    bottom:
-      node.y +
-      node.size / 2 +
-      (node.labelPlacement === 'bottom' ? metrics.reach : 0),
+    top: node.y - Math.max(visualHalfSize, labelTopReach),
+    bottom: node.y + Math.max(visualHalfSize, labelBottomReach),
   }
 }
 
@@ -268,8 +270,8 @@ export function buildStructureLayout(
   const minSide = Math.min(width, height)
   // Las coordinaciones deben conservar suficiente presencia visual alrededor
   // del hub, sin competir con su jerarquía de nodo institucional.
-  const nodeSize = Math.max(70, Math.min(112, minSide * 0.145))
-  const selectedSize = Math.max(190, Math.min(240, minSide * 0.28))
+  const nodeSize = Math.max(70, Math.min(132, minSide * 0.15))
+  const selectedSize = Math.max(200, Math.min(270, minSide * 0.3))
 
   if (selectedCoordinationId) {
     const institutionalLayout = buildStructureLayout(
@@ -312,8 +314,8 @@ export function buildStructureLayout(
 
   // El anillo exterior se abre y el interior se cierra para que entre ambos
   // quepa el bloque isla + etiqueta sin que una tape a la otra.
-  const innerRadiusX = Math.max(108, width * 0.215)
-  const innerRadiusY = Math.max(98, height * 0.245)
+  const innerRadiusX = Math.max(104, width * 0.205)
+  const innerRadiusY = Math.max(90, height * 0.205)
   const outerRadiusX = Math.max(166, width * 0.38)
   const outerRadiusY = Math.max(164, height * 0.395)
   const nodes: StructureNode[] = []

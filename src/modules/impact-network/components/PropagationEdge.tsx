@@ -2,7 +2,11 @@ import { memo } from 'react'
 import { buildCubicEdgePath } from '@/modules/impact-network/engine/radial-layout'
 import type { RiskLevel } from '@/modules/operational-events/types/operational-event.types'
 
-export type PropagationEdgeState = 'dormant' | 'active' | 'completed'
+export type PropagationEdgeState =
+  | 'dormant'
+  | 'active'
+  | 'completed'
+  | 'predicted'
 
 export interface PropagationEdgeProps {
   id: string
@@ -25,8 +29,10 @@ function PropagationEdgeView({
 }: PropagationEdgeProps) {
   const risk = riskLevel ?? 'moderate'
   const pathId = `propagation-edge-path-${id}`
-  const isFlowing = state === 'active' || state === 'completed'
-  const particleCount = state === 'active' ? 4 : state === 'completed' ? 2 : 0
+  const isFlowing =
+    state === 'active' || state === 'completed' || state === 'predicted'
+  const particleCount =
+    state === 'active' ? 4 : state === 'completed' || state === 'predicted' ? 2 : 0
 
   return (
     <g

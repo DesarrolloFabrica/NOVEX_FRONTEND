@@ -12,6 +12,8 @@ interface SituationMapOverviewProps {
   event: OperationalEvent
   originCoordinationId: CoordinationId
   affectedNames: readonly string[]
+  predictedNames?: readonly string[]
+  predictionVisible?: boolean
   propagationDurationLabel: string
 }
 
@@ -33,24 +35,34 @@ export function SituationMapOverview({
   event,
   originCoordinationId,
   affectedNames,
+  predictedNames = [],
+  predictionVisible = false,
   propagationDurationLabel,
 }: SituationMapOverviewProps) {
   const origin = getCoordination(originCoordinationId)
   const riskLevel = event.interpretation?.riskLevel ?? 'moderate'
   const riskScore = Math.round(event.interpretation?.riskScore ?? 0)
+  const visibleNodes =
+    affectedNames.length + 1 + (predictionVisible ? predictedNames.length : 0)
 
   return (
-    <div className="situation-map-overview">
+    <div
+      className="situation-map-overview"
+      data-prediction={predictionVisible ? 'visible' : 'hidden'}
+    >
       <section className="situation-map-overview__intro">
         <span className="situation-map-overview__icon" aria-hidden="true">
           <NovexIcon name="activity" size={18} strokeWidth={1.8} />
         </span>
         <div>
           <span>Lectura de la red</span>
-          <h3>Propagación activa</h3>
+          <h3>
+            {predictionVisible ? 'Impacto simulado' : 'Propagación activa'}
+          </h3>
           <p>
-            El mapa parte de {origin.name} y muestra únicamente las
-            coordinaciones relacionadas con esta situación.
+            {predictionVisible
+              ? `Predicción a 30 min desde ${origin.name}: se iluminan conexiones potenciales en el mapa.`
+              : `El mapa parte de ${origin.name} y muestra únicamente las coordinaciones relacionadas con esta situación.`}
           </p>
         </div>
       </section>
@@ -68,8 +80,15 @@ export function SituationMapOverview({
         </div>
         <div>
           <dt>Conexiones</dt>
-          <dd>{affectedNames.length}</dd>
-          <small>Coordinaciones relacionadas</small>
+          <dd>
+            {affectedNames.length}
+            {predictionVisible && predictedNames.length > 0
+              ? `+${predictedNames.length}`
+              : ''}
+          </dd>
+          <small>
+            {predictionVisible ? 'Reales + previstas' : 'Coordinaciones relacionadas'}
+          </small>
         </div>
         <div>
           <dt>Propagación</dt>
@@ -81,7 +100,7 @@ export function SituationMapOverview({
       <section className="situation-map-overview__route">
         <header>
           <span>Ruta de impacto</span>
-          <strong>{affectedNames.length + 1} nodos visibles</strong>
+          <strong>{visibleNodes} nodos visibles</strong>
         </header>
 
         <div className="situation-map-overview__origin">
@@ -113,15 +132,34 @@ export function SituationMapOverview({
             No se identificaron conexiones secundarias para esta situación.
           </p>
         )}
+
+        {predictionVisible && predictedNames.length > 0 ? (
+          <ol className="situation-map-overview__connections situation-map-overview__connections--predicted">
+            {predictedNames.map((name, index) => (
+              <li key={`predicted-${name}-${index}`}>
+                <span aria-hidden="true">P{index + 1}</span>
+                <div>
+                  <small>Impacto previsto</small>
+                  <strong>{name}</strong>
+                </div>
+              </li>
+            ))}
+          </ol>
+        ) : null}
       </section>
 
       <aside className="situation-map-overview__hint">
         <NovexIcon name="grid" size={18} strokeWidth={1.7} />
         <div>
-          <strong>Explore el detalle por isla</strong>
+          <strong>
+            {predictionVisible
+              ? 'Simulación activa'
+              : 'Explore el detalle por isla'}
+          </strong>
           <p>
-            Seleccione la isla central para abrir el expediente completo o una
-            isla relacionada para consultar su afectación específica.
+            {predictionVisible
+              ? 'Las líneas naranjas del mapa muestran el impacto potencial. Pulse “Ocultar predicción” para volver a la propagación real.'
+              : 'Seleccione la isla central para abrir el expediente completo o una isla relacionada para consultar su afectación específica.'}
           </p>
         </div>
       </aside>
