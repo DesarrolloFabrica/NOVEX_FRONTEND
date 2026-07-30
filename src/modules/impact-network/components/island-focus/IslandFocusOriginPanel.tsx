@@ -13,7 +13,11 @@ export function IslandFocusOriginPanel({
   return (
     <div className="island-focus-panel island-focus-panel--origin">
       <div className="island-focus-panel__scroll">
-        <SituationExecutiveReportBody event={event} variant="compact" />
+        <SituationExecutiveReportBody
+          event={event}
+          variant="compact"
+          showExport={false}
+        />
       </div>
     </div>
   )

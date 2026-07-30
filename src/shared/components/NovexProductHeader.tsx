@@ -1,4 +1,3 @@
-import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { NovexUserMenu } from '@/shared/components/NovexUserMenu'
 import { NovexViewHelp } from '@/shared/components/NovexViewHelp'
 import type { ReactNode } from 'react'
@@ -21,17 +20,17 @@ export function NovexProductHeader({
   help,
   helpTitle,
 }: NovexProductHeaderProps) {
-  const { user } = useAuth()
-
   return (
     <header className="novex-os-topbar">
       <div className="novex-os-topbar__heading">
         <p className="novex-os-topbar__eyebrow">{eyebrow}</p>
         <h1>{title}</h1>
-        <p className="novex-os-topbar__route">
-          <span aria-hidden="true" />
-          {context ?? user?.name ?? 'Sesión activa'}
-        </p>
+        {context ? (
+          <p className="novex-os-topbar__route">
+            <span aria-hidden="true" />
+            {context}
+          </p>
+        ) : null}
       </div>
 
       {middle ? (

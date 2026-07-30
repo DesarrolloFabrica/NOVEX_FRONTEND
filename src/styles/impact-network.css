@@ -6492,11 +6492,15 @@
 .island-focus-dossier__stage-gap {
   flex: 1 1 auto;
   width: 100%;
-  min-height: clamp(120px, 28vh, 280px);
+  min-height: 96px;
 }
 
+/* El alto máximo se refleja en computeIslandStageFrame() para que la cámara
+   encuadre la isla dentro de la franja libre y nunca quede tapada. */
 .island-focus-dossier__stage-card {
   width: min(100%, 340px);
+  max-height: min(26%, 164px);
+  overflow: hidden;
   border: 1px solid rgb(107 165 255 / 0.14);
   border-radius: 14px;
   padding: 14px 16px;
@@ -6579,7 +6583,10 @@
 }
 
 .island-focus-dossier__stage-title {
-  display: block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
   margin-top: 8px;
   color: #e8f3ff;
   font-size: 0.98rem;
@@ -6589,6 +6596,10 @@
 
 .island-focus-dossier__stage-summary,
 .island-focus-dossier__stage-detail {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
   margin: 10px 0 0;
   color: #8ca4c2;
   font-size: 0.72rem;
@@ -6718,6 +6729,56 @@
   font-size: 0.72rem;
   font-weight: 500;
   line-height: 1.4;
+}
+
+.island-focus-dossier__topbar-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.island-focus-dossier__export {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgb(92 211 151 / 0.3);
+  border-radius: 10px;
+  padding: 0 12px;
+  color: #c9f5dd;
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(
+    180deg,
+    rgb(20 91 69 / 0.62),
+    rgb(8 48 43 / 0.72)
+  );
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    color 180ms ease;
+}
+
+.island-focus-dossier__export:hover:not(:disabled) {
+  border-color: rgb(104 231 169 / 0.52);
+  color: #edfff5;
+  background: linear-gradient(
+    180deg,
+    rgb(24 111 82 / 0.72),
+    rgb(10 59 51 / 0.82)
+  );
+}
+
+.island-focus-dossier__export:disabled {
+  opacity: 0.58;
+  cursor: wait;
+}
+
+.island-focus-dossier__export:focus-visible {
+  outline: 2px solid rgb(99 224 161 / 0.72);
+  outline-offset: 2px;
 }
 
 .island-focus-dossier__close {
@@ -11862,4 +11923,804 @@
   .propagation-island__platform i {
     animation: none !important;
   }
+}
+
+/* --- Red de impacto operativa: CTAs, comando y modo inmersivo --- */
+
+.impact-network-immersive {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  flex: 1;
+}
+
+.impact-network-immersive:fullscreen,
+.impact-network-immersive--active {
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 18% 12%, rgb(56 120 255 / 0.16), transparent 42%),
+    radial-gradient(circle at 82% 18%, rgb(24 196 180 / 0.12), transparent 36%),
+    linear-gradient(160deg, #07111f 0%, #0b1628 48%, #0a1322 100%);
+}
+
+.impact-network-immersive:fullscreen .impact-network-deck,
+.impact-network-immersive--active .impact-network-deck {
+  height: 100%;
+  min-height: 100dvh;
+}
+
+.impact-network-immersive:fullscreen .novex-os-deck__content,
+.impact-network-immersive--active .novex-os-deck__content {
+  min-height: 0;
+  flex: 1;
+}
+
+.operational-context-panel__create {
+  padding: 0 1.05rem 0.55rem;
+}
+
+.operational-context-panel__create-btn {
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  padding: 0.72rem 1rem;
+  font-size: 0.84rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  color: #f4f8ff;
+  cursor: pointer;
+  background: linear-gradient(135deg, #2f6dff 0%, #1f4fd6 100%);
+  box-shadow:
+    0 10px 24px rgb(24 70 180 / 0.28),
+    inset 0 1px 0 rgb(255 255 255 / 0.16);
+  transition: transform 160ms ease, filter 160ms ease, box-shadow 160ms ease;
+}
+
+.operational-context-panel__create-btn:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.operational-context-panel__create-btn:focus-visible {
+  outline: 2px solid rgb(120 170 255 / 0.9);
+  outline-offset: 2px;
+}
+
+.operational-context-panel__empty-state {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.operational-context-panel[data-level='coordination']
+  .operational-context-panel__empty {
+  display: grid;
+  min-height: 92px;
+  grid-template-columns: 34px minmax(0, 1fr);
+  place-content: center stretch;
+  justify-items: stretch;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.05rem;
+  text-align: left;
+}
+
+.operational-context-panel[data-level='coordination']
+  .operational-context-panel__empty
+  i {
+  width: 34px;
+  height: 34px;
+}
+
+.operational-context-panel__empty-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.25rem;
+}
+
+.operational-context-panel__empty-copy strong,
+.operational-context-panel__empty-copy span {
+  display: block;
+}
+
+.operational-context-panel__empty-action {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  justify-self: start;
+  margin-left: 0.25rem;
+  border: 1px solid rgb(87 143 218 / 0.3);
+  border-radius: 9px;
+  padding: 0.52rem 0.72rem;
+  color: #9ebce3;
+  font-size: 0.69rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: rgb(38 79 137 / 0.12);
+  box-shadow: none;
+  transition:
+    border-color 160ms ease,
+    color 160ms ease,
+    background 160ms ease;
+}
+
+.operational-context-panel__empty-action > span {
+  color: #6f9fe1;
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.operational-context-panel__empty-action:hover {
+  border-color: rgb(102 163 244 / 0.5);
+  color: #c5daf5;
+  background: rgb(45 91 157 / 0.2);
+}
+
+.operational-context-panel__empty-action:focus-visible {
+  outline: 2px solid rgb(120 170 255 / 0.72);
+  outline-offset: 2px;
+}
+
+.impact-situation-command {
+  margin-top: 0.9rem;
+  padding: 0.85rem 0.9rem 0.95rem;
+  border-radius: 14px;
+  border: 1px solid rgb(120 150 210 / 0.18);
+  background:
+    linear-gradient(180deg, rgb(18 32 58 / 0.92), rgb(12 22 40 / 0.88));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+}
+
+.impact-situation-command__header {
+  display: grid;
+  gap: 0.15rem;
+  margin-bottom: 0.7rem;
+}
+
+.impact-situation-command__header span {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(160 184 220 / 0.78);
+}
+
+.impact-situation-command__header h3 {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 650;
+  color: #eef4ff;
+}
+
+.impact-situation-command__timeline .novex-ops-lifecycle {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+}
+
+.impact-situation-command__timeline .novex-ops-lifecycle__step {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  min-height: 0;
+  color: #6f829c;
+  font-size: 0.68rem;
+  text-align: center;
+}
+
+.impact-situation-command__timeline .novex-ops-lifecycle__marker {
+  width: 10px;
+  height: 10px;
+  margin-top: 0;
+  border: 2px solid #4d607a;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.impact-situation-command__timeline .novex-ops-lifecycle__connector {
+  display: none;
+}
+
+.impact-situation-command__timeline .novex-ops-lifecycle__step--complete {
+  color: #b7c6dc;
+}
+
+.impact-situation-command__timeline
+  .novex-ops-lifecycle__step--complete
+  .novex-ops-lifecycle__marker {
+  border-color: transparent;
+  background: #8b9bb4;
+}
+
+.impact-situation-command__timeline
+  .novex-ops-lifecycle__step--complete[data-status='in_progress']
+  .novex-ops-lifecycle__marker,
+.impact-situation-command__timeline
+  .novex-ops-lifecycle__step--current[data-status='in_progress']
+  .novex-ops-lifecycle__marker {
+  background: #f0b35a;
+}
+
+.impact-situation-command__timeline
+  .novex-ops-lifecycle__step--complete[data-status='resolved']
+  .novex-ops-lifecycle__marker,
+.impact-situation-command__timeline
+  .novex-ops-lifecycle__step--current[data-status='resolved']
+  .novex-ops-lifecycle__marker {
+  background: #4fd39a;
+}
+
+.impact-situation-command__timeline
+  .novex-ops-lifecycle__step--complete[data-status='closed']
+  .novex-ops-lifecycle__marker,
+.impact-situation-command__timeline
+  .novex-ops-lifecycle__step--current[data-status='closed']
+  .novex-ops-lifecycle__marker {
+  background: #2f4f8a;
+}
+
+.impact-situation-command__timeline .novex-ops-lifecycle__step--current {
+  color: #f4f7fc;
+  font-weight: 650;
+}
+
+.impact-situation-command__timeline
+  .novex-ops-lifecycle__step--current
+  .novex-ops-lifecycle__marker {
+  border-color: transparent;
+  box-shadow: 0 0 0 4px rgb(240 179 90 / 0.14);
+}
+
+.impact-situation-command__timeline .novex-ops-lifecycle__step--pending {
+  opacity: 0.55;
+}
+
+.impact-situation-command__actions {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.85rem;
+}
+
+.impact-situation-command__primary,
+.impact-situation-command__secondary {
+  width: 100%;
+  border: 0;
+  border-radius: 11px;
+  padding: 0.62rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 620;
+  cursor: pointer;
+  transition: filter 160ms ease, transform 160ms ease, opacity 160ms ease;
+}
+
+.impact-situation-command__primary {
+  color: #f7f9ff;
+  background: linear-gradient(135deg, #6a4dff 0%, #3d2bb8 100%);
+  box-shadow: 0 8px 18px rgb(70 50 180 / 0.28);
+}
+
+.impact-situation-command__secondary {
+  color: #dce7ff;
+  background: rgb(120 150 210 / 0.12);
+  border: 1px solid rgb(140 170 230 / 0.22);
+}
+
+.impact-situation-command__primary:hover,
+.impact-situation-command__secondary:hover {
+  filter: brightness(1.08);
+}
+
+.impact-situation-command__primary:disabled,
+.impact-situation-command__secondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.impact-situation-command__locked {
+  margin: 0;
+  font-size: 0.78rem;
+  color: rgb(170 188 220 / 0.78);
+}
+
+.impact-situation-command__status {
+  display: block;
+  margin-top: 0.55rem;
+  font-size: 0.74rem;
+  color: #7de2b5;
+}
+
+/* Nivel situación: resumen y comando forman una única columna desplazable. */
+.operational-context-panel[data-level='situation']
+  .operational-context-panel__dossier-content {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: rgb(80 148 205 / 0.34) transparent;
+  scrollbar-width: thin;
+}
+
+.operational-context-panel[data-level='situation']
+  .situation-map-overview {
+  min-width: 0;
+  min-height: auto;
+  flex: none;
+  overflow: visible;
+  padding-bottom: 0;
+}
+
+.operational-context-panel__detail-cta {
+  display: grid;
+  width: auto;
+  min-width: 0;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.7rem;
+  flex: none;
+  margin: 14px 14px 0;
+  border: 1px solid rgb(69 214 146 / 0.34);
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+  color: #dff9ec;
+  text-align: left;
+  cursor: pointer;
+  background:
+    linear-gradient(135deg, rgb(19 91 72 / 0.62), rgb(9 49 48 / 0.5)),
+    radial-gradient(circle at 0 0, rgb(80 232 157 / 0.12), transparent 58%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    0 8px 22px rgb(0 0 0 / 0.16);
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.operational-context-panel__detail-cta:hover {
+  border-color: rgb(87 233 166 / 0.58);
+  background:
+    linear-gradient(135deg, rgb(22 110 84 / 0.7), rgb(10 59 55 / 0.58)),
+    radial-gradient(circle at 0 0, rgb(80 232 157 / 0.16), transparent 58%);
+  transform: translateY(-1px);
+}
+
+.operational-context-panel__detail-cta:focus-visible {
+  outline: 2px solid rgb(96 232 165 / 0.78);
+  outline-offset: 2px;
+}
+
+.operational-context-panel__detail-cta-icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid rgb(95 231 167 / 0.26);
+  border-radius: 9px;
+  color: #69dda5;
+  background: rgb(26 112 83 / 0.26);
+}
+
+.operational-context-panel__detail-cta-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.18rem;
+}
+
+.operational-context-panel__detail-cta-copy strong {
+  overflow: hidden;
+  font-size: 0.74rem;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.operational-context-panel__detail-cta-copy small {
+  overflow: hidden;
+  color: #8db9aa;
+  font-size: 0.48rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.operational-context-panel[data-level='situation']
+  .impact-situation-command {
+  width: auto;
+  min-width: 0;
+  flex: none;
+  margin: 13px 14px 18px;
+}
+
+/* ==========================================================================
+   Mapa institucional — islas y conexiones según la referencia holográfica.
+   El alcance se limita al lienzo: la navegación y los paneles no cambian.
+   ========================================================================== */
+
+.organizational-scene[data-level='institutional']
+  .organizational-scene__direction-hub {
+  width: clamp(205px, 23vmin, 240px);
+  height: clamp(205px, 23vmin, 240px);
+}
+
+.organizational-scene[data-level='institutional']
+  .organizational-scene__connection-glow {
+  stroke: rgb(var(--island-glow-rgb) / 0.14);
+  stroke-width: 5.5;
+  filter: blur(4px);
+  vector-effect: non-scaling-stroke;
+  shape-rendering: geometricPrecision;
+}
+
+.organizational-scene[data-level='institutional']
+  .organizational-scene__connection-rail {
+  stroke: rgb(var(--island-glow-rgb) / 0.18);
+  stroke-width: 2.1;
+  filter: drop-shadow(0 0 3px rgb(var(--island-glow-rgb) / 0.12));
+  vector-effect: non-scaling-stroke;
+  shape-rendering: geometricPrecision;
+}
+
+.organizational-scene[data-level='institutional']
+  .organizational-scene__connection-sheen {
+  fill: none;
+  stroke: rgb(var(--island-glow-rgb) / 0.88);
+  stroke-width: 1.35;
+  stroke-linecap: round;
+  stroke-dasharray: 13 82;
+  filter:
+    drop-shadow(0 0 2px rgb(255 255 255 / 0.74))
+    drop-shadow(0 0 6px rgb(var(--island-glow-rgb) / 0.58));
+  animation: impact-fiber-sheen 9.8s linear infinite;
+  vector-effect: non-scaling-stroke;
+  shape-rendering: geometricPrecision;
+}
+
+.organizational-scene[data-level='institutional']
+  .organizational-scene__connection {
+  stroke-width: 0.9;
+  stroke-dasharray: none;
+  filter:
+    drop-shadow(0 0 2px rgb(255 255 255 / 0.44))
+    drop-shadow(0 0 5px rgb(var(--island-glow-rgb) / 0.38));
+  animation: none;
+  animation-direction: normal;
+  vector-effect: non-scaling-stroke;
+  shape-rendering: geometricPrecision;
+}
+
+.organizational-scene[data-level='institutional']
+  .organizational-scene__connection-node-pulse {
+  fill: none;
+  stroke: rgb(var(--island-glow-rgb) / 0.42);
+  stroke-width: 0.75;
+  stroke-dasharray: 1.3 2.7;
+  filter: drop-shadow(0 0 5px rgb(var(--island-glow-rgb) / 0.38));
+  transform-box: fill-box;
+  transform-origin: center;
+  animation:
+    impact-fiber-terminal-spin 8s linear infinite,
+    impact-fiber-terminal-breathe 3.8s ease-in-out infinite;
+  vector-effect: non-scaling-stroke;
+}
+
+.organizational-scene[data-level='institutional']
+  .organizational-scene__connection-node {
+  fill: rgb(2 14 30 / 0.96);
+  stroke: rgb(var(--island-glow-rgb) / 0.86);
+  stroke-width: 0.85;
+  filter:
+    drop-shadow(0 0 3px rgb(var(--island-glow-rgb) / 0.88))
+    drop-shadow(0 0 8px rgb(var(--island-glow-rgb) / 0.36));
+  animation: impact-fiber-terminal-breathe 3.8s ease-in-out infinite;
+  vector-effect: non-scaling-stroke;
+}
+
+.organizational-scene[data-level='institutional']
+  .organizational-scene__connection-node-core {
+  fill: #f5fdff;
+  stroke: rgb(var(--island-glow-rgb));
+  stroke-width: 0.6;
+  filter:
+    drop-shadow(0 0 2px #fff)
+    drop-shadow(0 0 5px rgb(var(--island-glow-rgb)));
+  vector-effect: non-scaling-stroke;
+}
+
+.organizational-scene[data-level='institutional']
+  .organizational-scene__connection-relay {
+  fill: rgb(2 14 30 / 0.96);
+  stroke: rgb(var(--island-glow-rgb) / 0.72);
+  stroke-width: 0.65;
+  filter: drop-shadow(0 0 5px rgb(var(--island-glow-rgb) / 0.38));
+}
+
+.organizational-scene[data-level='institutional']
+  .organizational-scene__connection-relay-core {
+  fill: #eafcff;
+  filter:
+    drop-shadow(0 0 2px #fff)
+    drop-shadow(0 0 4px rgb(var(--island-glow-rgb)));
+}
+
+.organizational-scene[data-level='institutional']
+  .organizational-scene__connection-particle {
+  fill: #f5feff;
+  stroke: rgb(var(--island-glow-rgb) / 0.94);
+  stroke-width: 0.45;
+  filter:
+    drop-shadow(0 0 2px #fff)
+    drop-shadow(0 0 5px rgb(var(--island-glow-rgb)));
+}
+
+.organizational-scene[data-level='institutional']
+  .organizational-scene__connection-particle[data-pulse='1'] {
+  opacity: 0.56;
+}
+
+.impact-network__canvas
+  .organizational-scene[data-level='institutional']
+  .propagation-island__body {
+  inset: -14%;
+}
+
+.impact-network__canvas .propagation-island__detail-orbit {
+  position: absolute;
+  z-index: 2;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.impact-network__canvas .propagation-island__detail-orbit--outer {
+  right: -4%;
+  bottom: -2%;
+  left: -4%;
+  height: 38%;
+  border: 1px dashed rgb(var(--island-glow-rgb) / 0.48);
+  box-shadow:
+    0 0 12px rgb(var(--island-glow-rgb) / 0.13),
+    inset 0 0 9px rgb(var(--island-glow-rgb) / 0.08);
+  opacity: 0.68;
+  transform: rotate(-4deg);
+}
+
+.impact-network__canvas .propagation-island__detail-orbit--inner {
+  right: 11%;
+  bottom: 5%;
+  left: 11%;
+  height: 25%;
+  border: 1px dotted rgb(var(--island-glow-rgb) / 0.64);
+  opacity: 0.76;
+  transform: rotate(5deg);
+}
+
+.impact-network__canvas
+  .organizational-scene[data-level='institutional']
+  .propagation-island__platform {
+  right: -1%;
+  bottom: 2%;
+  left: -1%;
+  height: 35%;
+  border-color: rgb(var(--island-glow-rgb) / 0.58);
+  box-shadow:
+    0 0 0 4px rgb(var(--island-glow-rgb) / 0.045),
+    0 0 21px rgb(var(--island-glow-rgb) / 0.22),
+    inset 0 0 16px rgb(var(--island-glow-rgb) / 0.18);
+}
+
+.impact-network__canvas
+  .organizational-scene[data-level='institutional']
+  .propagation-island__ground-glow {
+  right: -7%;
+  bottom: -4%;
+  left: -7%;
+  height: 39%;
+  opacity: 0.88;
+  filter: blur(10px);
+}
+
+.impact-network__canvas
+  .organizational-scene[data-level='institutional']
+  .organizational-scene__island
+  .propagation-island__image {
+  filter:
+    hue-rotate(var(--island-hue, 0deg))
+    saturate(0.92)
+    brightness(1.02)
+    contrast(1.12)
+    drop-shadow(0 0 9px rgb(var(--island-glow-rgb) / 0.46))
+    drop-shadow(0 0 22px rgb(var(--island-glow-rgb) / 0.16))
+    drop-shadow(0 13px 17px rgb(0 0 0 / 0.76)) !important;
+}
+
+.impact-network__canvas
+  .organizational-scene[data-level='institutional']
+  .organizational-scene__island
+  .propagation-island__label {
+  top: -12px;
+  bottom: auto;
+  display: grid;
+  width: max-content;
+  min-width: 126px;
+  max-width: 160px;
+  min-height: 42px;
+  grid-template-columns: 22px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 8px;
+  row-gap: 1px;
+  overflow: visible;
+  padding: 7px 11px 7px 7px;
+  border-color: rgb(var(--island-glow-rgb) / 0.48);
+  border-radius: 9px;
+  white-space: nowrap;
+  background:
+    linear-gradient(180deg, rgb(6 20 36 / 0.96), rgb(2 11 23 / 0.94)),
+    radial-gradient(
+      circle at 0 50%,
+      rgb(var(--island-glow-rgb) / 0.2),
+      transparent 70%
+    );
+  box-shadow:
+    0 10px 24px rgb(0 0 0 / 0.46),
+    0 0 20px rgb(var(--island-glow-rgb) / 0.1),
+    inset 0 1px 0 rgb(255 255 255 / 0.055);
+  transform: translate(-50%, -100%);
+}
+
+.impact-network__canvas
+  .organizational-scene[data-level='institutional']
+  .organizational-scene__island[data-label-placement='bottom']
+  .propagation-island__label {
+  top: auto;
+  bottom: -12px;
+  transform: translate(-50%, 100%);
+}
+
+.impact-network__canvas
+  .organizational-scene[data-level='institutional']
+  .organizational-scene__island
+  .propagation-island__badge {
+  width: 22px;
+  height: 22px;
+  grid-row: 1 / 3;
+  align-self: center;
+  border-color: rgb(var(--island-glow-rgb) / 0.72);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgb(var(--island-glow-rgb) / 0.2), transparent 68%),
+    rgb(3 18 32 / 0.88);
+}
+
+.impact-network__canvas
+  .organizational-scene[data-level='institutional']
+  .organizational-scene__island
+  .propagation-island__label
+  b {
+  grid-column: 2;
+  overflow: hidden;
+  color: #eef8ff;
+  font-size: 0.48rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+}
+
+.impact-network__canvas
+  .organizational-scene[data-level='institutional']
+  .organizational-scene__island
+  .propagation-island__sync {
+  display: flex;
+  min-width: 0;
+  grid-column: 2;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  color: #718ba1;
+  font-size: 0.4rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+}
+
+.impact-network__canvas
+  .organizational-scene[data-level='institutional']
+  .propagation-island__sync
+  i {
+  display: block;
+  width: 4px;
+  height: 4px;
+  flex: 0 0 4px;
+  border-radius: 50%;
+  background: #44e795;
+  box-shadow: 0 0 7px rgb(68 231 149 / 0.82);
+}
+
+@media (max-width: 720px) {
+  .impact-network__canvas
+    .organizational-scene[data-level='institutional']
+    .organizational-scene__island
+    .propagation-island__label {
+    top: -8px;
+    min-width: 0;
+    max-width: 96px;
+    min-height: 32px;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 5px 8px;
+  }
+
+  .impact-network__canvas
+    .organizational-scene[data-level='institutional']
+    .organizational-scene__island
+    .propagation-island__badge,
+  .impact-network__canvas
+    .organizational-scene[data-level='institutional']
+    .propagation-island__sync {
+    display: none;
+  }
+
+  .impact-network__canvas
+    .organizational-scene[data-level='institutional']
+    .organizational-scene__island
+    .propagation-island__label
+    b {
+    grid-column: 1;
+    align-self: center;
+  }
+
+  .impact-network__canvas
+    .organizational-scene[data-level='institutional']
+    .organizational-scene__island[data-label-placement='bottom']
+    .propagation-island__label {
+    top: auto;
+    bottom: -8px;
+    transform: translate(-50%, 100%);
+  }
+}
+
+@keyframes impact-fiber-sheen {
+  to {
+    stroke-dashoffset: -95;
+  }
+}
+
+@keyframes impact-fiber-terminal-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes impact-fiber-terminal-breathe {
+  0%,
+  100% {
+    opacity: 0.62;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .organizational-scene__connection,
+  .organizational-scene__connection-sheen,
+  .organizational-scene__connection-node,
+  .organizational-scene__connection-node-pulse {
+    animation: none !important;
+  }
+}
+
+.organizational-scene[data-reduced-motion='true']
+  :is(
+    .organizational-scene__connection,
+    .organizational-scene__connection-sheen,
+    .organizational-scene__connection-node,
+    .organizational-scene__connection-node-pulse
+  ) {
+  animation: none !important;
 }

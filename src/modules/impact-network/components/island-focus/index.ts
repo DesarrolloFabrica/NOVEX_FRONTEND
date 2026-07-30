@@ -14,6 +14,8 @@ export {
 } from './island-focus.selectors'
 export {
   computeFocusCamera,
+  computeIslandStageFrame,
+  type IslandStageFrame,
   ISLAND_FOCUS_ANIMATION_MS,
   ISLAND_REFOCUS_ANIMATION_MS,
   ISLAND_RESTORE_ANIMATION_MS,

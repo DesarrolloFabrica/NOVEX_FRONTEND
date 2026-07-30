@@ -31,6 +31,7 @@ interface SituationAnalysisPanelProps {
   situationTitle: string
   situation?: SituationResponse | null
   autoStart?: boolean
+  returnTo?: string | null
   onAnalysisReady?: (interpretation: AIInterpretation) => void
   onViewExecutiveReport: () => void
 }
@@ -40,6 +41,7 @@ export function SituationAnalysisPanel({
   situationTitle,
   situation = null,
   autoStart = true,
+  returnTo = null,
   onAnalysisReady,
   onViewExecutiveReport,
 }: SituationAnalysisPanelProps) {
@@ -191,6 +193,7 @@ export function SituationAnalysisPanel({
         analysisResponse={analysisResponse}
         elapsedMs={elapsedMs}
         operationalEvent={operationalEvent}
+        returnTo={returnTo}
         onViewExecutiveReport={onViewExecutiveReport}
       />
     )
@@ -203,6 +206,7 @@ export function SituationAnalysisPanel({
     interpretation,
     onViewExecutiveReport,
     operationalEvent,
+    returnTo,
     retrying,
     situationId,
     situationTitle,

@@ -113,6 +113,8 @@ function IslandNodeView({
             <i key={index} style={{ '--platform-led': index } as CSSProperties} />
           ))}
         </span>
+        <span className="propagation-island__detail-orbit propagation-island__detail-orbit--outer" />
+        <span className="propagation-island__detail-orbit propagation-island__detail-orbit--inner" />
         <span className="propagation-island__halo" />
         <span className="propagation-island__ring" />
         <span className="propagation-island__wave" />
@@ -133,7 +135,12 @@ function IslandNodeView({
             </svg>
           </i>
           <b>{coordination.shortName}</b>
-          {!isAmbient ? (
+          {isAmbient ? (
+            <small className="propagation-island__sync">
+              Sincronizado
+              <i aria-hidden="true" />
+            </small>
+          ) : (
             <small>
               Impacto:{' '}
               <em>
@@ -146,7 +153,7 @@ function IslandNodeView({
                       : 'Bajo'}
               </em>
             </small>
-          ) : null}
+          )}
         </span>
         {!isAmbient ? (
           <span className="propagation-island__state" aria-hidden="true">

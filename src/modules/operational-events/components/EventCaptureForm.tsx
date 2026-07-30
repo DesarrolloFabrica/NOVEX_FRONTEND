@@ -36,6 +36,7 @@ interface EventCaptureFormProps {
   draft: SituationCaptureDraft
   coordinations: CoordinationSummary[]
   loadingCoordinations?: boolean
+  coordinationLocked?: boolean
   onChange: (next: SituationCaptureDraft) => void
   onSubmit: () => void
   submitLabel?: string
@@ -46,6 +47,7 @@ export function EventCaptureForm({
   draft,
   coordinations,
   loadingCoordinations = false,
+  coordinationLocked = false,
   onChange,
   onSubmit,
   submitLabel = 'Continuar',
@@ -207,7 +209,7 @@ export function EventCaptureForm({
                 onChange({ ...draft, coordinationId: event.target.value })
               }
               required
-              disabled={loadingCoordinations}
+              disabled={loadingCoordinations || coordinationLocked}
               title={
                 selectedCoordination
                   ? `${selectedCoordination.code} · ${selectedCoordination.name}`

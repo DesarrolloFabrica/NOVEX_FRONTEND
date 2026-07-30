@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef } from 'react'
 import { AnimatePresence, LayoutGroup, motion } from 'motion/react'
-import { SituationMapOverview } from '@/modules/impact-network/components/SituationMapOverview'
+import { ImpactSituationCommand } from '@/modules/impact-network/components/ImpactSituationCommand'
 import type { CoordinationId } from '@/modules/impact-network/data/coordination-islands.config'
 import type { Coordination } from '@/modules/impact-network/types/operational-network.types'
 import type {
@@ -11,6 +11,9 @@ import type {
   OperationalEvent,
   RiskLevel,
 } from '@/modules/operational-events/types/operational-event.types'
+import type { UpdateSituationStatusInput } from '@/modules/monitoring/utils/situation-lifecycle'
+import type { SituationResponse } from '@/modules/situations/types/situation.types'
+import { NovexIcon } from '@/shared/components/NovexIcon'
 
 type PanelLevel = 'institutional' | 'coordination' | 'situation'
 
@@ -23,13 +26,19 @@ interface OperationalContextPanelProps {
   networkStatus: ImpactNetworkStatus
   lastSynchronizedAt: string
   focusedEvent?: OperationalEvent | null
+  focusedSituation?: SituationResponse | null
   originCoordinationId?: CoordinationId | null
   affectedNames?: readonly string[]
-  predictedNames?: readonly string[]
-  predictionVisible?: boolean
-  propagationDurationLabel?: string
   reducedMotion?: boolean
+  canUpdateSituation?: boolean
+  isUpdatingSituation?: boolean
+  isExportingPdf?: boolean
   onSelectSituation: (eventId: string) => void
+  onCreateSituation?: () => void
+  onUpdateSituationStatus?: (input: UpdateSituationStatusInput) => Promise<void>
+  onOpenAnalysis?: () => void
+  onDownloadPdf?: () => void
+  onOpenSituationDetail?: () => void
 }
 
 const RISK_LABEL: Record<RiskLevel, string> = {
@@ -40,10 +49,10 @@ const RISK_LABEL: Record<RiskLevel, string> = {
 }
 
 const STATUS_LABEL = {
-  open: 'Abierta',
-  monitoring: 'En seguimiento',
+  open: 'Registrada',
+  monitoring: 'En atención',
   resolved: 'Resuelta',
-  archived: 'Archivada',
+  archived: 'Cerrada',
 } as const
 
 const NETWORK_STATUS_LABEL: Record<ImpactNetworkStatus, string> = {
@@ -112,13 +121,19 @@ function OperationalContextPanelView({
   networkStatus,
   lastSynchronizedAt,
   focusedEvent = null,
+  focusedSituation = null,
   originCoordinationId = null,
   affectedNames = [],
-  predictedNames = [],
-  predictionVisible = false,
-  propagationDurationLabel = '—',
   reducedMotion = false,
+  canUpdateSituation = false,
+  isUpdatingSituation = false,
+  isExportingPdf = false,
   onSelectSituation,
+  onCreateSituation,
+  onUpdateSituationStatus,
+  onOpenAnalysis,
+  onDownloadPdf,
+  onOpenSituationDetail,
 }: OperationalContextPanelProps) {
   const panelLevel: PanelLevel = focusedEvent
     ? 'situation'
@@ -172,14 +187,44 @@ function OperationalContextPanelView({
         </motion.header>
 
         <div className="island-focus-dossier__content operational-context-panel__dossier-content">
-          <SituationMapOverview
-            event={focusedEvent}
-            originCoordinationId={originCoordinationId}
-            affectedNames={affectedNames}
-            predictedNames={predictedNames}
-            predictionVisible={predictionVisible}
-            propagationDurationLabel={propagationDurationLabel}
-          />
+          {onOpenSituationDetail ? (
+            <button
+              type="button"
+              className="operational-context-panel__detail-cta"
+              onClick={onOpenSituationDetail}
+            >
+              <span
+                className="operational-context-panel__detail-cta-icon"
+                aria-hidden="true"
+              >
+                <NovexIcon name="grid" size={17} strokeWidth={1.8} />
+              </span>
+              <span className="operational-context-panel__detail-cta-copy">
+                <strong>Ver detalle de la situación</strong>
+                <small>Abrir expediente ejecutivo en la isla origen</small>
+              </span>
+              <NovexIcon
+                name="chevron-right"
+                size={17}
+                strokeWidth={1.8}
+              />
+            </button>
+          ) : null}
+
+          {focusedSituation &&
+          onUpdateSituationStatus &&
+          onOpenAnalysis &&
+          onDownloadPdf ? (
+            <ImpactSituationCommand
+              situation={focusedSituation}
+              canUpdate={canUpdateSituation}
+              isUpdating={isUpdatingSituation}
+              isExportingPdf={isExportingPdf}
+              onUpdateStatus={onUpdateSituationStatus}
+              onOpenAnalysis={onOpenAnalysis}
+              onDownloadPdf={onDownloadPdf}
+            />
+          ) : null}
         </div>
       </>
     )
@@ -192,8 +237,8 @@ function OperationalContextPanelView({
             <h2>{coordination.name}</h2>
           </div>
           <p>
-            Abra una situación para consultar su expediente IA sin abandonar el
-            mapa operacional.
+            Registre una situación o abra un expediente existente sin abandonar
+            el mapa operacional.
           </p>
         </header>
 
@@ -240,6 +285,18 @@ function OperationalContextPanelView({
             <small>Actualización operacional</small>
           </div>
         </dl>
+
+        {onCreateSituation ? (
+          <div className="operational-context-panel__create">
+            <button
+              type="button"
+              className="operational-context-panel__create-btn"
+              onClick={onCreateSituation}
+            >
+              Crear situación
+            </button>
+          </div>
+        ) : null}
 
         <section className="operational-context-panel__situations">
           <header>
@@ -288,10 +345,28 @@ function OperationalContextPanelView({
                 </motion.button>
               ))
             ) : (
-              <div className="operational-context-panel__empty">
-                <i aria-hidden="true">✓</i>
-                <strong>Sin situaciones activas</strong>
-                <span>La coordinación opera sin alertas abiertas.</span>
+              <div className="operational-context-panel__empty-state">
+                <div className="operational-context-panel__empty">
+                  <i aria-hidden="true">✓</i>
+                  <div className="operational-context-panel__empty-copy">
+                    <strong>Sin situaciones activas</strong>
+                    <span>
+                      {onCreateSituation
+                        ? 'Esta coordinación no tiene casos abiertos.'
+                        : 'La coordinación opera sin alertas abiertas.'}
+                    </span>
+                  </div>
+                </div>
+                {onCreateSituation ? (
+                  <button
+                    type="button"
+                    className="operational-context-panel__empty-action"
+                    onClick={onCreateSituation}
+                  >
+                    <span aria-hidden="true">＋</span>
+                    Registrar primera situación
+                  </button>
+                ) : null}
               </div>
             )}
           </div>
@@ -349,7 +424,7 @@ function OperationalContextPanelView({
             <dd className="operational-context-panel__date">
               {formatDate(lastSynchronizedAt)}
             </dd>
-            <small>Datos mock estructurados</small>
+            <small>Datos operacionales</small>
           </div>
         </dl>
 

@@ -16,12 +16,14 @@ interface SituationExecutiveReportBodyProps {
   event: OperationalEvent
   variant?: 'compact' | 'full'
   className?: string
+  showExport?: boolean
 }
 
 export function SituationExecutiveReportBody({
   event,
   variant = 'compact',
   className = '',
+  showExport = true,
 }: SituationExecutiveReportBodyProps) {
   const [exportState, setExportState] = useState<
     'idle' | 'generating' | 'error'
@@ -404,22 +406,24 @@ export function SituationExecutiveReportBody({
   return (
     <div className={['novex-sit-report', className].filter(Boolean).join(' ')}>
       {sections}
-      <footer className="island-focus-panel__footer">
-        <button
-          type="button"
-          className="island-focus-panel__export"
-          onClick={(clickEvent) => void handleExport(clickEvent)}
-          disabled={exportState === 'generating'}
-          aria-busy={exportState === 'generating'}
-        >
-          <NovexIcon name="download" size={14} />
-          {exportState === 'generating'
-            ? 'Generando PDF…'
-            : exportState === 'error'
-              ? 'Reintentar exportación'
-              : 'Descargar reporte PDF'}
-        </button>
-      </footer>
+      {showExport ? (
+        <footer className="island-focus-panel__footer">
+          <button
+            type="button"
+            className="island-focus-panel__export"
+            onClick={(clickEvent) => void handleExport(clickEvent)}
+            disabled={exportState === 'generating'}
+            aria-busy={exportState === 'generating'}
+          >
+            <NovexIcon name="download" size={14} />
+            {exportState === 'generating'
+              ? 'Generando PDF…'
+              : exportState === 'error'
+                ? 'Reintentar exportación'
+                : 'Descargar reporte PDF'}
+          </button>
+        </footer>
+      ) : null}
     </div>
   )
 }

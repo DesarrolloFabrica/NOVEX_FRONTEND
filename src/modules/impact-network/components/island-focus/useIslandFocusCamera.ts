@@ -8,6 +8,7 @@ export interface SceneView {
 const FOCUS_ZOOM = 1.82
 /** Horizontal center of the left dossier column (40% width → center at 20%). */
 const FOCUS_X_RATIO = 0.2
+const FOCUS_Y_RATIO = 0.5
 
 export const ISLAND_FOCUS_ANIMATION_MS = 1040
 export const ISLAND_RESTORE_ANIMATION_MS = 620
@@ -24,15 +25,64 @@ export function computeFocusCamera(
   canvasHeight: number,
   zoom: number = FOCUS_ZOOM,
   targetXRatio: number = FOCUS_X_RATIO,
+  targetYRatio: number = FOCUS_Y_RATIO,
 ): SceneView {
   const focusZoom = clampZoom(zoom)
   const panX =
     canvasWidth * (targetXRatio - 0.5 + 0.5 * focusZoom) - nodeX * focusZoom
-  const panY = (canvasHeight * 0.5 - nodeY) * focusZoom
+  const panY = (canvasHeight * targetYRatio - nodeY) * focusZoom
 
   return {
     pan: { x: panX, y: panY },
     zoom: focusZoom,
+  }
+}
+
+/* Geometría del escenario izquierdo del dossier. Los valores deben mantenerse
+   sincronizados con `.island-focus-dossier__stage` en impact-network.css. */
+const STAGE_COLUMN_RATIO = 0.4
+const STAGE_SIDE_PADDING = 20
+const STAGE_PADDING_TOP = 28
+const STAGE_PADDING_BOTTOM = 24
+const STAGE_CARD_MAX_HEIGHT = 164
+const STAGE_CARD_MAX_RATIO = 0.26
+const STAGE_CARD_CLEARANCE = 14
+/** El arte de la isla desborda su caja de layout (`.propagation-island__body`). */
+const ISLAND_ART_OVERFLOW = 1.2
+const ISLAND_MIN_VISUAL_SIZE = 150
+const ISLAND_MAX_VISUAL_SIZE = 360
+
+export interface IslandStageFrame {
+  /** Centro vertical de la franja libre entre ambas tarjetas, en píxeles. */
+  centerY: number
+  /** Tamaño de nodo más grande que cabe sin quedar tapado por las tarjetas. */
+  maxVisualSize: number
+}
+
+export function computeIslandStageFrame(
+  stageWidth: number,
+  stageHeight: number,
+): IslandStageFrame {
+  const cardHeight = Math.min(
+    STAGE_CARD_MAX_HEIGHT,
+    stageHeight * STAGE_CARD_MAX_RATIO,
+  )
+  const bandTop = STAGE_PADDING_TOP + cardHeight + STAGE_CARD_CLEARANCE
+  const bandBottom =
+    stageHeight - STAGE_PADDING_BOTTOM - cardHeight - STAGE_CARD_CLEARANCE
+  const bandHeight = Math.max(0, bandBottom - bandTop)
+  const columnWidth = Math.max(
+    0,
+    stageWidth * STAGE_COLUMN_RATIO - STAGE_SIDE_PADDING * 2,
+  )
+  const available = Math.min(bandHeight, columnWidth) / ISLAND_ART_OVERFLOW
+
+  return {
+    centerY: (bandTop + bandBottom) / 2,
+    maxVisualSize: Math.min(
+      ISLAND_MAX_VISUAL_SIZE,
+      Math.max(ISLAND_MIN_VISUAL_SIZE, available),
+    ),
   }
 }
 

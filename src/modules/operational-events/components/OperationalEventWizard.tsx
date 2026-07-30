@@ -1,6 +1,7 @@
 // Componente: orquestador del wizard — capturar, confirmar y analizar.
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { CRYSTAL_ZONE } from '@/modules/monitoring/constants/monitoringTheme'
 import { SituationAnalysisPanel } from '@/modules/operational-events/components/analysis/SituationAnalysisPanel'
@@ -69,8 +70,22 @@ function resolveDefaultCoordinationId(
   return coordinations[0]?.id ?? ''
 }
 
+function sanitizeReturnTo(value: string | null): string | null {
+  if (!value) return null
+  if (!value.startsWith('/') || value.startsWith('//')) return null
+  return value
+}
+
 export function OperationalEventWizard() {
   const { user } = useAuth()
+  const [searchParams] = useSearchParams()
+  const prefillCoordinationCode = searchParams.get('coordination')
+  const returnTo = useMemo(
+    () => sanitizeReturnTo(searchParams.get('returnTo')),
+    [searchParams],
+  )
+  const coordinationLocked = Boolean(prefillCoordinationCode)
+
   const [step, setStep] = useState<WizardStepId>(
     () => readSituationCaptureWizardStep() ?? 1,
   )
@@ -116,16 +131,26 @@ export function OperationalEventWizard() {
 
         setCoordinations(sortedCoordinations)
         setCategories(categoriesResponse)
-        setDraft((current) => ({
-          ...current,
-          coordinationId:
-            current.coordinationId ||
-            resolveDefaultCoordinationId(
-              sortedCoordinations,
-              user?.coordinationId,
-              user?.selectedAreaId,
-            ),
-        }))
+        setDraft((current) => {
+          const preferredId = resolveDefaultCoordinationId(
+            sortedCoordinations,
+            undefined,
+            prefillCoordinationCode ?? undefined,
+          )
+          const fallbackId = resolveDefaultCoordinationId(
+            sortedCoordinations,
+            user?.coordinationId,
+            user?.selectedAreaId,
+          )
+          const nextCoordinationId =
+            preferredId || current.coordinationId || fallbackId
+
+          if (current.coordinationId === nextCoordinationId) return current
+          return {
+            ...current,
+            coordinationId: nextCoordinationId,
+          }
+        })
       } catch (loadError) {
         if (!cancelled) {
           setError(getErrorMessage(loadError))
@@ -142,7 +167,7 @@ export function OperationalEventWizard() {
     return () => {
       cancelled = true
     }
-  }, [user?.coordinationId, user?.selectedAreaId])
+  }, [prefillCoordinationCode, user?.coordinationId, user?.selectedAreaId])
 
   async function handleConfirmAndRegister() {
     setError(null)
@@ -185,6 +210,7 @@ export function OperationalEventWizard() {
               draft={draft}
               coordinations={coordinations}
               loadingCoordinations={loadingCatalogs}
+              coordinationLocked={coordinationLocked}
               onChange={setDraft}
               submitLabel="Continuar"
               submitDisabled={loadingCatalogs}
@@ -230,6 +256,7 @@ export function OperationalEventWizard() {
               situationId={registeredSituationId}
               situationTitle={situation?.title ?? draft.title}
               situation={situation}
+              returnTo={returnTo}
               onViewExecutiveReport={() => setShowExecutiveModal(true)}
             />
           </div>

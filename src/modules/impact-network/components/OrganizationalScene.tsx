@@ -25,6 +25,7 @@ import {
 import {
   IslandFocusDossier,
   computeFocusCamera,
+  computeIslandStageFrame,
   ISLAND_FOCUS_ANIMATION_MS,
   ISLAND_RESTORE_ANIMATION_MS,
   useIslandFocusCamera,
@@ -64,6 +65,9 @@ interface OrganizationalSceneProps {
   onIslandFocusChange?: (active: boolean) => void
   onSelectCoordination: (coordinationId: CoordinationId) => void
   onSelectSituation?: (eventId: string) => void
+  isImmersive?: boolean
+  onToggleImmersive?: () => void
+  focusOriginRequestKey?: number
 }
 
 interface DragState {
@@ -82,6 +86,13 @@ interface StructureVisual {
   hue: string
 }
 
+interface StructuralEdgeGeometry {
+  path: string
+  start: { x: number; y: number }
+  end: { x: number; y: number }
+  junction: { x: number; y: number }
+}
+
 const STRUCTURE_VISUALS: Record<CoordinationId, StructureVisual> = {
   'coord-general': { rgb: '88 135 255', hue: '28deg' },
   'coord-b2b': { rgb: '35 214 218', hue: '-12deg' },
@@ -96,6 +107,67 @@ const STRUCTURE_VISUALS: Record<CoordinationId, StructureVisual> = {
   'coord-saber-pro': { rgb: '255 181 64', hue: '-154deg' },
   'coord-transversales': { rgb: '64 197 255', hue: '0deg' },
   'coord-negocios': { rgb: '44 220 190', hue: '-22deg' },
+}
+
+function cubicPoint(
+  start: { x: number; y: number },
+  controlA: { x: number; y: number },
+  controlB: { x: number; y: number },
+  end: { x: number; y: number },
+  progress: number,
+) {
+  const inverse = 1 - progress
+  return {
+    x:
+      inverse ** 3 * start.x +
+      3 * inverse ** 2 * progress * controlA.x +
+      3 * inverse * progress ** 2 * controlB.x +
+      progress ** 3 * end.x,
+    y:
+      inverse ** 3 * start.y +
+      3 * inverse ** 2 * progress * controlA.y +
+      3 * inverse * progress ** 2 * controlB.y +
+      progress ** 3 * end.y,
+  }
+}
+
+function buildStructuralEdgeGeometry(
+  center: { x: number; y: number },
+  node: { x: number; y: number; size: number },
+): StructuralEdgeGeometry {
+  const dx = node.x - center.x
+  const dy = node.y - center.y
+  const distance = Math.max(1, Math.hypot(dx, dy))
+  const direction = { x: dx / distance, y: dy / distance }
+  const perpendicular = { x: -dy / distance, y: dx / distance }
+  const hubRadius = Math.min(102, Math.max(86, distance * 0.26))
+  const islandRadius = node.size * 0.61
+  const start = {
+    x: center.x + direction.x * hubRadius,
+    y: center.y + direction.y * hubRadius,
+  }
+  const end = {
+    x: node.x - direction.x * islandRadius,
+    y: node.y - direction.y * islandRadius,
+  }
+  const edgeDx = end.x - start.x
+  const edgeDy = end.y - start.y
+  const bend = Math.min(18, Math.max(6, distance * 0.035))
+  const controlA = {
+    x: start.x + edgeDx * 0.32 + perpendicular.x * bend,
+    y: start.y + edgeDy * 0.32 + perpendicular.y * bend,
+  }
+  const controlB = {
+    x: start.x + edgeDx * 0.72 + perpendicular.x * bend * 0.36,
+    y: start.y + edgeDy * 0.72 + perpendicular.y * bend * 0.36,
+  }
+
+  return {
+    path: `M ${start.x} ${start.y} C ${controlA.x} ${controlA.y} ${controlB.x} ${controlB.y} ${end.x} ${end.y}`,
+    start,
+    end,
+    junction: cubicPoint(start, controlA, controlB, end, 0.58),
+  }
 }
 
 function clampZoom(value: number): number {
@@ -153,6 +225,9 @@ function OrganizationalSceneView({
   onIslandFocusChange,
   onSelectCoordination,
   onSelectSituation,
+  isImmersive = false,
+  onToggleImmersive,
+  focusOriginRequestKey = 0,
 }: OrganizationalSceneProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const dragRef = useRef<DragState | null>(null)
@@ -162,7 +237,6 @@ function OrganizationalSceneView({
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [dragging, setDragging] = useState(false)
-  const [isFullscreen, setIsFullscreen] = useState(false)
   const [focusIslandId, setFocusIslandId] = useState<CoordinationId | null>(null)
   const [islandFocusOpen, setIslandFocusOpen] = useState(false)
   const [dossierVisible, setDossierVisible] = useState(false)
@@ -172,6 +246,7 @@ function OrganizationalSceneView({
   const savedSceneViewRef = useRef<SceneView | null>(null)
   const dossierPortalTargetRef = useRef<HTMLElement | null>(null)
   const isClosingFocusRef = useRef(false)
+  const focusOriginRequestRef = useRef(focusOriginRequestKey)
 
   const applySceneView = useCallback((view: SceneView) => {
     setPan(view.pan)
@@ -210,15 +285,6 @@ function OrganizationalSceneView({
     const observer = new ResizeObserver(update)
     observer.observe(element)
     return () => observer.disconnect()
-  }, [])
-
-  useEffect(() => {
-    const onFullscreenChange = () => {
-      setIsFullscreen(document.fullscreenElement === containerRef.current)
-    }
-    document.addEventListener('fullscreenchange', onFullscreenChange)
-    return () =>
-      document.removeEventListener('fullscreenchange', onFullscreenChange)
   }, [])
 
   const applyZoomAtPoint = useCallback(
@@ -438,10 +504,12 @@ function OrganizationalSceneView({
     }
     const workspaceBounds =
       dossierPortalTargetRef.current?.getBoundingClientRect()
-    const targetVisualSize = Math.min(
-      360,
-      Math.max(300, size.height * 0.44),
-    )
+    const canvasBounds = containerRef.current?.getBoundingClientRect()
+    const stageFrame = workspaceBounds
+      ? computeIslandStageFrame(workspaceBounds.width, workspaceBounds.height)
+      : null
+    const targetVisualSize =
+      stageFrame?.maxVisualSize ?? Math.min(360, Math.max(300, size.height * 0.44))
     const targetZoom = targetVisualSize / Math.max(1, node.size)
     const targetXRatio = workspaceBounds
       ? Math.min(
@@ -449,6 +517,17 @@ function OrganizationalSceneView({
           Math.max(0.18, (workspaceBounds.width * 0.2) / size.width),
         )
       : 0.2
+    const targetYRatio =
+      stageFrame && workspaceBounds && canvasBounds
+        ? Math.min(
+            0.82,
+            Math.max(
+              0.18,
+              (workspaceBounds.top + stageFrame.centerY - canvasBounds.top) /
+                Math.max(1, canvasBounds.height),
+            ),
+          )
+        : 0.5
     const targetView = computeFocusCamera(
       node.x,
       node.y,
@@ -456,6 +535,7 @@ function OrganizationalSceneView({
       size.height,
       targetZoom,
       targetXRatio,
+      targetYRatio,
     )
 
     void animateToView(
@@ -556,6 +636,13 @@ function OrganizationalSceneView({
       propagation,
     ],
   )
+
+  useEffect(() => {
+    if (focusOriginRequestRef.current === focusOriginRequestKey) return
+    focusOriginRequestRef.current = focusOriginRequestKey
+    if (!propagation) return
+    handleSelectIsland(propagation.originCoordinationId as CoordinationId)
+  }, [focusOriginRequestKey, handleSelectIsland, propagation])
 
   return (
     <div
@@ -674,11 +761,15 @@ function OrganizationalSceneView({
           type="button"
           className="propagation-scene__zoom-btn propagation-scene__zoom-btn--fullscreen"
           aria-label={
-            isFullscreen
+            isImmersive
               ? 'Salir de pantalla completa'
-              : 'Ver mapa en pantalla completa'
+              : 'Ver Red de impacto en pantalla completa'
           }
           onClick={() => {
+            if (onToggleImmersive) {
+              onToggleImmersive()
+              return
+            }
             const element = containerRef.current
             if (!element) return
             void (document.fullscreenElement
@@ -726,10 +817,14 @@ function OrganizationalSceneView({
         >
           <g className="organizational-scene__structural-network">
             {nodes.map((node, index) => {
-              const controlY = (center.y + node.y) / 2
-              const path = `M ${center.x} ${center.y} C ${center.x} ${controlY} ${node.x} ${controlY} ${node.x} ${node.y}`
+              const { path, start, end, junction } = buildStructuralEdgeGeometry(
+                center,
+                node,
+              )
               const pathId = `structure-link-${node.coordinationId}`
+              const gradientId = `${pathId}-gradient`
               const visual = STRUCTURE_VISUALS[node.coordinationId]
+              const edgeColor = `rgb(${visual.rgb.split(' ').join(', ')})`
               return (
                 <g
                   key={node.coordinationId}
@@ -740,6 +835,21 @@ function OrganizationalSceneView({
                     } as CSSProperties
                   }
                 >
+                  <defs>
+                    <linearGradient
+                      id={gradientId}
+                      gradientUnits="userSpaceOnUse"
+                      x1={start.x}
+                      y1={start.y}
+                      x2={end.x}
+                      y2={end.y}
+                    >
+                      <stop offset="0" stopColor={edgeColor} stopOpacity="0.28" />
+                      <stop offset="0.38" stopColor={edgeColor} stopOpacity="0.72" />
+                      <stop offset="0.78" stopColor={edgeColor} stopOpacity="0.9" />
+                      <stop offset="1" stopColor="#eafcff" stopOpacity="0.96" />
+                    </linearGradient>
+                  </defs>
                   <motion.path
                     className="organizational-scene__connection-glow"
                     animate={{ d: path }}
@@ -759,6 +869,15 @@ function OrganizationalSceneView({
                   <motion.path
                     id={pathId}
                     className="organizational-scene__connection"
+                    style={{ stroke: `url(#${gradientId})` }}
+                    animate={{ d: path }}
+                    transition={{
+                      duration: reducedMotion ? 0 : 0.68,
+                      ease: [0.22, 0.61, 0.36, 1],
+                    }}
+                  />
+                  <motion.path
+                    className="organizational-scene__connection-sheen"
                     animate={{ d: path }}
                     transition={{
                       duration: reducedMotion ? 0 : 0.68,
@@ -766,25 +885,46 @@ function OrganizationalSceneView({
                     }}
                   />
                   <circle
+                    className="organizational-scene__connection-node-pulse"
+                    cx={end.x}
+                    cy={end.y}
+                    r="6.8"
+                  />
+                  <circle
                     className="organizational-scene__connection-node"
-                    cx={node.x}
-                    cy={node.y}
-                    r="8"
+                    cx={end.x}
+                    cy={end.y}
+                    r="3.7"
                   />
                   <circle
                     className="organizational-scene__connection-node-core"
-                    cx={node.x}
-                    cy={node.y}
-                    r="2.6"
+                    cx={end.x}
+                    cy={end.y}
+                    r="1.05"
+                  />
+                  <rect
+                    className="organizational-scene__connection-relay"
+                    x={junction.x - 2.1}
+                    y={junction.y - 2.1}
+                    width="4.2"
+                    height="4.2"
+                    rx="0.7"
+                    transform={`rotate(45 ${junction.x} ${junction.y})`}
+                  />
+                  <circle
+                    className="organizational-scene__connection-relay-core"
+                    cx={junction.x}
+                    cy={junction.y}
+                    r="0.8"
                   />
                   {!reducedMotion ? (
                     <circle
                       className="organizational-scene__connection-particle"
-                      r="2.1"
+                      r="1.35"
                     >
                       <animateMotion
-                        begin={`${index * 0.18}s`}
-                        dur={`${3.2 + (index % 4) * 0.35}s`}
+                        begin={`${index * 0.29}s`}
+                        dur={`${6.4 + (index % 4) * 0.4}s`}
                         repeatCount="indefinite"
                       >
                         <mpath href={`#${pathId}`} />

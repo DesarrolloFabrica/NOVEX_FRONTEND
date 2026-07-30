@@ -32,10 +32,10 @@ export interface StructureBounds {
  */
 const COMPACT_BREAKPOINT = 720
 const LABEL_BOX_WIDTH = 142
-const LABEL_BOX_HEIGHT = 30
+const LABEL_BOX_HEIGHT = 42
 const LABEL_GAP = 12
 const COMPACT_LABEL_BOX_WIDTH = 96
-const COMPACT_LABEL_BOX_HEIGHT = 24
+const COMPACT_LABEL_BOX_HEIGHT = 32
 const COMPACT_LABEL_GAP = 8
 
 interface LabelMetrics {
@@ -53,11 +53,40 @@ function labelMetrics(stageWidth: number): LabelMetrics {
 }
 
 const STAGE_PADDING = 8
-const NODE_CLEARANCE = 8
-const RELAX_PASSES = 14
-const MAX_RADIAL_SHIFT = 72
-/** `.propagation-island__body` se extiende 9% por cada lado del nodo. */
-const NODE_VISUAL_SCALE = 1.18
+const NODE_CLEARANCE = 14
+const RELAX_PASSES = 24
+const MAX_RADIAL_SHIFT = 104
+/** La capa holográfica se extiende 14% por cada lado del nodo. */
+const NODE_VISUAL_SCALE = 1.28
+
+const INSTITUTIONAL_SLOT_ORDER: readonly CoordinationId[] = [
+  'coord-transversales',
+  'coord-saber-pro',
+  'coord-b2b',
+  'coord-operaciones-academicas',
+  'coord-desarrollo-profesional',
+  'coord-general',
+  'coord-proyeccion-social',
+  'coord-bellas-artes',
+  'coord-social-lab',
+  'coord-empresarial',
+  'coord-especializaciones',
+  'coord-ingenierias',
+]
+
+const INSET_COORDINATION_IDS = new Set<CoordinationId>([
+  'coord-operaciones-academicas',
+  'coord-general',
+  'coord-empresarial',
+  'coord-ingenierias',
+])
+
+const INSTITUTIONAL_SLOT_RANK = new Map(
+  INSTITUTIONAL_SLOT_ORDER.map((coordinationId, index) => [
+    coordinationId,
+    index,
+  ]),
+)
 
 /** Caja del nodo institucional central, incluida su etiqueta inferior. */
 const HUB_HALF_SIZE = 106
@@ -140,15 +169,17 @@ export function hubObstacles(
   ]
 }
 
-/**
- * La etiqueta apunta siempre en dirección contraria al centro, de modo que
- * nunca invade el anillo interior ni el nodo institucional.
- */
+/** En compacto, las placas inferiores se proyectan fuera del núcleo. */
 function radialPlacement(
   node: { y: number },
   center: { y: number },
+  stageWidth = Number.POSITIVE_INFINITY,
+  stageHeight = Number.POSITIVE_INFINITY,
 ): IslandLabelPlacement {
-  return node.y < center.y ? 'top' : 'bottom'
+  return (stageWidth <= COMPACT_BREAKPOINT || stageHeight < 600) &&
+    node.y > center.y
+    ? 'bottom'
+    : 'top'
 }
 
 function clampToStage(
@@ -234,7 +265,7 @@ function relaxOverlaps(
         node.x = origin.x + dx * ratio
         node.y = origin.y + dy * ratio
       }
-      node.labelPlacement = radialPlacement(node, center)
+      node.labelPlacement = radialPlacement(node, center, width, height)
       clampToStage(node, width, height)
     }
 
@@ -270,7 +301,7 @@ export function buildStructureLayout(
   const minSide = Math.min(width, height)
   // Las coordinaciones deben conservar suficiente presencia visual alrededor
   // del hub, sin competir con su jerarquía de nodo institucional.
-  const nodeSize = Math.max(70, Math.min(132, minSide * 0.15))
+  const nodeSize = Math.max(64, Math.min(112, minSide * 0.125))
   const selectedSize = Math.max(200, Math.min(270, minSide * 0.3))
 
   if (selectedCoordinationId) {
@@ -307,49 +338,34 @@ export function buildStructureLayout(
   const satelliteIds = [...coordinationIds]
   if (satelliteIds.length === 0) return { center, nodes: [] }
 
-  const innerCount =
-    satelliteIds.length >= 10 ? 4 : Math.min(3, satelliteIds.length)
-  const innerIds = satelliteIds.slice(0, innerCount)
-  const outerIds = satelliteIds.slice(innerCount)
-
-  // El anillo exterior se abre y el interior se cierra para que entre ambos
-  // quepa el bloque isla + etiqueta sin que una tape a la otra.
-  const innerRadiusX = Math.max(104, width * 0.205)
-  const innerRadiusY = Math.max(90, height * 0.205)
-  const outerRadiusX = Math.max(166, width * 0.38)
-  const outerRadiusY = Math.max(164, height * 0.395)
+  const arrangedIds = [...satelliteIds].sort(
+    (left, right) =>
+      (INSTITUTIONAL_SLOT_RANK.get(left) ?? Number.MAX_SAFE_INTEGER) -
+      (INSTITUTIONAL_SLOT_RANK.get(right) ?? Number.MAX_SAFE_INTEGER),
+  )
+  const radiusX = Math.max(174, width * 0.415)
+  const radiusY = Math.max(168, height * 0.365)
+  const angleStep = 360 / arrangedIds.length
+  const useInsetSlots = arrangedIds.length >= 10 && width > COMPACT_BREAKPOINT
+  const startAngle =
+    arrangedIds.length >= 10 && useInsetSlots ? -105 : -90
   const nodes: StructureNode[] = []
 
-  innerIds.forEach((coordinationId, index) => {
+  arrangedIds.forEach((coordinationId, index) => {
+    const radiusScale =
+      useInsetSlots && INSET_COORDINATION_IDS.has(coordinationId) ? 0.78 : 1
     const point = ellipsePoint(
       center,
-      innerRadiusX,
-      innerRadiusY,
-      -135 + (360 / innerIds.length) * index,
+      radiusX * radiusScale,
+      radiusY * radiusScale,
+      startAngle + angleStep * index,
     )
     nodes.push({
       coordinationId,
       ...point,
-      size: nodeSize * 0.92,
+      size: nodeSize * (radiusScale < 1 ? 0.92 : 1),
       selected: false,
-      labelPlacement: radialPlacement(point, center),
-      depth: 20,
-    })
-  })
-
-  outerIds.forEach((coordinationId, index) => {
-    const point = ellipsePoint(
-      center,
-      outerRadiusX,
-      outerRadiusY,
-      -90 + (360 / outerIds.length) * index + 360 / outerIds.length / 2,
-    )
-    nodes.push({
-      coordinationId,
-      ...point,
-      size: nodeSize,
-      selected: false,
-      labelPlacement: radialPlacement(point, center),
+      labelPlacement: radialPlacement(point, center, width, height),
       depth: 20,
     })
   })

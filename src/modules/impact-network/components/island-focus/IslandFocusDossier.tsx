@@ -1,10 +1,11 @@
-import { useEffect, useId, useMemo, useRef } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { getCoordination } from '@/modules/impact-network/data/coordination-islands.config'
 import type { CoordinationId } from '@/modules/impact-network/data/coordination-islands.config'
 import type { FocusedPropagation } from '@/modules/impact-network/types/impact-network.types'
 import type { OperationalEvent } from '@/modules/operational-events/types/operational-event.types'
 import { RISK_LEVEL_LABEL } from '@/modules/operational-events/components/eventPresentation'
+import { NovexIcon } from '@/shared/components/NovexIcon'
 import {
   isIslandFocusOrigin,
   resolveIslandAffectedBriefing,
@@ -35,6 +36,9 @@ export function IslandFocusDossier({
 }: IslandFocusDossierProps) {
   const titleId = useId()
   const closeRef = useRef<HTMLButtonElement>(null)
+  const [exportState, setExportState] = useState<
+    'idle' | 'generating' | 'error'
+  >('idle')
   const isOrigin = isIslandFocusOrigin(coordinationId, propagation)
   const affectedBriefing = isOrigin
     ? null
@@ -66,6 +70,20 @@ export function IslandFocusDossier({
     window.addEventListener('keydown', handleKeyDown, true)
     return () => window.removeEventListener('keydown', handleKeyDown, true)
   }, [onClose, open])
+
+  async function handleExport() {
+    if (exportState === 'generating') return
+    setExportState('generating')
+    try {
+      const { exportSituationReportPdf } = await import(
+        '@/modules/operational-events/utils/exportSituationReportPdf'
+      )
+      await exportSituationReportPdf(event)
+      setExportState('idle')
+    } catch {
+      setExportState('error')
+    }
+  }
 
   return (
     <AnimatePresence mode="wait" onExitComplete={onExitComplete}>
@@ -137,16 +155,36 @@ export function IslandFocusDossier({
                   {panelSubtitle}
                 </span>
               </div>
-              <button
-                ref={closeRef}
-                type="button"
-                className="island-focus-dossier__close island-focus-dossier__close--back"
-                aria-label="Volver al mapa"
-                onClick={onClose}
-              >
-                <span aria-hidden="true">←</span>
-                <span>Volver al mapa</span>
-              </button>
+              <div className="island-focus-dossier__topbar-actions">
+                {isOrigin ? (
+                  <button
+                    type="button"
+                    className="island-focus-dossier__export"
+                    onClick={() => void handleExport()}
+                    disabled={exportState === 'generating'}
+                    aria-busy={exportState === 'generating'}
+                  >
+                    <NovexIcon name="download" size={14} />
+                    <span>
+                      {exportState === 'generating'
+                        ? 'Generando PDF…'
+                        : exportState === 'error'
+                          ? 'Reintentar PDF'
+                          : 'Descargar PDF'}
+                    </span>
+                  </button>
+                ) : null}
+                <button
+                  ref={closeRef}
+                  type="button"
+                  className="island-focus-dossier__close island-focus-dossier__close--back"
+                  aria-label="Volver al mapa"
+                  onClick={onClose}
+                >
+                  <span aria-hidden="true">←</span>
+                  <span>Volver al mapa</span>
+                </button>
+              </div>
             </motion.header>
 
             <div id={titleId} className="island-focus-sr-only">

@@ -16,6 +16,7 @@ interface AnalysisCompletedStateProps {
   analysisResponse: SituationAIAnalysisResponse
   elapsedMs: number
   operationalEvent: OperationalEvent
+  returnTo?: string | null
   onViewExecutiveReport: () => void
 }
 
@@ -27,6 +28,17 @@ function formatElapsed(ms: number): string {
   return remainder > 0 ? `${minutes} min ${remainder} s` : `${minutes} min`
 }
 
+function buildReturnHref(returnTo: string | null | undefined, situationId: string) {
+  if (!returnTo) return `/situaciones?situation=${situationId}`
+  try {
+    const url = new URL(returnTo, window.location.origin)
+    url.searchParams.set('situation', situationId)
+    return `${url.pathname}${url.search}`
+  } catch {
+    return returnTo
+  }
+}
+
 export function AnalysisCompletedState({
   situationTitle,
   situationId,
@@ -34,6 +46,7 @@ export function AnalysisCompletedState({
   analysisResponse,
   elapsedMs,
   operationalEvent,
+  returnTo = null,
   onViewExecutiveReport,
 }: AnalysisCompletedStateProps) {
   const [exportState, setExportState] = useState<'idle' | 'generating' | 'error'>(
@@ -154,11 +167,13 @@ export function AnalysisCompletedState({
         </button>
 
         <Link
-          to={`/situaciones?situation=${situationId}`}
+          to={buildReturnHref(returnTo, situationId)}
           viewTransition
           className={`novex-intel-complete__tertiary ${FOCUS_VISIBLE}`}
         >
-          Volver al historial
+          {returnTo?.includes('/red-impacto')
+            ? 'Volver a Red de impacto'
+            : 'Volver al historial'}
         </Link>
       </div>
     </section>
