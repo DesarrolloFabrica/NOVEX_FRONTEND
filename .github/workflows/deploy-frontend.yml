@@ -11,13 +11,11 @@
 #   Sin tag :latest (despliegue inmutable por commit).
 #   VITE_* se inyectan en build-time (Dockerfile ARG/ENV).
 #
-# Cloud Run (hoy):
-#   Servicio: omega-frontend  (var CLOUD_RUN_SERVICE_FRONTEND)
+# Cloud Run:
+#   Servicio: novex-frontend  (var CLOUD_RUN_SERVICE_FRONTEND)
 #   Solo se actualiza --image; se preservan memoria/CPU/probes/IAM.
-#
-# Rename futuro a novex-frontend:
-#   GitHub → Settings → Variables → CLOUD_RUN_SERVICE_FRONTEND = novex-frontend
-#   Actualizar también VITE_API_BASE_URL y OAuth Authorized Origins.
+#   omega-frontend queda intacto (convivencia durante la migración).
+#   VITE_API_BASE_URL debe apuntar a novex-backend.
 #
 # Variables de repositorio requeridas:
 #   GCP_PROJECT_ID, GCP_REGION
@@ -26,7 +24,7 @@
 #   (opcionales con default abajo)
 #   ARTIFACT_REGISTRY_REPOSITORY  default: novex
 #   FRONTEND_IMAGE_NAME           default: novex-frontend
-#   CLOUD_RUN_SERVICE_FRONTEND    default: omega-frontend
+#   CLOUD_RUN_SERVICE_FRONTEND    default: novex-frontend
 #
 # Secrets de repositorio requeridos:
 #   GCP_SERVICE_ACCOUNT_KEY
@@ -82,8 +80,7 @@ jobs:
 
           REPOSITORY="${REPOSITORY:-novex}"
           IMAGE_NAME="${IMAGE_NAME:-novex-frontend}"
-          # Hoy: omega-frontend. Futuro rename: novex-frontend via variable de GitHub.
-          SERVICE_NAME="${SERVICE_NAME:-omega-frontend}"
+          SERVICE_NAME="${SERVICE_NAME:-novex-frontend}"
 
           # Normalizar: sin slash final
           VITE_API_BASE_URL="${VITE_API_BASE_URL%/}"
@@ -159,7 +156,7 @@ jobs:
           set -euo pipefail
           # Importante: solo --image.
           # No redefinir env/CPU/memoria/probes para no pisar la revisión actual
-          # de omega-frontend.
+          # de novex-frontend.
           gcloud run deploy "${{ steps.meta.outputs.service_name }}" \
             --image="${{ steps.digest.outputs.fully_qualified_digest }}" \
             --region="${{ steps.meta.outputs.region }}" \
@@ -189,5 +186,5 @@ jobs:
             echo ""
             echo "Configuración previa del servicio **preservada** (solo cambia la imagen)."
             echo ""
-            echo "Rename futuro: variable \`CLOUD_RUN_SERVICE_FRONTEND=novex-frontend\`."
+            echo "Target: \`novex-frontend\` (omega-frontend no se modifica)."
           } >> "$GITHUB_STEP_SUMMARY"
