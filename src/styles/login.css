@@ -439,70 +439,29 @@
   margin-top: 1.35rem;
 }
 
-.novex-login__google-action {
-  position: relative;
+.novex-login__google-official {
   display: flex;
   width: 100%;
   min-height: 3.2rem;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  border: 1px solid rgb(210 220 214 / 0.28) !important;
-  border-radius: 0.72rem;
-  padding: 0.7rem 1rem;
-  color: #eef4f0 !important;
-  font: inherit;
-  font-size: 0.86rem;
-  font-weight: 650;
-  background: linear-gradient(180deg, rgb(18 34 28 / 0.92), rgb(8 20 16 / 0.94)) !important;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
-  cursor: pointer;
   overflow: hidden;
-  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease, background 200ms ease;
+  border-radius: 0.72rem;
 }
 
-.novex-login__google-action[data-loading='true'] {
+.novex-login__google-official[data-loading='true'] {
   pointer-events: none;
+  opacity: 0.72;
 }
 
-.novex-login__google-action-main {
-  position: relative;
-  z-index: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.7rem;
-  pointer-events: none;
-}
-
-.novex-login__google-action-trigger {
-  position: absolute;
-  z-index: 1;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.011;
-}
-
-.novex-login__google-action-trigger > div,
-.novex-login__google-action-trigger iframe {
+.novex-login__google-official > div {
   width: 100% !important;
-  height: 100% !important;
+  display: flex !important;
+  justify-content: center;
+}
+
+.novex-login__google-official iframe {
   margin: 0 !important;
-}
-
-.novex-login__google-action svg {
-  flex: 0 0 auto;
-}
-
-@media (hover: hover) {
-  .novex-login__google-action:not([data-loading='true']):hover {
-    transform: translateY(-2px);
-    border-color: rgb(191 255 175 / 0.42) !important;
-    box-shadow:
-      0 10px 24px rgb(47 174 62 / 0.12),
-      inset 0 1px 0 rgb(255 255 255 / 0.06);
-  }
 }
 
 .novex-login__email-form {
