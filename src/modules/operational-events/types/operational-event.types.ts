@@ -109,7 +109,10 @@ export interface OperationalIndicator {
 /** Versión estable del contrato de inteligencia. */
 export const INTELLIGENCE_CONTRACT_VERSION = 'novex.intelligence.v2'
 
-/** Versiones legacy aceptadas en lectura tras el rebrand Omega → Cunmark -> NOVEX. */
+/**
+ * Versiones legacy aceptadas en lectura tras el rebrand Omega → Cunmark → NOVEX.
+ * Ver docs/LEGACY-OMEGA.md. No renombrar sin limpiar datos históricos.
+ */
 export const LEGACY_INTELLIGENCE_CONTRACT_VERSIONS = [
   'cunmark.intelligence.v2',
   'omega.intelligence.v2',

@@ -2,31 +2,12 @@
 # NOVEX — Deploy Frontend → Artifact Registry (novex) → Cloud Run
 # =============================================================================
 #
-# Triggers:
-#   - push a main
-#   - workflow_dispatch (manual)
+# Triggers: push a main | workflow_dispatch
+# Imagen: {REGION}-docker.pkg.dev/{PROJECT}/novex/novex-frontend:{sha7}
+# VITE_* se inyectan en build-time. Deploy: solo --image.
 #
-# Imágenes:
-#   {REGION}-docker.pkg.dev/{PROJECT}/novex/novex-frontend:{sha7}
-#   Sin tag :latest (despliegue inmutable por commit).
-#   VITE_* se inyectan en build-time (Dockerfile ARG/ENV).
-#
-# Cloud Run:
-#   Servicio: novex-frontend  (var CLOUD_RUN_SERVICE_FRONTEND)
-#   Solo se actualiza --image; se preservan memoria/CPU/probes/IAM.
-#   VITE_API_BASE_URL debe apuntar a novex-backend.
-#
-# Variables de repositorio requeridas:
-#   GCP_PROJECT_ID, GCP_REGION
-#   VITE_GOOGLE_CLIENT_ID
-#   VITE_API_BASE_URL
-#   (opcionales con default abajo)
-#   ARTIFACT_REGISTRY_REPOSITORY  default: novex
-#   FRONTEND_IMAGE_NAME           default: novex-frontend
-#   CLOUD_RUN_SERVICE_FRONTEND    default: novex-frontend
-#
-# Secrets de repositorio requeridos:
-#   GCP_SERVICE_ACCOUNT_KEY
+# Vars: GCP_PROJECT_ID, GCP_REGION, VITE_GOOGLE_CLIENT_ID, VITE_API_BASE_URL (req)
+# Secret: GCP_SERVICE_ACCOUNT_KEY
 # =============================================================================
 
 name: Deploy Frontend
@@ -50,8 +31,41 @@ permissions:
   contents: read
 
 jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build (typecheck + vite)
+        run: npm run build
+        env:
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+
   build-push-deploy:
-    name: Build · Push · Deploy (Frontend)
+    name: Build · Push · Deploy
+    needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -71,23 +85,36 @@ jobs:
           SERVICE_NAME="${{ vars.CLOUD_RUN_SERVICE_FRONTEND }}"
           VITE_GOOGLE_CLIENT_ID="${{ vars.VITE_GOOGLE_CLIENT_ID }}"
           VITE_API_BASE_URL="${{ vars.VITE_API_BASE_URL }}"
+          REASON="${{ github.event.inputs.reason || 'push' }}"
 
-          : "${PROJECT_ID:?GCP_PROJECT_ID no configurada}"
-          : "${REGION:?GCP_REGION no configurada}"
-          : "${VITE_GOOGLE_CLIENT_ID:?VITE_GOOGLE_CLIENT_ID no configurada}"
-          : "${VITE_API_BASE_URL:?VITE_API_BASE_URL no configurada}"
+          if [[ -z "${PROJECT_ID}" ]]; then
+            echo "::error::Falta variable GCP_PROJECT_ID"; exit 1
+          fi
+          if [[ -z "${REGION}" ]]; then
+            echo "::error::Falta variable GCP_REGION"; exit 1
+          fi
+          if [[ -z "${VITE_GOOGLE_CLIENT_ID}" ]]; then
+            echo "::error::Falta variable VITE_GOOGLE_CLIENT_ID"; exit 1
+          fi
+          if [[ -z "${VITE_API_BASE_URL}" ]]; then
+            echo "::error::Falta variable VITE_API_BASE_URL"; exit 1
+          fi
+
+          VITE_API_BASE_URL="${VITE_API_BASE_URL%/}"
+          if [[ "${VITE_API_BASE_URL}" != *"novex-backend"* ]]; then
+            echo "::error::VITE_API_BASE_URL debe apuntar a novex-backend (valor: ${VITE_API_BASE_URL})"
+            exit 1
+          fi
 
           REPOSITORY="${REPOSITORY:-novex}"
           IMAGE_NAME="${IMAGE_NAME:-novex-frontend}"
           SERVICE_NAME="${SERVICE_NAME:-novex-frontend}"
 
-          # Normalizar: sin slash final
-          VITE_API_BASE_URL="${VITE_API_BASE_URL%/}"
-
           SHORT_SHA="${GITHUB_SHA:0:7}"
           REGISTRY_HOST="${REGION}-docker.pkg.dev"
           IMAGE_URI="${REGISTRY_HOST}/${PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}"
           IMAGE_TAG="${IMAGE_URI}:${SHORT_SHA}"
+          CLIENT_ID_MASKED="${VITE_GOOGLE_CLIENT_ID:0:12}…(len=${#VITE_GOOGLE_CLIENT_ID})"
 
           {
             echo "project_id=${PROJECT_ID}"
@@ -99,12 +126,17 @@ jobs:
             echo "registry_host=${REGISTRY_HOST}"
             echo "image_uri=${IMAGE_URI}"
             echo "image_tag=${IMAGE_TAG}"
-            echo "vite_google_client_id=${VITE_GOOGLE_CLIENT_ID}"
             echo "vite_api_base_url=${VITE_API_BASE_URL}"
+            echo "vite_google_client_id_masked=${CLIENT_ID_MASKED}"
+            echo "reason=${REASON}"
           } >> "$GITHUB_OUTPUT"
 
-          echo "::notice::Frontend image=${IMAGE_TAG} → Cloud Run service=${SERVICE_NAME}"
+          # Client ID completo solo como env del job (no en GITHUB_OUTPUT)
+          echo "VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}" >> "$GITHUB_ENV"
+
+          echo "::notice::Deploy reason=${REASON} image=${IMAGE_TAG} → ${SERVICE_NAME}"
           echo "::notice::VITE_API_BASE_URL=${VITE_API_BASE_URL}"
+          echo "::notice::VITE_GOOGLE_CLIENT_ID=${CLIENT_ID_MASKED}"
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -125,7 +157,7 @@ jobs:
           set -euo pipefail
           docker build \
             --pull \
-            --build-arg "VITE_GOOGLE_CLIENT_ID=${{ steps.meta.outputs.vite_google_client_id }}" \
+            --build-arg "VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}" \
             --build-arg "VITE_API_BASE_URL=${{ steps.meta.outputs.vite_api_base_url }}" \
             --tag "${{ steps.meta.outputs.image_tag }}" \
             --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
@@ -153,9 +185,6 @@ jobs:
         id: deploy
         run: |
           set -euo pipefail
-          # Importante: solo --image.
-          # No redefinir env/CPU/memoria/probes para no pisar la revisión actual
-          # de novex-frontend.
           gcloud run deploy "${{ steps.meta.outputs.service_name }}" \
             --image="${{ steps.digest.outputs.fully_qualified_digest }}" \
             --region="${{ steps.meta.outputs.region }}" \
@@ -169,21 +198,40 @@ jobs:
             --format='value(status.url)')"
           echo "service_url=${SERVICE_URL}" >> "$GITHUB_OUTPUT"
 
+      - name: Smoke test
+        id: smoke
+        run: |
+          set -euo pipefail
+          BASE="${{ steps.deploy.outputs.service_url }}"
+          echo "::notice::Smoke GET ${BASE}/"
+          curl -fsS --retry 5 --retry-delay 3 --retry-all-errors "${BASE}/" | grep -qi '<div id="root"'
+          echo "::notice::Smoke GET ${BASE}/health"
+          HEALTH="$(curl -fsS --retry 5 --retry-delay 3 --retry-all-errors "${BASE}/health")"
+          if echo "${HEALTH}" | grep -qi '<html'; then
+            echo "::error::/health devolvió HTML SPA (probe falso). Revisar nginx.conf location /health."
+            exit 1
+          fi
+          echo "${HEALTH}" | grep -qi 'ok'
+          echo "result=ok" >> "$GITHUB_OUTPUT"
+
       - name: Job summary
+        if: always()
         run: |
           {
             echo "## Deploy Frontend"
             echo ""
             echo "| Campo | Valor |"
             echo "|---|---|"
-            echo "| Servicio Cloud Run | \`${{ steps.meta.outputs.service_name }}\` |"
-            echo "| Imagen (tag) | \`${{ steps.meta.outputs.image_tag }}\` |"
+            echo "| Motivo | \`${{ steps.meta.outputs.reason }}\` |"
+            echo "| Servicio | \`${{ steps.meta.outputs.service_name }}\` |"
+            echo "| Imagen | \`${{ steps.meta.outputs.image_tag }}\` |"
             echo "| Digest | \`${{ steps.digest.outputs.fully_qualified_digest }}\` |"
             echo "| Commit | \`${{ steps.meta.outputs.short_sha }}\` |"
             echo "| VITE_API_BASE_URL | \`${{ steps.meta.outputs.vite_api_base_url }}\` |"
+            echo "| VITE_GOOGLE_CLIENT_ID | \`${{ steps.meta.outputs.vite_google_client_id_masked }}\` |"
             echo "| URL | ${{ steps.deploy.outputs.service_url }} |"
+            echo "| Smoke | \`${{ steps.smoke.outputs.result || 'failed' }}\` |"
+            echo "| Job | \`${{ job.status }}\` |"
             echo ""
             echo "Configuración previa del servicio **preservada** (solo cambia la imagen)."
-            echo ""
-            echo "Target: \`novex-frontend\`."
           } >> "$GITHUB_STEP_SUMMARY"
