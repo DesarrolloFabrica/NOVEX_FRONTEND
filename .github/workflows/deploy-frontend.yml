@@ -14,7 +14,6 @@
 # Cloud Run:
 #   Servicio: novex-frontend  (var CLOUD_RUN_SERVICE_FRONTEND)
 #   Solo se actualiza --image; se preservan memoria/CPU/probes/IAM.
-#   omega-frontend queda intacto (convivencia durante la migración).
 #   VITE_API_BASE_URL debe apuntar a novex-backend.
 #
 # Variables de repositorio requeridas:
@@ -186,5 +185,5 @@ jobs:
             echo ""
             echo "Configuración previa del servicio **preservada** (solo cambia la imagen)."
             echo ""
-            echo "Target: \`novex-frontend\` (omega-frontend no se modifica)."
+            echo "Target: \`novex-frontend\`."
           } >> "$GITHUB_STEP_SUMMARY"
