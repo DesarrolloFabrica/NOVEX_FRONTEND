@@ -1,11 +1,14 @@
 // Capa: página de acceso de la plataforma Novex
-// Responsabilidad: presentar acceso por Google y correo.
+// Responsabilidad: presentar acceso por Google y, en local, por correo.
 
 import { GoogleLogin } from '@react-oauth/google'
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
+
+/** Solo en local: VITE_ENABLE_EMAIL_LOGIN=true. En deploy no se define → solo Google. */
+const emailLoginEnabled = import.meta.env.VITE_ENABLE_EMAIL_LOGIN === 'true'
 
 export function LoginPage() {
   const {
@@ -119,7 +122,9 @@ export function LoginPage() {
             <p className="novex-login__panel-kicker"><span /> Bienvenido <span /></p>
             <h2 id="access-title">Accede a <strong>Novex</strong></h2>
             <p className="novex-login__panel-lead">
-              Ingresa con Google o con tu correo institucional.
+              {emailLoginEnabled
+                ? 'Ingresa con Google o con tu correo institucional.'
+                : 'Ingresa con tu cuenta de Google institucional.'}
             </p>
           </header>
 
@@ -171,47 +176,51 @@ export function LoginPage() {
               </div>
             </div>
 
-            <div className="novex-login__separator" aria-hidden="true">
-              <span />
-              <b>o</b>
-              <span />
-            </div>
+            {emailLoginEnabled && (
+              <>
+                <div className="novex-login__separator" aria-hidden="true">
+                  <span />
+                  <b>o</b>
+                  <span />
+                </div>
 
-            <form className="novex-login__email-form" onSubmit={handleEmailSubmit}>
-              <label className="novex-login__field-label" htmlFor="login-email">
-                Correo electrónico
-              </label>
-              <div className="novex-login__input-wrap">
-                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-                  <path d="M4 6.5h16v11H4z" />
-                  <path d="m5 7.5 7 5.5 7-5.5" />
-                </svg>
-                <input
-                  id="login-email"
-                  type="email"
-                  name="email"
-                  autoComplete="email"
-                  inputMode="email"
-                  placeholder="nombre@institucion.edu"
-                  value={email}
-                  disabled={isBusy}
-                  onChange={(event) => setEmail(event.target.value)}
-                  className="novex-login__input"
-                />
-              </div>
+                <form className="novex-login__email-form" onSubmit={handleEmailSubmit}>
+                  <label className="novex-login__field-label" htmlFor="login-email">
+                    Correo electrónico
+                  </label>
+                  <div className="novex-login__input-wrap">
+                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                      <path d="M4 6.5h16v11H4z" />
+                      <path d="m5 7.5 7 5.5 7-5.5" />
+                    </svg>
+                    <input
+                      id="login-email"
+                      type="email"
+                      name="email"
+                      autoComplete="email"
+                      inputMode="email"
+                      placeholder="nombre@institucion.edu"
+                      value={email}
+                      disabled={isBusy}
+                      onChange={(event) => setEmail(event.target.value)}
+                      className="novex-login__input"
+                    />
+                  </div>
 
-              <button
-                type="submit"
-                disabled={!canSubmitEmail}
-                aria-busy={loading}
-                className="novex-login__primary-action"
-              >
-                <span>Continuar con correo</span>
-                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <path d="M5 12h13M13 6l6 6-6 6" />
-                </svg>
-              </button>
-            </form>
+                  <button
+                    type="submit"
+                    disabled={!canSubmitEmail}
+                    aria-busy={loading}
+                    className="novex-login__primary-action"
+                  >
+                    <span>Continuar con correo</span>
+                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                      <path d="M5 12h13M13 6l6 6-6 6" />
+                    </svg>
+                  </button>
+                </form>
+              </>
+            )}
           </div>
 
           <footer
