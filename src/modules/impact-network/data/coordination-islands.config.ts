@@ -1,302 +1,84 @@
-import { normalizeAreaToken } from '@/modules/impact-network/engine/impact-paths'
+/**
+ * Catálogo runtime de coordinaciones alimentado por GET /coordinations/graph.
+ * El backend es la única fuente de verdad; no hay IDs ni aliases hardcodeados.
+ */
 
-export type CoordinationId =
-  | 'coord-general'
-  | 'coord-b2b'
-  | 'coord-bellas-artes'
-  | 'coord-desarrollo-profesional'
-  | 'coord-social-lab'
-  | 'coord-empresarial'
-  | 'coord-especializaciones'
-  | 'coord-ingenierias'
-  | 'coord-operaciones-academicas'
-  | 'coord-proyeccion-social'
-  | 'coord-saber-pro'
-  | 'coord-transversales'
-  | 'coord-negocios'
+export type CoordinationId = string
 
 export interface CoordinationDefinition {
   id: CoordinationId
+  uuid: string
   name: string
   shortName: string
   islandAsset: string
+  color: string
+  displayOrder: number
+  isActive: boolean
 }
 
-const ISLAND_ASSETS = {
-  general: '/islas/CoordGeneral.png',
-  b2b: '/islas/CoordB2B.png',
-  bellasArtes: '/islas/CoordBellasartes.png',
-  desarrolloProfesional: '/islas/CoordDesarrolloprof.png',
-  socialLab: '/islas/CoordSociallab.png',
-} as const
+let catalog: readonly CoordinationDefinition[] = []
+const byCode = new Map<string, CoordinationDefinition>()
+const byUuid = new Map<string, CoordinationDefinition>()
+const byNameToken = new Map<string, CoordinationDefinition>()
 
-export const COORDINATION_CATALOG: readonly CoordinationDefinition[] = [
-  {
-    id: 'coord-general',
-    name: 'Coordinación General',
-    shortName: 'General',
-    islandAsset: ISLAND_ASSETS.general,
-  },
-  {
-    id: 'coord-b2b',
-    name: 'Coordinación Supervisor B2B',
-    shortName: 'B2B',
-    islandAsset: ISLAND_ASSETS.b2b,
-  },
-  {
-    id: 'coord-bellas-artes',
-    name: 'Coordinador Bellas Artes',
-    shortName: 'Bellas Artes',
-    islandAsset: ISLAND_ASSETS.bellasArtes,
-  },
-  {
-    id: 'coord-desarrollo-profesional',
-    name: 'Coordinador Desarrollo Profesional',
-    shortName: 'Desarrollo Prof.',
-    islandAsset: ISLAND_ASSETS.desarrolloProfesional,
-  },
-  {
-    id: 'coord-social-lab',
-    name: 'Coordinador de Social - Social Lab',
-    shortName: 'Social Lab',
-    islandAsset: ISLAND_ASSETS.socialLab,
-  },
-  {
-    id: 'coord-empresarial',
-    name: 'Coordinador Empresarial',
-    shortName: 'Empresarial',
-    islandAsset: ISLAND_ASSETS.b2b,
-  },
-  {
-    id: 'coord-especializaciones',
-    name: 'Coordinador Especializaciones',
-    shortName: 'Especializaciones',
-    islandAsset: ISLAND_ASSETS.desarrolloProfesional,
-  },
-  {
-    id: 'coord-ingenierias',
-    name: 'Coordinador Ingenierías',
-    shortName: 'Ingenierías',
-    islandAsset: ISLAND_ASSETS.general,
-  },
-  {
-    id: 'coord-operaciones-academicas',
-    name: 'Coordinador Operaciones Académicas',
-    shortName: 'Op. Académicas',
-    islandAsset: ISLAND_ASSETS.desarrolloProfesional,
-  },
-  {
-    id: 'coord-proyeccion-social',
-    name: 'Coordinador Proyección Social',
-    shortName: 'Proyección Social',
-    islandAsset: ISLAND_ASSETS.socialLab,
-  },
-  {
-    id: 'coord-saber-pro',
-    name: 'Coordinador Saber Pro',
-    shortName: 'Saber Pro',
-    islandAsset: ISLAND_ASSETS.desarrolloProfesional,
-  },
-  {
-    id: 'coord-transversales',
-    name: 'Coordinador Transversales',
-    shortName: 'Transversales',
-    islandAsset: ISLAND_ASSETS.general,
-  },
-  {
-    id: 'coord-negocios',
-    name: 'Negocios',
-    shortName: 'Negocios',
-    islandAsset: ISLAND_ASSETS.b2b,
-  },
-] as const
-
-const COORDINATION_BY_ID = new Map(
-  COORDINATION_CATALOG.map((coordination) => [coordination.id, coordination]),
-)
-
-interface CoordinationAlias {
-  coordinationId: CoordinationId
-  tokens: readonly string[]
+export function normalizeCatalogToken(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
 }
 
-const COORDINATION_ALIASES: readonly CoordinationAlias[] = [
-  {
-    coordinationId: 'coord-general',
-    tokens: [
-      'coord-general',
-      'area-vision-general',
-      'vgo',
-      'vision general operaciones',
-      'vision general',
-      'planning',
-      'planeacion',
-      'finance',
-      'financiera',
-      'library',
-      'biblioteca',
-      'infrastructure',
-      'infraestructura',
-    ],
-  },
-  {
-    coordinationId: 'coord-b2b',
-    tokens: [
-      'coord-b2b',
-      'area-b2b',
-      'sb2b',
-      'supervisor b2b',
-      'b2b',
-      'communications',
-      'comunicaciones',
-      'com',
-    ],
-  },
-  {
-    coordinationId: 'coord-bellas-artes',
-    tokens: [
-      'coord-bellas-artes',
-      'bellas artes',
-      'coordinador bellas artes',
-    ],
-  },
-  {
-    coordinationId: 'coord-desarrollo-profesional',
-    tokens: [
-      'coord-desarrollo-profesional',
-      'area-desarrollo-profesional',
-      'cdp',
-      'desarrollo profesional',
-      'coordinador de desarrollo profesional',
-      'people',
-      'talento humano',
-      'tal',
-    ],
-  },
-  {
-    coordinationId: 'coord-social-lab',
-    tokens: [
-      'coord-social-lab',
-      'social lab',
-      'coordinador de social social lab',
-    ],
-  },
-  {
-    coordinationId: 'coord-empresarial',
-    tokens: [
-      'coord-empresarial',
-      'empresarial',
-      'coordinador empresarial',
-      'area-servicio',
-      'lsv',
-      'lider de servicio',
-      'servicio',
-      'operations',
-      'operaciones',
-      'ope',
-      'direccion de operaciones',
-    ],
-  },
-  {
-    coordinationId: 'coord-especializaciones',
-    tokens: [
-      'coord-especializaciones',
-      'especializaciones',
-      'coordinador especializaciones',
-    ],
-  },
-  {
-    coordinationId: 'coord-ingenierias',
-    tokens: [
-      'coord-ingenierias',
-      'ingenierias',
-      'coordinador ingenierias',
-      'area-fabrica-desarrollo',
-      'cfd',
-      'fabrica y desarrollo',
-      'coordinador de fabrica y desarrollo',
-      'technology',
-      'tecnologia',
-      'tec',
-    ],
-  },
-  {
-    coordinationId: 'coord-operaciones-academicas',
-    tokens: [
-      'coord-operaciones-academicas',
-      'operaciones academicas',
-      'coordinador operaciones academicas',
-      'area-operacion-academica',
-      'coa',
-      'operacion academica',
-      'coordinador de operacion academica',
-      'academic-direction',
-      'direccion academica',
-      'aca',
-      'coordinacion academica',
-    ],
-  },
-  {
-    coordinationId: 'coord-proyeccion-social',
-    tokens: [
-      'coord-proyeccion-social',
-      'proyeccion social',
-      'coordinador proyeccion social',
-      'area-proyeccion-social',
-      'cpso',
-      'wellbeing',
-      'bienestar',
-      'bien',
-    ],
-  },
-  {
-    coordinationId: 'coord-saber-pro',
-    tokens: [
-      'coord-saber-pro',
-      'saber pro',
-      'coordinador saber pro',
-      'area-pruebas-saber',
-      'cps',
-      'pruebas saber',
-      'coordinadora pruebas saber',
-      'registry',
-      'registro',
-      'reg',
-    ],
-  },
-  {
-    coordinationId: 'coord-transversales',
-    tokens: [
-      'coord-transversales',
-      'transversales',
-      'coordinador transversales',
-      'area-innovacion-edu',
-      'lit',
-      'innovacion edu',
-      'lider de innovacion y transformacion edu',
-      'lms',
-    ],
-  },
-  {
-    coordinationId: 'coord-negocios',
-    tokens: ['coord-negocios', 'negocios'],
-  },
-]
+/** Convierte imageAsset del backend (ej. CoordGeneral.png) a ruta pública. */
+export function resolveIslandAssetPath(imageAsset: string): string {
+  const fileName = imageAsset.trim().replace(/^.*[/\\]/, '')
+  if (!fileName) return '/islas/CoordGeneral.webp'
+  const base = fileName.replace(/\.(png|jpg|jpeg|webp)$/i, '')
+  return `/islas/${base}.webp`
+}
 
-const ALIAS_LOOKUP = new Map<string, CoordinationId>()
-for (const alias of COORDINATION_ALIASES) {
-  for (const token of alias.tokens) {
-    ALIAS_LOOKUP.set(normalizeAreaToken(token), alias.coordinationId)
+export function setCoordinationCatalog(
+  items: readonly CoordinationDefinition[],
+): void {
+  catalog = items
+  byCode.clear()
+  byUuid.clear()
+  byNameToken.clear()
+
+  for (const item of items) {
+    byCode.set(item.id, item)
+    byUuid.set(item.uuid, item)
+    byNameToken.set(normalizeCatalogToken(item.name), item)
+    byNameToken.set(normalizeCatalogToken(item.shortName), item)
+    byNameToken.set(normalizeCatalogToken(item.id), item)
   }
+}
+
+export function getCoordinationCatalog(): readonly CoordinationDefinition[] {
+  return catalog
 }
 
 export function getCoordination(
   coordinationId: CoordinationId,
 ): CoordinationDefinition {
-  return (
-    COORDINATION_BY_ID.get(coordinationId) ??
-    COORDINATION_BY_ID.get('coord-general')!
-  )
+  const resolved =
+    byCode.get(coordinationId) ??
+    byUuid.get(coordinationId) ??
+    byNameToken.get(normalizeCatalogToken(coordinationId))
+
+  if (resolved) return resolved
+
+  return {
+    id: coordinationId,
+    uuid: coordinationId,
+    name: coordinationId,
+    shortName: coordinationId,
+    islandAsset: '/islas/CoordGeneral.webp',
+    color: '#4F8EF7',
+    displayOrder: Number.MAX_SAFE_INTEGER,
+    isActive: true,
+  }
 }
 
 export function getCoordinationIslandAsset(
@@ -305,19 +87,39 @@ export function getCoordinationIslandAsset(
   return getCoordination(coordinationId).islandAsset
 }
 
+/**
+ * Resuelve un identificador externo contra el catálogo cargado del backend.
+ * Acepta code, UUID o nombre exacto del catálogo (sin aliases inventados).
+ */
 export function resolveCoordinationId(
   value: string | null | undefined,
 ): CoordinationId | null {
   if (!value) return null
-  const token = normalizeAreaToken(value)
+  const direct = byCode.get(value) ?? byUuid.get(value)
+  if (direct) return direct.id
+
+  const token = normalizeCatalogToken(value)
   if (!token) return null
-  return ALIAS_LOOKUP.get(token) ?? null
+  return byNameToken.get(token)?.id ?? null
 }
 
+export function resolveCoordinationIdOrFallback(
+  value: string | null | undefined,
+  fallback: CoordinationId | null = null,
+): CoordinationId | null {
+  return resolveCoordinationId(value) ?? fallback
+}
+
+/** @deprecated Usar resolveCoordinationId + catálogo backend. */
 export function resolveCoordinationIdOrGeneral(
   value: string | null | undefined,
 ): CoordinationId {
-  return resolveCoordinationId(value) ?? 'coord-general'
+  return (
+    resolveCoordinationId(value) ??
+    catalog.find((item) => item.id.includes('general'))?.id ??
+    catalog[0]?.id ??
+    'unknown'
+  )
 }
 
 export function starEdgeId(
@@ -326,3 +128,23 @@ export function starEdgeId(
 ): string {
   return `${originId}-->${targetId}`
 }
+
+export function hexToRgbChannels(hex: string): string {
+  const normalized = hex.replace('#', '').trim()
+  const full =
+    normalized.length === 3
+      ? normalized
+          .split('')
+          .map((char) => `${char}${char}`)
+          .join('')
+      : normalized.padEnd(6, '0').slice(0, 6)
+  const value = Number.parseInt(full, 16)
+  if (Number.isNaN(value)) return '88 135 255'
+  const r = (value >> 16) & 255
+  const g = (value >> 8) & 255
+  const b = value & 255
+  return `${r} ${g} ${b}`
+}
+
+/** Legacy export vacío: el catálogo llega del backend en runtime. */
+export const COORDINATION_CATALOG: readonly CoordinationDefinition[] = []

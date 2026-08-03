@@ -12,12 +12,22 @@ import {
   CoordinationAutocomplete,
   CoordinationAutocompleteLegend,
 } from '@/modules/operational-events/components/CoordinationAutocomplete'
-import { EvidenceFileDropzone } from '@/modules/operational-events/components/EvidenceFileDropzone'
 import {
   contextQualityClass,
   DESCRIPTION_MIN_LENGTH_EXPORT,
   evaluateContextQuality,
 } from '@/modules/operational-events/utils/contextQuality'
+import {
+  normalizeCaptureDate,
+  todayCaptureDate,
+} from '@/modules/operational-events/utils/situationCaptureDate'
+import {
+  DESCRIPTION_MAX_LENGTH,
+  formatMissingRequirements,
+  TITLE_MAX_LENGTH,
+  TITLE_MIN_LENGTH,
+  validateSituationCaptureDraft,
+} from '@/modules/operational-events/utils/situationCaptureValidation'
 import {
   FOCUS_VISIBLE,
   TEXT_LABEL,
@@ -27,7 +37,6 @@ const FIELD =
   'novex-capture-field w-full min-w-0 border-0 bg-transparent px-3 py-2 text-sm text-slate-800 shadow-[inset_0_-1px_0_0_rgba(100,116,139,0.28)] placeholder:text-slate-500/65'
 const FIELD_AREA = `${FIELD} resize-none`
 
-const TITLE_MIN_LENGTH = 8
 const DESCRIPTION_MIN_LENGTH = DESCRIPTION_MIN_LENGTH_EXPORT
 const DESCRIPTION_PLACEHOLDER =
   'Describe la situación con el mayor detalle posible.\n\nIncluye qué ocurrió, desde cuándo sucede, cómo fue detectada, qué procesos afecta y qué acciones se intentaron previamente.\n\nMientras más contexto proporciones, mejor será el análisis de la IA.'
@@ -35,6 +44,7 @@ const DESCRIPTION_PLACEHOLDER =
 interface EventCaptureFormProps {
   draft: SituationCaptureDraft
   coordinations: CoordinationSummary[]
+  relatedCoordinations?: CoordinationSummary[]
   loadingCoordinations?: boolean
   coordinationLocked?: boolean
   onChange: (next: SituationCaptureDraft) => void
@@ -46,6 +56,7 @@ interface EventCaptureFormProps {
 export function EventCaptureForm({
   draft,
   coordinations,
+  relatedCoordinations,
   loadingCoordinations = false,
   coordinationLocked = false,
   onChange,
@@ -57,44 +68,25 @@ export function EventCaptureForm({
   const contextQuality = evaluateContextQuality(draft)
   const qualityClass = contextQualityClass(contextQuality)
 
-  const canContinue =
-    draft.title.trim().length >= TITLE_MIN_LENGTH &&
-    draft.description.trim().length >= DESCRIPTION_MIN_LENGTH &&
-    draft.coordinationId.length > 0 &&
-    draft.reportedAt.length > 0 &&
-    Boolean(draft.detectionMethod) &&
-    (draft.detectionMethod !== 'OTRO' || draft.detectionMethodOther.trim().length > 0) &&
-    (!draft.affectedParties.includes('OTRO') ||
-      draft.affectedPartyOther.trim().length > 0)
+  const validation = validateSituationCaptureDraft(
+    draft,
+    relatedCoordinations ?? coordinations,
+    coordinations,
+  )
+  const canContinue = validation.valid
 
-  const missingRequirements = [
-    draft.title.trim().length < TITLE_MIN_LENGTH
-      ? 'un título claro y específico'
-      : null,
-    draft.description.trim().length < DESCRIPTION_MIN_LENGTH
-      ? 'más contexto en la descripción'
-      : null,
-    !draft.coordinationId ? 'coordinación responsable' : null,
-    !draft.reportedAt ? 'fecha y hora' : null,
-    !draft.detectionMethod ? 'cómo se detectó la situación' : null,
-    draft.detectionMethod === 'OTRO' && !draft.detectionMethodOther.trim()
-      ? 'especificar el método de detección'
-      : null,
-    draft.affectedParties.includes('OTRO') && !draft.affectedPartyOther.trim()
-      ? 'especificar quiénes están siendo afectados'
-      : null,
-  ].filter((requirement): requirement is string => requirement !== null)
+  const missingRequirements = validation.missingRequirements
 
   const selectedCoordination = coordinations.find(
     (item) => item.id === draft.coordinationId,
   )
 
-  const [reportedDate = '', reportedTime = ''] = draft.reportedAt.split('T')
+  const reportedDate = normalizeCaptureDate(draft.reportedAt)
 
-  function updateReportedAt(date: string, time: string) {
+  function updateReportedDate(date: string) {
     onChange({
       ...draft,
-      reportedAt: date && time ? `${date}T${time}` : date,
+      reportedAt: date ? normalizeCaptureDate(date) : '',
     })
   }
 
@@ -126,7 +118,7 @@ export function EventCaptureForm({
               onChange={(event) =>
                 onChange({ ...draft, title: event.target.value })
               }
-              maxLength={200}
+              maxLength={TITLE_MAX_LENGTH}
               minLength={TITLE_MIN_LENGTH}
               placeholder="Ej.: Caída total del SGP durante proceso de matrícula"
               required
@@ -178,6 +170,7 @@ export function EventCaptureForm({
                 onChange({ ...draft, description: event.target.value })
               }
               minLength={DESCRIPTION_MIN_LENGTH}
+              maxLength={DESCRIPTION_MAX_LENGTH}
               placeholder={DESCRIPTION_PLACEHOLDER}
               required
             />
@@ -236,34 +229,26 @@ export function EventCaptureForm({
             </span>
           </label>
 
-          <fieldset className="block space-y-1.5">
-            <legend className={TEXT_LABEL}>Fecha y hora</legend>
-            <div className="novex-capture-date-time">
-              <input
-                type="date"
-                className={FIELD}
-                value={reportedDate}
-                onChange={(event) =>
-                  updateReportedAt(event.target.value, reportedTime)
-                }
-                required
-              />
-              <input
-                type="time"
-                className={FIELD}
-                value={reportedTime}
-                onChange={(event) =>
-                  updateReportedAt(reportedDate, event.target.value)
-                }
-                required
-              />
-            </div>
-          </fieldset>
+          <label className="block space-y-1.5">
+            <span className={TEXT_LABEL}>Fecha de ocurrencia</span>
+            <input
+              type="date"
+              className={FIELD}
+              value={reportedDate}
+              max={todayCaptureDate()}
+              onChange={(event) => updateReportedDate(event.target.value)}
+              required
+            />
+            <span className="novex-capture-field__hint">
+              Día en que ocurrió la situación. Por defecto es hoy; puede elegir
+              una fecha anterior si el hecho sucedió otro día.
+            </span>
+          </label>
 
           <fieldset className="novex-capture-related-coordinations block space-y-1.5">
             <CoordinationAutocompleteLegend />
             <CoordinationAutocomplete
-              coordinations={coordinations}
+              coordinations={relatedCoordinations ?? coordinations}
               selectedIds={draft.relatedCoordinationIds}
               onChange={(relatedCoordinationIds) =>
                 onChange({ ...draft, relatedCoordinationIds })
@@ -315,24 +300,15 @@ export function EventCaptureForm({
               onChange={(event) =>
                 onChange({ ...draft, additionalNotes: event.target.value })
               }
-              placeholder="Información adicional que pueda ayudar al análisis."
+              placeholder="Información adicional que se guardará como evidencia en el expediente."
             />
           </label>
-
-          <EvidenceFileDropzone
-            attachments={draft.attachments}
-            onChange={(attachments) => onChange({ ...draft, attachments })}
-          />
         </aside>
       </div>
 
       <div className="novex-capture-actions flex shrink-0 items-center justify-between gap-4 pt-2.5">
         <p className="novex-capture-validation" aria-live="polite">
-          {canContinue
-            ? 'Revise el resumen antes de continuar con el análisis de IA.'
-            : missingRequirements.length === 1
-              ? `Todavía falta ${missingRequirements[0]}.`
-              : `Todavía falta completar ${missingRequirements.join(', ')}.`}
+          {formatMissingRequirements(missingRequirements)}
         </p>
         <button
           type="submit"

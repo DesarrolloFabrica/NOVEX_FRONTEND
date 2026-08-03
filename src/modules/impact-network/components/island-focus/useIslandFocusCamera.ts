@@ -104,12 +104,16 @@ function interpolateView(from: SceneView, to: SceneView, progress: number): Scen
 
 interface UseIslandFocusCameraOptions {
   reducedMotion?: boolean
+  /** Live camera frames (prefer DOM/CSS updates; avoid React setState). */
   onViewChange: (view: SceneView) => void
+  /** Final settled view — safe to sync React state here. */
+  onViewCommit?: (view: SceneView) => void
 }
 
 export function useIslandFocusCamera({
   reducedMotion = false,
   onViewChange,
+  onViewCommit,
 }: UseIslandFocusCameraOptions) {
   const savedViewRef = useRef<SceneView | null>(null)
   const animationRef = useRef<number | null>(null)
@@ -129,6 +133,7 @@ export function useIslandFocusCamera({
 
       if (reducedMotion) {
         onViewChange(to)
+        onViewCommit?.(to)
         return Promise.resolve()
       }
 
@@ -146,6 +151,8 @@ export function useIslandFocusCamera({
           }
 
           animationRef.current = null
+          onViewChange(to)
+          onViewCommit?.(to)
           setIsAnimating(false)
           resolve()
         }
@@ -153,7 +160,7 @@ export function useIslandFocusCamera({
         animationRef.current = window.requestAnimationFrame(tick)
       })
     },
-    [cancelAnimation, onViewChange, reducedMotion],
+    [cancelAnimation, onViewChange, onViewCommit, reducedMotion],
   )
 
   const focusOnNode = useCallback(

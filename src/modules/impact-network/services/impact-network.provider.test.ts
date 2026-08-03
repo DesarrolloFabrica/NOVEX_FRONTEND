@@ -1,65 +1,79 @@
 import { describe, expect, it } from 'vitest'
-import { IMPACT_TOPOLOGY } from '@/modules/impact-network/data/impact-topology.mock'
 import {
-  getPrediction,
-  getReplay,
-  mockImpactNetworkDataProvider,
+  impactNetworkDataProvider,
+  stubImpactPropagationAdapter,
 } from '@/modules/impact-network/services/impact-network.provider'
+import { mapCoordinationGraphToImpactNetwork } from '@/modules/impact-network/services/impact-network-graph.mapper'
+import { getCoordinationCatalog } from '@/modules/impact-network/data/coordination-islands.config'
 
-describe('mockImpactNetworkDataProvider', () => {
-  it('entrega copias de topología que no permiten contaminar el fixture', async () => {
-    const first = await mockImpactNetworkDataProvider.loadTopology()
-    const second = await mockImpactNetworkDataProvider.loadTopology()
-
-    expect(first).toEqual(IMPACT_TOPOLOGY)
-    expect(first).not.toBe(second)
-    expect(first.areas).not.toBe(second.areas)
-    expect(first.areas[0]).not.toBe(second.areas[0])
-    expect(first.areas[0]?.position).not.toBe(second.areas[0]?.position)
-    expect(first.bindings[0]?.externalNames).not.toBe(
-      second.bindings[0]?.externalNames,
+describe('impact network backend provider', () => {
+  it('no carga topología mock desde el provider legado', async () => {
+    await expect(impactNetworkDataProvider.loadTopology()).rejects.toThrow(
+      /loadImpactNetworkGraph/,
     )
   })
 
-  it('devuelve null para expedientes nuevos sin enriquecimiento explícito', async () => {
+  it('adapter de propagación no inventa replay ni simulación', async () => {
+    await expect(stubImpactPropagationAdapter.loadReplay('evt-001')).resolves.toBeNull()
     await expect(
-      mockImpactNetworkDataProvider.loadReplay('event-without-fixture'),
+      stubImpactPropagationAdapter.simulateImpact('evt-001'),
     ).resolves.toBeNull()
-    await expect(
-      mockImpactNetworkDataProvider.simulateImpact('event-without-fixture'),
-    ).resolves.toBeNull()
-    expect(getReplay('event-without-fixture')).toBeNull()
-    expect(getPrediction('event-without-fixture')).toBeNull()
   })
 
-  it('clona replays para que el consumidor no altere llamadas posteriores', () => {
-    const first = getReplay('evt-001')
-    const second = getReplay('evt-001')
+  it('mapea el grafo del backend a topología e islas', () => {
+    const model = mapCoordinationGraphToImpactNetwork({
+      coordinations: [
+        {
+          id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+          code: 'coord-general',
+          name: 'Coordinación General',
+          shortName: 'General',
+          description: null,
+          color: '#4F8EF7',
+          icon: 'coord-general',
+          imageAsset: 'CoordGeneral.png',
+          displayOrder: 1,
+          isActive: true,
+        },
+        {
+          id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+          code: 'coord-ingenierias',
+          name: 'Coordinador Ingenierías',
+          shortName: 'Ingenierías',
+          description: null,
+          color: '#00B8D9',
+          icon: 'coord-ingenierias',
+          imageAsset: 'CoordGeneral.png',
+          displayOrder: 2,
+          isActive: true,
+        },
+      ],
+      dependencies: [
+        {
+          id: 'dep-1',
+          sourceCoordinationId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+          targetCoordinationId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+          dependencyWeight: 3,
+          dependencyType: 'technical',
+          bidirectional: false,
+        },
+      ],
+    })
 
-    expect(first).toEqual(second)
-    expect(first).not.toBe(second)
-    expect(first?.steps).not.toBe(second?.steps)
-    expect(first?.steps[0]).not.toBe(second?.steps[0])
-  })
-
-  it('recorta una simulación por horizonte sin mutar la predicción base', async () => {
-    const short = await mockImpactNetworkDataProvider.simulateImpact(
-      'evt-001',
-      { horizonMinutes: 10 },
+    expect(model.coordinationIds).toEqual([
+      'coord-general',
+      'coord-ingenierias',
+    ])
+    expect(model.dependencies).toEqual([
+      {
+        id: 'dep-1',
+        sourceAreaId: 'coord-general',
+        targetAreaId: 'coord-ingenierias',
+      },
+    ])
+    expect(getCoordinationCatalog()).toHaveLength(2)
+    expect(model.topology.bindings[0]?.externalIds).toContain(
+      'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
     )
-    const full = await mockImpactNetworkDataProvider.simulateImpact('evt-001')
-
-    expect(short).toMatchObject({
-      eventId: 'evt-001',
-      horizonMinutes: 10,
-      potentialAreaIds: ['communications'],
-    })
-    expect(short?.steps).toHaveLength(1)
-    expect(full).toMatchObject({
-      horizonMinutes: 30,
-      potentialAreaIds: ['communications', 'wellbeing'],
-    })
-    expect(full?.steps).toHaveLength(2)
   })
 })
-

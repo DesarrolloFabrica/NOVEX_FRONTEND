@@ -15,11 +15,6 @@ export type AffectedParty =
   | 'COMUNIDAD_EXTERNA'
   | 'OTRO'
 
-export interface CaptureFileAttachment {
-  id: string
-  file: File
-}
-
 export interface SituationCaptureDraft {
   title: string
   description: string
@@ -31,7 +26,6 @@ export interface SituationCaptureDraft {
   affectedPartyOther: string
   relatedCoordinationIds: string[]
   additionalNotes: string
-  attachments: CaptureFileAttachment[]
 }
 
 export const DETECTION_METHOD_OPTIONS: Array<{

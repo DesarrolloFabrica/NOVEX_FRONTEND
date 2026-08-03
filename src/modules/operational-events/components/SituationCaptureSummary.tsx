@@ -4,10 +4,7 @@ import {
   type SituationCaptureDraft,
 } from '@/modules/situations/types/situation-capture.types'
 import type { CoordinationSummary } from '@/modules/situations/types/situation.types'
-import {
-  formatFileSize,
-  inferEvidenceType,
-} from '@/modules/situations/services/situation-evidences.service'
+import { formatCaptureDateLabel } from '@/modules/operational-events/utils/situationCaptureDate'
 import { FOCUS_VISIBLE } from '@/modules/monitoring/constants/monitoringTheme'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { NovexIcon } from '@/shared/components/NovexIcon'
@@ -21,16 +18,6 @@ interface SituationCaptureSummaryProps {
   canConfirm?: boolean
 }
 
-const EVIDENCE_TYPE_LABEL: Record<string, string> = {
-  IMAGE: 'Imagen',
-  DOCUMENT: 'Documento',
-  VIDEO: 'Video',
-  EMAIL: 'Correo',
-  LINK: 'Enlace',
-  NOTE: 'Nota',
-  OTHER: 'Archivo',
-}
-
 const AI_ANALYSIS_POINTS = [
   'Identificar la causa probable del incidente',
   'Estimar el impacto operacional',
@@ -39,20 +26,6 @@ const AI_ANALYSIS_POINTS = [
   'Generar recomendaciones ejecutivas',
   'Proponer acciones inmediatas',
 ] as const
-
-function splitReportedAt(value: string): { date: string; time: string } {
-  if (!value) return { date: '—', time: '—' }
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) return { date: value, time: '—' }
-
-  return {
-    date: new Intl.DateTimeFormat('es-CO', { dateStyle: 'long' }).format(parsed),
-    time: new Intl.DateTimeFormat('es-CO', {
-      hour: 'numeric',
-      minute: '2-digit',
-    }).format(parsed),
-  }
-}
 
 export function SituationCaptureSummary({
   draft,
@@ -81,7 +54,7 @@ export function SituationCaptureSummary({
     return AFFECTED_PARTY_OPTIONS.find((item) => item.value === party)?.label ?? party
   })
 
-  const { date, time } = splitReportedAt(draft.reportedAt)
+  const occurrenceDate = formatCaptureDateLabel(draft.reportedAt)
   const hasNotes = draft.additionalNotes.trim().length > 0
 
   return (
@@ -100,11 +73,7 @@ export function SituationCaptureSummary({
           <div className="novex-executive-dossier__meta">
             <div className="novex-executive-dossier__meta-item">
               <NovexIcon name="calendar" size={14} />
-              <span>{date}</span>
-            </div>
-            <div className="novex-executive-dossier__meta-item">
-              <NovexIcon name="clock" size={14} />
-              <span>{time}</span>
+              <span>{occurrenceDate}</span>
             </div>
             <div className="novex-executive-dossier__meta-item">
               <NovexIcon name="user" size={14} />
@@ -157,16 +126,8 @@ export function SituationCaptureSummary({
             <div className="novex-executive-dossier__fact">
               <NovexIcon name="calendar" size={15} />
               <div>
-                <span>Fecha</span>
-                <strong>{date}</strong>
-              </div>
-            </div>
-
-            <div className="novex-executive-dossier__fact">
-              <NovexIcon name="clock" size={15} />
-              <div>
-                <span>Hora</span>
-                <strong>{time}</strong>
+                <span>Fecha de ocurrencia</span>
+                <strong>{occurrenceDate}</strong>
               </div>
             </div>
 
@@ -214,35 +175,6 @@ export function SituationCaptureSummary({
             <p>{draft.additionalNotes.trim()}</p>
           </article>
         ) : null}
-
-        <article className="novex-executive-dossier__evidence">
-          <h3 className="novex-executive-dossier__section-title">Evidencias</h3>
-          {draft.attachments.length > 0 ? (
-            <ul className="novex-executive-dossier__evidence-list">
-              {draft.attachments.map((attachment) => {
-                const evidenceType = inferEvidenceType(attachment.file)
-                return (
-                  <li key={attachment.id} className="novex-executive-dossier__evidence-item">
-                    <span className="novex-executive-dossier__evidence-icon" aria-hidden="true">
-                      <NovexIcon name="file" size={16} />
-                    </span>
-                    <div className="novex-executive-dossier__evidence-copy">
-                      <strong>{attachment.file.name}</strong>
-                      <span>
-                        {EVIDENCE_TYPE_LABEL[evidenceType] ?? 'Archivo'} ·{' '}
-                        {formatFileSize(attachment.file.size)}
-                      </span>
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
-          ) : (
-            <p className="novex-executive-dossier__evidence-empty">
-              Sin evidencias adjuntas.
-            </p>
-          )}
-        </article>
 
         <article className="novex-executive-dossier__ai-brief">
           <div className="novex-executive-dossier__ai-brief-head">

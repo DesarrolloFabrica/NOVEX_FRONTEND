@@ -1,72 +1,77 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import {
-  COORDINATION_CATALOG,
   getCoordinationIslandAsset,
   resolveCoordinationId,
+  resolveIslandAssetPath,
+  setCoordinationCatalog,
   starEdgeId,
-  type CoordinationId,
+  type CoordinationDefinition,
 } from '@/modules/impact-network/data/coordination-islands.config'
 
-describe('coordination-islands.config', () => {
-  it('resuelve ids de coordinaciones operativas y áreas institucionales', () => {
-    expect(resolveCoordinationId('area-b2b')).toBe('coord-b2b')
-    expect(resolveCoordinationId('TEC')).toBe('coord-ingenierias')
-    expect(resolveCoordinationId('Coordinador de Operación Académica')).toBe(
-      'coord-operaciones-academicas',
-    )
-    expect(resolveCoordinationId('Coordinador de Desarrollo Profesional')).toBe(
-      'coord-desarrollo-profesional',
-    )
+const SAMPLE_CATALOG: CoordinationDefinition[] = [
+  {
+    id: 'coord-b2b',
+    uuid: '11111111-1111-1111-1111-111111111111',
+    name: 'Coordinación Supervisor B2B',
+    shortName: 'B2B',
+    islandAsset: '/islas/CoordB2B.webp',
+    color: '#7C5CFF',
+    displayOrder: 2,
+    isActive: true,
+  },
+  {
+    id: 'coord-ingenierias',
+    uuid: '22222222-2222-2222-2222-222222222222',
+    name: 'Coordinador Ingenierías',
+    shortName: 'Ingenierías',
+    islandAsset: '/islas/CoordGeneral.webp',
+    color: '#00B8D9',
+    displayOrder: 8,
+    isActive: true,
+  },
+  {
+    id: 'coord-operaciones-academicas',
+    uuid: '33333333-3333-3333-3333-333333333333',
+    name: 'Coordinador Operaciones Académicas',
+    shortName: 'Op. Académicas',
+    islandAsset: '/islas/CoordDesarrolloprof.webp',
+    color: '#6554C0',
+    displayOrder: 9,
+    isActive: true,
+  },
+]
+
+describe('coordination catalog (backend-driven)', () => {
+  beforeEach(() => {
+    setCoordinationCatalog(SAMPLE_CATALOG)
   })
 
-  it('asigna islas semánticas y variadas a las coordinaciones operativas', () => {
-    expect(getCoordinationIslandAsset('coord-empresarial')).toBe(
-      '/islas/CoordB2B.png',
+  it('resuelve por code, uuid y nombre del catálogo cargado', () => {
+    expect(resolveCoordinationId('coord-b2b')).toBe('coord-b2b')
+    expect(
+      resolveCoordinationId('11111111-1111-1111-1111-111111111111'),
+    ).toBe('coord-b2b')
+    expect(resolveCoordinationId('Coordinador Ingenierías')).toBe(
+      'coord-ingenierias',
     )
-    expect(getCoordinationIslandAsset('coord-proyeccion-social')).toBe(
-      '/islas/CoordSociallab.png',
-    )
-    expect(getCoordinationIslandAsset('coord-operaciones-academicas')).toBe(
-      '/islas/CoordDesarrolloprof.png',
+    expect(resolveCoordinationId('alias-inventado')).toBeNull()
+  })
+
+  it('resuelve assets desde imageAsset del backend', () => {
+    expect(resolveIslandAssetPath('CoordGeneral.png')).toBe(
+      '/islas/CoordGeneral.webp',
     )
     expect(getCoordinationIslandAsset('coord-ingenierias')).toBe(
-      '/islas/CoordGeneral.png',
+      '/islas/CoordGeneral.webp',
+    )
+    expect(getCoordinationIslandAsset('coord-operaciones-academicas')).toBe(
+      '/islas/CoordDesarrolloprof.webp',
     )
   })
 
-  it('evita islas repetidas en la propagación típica del SGP', () => {
-    const sgpCoordinationIds: CoordinationId[] = [
-      'coord-ingenierias',
-      'coord-operaciones-academicas',
-      'coord-empresarial',
-    ]
-    const sgpIslandAssets = sgpCoordinationIds.map(getCoordinationIslandAsset)
-
-    expect(new Set(sgpIslandAssets).size).toBe(sgpIslandAssets.length)
-  })
-
-  it('limita el catálogo a los cinco PNG de islas disponibles', () => {
-    const availableIslandAssets = new Set([
-      '/islas/CoordGeneral.png',
-      '/islas/CoordB2B.png',
-      '/islas/CoordBellasartes.png',
-      '/islas/CoordDesarrolloprof.png',
-      '/islas/CoordSociallab.png',
-    ])
-
-    expect(
-      COORDINATION_CATALOG.every(({ islandAsset }) =>
-        availableIslandAssets.has(islandAsset),
-      ),
-    ).toBe(true)
-    expect(
-      new Set(COORDINATION_CATALOG.map(({ islandAsset }) => islandAsset)),
-    ).toEqual(availableIslandAssets)
-  })
-
-  it('genera ids de aristas estrella estables', () => {
-    expect(starEdgeId('coord-ingenierias', 'coord-saber-pro')).toBe(
-      'coord-ingenierias-->coord-saber-pro',
+  it('genera ids de arista estables', () => {
+    expect(starEdgeId('coord-ingenierias', 'coord-b2b')).toBe(
+      'coord-ingenierias-->coord-b2b',
     )
   })
 })

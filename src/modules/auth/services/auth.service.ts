@@ -18,12 +18,15 @@ interface UserApiResponse {
   onboardingSeenAt: string | null
 }
 
-function toUser(payload: UserApiResponse): User {
+function toUser(payload: UserApiResponse, base?: User): User {
   return {
     id: payload.id,
     name: payload.name,
     role: payload.role,
-    selectedAreaId: payload.selectedAreaId ?? undefined,
+    roleCode: base?.roleCode ?? 'COORDINADOR',
+    permissions: base?.permissions ?? [],
+    selectedAreaId: payload.selectedAreaId ?? base?.selectedAreaId,
+    coordinationId: base?.coordinationId,
     onboardingCompleted: payload.onboardingCompleted,
     onboardingSeenAt: payload.onboardingSeenAt,
   }
@@ -39,7 +42,7 @@ export async function completeOnboardingRequest(
     `/users/${encodeURIComponent(user.id)}/onboarding/complete`,
     { method: 'PATCH' },
   )
-  return toUser(response)
+  return toUser(response, user)
 }
 
 /** Cierra la sesión actual. */

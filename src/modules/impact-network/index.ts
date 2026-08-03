@@ -36,12 +36,19 @@ export type {
 export {
   COORDINATION_CATALOG,
   getCoordination,
+  getCoordinationCatalog,
   getCoordinationIslandAsset,
+  hexToRgbChannels,
   resolveCoordinationId,
   resolveCoordinationIdOrGeneral,
+  resolveIslandAssetPath,
+  setCoordinationCatalog,
   starEdgeId,
 } from '@/modules/impact-network/data/coordination-islands.config'
-export type { CoordinationDefinition, CoordinationId } from '@/modules/impact-network/data/coordination-islands.config'
+export type {
+  CoordinationDefinition,
+  CoordinationId,
+} from '@/modules/impact-network/data/coordination-islands.config'
 
 export {
   IMPACT_AREAS,
@@ -62,18 +69,20 @@ export {
   buildImpactNetworkStressFixture,
   IMPACT_STRESS_EXPECTATIONS,
 } from '@/modules/impact-network/data/impact-stress.fixture'
-export type {
-  ImpactNetworkStressFixture,
-} from '@/modules/impact-network/data/impact-stress.fixture'
+export type { ImpactNetworkStressFixture } from '@/modules/impact-network/data/impact-stress.fixture'
 
 export {
-  getImpactPrediction,
-  getImpactReplay,
-  getPrediction,
-  getReplay,
   impactNetworkDataProvider,
-  mockImpactNetworkDataProvider,
+  impactPropagationAdapter,
+  setImpactPropagationAdapter,
+  stubImpactPropagationAdapter,
 } from '@/modules/impact-network/services/impact-network.provider'
+export type { ImpactPropagationAdapter } from '@/modules/impact-network/services/impact-network.provider'
+export {
+  loadImpactNetworkBootstrap,
+  loadImpactNetworkGraph,
+} from '@/modules/impact-network/services/impact-network-bootstrap.service'
+export { mapCoordinationGraphToImpactNetwork } from '@/modules/impact-network/services/impact-network-graph.mapper'
 
 export {
   buildIncidentPropagationPaths,

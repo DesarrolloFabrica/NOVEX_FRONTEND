@@ -10,6 +10,7 @@ import { MonitoringPage } from '@/pages/MonitoringPage'
 import { OperationalEventsCenterPage } from '@/pages/OperationalEventsCenterPage'
 import { OperationalIntelligencePage } from '@/pages/OperationalIntelligencePage'
 import { RegisterOperationalEventPage } from '@/pages/RegisterOperationalEventPage'
+import { RequirePermissionRoute } from '@/shared/components/RequirePermissionRoute'
 
 function RedirectPreservingSearch({ to }: { to: string }) {
   const location = useLocation()
@@ -41,7 +42,11 @@ export const router = createBrowserRouter([
           },
           {
             path: '/situaciones/nueva',
-            element: <RegisterOperationalEventPage />,
+            element: (
+              <RequirePermissionRoute permission="SITUATIONS_CREATE">
+                <RegisterOperationalEventPage />
+              </RequirePermissionRoute>
+            ),
           },
           { path: '/gestion', element: <MonitoringPage /> },
           { path: '/intelligence', element: <RedirectPreservingSearch to="/dashboard" /> },

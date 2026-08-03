@@ -1,7 +1,13 @@
 import { createSituationEvidence } from '@/modules/api/evidences.api'
 import { createSituation } from '@/modules/api/situations.api'
-import { buildSituationDescription } from '@/modules/operational-events/utils/buildSituationSubmission'
-import { inferEvidenceType } from '@/modules/situations/services/situation-evidences.service'
+import {
+  buildSituationDescription,
+  labelForDetection,
+  labelsForAffectedParties,
+  labelsForRelatedCoordinations,
+} from '@/modules/operational-events/utils/buildSituationSubmission'
+import { captureDateToOccurredAt } from '@/modules/operational-events/utils/situationCaptureDate'
+import { validateSituationCaptureDraft } from '@/modules/operational-events/utils/situationCaptureValidation'
 import type { SituationCaptureDraft } from '@/modules/situations/types/situation-capture.types'
 import type {
   CoordinationSummary,
@@ -28,6 +34,16 @@ function assertBackendSituationId(situation: SituationResponse): string {
 export async function registerSituation(
   input: RegisterSituationInput,
 ): Promise<SituationResponse> {
+  const validation = validateSituationCaptureDraft(
+    input.draft,
+    input.coordinations,
+  )
+  if (!validation.valid) {
+    throw new Error(
+      `Complete el formulario antes de registrar: ${validation.missingRequirements.join(', ')}.`,
+    )
+  }
+
   const placeholderCategory =
     input.categories.find((item) => item.code === 'TECH_DEGRADATION') ??
     input.categories[0]
@@ -36,29 +52,53 @@ export async function registerSituation(
     throw new Error('No hay categorías de incidente disponibles.')
   }
 
-  if (!isValidUuid(input.draft.coordinationId)) {
-    throw new Error('Seleccione una coordinación responsable válida.')
-  }
-
   const situation = await createSituation({
     title: input.draft.title.trim(),
     description: buildSituationDescription(input.draft, input.coordinations),
     coordinationId: input.draft.coordinationId,
     categoryId: placeholderCategory.id,
     severity: 'MEDIUM',
-    occurredAt: new Date(input.draft.reportedAt).toISOString(),
+    occurredAt: captureDateToOccurredAt(input.draft.reportedAt),
   })
 
   assertBackendSituationId(situation)
   return situation
 }
 
-export async function uploadEvidence(
+export async function uploadCaptureEvidences(
   situationId: string,
   draft: SituationCaptureDraft,
+  coordinations: CoordinationSummary[],
 ): Promise<void> {
   if (!isValidUuid(situationId)) {
-    throw new Error('No se puede subir evidencias sin un expediente válido.')
+    throw new Error('No se puede registrar evidencias sin un expediente válido.')
+  }
+
+  const detectionLabel = labelForDetection(draft)
+  if (detectionLabel) {
+    await createSituationEvidence(situationId, {
+      type: 'NOTE',
+      title: 'Método de detección',
+      description: detectionLabel,
+    })
+  }
+
+  const affectedLabels = labelsForAffectedParties(draft)
+  if (affectedLabels.length > 0) {
+    await createSituationEvidence(situationId, {
+      type: 'NOTE',
+      title: 'Afectados percibidos',
+      description: affectedLabels.join(', '),
+    })
+  }
+
+  const relatedLabels = labelsForRelatedCoordinations(draft, coordinations)
+  if (relatedLabels.length > 0) {
+    await createSituationEvidence(situationId, {
+      type: 'NOTE',
+      title: 'Coordinaciones relacionadas (percepción inicial)',
+      description: relatedLabels.join(', '),
+    })
   }
 
   if (draft.additionalNotes.trim()) {
@@ -66,18 +106,6 @@ export async function uploadEvidence(
       type: 'NOTE',
       title: 'Notas adicionales',
       description: draft.additionalNotes.trim(),
-    })
-  }
-
-  for (const attachment of draft.attachments) {
-    await createSituationEvidence(situationId, {
-      type: inferEvidenceType(attachment.file),
-      title: attachment.file.name,
-      description: 'Archivo adjunto durante el registro de la situación.',
-      fileName: attachment.file.name,
-      storagePath: `uploads/pending/${situationId}/${attachment.file.name}`,
-      mimeType: attachment.file.type || 'application/octet-stream',
-      fileSize: attachment.file.size,
     })
   }
 }
@@ -88,7 +116,7 @@ export async function registerSituationWithEvidences(
   const situation = await registerSituation(input)
 
   try {
-    await uploadEvidence(situation.id, input.draft)
+    await uploadCaptureEvidences(situation.id, input.draft, input.coordinations)
   } catch (error) {
     const message =
       error instanceof Error

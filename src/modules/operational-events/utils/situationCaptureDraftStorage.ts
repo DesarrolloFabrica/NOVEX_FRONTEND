@@ -2,6 +2,7 @@
 // Evita perder el formulario ante recargas (F5) o reinicios de Vite/HMR.
 
 import type { WizardStepId } from '@/modules/operational-events/components/WizardStepRail'
+import { normalizeCaptureDate } from '@/modules/operational-events/utils/situationCaptureDate'
 import {
   AFFECTED_PARTY_OPTIONS,
   DETECTION_METHOD_OPTIONS,
@@ -23,7 +24,7 @@ const AFFECTED_PARTIES = new Set<AffectedParty>(
   AFFECTED_PARTY_OPTIONS.map((option) => option.value),
 )
 
-type StoredSituationCaptureDraft = Omit<SituationCaptureDraft, 'attachments'>
+type StoredSituationCaptureDraft = SituationCaptureDraft
 
 function getStorage(): Storage | null {
   try {
@@ -108,7 +109,7 @@ export function readSituationCaptureDraft(): SituationCaptureDraft | null {
 
     return {
       ...stored,
-      attachments: [],
+      reportedAt: normalizeCaptureDate(stored.reportedAt),
     }
   } catch {
     return null

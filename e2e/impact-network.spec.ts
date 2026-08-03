@@ -646,6 +646,13 @@ test('el coordinador inicia directamente en su coordinación', async ({
   await expect(
     page.locator('.organizational-scene__direction-hub'),
   ).toHaveAttribute('data-context', 'true')
+
+  await page.getByRole('button', { name: 'Volver a la Dirección' }).click()
+
+  await expect(page.locator('.organizational-scene__island')).toHaveCount(1)
+  await expect(
+    page.locator('.organizational-scene__direction-hub'),
+  ).not.toHaveAttribute('data-context', 'true')
 })
 
 test('se adapta a los tres viewports sin desbordamiento horizontal', async ({

@@ -10,7 +10,10 @@ import { OPERATIONAL_EVENTS } from '@/modules/operational-events/data/operationa
 import type { OperationalEvent } from '@/modules/operational-events/types/operational-event.types'
 
 /** Activa el fallback mock cuando la API no devuelve situaciones. */
-export const IMPACT_NETWORK_MOCK_FALLBACK_ENABLED = true
+/**
+ * Fixture histórico de eventos. Ya no se usa como fallback de producción.
+ */
+export const IMPACT_NETWORK_MOCK_FALLBACK_ENABLED = false
 
 /**
  * Catálogo operacional completo de demostración. El selector de la experiencia

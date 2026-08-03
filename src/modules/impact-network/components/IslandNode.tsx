@@ -123,6 +123,9 @@ function IslandNodeView({
           src={coordination.islandAsset}
           alt={coordination.shortName}
           className="propagation-island__image"
+          width={640}
+          height={640}
+          decoding="async"
           draggable={false}
         />
       </div>

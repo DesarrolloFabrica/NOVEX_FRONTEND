@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import type {
   SituationDossier,
   SituationListItem,
@@ -11,8 +12,10 @@ import {
 } from '@/modules/services/situationManagementData.service'
 import type { UpdateSituationStatusInput } from '@/modules/monitoring/utils/situation-lifecycle'
 import { getErrorMessage } from '@/shared/utils/error'
+import { isValidUuid } from '@/shared/utils/uuid'
 
 export function useSituationManagement() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [situations, setSituations] = useState<SituationListItem[]>([])
   const [summary, setSummary] = useState<SituationManagementSummary>({
     total: 0,
@@ -22,9 +25,9 @@ export function useSituationManagement() {
     closed: 0,
     critical: 0,
   })
-  const [selectedSituationId, setSelectedSituationId] = useState<string | null>(
-    null,
-  )
+  const [selectedSituationId, setSelectedSituationIdState] = useState<
+    string | null
+  >(null)
   const [dossier, setDossier] = useState<SituationDossier | null>(null)
   const [listLoading, setListLoading] = useState(true)
   const [dossierLoading, setDossierLoading] = useState(false)
@@ -61,9 +64,53 @@ export function useSituationManagement() {
     }
   }, [])
 
+  const setSelectedSituationId = useCallback(
+    (situationId: string | null) => {
+      setSelectedSituationIdState(situationId)
+
+      const next = new URLSearchParams(searchParams)
+      if (situationId) {
+        next.set('situation', situationId)
+      } else {
+        next.delete('situation')
+      }
+      setSearchParams(next, { replace: true })
+    },
+    [searchParams, setSearchParams],
+  )
+
   useEffect(() => {
     void loadList()
   }, [loadList])
+
+  useEffect(() => {
+    const situationId = searchParams.get('situation')
+    if (!situationId) {
+      setSelectedSituationIdState(null)
+      return
+    }
+
+    if (!isValidUuid(situationId)) {
+      const next = new URLSearchParams(searchParams)
+      next.delete('situation')
+      setSearchParams(next, { replace: true })
+      setSelectedSituationIdState(null)
+      return
+    }
+
+    if (listLoading) return
+
+    const exists = situations.some((item) => item.id === situationId)
+    if (!exists) {
+      const next = new URLSearchParams(searchParams)
+      next.delete('situation')
+      setSearchParams(next, { replace: true })
+      setSelectedSituationIdState(null)
+      return
+    }
+
+    setSelectedSituationIdState(situationId)
+  }, [listLoading, searchParams, setSearchParams, situations])
 
   useEffect(() => {
     if (!selectedSituationId) {

@@ -1,11 +1,42 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import {
   buildStructureLayout,
   hubObstacles,
   structureNodeBounds,
   type StructureBounds,
 } from '@/modules/impact-network/engine/structure-layout'
-import { OPERATIONAL_COORDINATION_IDS } from '@/modules/impact-network/data/operational-network.mock'
+import {
+  setCoordinationCatalog,
+  type CoordinationDefinition,
+} from '@/modules/impact-network/data/coordination-islands.config'
+
+const LAYOUT_IDS = [
+  'coord-ingenierias',
+  'coord-operaciones-academicas',
+  'coord-general',
+  'coord-empresarial',
+  'coord-saber-pro',
+  'coord-b2b',
+  'coord-desarrollo-profesional',
+  'coord-proyeccion-social',
+  'coord-bellas-artes',
+  'coord-social-lab',
+  'coord-especializaciones',
+  'coord-transversales',
+] as const
+
+const LAYOUT_CATALOG: CoordinationDefinition[] = LAYOUT_IDS.map(
+  (id, index) => ({
+    id,
+    uuid: `00000000-0000-0000-0000-${String(index + 1).padStart(12, '0')}`,
+    name: id,
+    shortName: id,
+    islandAsset: '/islas/CoordGeneral.webp',
+    color: '#4F8EF7',
+    displayOrder: index + 1,
+    isActive: true,
+  }),
+)
 
 const VIEWPORTS = [
   { width: 1440, height: 720 },
@@ -44,16 +75,20 @@ function minimumBearingGap(
 }
 
 describe('structure-layout', () => {
+  beforeEach(() => {
+    setCoordinationCatalog(LAYOUT_CATALOG)
+  })
+
   it('coloca las 12 coordinaciones sin que sus etiquetas se solapen', () => {
     for (const viewport of VIEWPORTS) {
       const { nodes } = buildStructureLayout(
-        OPERATIONAL_COORDINATION_IDS,
+        LAYOUT_IDS,
         null,
         viewport.width,
         viewport.height,
       )
 
-      expect(nodes).toHaveLength(OPERATIONAL_COORDINATION_IDS.length)
+      expect(nodes).toHaveLength(LAYOUT_IDS.length)
 
       const boxes = nodes.map((node) =>
         structureNodeBounds(node, viewport.width),
@@ -72,7 +107,7 @@ describe('structure-layout', () => {
   it('mantiene los bloques isla + etiqueta dentro del lienzo', () => {
     for (const viewport of VIEWPORTS) {
       const { nodes } = buildStructureLayout(
-        OPERATIONAL_COORDINATION_IDS,
+        LAYOUT_IDS,
         null,
         viewport.width,
         viewport.height,
@@ -91,7 +126,7 @@ describe('structure-layout', () => {
   it('no invade el nodo institucional central ni su etiqueta', () => {
     const viewport = { width: 1180, height: 640 }
     const { center, nodes } = buildStructureLayout(
-      OPERATIONAL_COORDINATION_IDS,
+      LAYOUT_IDS,
       null,
       viewport.width,
       viewport.height,
@@ -109,7 +144,7 @@ describe('structure-layout', () => {
 
   it('mantiene las placas institucionales sobre cada isla', () => {
     const { nodes } = buildStructureLayout(
-      OPERATIONAL_COORDINATION_IDS,
+      LAYOUT_IDS,
       null,
       1180,
       640,
@@ -123,7 +158,7 @@ describe('structure-layout', () => {
   it('reserva un corredor angular legible para cada conexión', () => {
     for (const viewport of VIEWPORTS) {
       const { center, nodes } = buildStructureLayout(
-        OPERATIONAL_COORDINATION_IDS,
+        LAYOUT_IDS,
         null,
         viewport.width,
         viewport.height,
@@ -138,13 +173,13 @@ describe('structure-layout', () => {
 
   it('colapsa a una sola isla centrada cuando hay coordinación seleccionada', () => {
     const { center, nodes } = buildStructureLayout(
-      OPERATIONAL_COORDINATION_IDS,
+      LAYOUT_IDS,
       'coord-b2b',
       1180,
       640,
     )
 
-    expect(nodes).toHaveLength(OPERATIONAL_COORDINATION_IDS.length)
+    expect(nodes).toHaveLength(LAYOUT_IDS.length)
     expect(nodes.find((node) => node.coordinationId === 'coord-b2b')).toMatchObject({
       coordinationId: 'coord-b2b',
       x: center.x,

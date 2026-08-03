@@ -1,20 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { AnalysisCompletedState } from '@/modules/operational-events/components/analysis/AnalysisCompletedState'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnalysisCompletingTransition } from '@/modules/operational-events/components/analysis/AnalysisCompletingTransition'
-import { AnalysisEmptyState } from '@/modules/operational-events/components/analysis/AnalysisEmptyState'
 import { AnalysisErrorState } from '@/modules/operational-events/components/analysis/AnalysisErrorState'
 import { AnalysisIntelligenceCenter } from '@/modules/operational-events/components/analysis/AnalysisIntelligenceCenter'
-import type { SituationAIAnalysisResponse } from '@/modules/api/types/analysis.types'
-import type { AIInterpretation } from '@/modules/operational-events/types/operational-event.types'
-import {
-  mapAnalysisToInterpretation,
-  mapSituationToOperationalEvent,
-} from '@/modules/services/mappers/analysisPresentation.mapper'
 import {
   loadAnalysis,
   runAnalysisFlow,
 } from '@/modules/services/situationAnalysis.service'
-import type { SituationResponse } from '@/modules/situations/types/situation.types'
 import { getErrorMessage } from '@/shared/utils/error'
 import { isValidUuid } from '@/shared/utils/uuid'
 
@@ -23,53 +14,32 @@ export type SituationAnalysisStatus =
   | 'analyzing'
   | 'loading'
   | 'completing'
-  | 'ready'
   | 'error'
 
 interface SituationAnalysisPanelProps {
   situationId: string
   situationTitle: string
-  situation?: SituationResponse | null
   autoStart?: boolean
-  returnTo?: string | null
-  onAnalysisReady?: (interpretation: AIInterpretation) => void
-  onViewExecutiveReport: () => void
+  onAnalysisComplete: (situationId: string) => void
 }
 
 export function SituationAnalysisPanel({
   situationId,
-  situationTitle,
-  situation = null,
+  situationTitle: _situationTitle,
   autoStart = true,
-  returnTo = null,
-  onAnalysisReady,
-  onViewExecutiveReport,
+  onAnalysisComplete,
 }: SituationAnalysisPanelProps) {
   const hasValidSituationId = isValidUuid(situationId)
   const analysisStartedAt = useRef(Date.now())
   const [status, setStatus] = useState<SituationAnalysisStatus>(
     autoStart && hasValidSituationId ? 'loading' : 'idle',
   )
-  const [interpretation, setInterpretation] = useState<AIInterpretation | null>(
-    null,
-  )
-  const [analysisResponse, setAnalysisResponse] =
-    useState<SituationAIAnalysisResponse | null>(null)
-  const [elapsedMs, setElapsedMs] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [retrying, setRetrying] = useState(false)
 
-  const applyAnalysis = useCallback(
-    (response: SituationAIAnalysisResponse) => {
-      const mapped = mapAnalysisToInterpretation(response, situationId)
-      setInterpretation(mapped)
-      setAnalysisResponse(response)
-      setElapsedMs(Date.now() - analysisStartedAt.current)
-      setStatus('completing')
-      onAnalysisReady?.(mapped)
-    },
-    [onAnalysisReady, situationId],
-  )
+  const completeAnalysis = useCallback(() => {
+    setStatus('completing')
+  }, [])
 
   const runFlow = useCallback(async () => {
     if (!hasValidSituationId) {
@@ -84,13 +54,13 @@ export function SituationAnalysisPanel({
 
     const existing = await loadAnalysis(situationId)
     if (existing) {
-      applyAnalysis(existing)
+      completeAnalysis()
       return
     }
 
-    const analysis = await runAnalysisFlow(situationId)
-    applyAnalysis(analysis)
-  }, [applyAnalysis, hasValidSituationId, situationId])
+    await runAnalysisFlow(situationId)
+    completeAnalysis()
+  }, [completeAnalysis, hasValidSituationId, situationId])
 
   useEffect(() => {
     if (!autoStart || !hasValidSituationId) {
@@ -113,14 +83,14 @@ export function SituationAnalysisPanel({
         if (cancelled) return
 
         if (existing) {
-          applyAnalysis(existing)
+          completeAnalysis()
           return
         }
 
         setStatus('analyzing')
-        const analysis = await runAnalysisFlow(situationId)
+        await runAnalysisFlow(situationId)
         if (cancelled) return
-        applyAnalysis(analysis)
+        completeAnalysis()
       } catch (bootstrapError) {
         if (!cancelled) {
           setStatus('error')
@@ -134,7 +104,7 @@ export function SituationAnalysisPanel({
     return () => {
       cancelled = true
     }
-  }, [applyAnalysis, autoStart, hasValidSituationId, situationId])
+  }, [autoStart, completeAnalysis, hasValidSituationId, situationId])
 
   const handleRetry = useCallback(async () => {
     setRetrying(true)
@@ -150,68 +120,30 @@ export function SituationAnalysisPanel({
     }
   }, [runFlow])
 
-  const operationalEvent = useMemo(() => {
-    if (!interpretation || !situation) return null
-    return mapSituationToOperationalEvent(situation, interpretation)
-  }, [interpretation, situation])
-
-  const content = useMemo(() => {
-    if (status === 'idle' || status === 'loading' || status === 'analyzing') {
-      return (
-        <AnalysisIntelligenceCenter startedAt={analysisStartedAt.current} />
-      )
-    }
-
-    if (status === 'completing') {
-      return (
-        <AnalysisCompletingTransition
-          onComplete={() => setStatus('ready')}
-          durationMs={800}
-        />
-      )
-    }
-
-    if (status === 'error') {
-      return (
-        <AnalysisErrorState
-          message={error ?? 'Ocurrió un error inesperado.'}
-          onRetry={hasValidSituationId ? handleRetry : undefined}
-          retrying={retrying}
-        />
-      )
-    }
-
-    if (!interpretation || !analysisResponse || !operationalEvent) {
-      return <AnalysisEmptyState />
-    }
-
+  if (status === 'idle' || status === 'loading' || status === 'analyzing') {
     return (
-      <AnalysisCompletedState
-        situationTitle={situationTitle}
-        situationId={situationId}
-        interpretation={interpretation}
-        analysisResponse={analysisResponse}
-        elapsedMs={elapsedMs}
-        operationalEvent={operationalEvent}
-        returnTo={returnTo}
-        onViewExecutiveReport={onViewExecutiveReport}
+      <AnalysisIntelligenceCenter startedAt={analysisStartedAt.current} />
+    )
+  }
+
+  if (status === 'completing') {
+    return (
+      <AnalysisCompletingTransition
+        onComplete={() => onAnalysisComplete(situationId)}
+        durationMs={800}
       />
     )
-  }, [
-    analysisResponse,
-    elapsedMs,
-    error,
-    handleRetry,
-    hasValidSituationId,
-    interpretation,
-    onViewExecutiveReport,
-    operationalEvent,
-    returnTo,
-    retrying,
-    situationId,
-    situationTitle,
-    status,
-  ])
+  }
 
-  return content
+  if (status === 'error') {
+    return (
+      <AnalysisErrorState
+        message={error ?? 'Ocurrió un error inesperado.'}
+        onRetry={hasValidSituationId ? handleRetry : undefined}
+        retrying={retrying}
+      />
+    )
+  }
+
+  return null
 }

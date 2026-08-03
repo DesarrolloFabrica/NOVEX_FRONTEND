@@ -1,11 +1,11 @@
 // Componente: orquestador del wizard — capturar, confirmar y analizar.
 
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
+import { isCoordinator } from '@/modules/auth/utils/permissions'
 import { CRYSTAL_ZONE } from '@/modules/monitoring/constants/monitoringTheme'
 import { SituationAnalysisPanel } from '@/modules/operational-events/components/analysis/SituationAnalysisPanel'
-import { ConnectedSituationDetailModal } from '@/modules/operational-events/components/ConnectedSituationDetailModal'
 import { EventCaptureForm } from '@/modules/operational-events/components/EventCaptureForm'
 import { SituationCaptureSummary } from '@/modules/operational-events/components/SituationCaptureSummary'
 import {
@@ -28,63 +28,67 @@ import {
   writeSituationCaptureDraft,
   writeSituationCaptureWizardStep,
 } from '@/modules/operational-events/utils/situationCaptureDraftStorage'
+import { todayCaptureDate } from '@/modules/operational-events/utils/situationCaptureDate'
+import { validateSituationCaptureDraft } from '@/modules/operational-events/utils/situationCaptureValidation'
 import { getErrorMessage } from '@/shared/utils/error'
 import { isValidUuid } from '@/shared/utils/uuid'
-
-function todayDateInput(): string {
-  const now = new Date()
-  const offset = now.getTimezoneOffset() * 60_000
-  return new Date(now.getTime() - offset).toISOString().slice(0, 16)
-}
 
 function createEmptyDraft(defaultCoordinationId = ''): SituationCaptureDraft {
   return {
     title: '',
     description: '',
     coordinationId: defaultCoordinationId,
-    reportedAt: todayDateInput(),
+    reportedAt: todayCaptureDate(),
     detectionMethod: '',
     detectionMethodOther: '',
     affectedParties: [],
     affectedPartyOther: '',
     relatedCoordinationIds: [],
     additionalNotes: '',
-    attachments: [],
   }
 }
 
-function resolveDefaultCoordinationId(
+function resolveCoordinationAfterCatalogLoad(
+  currentCoordinationId: string,
   coordinations: CoordinationSummary[],
-  coordinationId?: string,
-  coordinationCode?: string,
+  options: {
+    prefillCoordinationCode?: string | null
+    userCoordinationId?: string
+    coordinatorMode: boolean
+  },
 ): string {
-  if (coordinationId && coordinations.some((item) => item.id === coordinationId)) {
-    return coordinationId
+  const validIds = new Set(coordinations.map((item) => item.id))
+
+  if (currentCoordinationId && validIds.has(currentCoordinationId)) {
+    return currentCoordinationId
   }
 
-  if (coordinationCode) {
-    const byCode = coordinations.find((item) => item.code === coordinationCode)
+  if (options.prefillCoordinationCode) {
+    const byCode = coordinations.find(
+      (item) => item.code === options.prefillCoordinationCode,
+    )
     if (byCode) return byCode.id
   }
 
-  return coordinations[0]?.id ?? ''
-}
+  if (
+    options.coordinatorMode &&
+    options.userCoordinationId &&
+    validIds.has(options.userCoordinationId)
+  ) {
+    return options.userCoordinationId
+  }
 
-function sanitizeReturnTo(value: string | null): string | null {
-  if (!value) return null
-  if (!value.startsWith('/') || value.startsWith('//')) return null
-  return value
+  return ''
 }
 
 export function OperationalEventWizard() {
+  const navigate = useNavigate()
   const { user } = useAuth()
   const [searchParams] = useSearchParams()
   const prefillCoordinationCode = searchParams.get('coordination')
-  const returnTo = useMemo(
-    () => sanitizeReturnTo(searchParams.get('returnTo')),
-    [searchParams],
-  )
-  const coordinationLocked = Boolean(prefillCoordinationCode)
+  const coordinationLocked =
+    Boolean(prefillCoordinationCode) || isCoordinator(user)
+  const coordinatorMode = isCoordinator(user)
 
   const [step, setStep] = useState<WizardStepId>(
     () => readSituationCaptureWizardStep() ?? 1,
@@ -92,16 +96,28 @@ export function OperationalEventWizard() {
   const [draft, setDraft] = useState<SituationCaptureDraft>(() => {
     return readSituationCaptureDraft() ?? createEmptyDraft()
   })
-  const [coordinations, setCoordinations] = useState<CoordinationSummary[]>([])
+  const [coordinationCatalog, setCoordinationCatalog] = useState<CoordinationSummary[]>([])
   const [categories, setCategories] = useState<IncidentCategorySummary[]>([])
   const [loadingCatalogs, setLoadingCatalogs] = useState(true)
+  const responsibleCoordinations = useMemo(() => {
+    if (coordinatorMode && user?.coordinationId) {
+      return coordinationCatalog.filter(
+        (item) => item.id === user.coordinationId,
+      )
+    }
+    return coordinationCatalog
+  }, [coordinationCatalog, coordinatorMode, user?.coordinationId])
   const [situation, setSituation] = useState<SituationResponse | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  const [showExecutiveModal, setShowExecutiveModal] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const registeredSituationId =
     situation && isValidUuid(situation.id) ? situation.id : null
+  const captureValidation = validateSituationCaptureDraft(
+    draft,
+    coordinationCatalog,
+    responsibleCoordinations,
+  )
 
   useEffect(() => {
     writeSituationCaptureDraft(draft)
@@ -119,7 +135,7 @@ export function OperationalEventWizard() {
       setError(null)
       try {
         const [coordinationsResponse, categoriesResponse] = await Promise.all([
-          fetchCoordinationsRequest(),
+          fetchCoordinationsRequest(true),
           fetchIncidentCategoriesRequest(),
         ])
 
@@ -129,21 +145,18 @@ export function OperationalEventWizard() {
           (left, right) => left.displayOrder - right.displayOrder,
         )
 
-        setCoordinations(sortedCoordinations)
+        setCoordinationCatalog(sortedCoordinations)
         setCategories(categoriesResponse)
         setDraft((current) => {
-          const preferredId = resolveDefaultCoordinationId(
+          const nextCoordinationId = resolveCoordinationAfterCatalogLoad(
+            current.coordinationId,
             sortedCoordinations,
-            undefined,
-            prefillCoordinationCode ?? undefined,
+            {
+              prefillCoordinationCode,
+              userCoordinationId: user?.coordinationId,
+              coordinatorMode,
+            },
           )
-          const fallbackId = resolveDefaultCoordinationId(
-            sortedCoordinations,
-            user?.coordinationId,
-            user?.selectedAreaId,
-          )
-          const nextCoordinationId =
-            preferredId || current.coordinationId || fallbackId
 
           if (current.coordinationId === nextCoordinationId) return current
           return {
@@ -167,7 +180,13 @@ export function OperationalEventWizard() {
     return () => {
       cancelled = true
     }
-  }, [prefillCoordinationCode, user?.coordinationId, user?.selectedAreaId])
+  }, [coordinatorMode, prefillCoordinationCode, user?.coordinationId])
+
+  function handleAnalysisComplete(situationId: string) {
+    navigate(`/gestion?situation=${encodeURIComponent(situationId)}`, {
+      replace: true,
+    })
+  }
 
   async function handleConfirmAndRegister() {
     setError(null)
@@ -182,7 +201,7 @@ export function OperationalEventWizard() {
     try {
       const created = await registerSituationWithEvidences({
         draft,
-        coordinations,
+        coordinations: coordinationCatalog,
         categories,
       })
       clearSituationCapturePersistence()
@@ -208,7 +227,8 @@ export function OperationalEventWizard() {
           <div className="novex-wizard-step-pane flex min-h-0 flex-1 flex-col gap-3">
             <EventCaptureForm
               draft={draft}
-              coordinations={coordinations}
+              coordinations={responsibleCoordinations}
+              relatedCoordinations={coordinationCatalog}
               loadingCoordinations={loadingCatalogs}
               coordinationLocked={coordinationLocked}
               onChange={setDraft}
@@ -231,9 +251,9 @@ export function OperationalEventWizard() {
           <div className="novex-wizard-step-pane novex-wizard-step-pane--dossier">
             <SituationCaptureSummary
               draft={draft}
-              coordinations={coordinations}
+              coordinations={coordinationCatalog}
               confirming={submitting}
-              canConfirm={!loadingCatalogs && Boolean(draft.coordinationId)}
+              canConfirm={!loadingCatalogs && captureValidation.valid}
               onBack={() => {
                 setError(null)
                 setStep(1)
@@ -255,20 +275,11 @@ export function OperationalEventWizard() {
             <SituationAnalysisPanel
               situationId={registeredSituationId}
               situationTitle={situation?.title ?? draft.title}
-              situation={situation}
-              returnTo={returnTo}
-              onViewExecutiveReport={() => setShowExecutiveModal(true)}
+              onAnalysisComplete={handleAnalysisComplete}
             />
           </div>
         ) : null}
       </div>
-
-      {showExecutiveModal && registeredSituationId ? (
-        <ConnectedSituationDetailModal
-          situationId={registeredSituationId}
-          onClose={() => setShowExecutiveModal(false)}
-        />
-      ) : null}
     </div>
   )
 }

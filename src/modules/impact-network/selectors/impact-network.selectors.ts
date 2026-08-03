@@ -1,5 +1,6 @@
 import {
   getCoordination,
+  getCoordinationCatalog,
   resolveCoordinationId,
   resolveCoordinationIdOrGeneral,
   starEdgeId,
@@ -589,6 +590,7 @@ function uniqueCoordinationIds(values: readonly CoordinationId[]): CoordinationI
 function resolveIncidentCoordinationIds(
   incident: ImpactIncident,
   topology: ImpactTopology,
+  affectedCoordinationIdsOverride?: readonly CoordinationId[] | null,
 ): {
   originCoordinationId: CoordinationId
   affectedCoordinationIds: CoordinationId[]
@@ -603,7 +605,20 @@ function resolveIncidentCoordinationIds(
   const originCoordinationId =
     sourceCandidates
       .map((candidate) => resolveCoordinationId(candidate ?? undefined))
-      .find(Boolean) ?? 'coord-general'
+      .find(Boolean) ??
+    getCoordinationCatalog()[0]?.id ??
+    'unknown'
+
+  if (affectedCoordinationIdsOverride) {
+    return {
+      originCoordinationId,
+      affectedCoordinationIds: uniqueCoordinationIds(
+        affectedCoordinationIdsOverride.filter(
+          (id) => id !== originCoordinationId,
+        ),
+      ),
+    }
+  }
 
   const affectedCoordinationIds = uniqueCoordinationIds(
     incident.affectedAreaIds
@@ -628,12 +643,17 @@ function resolveIncidentCoordinationIds(
 export function selectFocusedPropagation(
   incident: ImpactIncident | null,
   replay: IncidentReplay | null = null,
-  topology: ImpactTopology = IMPACT_TOPOLOGY,
+  topology: ImpactTopology = { canvas: { width: 0, height: 0, incidentCenter: { x: 0, y: 0 } }, areas: [], dependencies: [], bindings: [] },
+  affectedCoordinationIdsOverride: readonly CoordinationId[] | null = null,
 ): FocusedPropagation | null {
   if (!incident) return null
 
   const { originCoordinationId, affectedCoordinationIds } =
-    resolveIncidentCoordinationIds(incident, topology)
+    resolveIncidentCoordinationIds(
+      incident,
+      topology,
+      affectedCoordinationIdsOverride,
+    )
 
   let propagationOrder = [...affectedCoordinationIds]
   if (replay) {

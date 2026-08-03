@@ -3,6 +3,7 @@
 
 import { useMemo } from 'react'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
+import { canUpdateSituations } from '@/modules/auth/utils/permissions'
 import { useSituationManagement } from '@/modules/monitoring/hooks/useSituationManagement'
 import { MonitoringCenter } from '@/modules/monitoring/components/MonitoringCenter'
 import { MainScreen, NovexFrame, NovexRoom } from '@/modules/room'
@@ -19,7 +20,7 @@ function resolveEnvironment(summary: SituationManagementSummary): EnvironmentSta
 
 export function MonitoringPage() {
   const { user, logout } = useAuth()
-  const canUpdate = user != null
+  const canUpdate = canUpdateSituations(user)
 
   const {
     situations,

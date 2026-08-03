@@ -20,6 +20,7 @@ type PanelLevel = 'institutional' | 'coordination' | 'situation'
 interface OperationalContextPanelProps {
   coordination: Coordination | null
   coordinationsCount: number
+  synchronizedCoordinationsCount?: number
   incidents: readonly ImpactIncident[]
   globalIncidentCount: number
   globalRiskScore: number
@@ -89,9 +90,36 @@ const dateFormatter = new Intl.DateTimeFormat('es-CO', {
   minute: '2-digit',
 })
 
-function formatDate(value: string): string {
+function formatDate(value: string | null | undefined): string {
+  if (!value) return 'Sin actividad registrada'
   const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? 'Sin registro' : dateFormatter.format(date)
+  if (Number.isNaN(date.getTime()) || date.getTime() <= 0) {
+    return 'Sin actividad registrada'
+  }
+  return dateFormatter.format(date)
+}
+
+function resolveCoordinationLastActivity(
+  incidents: readonly ImpactIncident[],
+  fallback: string | null,
+): string {
+  if (incidents.length > 0) {
+    const latestMs = incidents.reduce((max, incident) => {
+      const reported = Date.parse(incident.reportedAt)
+      const updated = Date.parse(incident.lastUpdateAt)
+      const candidate = Math.max(
+        Number.isNaN(reported) ? 0 : reported,
+        Number.isNaN(updated) ? 0 : updated,
+      )
+      return candidate > max ? candidate : max
+    }, 0)
+
+    if (latestMs > 0) {
+      return formatDate(new Date(latestMs).toISOString())
+    }
+  }
+
+  return formatDate(fallback)
 }
 
 function averageRisk(incidents: readonly ImpactIncident[]): number {
@@ -115,6 +143,7 @@ function strongestRisk(
 function OperationalContextPanelView({
   coordination,
   coordinationsCount,
+  synchronizedCoordinationsCount,
   incidents,
   globalIncidentCount,
   globalRiskScore,
@@ -145,6 +174,9 @@ function OperationalContextPanelView({
     PANEL_DEPTH[panelLevel] >= PANEL_DEPTH[previousLevelRef.current] ? 1 : -1
   const coordinationRisk = strongestRisk(incidents)
   const coordinationRiskScore = averageRisk(incidents)
+  const coordinationLastActivity = coordination
+    ? resolveCoordinationLastActivity(incidents, coordination.lastActivityAt)
+    : 'Sin actividad registrada'
 
   useEffect(() => {
     previousLevelRef.current = panelLevel
@@ -280,7 +312,7 @@ function OperationalContextPanelView({
           <div>
             <dt>Última actividad</dt>
             <dd className="operational-context-panel__date">
-              {formatDate(coordination.lastActivityAt)}
+              {coordinationLastActivity}
             </dd>
             <small>Actualización operacional</small>
           </div>
@@ -407,7 +439,13 @@ function OperationalContextPanelView({
           <div>
             <dt>Coordinaciones</dt>
             <dd>{coordinationsCount}</dd>
-            <small>100% en monitoreo</small>
+            <small>
+              {synchronizedCoordinationsCount != null && coordinationsCount > 0
+                ? `${Math.round(
+                    (synchronizedCoordinationsCount / coordinationsCount) * 100,
+                  )}% sincronizadas`
+                : 'En monitoreo'}
+            </small>
           </div>
           <div>
             <dt>Riesgo global</dt>
@@ -431,8 +469,8 @@ function OperationalContextPanelView({
         <footer className="operational-context-panel__hint">
           <span aria-hidden="true">01</span>
           <p>
-            Está en el primer nivel. Las líneas visibles representan únicamente
-            la estructura organizacional.
+            Está en el primer nivel. Cada coordinación se conecta al nodo
+            institucional central de la Dirección de Operaciones.
           </p>
         </footer>
       </>

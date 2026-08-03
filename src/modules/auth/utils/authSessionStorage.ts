@@ -1,4 +1,4 @@
-// Persistencia local de la sesión demo.
+// Persistencia local de la sesión autenticada.
 // Evita perder el login ante recargas de Vite/HMR o F5.
 
 import type { User } from '@/modules/auth/types/user.types'
@@ -29,6 +29,8 @@ function isUser(value: unknown): value is User {
     typeof candidate.id === 'string' &&
     typeof candidate.name === 'string' &&
     (candidate.role === 'supervisor' || candidate.role === 'ejecutor') &&
+    typeof candidate.roleCode === 'string' &&
+    Array.isArray(candidate.permissions) &&
     typeof candidate.onboardingCompleted === 'boolean'
   )
 }

@@ -13,7 +13,6 @@ interface ImpactNetworkToolbarProps {
   navigationLevel: ImpactNavigationLevel
   selectedCoordinationName: string | null
   activeCount: number
-  coordinatorMode?: boolean
   onNavigateDirection: () => void
   onNavigateCoordination: () => void
 }
@@ -57,7 +56,6 @@ function ImpactNetworkToolbarView({
   navigationLevel,
   selectedCoordinationName,
   activeCount,
-  coordinatorMode = false,
   onNavigateDirection,
   onNavigateCoordination,
 }: ImpactNetworkToolbarProps) {
@@ -81,8 +79,7 @@ function ImpactNetworkToolbarView({
             const state = stepState(step.id, navigationLevel)
             const canJumpToDirection =
               step.id === 'institutional' &&
-              navigationLevel !== 'institutional' &&
-              !coordinatorMode
+              navigationLevel !== 'institutional'
             const canJumpToCoordination =
               step.id === 'coordination' &&
               navigationLevel === 'situation' &&

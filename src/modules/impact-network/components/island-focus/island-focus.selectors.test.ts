@@ -1,13 +1,60 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { OPERATIONAL_EVENTS } from '@/modules/operational-events/data/operational-events.mock'
 import type { OperationalEvent } from '@/modules/operational-events/types/operational-event.types'
 import type { FocusedPropagation } from '@/modules/impact-network/types/impact-network.types'
+import {
+  setCoordinationCatalog,
+  type CoordinationDefinition,
+} from '@/modules/impact-network/data/coordination-islands.config'
 import {
   isIslandFocusOrigin,
   resolveIslandAffectedBriefing,
   resolveIslandFocusRole,
   resolveIslandStageBriefing,
 } from './island-focus.selectors'
+
+const CATALOG: CoordinationDefinition[] = [
+  {
+    id: 'coord-operaciones-academicas',
+    uuid: '1',
+    name: 'Coordinador Operaciones Académicas',
+    shortName: 'Op. Académicas',
+    islandAsset: '/islas/CoordDesarrolloprof.webp',
+    color: '#6554C0',
+    displayOrder: 1,
+    isActive: true,
+  },
+  {
+    id: 'coord-social-lab',
+    uuid: '2',
+    name: 'Coordinador de Social - Social Lab',
+    shortName: 'Social Lab',
+    islandAsset: '/islas/CoordSociallab.webp',
+    color: '#FF8A5B',
+    displayOrder: 2,
+    isActive: true,
+  },
+  {
+    id: 'coord-empresarial',
+    uuid: '3',
+    name: 'Coordinador Empresarial',
+    shortName: 'Empresarial',
+    islandAsset: '/islas/CoordB2B.webp',
+    color: '#5B7CFA',
+    displayOrder: 3,
+    isActive: true,
+  },
+  {
+    id: 'coord-general',
+    uuid: '4',
+    name: 'Coordinación General',
+    shortName: 'General',
+    islandAsset: '/islas/CoordGeneral.webp',
+    color: '#4F8EF7',
+    displayOrder: 4,
+    isActive: true,
+  },
+]
 
 const propagation: FocusedPropagation = {
   originCoordinationId: 'coord-operaciones-academicas',
@@ -21,6 +68,10 @@ const propagation: FocusedPropagation = {
   propagationOrder: ['coord-social-lab', 'coord-empresarial'],
   riskLevel: 'high',
 }
+
+beforeEach(() => {
+  setCoordinationCatalog(CATALOG)
+})
 
 describe('resolveIslandFocusRole', () => {
   it('identifica origen y afectadas', () => {

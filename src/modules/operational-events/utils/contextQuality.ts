@@ -27,7 +27,6 @@ export function evaluateContextQuality(
     draft.affectedParties.length > 0,
     draft.relatedCoordinationIds.length > 0,
     Boolean(draft.additionalNotes.trim()),
-    draft.attachments.length > 0,
   ].filter(Boolean).length
 
   if (descriptionLength >= DESCRIPTION_EXCELLENT_LENGTH && signals >= 5) {

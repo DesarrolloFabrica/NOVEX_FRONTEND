@@ -1,13 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import { OPERATIONAL_EVENTS } from '@/modules/operational-events/data/operational-events.mock'
 import type { OperationalEvent } from '@/modules/operational-events/types/operational-event.types'
-import { getPrediction } from '@/modules/impact-network/services/impact-network.provider'
+import {
+  IMPACT_PREDICTIONS,
+  IMPACT_REPLAYS,
+} from '@/modules/impact-network/data/impact-scenarios.mock'
 import type {
   ImpactIncident,
   IncidentReplay,
 } from '@/modules/impact-network/types/impact-network.types'
-import type { CoordinationId } from '@/modules/impact-network/data/coordination-islands.config'
-import { IMPACT_REPLAYS } from '@/modules/impact-network/data/impact-scenarios.mock'
+import {
+  setCoordinationCatalog,
+  type CoordinationDefinition,
+  type CoordinationId,
+} from '@/modules/impact-network/data/coordination-islands.config'
 import {
   aggregateAreaSignals,
   aggregateDependencyTraffic,
@@ -22,6 +28,40 @@ import {
   selectOperationalFocus,
   selectReplayFrameAt,
 } from '@/modules/impact-network/selectors/impact-network.selectors'
+
+const TEST_CATALOG: CoordinationDefinition[] = [
+  {
+    id: 'coord-ingenierias',
+    uuid: '22222222-2222-2222-2222-222222222222',
+    name: 'Coordinador Ingenierías',
+    shortName: 'Ingenierías',
+    islandAsset: '/islas/CoordGeneral.webp',
+    color: '#00B8D9',
+    displayOrder: 1,
+    isActive: true,
+  },
+  {
+    id: 'coord-operaciones-academicas',
+    uuid: '33333333-3333-3333-3333-333333333333',
+    name: 'Coordinador Operaciones Académicas',
+    shortName: 'Op. Académicas',
+    islandAsset: '/islas/CoordDesarrolloprof.webp',
+    color: '#6554C0',
+    displayOrder: 2,
+    isActive: true,
+  },
+  {
+    id: 'coord-empresarial',
+    uuid: '44444444-4444-4444-4444-444444444444',
+    name: 'Coordinador Empresarial',
+    shortName: 'Empresarial',
+    islandAsset: '/islas/CoordB2B.webp',
+    color: '#5B7CFA',
+    displayOrder: 3,
+    isActive: true,
+  },
+]
+
 
 function makeIncident(
   eventId: string,
@@ -256,7 +296,7 @@ describe('agregación espacial y de tráfico', () => {
   })
 
   it('intensifica áreas compartidas y conserva roles del incidente enfocado', () => {
-    const prediction = getPrediction('evt-004')
+    const prediction = IMPACT_PREDICTIONS['evt-004']
     const combined = aggregateAreaSignals([primary, overlapping], undefined, {
       focusedEventId: 'primary',
       prediction,
@@ -288,7 +328,7 @@ describe('agregación espacial y de tráfico', () => {
       riskScore: 70,
       riskLevel: 'high',
     })
-    const prediction = getPrediction('evt-004')
+    const prediction = IMPACT_PREDICTIONS['evt-004']
     const traffic = aggregateDependencyTraffic(
       [primary, reachesFinance],
       undefined,
@@ -320,7 +360,7 @@ describe('agregación espacial y de tráfico', () => {
   })
 
   it('una superposición predictiva no altera métricas de las rutas reales', () => {
-    const prediction = getPrediction('evt-004')
+    const prediction = IMPACT_PREDICTIONS['evt-004']
     const actualOnly = aggregateDependencyTraffic([primary])
     const withPrediction = aggregateDependencyTraffic(
       [primary],
@@ -432,8 +472,29 @@ describe('slots de incidentes y frames del timeline', () => {
   })
 
   it('construye propagación estrella solo desde el origen', () => {
-    const incident = mapOperationalEventToImpactIncident(OPERATIONAL_EVENTS[0]!)
-    const propagation = selectFocusedPropagation(incident, IMPACT_REPLAYS['evt-001'])
+    setCoordinationCatalog(TEST_CATALOG)
+    const incident = mapOperationalEventToImpactIncident({
+      ...OPERATIONAL_EVENTS[0]!,
+      sourceAreaId: 'coord-ingenierias',
+      sourceAreaName: 'Coordinador Ingenierías',
+      interpretation: {
+        ...OPERATIONAL_EVENTS[0]!.interpretation!,
+        affectedAreaIds: [
+          'coord-operaciones-academicas',
+          'coord-empresarial',
+        ],
+        affectedAreaNames: [
+          'Coordinador Operaciones Académicas',
+          'Coordinador Empresarial',
+        ],
+      },
+    })
+    const propagation = selectFocusedPropagation(
+      incident,
+      null,
+      undefined,
+      ['coord-operaciones-academicas', 'coord-empresarial'],
+    )
     const frames = buildStarPropagationFrames(
       IMPACT_REPLAYS['evt-001']!,
       'coord-ingenierias',
@@ -441,6 +502,10 @@ describe('slots de incidentes y frames del timeline', () => {
     )
 
     expect(propagation?.originCoordinationId).toBe('coord-ingenierias')
+    expect(propagation?.affectedCoordinationIds).toEqual([
+      'coord-operaciones-academicas',
+      'coord-empresarial',
+    ])
     expect(frames[0]?.phase).toBe('origin_pulse')
     expect(frames.at(-1)?.complete).toBe(true)
     expect(

@@ -1,16 +1,21 @@
 import type { User, UserRole } from '@/modules/auth/types/user.types'
 import {
   clearAccessToken,
+  readAccessToken,
   writeAccessToken,
 } from '@/modules/auth/utils/accessTokenStorage'
+import {
+  decodeAccessTokenClaims,
+  type AccessTokenClaims,
+} from '@/modules/auth/utils/decodeAccessToken'
 import { ApiError, apiRequest } from '@/shared/api/http'
 
 export interface AuthUserSummary {
   id: string
   fullName: string
   roleCode: string
-  coordinationId: string
-  coordinationCode: string
+  coordinationId: string | null
+  coordinationCode: string | null
 }
 
 interface AuthLoginResponse {
@@ -46,23 +51,73 @@ function mapRoleCode(roleCode: string): UserRole {
   return roleCode === 'COORDINADOR' ? 'ejecutor' : 'supervisor'
 }
 
-export function mapAuthUserToUser(summary: AuthUserSummary): User {
-  const role = mapRoleCode(summary.roleCode)
+function normalizeSummaryCoordinationId(
+  value: string | null | undefined,
+): string | undefined {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    return undefined
+  }
+  return value
+}
+
+function normalizeSummaryCoordinationCode(
+  value: string | null | undefined,
+): string | undefined {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    return undefined
+  }
+  return value
+}
+
+/**
+ * Construye el usuario de sesión usando la coordinación embebida en el JWT
+ * como fuente de verdad (sin coordinaciones mock en login).
+ */
+export function mapAuthUserToUser(
+  summary: AuthUserSummary,
+  claims: AccessTokenClaims,
+): User {
+  const roleCode = claims.roleCode || summary.roleCode
+  const role = mapRoleCode(roleCode)
+  const coordinationId =
+    claims.coordinationId ??
+    normalizeSummaryCoordinationId(summary.coordinationId)
+
+  const coordinationCode = normalizeSummaryCoordinationCode(
+    summary.coordinationCode,
+  )
 
   return {
-    id: summary.id,
+    id: claims.sub || summary.id,
     name: summary.fullName,
     role,
-    selectedAreaId: role === 'ejecutor' ? summary.coordinationCode : undefined,
-    coordinationId: summary.coordinationId,
+    roleCode,
+    permissions: [...claims.permissions],
+    // Código de coordinación real del backend para vistas de ejecutor.
+    selectedAreaId: role === 'ejecutor' ? coordinationCode : undefined,
+    coordinationId,
     onboardingCompleted: false,
     onboardingSeenAt: null,
   }
 }
 
+function requireTokenClaims(accessToken: string): AccessTokenClaims {
+  const claims = decodeAccessTokenClaims(accessToken)
+  if (!claims) {
+    throw new Error('El token de acceso no es válido o está incompleto.')
+  }
+  return claims
+}
+
 export async function bootstrapAuthSessionRequest(): Promise<User> {
+  const accessToken = readAccessToken()
+  if (!accessToken) {
+    throw new Error('No hay sesión activa.')
+  }
+
+  const claims = requireTokenClaims(accessToken)
   const meResponse = await apiRequest<AuthMeResponse>('/auth/me')
-  return mapAuthUserToUser(meResponse.user)
+  return mapAuthUserToUser(meResponse.user, claims)
 }
 
 export async function loginWithCredentialsRequest(
@@ -83,10 +138,10 @@ export async function loginWithCredentialsRequest(
   writeAccessToken(loginResponse.accessToken)
 
   try {
-    const meResponse = await apiRequest<AuthMeResponse>('/auth/me')
-    return mapAuthUserToUser(meResponse.user)
+    const claims = requireTokenClaims(loginResponse.accessToken)
+    return mapAuthUserToUser(loginResponse.user, claims)
   } catch (error) {
     clearAccessToken()
-    throw mapAuthError(error)
+    throw error instanceof Error ? error : mapAuthError(error)
   }
 }

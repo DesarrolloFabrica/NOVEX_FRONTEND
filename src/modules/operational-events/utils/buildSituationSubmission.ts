@@ -5,7 +5,7 @@ import {
 } from '@/modules/situations/types/situation-capture.types'
 import type { CoordinationSummary } from '@/modules/situations/types/situation.types'
 
-function labelForDetection(draft: SituationCaptureDraft): string | null {
+export function labelForDetection(draft: SituationCaptureDraft): string | null {
   if (!draft.detectionMethod) return null
   if (draft.detectionMethod === 'OTRO') {
     return draft.detectionMethodOther.trim() || 'Otro'
@@ -16,7 +16,7 @@ function labelForDetection(draft: SituationCaptureDraft): string | null {
   )
 }
 
-function labelsForAffectedParties(draft: SituationCaptureDraft): string[] {
+export function labelsForAffectedParties(draft: SituationCaptureDraft): string[] {
   return draft.affectedParties.map((party) => {
     if (party === 'OTRO') {
       return draft.affectedPartyOther.trim() || 'Otro'
@@ -27,7 +27,7 @@ function labelsForAffectedParties(draft: SituationCaptureDraft): string[] {
   })
 }
 
-function labelsForRelatedCoordinations(
+export function labelsForRelatedCoordinations(
   draft: SituationCaptureDraft,
   coordinations: CoordinationSummary[],
 ): string[] {

@@ -1,0 +1,126 @@
+# Cloud Build — frontend OMEGA / NOVEX → Artifact Registry + Cloud Run
+# Proyecto: it-fab-contenido-edu-5 (Operacion Producto y LMS) | Región: us-central1
+#
+# Las variables VITE_* se pasan como build-args (públicas; no Secret Manager).
+# Actualizar VITE_* exige un nuevo build de imagen.
+#
+# Sustituciones esperadas:
+#   _BACKEND_URL       → URL completa del API (incluye /api/v1)
+#   _GOOGLE_CLIENT_ID  → OAuth Client ID público
+#   _SERVICE_ACCOUNT   → SA de runtime (opcional)
+#   _MIN_INSTANCES     → default 0
+#   _MAX_INSTANCES     → default 5
+#   _MEMORY            → default 512Mi (mínimo gen2)
+#   _CPU               → default 1
+#   _APP_NAME          → default NOVEX
+#   _APP_ENV           → default production
+#
+# NO ejecutar este archivo hasta tener _GOOGLE_CLIENT_ID real.
+# No usar el proyecto Acervo / gen-lang-client-0049269139.
+
+substitutions:
+  _REGION: us-central1
+  _SERVICE: omega-frontend
+  _REPOSITORY: omega
+  _IMAGE: omega-frontend
+  _BACKEND_URL: 'https://omega-backend-550902908078.us-central1.run.app/api/v1'
+  _GOOGLE_CLIENT_ID: ''
+  # Vacío = no pasar --service-account (usa runtime default de Cloud Run)
+  _SERVICE_ACCOUNT: ''
+  _MIN_INSTANCES: '0'
+  _MAX_INSTANCES: '5'
+  _MEMORY: 512Mi
+  _CPU: '1'
+  _CONCURRENCY: '80'
+  _TIMEOUT: '60s'
+  _APP_NAME: NOVEX
+  _APP_ENV: production
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  substitution_option: ALLOW_LOOSE
+
+steps:
+  # 0) Validar sustituciones públicas obligatorias
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    id: 'validate-substitutions'
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        if [ -z "${_BACKEND_URL}" ]; then
+          echo "ERROR: falta _BACKEND_URL (URL completa del API, p.ej. https://.../api/v1)"
+          exit 1
+        fi
+        if [ -z "${_GOOGLE_CLIENT_ID}" ]; then
+          echo "ERROR: falta _GOOGLE_CLIENT_ID"
+          exit 1
+        fi
+        echo "Sustituciones OK (valores no se imprimen por completo)."
+
+  # 1) Build imagen con variables VITE_*
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'docker-build'
+    waitFor: ['validate-substitutions']
+    args:
+      - 'build'
+      - '--build-arg'
+      - 'VITE_API_URL=${_BACKEND_URL}'
+      - '--build-arg'
+      - 'VITE_GOOGLE_CLIENT_ID=${_GOOGLE_CLIENT_ID}'
+      - '--build-arg'
+      - 'VITE_APP_NAME=${_APP_NAME}'
+      - '--build-arg'
+      - 'VITE_APP_ENV=${_APP_ENV}'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}:$COMMIT_SHA'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}:latest'
+      - '.'
+
+  # 2) Push etiquetas
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'docker-push-sha'
+    waitFor: ['docker-build']
+    args:
+      - 'push'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}:$COMMIT_SHA'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'docker-push-latest'
+    waitFor: ['docker-build']
+    args:
+      - 'push'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}:latest'
+
+  # 3) Deploy Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    id: 'deploy-cloud-run'
+    waitFor: ['docker-push-sha', 'docker-push-latest']
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE}'
+      - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}:$COMMIT_SHA'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--port=8080'
+      - '--cpu=${_CPU}'
+      - '--memory=${_MEMORY}'
+      - '--concurrency=${_CONCURRENCY}'
+      - '--timeout=${_TIMEOUT}'
+      - '--min-instances=${_MIN_INSTANCES}'
+      - '--max-instances=${_MAX_INSTANCES}'
+      - '--execution-environment=gen2'
+      - '--ingress=all'
+      - '--allow-unauthenticated'
+      - '--startup-probe=httpGet.path=/health,httpGet.port=8080,periodSeconds=5,timeoutSeconds=2,failureThreshold=12'
+      - '--liveness-probe=httpGet.path=/health,httpGet.port=8080,periodSeconds=30,timeoutSeconds=3,failureThreshold=3'
+
+images:
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}:$COMMIT_SHA'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}:latest'
+
+timeout: 1200s

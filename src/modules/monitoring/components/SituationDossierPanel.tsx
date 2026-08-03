@@ -1,4 +1,5 @@
 import type { SituationDossier } from '@/modules/api/types/situation-management.types'
+import { splitSituationDescription } from '@/modules/operational-events/utils/parseSituationDescription'
 import {
   formatManagementDate,
   SITUATION_SEVERITY_LABEL,
@@ -53,6 +54,13 @@ export function SituationDossierPanel({
   const { situation } = dossier
   const responsibleName =
     situation.assignedUserName ?? situation.createdByUserName
+  const { narrative, reportedContext } = splitSituationDescription(
+    situation.description,
+  )
+  const captureEvidences = dossier.evidences.filter(
+    (evidence) => evidence.type === 'NOTE',
+  )
+  const affectedCoordinations = dossier.affectedCoordinations?.items ?? []
 
   return (
     <article
@@ -107,10 +115,46 @@ export function SituationDossierPanel({
             <dd>{formatManagementDate(situation.occurredAt)}</dd>
           </div>
         </dl>
+
         <div className="novex-ops-context">
           <strong>Descripción</strong>
-          <p>{situation.description}</p>
+          <p>{narrative}</p>
         </div>
+
+        {reportedContext ? (
+          <div className="novex-ops-context">
+            <strong>Contexto reportado</strong>
+            <p>{reportedContext}</p>
+          </div>
+        ) : null}
+
+        {captureEvidences.length > 0 ? (
+          <div className="novex-ops-context">
+            <strong>Evidencias de registro</strong>
+            <ul className="novex-ops-evidence-list">
+              {captureEvidences.map((evidence) => (
+                <li key={evidence.id}>
+                  <span>{evidence.title}</span>
+                  <p>{evidence.description}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        {affectedCoordinations.length > 0 ? (
+          <div className="novex-ops-context">
+            <strong>Coordinaciones afectadas (análisis IA)</strong>
+            <ul className="novex-ops-evidence-list">
+              {affectedCoordinations.map((item) => (
+                <li key={item.id}>
+                  <span>{item.coordinationName}</span>
+                  <p>{item.description}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </section>
     </article>
   )

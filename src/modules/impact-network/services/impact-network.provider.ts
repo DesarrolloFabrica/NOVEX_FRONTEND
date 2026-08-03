@@ -1,105 +1,52 @@
-import {
-  IMPACT_PREDICTIONS,
-  IMPACT_REPLAYS,
-} from '@/modules/impact-network/data/impact-scenarios.mock'
-import { IMPACT_TOPOLOGY } from '@/modules/impact-network/data/impact-topology.mock'
 import type {
   ImpactNetworkDataProvider,
   ImpactPrediction,
-  ImpactTopology,
+  ImpactSimulationOptions,
   IncidentReplay,
 } from '@/modules/impact-network/types/impact-network.types'
 
-function cloneTopology(topology: ImpactTopology): ImpactTopology {
-  return {
-    canvas: {
-      ...topology.canvas,
-      incidentCenter: { ...topology.canvas.incidentCenter },
-    },
-    areas: topology.areas.map((area) => ({
-      ...area,
-      position: { ...area.position },
-    })),
-    dependencies: topology.dependencies.map((dependency) => ({
-      ...dependency,
-    })),
-    bindings: topology.bindings.map((binding) => ({
-      ...binding,
-      externalIds: [...binding.externalIds],
-      externalCodes: [...binding.externalCodes],
-      externalNames: [...binding.externalNames],
-    })),
-  }
-}
-
-function cloneReplay(replay: IncidentReplay): IncidentReplay {
-  return {
-    ...replay,
-    steps: replay.steps.map((step) => ({ ...step })),
-  }
-}
-
-function clonePrediction(prediction: ImpactPrediction): ImpactPrediction {
-  return {
-    ...prediction,
-    potentialAreaIds: [...prediction.potentialAreaIds],
-    steps: prediction.steps.map((step) => ({ ...step })),
-  }
-}
-
-/** Búsqueda síncrona para disponibilidad de controles y pruebas. */
-export function getReplay(eventId: string): IncidentReplay | null {
-  const replay = IMPACT_REPLAYS[eventId]
-  return replay ? cloneReplay(replay) : null
-}
-
-/** Alias explícito que evita colisiones en consumidores con otros timelines. */
-export const getImpactReplay = getReplay
-
 /**
- * Obtiene una predicción determinista. Reducir el horizonte descarta pasos
- * posteriores sin alterar el fixture original.
+ * Adapter desacoplado para Replay / Simulación.
+ * Sprint de Propagación Inteligente: conectar aquí el backend real.
+ * Hasta entonces no inventa datos (siempre null).
  */
-export function getPrediction(
-  eventId: string,
-  horizonMinutes?: number,
-): ImpactPrediction | null {
-  const prediction = IMPACT_PREDICTIONS[eventId]
-  if (!prediction) return null
-
-  const requestedHorizon =
-    horizonMinutes !== undefined &&
-    Number.isFinite(horizonMinutes) &&
-    horizonMinutes > 0
-      ? Math.round(horizonMinutes)
-      : prediction.horizonMinutes
-  const steps = prediction.steps
-    .filter((step) => step.etaMinutes <= requestedHorizon)
-    .map((step) => ({ ...step }))
-
-  return {
-    ...clonePrediction(prediction),
-    horizonMinutes: requestedHorizon,
-    steps,
-    potentialAreaIds: [...new Set(steps.map((step) => step.areaId))],
-  }
+export interface ImpactPropagationAdapter {
+  loadReplay(eventId: string): Promise<IncidentReplay | null>
+  simulateImpact(
+    eventId: string,
+    options?: ImpactSimulationOptions,
+  ): Promise<ImpactPrediction | null>
 }
 
-export const getImpactPrediction = getPrediction
+export const stubImpactPropagationAdapter: ImpactPropagationAdapter = {
+  async loadReplay() {
+    return null
+  },
+  async simulateImpact() {
+    return null
+  },
+}
 
-export const mockImpactNetworkDataProvider: ImpactNetworkDataProvider = {
+export let impactPropagationAdapter: ImpactPropagationAdapter =
+  stubImpactPropagationAdapter
+
+export function setImpactPropagationAdapter(
+  adapter: ImpactPropagationAdapter,
+): void {
+  impactPropagationAdapter = adapter
+}
+
+/** Provider de topología: la carga real vive en loadImpactNetworkGraph. */
+export const impactNetworkDataProvider: ImpactNetworkDataProvider = {
   async loadTopology() {
-    return cloneTopology(IMPACT_TOPOLOGY)
+    throw new Error(
+      'loadTopology está deprecado. Usar loadImpactNetworkGraph().',
+    )
   },
-
   async loadReplay(eventId) {
-    return getReplay(eventId)
+    return impactPropagationAdapter.loadReplay(eventId)
   },
-
   async simulateImpact(eventId, options) {
-    return getPrediction(eventId, options?.horizonMinutes)
+    return impactPropagationAdapter.simulateImpact(eventId, options)
   },
 }
-
-export const impactNetworkDataProvider = mockImpactNetworkDataProvider
-

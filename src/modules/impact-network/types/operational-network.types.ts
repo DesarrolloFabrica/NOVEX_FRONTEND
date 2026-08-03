@@ -27,7 +27,7 @@ export interface Coordination {
   operationalStatus: CoordinationOperationalStatus
   responsiblePeople: readonly string[]
   situationIds: readonly string[]
-  lastActivityAt: string
+  lastActivityAt: string | null
 }
 
 export interface Situation {
@@ -39,7 +39,7 @@ export interface Situation {
   riskLevel: RiskLevel
   riskScore: number
   reportedAt: string
-  lastActivityAt: string
+  lastActivityAt: string | null
 }
 
 export interface SituationPropagation {

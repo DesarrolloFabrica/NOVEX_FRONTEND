@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom'
+import { useAuth } from '@/modules/auth/hooks/useAuth'
+import { canCreateSituations } from '@/modules/auth/utils/permissions'
 
 type RegisterSituationCtaVariant = 'rail' | 'topbar' | 'inline' | 'command' | 'footer'
 
@@ -15,6 +17,12 @@ export function RegisterSituationCta({
   label = DEFAULT_LABEL,
   className = '',
 }: RegisterSituationCtaProps) {
+  const { user } = useAuth()
+
+  if (!canCreateSituations(user)) {
+    return null
+  }
+
   return (
     <Link
       to="/situaciones/nueva"

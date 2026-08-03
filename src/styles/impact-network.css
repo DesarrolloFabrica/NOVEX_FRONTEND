@@ -9231,12 +9231,44 @@
   background: #010712;
 }
 
+.impact-network--v2 .impact-network__canvas {
+  position: relative;
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  min-height: 0;
+  border-right: 1px solid rgb(67 135 198 / 0.12);
+}
+
+.impact-network--v2 .impact-network__panel-layer {
+  position: relative;
+  inset: auto;
+  z-index: 12;
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.impact-network--v2 .impact-network__panel-layer > .operational-context-panel {
+  flex: 1;
+  min-height: 0;
+}
+
 .impact-network--v2 .impact-network__workspace--island-focus {
   grid-template-columns: minmax(0, 1fr);
 }
 
-.impact-network--v2 .impact-network__canvas {
-  border-right: 1px solid rgb(67 135 198 / 0.12);
+.impact-network--v2 .impact-network__workspace--island-focus .impact-network__panel-layer {
+  display: none;
+}
+
+.impact-network--v2 .impact-network__workspace--island-focus .impact-network__canvas {
+  border-right: none;
 }
 
 .impact-map-actions {
@@ -10628,6 +10660,12 @@
     overflow: visible;
   }
 
+  .impact-network--v2 .impact-network__panel-layer {
+    grid-column: 1;
+    grid-row: 2;
+    display: flex;
+  }
+
   .impact-network--v2 .operational-context-panel,
   .impact-network--v2 .situation-command-panel {
     min-height: 320px;
@@ -10863,6 +10901,7 @@
 }
 
 .impact-network__workspace.impact-network__workspace--island-focus
+  > .impact-network__panel-layer
   > .operational-context-panel {
   min-width: 0;
   visibility: hidden;
@@ -12723,4 +12762,217 @@
     .organizational-scene__connection-node-pulse
   ) {
   animation: none !important;
+}
+
+/* ==========================================================================
+   Performance: balanced render mode (default for Red de impacto)
+   Keep visual fidelity (labels, soft glows, hover). Only cut idle GPU cost.
+   ========================================================================== */
+
+/* Never contain islands: labels and art overflow the layout box on purpose. */
+.propagation-scene[data-perf='balanced'] .propagation-scene__backdrop,
+.organizational-scene[data-perf='balanced'] .propagation-scene__backdrop {
+  contain: strict;
+}
+
+.propagation-scene__stage {
+  will-change: auto;
+}
+
+.propagation-scene--dragging .propagation-scene__stage,
+.propagation-scene--camera-animating .propagation-scene__stage {
+  will-change: transform;
+}
+
+/* Cheaper connection glow: wide translucent stroke instead of SVG blur filters. */
+.propagation-scene[data-perf='balanced'] .organizational-scene__connection-glow,
+.organizational-scene[data-perf='balanced'] .organizational-scene__connection-glow {
+  stroke: rgb(var(--island-glow-rgb) / 0.2);
+  stroke-width: 8;
+  filter: none;
+}
+
+.propagation-scene[data-perf='balanced'] .organizational-scene__connection,
+.organizational-scene[data-perf='balanced'] .organizational-scene__connection,
+.propagation-scene[data-perf='balanced'] .organizational-scene__connection-rail,
+.organizational-scene[data-perf='balanced'] .organizational-scene__connection-rail,
+.propagation-scene[data-perf='balanced'] .organizational-scene__connection-sheen,
+.organizational-scene[data-perf='balanced'] .organizational-scene__connection-sheen,
+.propagation-scene[data-perf='balanced'] .organizational-scene__connection-node,
+.organizational-scene[data-perf='balanced'] .organizational-scene__connection-node,
+.propagation-scene[data-perf='balanced'] .organizational-scene__connection-node-core,
+.organizational-scene[data-perf='balanced'] .organizational-scene__connection-node-core,
+.propagation-scene[data-perf='balanced'] .organizational-scene__connection-particle,
+.organizational-scene[data-perf='balanced'] .organizational-scene__connection-particle {
+  filter: none;
+}
+
+.organizational-scene[data-perf='balanced'][data-level='institutional']
+  .organizational-scene__connection-glow {
+  stroke: rgb(var(--island-glow-rgb) / 0.22);
+  stroke-width: 7;
+  filter: none;
+}
+
+.organizational-scene[data-perf='balanced'][data-level='institutional']
+  .organizational-scene__connection,
+.organizational-scene[data-perf='balanced'][data-level='institutional']
+  .organizational-scene__connection-rail,
+.organizational-scene[data-perf='balanced'][data-level='institutional']
+  .organizational-scene__connection-sheen {
+  filter: none;
+}
+
+/* Drop only the densest continuous LED dots; keep platform, halo and art intact. */
+.propagation-scene[data-perf='balanced'] .propagation-island__platform i,
+.organizational-scene[data-perf='balanced'] .propagation-island__platform i {
+  display: none !important;
+}
+
+.propagation-scene[data-perf='balanced'] .propagation-island__wave,
+.propagation-scene[data-perf='balanced'] .propagation-island__emitter,
+.organizational-scene[data-perf='balanced'] .propagation-island__wave,
+.organizational-scene[data-perf='balanced'] .propagation-island__emitter {
+  animation: none;
+  opacity: 0.45;
+}
+
+.propagation-scene[data-perf='balanced'] .propagation-island__detail-orbit,
+.organizational-scene[data-perf='balanced'] .propagation-island__detail-orbit {
+  animation-duration: 28s;
+  opacity: 0.55;
+}
+
+.propagation-scene[data-perf='balanced'] .propagation-island__ground-glow,
+.organizational-scene[data-perf='balanced'] .propagation-island__ground-glow {
+  animation: none;
+  filter: blur(6px);
+  opacity: 0.55;
+}
+
+.propagation-scene[data-perf='balanced'] .propagation-island__halo,
+.organizational-scene[data-perf='balanced'] .propagation-island__halo {
+  animation: none;
+  filter: blur(10px);
+  opacity: 0.55;
+}
+
+/* Restore premium island art look; soft float remains but slower.
+   Do not override institutional hue/glow filters — those use !important. */
+.propagation-scene[data-perf='balanced']
+  .propagation-island:not(.organizational-scene__island)
+  .propagation-island__image {
+  animation: propagation-island-float 9.5s ease-in-out infinite;
+  transition:
+    transform 220ms ease,
+    filter 220ms ease,
+    opacity 220ms ease;
+}
+
+.impact-network__canvas
+  .propagation-scene[data-perf='balanced']
+  .organizational-scene__island
+  .propagation-island__image {
+  animation: propagation-island-float 9.5s ease-in-out infinite;
+  transition:
+    transform 220ms ease,
+    filter 220ms ease,
+    opacity 220ms ease;
+}
+
+.propagation-scene[data-perf='balanced']
+  .propagation-island:not(.organizational-scene__island):hover
+  .propagation-island__image,
+.propagation-scene[data-perf='balanced']
+  .propagation-island:not(.organizational-scene__island):focus-visible
+  .propagation-island__image,
+.propagation-scene[data-perf='balanced']
+  .propagation-island:not(.organizational-scene__island)[data-selected='true']
+  .propagation-island__image {
+  animation: none;
+  transform: translate3d(0, -4px, 0) scale(1.05);
+  filter:
+    drop-shadow(0 0 18px rgb(var(--island-glow-rgb) / 0.55))
+    drop-shadow(0 14px 22px rgb(0 0 0 / 0.55));
+}
+
+/* Institutional hover: amplify glow without fighting existing hue filters. */
+.impact-network__canvas
+  .propagation-scene[data-perf='balanced']
+  .organizational-scene__island:is(:hover, :focus-visible, :focus-within, [data-selected='true'])
+  .propagation-island__halo {
+  opacity: 0.9;
+  filter: blur(12px);
+}
+
+.impact-network__canvas
+  .propagation-scene[data-perf='balanced']
+  .organizational-scene__island:is(:hover, :focus-visible, :focus-within, [data-selected='true'])
+  .propagation-island__label {
+  border-color: rgb(var(--island-glow-rgb) / 0.72);
+  box-shadow:
+    0 12px 28px rgb(0 0 0 / 0.5),
+    0 0 24px rgb(var(--island-glow-rgb) / 0.22),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+.propagation-scene[data-perf='balanced'] .propagation-island:hover .propagation-island__halo,
+.propagation-scene[data-perf='balanced'] .propagation-island:focus-visible .propagation-island__halo,
+.propagation-scene[data-perf='balanced'] .propagation-island[data-selected='true'] .propagation-island__halo,
+.organizational-scene[data-perf='balanced'] .propagation-island:hover .propagation-island__halo,
+.organizational-scene[data-perf='balanced'] .propagation-island:focus-visible .propagation-island__halo,
+.organizational-scene[data-perf='balanced'] .propagation-island[data-selected='true'] .propagation-island__halo {
+  opacity: 0.85;
+  filter: blur(12px);
+}
+
+.propagation-scene[data-perf='balanced'] .propagation-island--ambient:hover .propagation-island__image,
+.propagation-scene[data-perf='balanced'] .propagation-island--ambient[data-selected='true'] .propagation-island__image,
+.organizational-scene[data-perf='balanced'] .propagation-island--ambient:hover .propagation-island__image,
+.organizational-scene[data-perf='balanced'] .propagation-island--ambient[data-selected='true'] .propagation-island__image {
+  opacity: 1;
+}
+
+/* Labels must always paint outside the island box. */
+.propagation-scene[data-perf='balanced'] .propagation-island,
+.organizational-scene[data-perf='balanced'] .propagation-island,
+.propagation-scene[data-perf='balanced'] .propagation-island__label,
+.organizational-scene[data-perf='balanced'] .propagation-island__label,
+.propagation-scene[data-perf='balanced'] .propagation-island__overlays,
+.organizational-scene[data-perf='balanced'] .propagation-island__overlays,
+.propagation-scene[data-perf='balanced'] .propagation-island__body,
+.organizational-scene[data-perf='balanced'] .propagation-island__body {
+  overflow: visible !important;
+  contain: none !important;
+}
+
+.propagation-scene[data-perf='balanced'] .organizational-scene__direction-hub img,
+.organizational-scene[data-perf='balanced'] .organizational-scene__direction-hub img {
+  filter:
+    saturate(1.18)
+    brightness(1.03)
+    drop-shadow(0 0 14px rgb(48 181 246 / 0.55))
+    drop-shadow(0 12px 18px rgb(0 0 0 / 0.62));
+}
+
+.propagation-scene[data-perf='balanced'] .organizational-scene__direction-orbit,
+.organizational-scene[data-perf='balanced'] .organizational-scene__direction-pulse,
+.organizational-scene[data-perf='balanced'] .organizational-scene__direction-scan {
+  animation-duration: 12s;
+}
+
+.propagation-scene[data-perf='balanced'] .propagation-scene__grid,
+.propagation-scene[data-perf='balanced'] .propagation-scene__fog {
+  animation: none;
+}
+
+.propagation-scene[data-perf='balanced'] .propagation-scene__orbit {
+  animation-duration: 40s;
+}
+
+.propagation-scene[data-page-hidden='true'],
+.propagation-scene[data-page-hidden='true'] *,
+.organizational-scene[data-page-hidden='true'],
+.organizational-scene[data-page-hidden='true'] * {
+  animation-play-state: paused !important;
 }
