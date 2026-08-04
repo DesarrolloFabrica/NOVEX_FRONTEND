@@ -8,10 +8,39 @@ import { OperationalIntelligenceDashboard } from '@/modules/operational-events/c
 import type { OperationalEnvironmentStatus } from '@/modules/operational-events/types/operational-event.types'
 import { MainScreen, NovexFrame, NovexRoom } from '@/modules/room'
 import { NovexProductHeader } from '@/shared/components/NovexProductHeader'
+import { useAuth } from '@/modules/auth/hooks/useAuth'
+import { getEffectiveDashboardRole } from '@/modules/auth/utils/roleExperience'
+import { useSearchParams } from 'react-router-dom'
+
+const HEADER_BY_ROLE = {
+  COORDINADOR: {
+    title: 'Panel de coordinación',
+    eyebrow: 'Operación local',
+    context: 'Registro, historial y seguimiento de su coordinación',
+  },
+  ANALISTA: {
+    title: 'Centro de monitoreo',
+    eyebrow: 'Supervisión operacional',
+    context: 'Visión global, prioridades y actividad reciente',
+  },
+  DIRECTOR: {
+    title: 'Command Center',
+    eyebrow: 'Dirección ejecutiva',
+    context: 'Riesgos, impacto e indicadores institucionales',
+  },
+  ADMIN: {
+    title: 'Vista operacional',
+    eyebrow: 'Soporte de plataforma',
+    context: 'Supervisión global de la operación',
+  },
+} as const
 
 export function OperationalIntelligencePage() {
-  const [environment, setEnvironment] =
-    useState<EnvironmentStatus>('pending')
+  const { user } = useAuth()
+  const [searchParams] = useSearchParams()
+  const role = getEffectiveDashboardRole(user, searchParams.get('preview'))
+  const header = HEADER_BY_ROLE[role]
+  const [environment, setEnvironment] = useState<EnvironmentStatus>('pending')
 
   const handleEnvironmentChange = useCallback(
     (next: OperationalEnvironmentStatus) => {
@@ -28,7 +57,9 @@ export function OperationalIntelligencePage() {
             environment={environment}
             header={
               <NovexProductHeader
-                title="Dashboard"
+                title={header.title}
+                eyebrow={header.eyebrow}
+                context={header.context}
                 help={
                   <>
                     <p>
@@ -36,8 +67,8 @@ export function OperationalIntelligencePage() {
                       y el historial de seguimiento institucional.
                     </p>
                     <p>
-                      Use <b>Registrar situación</b> cuando ocurra un nuevo evento
-                      operativo que deba documentarse.
+                      Use <b>Registrar situación</b> cuando ocurra un nuevo
+                      evento operativo que deba documentarse.
                     </p>
                   </>
                 }

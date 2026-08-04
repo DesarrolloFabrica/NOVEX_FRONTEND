@@ -100,7 +100,9 @@ function average(values: number[]): number | null {
   return values.reduce((total, value) => total + value, 0) / values.length
 }
 
-function resolveEnvironment(kpis: ExecutiveDashboardKpis): OperationalEnvironmentStatus {
+function resolveEnvironment(
+  kpis: ExecutiveDashboardKpis,
+): OperationalEnvironmentStatus {
   if (kpis.openSituations === 0 && kpis.criticalSituations === 0) {
     return kpis.resolvedSituations > 0 ? 'healthy' : 'pending'
   }
@@ -219,16 +221,44 @@ function buildPrioritySituations(
     }))
     .sort(
       (left, right) =>
-        new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime(),
+        new Date(right.updatedAt).getTime() -
+        new Date(left.updatedAt).getTime(),
     )
     .slice(0, 5)
+}
+
+function buildLatestSituations(
+  enrichments: SituationEnrichment[],
+): PrioritySituationCard[] {
+  return enrichments
+    .map((item) => ({
+      id: item.situation.id,
+      title: item.situation.title,
+      coordinationName: item.situation.coordinationName,
+      coordinationCode: item.situation.coordinationCode,
+      categoryName: item.situation.categoryName,
+      severity: item.analysisSeverity ?? item.situation.severity,
+      status: item.situation.status,
+      riskScore: item.riskScore,
+      riskLevel: item.riskLevel,
+      updatedAt: item.situation.updatedAt,
+    }))
+    .sort(
+      (left, right) =>
+        new Date(right.updatedAt).getTime() -
+        new Date(left.updatedAt).getTime(),
+    )
+    .slice(0, 8)
 }
 
 function buildCoordinationImpact(
   enrichments: SituationEnrichment[],
   coordinations: Awaited<ReturnType<typeof fetchCoordinations>>,
 ): CoordinationImpactEntry[] {
-  const map = new Map<string, CoordinationImpactEntry & { intensityTotal: number }>()
+  const map = new Map<
+    string,
+    CoordinationImpactEntry & { intensityTotal: number }
+  >()
 
   for (const enrichment of enrichments) {
     for (const affected of enrichment.affectedCoordinations) {
@@ -302,7 +332,8 @@ function buildRecentActivity(
     .flatMap((item) => item.timelineItems)
     .sort(
       (left, right) =>
-        new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+        new Date(right.createdAt).getTime() -
+        new Date(left.createdAt).getTime(),
     )
     .slice(0, 12)
 }
@@ -324,18 +355,19 @@ function buildAiIndicators(enrichments: SituationEnrichment[]): AiIndicators {
         entry.eventType === 'AI_ANALYSIS_VERSION_CREATED',
     ).length
 
-  const lastAnalysisAt = sessions
-    .map((session) => session.createdAt)
-    .sort((left, right) => new Date(right).getTime() - new Date(left).getTime())[0] ?? null
+  const lastAnalysisAt =
+    sessions
+      .map((session) => session.createdAt)
+      .sort(
+        (left, right) => new Date(right).getTime() - new Date(left).getTime(),
+      )[0] ?? null
 
   return {
     totalAnalyses: sessions.length,
     averageConfidence: average(confidences),
     averageExecutionMinutes:
       executionTimes.length > 0
-        ? Math.round(
-            (average(executionTimes) ?? 0) / 60_000,
-          )
+        ? Math.round((average(executionTimes) ?? 0) / 60_000)
         : null,
     lastAnalysisAt,
     reanalysisCount: Math.max(reanalysisCount, timelineReanalysis),
@@ -372,7 +404,9 @@ function buildKpis(enrichments: SituationEnrichment[]): ExecutiveDashboardKpis {
 
   const affectedCoordinationIds = new Set(
     enrichments.flatMap((item) =>
-      item.affectedCoordinations.map((coordination) => coordination.coordinationId),
+      item.affectedCoordinations.map(
+        (coordination) => coordination.coordinationId,
+      ),
     ),
   )
 
@@ -412,6 +446,7 @@ export async function loadExecutiveDashboardData(): Promise<ExecutiveDashboardDa
     executiveNarrative: buildExecutiveNarrative(kpis, prioritySituations),
     environment: resolveEnvironment(kpis),
     prioritySituations,
+    latestSituations: buildLatestSituations(enrichments),
     coordinationImpact: buildCoordinationImpact(enrichments, coordinations),
     recentActivity: buildRecentActivity(enrichments),
     aiIndicators: buildAiIndicators(enrichments),

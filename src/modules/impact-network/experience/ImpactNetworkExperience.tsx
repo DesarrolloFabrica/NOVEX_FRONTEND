@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useReducedMotion } from 'motion/react'
 import { OrganizationalScene } from '@/modules/impact-network/components/OrganizationalScene'
@@ -44,9 +38,7 @@ import { ScreenDeck } from '@/modules/monitoring/components/ScreenDeck'
 import type { UpdateSituationStatusInput } from '@/modules/monitoring/utils/situation-lifecycle'
 import { MainScreen, NovexFrame, NovexRoom } from '@/modules/room'
 import { updateSituationStatus } from '@/modules/services/situationManagementData.service'
-import type {
-  Coordination,
-} from '@/modules/impact-network/types/operational-network.types'
+import type { Coordination } from '@/modules/impact-network/types/operational-network.types'
 import type { SituationResponse } from '@/modules/situations/types/situation.types'
 import { NovexProductHeader } from '@/shared/components/NovexProductHeader'
 import { getErrorMessage } from '@/shared/utils/error'
@@ -61,6 +53,17 @@ const EMPTY_TOPOLOGY: ImpactTopology = {
   areas: [],
   dependencies: [],
   bindings: [],
+}
+
+function getCoordinatorInitialSelection(
+  roleCode: string | undefined,
+  selectedAreaId: string | undefined,
+  coordinationId: string | undefined,
+): CoordinationId | null {
+  if (roleCode !== 'COORDINADOR') return null
+
+  const candidate = selectedAreaId?.trim() || coordinationId?.trim()
+  return candidate ? (candidate as CoordinationId) : null
 }
 
 function formatPropagationDuration(replay: IncidentReplay | null): string {
@@ -88,6 +91,11 @@ export function ImpactNetworkExperience() {
   const reduceMotion = useReducedMotion()
   const immersiveRef = useRef<HTMLDivElement | null>(null)
   const deepLinkAppliedRef = useRef(false)
+  const initialCoordinatorSelection = getCoordinatorInitialSelection(
+    user?.roleCode,
+    user?.selectedAreaId,
+    user?.coordinationId,
+  )
   const coordinatorInitialFocusRef = useRef(false)
 
   const [topology, setTopology] = useState<ImpactTopology>(EMPTY_TOPOLOGY)
@@ -106,7 +114,7 @@ export function ImpactNetworkExperience() {
   const [situationsLoading, setSituationsLoading] = useState(true)
   const [situationsError, setSituationsError] = useState<string | null>(null)
   const [selectedCoordinationId, setSelectedCoordinationId] =
-    useState<CoordinationId | null>(null)
+    useState<CoordinationId | null>(() => initialCoordinatorSelection)
   const [focusedEventId, setFocusedEventId] = useState<string | null>(null)
   const [affectedCoordinationIds, setAffectedCoordinationIds] = useState<
     readonly CoordinationId[]
@@ -129,13 +137,19 @@ export function ImpactNetworkExperience() {
     Boolean(typeof document !== 'undefined' && document.fullscreenElement),
   )
 
-  const coordinatorMode = user?.role === 'ejecutor'
-  const assignedCoordinationId = useMemo(
-    () =>
+  const coordinatorMode = user?.roleCode === 'COORDINADOR'
+  const assignedCoordinationId = useMemo(() => {
+    const selectedAreaId = user?.selectedAreaId?.trim() as
+      CoordinationId | undefined
+    if (selectedAreaId && coordinationIds.includes(selectedAreaId)) {
+      return selectedAreaId
+    }
+
+    return (
       resolveCoordinationId(user?.selectedAreaId) ??
-      resolveCoordinationId(user?.coordinationId),
-    [user?.coordinationId, user?.selectedAreaId, coordinationIds],
-  )
+      resolveCoordinationId(user?.coordinationId)
+    )
+  }, [user?.coordinationId, user?.selectedAreaId, coordinationIds])
 
   const reloadSituations = useCallback(async () => {
     setSituationsLoading(true)
@@ -233,8 +247,8 @@ export function ImpactNetworkExperience() {
   const focusedIncident = useMemo(
     () =>
       focusedEventId
-        ? incidents.find((incident) => incident.eventId === focusedEventId) ??
-          null
+        ? (incidents.find((incident) => incident.eventId === focusedEventId) ??
+          null)
         : null,
     [focusedEventId, incidents],
   )
@@ -245,7 +259,7 @@ export function ImpactNetworkExperience() {
   const focusedSituation = useMemo(
     () =>
       focusedEventId
-        ? situations.find((item) => item.id === focusedEventId) ?? null
+        ? (situations.find((item) => item.id === focusedEventId) ?? null)
         : null,
     [focusedEventId, situations],
   )
@@ -272,9 +286,9 @@ export function ImpactNetworkExperience() {
   const selectedCoordination = useMemo(
     () =>
       selectedCoordinationId
-        ? coordinations.find(
+        ? (coordinations.find(
             (coordination) => coordination.id === selectedCoordinationId,
-          ) ?? null
+          ) ?? null)
         : null,
     [coordinations, selectedCoordinationId],
   )
@@ -444,7 +458,10 @@ export function ImpactNetworkExperience() {
     }
 
     if (coordinationFromQuery) {
-      if (!coordinatorMode || coordinationFromQuery === assignedCoordinationId) {
+      if (
+        !coordinatorMode ||
+        coordinationFromQuery === assignedCoordinationId
+      ) {
         setSelectedCoordinationId(coordinationFromQuery)
       }
       deepLinkAppliedRef.current = true
@@ -559,6 +576,35 @@ export function ImpactNetworkExperience() {
     syncSearchParams(selectedCoordinationId, null)
   }, [exitFocusMode, selectedCoordinationId, syncSearchParams])
 
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (
+        event.key !== 'Escape' ||
+        event.defaultPrevented ||
+        showAnalysisModal
+      ) {
+        return
+      }
+
+      if (islandFocusActive) {
+        setIslandFocusActive(false)
+        return
+      }
+
+      if (focusedIncident) {
+        navigateToCoordination()
+      }
+    }
+
+    window.addEventListener('keydown', handleEscape)
+    return () => window.removeEventListener('keydown', handleEscape)
+  }, [
+    focusedIncident,
+    islandFocusActive,
+    navigateToCoordination,
+    showAnalysisModal,
+  ])
+
   const openCoordinationFromMap = useCallback(
     (coordinationId: CoordinationId) => {
       if (coordinatorMode && coordinationId !== assignedCoordinationId) {
@@ -634,9 +680,7 @@ export function ImpactNetworkExperience() {
 
   const showAllIlluminated =
     Boolean(propagation) &&
-    (replayPhase === 'complete' ||
-      playbackState === 'complete' ||
-      !replay)
+    (replayPhase === 'complete' || playbackState === 'complete' || !replay)
 
   const navigationLevel: ImpactNavigationLevel = focusedIncident
     ? 'situation'
@@ -654,11 +698,7 @@ export function ImpactNetworkExperience() {
     : undefined
 
   return (
-    <NovexRoom
-      environment={environment}
-      scene="impact"
-      immersive={isImmersive}
-    >
+    <NovexRoom environment={environment} scene="impact" immersive={isImmersive}>
       <NovexFrame environment={environment}>
         <MainScreen environment={environment}>
           <div
@@ -710,6 +750,7 @@ export function ImpactNetworkExperience() {
               }
             >
               <section
+                data-tour="impact-network"
                 className={[
                   'impact-network impact-network--propagation impact-network--v2',
                   islandFocusActive ? 'impact-network--island-focus' : '',
@@ -754,7 +795,9 @@ export function ImpactNetworkExperience() {
                           viewResetKey={mapViewResetKey}
                           propagation={propagation}
                           focusedEvent={focusedEvent}
-                          illuminatedCoordinationIds={illuminatedCoordinationIds}
+                          illuminatedCoordinationIds={
+                            illuminatedCoordinationIds
+                          }
                           predictedCoordinationIds={[]}
                           predictionVisible={simulationPhase === 'visible'}
                           activeEdgeId={currentFrame?.activeEdgeId ?? null}

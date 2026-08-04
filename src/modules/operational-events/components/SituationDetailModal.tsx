@@ -68,8 +68,7 @@ export function SituationDetailModal({
     interpretation?.affectedAreaNames.join(' · ') || event.sourceAreaName
 
   const timeline = useMemo(
-    () =>
-      [...event.timeline.entries].sort((a, b) => a.at.localeCompare(b.at)),
+    () => [...event.timeline.entries].sort((a, b) => a.at.localeCompare(b.at)),
     [event.timeline.entries],
   )
 
@@ -100,17 +99,14 @@ export function SituationDetailModal({
     }
   }, [onClose])
 
-  async function handleExport(
-    clickEvent?: MouseEvent<HTMLButtonElement>,
-  ) {
+  async function handleExport(clickEvent?: MouseEvent<HTMLButtonElement>) {
     clickEvent?.preventDefault()
     clickEvent?.stopPropagation()
     if (exportState === 'generating') return
     setExportState('generating')
     try {
-      const { exportSituationReportPdf } = await import(
-        '@/modules/operational-events/utils/exportSituationReportPdf'
-      )
+      const { exportSituationReportPdf } =
+        await import('@/modules/operational-events/utils/exportSituationReportPdf')
       await exportSituationReportPdf(event)
       setExportState('idle')
     } catch {
@@ -133,6 +129,7 @@ export function SituationDetailModal({
         aria-modal="true"
         aria-labelledby={titleId}
         data-risk={risk}
+        data-tour="report-modal"
       >
         <header className="novex-sit-header">
           <div className="novex-sit-header__lead">
@@ -166,8 +163,14 @@ export function SituationDetailModal({
             >
               <NovexIcon name="x" size={15} strokeWidth={1.7} />
             </button>
-            <div className="novex-sit-header__status" data-status={event.status}>
-              <span className="novex-sit-header__status-dot" aria-hidden="true" />
+            <div
+              className="novex-sit-header__status"
+              data-status={event.status}
+            >
+              <span
+                className="novex-sit-header__status-dot"
+                aria-hidden="true"
+              />
               <strong>
                 {EVENT_STATUS_LABEL[event.status]} · {RISK_LEVEL_LABEL[risk]}
               </strong>
@@ -181,7 +184,7 @@ export function SituationDetailModal({
           </div>
         </header>
 
-        <div className="novex-sit-scroll">
+        <div className="novex-sit-scroll" data-tour="report-scroll">
           {report ? (
             <div className="novex-sit-report">
               {/* 1. ¿Qué ocurrió? */}
@@ -199,7 +202,10 @@ export function SituationDetailModal({
                       {report.incidentSummary.executiveSummary}
                     </p>
                     {interpretation?.narrative ? (
-                      <p className="novex-sit-card__hint" style={{ marginTop: 10 }}>
+                      <p
+                        className="novex-sit-card__hint"
+                        style={{ marginTop: 10 }}
+                      >
                         {interpretation.narrative}
                       </p>
                     ) : null}
@@ -209,7 +215,9 @@ export function SituationDetailModal({
                       <h3>¿Por qué ocurrió?</h3>
                     </header>
                     <div className="novex-sit-cause">
-                      <p className="novex-sit-cause__label">Causas detectadas</p>
+                      <p className="novex-sit-cause__label">
+                        Causas detectadas
+                      </p>
                       <ul>
                         {report.rootCause.detectedCauses.map((cause) => (
                           <li key={cause}>{cause}</li>
@@ -260,11 +268,14 @@ export function SituationDetailModal({
                         aria-valuenow={report.riskAssessment.riskScore}
                       >
                         <span
-                          style={{ width: `${report.riskAssessment.riskScore}%` }}
+                          style={{
+                            width: `${report.riskAssessment.riskScore}%`,
+                          }}
                         />
                       </div>
                       <p className="novex-sit-card__hint">
-                        Severidad {report.riskAssessment.severity}/5 · Categoría:{' '}
+                        Severidad {report.riskAssessment.severity}/5 ·
+                        Categoría:{' '}
                         {interpretation?.categoryName ?? 'Sin clasificar'}
                       </p>
                     </div>
@@ -282,7 +293,11 @@ export function SituationDetailModal({
                               : 'high'
                         }
                       >
-                        {EXEC_CERTAINTY_LABEL[report.riskAssessment.certainty.level]}
+                        {
+                          EXEC_CERTAINTY_LABEL[
+                            report.riskAssessment.certainty.level
+                          ]
+                        }
                       </span>
                     </header>
                     <div className="novex-sit-tech">
@@ -369,9 +384,11 @@ export function SituationDetailModal({
                     </dl>
                     <p className="novex-sit-cause__label">Procesos afectados</p>
                     <ul className="novex-sit-chips">
-                      {report.impactAnalysis.affectedProcesses.map((process) => (
-                        <li key={process}>{process}</li>
-                      ))}
+                      {report.impactAnalysis.affectedProcesses.map(
+                        (process) => (
+                          <li key={process}>{process}</li>
+                        ),
+                      )}
                     </ul>
                   </article>
                   <article className="novex-sit-card">
@@ -426,7 +443,9 @@ export function SituationDetailModal({
                       <strong className="novex-sit-action__title">
                         {action.action}
                       </strong>
-                      <p className="novex-sit-action__reason">{action.reason}</p>
+                      <p className="novex-sit-action__reason">
+                        {action.reason}
+                      </p>
                       <p className="novex-sit-action__area">
                         <NovexIcon name="users" size={11} strokeWidth={1.8} />
                         {action.suggestedArea}
@@ -583,7 +602,9 @@ export function SituationDetailModal({
                       </p>
                     </div>
                     <div>
-                      <p className="novex-sit-cause__label">Recomendación general</p>
+                      <p className="novex-sit-cause__label">
+                        Recomendación general
+                      </p>
                       <p className="novex-sit-conclusion__text">
                         {report.executiveConclusion.recommendation}
                       </p>
@@ -615,15 +636,22 @@ export function SituationDetailModal({
                 </p>
                 <p className="novex-sit-card__hint" style={{ marginTop: 10 }}>
                   Esta situación no cuenta con reporte ejecutivo de inteligencia
-                  (contrato v2). Registrada el {formatEventDate(event.reportedAt)}.
+                  (contrato v2). Registrada el{' '}
+                  {formatEventDate(event.reportedAt)}.
                 </p>
               </article>
             </div>
           )}
+          <span
+            className="novex-sit-report-end"
+            data-tour="report-end"
+            aria-hidden="true"
+          />
         </div>
 
         <footer className="novex-sit-footer">
           <button
+            data-tour="download-report"
             type="button"
             className="novex-sit-footer__secondary"
             onClick={(clickEvent) => void handleExport(clickEvent)}

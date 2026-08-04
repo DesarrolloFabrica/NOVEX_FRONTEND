@@ -88,7 +88,7 @@ export function MonitoringCenter({
         />
       }
     >
-      <main className="novex-execution-flow">
+      <main className="novex-execution-flow" data-tour="situation-management">
         <SituationSummary summary={summary} />
 
         <SituationQueueConsole

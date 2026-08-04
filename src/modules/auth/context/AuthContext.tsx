@@ -12,14 +12,13 @@ import {
   useState,
 } from 'react'
 import type { ReactNode } from 'react'
-import {
-  bootstrapAuthSessionRequest,
-} from '@/modules/auth/services/auth-session.service'
+import { bootstrapAuthSessionRequest } from '@/modules/auth/services/auth-session.service'
 import type { User } from '@/modules/auth/types/user.types'
 import {
   completeOnboardingRequest,
   loginWithEmailRequest,
   logoutRequest,
+  saveOnboardingProgressRequest,
 } from '@/modules/auth/services/auth.service'
 import { loginWithGoogleRequest } from '@/modules/auth/services/google-auth.service'
 import {
@@ -27,7 +26,10 @@ import {
   readAuthSession,
   writeAuthSession,
 } from '@/modules/auth/utils/authSessionStorage'
-import { clearAccessToken, readAccessToken } from '@/modules/auth/utils/accessTokenStorage'
+import {
+  clearAccessToken,
+  readAccessToken,
+} from '@/modules/auth/utils/accessTokenStorage'
 import { setUnauthorizedHandler } from '@/shared/api/http'
 import { getErrorMessage } from '@/shared/utils/error'
 
@@ -107,12 +109,17 @@ export interface AuthContextValue extends AuthState {
   loginWithGoogle: (credential: string) => Promise<void>
   logout: () => Promise<void>
   completeOnboarding: () => Promise<void>
+  saveOnboardingProgress: (step: number, completed?: boolean) => Promise<void>
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(authReducer, undefined, createInitialState)
+  const [state, dispatch] = useReducer(
+    authReducer,
+    undefined,
+    createInitialState,
+  )
   const [bootSplashActive, setBootSplashActive] = useState(false)
 
   const clearSession = useCallback(() => {
@@ -211,6 +218,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [state.user])
 
+  const saveOnboardingProgress = useCallback(
+    async (step: number, completed = false) => {
+      if (!state.user) return
+      const current = state.user
+      try {
+        const updated = await saveOnboardingProgressRequest(
+          current,
+          step,
+          completed,
+        )
+        writeAuthSession(updated)
+        dispatch({ type: 'AUTH_SUCCESS', user: updated })
+      } catch {
+        // El recorrido conserva una copia local si la sincronización falla.
+      }
+    },
+    [state.user],
+  )
+
   const value = useMemo<AuthContextValue>(
     () => ({
       ...state,
@@ -221,6 +247,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loginWithGoogle,
       logout,
       completeOnboarding,
+      saveOnboardingProgress,
     }),
     [
       state,
@@ -231,6 +258,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loginWithGoogle,
       logout,
       completeOnboarding,
+      saveOnboardingProgress,
     ],
   )
 

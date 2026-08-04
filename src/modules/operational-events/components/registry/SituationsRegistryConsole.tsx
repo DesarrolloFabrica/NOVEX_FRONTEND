@@ -141,7 +141,7 @@ export function SituationsRegistryConsole({
         : null
 
   return (
-    <div className="novex-registry-console">
+    <div className="novex-registry-console" data-tour="situations-registry">
       <SituationRegistrySummaryBar summary={summary} indicators={indicators} />
 
       <section

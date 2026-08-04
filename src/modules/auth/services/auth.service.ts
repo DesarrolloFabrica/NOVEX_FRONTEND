@@ -11,9 +11,12 @@ const delay = (ms: number): Promise<void> =>
 
 interface UserApiResponse {
   id: string
-  name: string
-  role: 'supervisor' | 'ejecutor'
-  selectedAreaId: string | null
+  fullName: string
+  roleCode: string
+  roleName: string
+  coordinationId: string | null
+  coordinationCode: string | null
+  onboardingStep: number
   onboardingCompleted: boolean
   onboardingSeenAt: string | null
 }
@@ -21,12 +24,14 @@ interface UserApiResponse {
 function toUser(payload: UserApiResponse, base?: User): User {
   return {
     id: payload.id,
-    name: payload.name,
-    role: payload.role,
-    roleCode: base?.roleCode ?? 'COORDINADOR',
+    name: payload.fullName,
+    role: payload.roleCode === 'COORDINADOR' ? 'ejecutor' : 'supervisor',
+    roleCode: payload.roleCode,
+    roleName: payload.roleName,
     permissions: base?.permissions ?? [],
-    selectedAreaId: payload.selectedAreaId ?? base?.selectedAreaId,
-    coordinationId: base?.coordinationId,
+    selectedAreaId: payload.coordinationCode ?? base?.selectedAreaId,
+    coordinationId: payload.coordinationId ?? base?.coordinationId,
+    onboardingStep: payload.onboardingStep,
     onboardingCompleted: payload.onboardingCompleted,
     onboardingSeenAt: payload.onboardingSeenAt,
   }
@@ -35,13 +40,23 @@ function toUser(payload: UserApiResponse, base?: User): User {
 export { loginWithEmailRequest } from '@/modules/auth/services/google-auth.service'
 
 /** Marca el onboarding de primera vez como completado. */
-export async function completeOnboardingRequest(
+export async function completeOnboardingRequest(user: User): Promise<User> {
+  const response = await apiRequest<UserApiResponse>('/users/me/onboarding', {
+    method: 'PATCH',
+    body: JSON.stringify({ step: 100, completed: true }),
+  })
+  return toUser(response, user)
+}
+
+export async function saveOnboardingProgressRequest(
   user: User,
+  step: number,
+  completed = false,
 ): Promise<User> {
-  const response = await apiRequest<UserApiResponse>(
-    `/users/${encodeURIComponent(user.id)}/onboarding/complete`,
-    { method: 'PATCH' },
-  )
+  const response = await apiRequest<UserApiResponse>('/users/me/onboarding', {
+    method: 'PATCH',
+    body: JSON.stringify({ step, completed }),
+  })
   return toUser(response, user)
 }
 

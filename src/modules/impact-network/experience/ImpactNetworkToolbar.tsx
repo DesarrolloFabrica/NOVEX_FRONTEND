@@ -2,9 +2,7 @@ import { memo } from 'react'
 import type { ImpactNetworkStatus } from '@/modules/impact-network/types/impact-network.types'
 
 export type ImpactNavigationLevel =
-  | 'institutional'
-  | 'coordination'
-  | 'situation'
+  'institutional' | 'coordination' | 'situation'
 
 interface ImpactNetworkToolbarProps {
   status: ImpactNetworkStatus
@@ -67,19 +65,22 @@ function ImpactNetworkToolbarView({
       : `${STATUS_LABEL[status]} · ${activeCount} activas`
 
   return (
-    <div
+    <nav
       className="impact-flow-nav"
       data-level={navigationLevel}
-      aria-label="Flujo de navegación de la red de impacto"
+      aria-label="Ruta operacional"
     >
+      <span className="sr-only">
+        Dirección Operaciones
+        {selectedCoordinationName ? `, ${selectedCoordinationName}` : ''}
+      </span>
       <div className="impact-flow-nav__trail">
         <span className="impact-flow-nav__eyebrow">Ruta de navegación</span>
         <ol className="impact-flow-nav__steps" aria-label="Niveles del flujo">
           {FLOW_STEPS.map((step, index) => {
             const state = stepState(step.id, navigationLevel)
             const canJumpToDirection =
-              step.id === 'institutional' &&
-              navigationLevel !== 'institutional'
+              step.id === 'institutional' && navigationLevel !== 'institutional'
             const canJumpToCoordination =
               step.id === 'coordination' &&
               navigationLevel === 'situation' &&
@@ -97,9 +98,7 @@ function ImpactNetworkToolbarView({
                 {index > 0 ? (
                   <span
                     className="impact-flow-nav__connector"
-                    data-state={
-                      state === 'upcoming' ? 'upcoming' : 'reached'
-                    }
+                    data-state={state === 'upcoming' ? 'upcoming' : 'reached'}
                     aria-hidden="true"
                   />
                 ) : null}
@@ -128,7 +127,7 @@ function ImpactNetworkToolbarView({
           {statusText}
         </span>
       </div>
-    </div>
+    </nav>
   )
 }
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { fetchSituations } from '@/modules/api/situations.api'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { isCoordinator } from '@/modules/auth/utils/permissions'
 import { CRYSTAL_ZONE } from '@/modules/monitoring/constants/monitoringTheme'
@@ -32,6 +33,12 @@ import { todayCaptureDate } from '@/modules/operational-events/utils/situationCa
 import { validateSituationCaptureDraft } from '@/modules/operational-events/utils/situationCaptureValidation'
 import { getErrorMessage } from '@/shared/utils/error'
 import { isValidUuid } from '@/shared/utils/uuid'
+import {
+  readOnboardingSituation,
+  rememberOnboardingSituation,
+} from '@/modules/onboarding/onboardingFirstSituation'
+import { findLatestSituationCreatedByUser } from '@/modules/onboarding/onboardingSituationRecovery'
+import { useOnboarding } from '@/modules/onboarding/OnboardingContext'
 
 function createEmptyDraft(defaultCoordinationId = ''): SituationCaptureDraft {
   return {
@@ -84,19 +91,38 @@ function resolveCoordinationAfterCatalogLoad(
 export function OperationalEventWizard() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { stepIndex: onboardingStepIndex, steps: onboardingSteps } =
+    useOnboarding()
   const [searchParams] = useSearchParams()
   const prefillCoordinationCode = searchParams.get('coordination')
   const coordinationLocked =
     Boolean(prefillCoordinationCode) || isCoordinator(user)
   const coordinatorMode = isCoordinator(user)
+  const onboardingStepId = onboardingSteps[onboardingStepIndex]?.id
+  const canResumeOnboardingAnalysis =
+    !user?.onboardingCompleted &&
+    (onboardingStepId === 'review' || onboardingStepId === 'analysis')
+  const rememberedSituationId = canResumeOnboardingAnalysis
+    ? readOnboardingSituation(user?.id)
+    : null
+  const resumableSituationId =
+    rememberedSituationId && isValidUuid(rememberedSituationId)
+      ? rememberedSituationId
+      : null
 
-  const [step, setStep] = useState<WizardStepId>(
-    () => readSituationCaptureWizardStep() ?? 1,
-  )
+  const [step, setStep] = useState<WizardStepId>(() => {
+    if (resumableSituationId) return 3
+    const persisted = readSituationCaptureWizardStep()
+    // El id de la situación no vive en el borrador; nunca restaure una
+    // pantalla de análisis sin expediente asociado.
+    return persisted === 3 ? 1 : (persisted ?? 1)
+  })
   const [draft, setDraft] = useState<SituationCaptureDraft>(() => {
     return readSituationCaptureDraft() ?? createEmptyDraft()
   })
-  const [coordinationCatalog, setCoordinationCatalog] = useState<CoordinationSummary[]>([])
+  const [coordinationCatalog, setCoordinationCatalog] = useState<
+    CoordinationSummary[]
+  >([])
   const [categories, setCategories] = useState<IncidentCategorySummary[]>([])
   const [loadingCatalogs, setLoadingCatalogs] = useState(true)
   const responsibleCoordinations = useMemo(() => {
@@ -108,11 +134,12 @@ export function OperationalEventWizard() {
     return coordinationCatalog
   }, [coordinationCatalog, coordinatorMode, user?.coordinationId])
   const [situation, setSituation] = useState<SituationResponse | null>(null)
+  const [registeredSituationId, setRegisteredSituationId] = useState<
+    string | null
+  >(resumableSituationId)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const registeredSituationId =
-    situation && isValidUuid(situation.id) ? situation.id : null
   const captureValidation = validateSituationCaptureDraft(
     draft,
     coordinationCatalog,
@@ -126,6 +153,51 @@ export function OperationalEventWizard() {
   useEffect(() => {
     writeSituationCaptureWizardStep(step)
   }, [step])
+
+  useEffect(() => {
+    if (!resumableSituationId || registeredSituationId) return
+
+    setRegisteredSituationId(resumableSituationId)
+    setStep(3)
+  }, [registeredSituationId, resumableSituationId])
+
+  useEffect(() => {
+    if (
+      user?.onboardingCompleted ||
+      onboardingStepId !== 'analysis' ||
+      registeredSituationId
+    ) {
+      return
+    }
+
+    let cancelled = false
+
+    async function recoverRegisteredSituation() {
+      try {
+        const response = await fetchSituations({ limit: 100, page: 1 })
+        if (cancelled) return
+
+        const recovered = findLatestSituationCreatedByUser(
+          response.items,
+          user?.id,
+        )
+        if (!recovered) return
+
+        rememberOnboardingSituation(user?.id, recovered.id)
+        setSituation(recovered)
+        setRegisteredSituationId(recovered.id)
+        setStep(3)
+      } catch {
+        // El tour habilita una salida segura si el expediente ya no es visible.
+      }
+    }
+
+    void recoverRegisteredSituation()
+
+    return () => {
+      cancelled = true
+    }
+  }, [onboardingStepId, registeredSituationId, user?.id, user?.onboardingCompleted])
 
   useEffect(() => {
     let cancelled = false
@@ -183,6 +255,7 @@ export function OperationalEventWizard() {
   }, [coordinatorMode, prefillCoordinationCode, user?.coordinationId])
 
   function handleAnalysisComplete(situationId: string) {
+    rememberOnboardingSituation(user?.id, situationId)
     navigate(`/gestion?situation=${encodeURIComponent(situationId)}`, {
       replace: true,
     })
@@ -204,8 +277,10 @@ export function OperationalEventWizard() {
         coordinations: coordinationCatalog,
         categories,
       })
+      rememberOnboardingSituation(user?.id, created.id)
       clearSituationCapturePersistence()
       setSituation(created)
+      setRegisteredSituationId(created.id)
       setStep(3)
     } catch (submitError) {
       setError(getErrorMessage(submitError))
@@ -216,9 +291,10 @@ export function OperationalEventWizard() {
 
   return (
     <div
+      data-tour="registration-wizard"
       className={`novex-operational-event-wizard novex-wizard-station ${CRYSTAL_ZONE}`}
     >
-      <div className="novex-wizard-station__rail">
+      <div className="novex-wizard-station__rail" data-tour="wizard-steps">
         <WizardStepRail currentStep={step} />
       </div>
 
@@ -271,7 +347,10 @@ export function OperationalEventWizard() {
         ) : null}
 
         {step === 3 && registeredSituationId ? (
-          <div className="novex-wizard-step-pane novex-wizard-step-pane--intelligence flex min-h-0 flex-1 flex-col">
+          <div
+            className="novex-wizard-step-pane novex-wizard-step-pane--intelligence flex min-h-0 flex-1 flex-col"
+            data-tour="analysis-stage"
+          >
             <SituationAnalysisPanel
               situationId={registeredSituationId}
               situationTitle={situation?.title ?? draft.title}

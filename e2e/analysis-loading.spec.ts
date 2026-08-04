@@ -75,7 +75,10 @@ const situation = {
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(
     ({ user, captureDraft }) => {
-      localStorage.setItem('novex.auth.accessToken.v1', 'e2e-token')
+      localStorage.setItem(
+        'novex.auth.accessToken.v1',
+        'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJlMmUtc3VwZXJ2aXNvciIsImVtYWlsIjoiZTJlQG5vdmV4LnRlc3QiLCJyb2xlSWQiOiJyb2xlLWUyZSIsInJvbGVDb2RlIjoiQU5BTElTVEEiLCJjb29yZGluYXRpb25JZCI6bnVsbCwicGVybWlzc2lvbnMiOlsiQVVUSF9WSUVXX1BST0ZJTEUiLCJDT09SRElOQVRJT05TX1ZJRVciLCJTSVRVQVRJT05TX1ZJRVciLCJTSVRVQVRJT05TX0NSRUFURSIsIlNJVFVBVElPTlNfVVBEQVRFIiwiQUlfQU5BTFlaRSIsIkFJX1ZJRVdfUkVQT1JUUyIsIlJFUE9SVFNfVklFVyJdLCJzdGF0dXMiOiJBQ1RJVkUifQ.e2e',
+      )
       localStorage.setItem('novex.auth.session.v1', JSON.stringify(user))
       localStorage.setItem(
         'novex.situationCapture.draft.v1',
@@ -97,7 +100,11 @@ test.beforeEach(async ({ page }) => {
           user: {
             id: session.id,
             fullName: session.name,
-            roleCode: 'SUPERVISOR_GENERAL',
+            roleCode: 'ANALISTA',
+            roleName: 'Analista',
+            onboardingStep: 100,
+            onboardingCompleted: true,
+            onboardingSeenAt: '2026-07-22T00:00:00.000Z',
             coordinationId,
             coordinationCode: coordination.code,
           },
@@ -122,11 +129,19 @@ test.beforeEach(async ({ page }) => {
     }
 
     if (path.endsWith(`/situations/${situationId}/analysis`)) {
-      await route.fulfill({ status: 404, json: { message: 'Análisis en curso' } })
+      await route.fulfill({
+        status: 404,
+        json: { message: 'Análisis en curso' },
+      })
       return
     }
 
-    if (path.endsWith(`/situations/${situationId}/analyze`) && method === 'POST') {
+    if (
+      path.endsWith(`/situations/${situationId}/analyze`) &&
+      method === 'POST'
+    ) {
+      // Mantiene la solicitud en curso para validar el estado de procesamiento.
+      await new Promise((resolve) => setTimeout(resolve, 20_000))
       await route.fulfill({ json: { situationId } })
       return
     }
@@ -203,7 +218,9 @@ test('mantiene íntegro el centro de análisis en un escritorio compacto', async
     page.getByRole('heading', { name: 'Analizando la situación...' }),
   ).toBeVisible()
   await expect(page.locator('.novex-analysis-pipeline')).toBeInViewport()
-  await expect(page.locator('.novex-analysis-report__security')).toBeInViewport()
+  await expect(
+    page.locator('.novex-analysis-report__security'),
+  ).toBeInViewport()
   await expect
     .poll(() =>
       page.evaluate(
@@ -222,7 +239,9 @@ test('mantiene íntegro el centro de análisis en un escritorio compacto', async
   })
 })
 
-test('apila el informe y conserva scroll interno en tablet', async ({ page }) => {
+test('apila el informe y conserva scroll interno en tablet', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1024, height: 768 })
   await page.goto('/situaciones/nueva')
 
@@ -248,7 +267,9 @@ test('apila el informe y conserva scroll interno en tablet', async ({ page }) =>
   await workspace.evaluate((element) => {
     element.scrollTop = element.scrollHeight
   })
-  await expect(page.locator('.novex-analysis-report__security')).toBeInViewport()
+  await expect(
+    page.locator('.novex-analysis-report__security'),
+  ).toBeInViewport()
   await expect(
     page.getByRole('navigation', { name: 'Pasos del registro' }),
   ).toBeVisible()

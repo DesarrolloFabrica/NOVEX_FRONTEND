@@ -12,9 +12,11 @@ const director: User = {
   name: 'Director',
   role: 'supervisor',
   roleCode: 'DIRECTOR',
+  roleName: 'Director',
   permissions: ['SITUATIONS_VIEW', 'REPORTS_VIEW'],
   coordinationId: 'coord-general',
   onboardingCompleted: false,
+  onboardingStep: 0,
   onboardingSeenAt: null,
 }
 
@@ -23,6 +25,7 @@ const analyst: User = {
   id: '2',
   name: 'Analista',
   roleCode: 'ANALISTA',
+  roleName: 'Analista',
   permissions: ['SITUATIONS_VIEW', 'SITUATIONS_UPDATE'],
 }
 
@@ -32,6 +35,7 @@ const coordinator: User = {
   name: 'Coordinador',
   role: 'ejecutor',
   roleCode: 'COORDINADOR',
+  roleName: 'Coordinador',
   permissions: ['SITUATIONS_VIEW', 'SITUATIONS_CREATE', 'SITUATIONS_UPDATE'],
   coordinationId: 'coord-b2b',
   selectedAreaId: 'coord-b2b',

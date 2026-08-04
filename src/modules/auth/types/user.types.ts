@@ -10,6 +10,8 @@ export interface User {
   role: UserRole
   /** Código de rol del backend (COORDINADOR, ANALISTA, DIRECTOR, ADMIN). */
   roleCode: string
+  /** Nombre visible del rol desde el catálogo del backend. */
+  roleName: string
   /** Permisos embebidos en el JWT. */
   permissions: string[]
   /** Código de coordinación del backend (relevante para el rol ejecutor). */
@@ -18,6 +20,7 @@ export interface User {
   coordinationId?: string
   /** Preferencia: onboarding de primera vez completado. */
   onboardingCompleted: boolean
+  onboardingStep: number
   /** Timestamp ISO de la primera finalización del onboarding. */
   onboardingSeenAt: string | null
 }

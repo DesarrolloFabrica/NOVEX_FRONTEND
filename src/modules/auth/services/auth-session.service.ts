@@ -14,8 +14,12 @@ export interface AuthUserSummary {
   id: string
   fullName: string
   roleCode: string
+  roleName: string
   coordinationId: string | null
   coordinationCode: string | null
+  onboardingStep?: number
+  onboardingCompleted?: boolean
+  onboardingSeenAt?: string | null
 }
 
 interface AuthLoginResponse {
@@ -77,7 +81,9 @@ export function mapAuthUserToUser(
   summary: AuthUserSummary,
   claims: AccessTokenClaims,
 ): User {
-  const roleCode = claims.roleCode || summary.roleCode
+  // /auth/me refleja cambios de rol posteriores a la emisión del JWT y es la
+  // fuente vigente para decidir la experiencia que se renderiza.
+  const roleCode = summary.roleCode || claims.roleCode
   const role = mapRoleCode(roleCode)
   const coordinationId =
     claims.coordinationId ??
@@ -92,12 +98,14 @@ export function mapAuthUserToUser(
     name: summary.fullName,
     role,
     roleCode,
+    roleName: summary.roleName?.trim() ?? '',
     permissions: [...claims.permissions],
     // Código de coordinación real del backend para vistas de ejecutor.
     selectedAreaId: role === 'ejecutor' ? coordinationCode : undefined,
     coordinationId,
-    onboardingCompleted: false,
-    onboardingSeenAt: null,
+    onboardingStep: summary.onboardingStep ?? 0,
+    onboardingCompleted: summary.onboardingCompleted ?? false,
+    onboardingSeenAt: summary.onboardingSeenAt ?? null,
   }
 }
 

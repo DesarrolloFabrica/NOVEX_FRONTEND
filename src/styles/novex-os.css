@@ -7701,6 +7701,12 @@ textarea {
   scrollbar-gutter: stable;
 }
 
+.novex-sit-report-end {
+  display: block;
+  width: 100%;
+  height: 1px;
+}
+
 .novex-sit-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

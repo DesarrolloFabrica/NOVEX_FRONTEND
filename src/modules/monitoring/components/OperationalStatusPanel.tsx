@@ -40,7 +40,10 @@ export function OperationalStatusPanel({
   }
 
   return (
-    <section className="novex-ops-state novex-ops-dashboard-section">
+    <section
+      className="novex-ops-state novex-ops-dashboard-section"
+      data-tour="status-management"
+    >
       <div className="novex-ops-section-heading">
         <h2>Estado operacional</h2>
       </div>
@@ -49,6 +52,7 @@ export function OperationalStatusPanel({
         <div className="novex-ops-state__actions">
           {canAdvance ? (
             <button
+              data-tour="status-update-trigger"
               type="button"
               className="novex-ops-state__cta"
               disabled={isUpdating}

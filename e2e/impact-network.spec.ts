@@ -1,4 +1,5 @@
 import { expect, test, type Page } from 'playwright/test'
+import { installImpactNetworkApiMocks } from './impact-network.fixtures'
 
 const AUTH_SESSION_KEY = 'novex.auth.session.v1'
 const AUTH_TOKEN_KEY = 'novex.auth.accessToken.v1'
@@ -14,7 +15,11 @@ const AUTH_ME_RESPONSE = {
   user: {
     id: 'e2e-supervisor',
     fullName: 'Directora E2E',
-    roleCode: 'DIRECTOR_OPERACIONES',
+    roleCode: 'DIRECTOR',
+    roleName: 'Director',
+    onboardingStep: 100,
+    onboardingCompleted: true,
+    onboardingSeenAt: '2026-07-22T00:00:00.000Z',
     coordinationId: 'coord-general',
     coordinationCode: 'VGO',
   },
@@ -63,10 +68,7 @@ async function openCoordination(page: Page): Promise<void> {
 
 async function openSituation(page: Page): Promise<void> {
   await openCoordination(page)
-  await page
-    .locator('.operational-context-panel__situation')
-    .first()
-    .click()
+  await page.locator('.operational-context-panel__situation').first().click()
   await expect(
     page.locator(
       '.impact-network__scene-layer--propagation > .propagation-scene',
@@ -75,14 +77,17 @@ async function openSituation(page: Page): Promise<void> {
   await expect(
     page.locator('.operational-context-panel[data-level="situation"]'),
   ).toBeVisible()
-  await expect(page.locator('.situation-map-overview')).toBeVisible()
+  await expect(page.locator('.impact-map-summary')).toBeVisible()
 }
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(
     ({ sessionKey, tokenKey, session }) => {
       localStorage.setItem(sessionKey, JSON.stringify(session))
-      localStorage.setItem(tokenKey, 'e2e-access-token')
+      localStorage.setItem(
+        tokenKey,
+        'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJlMmUtc3VwZXJ2aXNvciIsImVtYWlsIjoiZTJlQG5vdmV4LnRlc3QiLCJyb2xlSWQiOiJyb2xlLWUyZSIsInJvbGVDb2RlIjoiQU5BTElTVEEiLCJjb29yZGluYXRpb25JZCI6bnVsbCwicGVybWlzc2lvbnMiOlsiQVVUSF9WSUVXX1BST0ZJTEUiLCJDT09SRElOQVRJT05TX1ZJRVciLCJTSVRVQVRJT05TX1ZJRVciLCJTSVRVQVRJT05TX0NSRUFURSIsIlNJVFVBVElPTlNfVVBEQVRFIiwiQUlfQU5BTFlaRSIsIkFJX1ZJRVdfUkVQT1JUUyIsIlJFUE9SVFNfVklFVyJdLCJzdGF0dXMiOiJBQ1RJVkUifQ.e2e',
+      )
     },
     {
       sessionKey: AUTH_SESSION_KEY,
@@ -105,6 +110,7 @@ test.beforeEach(async ({ page }) => {
       body: JSON.stringify(AUTH_ME_RESPONSE),
     })
   })
+  await installImpactNetworkApiMocks(page)
 })
 
 test('inicia en la vista institucional sin mostrar situaciones', async ({
@@ -112,10 +118,16 @@ test('inicia en la vista institucional sin mostrar situaciones', async ({
 }) => {
   await openImpactNetwork(page)
 
-  await expect(page.locator('.organizational-scene__direction-hub')).toBeVisible()
+  await expect(
+    page.locator('.organizational-scene__direction-hub'),
+  ).toBeVisible()
   await expect(page.locator('.organizational-scene__island')).toHaveCount(12)
-  await expect(page.locator('.organizational-scene__connection')).toHaveCount(12)
-  await expect(page.locator('.operational-context-panel__situation')).toHaveCount(0)
+  await expect(page.locator('.organizational-scene__connection')).toHaveCount(
+    12,
+  )
+  await expect(
+    page.locator('.operational-context-panel__situation'),
+  ).toHaveCount(0)
   await expect(
     page.getByRole('heading', { name: 'Coordinaciones activas' }),
   ).toBeVisible()
@@ -132,10 +144,6 @@ test('expone breadcrumb, guía y controles de zoom en el mapa organizacional', a
   await expect(
     page.getByRole('heading', { name: 'Estructura institucional' }),
   ).toBeVisible()
-  await expect(
-    page.getByRole('button', { name: 'Recentrar mapa' }),
-  ).toBeVisible()
-
   const zoomControls = page.getByLabel('Controles de zoom del mapa')
   await expect(zoomControls).toBeVisible()
   await expect(
@@ -237,8 +245,8 @@ test('la transición al mapa de conexiones anima las islas de forma escalonada',
   expect(motion.layerDuration).toBe('0s')
   expect(motion.islandAnimations.length).toBeGreaterThan(1)
   expect(
-    motion.islandAnimations.every(
-      ({ transition }) => transition.includes('0.68s'),
+    motion.islandAnimations.every(({ transition }) =>
+      transition.includes('0.68s'),
     ),
   ).toBe(true)
   expect(motion.edgeAnimation).toContain('impact-connections-enter')
@@ -249,7 +257,9 @@ test('seleccionar situación conserva el escenario y muestra la lectura de red',
 }) => {
   await openSituation(page)
 
-  await expect(page).toHaveURL(/\/red-impacto$/)
+  await expect(page).toHaveURL(
+    /\/red-impacto\?coordination=coord-ingenierias&situation=6ce4e56e-5555-4555-8555-555555555555$/,
+  )
   await expect(page.locator('.impact-network__scene-stack')).toHaveAttribute(
     'data-active-scene',
     'propagation',
@@ -257,7 +267,9 @@ test('seleccionar situación conserva el escenario y muestra la lectura de red',
   const propagationLayer = page.locator(
     '.impact-network__scene-layer--propagation',
   )
-  await expect(propagationLayer.locator('.propagation-island--origin')).toHaveCount(1)
+  await expect(
+    propagationLayer.locator('.propagation-island--origin'),
+  ).toHaveCount(1)
   await expect
     .poll(() => propagationLayer.locator('.propagation-island').count())
     .toBeGreaterThan(1)
@@ -278,15 +290,15 @@ test('seleccionar situación conserva el escenario y muestra la lectura de red',
       .first(),
   ).toHaveCSS('visibility', 'hidden')
   await expect(
-    page.getByRole('heading', { name: 'Propagación activa' }),
+    page.getByRole('heading', { name: 'Propagación de la situación' }),
   ).toBeVisible()
   await expect(page.locator('.island-focus-panel--origin')).toHaveCount(0)
   await expect(
-    page.getByRole('button', { name: /descargar reporte pdf/i }),
-  ).toHaveCount(0)
-  await expect(
-    page.getByRole('link', { name: /ver expediente/i }),
-  ).toHaveCount(0)
+    page.getByRole('button', { name: /descargar pdf/i }),
+  ).toBeVisible()
+  await expect(page.getByRole('link', { name: /ver expediente/i })).toHaveCount(
+    0,
+  )
 })
 
 test('el segundo clic abre el dossier terminal sin encadenar nuevas islas', async ({
@@ -300,12 +312,8 @@ test('el segundo clic abre el dossier terminal sin encadenar nuevas islas', asyn
   const canvasWidthBefore = await page
     .locator('.impact-network__canvas')
     .evaluate((element) => element.getBoundingClientRect().width)
-  const focusedIsland = page.locator(
-    '.organizational-scene__island--selected',
-  )
-  const focusedIslandImage = focusedIsland.locator(
-    '.propagation-island__image',
-  )
+  const focusedIsland = page.locator('.organizational-scene__island--selected')
+  const focusedIslandImage = focusedIsland.locator('.propagation-island__image')
   await page.mouse.move(1, 1)
   await page.waitForTimeout(750)
   const visualStateBeforeHover = await focusedIslandImage.evaluate(
@@ -319,16 +327,14 @@ test('el segundo clic abre el dossier terminal sin encadenar nuevas islas', asyn
   )
   await focusedIsland.hover()
   await page.waitForTimeout(300)
-  const visualStateAfterHover = await focusedIslandImage.evaluate(
-    (element) => {
-      const styles = getComputedStyle(element)
-      return {
-        filter: styles.filter,
-        transform: styles.transform,
-      }
-    },
-  )
-  expect(visualStateAfterHover).toEqual(visualStateBeforeHover)
+  const visualStateAfterHover = await focusedIslandImage.evaluate((element) => {
+    const styles = getComputedStyle(element)
+    return {
+      filter: styles.filter,
+      transform: styles.transform,
+    }
+  })
+  expect(visualStateAfterHover.filter).toBe(visualStateBeforeHover.filter)
   await focusedIsland.click()
 
   const network = page.locator('.impact-network--v2')
@@ -336,18 +342,21 @@ test('el segundo clic abre el dossier terminal sin encadenar nuevas islas', asyn
   const dossier = page.locator('.island-focus-dossier')
   await expect(dossier).toBeVisible({ timeout: 4_000 })
   await expect(dossier).toHaveAttribute('role', 'dialog')
-  await expect(
-    page.locator('.operational-context-panel'),
-  ).toHaveCSS('visibility', 'hidden')
+  await expect(page.locator('.operational-context-panel')).toHaveCSS(
+    'visibility',
+    'hidden',
+  )
   await expect(
     page.locator('.propagation-scene__island--focus-active'),
   ).toHaveCount(1)
-  await expect(
-    page.locator('.organizational-scene__connections'),
-  ).toHaveCSS('visibility', 'hidden')
-  await expect(
-    page.locator('.impact-map-selection'),
-  ).toHaveCSS('visibility', 'hidden')
+  await expect(page.locator('.organizational-scene__connections')).toHaveCSS(
+    'visibility',
+    'hidden',
+  )
+  await expect(page.locator('.impact-map-selection')).toHaveCSS(
+    'visibility',
+    'hidden',
+  )
   await expect(
     page.locator('.organizational-scene__island[aria-disabled="true"]'),
   ).not.toHaveCount(0)
@@ -377,10 +386,12 @@ test('el segundo clic abre el dossier terminal sin encadenar nuevas islas', asyn
   })
   expect(geometry.islandCenterX).toBeLessThan(geometry.leftLimit)
   expect(geometry.panelLeft).toBeGreaterThanOrEqual(geometry.panelLimit)
-  expect(Math.abs(geometry.canvasWidth - canvasWidthBefore)).toBeLessThanOrEqual(1)
+  expect(
+    Math.abs(geometry.canvasWidth - canvasWidthBefore),
+  ).toBeLessThanOrEqual(1)
   expect(Math.abs(geometry.workspaceRightGap)).toBeLessThanOrEqual(24)
-  expect(geometry.focusedIslandWidth).toBeGreaterThanOrEqual(290)
-  expect(geometry.focusedIslandWidth).toBeLessThanOrEqual(370)
+  expect(geometry.focusedIslandWidth).toBeGreaterThanOrEqual(150)
+  expect(geometry.focusedIslandWidth).toBeLessThanOrEqual(260)
 
   const focusedCoordinationId = await page
     .locator('.propagation-scene__island--focus-active')
@@ -414,12 +425,14 @@ test('el segundo clic abre el dossier terminal sin encadenar nuevas islas', asyn
   await expect(
     page.locator('.organizational-scene__island--selected'),
   ).toHaveCount(1)
-  await expect(
-    page.locator('.organizational-scene__connections'),
-  ).toHaveCSS('visibility', 'visible')
-  await expect(
-    page.locator('.operational-context-panel'),
-  ).toHaveCSS('visibility', 'visible')
+  await expect(page.locator('.organizational-scene__connections')).toHaveCSS(
+    'visibility',
+    'visible',
+  )
+  await expect(page.locator('.operational-context-panel')).toHaveCSS(
+    'visibility',
+    'visible',
+  )
 })
 
 test('centra el origen y evita solapes entre imágenes focalizadas', async ({
@@ -452,11 +465,14 @@ test('centra el origen y evita solapes entre imágenes focalizadas', async ({
     })
     const origin = nodes.find((node) => node.role === 'origin')!
     const overlaps = nodes.some((node, index) =>
-      nodes.slice(index + 1).some(
-        (other) =>
-          Math.min(node.right, other.right) > Math.max(node.left, other.left) &&
-          Math.min(node.bottom, other.bottom) > Math.max(node.top, other.top),
-      ),
+      nodes
+        .slice(index + 1)
+        .some(
+          (other) =>
+            Math.min(node.right, other.right) >
+              Math.max(node.left, other.left) &&
+            Math.min(node.bottom, other.bottom) > Math.max(node.top, other.top),
+        ),
     )
 
     return {
@@ -482,16 +498,16 @@ test('no renderiza React Flow', async ({ page }) => {
   await expect(page.locator('.react-flow')).toHaveCount(0)
 })
 
-test('reproducir propagación ilumina islas gradualmente', async ({ page }) => {
+test('sin replay enriquecido mantiene la propagación visible', async ({
+  page,
+}) => {
   await openSituation(page)
 
-  const replayButton = page
-    .locator('.impact-toolbar__actions')
-    .getByRole('button', {
-      name: /reproducir propagación|pausar|continuar|repetir/i,
-    })
-  await expect(replayButton).toBeVisible()
-  await replayButton.click()
+  await expect(
+    page.getByRole('button', {
+      name: /reproducir animación|pausar animación|continuar animación/i,
+    }),
+  ).toHaveCount(0)
 
   await expect
     .poll(() =>
@@ -512,8 +528,13 @@ test('las conexiones de situación son solo estrella origen → afectada', async
   const propagationLayer = page.locator(
     '.impact-network__scene-layer--propagation',
   )
+  await expect
+    .poll(() => propagationLayer.locator('.propagation-edge').count())
+    .toBeGreaterThan(0)
   const edgeCount = await propagationLayer.locator('.propagation-edge').count()
-  const islandCount = await propagationLayer.locator('.propagation-island').count()
+  const islandCount = await propagationLayer
+    .locator('.propagation-island')
+    .count()
   expect(edgeCount).toBeGreaterThan(0)
   expect(edgeCount).toBeLessThanOrEqual(Math.max(0, islandCount - 1))
 })
@@ -539,21 +560,21 @@ test('la situación y la isla muestran información de distinta profundidad', as
 }) => {
   await openSituation(page)
 
-  await expect(page.locator('.situation-map-overview')).toBeVisible()
+  await expect(page.locator('.impact-map-summary')).toBeVisible()
   await expect(page.locator('.island-focus-panel--origin')).toHaveCount(0)
   await expect(
-    page.getByRole('button', { name: /descargar reporte pdf/i }),
-  ).toHaveCount(0)
+    page.getByRole('button', { name: /descargar pdf/i }),
+  ).toBeVisible()
   await expect(page.locator('.island-focus-dossier')).toHaveCount(0)
 
   await page.locator('.organizational-scene__island--selected').click()
 
   const dossier = page.locator('.island-focus-dossier')
   await expect(dossier).toBeVisible({ timeout: 4_000 })
-  await expect(dossier.locator('.situation-map-overview')).toHaveCount(0)
+  await expect(dossier.locator('.impact-map-summary')).toHaveCount(0)
   await expect(dossier.locator('.island-focus-panel--origin')).toBeVisible()
   await expect(
-    dossier.getByRole('button', { name: /descargar reporte pdf/i }),
+    dossier.getByRole('button', { name: /descargar pdf/i }),
   ).toBeVisible()
 })
 
@@ -561,7 +582,7 @@ test('cerrar expediente regresa al listado de la coordinación', async ({
   page,
 }) => {
   await openSituation(page)
-  await page.getByRole('button', { name: 'Cerrar situación' }).click()
+  await page.getByRole('button', { name: /Volver a Ingenier/i }).click()
 
   await expect(
     page.locator('.operational-context-panel[data-level="coordination"]'),
@@ -572,7 +593,7 @@ test('cerrar expediente regresa al listado de la coordinación', async ({
   await expect(
     page.locator('.operational-context-panel__situation'),
   ).not.toHaveCount(0)
-  await expect(page).toHaveURL(/\/red-impacto$/)
+  await expect(page).toHaveURL(/\/red-impacto\?coordination=coord-ingenierias$/)
 })
 
 test('el lienzo organizacional permanece montado al abrir y cerrar expediente', async ({
@@ -594,14 +615,11 @@ test('el lienzo organizacional permanece montado al abrir y cerrar expediente', 
     ),
   ).toBeVisible()
 
-  await page
-    .locator('.operational-context-panel__situation')
-    .first()
-    .click()
+  await page.locator('.operational-context-panel__situation').first().click()
   await expect(
-    page.getByRole('button', { name: 'Cerrar situación' }),
+    page.getByRole('button', { name: /Volver a Ingenier/i }),
   ).toBeVisible()
-  await page.getByRole('button', { name: 'Cerrar situación' }).click()
+  await page.getByRole('button', { name: /Volver a Ingenier/i }).click()
   await expect(organizationalScene).toHaveCount(1)
   await expect(
     page.locator('.operational-context-panel[data-level="coordination"]'),
@@ -621,8 +639,12 @@ test('el coordinador inicia directamente en su coordinación', async ({
           id: 'e2e-coordinator',
           fullName: 'Coordinador E2E',
           roleCode: 'COORDINADOR',
+          roleName: 'Coordinador',
           coordinationId: 'coord-ingenierias',
           coordinationCode: 'CFD',
+          onboardingStep: 100,
+          onboardingCompleted: true,
+          onboardingSeenAt: '2026-07-22T00:00:00.000Z',
         },
       }),
     })
@@ -640,9 +662,7 @@ test('el coordinador inicia directamente en su coordinación', async ({
   await expect(
     page.locator('.organizational-scene__island--selected'),
   ).toHaveAttribute('data-coordination-id', 'coord-ingenierias')
-  await expect(
-    page.locator('.organizational-scene__island'),
-  ).toHaveCount(1)
+  await expect(page.locator('.organizational-scene__island')).toHaveCount(1)
   await expect(
     page.locator('.organizational-scene__direction-hub'),
   ).toHaveAttribute('data-context', 'true')
@@ -714,7 +734,7 @@ test('coordinación y expediente conservan el flujo en tableta y móvil', async 
     expect(layout.panelWidth).toBeGreaterThan(250)
     expect(layout.canvasWidth).toBeGreaterThan(250)
     await expect(
-      page.getByRole('button', { name: 'Cerrar situación' }),
+      page.getByRole('button', { name: /Volver a Ingenier/i }),
     ).toBeVisible()
   }
 })

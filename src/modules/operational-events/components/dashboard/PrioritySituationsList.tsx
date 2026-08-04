@@ -2,9 +2,13 @@ import { Link } from 'react-router-dom'
 import type { PrioritySituationCard } from '@/modules/api/types/dashboard.types'
 import { FOCUS_VISIBLE } from '@/modules/monitoring/constants/monitoringTheme'
 import { NovexIcon } from '@/shared/components/NovexIcon'
+import { useAuth } from '@/modules/auth/hooks/useAuth'
+import { canCreateSituations } from '@/modules/auth/utils/permissions'
 
 interface PrioritySituationsListProps {
   situations: PrioritySituationCard[]
+  title?: string
+  description?: string
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -35,7 +39,10 @@ function situationRef(id: string): string {
 
 export function PrioritySituationsList({
   situations,
+  title = 'Situaciones recientes',
+  description,
 }: PrioritySituationsListProps) {
+  const { user } = useAuth()
   return (
     <section
       className="novex-intel-priority"
@@ -44,11 +51,12 @@ export function PrioritySituationsList({
       <div className="novex-intel-priority__heading">
         <div className="novex-intel-priority__heading-copy">
           <div className="novex-intel-priority__title-row">
-            <h3 id="intel-priority-heading">Situaciones recientes</h3>
+            <h3 id="intel-priority-heading">{title}</h3>
           </div>
-          <p>
+          <p hidden={Boolean(description)}>
             Últimos registros capturados y su estado actual de seguimiento.
           </p>
+          {description ? <p>{description}</p> : null}
         </div>
         <Link
           to="/situaciones"
@@ -63,13 +71,15 @@ export function PrioritySituationsList({
       {situations.length === 0 ? (
         <p className="novex-empty-signal py-3 text-sm leading-relaxed text-slate-400">
           No hay situaciones registradas todavía.{' '}
-          <Link
-            to="/situaciones/nueva"
-            viewTransition
-            className={`font-semibold text-emerald-300 hover:text-emerald-200 ${FOCUS_VISIBLE}`}
-          >
-            Registre una nueva situación
-          </Link>
+          {canCreateSituations(user) ? (
+            <Link
+              to="/situaciones/nueva"
+              viewTransition
+              className={`font-semibold text-emerald-300 hover:text-emerald-200 ${FOCUS_VISIBLE}`}
+            >
+              Registre una nueva situación
+            </Link>
+          ) : null}
         </p>
       ) : (
         <div className="novex-intel-priority__table-wrap">
@@ -94,7 +104,9 @@ export function PrioritySituationsList({
                   <td data-label="Área / Proceso">
                     <span className="novex-intel-priority__area">
                       {situation.coordinationName}
-                      {situation.categoryName ? ` · ${situation.categoryName}` : ''}
+                      {situation.categoryName
+                        ? ` · ${situation.categoryName}`
+                        : ''}
                       {' · '}
                       {situationRef(situation.id)}
                     </span>

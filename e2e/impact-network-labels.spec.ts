@@ -1,4 +1,5 @@
 import { expect, test, type Page } from 'playwright/test'
+import { installImpactNetworkApiMocks } from './impact-network.fixtures'
 
 const AUTH_SESSION_KEY = 'novex.auth.session.v1'
 const AUTH_TOKEN_KEY = 'novex.auth.accessToken.v1'
@@ -14,7 +15,11 @@ const AUTH_ME_RESPONSE = {
   user: {
     id: 'e2e-supervisor',
     fullName: 'Directora E2E',
-    roleCode: 'DIRECTOR_OPERACIONES',
+    roleCode: 'DIRECTOR',
+    roleName: 'Director',
+    onboardingStep: 100,
+    onboardingCompleted: true,
+    onboardingSeenAt: '2026-07-22T00:00:00.000Z',
     coordinationId: 'coord-general',
     coordinationCode: 'VGO',
   },
@@ -53,14 +58,15 @@ async function readIslandBoxes(page: Page) {
       label: read(
         island.querySelector('.propagation-island__label') as Element,
       ),
-      body: read(
-        island.querySelector('.propagation-island__image') as Element,
-      ),
+      body: read(island.querySelector('.propagation-island__image') as Element),
     }))
   })
 }
 
-function intersects(a: LabelRect | Omit<LabelRect, 'id'>, b: LabelRect | Omit<LabelRect, 'id'>) {
+function intersects(
+  a: LabelRect | Omit<LabelRect, 'id'>,
+  b: LabelRect | Omit<LabelRect, 'id'>,
+) {
   const x = Math.min(a.right, b.right) - Math.max(a.left, b.left)
   const y = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)
   return x > 1 && y > 1
@@ -70,7 +76,10 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(
     ({ sessionKey, tokenKey, session }) => {
       localStorage.setItem(sessionKey, JSON.stringify(session))
-      localStorage.setItem(tokenKey, 'e2e-access-token')
+      localStorage.setItem(
+        tokenKey,
+        'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJlMmUtc3VwZXJ2aXNvciIsImVtYWlsIjoiZTJlQG5vdmV4LnRlc3QiLCJyb2xlSWQiOiJyb2xlLWUyZSIsInJvbGVDb2RlIjoiQU5BTElTVEEiLCJjb29yZGluYXRpb25JZCI6bnVsbCwicGVybWlzc2lvbnMiOlsiQVVUSF9WSUVXX1BST0ZJTEUiLCJDT09SRElOQVRJT05TX1ZJRVciLCJTSVRVQVRJT05TX1ZJRVciLCJTSVRVQVRJT05TX0NSRUFURSIsIlNJVFVBVElPTlNfVVBEQVRFIiwiQUlfQU5BTFlaRSIsIkFJX1ZJRVdfUkVQT1JUUyIsIlJFUE9SVFNfVklFVyJdLCJzdGF0dXMiOiJBQ1RJVkUifQ.e2e',
+      )
     },
     {
       sessionKey: AUTH_SESSION_KEY,
@@ -93,6 +102,7 @@ test.beforeEach(async ({ page }) => {
       body: JSON.stringify(AUTH_ME_RESPONSE),
     })
   })
+  await installImpactNetworkApiMocks(page)
 })
 
 for (const viewport of VIEWPORTS) {

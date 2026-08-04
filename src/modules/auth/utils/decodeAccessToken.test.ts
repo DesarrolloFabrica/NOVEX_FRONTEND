@@ -66,6 +66,7 @@ describe('mapAuthUserToUser', () => {
         id: 'user-1',
         fullName: 'Ana',
         roleCode: 'COORDINADOR',
+        roleName: 'Coordinador',
         coordinationId: 'should-not-win',
         coordinationCode: 'coord-b2b',
       },
@@ -82,6 +83,7 @@ describe('mapAuthUserToUser', () => {
 
     expect(user.coordinationId).toBe('jwt-coordination-id')
     expect(user.roleCode).toBe('COORDINADOR')
+    expect(user.roleName).toBe('Coordinador')
     expect(user.permissions).toEqual(['SITUATIONS_CREATE'])
     expect(user.selectedAreaId).toBe('coord-b2b')
     expect(user.role).toBe('ejecutor')
@@ -93,6 +95,7 @@ describe('mapAuthUserToUser', () => {
         id: 'admin-1',
         fullName: 'Desarrollo Fabrica',
         roleCode: 'ADMIN',
+        roleName: 'Administrador',
         coordinationId: null,
         coordinationCode: null,
       },
@@ -111,5 +114,6 @@ describe('mapAuthUserToUser', () => {
     expect(user.selectedAreaId).toBeUndefined()
     expect(user.role).toBe('supervisor')
     expect(user.roleCode).toBe('ADMIN')
+    expect(user.roleName).toBe('Administrador')
   })
 })

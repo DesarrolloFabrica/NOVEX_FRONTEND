@@ -6,6 +6,7 @@ import '@/index.css'
 import '@/styles/novex-os.css'
 import '@/styles/login.css'
 import '@/styles/platform-backgrounds.css'
+import '@/styles/operational-experience.css'
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
 

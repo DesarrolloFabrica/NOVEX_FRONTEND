@@ -105,6 +105,7 @@ export function EventCaptureForm({
 
   return (
     <form
+      data-tour="capture-form"
       className="novex-event-capture-form flex min-h-0 flex-1 flex-col"
       onSubmit={handleSubmit}
     >

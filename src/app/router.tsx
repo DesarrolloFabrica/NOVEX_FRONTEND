@@ -11,6 +11,9 @@ import { OperationalEventsCenterPage } from '@/pages/OperationalEventsCenterPage
 import { OperationalIntelligencePage } from '@/pages/OperationalIntelligencePage'
 import { RegisterOperationalEventPage } from '@/pages/RegisterOperationalEventPage'
 import { RequirePermissionRoute } from '@/shared/components/RequirePermissionRoute'
+import { RoleLandingRoute } from '@/shared/components/RoleLandingRoute'
+import { RequireRoleRoute } from '@/shared/components/RequireRoleRoute'
+import { AdminConsolePage } from '@/pages/AdminConsolePage'
 
 function RedirectPreservingSearch({ to }: { to: string }) {
   const location = useLocation()
@@ -21,24 +24,53 @@ export const router = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
-      { path: '/', element: <Navigate to="/red-impacto" replace /> },
       { path: '/login', element: <LoginPage /> },
       // Alias legados para no romper enlaces anteriores.
-      { path: '/monitoring', element: <RedirectPreservingSearch to="/gestion" /> },
+      {
+        path: '/monitoring',
+        element: <RedirectPreservingSearch to="/gestion" />,
+      },
       {
         element: <ProtectedRoute />,
         children: [
-          { path: '/dashboard', element: <OperationalIntelligencePage /> },
+          { index: true, element: <RoleLandingRoute /> },
+          {
+            path: '/dashboard',
+            element: (
+              <RequirePermissionRoute permission="SITUATIONS_VIEW">
+                <OperationalIntelligencePage />
+              </RequirePermissionRoute>
+            ),
+          },
+          {
+            path: '/admin',
+            element: (
+              <RequireRoleRoute role="ADMIN">
+                <AdminConsolePage />
+              </RequireRoleRoute>
+            ),
+          },
           {
             path: '/red-impacto',
             lazy: async () => {
-              const { ImpactNetworkPage } = await import('@/pages/ImpactNetworkPage')
-              return { Component: ImpactNetworkPage }
+              const { ImpactNetworkPage } =
+                await import('@/pages/ImpactNetworkPage')
+              return {
+                Component: () => (
+                  <RequirePermissionRoute permission="COORDINATIONS_VIEW">
+                    <ImpactNetworkPage />
+                  </RequirePermissionRoute>
+                ),
+              }
             },
           },
           {
             path: '/situaciones',
-            element: <OperationalEventsCenterPage />,
+            element: (
+              <RequirePermissionRoute permission="SITUATIONS_VIEW">
+                <OperationalEventsCenterPage />
+              </RequirePermissionRoute>
+            ),
           },
           {
             path: '/situaciones/nueva',
@@ -48,14 +80,37 @@ export const router = createBrowserRouter([
               </RequirePermissionRoute>
             ),
           },
-          { path: '/gestion', element: <MonitoringPage /> },
-          { path: '/intelligence', element: <RedirectPreservingSearch to="/dashboard" /> },
-          { path: '/operational-events', element: <RedirectPreservingSearch to="/situaciones" /> },
-          { path: '/operational-events/register', element: <RedirectPreservingSearch to="/situaciones/nueva" /> },
-          { path: '/situation-management', element: <RedirectPreservingSearch to="/gestion" /> },
-          { path: '/legacy-monitoring', element: <RedirectPreservingSearch to="/gestion" /> },
+          {
+            path: '/gestion',
+            element: (
+              <RequirePermissionRoute permission="SITUATIONS_VIEW">
+                <MonitoringPage />
+              </RequirePermissionRoute>
+            ),
+          },
+          {
+            path: '/intelligence',
+            element: <RedirectPreservingSearch to="/dashboard" />,
+          },
+          {
+            path: '/operational-events',
+            element: <RedirectPreservingSearch to="/situaciones" />,
+          },
+          {
+            path: '/operational-events/register',
+            element: <RedirectPreservingSearch to="/situaciones/nueva" />,
+          },
+          {
+            path: '/situation-management',
+            element: <RedirectPreservingSearch to="/gestion" />,
+          },
+          {
+            path: '/legacy-monitoring',
+            element: <RedirectPreservingSearch to="/gestion" />,
+          },
         ],
       },
+      { path: '*', element: <Navigate to="/" replace /> },
     ],
   },
 ])

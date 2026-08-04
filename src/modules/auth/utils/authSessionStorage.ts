@@ -30,7 +30,11 @@ function isUser(value: unknown): value is User {
     typeof candidate.name === 'string' &&
     (candidate.role === 'supervisor' || candidate.role === 'ejecutor') &&
     typeof candidate.roleCode === 'string' &&
+    (typeof candidate.roleName === 'string' ||
+      candidate.roleName === undefined) &&
     Array.isArray(candidate.permissions) &&
+    (typeof candidate.onboardingStep === 'number' ||
+      candidate.onboardingStep === undefined) &&
     typeof candidate.onboardingCompleted === 'boolean'
   )
 }
@@ -57,7 +61,8 @@ export function readAuthSession(): User | null {
 
   try {
     const current = parseUser(storage.getItem(AUTH_SESSION_KEY))
-    if (current) return current
+    if (current)
+      return { ...current, onboardingStep: current.onboardingStep ?? 0 }
 
     for (const legacyKey of LEGACY_AUTH_SESSION_KEYS) {
       const legacy = parseUser(storage.getItem(legacyKey))
@@ -66,7 +71,7 @@ export function readAuthSession(): User | null {
       // Migración one-shot: reescribe en la clave nueva y limpia las legacy.
       storage.setItem(AUTH_SESSION_KEY, JSON.stringify(legacy))
       clearLegacyAuthSessions(storage)
-      return legacy
+      return { ...legacy, onboardingStep: legacy.onboardingStep ?? 0 }
     }
 
     return null

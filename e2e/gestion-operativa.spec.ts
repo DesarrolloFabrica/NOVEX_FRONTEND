@@ -74,7 +74,10 @@ const recommendations = {
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(
     ({ user }) => {
-      localStorage.setItem('novex.auth.accessToken.v1', 'e2e-token')
+      localStorage.setItem(
+        'novex.auth.accessToken.v1',
+        'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJlMmUtc3VwZXJ2aXNvciIsImVtYWlsIjoiZTJlQG5vdmV4LnRlc3QiLCJyb2xlSWQiOiJyb2xlLWUyZSIsInJvbGVDb2RlIjoiQU5BTElTVEEiLCJjb29yZGluYXRpb25JZCI6bnVsbCwicGVybWlzc2lvbnMiOlsiQVVUSF9WSUVXX1BST0ZJTEUiLCJDT09SRElOQVRJT05TX1ZJRVciLCJTSVRVQVRJT05TX1ZJRVciLCJTSVRVQVRJT05TX0NSRUFURSIsIlNJVFVBVElPTlNfVVBEQVRFIiwiQUlfQU5BTFlaRSIsIkFJX1ZJRVdfUkVQT1JUUyIsIlJFUE9SVFNfVklFVyJdLCJzdGF0dXMiOiJBQ1RJVkUifQ.e2e',
+      )
       localStorage.setItem('novex.auth.session.v1', JSON.stringify(user))
     },
     { user: session },
@@ -90,7 +93,11 @@ test.beforeEach(async ({ page }) => {
           user: {
             id: session.id,
             fullName: session.name,
-            roleCode: 'SUPERVISOR_GENERAL',
+            roleCode: 'ANALISTA',
+            roleName: 'Analista',
+            onboardingStep: 100,
+            onboardingCompleted: true,
+            onboardingSeenAt: '2026-07-22T00:00:00.000Z',
             coordinationId: 'coord-general',
             coordinationCode: 'coord-general',
           },
@@ -163,7 +170,12 @@ test.beforeEach(async ({ page }) => {
 
     if (path.endsWith(`/situations/${situation.id}/affected-coordinations`)) {
       await route.fulfill({
-        json: { situationId: situation.id, impactAssessmentId: null, items: [], total: 0 },
+        json: {
+          situationId: situation.id,
+          impactAssessmentId: null,
+          items: [],
+          total: 0,
+        },
       })
       return
     }
@@ -187,29 +199,45 @@ test('centro de gestión operativa: ciclo de vida y recomendaciones de solo lect
     page.getByRole('heading', { name: 'Gestión de situaciones' }),
   ).toBeVisible()
   await expect(
-    page.locator('.novex-execution-summary__item span', { hasText: 'Registradas' }),
+    page.locator('.novex-execution-summary__item span', {
+      hasText: 'Registradas',
+    }),
   ).toBeVisible()
   await expect(
-    page.locator('.novex-execution-summary__item span', { hasText: 'En atención' }),
+    page.locator('.novex-execution-summary__item span', {
+      hasText: 'En atención',
+    }),
   ).toBeVisible()
 
   await page.getByRole('button', { name: /Interrupción parcial/i }).click()
 
   await expect(page.getByText('Expediente operativo')).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Estado operacional' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Actualizar estado' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Recomendaciones IA' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Estado operacional' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Actualizar estado' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Recomendaciones IA' }),
+  ).toBeVisible()
   await expect(page.getByText('Inmediata', { exact: true })).toBeVisible()
   await expect(page.getByText('Escalamiento Vertical Inmediato')).toBeVisible()
 
   await expect(page.locator('.novex-ops-dossier select')).toHaveCount(0)
-  await expect(page.locator('.novex-recommendation-item__status')).toHaveCount(0)
+  await expect(page.locator('.novex-recommendation-item__status')).toHaveCount(
+    0,
+  )
 
   await page.getByRole('button', { name: 'Actualizar estado' }).click()
-  await expect(page.getByRole('dialog', { name: 'Actualizar estado' })).toBeVisible()
+  await expect(
+    page.getByRole('dialog', { name: 'Actualizar estado' }),
+  ).toBeVisible()
   await expect(
     page.locator('.novex-ops-modal__radio', { hasText: 'En atención' }),
   ).toBeVisible()
   await page.getByRole('button', { name: 'Cancelar' }).click()
-  await expect(page.getByRole('dialog', { name: 'Actualizar estado' })).toHaveCount(0)
+  await expect(
+    page.getByRole('dialog', { name: 'Actualizar estado' }),
+  ).toHaveCount(0)
 })

@@ -59,6 +59,7 @@ export interface ExecutiveDashboardData {
   executiveNarrative: string
   environment: OperationalEnvironmentStatus
   prioritySituations: PrioritySituationCard[]
+  latestSituations: PrioritySituationCard[]
   coordinationImpact: CoordinationImpactEntry[]
   recentActivity: RecentActivityEntry[]
   aiIndicators: AiIndicators

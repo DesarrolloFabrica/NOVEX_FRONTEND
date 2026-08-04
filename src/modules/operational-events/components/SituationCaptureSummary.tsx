@@ -36,7 +36,9 @@ export function SituationCaptureSummary({
   canConfirm = true,
 }: SituationCaptureSummaryProps) {
   const { user } = useAuth()
-  const responsible = coordinations.find((item) => item.id === draft.coordinationId)
+  const responsible = coordinations.find(
+    (item) => item.id === draft.coordinationId,
+  )
   const related = draft.relatedCoordinationIds
     .map((id) => coordinations.find((item) => item.id === id))
     .filter((item): item is CoordinationSummary => Boolean(item))
@@ -44,28 +46,39 @@ export function SituationCaptureSummary({
   const detectionLabel =
     draft.detectionMethod === 'OTRO'
       ? draft.detectionMethodOther.trim() || 'Otro'
-      : DETECTION_METHOD_OPTIONS.find((item) => item.value === draft.detectionMethod)
-          ?.label
+      : DETECTION_METHOD_OPTIONS.find(
+          (item) => item.value === draft.detectionMethod,
+        )?.label
 
   const affectedLabels = draft.affectedParties.map((party) => {
     if (party === 'OTRO') {
       return draft.affectedPartyOther.trim() || 'Otro'
     }
-    return AFFECTED_PARTY_OPTIONS.find((item) => item.value === party)?.label ?? party
+    return (
+      AFFECTED_PARTY_OPTIONS.find((item) => item.value === party)?.label ??
+      party
+    )
   })
 
   const occurrenceDate = formatCaptureDateLabel(draft.reportedAt)
   const hasNotes = draft.additionalNotes.trim().length > 0
 
   return (
-    <section className="novex-executive-dossier" aria-labelledby="executive-dossier-title">
+    <section
+      className="novex-executive-dossier"
+      aria-labelledby="executive-dossier-title"
+      data-tour="capture-review"
+    >
       <div className="novex-executive-dossier__scroll">
         <header className="novex-executive-dossier__header">
           <div className="novex-executive-dossier__header-copy">
             <p className="novex-executive-dossier__eyebrow">
               Revise el expediente antes de iniciar el análisis ejecutivo.
             </p>
-            <h2 id="executive-dossier-title" className="novex-executive-dossier__title">
+            <h2
+              id="executive-dossier-title"
+              className="novex-executive-dossier__title"
+            >
               {draft.title}
             </h2>
           </div>
@@ -94,14 +107,18 @@ export function SituationCaptureSummary({
         </header>
 
         <article className="novex-executive-dossier__narrative">
-          <h3 className="novex-executive-dossier__section-title">Resumen ejecutivo</h3>
+          <h3 className="novex-executive-dossier__section-title">
+            Resumen ejecutivo
+          </h3>
           <p className="novex-executive-dossier__narrative-text">
             {draft.description.trim()}
           </p>
         </article>
 
         <article className="novex-executive-dossier__context">
-          <h3 className="novex-executive-dossier__section-title">Contexto operativo</h3>
+          <h3 className="novex-executive-dossier__section-title">
+            Contexto operativo
+          </h3>
           <div className="novex-executive-dossier__context-grid">
             <div className="novex-executive-dossier__fact">
               <NovexIcon name="activity" size={15} />
@@ -138,7 +155,10 @@ export function SituationCaptureSummary({
                 {affectedLabels.length > 0 ? (
                   <div className="novex-executive-dossier__chips">
                     {affectedLabels.map((label) => (
-                      <span key={label} className="novex-executive-dossier__chip">
+                      <span
+                        key={label}
+                        className="novex-executive-dossier__chip"
+                      >
                         {label}
                       </span>
                     ))}
@@ -156,7 +176,10 @@ export function SituationCaptureSummary({
                 {related.length > 0 ? (
                   <div className="novex-executive-dossier__chips">
                     {related.map((item) => (
-                      <span key={item.id} className="novex-executive-dossier__chip">
+                      <span
+                        key={item.id}
+                        className="novex-executive-dossier__chip"
+                      >
                         {item.shortName}
                       </span>
                     ))}
@@ -171,21 +194,26 @@ export function SituationCaptureSummary({
 
         {hasNotes ? (
           <article className="novex-executive-dossier__notes">
-            <h3 className="novex-executive-dossier__section-title">Notas adicionales</h3>
+            <h3 className="novex-executive-dossier__section-title">
+              Notas adicionales
+            </h3>
             <p>{draft.additionalNotes.trim()}</p>
           </article>
         ) : null}
 
         <article className="novex-executive-dossier__ai-brief">
           <div className="novex-executive-dossier__ai-brief-head">
-            <span className="novex-executive-dossier__ai-brief-icon" aria-hidden="true">
+            <span
+              className="novex-executive-dossier__ai-brief-icon"
+              aria-hidden="true"
+            >
               <NovexIcon name="sparkles" size={18} />
             </span>
             <div>
               <h3>Información que analizará la IA</h3>
               <p>
-                El motor de inteligencia operacional procesará este expediente para
-                generar un análisis ejecutivo accionable.
+                El motor de inteligencia operacional procesará este expediente
+                para generar un análisis ejecutivo accionable.
               </p>
             </div>
           </div>
@@ -217,7 +245,9 @@ export function SituationCaptureSummary({
             disabled={confirming || !canConfirm}
             className={`novex-executive-dossier__submit ${FOCUS_VISIBLE}`}
           >
-            {confirming ? 'Generando expediente…' : 'Crear expediente e iniciar análisis IA'}
+            {confirming
+              ? 'Generando expediente…'
+              : 'Crear expediente e iniciar análisis IA'}
           </button>
           <p className="novex-executive-dossier__confirm-note">
             Podrá reanalizar la situación posteriormente si el contexto cambia.

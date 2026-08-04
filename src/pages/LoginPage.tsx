@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
+import { getRoleLandingPath } from '@/modules/auth/utils/roleExperience'
 
 /** Solo en local: VITE_ENABLE_EMAIL_LOGIN=true. En deploy no se define → solo Google. */
 const emailLoginEnabled = import.meta.env.VITE_ENABLE_EMAIL_LOGIN === 'true'
@@ -15,6 +16,7 @@ export function LoginPage() {
     isAuthenticated,
     loading,
     error,
+    user,
     bootSplashActive,
     beginBootSplash,
     loginWithEmail,
@@ -34,8 +36,8 @@ export function LoginPage() {
       return
     }
 
-    navigate('/red-impacto', { replace: true })
-  }, [beginBootSplash, isAuthenticated, loading, navigate])
+    navigate(getRoleLandingPath(user), { replace: true })
+  }, [beginBootSplash, isAuthenticated, loading, navigate, user])
 
   const handleEmailSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()

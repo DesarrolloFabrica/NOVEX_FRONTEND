@@ -1,17 +1,21 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
+import { getRoleDisplayName } from '@/modules/auth/utils/roleDisplay'
 import { NovexBrandMark } from '@/shared/components/NovexBrandMark'
 import { RegisterSituationCta } from '@/shared/components/RegisterSituationCta'
 
-type IconName = 'intelligence' | 'impact' | 'events' | 'monitoring' | 'logout'
+type IconName =
+  'intelligence' | 'impact' | 'events' | 'monitoring' | 'admin' | 'logout'
 
-const NAV_ITEMS: Array<{
+type NavItem = {
   to: string
   label: string
   eyebrow: string
   icon: IconName
   end?: boolean
-}> = [
+}
+
+const OPERATIONAL_NAV_ITEMS: NavItem[] = [
   {
     to: '/situaciones',
     label: 'Situaciones registradas',
@@ -39,6 +43,21 @@ const NAV_ITEMS: Array<{
     eyebrow: 'Ciclo operativo',
     icon: 'monitoring',
   },
+]
+
+const DIRECTOR_NAV_ITEMS: NavItem[] = OPERATIONAL_NAV_ITEMS.filter(
+  (item) => item.to !== '/gestion',
+)
+
+const ADMIN_NAV_ITEMS: NavItem[] = [
+  {
+    to: '/admin',
+    label: 'Administración',
+    eyebrow: 'Control del sistema',
+    icon: 'admin',
+    end: true,
+  },
+  ...DIRECTOR_NAV_ITEMS,
 ]
 
 function NovexRailIcon({ name }: { name: IconName }) {
@@ -74,6 +93,12 @@ function NovexRailIcon({ name }: { name: IconName }) {
         <path d="M3 20h18" />
       </>
     ),
+    admin: (
+      <>
+        <path d="M4.5 6.5h15v12h-15z" />
+        <path d="M8 10h3M8 14h5M16.5 9.5v5" />
+      </>
+    ),
     logout: (
       <>
         <path d="M10 5H5v14h5M14 8l4 4-4 4M9 12h9" />
@@ -98,10 +123,17 @@ function NovexRailIcon({ name }: { name: IconName }) {
 
 export function NovexSystemRail() {
   const { user, logout } = useAuth()
+  const roleCode = user?.roleCode ?? 'COORDINADOR'
+  const navItems =
+    roleCode === 'ADMIN'
+      ? ADMIN_NAV_ITEMS
+      : roleCode === 'DIRECTOR'
+        ? DIRECTOR_NAV_ITEMS
+        : OPERATIONAL_NAV_ITEMS
 
   return (
     <aside className="novex-os-rail" aria-label="Navegación principal">
-      <div className="novex-os-rail__brand">
+      <div className="novex-os-rail__brand" data-tour="platform-brand">
         <NovexBrandMark size="rail" className="novex-os-mark" />
         <div className="novex-os-rail__brand-copy">
           <strong>NOVEX</strong>
@@ -109,12 +141,14 @@ export function NovexSystemRail() {
         </div>
       </div>
 
-      <div className="novex-os-rail__primary">
-        <RegisterSituationCta variant="rail" />
+      <div className="novex-os-rail__primary" data-tour="register-situation">
+        {roleCode === 'COORDINADOR' || roleCode === 'ANALISTA' ? (
+          <RegisterSituationCta variant="rail" />
+        ) : null}
       </div>
 
       <nav className="novex-os-rail__nav">
-        {NAV_ITEMS.map((item) => (
+        {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
@@ -155,7 +189,7 @@ export function NovexSystemRail() {
           </span>
           <span className="novex-os-rail__identity-copy">
             <strong>{user?.name ?? 'Sesión activa'}</strong>
-            <small>{user?.role ?? 'operador'}</small>
+            <small>{getRoleDisplayName(user)}</small>
           </span>
         </div>
         <button

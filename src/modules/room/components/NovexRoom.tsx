@@ -3,11 +3,7 @@ import type { RoomEnvironment } from '@/modules/room/constants/roomTheme'
 import { NovexSystemRail } from '@/shared/components/NovexSystemRail'
 
 export type NovexScene =
-  | 'intelligence'
-  | 'impact'
-  | 'events'
-  | 'register'
-  | 'commitments'
+  'intelligence' | 'impact' | 'events' | 'register' | 'commitments' | 'admin'
 
 interface NovexRoomProps {
   /** Videowall: NovexFrame -> MainScreen -> Dashboard. */

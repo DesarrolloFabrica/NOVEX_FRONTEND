@@ -67,6 +67,7 @@ export function SituationDossierPanel({
       className="novex-action-detail novex-ops-dossier"
       data-status={situation.status.toLowerCase()}
       data-priority={situation.severity.toLowerCase()}
+      data-tour="management-dossier"
     >
       <header className="novex-action-detail__header">
         <div className="novex-action-detail__heading">

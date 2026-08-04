@@ -71,7 +71,9 @@ export async function uploadCaptureEvidences(
   coordinations: CoordinationSummary[],
 ): Promise<void> {
   if (!isValidUuid(situationId)) {
-    throw new Error('No se puede registrar evidencias sin un expediente válido.')
+    throw new Error(
+      'No se puede registrar evidencias sin un expediente válido.',
+    )
   }
 
   const detectionLabel = labelForDetection(draft)
@@ -117,14 +119,10 @@ export async function registerSituationWithEvidences(
 
   try {
     await uploadCaptureEvidences(situation.id, input.draft, input.coordinations)
-  } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : 'No fue posible registrar las evidencias de la situación.'
-    throw new Error(
-      `${message} El expediente ${situation.id} quedó creado y puede reintentar el análisis.`,
-    )
+  } catch {
+    // El expediente ya contiene el contexto estructurado en su descripción.
+    // Una evidencia auxiliar no debe interrumpir el análisis ni inducir al
+    // usuario a crear un expediente duplicado.
   }
 
   return situation

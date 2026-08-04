@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { NovexIcon } from '@/shared/components/NovexIcon'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
+import { getRoleDisplayName } from '@/modules/auth/utils/roleDisplay'
+import { useOnboarding } from '@/modules/onboarding/OnboardingContext'
 
 interface NovexUserMenuProps {
   onLogout?: () => void
@@ -8,10 +10,11 @@ interface NovexUserMenuProps {
 
 export function NovexUserMenu({ onLogout }: NovexUserMenuProps) {
   const { user, logout } = useAuth()
+  const { restart, resume } = useOnboarding()
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const firstName = user?.name?.split(' ')[0] ?? 'Operador'
-  const role = user?.role === 'supervisor' ? 'Supervisora General' : 'Ejecutor operativo'
+  const role = getRoleDisplayName(user)
 
   useEffect(() => {
     if (!open) return
@@ -39,7 +42,7 @@ export function NovexUserMenu({ onLogout }: NovexUserMenuProps) {
   }
 
   return (
-    <div className="novex-user-menu" ref={rootRef}>
+    <div className="novex-user-menu" ref={rootRef} data-tour="user-menu">
       <button
         type="button"
         className="novex-user-menu__trigger"
@@ -55,7 +58,11 @@ export function NovexUserMenu({ onLogout }: NovexUserMenuProps) {
           <strong>{user?.name ?? 'Operador Novex'}</strong>
           <small>{role}</small>
         </span>
-        <NovexIcon name="chevron-down" size={15} className="novex-user-menu__chevron" />
+        <NovexIcon
+          name="chevron-down"
+          size={15}
+          className="novex-user-menu__chevron"
+        />
       </button>
 
       {open ? (
@@ -68,13 +75,19 @@ export function NovexUserMenu({ onLogout }: NovexUserMenuProps) {
             </div>
           </div>
           <div className="novex-user-menu__items">
-            <button type="button" role="menuitem" onClick={() => setOpen(false)}>
-              <NovexIcon name="user" />
-              Perfil
-            </button>
-            <button type="button" role="menuitem" onClick={() => setOpen(false)}>
-              <NovexIcon name="settings" />
-              Preferencias
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false)
+                if (user?.onboardingCompleted) restart()
+                else resume()
+              }}
+            >
+              <NovexIcon name="sparkles" />
+              {user?.onboardingCompleted
+                ? 'Ver tutorial nuevamente'
+                : 'Continuar tutorial'}
             </button>
           </div>
           <button

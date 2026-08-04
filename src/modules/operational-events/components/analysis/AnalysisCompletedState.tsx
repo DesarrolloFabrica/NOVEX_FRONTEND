@@ -141,6 +141,7 @@ export function AnalysisCompletedState({
 
       <div className="novex-intel-complete__actions">
         <button
+          data-tour="download-report"
           type="button"
           className={`novex-intel-complete__primary ${FOCUS_VISIBLE}`}
           onClick={onViewExecutiveReport}

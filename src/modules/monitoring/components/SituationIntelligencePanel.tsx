@@ -1,9 +1,7 @@
 import { useState } from 'react'
 import type { SituationDossier } from '@/modules/api/types/situation-management.types'
 import { NovexIcon } from '@/shared/components/NovexIcon'
-import {
-  SITUATION_SEVERITY_LABEL,
-} from '@/modules/monitoring/utils/situation-management.presentation'
+import { SITUATION_SEVERITY_LABEL } from '@/modules/monitoring/utils/situation-management.presentation'
 
 interface SituationIntelligencePanelProps {
   dossier: SituationDossier | null
@@ -105,7 +103,10 @@ function ExecutiveBrief({
   const [expanded, setExpanded] = useState('summary')
 
   return (
-    <aside className="novex-action-outcome novex-ops-brief">
+    <aside
+      className="novex-action-outcome novex-ops-brief"
+      data-tour="ai-report"
+    >
       <header>
         <NovexIcon name="sparkles" size={20} />
         <div>
