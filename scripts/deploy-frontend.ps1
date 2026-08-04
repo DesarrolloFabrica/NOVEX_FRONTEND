@@ -19,7 +19,7 @@ $SERVICE = "omega-frontend"
 $REPOSITORY = "omega"
 $IMAGE = "omega-frontend"
 $BACKEND_URL = "https://omega-backend-550902908078.us-central1.run.app/api/v1"
-$GOOGLE_CLIENT_ID = "550902908078-e7rhueelk83bsfoegnpsoisrnaqog0jd.apps.googleusercontent.com"
+$GOOGLE_CLIENT_ID = "550902908078-biqvngn6c1eufs3occ54cnritqrfhvl5.apps.googleusercontent.com"
 # Vacío = usar la SA por defecto de Cloud Run (la dedicada aún no existe / no hay actAs).
 $SERVICE_ACCOUNT = ""
 $APP_NAME = "NOVEX"
@@ -180,7 +180,7 @@ Set-Location $staging
 
 Write-Host "`nConstruyendo imagen (VITE_* como build-args)..."
 docker build `
-  --build-arg "VITE_API_URL=$BACKEND_URL" `
+  --build-arg "VITE_API_BASE_URL=$BACKEND_URL" `
   --build-arg "VITE_GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID" `
   --build-arg "VITE_APP_NAME=$APP_NAME" `
   --build-arg "VITE_APP_ENV=$APP_ENV" `

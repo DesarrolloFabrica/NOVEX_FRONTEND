@@ -11,7 +11,9 @@ export function setUnauthorizedHandler(handler: UnauthorizedHandler | null): voi
 }
 
 export function getApiBaseUrl(): string {
-  const fromEnv = import.meta.env.VITE_API_BASE_URL as string | undefined
+  const fromEnv = (
+    import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL
+  ) as string | undefined
   return (fromEnv?.replace(/\/$/, '') || DEFAULT_API_BASE).trim()
 }
 

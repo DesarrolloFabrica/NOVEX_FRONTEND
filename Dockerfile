@@ -17,8 +17,9 @@ COPY src ./src
 # Variables Vite se inyectan en build-time (Cloud Build / docker build --build-arg).
 ARG VITE_GOOGLE_CLIENT_ID=
 ARG VITE_API_BASE_URL=
+ARG VITE_API_URL=
 ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID \
-    VITE_API_BASE_URL=$VITE_API_BASE_URL
+    VITE_API_BASE_URL=${VITE_API_BASE_URL:-$VITE_API_URL}
 
 RUN npm run build
 

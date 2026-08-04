@@ -24,8 +24,6 @@ export function LoginPage() {
   const [email, setEmail] = useState('')
   const [googleError, setGoogleError] = useState<string | null>(null)
   const loginAttemptedRef = useRef(false)
-  const googleButtonRef = useRef<HTMLDivElement>(null)
-  const [googleButtonWidth, setGoogleButtonWidth] = useState(360)
 
   useEffect(() => {
     if (loading) return
@@ -38,21 +36,6 @@ export function LoginPage() {
 
     navigate('/red-impacto', { replace: true })
   }, [beginBootSplash, isAuthenticated, loading, navigate])
-
-  useEffect(() => {
-    const element = googleButtonRef.current
-    if (!element) return
-
-    const updateWidth = () => {
-      const width = Math.floor(element.getBoundingClientRect().width)
-      if (width > 0) setGoogleButtonWidth(width)
-    }
-
-    updateWidth()
-    const observer = new ResizeObserver(updateWidth)
-    observer.observe(element)
-    return () => observer.disconnect()
-  }, [])
 
   const handleEmailSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -149,7 +132,6 @@ export function LoginPage() {
           <div className="novex-login__auth-stack">
             {/* Botón oficial de Google (visible): el overlay casi invisible falla en deploy/FedCM. */}
             <div
-              ref={googleButtonRef}
               className="novex-login__google-official"
               data-loading={isBusy ? 'true' : 'false'}
             >
@@ -162,7 +144,6 @@ export function LoginPage() {
                 size="large"
                 text="signin_with"
                 shape="rectangular"
-                width={googleButtonWidth}
                 logo_alignment="left"
               />
             </div>
