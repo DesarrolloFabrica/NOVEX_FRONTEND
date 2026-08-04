@@ -10,11 +10,17 @@ export function RequireRoleRoute({
   role,
   children,
 }: {
-  role: string
+  role: string | readonly string[]
   children: ReactNode
 }) {
   const { user } = useAuth()
-  if (normalizeRoleCode(user?.roleCode) !== normalizeRoleCode(role)) {
+  const allowedRoles = Array.isArray(role) ? role : [role]
+  if (
+    !allowedRoles.some(
+      (allowedRole) =>
+        normalizeRoleCode(user?.roleCode) === normalizeRoleCode(allowedRole),
+    )
+  ) {
     return <Navigate to={getRoleLandingPath(user)} replace />
   }
   return children

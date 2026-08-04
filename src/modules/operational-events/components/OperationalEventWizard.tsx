@@ -62,9 +62,12 @@ function resolveCoordinationAfterCatalogLoad(
     prefillCoordinationCode?: string | null
     userCoordinationId?: string
     coordinatorMode: boolean
+    analystMode: boolean
   },
 ): string {
   const validIds = new Set(coordinations.map((item) => item.id))
+
+  if (options.analystMode) return ''
 
   if (currentCoordinationId && validIds.has(currentCoordinationId)) {
     return currentCoordinationId
@@ -98,6 +101,7 @@ export function OperationalEventWizard() {
   const coordinationLocked =
     Boolean(prefillCoordinationCode) || isCoordinator(user)
   const coordinatorMode = isCoordinator(user)
+  const analystMode = user?.roleCode === 'ANALISTA'
   const onboardingStepId = onboardingSteps[onboardingStepIndex]?.id
   const canResumeOnboardingAnalysis =
     !user?.onboardingCompleted &&
@@ -126,13 +130,14 @@ export function OperationalEventWizard() {
   const [categories, setCategories] = useState<IncidentCategorySummary[]>([])
   const [loadingCatalogs, setLoadingCatalogs] = useState(true)
   const responsibleCoordinations = useMemo(() => {
+    if (analystMode) return []
     if (coordinatorMode && user?.coordinationId) {
       return coordinationCatalog.filter(
         (item) => item.id === user.coordinationId,
       )
     }
     return coordinationCatalog
-  }, [coordinationCatalog, coordinatorMode, user?.coordinationId])
+  }, [analystMode, coordinationCatalog, coordinatorMode, user?.coordinationId])
   const [situation, setSituation] = useState<SituationResponse | null>(null)
   const [registeredSituationId, setRegisteredSituationId] = useState<
     string | null
@@ -144,6 +149,7 @@ export function OperationalEventWizard() {
     draft,
     coordinationCatalog,
     responsibleCoordinations,
+    !analystMode,
   )
 
   useEffect(() => {
@@ -227,13 +233,20 @@ export function OperationalEventWizard() {
               prefillCoordinationCode,
               userCoordinationId: user?.coordinationId,
               coordinatorMode,
+              analystMode,
             },
           )
 
-          if (current.coordinationId === nextCoordinationId) return current
+          if (
+            current.coordinationId === nextCoordinationId &&
+            (!analystMode || current.relatedCoordinationIds.length === 0)
+          ) {
+            return current
+          }
           return {
             ...current,
             coordinationId: nextCoordinationId,
+            relatedCoordinationIds: analystMode ? [] : current.relatedCoordinationIds,
           }
         })
       } catch (loadError) {
@@ -252,7 +265,7 @@ export function OperationalEventWizard() {
     return () => {
       cancelled = true
     }
-  }, [coordinatorMode, prefillCoordinationCode, user?.coordinationId])
+  }, [analystMode, coordinatorMode, prefillCoordinationCode, user?.coordinationId])
 
   function handleAnalysisComplete(situationId: string) {
     rememberOnboardingSituation(user?.id, situationId)
@@ -276,6 +289,7 @@ export function OperationalEventWizard() {
         draft,
         coordinations: coordinationCatalog,
         categories,
+        allowUnassignedCoordination: analystMode,
       })
       rememberOnboardingSituation(user?.id, created.id)
       clearSituationCapturePersistence()
@@ -307,6 +321,8 @@ export function OperationalEventWizard() {
               relatedCoordinations={coordinationCatalog}
               loadingCoordinations={loadingCatalogs}
               coordinationLocked={coordinationLocked}
+              requiresCoordination={!analystMode}
+              showRelatedCoordinations={!analystMode}
               onChange={setDraft}
               submitLabel="Continuar"
               submitDisabled={loadingCatalogs}

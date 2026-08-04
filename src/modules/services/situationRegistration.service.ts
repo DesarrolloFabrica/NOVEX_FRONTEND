@@ -20,6 +20,7 @@ export interface RegisterSituationInput {
   draft: SituationCaptureDraft
   coordinations: CoordinationSummary[]
   categories: IncidentCategorySummary[]
+  allowUnassignedCoordination?: boolean
 }
 
 function assertBackendSituationId(situation: SituationResponse): string {
@@ -37,6 +38,8 @@ export async function registerSituation(
   const validation = validateSituationCaptureDraft(
     input.draft,
     input.coordinations,
+    undefined,
+    !input.allowUnassignedCoordination,
   )
   if (!validation.valid) {
     throw new Error(
@@ -55,7 +58,7 @@ export async function registerSituation(
   const situation = await createSituation({
     title: input.draft.title.trim(),
     description: buildSituationDescription(input.draft, input.coordinations),
-    coordinationId: input.draft.coordinationId,
+    coordinationId: input.draft.coordinationId || undefined,
     categoryId: placeholderCategory.id,
     severity: 'MEDIUM',
     occurredAt: captureDateToOccurredAt(input.draft.reportedAt),

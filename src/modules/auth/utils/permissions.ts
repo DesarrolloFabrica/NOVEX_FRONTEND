@@ -8,9 +8,18 @@ export function hasPermission(
 }
 
 export function canCreateSituations(
-  user: Pick<User, 'permissions'> | null | undefined,
+  user: Pick<User, 'permissions' | 'roleCode'> | null | undefined,
 ): boolean {
-  return hasPermission(user, 'SITUATIONS_CREATE')
+  return (
+    hasPermission(user, 'SITUATIONS_CREATE') &&
+    (user?.roleCode === 'COORDINADOR' || user?.roleCode === 'ANALISTA')
+  )
+}
+
+export function canCreateCoordinationSituations(
+  user: Pick<User, 'permissions' | 'roleCode'> | null | undefined,
+): boolean {
+  return user?.roleCode === 'COORDINADOR' && canCreateSituations(user)
 }
 
 export function canUpdateSituations(

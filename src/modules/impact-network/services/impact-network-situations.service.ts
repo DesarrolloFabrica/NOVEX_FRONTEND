@@ -61,8 +61,8 @@ function buildFallbackInterpretation(
     eventId: situation.id,
     categoryId: situation.categoryCode,
     categoryName: situation.categoryName,
-    affectedAreaIds: [situation.coordinationCode],
-    affectedAreaNames: [situation.coordinationName],
+    affectedAreaIds: situation.coordinationCode ? [situation.coordinationCode] : [],
+    affectedAreaNames: situation.coordinationName ? [situation.coordinationName] : [],
     impactSeverity: SEVERITY_TO_IMPACT[situation.severity],
     affectationPercentage: SEVERITY_TO_SCORE[situation.severity],
     impactInternal: Math.round(SEVERITY_TO_SCORE[situation.severity] * 0.55),
@@ -97,8 +97,8 @@ export function mapSituationToImpactOperationalEvent(
 
   return {
     ...base,
-    sourceAreaId: situation.coordinationCode,
-    sourceAreaName: situation.coordinationName,
+    sourceAreaId: situation.coordinationCode ?? 'sin-coordinacion',
+    sourceAreaName: situation.coordinationName ?? 'Sin coordinación asignada',
     status: mapSituationStatusToEventStatus(situation.status),
   }
 }

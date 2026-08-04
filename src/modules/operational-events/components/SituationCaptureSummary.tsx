@@ -97,7 +97,7 @@ export function SituationCaptureSummary({
               <span>
                 {responsible
                   ? `${responsible.shortName || responsible.name}`
-                  : 'Coordinación no definida'}
+                  : 'Sin coordinación asignada'}
               </span>
             </div>
             <span className="novex-executive-dossier__status">
@@ -135,7 +135,7 @@ export function SituationCaptureSummary({
                 <strong>
                   {responsible
                     ? `${responsible.code} · ${responsible.name}`
-                    : 'No indicada'}
+                    : 'Sin coordinación asignada'}
                 </strong>
               </div>
             </div>

@@ -32,6 +32,7 @@ import {
 import type { CoordinationNetworkStatusResponse } from '@/modules/api/coordinations.api'
 import { fetchSituationAffectedCoordinations } from '@/modules/api/impact.api'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
+import { canCreateCoordinationSituations } from '@/modules/auth/utils/permissions'
 import { ConnectedSituationDetailModal } from '@/modules/operational-events/components/ConnectedSituationDetailModal'
 import type { OperationalEvent } from '@/modules/operational-events/types/operational-event.types'
 import { ScreenDeck } from '@/modules/monitoring/components/ScreenDeck'
@@ -150,6 +151,10 @@ export function ImpactNetworkExperience() {
       resolveCoordinationId(user?.coordinationId)
     )
   }, [user?.coordinationId, user?.selectedAreaId, coordinationIds])
+  const canCreateInSelectedCoordination =
+    canCreateCoordinationSituations(user) &&
+    selectedCoordinationId !== null &&
+    selectedCoordinationId === assignedCoordinationId
 
   const reloadSituations = useCallback(async () => {
     setSituationsLoading(true)
@@ -626,12 +631,12 @@ export function ImpactNetworkExperience() {
   )
 
   const handleCreateSituation = useCallback(() => {
-    if (!selectedCoordinationId) return
+    if (!selectedCoordinationId || !canCreateInSelectedCoordination) return
     const returnTo = `/red-impacto?coordination=${encodeURIComponent(selectedCoordinationId)}`
     navigate(
       `/situaciones/nueva?coordination=${encodeURIComponent(selectedCoordinationId)}&returnTo=${encodeURIComponent(returnTo)}`,
     )
-  }, [navigate, selectedCoordinationId])
+  }, [canCreateInSelectedCoordination, navigate, selectedCoordinationId])
 
   const handleUpdateSituationStatus = useCallback(
     async (input: UpdateSituationStatusInput) => {
@@ -912,7 +917,7 @@ export function ImpactNetworkExperience() {
                       isExportingPdf={isExportingPdf}
                       onSelectSituation={selectSituation}
                       onCreateSituation={
-                        selectedCoordinationId
+                        canCreateInSelectedCoordination
                           ? handleCreateSituation
                           : undefined
                       }

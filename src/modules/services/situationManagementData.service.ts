@@ -20,8 +20,8 @@ function mapSituationToListItem(situation: SituationResponse): SituationListItem
   return {
     id: situation.id,
     title: situation.title,
-    coordinationName: situation.coordinationName,
-    coordinationCode: situation.coordinationCode,
+    coordinationName: situation.coordinationName ?? 'Sin coordinación asignada',
+    coordinationCode: situation.coordinationCode ?? 'SIN_COORDINACION',
     categoryName: situation.categoryName,
     severity: situation.severity,
     status: situation.status,

@@ -210,8 +210,8 @@ function buildPrioritySituations(
     .map((item) => ({
       id: item.situation.id,
       title: item.situation.title,
-      coordinationName: item.situation.coordinationName,
-      coordinationCode: item.situation.coordinationCode,
+      coordinationName: item.situation.coordinationName ?? 'Sin coordinación asignada',
+      coordinationCode: item.situation.coordinationCode ?? 'SIN_COORDINACION',
       categoryName: item.situation.categoryName,
       severity: item.analysisSeverity ?? item.situation.severity,
       status: item.situation.status,
@@ -234,8 +234,8 @@ function buildLatestSituations(
     .map((item) => ({
       id: item.situation.id,
       title: item.situation.title,
-      coordinationName: item.situation.coordinationName,
-      coordinationCode: item.situation.coordinationCode,
+      coordinationName: item.situation.coordinationName ?? 'Sin coordinación asignada',
+      coordinationCode: item.situation.coordinationCode ?? 'SIN_COORDINACION',
       categoryName: item.situation.categoryName,
       severity: item.analysisSeverity ?? item.situation.severity,
       status: item.situation.status,
@@ -296,9 +296,10 @@ function buildCoordinationImpact(
     const openByCoordination = new Map<string, number>()
     for (const enrichment of enrichments) {
       if (!isOpenStatus(enrichment.situation.status)) continue
-      const count =
-        openByCoordination.get(enrichment.situation.coordinationId) ?? 0
-      openByCoordination.set(enrichment.situation.coordinationId, count + 1)
+      const coordinationId = enrichment.situation.coordinationId
+      if (!coordinationId) continue
+      const count = openByCoordination.get(coordinationId) ?? 0
+      openByCoordination.set(coordinationId, count + 1)
     }
 
     for (const coordination of coordinations) {

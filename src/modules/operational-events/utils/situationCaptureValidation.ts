@@ -20,6 +20,7 @@ export function validateSituationCaptureDraft(
   draft: SituationCaptureDraft,
   coordinations: CoordinationSummary[],
   responsibleCoordinations?: CoordinationSummary[],
+  requiresCoordination = true,
 ): SituationCaptureValidationResult {
   const coordinationIds = new Set(coordinations.map((item) => item.id))
   const responsibleIds = new Set(
@@ -39,7 +40,10 @@ export function validateSituationCaptureDraft(
   if (draft.description.trim().length > DESCRIPTION_MAX_LENGTH) {
     missingRequirements.push('una descripción más breve')
   }
-  if (!draft.coordinationId || !responsibleIds.has(draft.coordinationId)) {
+  if (
+    requiresCoordination &&
+    (!draft.coordinationId || !responsibleIds.has(draft.coordinationId))
+  ) {
     missingRequirements.push('coordinación responsable válida')
   }
   if (!isValidCaptureDate(draft.reportedAt)) {

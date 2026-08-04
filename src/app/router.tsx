@@ -76,7 +76,9 @@ export const router = createBrowserRouter([
             path: '/situaciones/nueva',
             element: (
               <RequirePermissionRoute permission="SITUATIONS_CREATE">
-                <RegisterOperationalEventPage />
+                <RequireRoleRoute role={['COORDINADOR', 'ANALISTA']}>
+                  <RegisterOperationalEventPage />
+                </RequireRoleRoute>
               </RequirePermissionRoute>
             ),
           },

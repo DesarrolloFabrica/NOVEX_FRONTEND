@@ -47,6 +47,8 @@ interface EventCaptureFormProps {
   relatedCoordinations?: CoordinationSummary[]
   loadingCoordinations?: boolean
   coordinationLocked?: boolean
+  requiresCoordination?: boolean
+  showRelatedCoordinations?: boolean
   onChange: (next: SituationCaptureDraft) => void
   onSubmit: () => void
   submitLabel?: string
@@ -59,6 +61,8 @@ export function EventCaptureForm({
   relatedCoordinations,
   loadingCoordinations = false,
   coordinationLocked = false,
+  requiresCoordination = true,
+  showRelatedCoordinations = true,
   onChange,
   onSubmit,
   submitLabel = 'Continuar',
@@ -72,6 +76,7 @@ export function EventCaptureForm({
     draft,
     relatedCoordinations ?? coordinations,
     coordinations,
+    requiresCoordination,
   )
   const canContinue = validation.valid
 
@@ -194,6 +199,7 @@ export function EventCaptureForm({
         </div>
 
         <aside className="novex-capture-desk__context">
+          {requiresCoordination ? (
           <label className="block space-y-1.5">
             <span className={TEXT_LABEL}>Coordinación responsable</span>
             <select
@@ -229,6 +235,17 @@ export function EventCaptureForm({
               Coordinación donde se originó principalmente la situación.
             </span>
           </label>
+          ) : (
+            <div className="block space-y-1.5">
+              <span className={TEXT_LABEL}>Coordinación responsable</span>
+              <p className={`${FIELD} py-2 text-slate-600`}>
+                Sin coordinación asignada
+              </p>
+              <span className="novex-capture-field__hint">
+                El registro del analista queda disponible para seguimiento institucional.
+              </span>
+            </div>
+          )}
 
           <label className="block space-y-1.5">
             <span className={TEXT_LABEL}>Fecha de ocurrencia</span>
@@ -246,6 +263,7 @@ export function EventCaptureForm({
             </span>
           </label>
 
+          {showRelatedCoordinations ? (
           <fieldset className="novex-capture-related-coordinations block space-y-1.5">
             <CoordinationAutocompleteLegend />
             <CoordinationAutocomplete
@@ -256,6 +274,7 @@ export function EventCaptureForm({
               }
             />
           </fieldset>
+          ) : null}
 
           <fieldset className="novex-capture-affected-parties space-y-2">
             <legend className={TEXT_LABEL}>

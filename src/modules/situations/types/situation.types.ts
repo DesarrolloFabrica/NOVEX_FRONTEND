@@ -23,7 +23,7 @@ export interface IncidentCategorySummary {
 export interface CreateSituationPayload {
   title: string
   description: string
-  coordinationId: string
+  coordinationId?: string
   categoryId: string
   severity: SituationSeverity
   occurredAt: string
@@ -33,9 +33,9 @@ export interface SituationResponse {
   id: string
   title: string
   description: string
-  coordinationId: string
-  coordinationCode: string
-  coordinationName: string
+  coordinationId: string | null
+  coordinationCode: string | null
+  coordinationName: string | null
   createdByUserId: string
   createdByUserName: string
   assignedUserId?: string | null

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   canCreateSituations,
+  canCreateCoordinationSituations,
   canUpdateSituations,
   hasPermission,
   isCoordinator,
@@ -51,8 +52,31 @@ describe('permissions utils', () => {
     expect(canUpdateSituations(analyst)).toBe(true)
   })
 
+  it('permite al analista registrar sin darle creación por coordinación', () => {
+    const analystWithCreate: User = {
+      ...analyst,
+      permissions: [...analyst.permissions, 'SITUATIONS_CREATE'],
+    }
+
+    expect(canCreateSituations(analystWithCreate)).toBe(true)
+    expect(canCreateCoordinationSituations(analystWithCreate)).toBe(false)
+  })
+
+  it('oculta el registro incluso si un admin conserva un permiso anterior', () => {
+    const adminWithStalePermission: User = {
+      ...director,
+      roleCode: 'ADMIN',
+      roleName: 'Administrador',
+      permissions: ['SITUATIONS_CREATE'],
+    }
+
+    expect(canCreateSituations(adminWithStalePermission)).toBe(false)
+    expect(canCreateCoordinationSituations(adminWithStalePermission)).toBe(false)
+  })
+
   it('identifica coordinador para bloqueo de coordinación', () => {
     expect(isCoordinator(coordinator)).toBe(true)
     expect(canCreateSituations(coordinator)).toBe(true)
+    expect(canCreateCoordinationSituations(coordinator)).toBe(true)
   })
 })
