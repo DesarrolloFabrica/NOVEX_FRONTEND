@@ -13,7 +13,7 @@ Navegador → Cloud Run (omega-frontend) → Nginx
                 └── /* → index.html (SPA)
                 └── /assets/* → JS/CSS con hash (cache largo)
 
-API calls del navegador → VITE_API_URL (backend Cloud Run u otro)
+API calls del navegador → VITE_API_BASE_URL (backend Cloud Run u otro)
 Google OAuth → VITE_GOOGLE_CLIENT_ID (Client ID público)
 ```
 
@@ -39,7 +39,7 @@ Las variables `VITE_*` se **incrustan en tiempo de compilación**. Cambiarlas ex
 | Imagen | `omega-frontend` |
 | Ruta imagen | `us-central1-docker.pkg.dev/it-fab-contenido-edu-5/omega/omega-frontend` |
 | Backend | `https://omega-backend-550902908078.us-central1.run.app` |
-| API base (`VITE_API_URL`) | `https://omega-backend-550902908078.us-central1.run.app/api/v1` |
+| API base (`VITE_API_BASE_URL`) | `https://omega-backend-550902908078.us-central1.run.app/api/v1` |
 | SA runtime (sugerida) | `omega-frontend-runner@it-fab-contenido-edu-5.iam.gserviceaccount.com` |
 
 > No usar el proyecto Acervo ni `gen-lang-client-0049269139`.
@@ -48,18 +48,22 @@ Las variables `VITE_*` se **incrustan en tiempo de compilación**. Cambiarlas ex
 
 | Variable | Obligatoria | Descripción |
 |----------|-------------|-------------|
-| `VITE_API_URL` | Sí | Base completa del API, **incluye** `/api/v1` |
+| `VITE_API_BASE_URL` | Sí | Base completa del API, **incluye** `/api/v1` |
+| `VITE_API_URL` | No | Alias de compatibilidad para instalaciones anteriores |
 | `VITE_GOOGLE_CLIENT_ID` | Sí | OAuth Client ID (público) |
+| `VITE_ENABLE_EMAIL_LOGIN` | No | Solo desarrollo local; mantener `false` fuera de local |
 | `VITE_APP_NAME` | No | Default `NOVEX` |
 | `VITE_APP_ENV` | No | `development` / `production` |
 
-Compatibilidad: si existe `VITE_API_BASE_URL` (legacy), se usa cuando falta `VITE_API_URL`.
+El cliente usa `VITE_API_BASE_URL` como variable principal y recurre a
+`VITE_API_URL` únicamente por compatibilidad.
 
 Ejemplo local / desarrollo apuntando al backend desplegado:
 
 ```env
-VITE_API_URL=https://omega-backend-550902908078.us-central1.run.app/api/v1
+VITE_API_BASE_URL=https://omega-backend-550902908078.us-central1.run.app/api/v1
 VITE_GOOGLE_CLIENT_ID=tu-client-id.apps.googleusercontent.com
+VITE_ENABLE_EMAIL_LOGIN=true
 VITE_APP_NAME=NOVEX
 VITE_APP_ENV=development
 ```
@@ -67,8 +71,9 @@ VITE_APP_ENV=development
 Ejemplo producción (valor al construir la imagen):
 
 ```env
-VITE_API_URL=https://omega-backend-550902908078.us-central1.run.app/api/v1
+VITE_API_BASE_URL=https://omega-backend-550902908078.us-central1.run.app/api/v1
 VITE_GOOGLE_CLIENT_ID=tu-client-id.apps.googleusercontent.com
+VITE_ENABLE_EMAIL_LOGIN=false
 VITE_APP_NAME=NOVEX
 VITE_APP_ENV=production
 ```
@@ -118,9 +123,9 @@ No inventar la URL productiva antes del primer deploy.
 
 ## 13. URL del backend
 
-Debe configurarse solo vía `VITE_API_URL` (no hardcode en componentes).
+Debe configurarse mediante `VITE_API_BASE_URL` (no hardcode en componentes).
 
-El cliente HTTP está en `src/shared/api/http.ts` y usa `src/shared/config/env.ts`.
+El cliente HTTP está en `src/shared/api/http.ts`.
 
 CORS: el backend debe permitir el origen del frontend Cloud Run.
 
@@ -137,7 +142,7 @@ npm run preview
 
 ```powershell
 docker build `
-  --build-arg VITE_API_URL=https://omega-backend-550902908078.us-central1.run.app/api/v1 `
+  --build-arg VITE_API_BASE_URL=https://omega-backend-550902908078.us-central1.run.app/api/v1 `
   --build-arg VITE_GOOGLE_CLIENT_ID=CLIENT_ID_DE_PRUEBA `
   --build-arg VITE_APP_NAME=NOVEX `
   --build-arg VITE_APP_ENV=production `
@@ -166,8 +171,6 @@ gcloud builds submit `
 2. Ejecutar:
 
 ```powershell
-npm run deploy:gcp
-# o:
 powershell -ExecutionPolicy Bypass -File .\scripts\deploy-frontend.ps1
 ```
 
@@ -218,9 +221,9 @@ Rutas internas relevantes: `/login`, `/dashboard`, `/red-impacto`, `/situaciones
 | `ERR_CONNECTION_REFUSED` | Vite no arrancado / puerto incorrecto | `npm run dev` (5173) o Docker 8080 |
 | Failed to resolve `@react-oauth/google` | `node_modules` incompleto | `npm ci` |
 | `Falta VITE_GOOGLE_CLIENT_ID` | `.env` ausente o mal formado | Corregir `.env` / rebuild |
-| API apunta a localhost en prod | Build sin `VITE_API_URL` | Rebuild con build-arg |
+| API apunta a localhost en prod | Build sin `VITE_API_BASE_URL` | Rebuild con build-arg |
 | Variables no se actualizan | Vite es build-time | Rebuild imagen |
-| 404 al refrescar `/dashboard` | Nginx sin `try_files` | Usar `docker/nginx.conf` del repo |
+| 404 al refrescar `/dashboard` | Nginx sin `try_files` | Verificar `nginx.conf`, copiado por el Dockerfile |
 | CORS | Backend no permite origen FE | Configurar CORS en backend |
 | OAuth popup falla | Origen no autorizado | Añadir URL FE en Google Console |
 | Dependencias faltantes | Clone sin install | `npm ci` |
@@ -245,7 +248,7 @@ Workflow: `.github/workflows/deploy-frontend.yml` (manual `workflow_dispatch`).
 
 Variables de repositorio esperadas:
 
-- `VITE_API_URL`
+- `VITE_API_BASE_URL`
 - `VITE_GOOGLE_CLIENT_ID`
 - `VITE_APP_NAME`
 - `GCP_WORKLOAD_IDENTITY_PROVIDER`

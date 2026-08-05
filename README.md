@@ -6,13 +6,13 @@ Centro de Monitoreo Operativo — frontend en **React + TypeScript + Vite + Tail
 
 ```
 NOVEX_FRONTEND/
-├── src/              # Código fuente de la aplicación
-├── public/           # Assets estáticos (capas, escenas, favicon)
-├── DOCS/             # Documentación de producto y dirección de arte
-├── BACKEND/          # Reservado para el backend (futuro)
-├── photoshop/        # Assets de diseño
-├── refs/             # Referencias visuales
-└── package.json      # Dependencias y scripts del frontend
+├── src/              # Código fuente y pruebas unitarias
+├── public/           # Assets estáticos
+├── e2e/              # Pruebas Playwright
+├── DOCS/             # Documentación de producto
+├── docker/           # Configuración de referencia para Nginx
+├── scripts/          # Automatización de despliegue
+└── package.json      # Dependencias y scripts
 ```
 
 ## Requisitos
@@ -28,6 +28,7 @@ npm run dev        # Servidor de desarrollo (http://localhost:5173)
 npm run build      # Build de producción
 npm run preview    # Vista previa del build
 npm run test       # Tests (Vitest)
+npm run test:e2e   # Pruebas end-to-end (Playwright)
 npm run typecheck  # Verificación de tipos
 npm run lint       # Oxlint
 ```
