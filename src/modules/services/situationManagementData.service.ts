@@ -1,11 +1,7 @@
 import { fetchAnalysisHistory, tryFetchSituationAnalysis } from '@/modules/api/analysis.api'
 import { fetchSituationEvidences } from '@/modules/api/evidences.api'
 import { fetchSituationAffectedCoordinations, fetchSituationImpact } from '@/modules/api/impact.api'
-import {
-  fetchSituationRecommendations,
-  updateSituationRecommendation,
-  type UpdateSituationRecommendationPayload,
-} from '@/modules/api/recommendations.api'
+import { fetchSituationRecommendations } from '@/modules/api/recommendations.api'
 import { fetchSituation, fetchSituations, updateSituation } from '@/modules/api/situations.api'
 import { fetchSituationTimeline } from '@/modules/api/timeline.api'
 import type {
@@ -107,15 +103,4 @@ export async function updateSituationStatus(
     statusComment: input.statusComment,
     evidenceIds: input.evidenceIds,
   })
-}
-
-/**
- * @deprecated Conservado por compatibilidad. La UI de Gestión Operativa ya no
- * administra recomendaciones individuales.
- */
-export async function updateRecommendationStatus(
-  recommendationId: string,
-  payload: UpdateSituationRecommendationPayload,
-) {
-  return updateSituationRecommendation(recommendationId, payload)
 }

@@ -23,30 +23,10 @@ export interface SituationRecommendationsListResponse {
   total: number
 }
 
-export interface UpdateSituationRecommendationPayload {
-  status?: string
-  priority?: string
-  executionNotes?: string | null
-}
-
 export async function fetchSituationRecommendations(
   situationId: string,
 ): Promise<SituationRecommendationsListResponse> {
   return apiRequest<SituationRecommendationsListResponse>(
     `/situations/${situationId}/recommendations`,
   )
-}
-
-/**
- * @deprecated La UI de Gestión Operativa ya no administra recomendaciones
- * individuales. Conservado por compatibilidad de API.
- */
-export async function updateSituationRecommendation(
-  recommendationId: string,
-  payload: UpdateSituationRecommendationPayload,
-): Promise<SituationRecommendation> {
-  return apiRequest<SituationRecommendation>(`/recommendations/${recommendationId}`, {
-    method: 'PATCH',
-    body: JSON.stringify(payload),
-  })
 }
