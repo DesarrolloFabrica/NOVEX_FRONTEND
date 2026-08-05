@@ -8,6 +8,7 @@ import { mapCoordinationGraphToImpactNetwork } from '@/modules/impact-network/se
 import {
   getCoordination,
   getCoordinationCatalog,
+  resolveCoordinationId,
   setCoordinationCatalog,
 } from '@/modules/impact-network/data/coordination-islands.config'
 import { simulateSituationImpact } from '@/modules/api/impact.api'
@@ -174,5 +175,41 @@ describe('impact network backend provider', () => {
     expect(model.topology.bindings[0]?.externalIds).toContain(
       'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
     )
+  })
+
+  it('resuelve islas fuera del alcance del actor con el catálogo institucional', () => {
+    const scopedCoordination = {
+      id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+      code: 'coord-saber-pro',
+      name: 'Coordinador Saber Pro',
+      shortName: 'Saber Pro',
+      description: null,
+      color: '#9ACD50',
+      icon: 'coord-saber-pro',
+      imageAsset: 'CoordSaberPro.png',
+      displayOrder: 10,
+      isActive: true,
+    }
+    const outOfScopeCoordination = {
+      id: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+      code: 'coord-b2b',
+      name: 'Coordinación Supervisor B2B',
+      shortName: 'B2B',
+      description: null,
+      color: '#FF5F66',
+      icon: 'coord-b2b',
+      imageAsset: 'CoordB2B.png',
+      displayOrder: 2,
+      isActive: true,
+    }
+
+    const model = mapCoordinationGraphToImpactNetwork(
+      { coordinations: [scopedCoordination], dependencies: [] },
+      [outOfScopeCoordination, scopedCoordination],
+    )
+
+    expect(model.coordinationIds).toEqual(['coord-saber-pro'])
+    expect(resolveCoordinationId('coord-b2b')).toBe('coord-b2b')
+    expect(getCoordination('coord-b2b').shortName).toBe('B2B')
   })
 })

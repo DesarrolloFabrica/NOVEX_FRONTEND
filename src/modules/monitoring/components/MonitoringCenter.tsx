@@ -142,6 +142,7 @@ export function MonitoringCenter({
       {showAnalysis && selectedSituationId ? (
         <ConnectedSituationDetailModal
           situationId={selectedSituationId}
+          title={dossier?.situation.title}
           onClose={() => setShowAnalysis(false)}
         />
       ) : null}

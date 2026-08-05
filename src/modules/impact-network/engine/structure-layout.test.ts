@@ -208,4 +208,38 @@ describe('structure-layout', () => {
         .every((node) => !node.selected),
     ).toBe(true)
   })
+
+  it('agrupa el contexto cerca del origen cuando hay pocas islas impactadas', () => {
+    const width = 1180
+    const height = 640
+    const { center, nodes } = buildStructureLayout(
+      ['coord-saber-pro', 'coord-b2b', 'coord-desarrollo-profesional'],
+      'coord-saber-pro',
+      width,
+      height,
+      true,
+    )
+
+    const origin = nodes.find(
+      (node) => node.coordinationId === 'coord-saber-pro',
+    )!
+    const satellites = nodes.filter(
+      (node) => node.coordinationId !== 'coord-saber-pro',
+    )
+
+    expect(satellites).toHaveLength(2)
+
+    const institutionalRadius = Math.max(174, width * 0.415)
+    for (const satellite of satellites) {
+      const distance = Math.hypot(
+        satellite.x - center.x,
+        satellite.y - center.y,
+      )
+      // Fuera de la isla origen, pero sin irse al borde del escenario.
+      expect(distance).toBeGreaterThan(origin.size / 2)
+      expect(distance).toBeLessThan(institutionalRadius)
+      // El arco superior deja libre la etiqueta del origen.
+      expect(satellite.y).toBeLessThan(center.y)
+    }
+  })
 })

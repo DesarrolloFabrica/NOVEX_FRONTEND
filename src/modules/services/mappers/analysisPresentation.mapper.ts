@@ -15,6 +15,7 @@ import type {
 import { INTELLIGENCE_CONTRACT_VERSION } from '@/modules/operational-events/types/operational-event.types'
 import type { SituationResponse } from '@/modules/situations/types/situation.types'
 import type { SituationSeverity } from '@/modules/situations/types/situation.types'
+import { situationOwnerLabel } from '@/modules/situations/utils/situationOwner'
 
 const SEVERITY_TO_RISK: Record<SituationSeverity, RiskLevel> = {
   LOW: 'low',
@@ -320,7 +321,7 @@ export function mapSituationToOperationalEvent(
     },
     reportedAt: situation.occurredAt,
     sourceAreaId: situation.coordinationId ?? 'sin-coordinacion',
-    sourceAreaName: situation.coordinationName ?? 'Sin coordinación asignada',
+    sourceAreaName: situationOwnerLabel(situation),
     status: 'open',
     createdAt: situation.createdAt,
     lastUpdateAt: situation.updatedAt,

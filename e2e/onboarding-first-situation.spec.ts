@@ -69,9 +69,9 @@ const situation = {
   id: situationId,
   title: draft.title,
   description: draft.description,
-  coordinationId,
-  coordinationCode: coordination.code,
-  coordinationName: coordination.name,
+  coordinationId: null,
+  coordinationCode: null,
+  coordinationName: null,
   createdByUserId: session.id,
   createdByUserName: session.name,
   assignedUserId: null,
@@ -317,6 +317,8 @@ test('acompaña una primera situación real hasta informe, historial y estado', 
     }
 
     if (path.endsWith('/situations') && method === 'POST') {
+      const payload = request.postDataJSON() as Record<string, unknown>
+      expect(payload).not.toHaveProperty('coordinationId')
       registered = true
       await route.fulfill({ json: situation })
       return

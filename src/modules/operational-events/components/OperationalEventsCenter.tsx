@@ -228,6 +228,10 @@ export function OperationalEventsCenter({
 
           situationId={selectedSituationId}
 
+          title={
+            rows.find((row) => row.id === selectedSituationId)?.title
+          }
+
           onClose={handleCloseDetail}
 
         />

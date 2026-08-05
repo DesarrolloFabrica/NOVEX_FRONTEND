@@ -58,7 +58,9 @@ export async function registerSituation(
   const situation = await createSituation({
     title: input.draft.title.trim(),
     description: buildSituationDescription(input.draft, input.coordinations),
-    coordinationId: input.draft.coordinationId || undefined,
+    coordinationId: input.allowUnassignedCoordination
+      ? undefined
+      : input.draft.coordinationId || undefined,
     categoryId: placeholderCategory.id,
     severity: 'MEDIUM',
     occurredAt: captureDateToOccurredAt(input.draft.reportedAt),

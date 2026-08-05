@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { fetchSituation } from '@/modules/api/situations.api'
 import { SituationDetailModal } from '@/modules/operational-events/components/SituationDetailModal'
+import { SituationModalShell } from '@/modules/operational-events/components/SituationModalShell'
 import { AnalysisErrorState } from '@/modules/operational-events/components/analysis/AnalysisErrorState'
-import { AnalysisLoadingState } from '@/modules/operational-events/components/analysis/AnalysisLoadingState'
+import { SituationDetailSkeleton } from '@/modules/operational-events/components/analysis/SituationDetailSkeleton'
 import { splitSituationDescription } from '@/modules/operational-events/utils/parseSituationDescription'
 import type { OperationalEvent } from '@/modules/operational-events/types/operational-event.types'
 import {
@@ -17,6 +18,8 @@ import { isValidUuid } from '@/shared/utils/uuid'
 interface ConnectedSituationDetailModalProps {
   situationId: string
   onClose: () => void
+  /** Título ya visible en la lista, para no abrir el expediente en blanco. */
+  title?: string
 }
 
 function SituationWithoutAnalysisModal({
@@ -29,39 +32,27 @@ function SituationWithoutAnalysisModal({
   const { narrative } = splitSituationDescription(situation.description)
 
   return (
-    <div className="novex-situation-modal" role="presentation">
-      <button
-        type="button"
-        className="novex-situation-modal__backdrop"
-        aria-label="Cerrar"
-        onClick={onClose}
-      />
-      <div
-        className="novex-situation-modal__dialog novex-situation-modal__dialog--state"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Expediente sin análisis IA"
-      >
-        <header>
-          <p>Expediente operativo</p>
-          <h2>{situation.title}</h2>
-        </header>
-        <p>{narrative}</p>
-        <p>
-          El análisis ejecutivo IA aún no está disponible. Consulte el expediente
-          en Gestión de situaciones para ver el estado actual.
-        </p>
-        <button type="button" onClick={onClose}>
-          Cerrar
-        </button>
-      </div>
-    </div>
+    <SituationModalShell label="Expediente sin análisis IA" onClose={onClose}>
+      <header>
+        <p>Expediente operativo</p>
+        <h2>{situation.title}</h2>
+      </header>
+      <p>{narrative}</p>
+      <p>
+        El análisis ejecutivo IA aún no está disponible. Consulte el expediente
+        en Gestión de situaciones para ver el estado actual.
+      </p>
+      <button type="button" onClick={onClose}>
+        Cerrar
+      </button>
+    </SituationModalShell>
   )
 }
 
 export function ConnectedSituationDetailModal({
   situationId,
   onClose,
+  title,
 }: ConnectedSituationDetailModalProps) {
   const [event, setEvent] = useState<OperationalEvent | null>(null)
   const [situationWithoutAnalysis, setSituationWithoutAnalysis] =
@@ -83,8 +74,10 @@ export function ConnectedSituationDetailModal({
     setSituationWithoutAnalysis(null)
 
     try {
-      const situation = await fetchSituation(situationId)
-      const analysis = await loadAnalysis(situationId)
+      const [situation, analysis] = await Promise.all([
+        fetchSituation(situationId),
+        loadAnalysis(situationId),
+      ])
       const interpretation = analysis
         ? mapAnalysisToInterpretation(analysis, situationId)
         : null
@@ -111,48 +104,26 @@ export function ConnectedSituationDetailModal({
 
   if (loading) {
     return (
-      <div className="novex-situation-modal" role="presentation">
-        <button
-          type="button"
-          className="novex-situation-modal__backdrop"
-          aria-label="Cerrar"
-          onClick={onClose}
-        />
-        <div
-          className="novex-situation-modal__dialog novex-situation-modal__dialog--state"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Cargando análisis"
-        >
-          <AnalysisLoadingState />
-        </div>
-      </div>
+      <SituationModalShell
+        label="Abriendo expediente"
+        onClose={onClose}
+        fullSize
+      >
+        <SituationDetailSkeleton title={title} onClose={onClose} />
+      </SituationModalShell>
     )
   }
 
   if (error) {
     return (
-      <div className="novex-situation-modal" role="presentation">
-        <button
-          type="button"
-          className="novex-situation-modal__backdrop"
-          aria-label="Cerrar"
-          onClick={onClose}
+      <SituationModalShell label="Error de análisis" onClose={onClose}>
+        <AnalysisErrorState
+          message={error}
+          onRetry={() => {
+            void loadData()
+          }}
         />
-        <div
-          className="novex-situation-modal__dialog novex-situation-modal__dialog--state"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Error de análisis"
-        >
-          <AnalysisErrorState
-            message={error}
-            onRetry={() => {
-              void loadData()
-            }}
-          />
-        </div>
-      </div>
+      </SituationModalShell>
     )
   }
 

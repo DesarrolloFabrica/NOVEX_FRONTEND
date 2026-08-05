@@ -32,7 +32,10 @@ import {
 import type { CoordinationNetworkStatusResponse } from '@/modules/api/coordinations.api'
 import { fetchSituationAffectedCoordinations, fetchSituationImpactContext } from '@/modules/api/impact.api'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
-import { canCreateCoordinationSituations } from '@/modules/auth/utils/permissions'
+import {
+  canCreateCoordinationSituations,
+  canUpdateSituationStatus,
+} from '@/modules/auth/utils/permissions'
 import { ConnectedSituationDetailModal } from '@/modules/operational-events/components/ConnectedSituationDetailModal'
 import type { OperationalEvent } from '@/modules/operational-events/types/operational-event.types'
 import { ScreenDeck } from '@/modules/monitoring/components/ScreenDeck'
@@ -797,9 +800,28 @@ export function ImpactNetworkExperience() {
       !impactContext.hasDeclaredRelated &&
       impactContext.canSimulate,
   )
-  const predictedCoordinationIds = (
-    prediction?.potentialAreaIds ?? []
-  ).filter((id): id is CoordinationId => Boolean(resolveCoordinationId(id)))
+  const predictedCoordinationIds = useMemo(
+    () =>
+      (prediction?.potentialAreaIds ?? []).filter((id): id is CoordinationId =>
+        Boolean(resolveCoordinationId(id)),
+      ),
+    [prediction?.potentialAreaIds],
+  )
+
+  // El grafo llega recortado al alcance del actor. Al enfocar una situación el
+  // mapa debe poder dibujar las islas impactadas aunque queden fuera de él.
+  const sceneCoordinationIds = useMemo(() => {
+    if (!propagation) return coordinationIds
+
+    return [
+      ...new Set([
+        ...coordinationIds,
+        propagation.originCoordinationId,
+        ...propagation.affectedCoordinationIds,
+        ...predictedCoordinationIds,
+      ]),
+    ]
+  }, [coordinationIds, predictedCoordinationIds, propagation])
 
   const illuminatedCoordinationIds =
     currentFrame?.illuminatedCoordinationIds ??
@@ -923,7 +945,7 @@ export function ImpactNetworkExperience() {
                         data-active="true"
                       >
                         <OrganizationalScene
-                          coordinationIds={coordinationIds}
+                          coordinationIds={sceneCoordinationIds}
                           graphDependencies={topology.dependencies}
                           selectedCoordinationId={selectedCoordinationId}
                           assignedCoordinationId={assignedCoordinationId}
@@ -1048,7 +1070,10 @@ export function ImpactNetworkExperience() {
                       }
                       affectedNames={propagation?.affectedNames ?? []}
                       reducedMotion={Boolean(reduceMotion)}
-                      canUpdateSituation={Boolean(focusedSituation)}
+                      canUpdateSituation={canUpdateSituationStatus(
+                        user,
+                        focusedSituation,
+                      )}
                       isUpdatingSituation={isUpdatingSituation}
                       isExportingPdf={isExportingPdf}
                       onSelectSituation={selectSituation}
@@ -1065,7 +1090,6 @@ export function ImpactNetworkExperience() {
                       }}
                       onOpenSituationDetail={() => {
                         setFocusOriginRequestKey((key) => key + 1)
-                        setShowAnalysisModal(true)
                       }}
                     />
                   </div>
@@ -1079,6 +1103,7 @@ export function ImpactNetworkExperience() {
       {showAnalysisModal && focusedSituation ? (
         <ConnectedSituationDetailModal
           situationId={focusedSituation.id}
+          title={focusedSituation.title}
           onClose={() => setShowAnalysisModal(false)}
         />
       ) : null}

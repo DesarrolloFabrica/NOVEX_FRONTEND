@@ -13,6 +13,7 @@ import { RegisterOperationalEventPage } from '@/pages/RegisterOperationalEventPa
 import { RequirePermissionRoute } from '@/shared/components/RequirePermissionRoute'
 import { RoleLandingRoute } from '@/shared/components/RoleLandingRoute'
 import { RequireRoleRoute } from '@/shared/components/RequireRoleRoute'
+import { RequireSituationCreationRoute } from '@/shared/components/RequireSituationCreationRoute'
 import { AdminConsolePage } from '@/pages/AdminConsolePage'
 
 function RedirectPreservingSearch({ to }: { to: string }) {
@@ -75,11 +76,9 @@ export const router = createBrowserRouter([
           {
             path: '/situaciones/nueva',
             element: (
-              <RequirePermissionRoute permission="SITUATIONS_CREATE">
-                <RequireRoleRoute role={['COORDINADOR', 'ANALISTA']}>
-                  <RegisterOperationalEventPage />
-                </RequireRoleRoute>
-              </RequirePermissionRoute>
+              <RequireSituationCreationRoute>
+                <RegisterOperationalEventPage />
+              </RequireSituationCreationRoute>
             ),
           },
           {

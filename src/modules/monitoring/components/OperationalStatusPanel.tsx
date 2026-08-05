@@ -68,7 +68,7 @@ export function OperationalStatusPanel({
             <p className="novex-ops-state__locked">
               {situation.status === 'CLOSED'
                 ? 'Caso cerrado'
-                : 'Sin permisos de actualización'}
+                : 'Vista informativa: el seguimiento lo gestiona quien registró la situación.'}
             </p>
           )}
           {message ? <span role="status">{message}</span> : null}

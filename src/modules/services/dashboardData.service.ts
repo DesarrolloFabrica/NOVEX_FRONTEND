@@ -19,6 +19,11 @@ import type { OperationalEnvironmentStatus } from '@/modules/operational-events/
 import type { RiskLevel } from '@/modules/operational-events/types/operational-event.types'
 import type { SituationResponse } from '@/modules/situations/types/situation.types'
 import type { SituationSeverity } from '@/modules/situations/types/situation.types'
+import {
+  ANALYST_REGISTRY_CODE,
+  situationOwnerCode,
+  situationOwnerLabel,
+} from '@/modules/situations/utils/situationOwner'
 
 const SEVERITY_WEIGHT: Record<SituationSeverity, number> = {
   CRITICAL: 4,
@@ -125,7 +130,11 @@ function buildExecutiveNarrative(
   const totalRegistered = kpis.openSituations + kpis.resolvedSituations
 
   if (latest) {
-    return `Hay ${totalRegistered} situación${totalRegistered === 1 ? '' : 'es'} registrada${totalRegistered === 1 ? '' : 's'}: ${kpis.openSituations} en seguimiento y ${kpis.resolvedSituations} resuelta${kpis.resolvedSituations === 1 ? '' : 's'}. El registro más reciente es «${latest.title}» en ${latest.coordinationName}.`
+    const origin =
+      latest.coordinationCode === ANALYST_REGISTRY_CODE
+        ? 'registrado por un analista'
+        : `en ${latest.coordinationName}`
+    return `Hay ${totalRegistered} situación${totalRegistered === 1 ? '' : 'es'} registrada${totalRegistered === 1 ? '' : 's'}: ${kpis.openSituations} en seguimiento y ${kpis.resolvedSituations} resuelta${kpis.resolvedSituations === 1 ? '' : 's'}. El registro más reciente es «${latest.title}» ${origin}.`
   }
 
   return `La plataforma documenta ${totalRegistered} situación${totalRegistered === 1 ? '' : 'es'}: ${kpis.openSituations} en seguimiento y ${kpis.resolvedSituations} resuelta${kpis.resolvedSituations === 1 ? '' : 's'}.`
@@ -210,8 +219,8 @@ function buildPrioritySituations(
     .map((item) => ({
       id: item.situation.id,
       title: item.situation.title,
-      coordinationName: item.situation.coordinationName ?? 'Sin coordinación asignada',
-      coordinationCode: item.situation.coordinationCode ?? 'SIN_COORDINACION',
+      coordinationName: situationOwnerLabel(item.situation),
+      coordinationCode: situationOwnerCode(item.situation),
       categoryName: item.situation.categoryName,
       severity: item.analysisSeverity ?? item.situation.severity,
       status: item.situation.status,
@@ -234,8 +243,8 @@ function buildLatestSituations(
     .map((item) => ({
       id: item.situation.id,
       title: item.situation.title,
-      coordinationName: item.situation.coordinationName ?? 'Sin coordinación asignada',
-      coordinationCode: item.situation.coordinationCode ?? 'SIN_COORDINACION',
+      coordinationName: situationOwnerLabel(item.situation),
+      coordinationCode: situationOwnerCode(item.situation),
       categoryName: item.situation.categoryName,
       severity: item.analysisSeverity ?? item.situation.severity,
       status: item.situation.status,

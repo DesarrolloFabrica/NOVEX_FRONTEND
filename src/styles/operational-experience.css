@@ -15,6 +15,24 @@
   scrollbar-gutter: stable;
 }
 
+/**
+ * El tablero por rol comparte la carcasa `.novex-intel-shell`, que recorta su
+ * contenido porque en otras vistas el scroll vive en un hijo dedicado. Aquí no
+ * hay tal hijo, así que la carcasa misma tiene que desplazarse. En viewports
+ * angostos la carcasa se libera con `overflow: visible` y el scroll lo asume el
+ * contenedor externo, por eso la regla se limita a escritorio.
+ */
+@media (min-width: 1024px) {
+  .novex-os .novex-intel-shell.novex-role-dashboard {
+    height: 100%;
+    min-height: 0;
+    flex: 1;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-bottom: 24px;
+  }
+}
+
 .novex-role-dashboard__hero {
   display: flex;
   align-items: flex-start;
@@ -151,7 +169,9 @@
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
   gap: 12px;
-  align-items: start;
+  /* Los paneles llenan su fila: el desnivel entre columnas queda dentro de la
+     tarjeta y no como un vacío suelto en el tablero. */
+  align-items: stretch;
 }
 
 .novex-role-dashboard__wide {
@@ -165,6 +185,43 @@
   border: 1px solid rgb(111 157 229 / 0.12);
   border-radius: 12px;
   background: rgb(6 14 27 / 0.68);
+}
+
+/**
+ * La línea de tiempo llega con hasta doce entradas y, sin acotar, era ella la
+ * que fijaba el alto de la fila: el mapa de impacto quedaba con media pantalla
+ * en blanco al lado. El panel se limita al alto de la fila y el recorrido de la
+ * historia vive dentro de la lista.
+ */
+.novex-role-dashboard__grid .novex-activity-feed {
+  display: flex;
+  max-height: 20rem;
+  flex-direction: column;
+}
+
+.novex-role-dashboard__grid .novex-activity-feed__list {
+  min-height: 0;
+  gap: 8px;
+  overflow-y: auto;
+  padding-right: 6px;
+  scrollbar-gutter: stable;
+}
+
+.novex-role-dashboard__grid .novex-activity-feed__item {
+  padding: 8px 10px;
+}
+
+.novex-role-dashboard__grid .novex-activity-feed__title {
+  margin-top: 3px;
+  font-size: 0.75rem;
+}
+
+.novex-role-dashboard__grid .novex-activity-feed__copy {
+  overflow: hidden;
+  margin-top: 2px;
+  font-size: 0.68rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .novex-role-dashboard__trend > div > span {

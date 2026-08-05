@@ -10,6 +10,7 @@ import {
   mapSituationToOperationalEvent,
 } from '@/modules/services/mappers/analysisPresentation.mapper'
 import { tryFetchSituationAnalysis } from '@/modules/api/analysis.api'
+import { situationOwnerLabel } from '@/modules/situations/utils/situationOwner'
 import type {
   SituationResponse,
   SituationSeverity,
@@ -98,7 +99,7 @@ export function mapSituationToImpactOperationalEvent(
   return {
     ...base,
     sourceAreaId: situation.coordinationCode ?? 'sin-coordinacion',
-    sourceAreaName: situation.coordinationName ?? 'Sin coordinación asignada',
+    sourceAreaName: situationOwnerLabel(situation),
     status: mapSituationStatusToEventStatus(situation.status),
   }
 }

@@ -12,15 +12,10 @@ export function AnalysisErrorState({
   retrying = false,
 }: AnalysisErrorStateProps) {
   return (
-    <section
-      className="novex-analysis-state novex-analysis-state--error space-y-4"
-      role="alert"
-    >
+    <section className="novex-analysis-state novex-analysis-state--error" role="alert">
       <header className="space-y-1">
-        <h2 className="text-sm font-semibold tracking-tight text-red-800">
-          No fue posible completar el análisis
-        </h2>
-        <p className="text-[0.8rem] leading-relaxed text-slate-600">{message}</p>
+        <h2>No fue posible completar el análisis</h2>
+        <p>{message}</p>
       </header>
 
       {onRetry ? (

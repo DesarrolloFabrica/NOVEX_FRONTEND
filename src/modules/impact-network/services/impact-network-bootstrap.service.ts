@@ -4,9 +4,13 @@ import {
 
   fetchCoordinationNetworkStatus,
 
+  fetchCoordinations,
+
   type CoordinationNetworkStatusResponse,
 
 } from '@/modules/api/coordinations.api'
+
+import type { CoordinationSummary } from '@/modules/situations/types/situation.types'
 
 import {
 
@@ -54,11 +58,33 @@ function buildFallbackNetworkStatus(
 
 
 
+async function loadInstitutionalCatalog(): Promise<CoordinationSummary[]> {
+
+  try {
+
+    return await fetchCoordinations(false, { catalog: true })
+
+  } catch {
+
+    return []
+
+  }
+
+}
+
+
+
 export async function loadImpactNetworkGraph(): Promise<ImpactNetworkGraphModel> {
 
-  const response = await fetchCoordinationGraph()
+  const [response, catalog] = await Promise.all([
 
-  return mapCoordinationGraphToImpactNetwork(response)
+    fetchCoordinationGraph(),
+
+    loadInstitutionalCatalog(),
+
+  ])
+
+  return mapCoordinationGraphToImpactNetwork(response, catalog)
 
 }
 
@@ -66,11 +92,13 @@ export async function loadImpactNetworkGraph(): Promise<ImpactNetworkGraphModel>
 
 export async function loadImpactNetworkBootstrap(): Promise<ImpactNetworkBootstrap> {
 
-  const [graphResult, statusResult] = await Promise.allSettled([
+  const [graphResult, statusResult, catalogResult] = await Promise.allSettled([
 
     fetchCoordinationGraph(),
 
     fetchCoordinationNetworkStatus(),
+
+    fetchCoordinations(false, { catalog: true }),
 
   ])
 
@@ -84,7 +112,13 @@ export async function loadImpactNetworkBootstrap(): Promise<ImpactNetworkBootstr
 
 
 
-  const graph = mapCoordinationGraphToImpactNetwork(graphResult.value)
+  const graph = mapCoordinationGraphToImpactNetwork(
+
+    graphResult.value,
+
+    catalogResult.status === 'fulfilled' ? catalogResult.value : [],
+
+  )
 
   const networkStatus =
 

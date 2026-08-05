@@ -13,6 +13,7 @@ import type {
   ImpactTopology,
 } from '@/modules/impact-network/types/impact-network.types'
 import type { Coordination } from '@/modules/impact-network/types/operational-network.types'
+import type { CoordinationSummary } from '@/modules/situations/types/situation.types'
 
 const DEFAULT_CANVAS = {
   width: 1440,
@@ -29,9 +30,7 @@ export interface ImpactNetworkGraphModel {
   dependencies: readonly ImpactDependency[]
 }
 
-function toDefinition(
-  item: CoordinationGraphResponse['coordinations'][number],
-): CoordinationDefinition {
+function toDefinition(item: CoordinationSummary): CoordinationDefinition {
   return {
     id: item.code,
     uuid: item.id,
@@ -44,19 +43,46 @@ function toDefinition(
   }
 }
 
+function sortActiveDefinitions(
+  items: readonly CoordinationSummary[],
+): CoordinationDefinition[] {
+  return [...items]
+    .filter((item) => item.isActive)
+    .sort((left, right) => left.displayOrder - right.displayOrder)
+    .map(toDefinition)
+}
+
 /**
  * Adapta GET /coordinations/graph al modelo de la Red de impacto.
  * Identificador de isla = code del backend.
+ *
+ * El grafo llega recortado al alcance operativo del actor, pero una situación
+ * puede impactar coordinaciones fuera de ese alcance. Por eso el catálogo de
+ * resolución se alimenta del catálogo institucional completo, mientras que las
+ * islas navegables siguen limitadas al grafo.
  */
 export function mapCoordinationGraphToImpactNetwork(
   graph: CoordinationGraphResponse,
+  institutionalCatalog: readonly CoordinationSummary[] = [],
 ): ImpactNetworkGraphModel {
   const active = [...graph.coordinations]
     .filter((item) => item.isActive)
     .sort((left, right) => left.displayOrder - right.displayOrder)
 
   const definitions = active.map(toDefinition)
-  setCoordinationCatalog(definitions)
+  const catalogDefinitions = new Map<CoordinationId, CoordinationDefinition>()
+  for (const definition of [
+    ...sortActiveDefinitions(institutionalCatalog),
+    ...definitions,
+  ]) {
+    catalogDefinitions.set(definition.id, definition)
+  }
+  setCoordinationCatalog(
+    [...catalogDefinitions.values()].sort(
+      (left, right) => left.displayOrder - right.displayOrder,
+    ),
+  )
+
   const visibleDefinitions = definitions.filter(
     (item) => item.id !== GENERAL_COORDINATION_ID,
   )
@@ -66,9 +92,9 @@ export function mapCoordinationGraphToImpactNetwork(
 
   const uuidToCode = new Map<string, CoordinationId>()
   const codeToUuid = new Map<string, string>()
-  for (const item of active) {
-    uuidToCode.set(item.id, item.code)
-    codeToUuid.set(item.code, item.id)
+  for (const item of catalogDefinitions.values()) {
+    uuidToCode.set(item.uuid, item.id)
+    codeToUuid.set(item.id, item.uuid)
   }
 
   const visible = active.filter((item) => item.code !== GENERAL_COORDINATION_ID)

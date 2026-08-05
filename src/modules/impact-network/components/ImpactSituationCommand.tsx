@@ -77,7 +77,7 @@ export function ImpactSituationCommand({
           <p className="impact-situation-command__locked">
             {situation.status === 'CLOSED'
               ? 'Caso cerrado'
-              : 'Sin permisos de actualización'}
+              : 'Vista informativa: el seguimiento lo gestiona quien registró la situación.'}
           </p>
         )}
 

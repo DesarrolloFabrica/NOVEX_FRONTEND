@@ -10,14 +10,18 @@ import type {
   SituationManagementSummary,
 } from '@/modules/api/types/situation-management.types'
 import type { SituationResponse } from '@/modules/situations/types/situation.types'
+import {
+  situationOwnerCode,
+  situationOwnerLabel,
+} from '@/modules/situations/utils/situationOwner'
 import type { UpdateSituationStatusInput } from '@/modules/monitoring/utils/situation-lifecycle'
 
 function mapSituationToListItem(situation: SituationResponse): SituationListItem {
   return {
     id: situation.id,
     title: situation.title,
-    coordinationName: situation.coordinationName ?? 'Sin coordinación asignada',
-    coordinationCode: situation.coordinationCode ?? 'SIN_COORDINACION',
+    coordinationName: situationOwnerLabel(situation),
+    coordinationCode: situationOwnerCode(situation),
     categoryName: situation.categoryName,
     severity: situation.severity,
     status: situation.status,

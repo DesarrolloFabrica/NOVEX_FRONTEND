@@ -990,8 +990,6 @@ function OrganizationalSceneView({
         <div className="propagation-scene__islands organizational-scene__islands">
           {nodes.map((node, index) => {
             const visual = getStructureVisual(node.coordinationId)
-            const isAssigned =
-              !coordinatorMode || node.coordinationId === assignedCoordinationId
             const role = !propagation
               ? 'ambient'
               : node.coordinationId === propagation.originCoordinationId
@@ -1004,6 +1002,14 @@ function OrganizationalSceneView({
                       predictedCoordinationIds.includes(node.coordinationId)
                     ? 'predicted'
                     : 'ambient'
+            // Dentro de una situación el clic abre el expediente de la isla, no
+            // navega a la coordinación: un coordinador puede consultar las islas
+            // impactadas aunque estén fuera de su alcance.
+            const isAssigned =
+              !coordinatorMode ||
+              node.coordinationId === assignedCoordinationId ||
+              role === 'origin' ||
+              role === 'affected'
             const impactState =
               role === 'predicted'
                 ? 'illuminated'

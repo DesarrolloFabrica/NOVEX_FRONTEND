@@ -15,6 +15,10 @@ import type {
 import type { RiskLevel } from '@/modules/operational-events/types/operational-event.types'
 import type { SituationResponse } from '@/modules/situations/types/situation.types'
 import type { SituationSeverity } from '@/modules/situations/types/situation.types'
+import {
+  situationOwnerCode,
+  situationOwnerLabel,
+} from '@/modules/situations/utils/situationOwner'
 
 const SEVERITY_TO_RISK: Record<SituationSeverity, RiskLevel> = {
   LOW: 'low',
@@ -76,8 +80,8 @@ async function enrichSituationRow(
     code: situationCode(situation.id),
     title: situation.title,
     coordinationId: situation.coordinationId ?? 'sin-coordinacion',
-    coordinationCode: situation.coordinationCode ?? 'SIN_COORDINACION',
-    coordinationName: situation.coordinationName ?? 'Sin coordinación asignada',
+    coordinationCode: situationOwnerCode(situation),
+    coordinationName: situationOwnerLabel(situation),
     categoryId: situation.categoryId,
     categoryCode: situation.categoryCode,
     categoryName: situation.categoryName,

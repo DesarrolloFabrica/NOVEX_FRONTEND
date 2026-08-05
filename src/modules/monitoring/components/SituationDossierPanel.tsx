@@ -1,5 +1,6 @@
 import type { SituationDossier } from '@/modules/api/types/situation-management.types'
 import { splitSituationDescription } from '@/modules/operational-events/utils/parseSituationDescription'
+import { situationOwnerLabel } from '@/modules/situations/utils/situationOwner'
 import {
   formatManagementDate,
   SITUATION_SEVERITY_LABEL,
@@ -109,7 +110,7 @@ export function SituationDossierPanel({
           </div>
           <div>
             <dt>Coordinación</dt>
-            <dd>{situation.coordinationName}</dd>
+            <dd>{situationOwnerLabel(situation)}</dd>
           </div>
           <div>
             <dt>Fecha</dt>

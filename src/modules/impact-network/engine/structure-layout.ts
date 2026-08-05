@@ -54,6 +54,18 @@ const RELAX_PASSES = 24
 const MAX_RADIAL_SHIFT = 104
 const NODE_VISUAL_SCALE = 1.28
 
+/**
+ * La elipse institucional está dimensionada para una docena de islas. Cuando el
+ * contexto de una situación trae solo unas pocas, se agrupan en un anillo
+ * cercano al origen en lugar de quedar pegadas a los bordes del escenario.
+ */
+const COMPACT_CONTEXT_MAX_SATELLITES = 5
+const COMPACT_CONTEXT_GAP = 96
+const COMPACT_CONTEXT_ARC_BASE = 120
+const COMPACT_CONTEXT_ARC_STEP = 45
+const COMPACT_CONTEXT_ARC_MAX = 260
+const COMPACT_CONTEXT_VERTICAL_RATIO = 0.82
+
 const HUB_HALF_SIZE = 106
 const COMPACT_HUB_HALF_SIZE = 62
 const HUB_LABEL_HALF_WIDTH = 88
@@ -254,6 +266,55 @@ function displayOrderRank(coordinationId: CoordinationId): number {
   )
 }
 
+function buildCompactContextNodes(
+  satelliteIds: readonly CoordinationId[],
+  center: { x: number; y: number },
+  stage: {
+    selectedSize: number
+    nodeSize: number
+    width: number
+    height: number
+  },
+): StructureNode[] {
+  const { selectedSize, nodeSize, width, height } = stage
+  const radiusX = selectedSize / 2 + nodeSize / 2 + COMPACT_CONTEXT_GAP
+  const radiusY = radiusX * COMPACT_CONTEXT_VERTICAL_RATIO
+  const arranged = [...satelliteIds].sort(
+    (left, right) => displayOrderRank(left) - displayOrderRank(right),
+  )
+  // Arco centrado en la parte superior: deja libre la base del origen, donde va
+  // su etiqueta.
+  const arc = Math.min(
+    COMPACT_CONTEXT_ARC_BASE + (arranged.length - 2) * COMPACT_CONTEXT_ARC_STEP,
+    COMPACT_CONTEXT_ARC_MAX,
+  )
+  const angleStep = arranged.length > 1 ? arc / (arranged.length - 1) : 0
+  const startAngle = arranged.length > 1 ? -90 - arc / 2 : -90
+
+  const nodes = arranged.map((coordinationId, index) => {
+    const point = ellipsePoint(
+      center,
+      radiusX,
+      radiusY,
+      startAngle + angleStep * index,
+    )
+    return {
+      coordinationId,
+      ...point,
+      size: nodeSize,
+      selected: false,
+      labelPlacement: radialPlacement(point, center, width, height),
+      depth: 20 + index,
+    }
+  })
+
+  for (const node of nodes) clampToStage(node, width, height)
+  relaxOverlaps(nodes, center, width, height)
+  assignDepths(nodes, center)
+
+  return nodes
+}
+
 export function buildStructureLayout(
   coordinationIds: readonly CoordinationId[],
   selectedCoordinationId: CoordinationId | null,
@@ -283,6 +344,28 @@ export function buildStructureLayout(
 
     if (!includeContext) {
       return { center, nodes: [selectedNode] }
+    }
+
+    const satellites = coordinationIds.filter(
+      (id) => id !== selectedCoordinationId,
+    )
+
+    if (
+      satellites.length > 0 &&
+      satellites.length <= COMPACT_CONTEXT_MAX_SATELLITES
+    ) {
+      return {
+        center,
+        nodes: [
+          selectedNode,
+          ...buildCompactContextNodes(satellites, center, {
+            selectedSize,
+            nodeSize,
+            width,
+            height,
+          }),
+        ],
+      }
     }
 
     const institutionalLayout = buildStructureLayout(
