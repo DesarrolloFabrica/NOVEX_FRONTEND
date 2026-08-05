@@ -58,4 +58,3 @@ export {
   selectOperationalTrend,
   selectRoomEnvironment,
 } from '@/modules/operational-events/selectors/operationalIntelligence.selectors'
-export { selectPriorityEvents } from '@/modules/operational-events/selectors/priorityEvents.selectors'
