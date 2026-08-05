@@ -1,5 +1,7 @@
 import type { CoordinationGraphResponse } from '@/modules/api/coordinations.api'
 import {
+  GENERAL_COORDINATION_ID,
+  resolveIslandColor,
   resolveIslandAssetPath,
   setCoordinationCatalog,
   type CoordinationDefinition,
@@ -35,8 +37,8 @@ function toDefinition(
     uuid: item.id,
     name: item.name,
     shortName: item.shortName,
-    islandAsset: resolveIslandAssetPath(item.imageAsset),
-    color: item.color,
+    islandAsset: resolveIslandAssetPath(item.imageAsset, item.code),
+    color: resolveIslandColor(item.code, item.color),
     displayOrder: item.displayOrder,
     isActive: item.isActive,
   }
@@ -55,6 +57,12 @@ export function mapCoordinationGraphToImpactNetwork(
 
   const definitions = active.map(toDefinition)
   setCoordinationCatalog(definitions)
+  const visibleDefinitions = definitions.filter(
+    (item) => item.id !== GENERAL_COORDINATION_ID,
+  )
+  const visibleCoordinationIds = new Set(
+    visibleDefinitions.map((item) => item.id),
+  )
 
   const uuidToCode = new Map<string, CoordinationId>()
   const codeToUuid = new Map<string, string>()
@@ -63,7 +71,9 @@ export function mapCoordinationGraphToImpactNetwork(
     codeToUuid.set(item.code, item.id)
   }
 
-  const areas: ImpactArea[] = active.map((item, index) => ({
+  const visible = active.filter((item) => item.code !== GENERAL_COORDINATION_ID)
+
+  const areas: ImpactArea[] = visible.map((item, index) => ({
     id: item.code,
     code: item.code,
     name: item.name,
@@ -78,6 +88,12 @@ export function mapCoordinationGraphToImpactNetwork(
       const sourceAreaId = uuidToCode.get(dependency.sourceCoordinationId)
       const targetAreaId = uuidToCode.get(dependency.targetCoordinationId)
       if (!sourceAreaId || !targetAreaId) return null
+      if (
+        !visibleCoordinationIds.has(sourceAreaId) ||
+        !visibleCoordinationIds.has(targetAreaId)
+      ) {
+        return null
+      }
       return {
         id: dependency.id,
         sourceAreaId,
@@ -90,7 +106,7 @@ export function mapCoordinationGraphToImpactNetwork(
     canvas: DEFAULT_CANVAS,
     areas,
     dependencies,
-    bindings: active.map((item) => ({
+    bindings: visible.map((item) => ({
       catalog: 'backend' as const,
       areaId: item.code,
       externalIds: [item.id],
@@ -99,7 +115,7 @@ export function mapCoordinationGraphToImpactNetwork(
     })),
   }
 
-  const coordinations: Coordination[] = definitions.map((item) => ({
+  const coordinations: Coordination[] = visibleDefinitions.map((item) => ({
     id: item.id,
     name: item.name,
     shortName: item.shortName,
@@ -112,7 +128,7 @@ export function mapCoordinationGraphToImpactNetwork(
 
   return {
     topology,
-    coordinationIds: definitions.map((item) => item.id),
+    coordinationIds: visibleDefinitions.map((item) => item.id),
     coordinations,
     uuidToCode,
     codeToUuid,

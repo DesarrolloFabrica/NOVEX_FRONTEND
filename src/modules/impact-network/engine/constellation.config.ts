@@ -5,7 +5,7 @@ export const NETWORK_CONSTELLATION_IDS: readonly CoordinationId[] = [
   'coord-general',
   'coord-bellas-artes',
   'coord-desarrollo-profesional',
-  'coord-social-lab',
+  'coord-servicios',
   'coord-empresarial',
   'coord-especializaciones',
   'coord-ingenierias',

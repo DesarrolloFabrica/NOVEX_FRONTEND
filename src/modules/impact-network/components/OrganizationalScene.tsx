@@ -10,6 +10,7 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import {
+  GENERAL_COORDINATION_ID,
   getCoordination,
   getCoordinationIslandAsset,
   hexToRgbChannels,
@@ -167,7 +168,9 @@ function OrganizationalSceneView({
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [dragging, setDragging] = useState(false)
   const [pageHidden, setPageHidden] = useState(false)
-  const [focusIslandId, setFocusIslandId] = useState<CoordinationId | null>(null)
+  const [focusIslandId, setFocusIslandId] = useState<CoordinationId | null>(
+    null,
+  )
   const [islandFocusOpen, setIslandFocusOpen] = useState(false)
   const [dossierVisible, setDossierVisible] = useState(false)
   const islandFocusOpenRef = useRef(false)
@@ -178,19 +181,22 @@ function OrganizationalSceneView({
   const isClosingFocusRef = useRef(false)
   const focusOriginRequestRef = useRef(focusOriginRequestKey)
 
-  const writeStageView = useCallback((nextPan: { x: number; y: number }, nextZoom: number) => {
-    panRef.current = nextPan
-    zoomRef.current = nextZoom
-    const stage = stageRef.current
-    if (stage) {
-      stage.style.setProperty('--scene-pan-x', `${nextPan.x}px`)
-      stage.style.setProperty('--scene-pan-y', `${nextPan.y}px`)
-      stage.style.setProperty('--scene-zoom', String(nextZoom))
-    }
-    if (zoomLabelRef.current) {
-      zoomLabelRef.current.textContent = `${Math.round(nextZoom * 100)}%`
-    }
-  }, [])
+  const writeStageView = useCallback(
+    (nextPan: { x: number; y: number }, nextZoom: number) => {
+      panRef.current = nextPan
+      zoomRef.current = nextZoom
+      const stage = stageRef.current
+      if (stage) {
+        stage.style.setProperty('--scene-pan-x', `${nextPan.x}px`)
+        stage.style.setProperty('--scene-pan-y', `${nextPan.y}px`)
+        stage.style.setProperty('--scene-zoom', String(nextZoom))
+      }
+      if (zoomLabelRef.current) {
+        zoomLabelRef.current.textContent = `${Math.round(nextZoom * 100)}%`
+      }
+    },
+    [],
+  )
 
   const commitSceneView = useCallback(
     (view: SceneView) => {
@@ -300,7 +306,12 @@ function OrganizationalSceneView({
     const onWheel = (event: WheelEvent) => {
       event.preventDefault()
       const factor = Math.exp(-event.deltaY * 0.0012)
-      applyZoomAtPoint(zoomRef.current * factor, event.clientX, event.clientY, false)
+      applyZoomAtPoint(
+        zoomRef.current * factor,
+        event.clientX,
+        event.clientY,
+        false,
+      )
       if (wheelCommitTimer !== null) window.clearTimeout(wheelCommitTimer)
       wheelCommitTimer = window.setTimeout(() => {
         commitSceneView({ pan: { ...panRef.current }, zoom: zoomRef.current })
@@ -318,13 +329,10 @@ function OrganizationalSceneView({
       coordinatorMode && assignedCoordinationId && !focusedEvent
         ? [assignedCoordinationId]
         : coordinationIds,
-    [
-      assignedCoordinationId,
-      coordinationIds,
-      coordinatorMode,
-      focusedEvent,
-    ],
+    [assignedCoordinationId, coordinationIds, coordinatorMode, focusedEvent],
   )
+
+  const includeContextNodes = Boolean(focusedEvent && propagation)
 
   const layout = useMemo(
     () =>
@@ -333,15 +341,18 @@ function OrganizationalSceneView({
         selectedCoordinationId,
         size.width,
         size.height,
+        includeContextNodes,
       ),
-    [selectedCoordinationId, size.height, size.width, visibleCoordinationIds],
+    [
+      includeContextNodes,
+      selectedCoordinationId,
+      size.height,
+      size.width,
+      visibleCoordinationIds,
+    ],
   )
 
-  const directionAsset = getCoordinationIslandAsset(
-    coordinationIds.find((id) => id.includes('general')) ??
-      coordinationIds[0] ??
-      'direction',
-  )
+  const directionAsset = getCoordinationIslandAsset(GENERAL_COORDINATION_ID)
   const { center, nodes } = layout
   const visibleNodeCount = selectedCoordinationId
     ? propagation
@@ -352,8 +363,7 @@ function OrganizationalSceneView({
       : 1
     : coordinationIds.length
   const syncBadgeLabel =
-    synchronizedLabel ??
-    `${visibleNodeCount} coordinaciones sincronizadas`
+    synchronizedLabel ?? `${visibleNodeCount} coordinaciones sincronizadas`
 
   const graphEdges = useMemo(() => {
     if (selectedCoordinationId) return []
@@ -388,8 +398,8 @@ function OrganizationalSceneView({
           (node) => node.coordinationId === edge.targetCoordinationId,
         )
         if (!target) return null
-        const curvature = (edge.order % 2 === 0 ? 1 : -1) *
-          (0.12 + (edge.order % 3) * 0.035)
+        const curvature =
+          (edge.order % 2 === 0 ? 1 : -1) * (0.12 + (edge.order % 3) * 0.035)
         return {
           ...edge,
           targetCoordinationId: edge.targetCoordinationId as CoordinationId,
@@ -425,7 +435,8 @@ function OrganizationalSceneView({
           (node) => node.coordinationId === targetCoordinationId,
         )
         if (!target) return null
-        const curvature = (order % 2 === 0 ? -1 : 1) * (0.16 + (order % 3) * 0.04)
+        const curvature =
+          (order % 2 === 0 ? -1 : 1) * (0.16 + (order % 3) * 0.04)
         return {
           id: `predicted:${propagation.originCoordinationId}-->${targetCoordinationId}`,
           targetCoordinationId,
@@ -448,7 +459,10 @@ function OrganizationalSceneView({
   ])
 
   const getEdgeState = useCallback(
-    (edgeId: string, targetCoordinationId: CoordinationId): PropagationEdgeState => {
+    (
+      edgeId: string,
+      targetCoordinationId: CoordinationId,
+    ): PropagationEdgeState => {
       if (showAllIlluminated) return 'completed'
       if (activeEdgeId === edgeId) return 'active'
       if (illuminatedCoordinationIds.includes(targetCoordinationId)) {
@@ -476,11 +490,7 @@ function OrganizationalSceneView({
   }, [clearSavedView, focusedEvent?.id, onIslandFocusChange])
 
   useEffect(() => {
-    if (
-      !islandFocusOpen ||
-      !focusIslandId ||
-      focusStartedRef.current
-    ) {
+    if (!islandFocusOpen || !focusIslandId || focusStartedRef.current) {
       return
     }
 
@@ -502,7 +512,8 @@ function OrganizationalSceneView({
       ? computeIslandStageFrame(workspaceBounds.width, workspaceBounds.height)
       : null
     const targetVisualSize =
-      stageFrame?.maxVisualSize ?? Math.min(360, Math.max(300, size.height * 0.44))
+      stageFrame?.maxVisualSize ??
+      Math.min(360, Math.max(300, size.height * 0.44))
     const targetZoom = targetVisualSize / Math.max(1, node.size)
     const targetXRatio = workspaceBounds
       ? Math.min(
@@ -531,18 +542,16 @@ function OrganizationalSceneView({
       targetYRatio,
     )
 
-    void animateToView(
-      currentView,
-      targetView,
-      ISLAND_FOCUS_ANIMATION_MS,
-    ).then(() => {
-      if (
-        sequence === focusSequenceRef.current &&
-        islandFocusOpenRef.current
-      ) {
-        setDossierVisible(true)
-      }
-    })
+    void animateToView(currentView, targetView, ISLAND_FOCUS_ANIMATION_MS).then(
+      () => {
+        if (
+          sequence === focusSequenceRef.current &&
+          islandFocusOpenRef.current
+        ) {
+          setDossierVisible(true)
+        }
+      },
+    )
   }, [
     focusIslandId,
     animateToView,
@@ -622,12 +631,7 @@ function OrganizationalSceneView({
       setIslandFocusOpen(true)
       onIslandFocusChange?.(true)
     },
-    [
-      focusedEvent,
-      nodes,
-      onIslandFocusChange,
-      propagation,
-    ],
+    [focusedEvent, nodes, onIslandFocusChange, propagation],
   )
 
   useEffect(() => {
@@ -843,7 +847,11 @@ function OrganizationalSceneView({
                   y2={edge.target.y}
                 >
                   <stop offset="0" stopColor={edgeColor} stopOpacity="0.28" />
-                  <stop offset="0.38" stopColor={edgeColor} stopOpacity="0.72" />
+                  <stop
+                    offset="0.38"
+                    stopColor={edgeColor}
+                    stopOpacity="0.72"
+                  />
                   <stop offset="0.78" stopColor={edgeColor} stopOpacity="0.9" />
                   <stop offset="1" stopColor="#eafcff" stopOpacity="0.96" />
                 </linearGradient>
@@ -937,32 +945,45 @@ function OrganizationalSceneView({
           </g>
         </svg>
 
-        <div
-          className="organizational-scene__direction-hub"
-          data-context={Boolean(selectedCoordinationId)}
-          style={{ left: center.x, top: center.y }}
-          aria-label="Dirección de Operaciones"
-          aria-hidden={selectedCoordinationId ? true : undefined}
-        >
-          <span className="organizational-scene__direction-orbit" aria-hidden="true" />
-          <span className="organizational-scene__direction-pulse" aria-hidden="true" />
-          <span className="organizational-scene__direction-base" aria-hidden="true" />
-          <span className="organizational-scene__direction-scan" aria-hidden="true" />
-          <img
-            src={directionAsset}
-            alt=""
-            aria-hidden="true"
-            width={640}
-            height={640}
-            decoding="async"
-            fetchPriority="high"
-            draggable={false}
-          />
-          <span className="organizational-scene__direction-label">
-            <small>Nodo institucional</small>
-            <strong>Dirección de Operaciones</strong>
-          </span>
-        </div>
+        {!selectedCoordinationId ? (
+          <div
+            className="organizational-scene__direction-hub"
+            data-context="false"
+            style={{ left: center.x, top: center.y }}
+            aria-label="Dirección de Operaciones"
+          >
+            <span
+              className="organizational-scene__direction-orbit"
+              aria-hidden="true"
+            />
+            <span
+              className="organizational-scene__direction-pulse"
+              aria-hidden="true"
+            />
+            <span
+              className="organizational-scene__direction-base"
+              aria-hidden="true"
+            />
+            <span
+              className="organizational-scene__direction-scan"
+              aria-hidden="true"
+            />
+            <img
+              src={directionAsset}
+              alt=""
+              aria-hidden="true"
+              width={640}
+              height={640}
+              decoding="async"
+              fetchPriority="high"
+              draggable={false}
+            />
+            <span className="organizational-scene__direction-label">
+              <small>Nodo institucional</small>
+              <strong>Dirección de Operaciones</strong>
+            </span>
+          </div>
+        ) : null}
 
         <div className="propagation-scene__islands organizational-scene__islands">
           {nodes.map((node, index) => {
@@ -1002,8 +1023,7 @@ function OrganizationalSceneView({
               role === 'ambient'
             const isFocusedIsland =
               islandFocusOpen && focusIslandId === node.coordinationId
-            const hideDuringDossier =
-              islandFocusOpen && !isFocusedIsland
+            const hideDuringDossier = islandFocusOpen && !isFocusedIsland
             return (
               <IslandNode
                 key={node.coordinationId}
@@ -1031,9 +1051,7 @@ function OrganizationalSceneView({
                   'organizational-scene__island propagation-scene__island',
                   node.selected ? 'organizational-scene__island--selected' : '',
                   isDimmed ? 'organizational-scene__island--dimmed' : '',
-                  isUnrelated
-                    ? 'organizational-scene__island--unrelated'
-                    : '',
+                  isUnrelated ? 'organizational-scene__island--unrelated' : '',
                   hideDuringDossier ? 'propagation-scene__island--hidden' : '',
                   isFocusedIsland
                     ? 'propagation-scene__island--focus-active'

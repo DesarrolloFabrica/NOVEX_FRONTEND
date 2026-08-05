@@ -121,9 +121,14 @@ test('inicia en la vista institucional sin mostrar situaciones', async ({
   await expect(
     page.locator('.organizational-scene__direction-hub'),
   ).toBeVisible()
-  await expect(page.locator('.organizational-scene__island')).toHaveCount(12)
+  await expect(page.locator('.organizational-scene__island')).toHaveCount(11)
+  await expect(
+    page.locator(
+      '.organizational-scene__island[data-coordination-id="coord-general"]',
+    ),
+  ).toHaveCount(0)
   await expect(page.locator('.organizational-scene__connection')).toHaveCount(
-    12,
+    11,
   )
   await expect(
     page.locator('.operational-context-panel__situation'),
@@ -131,6 +136,9 @@ test('inicia en la vista institucional sin mostrar situaciones', async ({
   await expect(
     page.getByRole('heading', { name: 'Coordinaciones activas' }),
   ).toBeVisible()
+  await expect(
+    page.locator('.operational-context-panel__hero strong'),
+  ).toHaveText('11')
 })
 
 test('expone breadcrumb, guía y controles de zoom en el mapa organizacional', async ({
@@ -189,6 +197,10 @@ test('seleccionar isla abre sus situaciones sin conexiones de impacto', async ({
       '.organizational-scene__island:not(.organizational-scene__island--unrelated)',
     ),
   ).toHaveCount(1)
+  await expect(page.locator('.organizational-scene__island')).toHaveCount(1)
+  await expect(
+    page.locator('.organizational-scene__direction-hub'),
+  ).toHaveCount(0)
 
   const readPanelRatio = () =>
     page.evaluate(() => {
@@ -588,7 +600,10 @@ test('cerrar expediente regresa al listado de la coordinación', async ({
     page.locator('.operational-context-panel[data-level="coordination"]'),
   ).toBeVisible()
   await expect(page.locator('.organizational-scene')).toHaveCount(1)
-  await expect(page.locator('.organizational-scene__island')).toHaveCount(12)
+  await expect(page.locator('.organizational-scene__island')).toHaveCount(1)
+  await expect(
+    page.locator('.organizational-scene__direction-hub'),
+  ).toHaveCount(0)
   await expect(page.locator('.propagation-edge')).toHaveCount(0)
   await expect(
     page.locator('.operational-context-panel__situation'),
@@ -665,7 +680,7 @@ test('el coordinador inicia directamente en su coordinación', async ({
   await expect(page.locator('.organizational-scene__island')).toHaveCount(1)
   await expect(
     page.locator('.organizational-scene__direction-hub'),
-  ).toHaveAttribute('data-context', 'true')
+  ).toHaveCount(0)
 
   await page.getByRole('button', { name: 'Volver a la Dirección' }).click()
 

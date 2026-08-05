@@ -1,5 +1,8 @@
 import { expect, test, type Page } from 'playwright/test'
-import { installImpactNetworkApiMocks } from './impact-network.fixtures'
+import {
+  buildImpactE2ESituations,
+  installImpactNetworkApiMocks,
+} from './impact-network.fixtures'
 
 const AUTH_SESSION_KEY = 'novex.auth.session.v1'
 const AUTH_TOKEN_KEY = 'novex.auth.accessToken.v1'
@@ -112,7 +115,7 @@ for (const viewport of VIEWPORTS) {
     await page.setViewportSize(viewport)
     await page.goto('/red-impacto', { waitUntil: 'domcontentloaded' })
     await expect(page.locator('.organizational-scene')).toBeVisible()
-    await expect(page.locator('.organizational-scene__island')).toHaveCount(12)
+    await expect(page.locator('.organizational-scene__island')).toHaveCount(11)
     await page.waitForTimeout(1200)
 
     const islands = await readIslandBoxes(page)
@@ -148,9 +151,29 @@ for (const viewport of VIEWPORTS) {
   })
 }
 
-test('la etiqueta de la isla focalizada no queda detrás de sus situaciones', async ({
+test('la isla focalizada distribuye muchas situaciones sin superposiciones', async ({
   page,
 }) => {
+  const situations = buildImpactE2ESituations(8)
+  await page.route('**/api/v1/situations**', async (route) => {
+    const url = new URL(route.request().url())
+    if (
+      url.pathname.endsWith('/situations') &&
+      route.request().method() === 'GET'
+    ) {
+      await route.fulfill({
+        json: {
+          items: situations,
+          total: situations.length,
+          page: 1,
+          limit: 100,
+        },
+      })
+      return
+    }
+    await route.fallback()
+  })
+
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/red-impacto', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.organizational-scene')).toBeVisible()
@@ -163,17 +186,39 @@ test('la etiqueta de la isla focalizada no queda detrás de sus situaciones', as
     page.locator('.operational-context-panel[data-level="coordination"]'),
   ).toBeVisible()
 
+  const situationLayer = page.locator('.coordination-situation-nodes')
   const situationNodes = page.locator('.coordination-situation-node')
-  await expect(situationNodes.first()).toBeVisible()
+  await expect(situationLayer).toHaveAttribute('data-visible-count', '6')
+  await expect(situationLayer).toHaveAttribute('data-hidden-count', '2')
+  await expect(situationNodes).toHaveCount(6)
+  await expect(
+    page.locator('.operational-context-panel__situation'),
+  ).toHaveCount(8)
+  await expect(
+    page.locator('.coordination-situation-nodes__hint'),
+  ).toContainText('+2')
+  await page.waitForTimeout(900)
 
   const labelBox = await selectedIsland
     .locator('.propagation-island__label')
     .boundingBox()
   expect(labelBox).not.toBeNull()
 
-  for (let index = 0; index < (await situationNodes.count()); index += 1) {
-    const situationBox = await situationNodes.nth(index).boundingBox()
-    expect(situationBox).not.toBeNull()
+  const situationBoxes = await situationNodes.evaluateAll((nodes) =>
+    nodes.map((node, index) => {
+      const rect = node.getBoundingClientRect()
+      return {
+        id: String(index + 1),
+        left: rect.left,
+        right: rect.right,
+        top: rect.top,
+        bottom: rect.bottom,
+      }
+    }),
+  )
+
+  for (let index = 0; index < situationBoxes.length; index += 1) {
+    const situationBox = situationBoxes[index]
     expect(
       intersects(
         {
@@ -183,13 +228,24 @@ test('la etiqueta de la isla focalizada no queda detrás de sus situaciones', as
           bottom: labelBox!.y + labelBox!.height,
         },
         {
-          left: situationBox!.x,
-          right: situationBox!.x + situationBox!.width,
-          top: situationBox!.y,
-          bottom: situationBox!.y + situationBox!.height,
+          left: situationBox.left,
+          right: situationBox.right,
+          top: situationBox.top,
+          bottom: situationBox.bottom,
         },
       ),
       `la etiqueta seleccionada se solapa con la situación ${index + 1}`,
     ).toBe(false)
+
+    for (
+      let siblingIndex = index + 1;
+      siblingIndex < situationBoxes.length;
+      siblingIndex += 1
+    ) {
+      expect(
+        intersects(situationBox, situationBoxes[siblingIndex]),
+        `la situación ${index + 1} se solapa con la situación ${siblingIndex + 1}`,
+      ).toBe(false)
+    }
   }
 })

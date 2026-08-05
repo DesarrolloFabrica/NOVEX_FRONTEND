@@ -27,7 +27,7 @@ export const OPERATIONAL_COORDINATION_IDS: readonly CoordinationId[] = [
   'coord-desarrollo-profesional',
   'coord-proyeccion-social',
   'coord-bellas-artes',
-  'coord-social-lab',
+  'coord-servicios',
   'coord-especializaciones',
   'coord-transversales',
 ] as const
@@ -52,7 +52,7 @@ const COORDINATION_RESPONSIBLES: Readonly<
   'coord-b2b': ['Mónica Salas', 'Equipo B2B'],
   'coord-bellas-artes': ['Camila Suárez', 'Mesa Académica'],
   'coord-desarrollo-profesional': ['Daniela Vargas', 'Gestión de Talento'],
-  'coord-social-lab': ['Santiago León', 'Equipo Social Lab'],
+  'coord-servicios': ['Equipo Servicios', 'Mesa de Servicios'],
   'coord-empresarial': ['Natalia Ruiz', 'Servicio Institucional'],
   'coord-especializaciones': ['Laura Peña', 'Mesa de Posgrados'],
   'coord-ingenierias': ['Andrés Rivas', 'Fábrica y Desarrollo'],

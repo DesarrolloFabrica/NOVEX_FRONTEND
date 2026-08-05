@@ -10,7 +10,7 @@ const CODES = [
   ['coord-desarrollo-profesional', 'Desarrollo Profesional'],
   ['coord-proyeccion-social', 'Proyección Social'],
   ['coord-bellas-artes', 'Bellas Artes'],
-  ['coord-social-lab', 'Social Lab'],
+  ['coord-servicios', 'Servicios'],
   ['coord-especializaciones', 'Especializaciones'],
   ['coord-transversales', 'Transversales'],
 ] as const
@@ -30,11 +30,13 @@ const coordinations = CODES.map(([code, name], index) => ({
       ? 'CoordB2B.png'
       : code === 'coord-bellas-artes'
         ? 'CoordBellasartes.png'
-        : code === 'coord-social-lab'
-          ? 'CoordSociallab.png'
-          : code === 'coord-desarrollo-profesional'
-            ? 'CoordDesarrolloprof.png'
-            : 'CoordGeneral.png',
+        : code === 'coord-servicios'
+          ? 'CoordServicios.png'
+          : code === 'coord-proyeccion-social'
+            ? 'CoordSociallab.png'
+            : code === 'coord-desarrollo-profesional'
+              ? 'CoordDesarrolloprof.png'
+              : 'CoordGeneral.png',
   displayOrder: index + 1,
   isActive: true,
   createdAt: '2026-07-20T00:00:00.000Z',
@@ -63,6 +65,15 @@ const situation = {
   occurredAt: '2026-07-28T15:00:00.000Z',
   createdAt: '2026-07-28T15:25:00.000Z',
   updatedAt: '2026-07-28T15:25:00.000Z',
+}
+
+export function buildImpactE2ESituations(count: number) {
+  return Array.from({ length: count }, (_, index) => ({
+    ...situation,
+    id: `6ce4e56e-5555-4555-8555-${String(index + 1).padStart(12, '0')}`,
+    title: `${situation.title} ${index + 1}`,
+    severity: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'][index % 4],
+  }))
 }
 
 export async function installImpactNetworkApiMocks(page: Page): Promise<void> {
@@ -120,6 +131,31 @@ export async function installImpactNetworkApiMocks(page: Page): Promise<void> {
     }
     if (path.endsWith(`/situations/${IMPACT_E2E_SITUATION_ID}/analysis`)) {
       await route.fulfill({ status: 404, json: { message: 'Sin análisis' } })
+      return
+    }
+    if (
+      path.endsWith(`/situations/${IMPACT_E2E_SITUATION_ID}/impact-context`)
+    ) {
+      await route.fulfill({
+        json: {
+          situationId: IMPACT_E2E_SITUATION_ID,
+          originCoordinationId: 'coord-ingenierias',
+          originCoordinationCode: 'coord-ingenierias',
+          hasDeclaredRelated: true,
+          canSimulate: false,
+          simulationAvailable: false,
+          declaredRelated: coordinations.slice(1, 5).map((item, index) => ({
+            coordinationId: item.id,
+            coordinationCode: item.code,
+            coordinationName: item.name,
+            coordinationShortName: item.shortName,
+            impactLevel: index === 0 ? 'HIGH' : 'MEDIUM',
+            description: 'Dependencia operacional',
+            source: 'declared',
+          })),
+          message: 'Se muestran las coordinaciones declaradas por el usuario.',
+        },
+      })
       return
     }
     if (path.includes(`/situations/${IMPACT_E2E_SITUATION_ID}/`)) {

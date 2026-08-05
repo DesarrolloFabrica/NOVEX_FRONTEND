@@ -35,6 +35,7 @@ export type {
 
 export {
   COORDINATION_CATALOG,
+  GENERAL_COORDINATION_ID,
   getCoordination,
   getCoordinationCatalog,
   getCoordinationIslandAsset,
@@ -42,6 +43,7 @@ export {
   resolveCoordinationId,
   resolveCoordinationIdOrGeneral,
   resolveIslandAssetPath,
+  resolveIslandColor,
   setCoordinationCatalog,
   starEdgeId,
 } from '@/modules/impact-network/data/coordination-islands.config'
@@ -72,6 +74,7 @@ export {
 export type { ImpactNetworkStressFixture } from '@/modules/impact-network/data/impact-stress.fixture'
 
 export {
+  backendImpactPropagationAdapter,
   impactNetworkDataProvider,
   impactPropagationAdapter,
   setImpactPropagationAdapter,

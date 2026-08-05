@@ -41,7 +41,11 @@
   --impact-edge-real: #63d8ff;
   --impact-edge-predicted: #f5a524;
   background:
-    radial-gradient(circle at 55% 48%, rgb(var(--impact-state-rgb) / 0.1), transparent 42%),
+    radial-gradient(
+      circle at 55% 48%,
+      rgb(var(--impact-state-rgb) / 0.1),
+      transparent 42%
+    ),
     linear-gradient(145deg, #020713 0%, #030b18 48%, #01050d 100%);
   transition: background 2.4s ease;
 }
@@ -67,7 +71,11 @@
 
 .novex-os[data-scene='impact'] .novex-os__backdrop::before {
   background:
-    radial-gradient(circle at 62% 47%, rgb(var(--impact-state-rgb) / 0.12), transparent 38%),
+    radial-gradient(
+      circle at 62% 47%,
+      rgb(var(--impact-state-rgb) / 0.12),
+      transparent 38%
+    ),
     radial-gradient(circle at 24% 20%, rgb(55 112 220 / 0.08), transparent 30%),
     linear-gradient(155deg, #01050d, #030a17 54%, #01040a);
   opacity: 0.92;
@@ -113,7 +121,11 @@
   color: var(--impact-text);
   background:
     linear-gradient(180deg, rgb(3 9 21 / 0.66), rgb(1 6 14 / 0.78)),
-    radial-gradient(circle at 50% 46%, rgb(var(--impact-state-rgb) / 0.08), transparent 46%);
+    radial-gradient(
+      circle at 50% 46%,
+      rgb(var(--impact-state-rgb) / 0.08),
+      transparent 46%
+    );
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.035),
     inset 0 0 70px rgb(var(--impact-state-rgb) / 0.025),
@@ -146,11 +158,31 @@
   inset: 0;
   opacity: 0.24;
   background:
-    radial-gradient(circle at 8% 18%, rgb(105 190 255 / 0.72) 0 1px, transparent 1.6px),
-    radial-gradient(circle at 68% 13%, rgb(133 103 255 / 0.52) 0 1px, transparent 1.7px),
-    radial-gradient(circle at 84% 72%, rgb(var(--impact-state-rgb) / 0.72) 0 1px, transparent 1.7px),
-    radial-gradient(circle at 32% 82%, rgb(79 224 255 / 0.55) 0 0.8px, transparent 1.4px);
-  background-size: 173px 191px, 251px 227px, 211px 263px, 307px 281px;
+    radial-gradient(
+      circle at 8% 18%,
+      rgb(105 190 255 / 0.72) 0 1px,
+      transparent 1.6px
+    ),
+    radial-gradient(
+      circle at 68% 13%,
+      rgb(133 103 255 / 0.52) 0 1px,
+      transparent 1.7px
+    ),
+    radial-gradient(
+      circle at 84% 72%,
+      rgb(var(--impact-state-rgb) / 0.72) 0 1px,
+      transparent 1.7px
+    ),
+    radial-gradient(
+      circle at 32% 82%,
+      rgb(79 224 255 / 0.55) 0 0.8px,
+      transparent 1.4px
+    );
+  background-size:
+    173px 191px,
+    251px 227px,
+    211px 263px,
+    307px 281px;
   animation: impact-ambient-drift 28s ease-in-out infinite alternate;
 }
 
@@ -192,7 +224,11 @@
   border-bottom: 1px solid rgb(94 153 236 / 0.1);
   background:
     linear-gradient(180deg, rgb(3 9 20 / 0.88), rgb(3 9 20 / 0.5)),
-    radial-gradient(circle at 18% 50%, rgb(var(--impact-state-rgb) / 0.08), transparent 32%);
+    radial-gradient(
+      circle at 18% 50%,
+      rgb(var(--impact-state-rgb) / 0.08),
+      transparent 32%
+    );
   backdrop-filter: blur(18px);
 }
 
@@ -399,8 +435,11 @@
   font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.025em;
-  background:
-    linear-gradient(180deg, rgb(17 57 92 / 0.62), rgb(5 23 44 / 0.72));
+  background: linear-gradient(
+    180deg,
+    rgb(17 57 92 / 0.62),
+    rgb(5 23 44 / 0.72)
+  );
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
   cursor: pointer;
   transition:
@@ -415,8 +454,11 @@
 .impact-context-panel__actions button:hover:not(:disabled) {
   transform: translateY(-1px);
   border-color: rgb(99 216 255 / 0.52);
-  background:
-    linear-gradient(180deg, rgb(22 73 116 / 0.72), rgb(7 30 56 / 0.82));
+  background: linear-gradient(
+    180deg,
+    rgb(22 73 116 / 0.72),
+    rgb(7 30 56 / 0.82)
+  );
 }
 
 .impact-action:focus-visible,
@@ -445,8 +487,7 @@
 .impact-action--prediction {
   border-color: rgb(var(--impact-predicted-rgb) / 0.42);
   color: #ffd68c;
-  background:
-    linear-gradient(180deg, rgb(94 54 12 / 0.54), rgb(42 26 9 / 0.6));
+  background: linear-gradient(180deg, rgb(94 54 12 / 0.54), rgb(42 26 9 / 0.6));
 }
 
 .impact-network__canvas .propagation-edge[data-state='predicted'] {
@@ -562,8 +603,11 @@
   opacity: 0.3;
   border-radius: 50%;
   pointer-events: none;
-  background:
-    radial-gradient(circle, rgb(var(--impact-state-rgb) / 0.065), transparent 62%);
+  background: radial-gradient(
+    circle,
+    rgb(var(--impact-state-rgb) / 0.065),
+    transparent 62%
+  );
   filter: blur(20px);
   animation: impact-network-heartbeat 8s ease-in-out infinite;
 }
@@ -576,12 +620,13 @@
   cursor: default;
 }
 
-.impact-network__canvas :is(
-  .react-flow__node,
-  .react-flow__node.selected,
-  .react-flow__node:focus,
-  .react-flow__node:focus-visible
-) {
+.impact-network__canvas
+  :is(
+    .react-flow__node,
+    .react-flow__node.selected,
+    .react-flow__node:focus,
+    .react-flow__node:focus-visible
+  ) {
   width: auto;
   border: 0;
   outline: 0;
@@ -594,26 +639,28 @@
   pointer-events: none;
 }
 
-.impact-network__canvas :is(
-  .react-flow__selection,
-  .react-flow__nodesselection-rect,
-  .react-flow__connectionline,
-  .react-flow__handle
-) {
+.impact-network__canvas
+  :is(
+    .react-flow__selection,
+    .react-flow__nodesselection-rect,
+    .react-flow__connectionline,
+    .react-flow__handle
+  ) {
   opacity: 0 !important;
   pointer-events: none !important;
 }
 
-.impact-network__canvas :is(
-  .react-flow__attribution,
-  .react-flow__background,
-  .react-flow__controls,
-  .react-flow__minimap,
-  .react-flow__panel,
-  .react-flow__node-toolbar,
-  .react-flow__edgeupdater,
-  .react-flow__resize-control
-) {
+.impact-network__canvas
+  :is(
+    .react-flow__attribution,
+    .react-flow__background,
+    .react-flow__controls,
+    .react-flow__minimap,
+    .react-flow__panel,
+    .react-flow__node-toolbar,
+    .react-flow__edgeupdater,
+    .react-flow__resize-control
+  ) {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
@@ -709,7 +756,10 @@
   filter: brightness(1.17) saturate(1.16);
 }
 
-.impact-area-node:hover:not(.impact-area-node--dimmed, .impact-area-node--unrelated),
+.impact-area-node:hover:not(
+    .impact-area-node--dimmed,
+    .impact-area-node--unrelated
+  ),
 .impact-area-node:focus-visible {
   transform: translateY(-2px) scale(1.025);
   filter: brightness(1.2) saturate(1.18);
@@ -769,7 +819,10 @@
   width: 1px;
   height: 16px;
   content: '';
-  background: linear-gradient(rgb(var(--node-rgb) / 0.9), rgb(var(--node-rgb) / 0.12));
+  background: linear-gradient(
+    rgb(var(--node-rgb) / 0.9),
+    rgb(var(--node-rgb) / 0.12)
+  );
   box-shadow: 0 0 6px rgb(var(--node-rgb) / 0.4);
 }
 
@@ -802,7 +855,16 @@
   left: 41px;
   width: 102px;
   height: 61px;
-  clip-path: polygon(10px 0, 92px 0, 100% 10px, 100% 51px, 91px 100%, 11px 100%, 0 50px, 0 10px);
+  clip-path: polygon(
+    10px 0,
+    92px 0,
+    100% 10px,
+    100% 51px,
+    91px 100%,
+    11px 100%,
+    0 50px,
+    0 10px
+  );
   border: 1px solid rgb(var(--node-rgb) / 0.42);
   background:
     linear-gradient(135deg, rgb(var(--node-rgb) / 0.13), transparent 44%),
@@ -810,12 +872,18 @@
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.06),
     inset 0 0 18px rgb(var(--node-rgb) / 0.08),
-    0 0 calc(8px + var(--impact-intensity, 0) * 18px) rgb(var(--node-rgb) / 0.22);
+    0 0 calc(8px + var(--impact-intensity, 0) * 18px)
+      rgb(var(--node-rgb) / 0.22);
 }
 
 .impact-area-node__rail {
   position: absolute;
-  background: linear-gradient(90deg, transparent, rgb(var(--node-rgb) / 0.72), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(var(--node-rgb) / 0.72),
+    transparent
+  );
 }
 
 .impact-area-node__rail--top,
@@ -838,7 +906,11 @@
   top: 12px;
   bottom: 12px;
   width: 1px;
-  background: linear-gradient(transparent, rgb(var(--node-rgb) / 0.48), transparent);
+  background: linear-gradient(
+    transparent,
+    rgb(var(--node-rgb) / 0.48),
+    transparent
+  );
 }
 
 .impact-area-node__rail--left {
@@ -858,7 +930,11 @@
   border: 1px solid rgb(var(--node-rgb) / 0.58);
   border-radius: 4px;
   background:
-    repeating-linear-gradient(180deg, rgb(var(--node-rgb) / 0.18) 0 2px, transparent 2px 6px),
+    repeating-linear-gradient(
+      180deg,
+      rgb(var(--node-rgb) / 0.18) 0 2px,
+      transparent 2px 6px
+    ),
     rgb(2 10 20 / 0.92);
   box-shadow:
     inset 0 0 10px rgb(var(--node-rgb) / 0.18),
@@ -873,7 +949,9 @@
   height: 3px;
   border-radius: 50%;
   background: rgb(var(--node-rgb));
-  box-shadow: 0 8px 0 rgb(var(--node-rgb) / 0.7), 0 16px 0 rgb(var(--node-rgb) / 0.5);
+  box-shadow:
+    0 8px 0 rgb(var(--node-rgb) / 0.7),
+    0 16px 0 rgb(var(--node-rgb) / 0.5);
   animation: impact-server-light 2s steps(2) infinite;
 }
 
@@ -968,7 +1046,12 @@
   gap: 3px 7px;
   padding: 6px 9px 7px;
   border-top: 1px solid rgb(var(--node-rgb) / 0.22);
-  background: linear-gradient(90deg, transparent, rgb(3 11 22 / 0.78) 18% 82%, transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(3 11 22 / 0.78) 18% 82%,
+    transparent
+  );
   text-align: center;
 }
 
@@ -1073,7 +1156,8 @@
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.07),
     inset 0 0 22px rgb(var(--node-rgb) / 0.13),
-    0 0 calc(15px + var(--impact-intensity, 0) * 21px) rgb(var(--node-rgb) / 0.3);
+    0 0 calc(15px + var(--impact-intensity, 0) * 21px)
+      rgb(var(--node-rgb) / 0.3);
 }
 
 /* --- Núcleo de incidente ------------------------------------------------ */
@@ -1205,7 +1289,16 @@
   width: 54px;
   height: 44px;
   place-items: center;
-  clip-path: polygon(10px 0, 44px 0, 100% 10px, 100% 34px, 44px 100%, 10px 100%, 0 34px, 0 10px);
+  clip-path: polygon(
+    10px 0,
+    44px 0,
+    100% 10px,
+    100% 34px,
+    44px 100%,
+    10px 100%,
+    0 34px,
+    0 10px
+  );
   border: 1px solid rgb(var(--incident-rgb) / 0.7);
   background:
     radial-gradient(circle, rgb(var(--incident-rgb) / 0.25), transparent 48%),
@@ -1282,7 +1375,12 @@
   gap: 3px 8px;
   border-top: 1px solid rgb(var(--incident-rgb) / 0.28);
   padding: 7px 10px 5px;
-  background: linear-gradient(90deg, transparent, rgb(4 11 22 / 0.9) 12% 88%, transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(4 11 22 / 0.9) 12% 88%,
+    transparent
+  );
   text-align: left;
 }
 
@@ -1329,11 +1427,12 @@
   font-size: 0.5rem;
 }
 
-.impact-incident-node--compact :is(
-  .impact-incident-node__telemetry,
-  .impact-incident-node__meta,
-  .impact-incident-node__eyebrow
-) {
+.impact-incident-node--compact
+  :is(
+    .impact-incident-node__telemetry,
+    .impact-incident-node__meta,
+    .impact-incident-node__eyebrow
+  ) {
   display: none;
 }
 
@@ -1347,41 +1446,56 @@
 }
 
 .impact-network__workspace:has(
-  .impact-timeline[data-replay-state='camera'],
-  .impact-timeline[data-replay-state='playing'],
-  .impact-timeline[data-replay-state='paused']
-) :is(.impact-incident-node--resolved, .impact-incident-node--closed).impact-incident-node--low {
+    .impact-timeline[data-replay-state='camera'],
+    .impact-timeline[data-replay-state='playing'],
+    .impact-timeline[data-replay-state='paused']
+  )
+  :is(
+    .impact-incident-node--resolved,
+    .impact-incident-node--closed
+  ).impact-incident-node--low {
   --incident-rgb: var(--impact-low-rgb);
 }
 
 .impact-network__workspace:has(
-  .impact-timeline[data-replay-state='camera'],
-  .impact-timeline[data-replay-state='playing'],
-  .impact-timeline[data-replay-state='paused']
-) :is(.impact-incident-node--resolved, .impact-incident-node--closed).impact-incident-node--moderate {
+    .impact-timeline[data-replay-state='camera'],
+    .impact-timeline[data-replay-state='playing'],
+    .impact-timeline[data-replay-state='paused']
+  )
+  :is(
+    .impact-incident-node--resolved,
+    .impact-incident-node--closed
+  ).impact-incident-node--moderate {
   --incident-rgb: var(--impact-moderate-rgb);
 }
 
 .impact-network__workspace:has(
-  .impact-timeline[data-replay-state='camera'],
-  .impact-timeline[data-replay-state='playing'],
-  .impact-timeline[data-replay-state='paused']
-) :is(.impact-incident-node--resolved, .impact-incident-node--closed).impact-incident-node--high {
+    .impact-timeline[data-replay-state='camera'],
+    .impact-timeline[data-replay-state='playing'],
+    .impact-timeline[data-replay-state='paused']
+  )
+  :is(
+    .impact-incident-node--resolved,
+    .impact-incident-node--closed
+  ).impact-incident-node--high {
   --incident-rgb: var(--impact-high-rgb);
 }
 
 .impact-network__workspace:has(
-  .impact-timeline[data-replay-state='camera'],
-  .impact-timeline[data-replay-state='playing'],
-  .impact-timeline[data-replay-state='paused']
-) :is(.impact-incident-node--resolved, .impact-incident-node--closed).impact-incident-node--critical {
+    .impact-timeline[data-replay-state='camera'],
+    .impact-timeline[data-replay-state='playing'],
+    .impact-timeline[data-replay-state='paused']
+  )
+  :is(
+    .impact-incident-node--resolved,
+    .impact-incident-node--closed
+  ).impact-incident-node--critical {
   --incident-rgb: var(--impact-critical-rgb);
 }
 
 .impact-network[data-recovery-active='true']
   :is(.impact-incident-node--resolved, .impact-incident-node--closed) {
-  --incident-rgb:
-    var(--impact-recovery-r) var(--impact-recovery-g)
+  --incident-rgb: var(--impact-recovery-r) var(--impact-recovery-g)
     var(--impact-recovery-b);
   animation: impact-incident-recovery-colors 6s ease-in-out both;
 }
@@ -1426,7 +1540,10 @@
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
-  filter: drop-shadow(0 0 calc(2px + var(--impact-edge-intensity, 0) * 5px) rgb(var(--edge-rgb) / 0.3));
+  filter: drop-shadow(
+    0 0 calc(2px + var(--impact-edge-intensity, 0) * 5px)
+      rgb(var(--edge-rgb) / 0.3)
+  );
   animation: impact-edge-breathe 6.4s ease-in-out infinite;
 }
 
@@ -1623,7 +1740,11 @@
   height: 22px;
   border: 1px solid rgb(var(--impact-low-rgb) / 0.5);
   border-radius: 50%;
-  background: radial-gradient(circle, rgb(var(--impact-low-rgb) / 0.34), transparent 65%);
+  background: radial-gradient(
+    circle,
+    rgb(var(--impact-low-rgb) / 0.34),
+    transparent 65%
+  );
   box-shadow: 0 0 13px rgb(var(--impact-low-rgb) / 0.22);
 }
 
@@ -1829,7 +1950,11 @@
   border-radius: 15px;
   color: var(--impact-text);
   background:
-    linear-gradient(135deg, rgb(var(--impact-state-rgb) / 0.055), transparent 36%),
+    linear-gradient(
+      135deg,
+      rgb(var(--impact-state-rgb) / 0.055),
+      transparent 36%
+    ),
     rgb(2 8 19 / 0.94);
   box-shadow:
     -18px 0 42px rgb(0 0 0 / 0.24),
@@ -2809,7 +2934,9 @@
   background:
     linear-gradient(180deg, rgb(5 15 31 / 0.96), rgb(3 10 22 / 0.94)),
     radial-gradient(circle at 50% 0%, rgb(72 157 255 / 0.09), transparent 52%);
-  box-shadow: -12px 0 34px rgb(0 0 0 / 0.24), inset 0 1px 0 rgb(255 255 255 / 0.045);
+  box-shadow:
+    -12px 0 34px rgb(0 0 0 / 0.24),
+    inset 0 1px 0 rgb(255 255 255 / 0.045);
   backdrop-filter: blur(18px);
 }
 
@@ -2882,12 +3009,21 @@
   text-align: left;
   background: rgb(8 21 41 / 0.64);
   cursor: pointer;
-  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
 }
 
-.impact-network__incident-item[data-risk='low'] { --incident-rgb: 77 194 74; }
-.impact-network__incident-item[data-risk='high'] { --incident-rgb: 255 138 61; }
-.impact-network__incident-item[data-risk='critical'] { --incident-rgb: 255 70 91; }
+.impact-network__incident-item[data-risk='low'] {
+  --incident-rgb: 77 194 74;
+}
+.impact-network__incident-item[data-risk='high'] {
+  --incident-rgb: 255 138 61;
+}
+.impact-network__incident-item[data-risk='critical'] {
+  --incident-rgb: 255 70 91;
+}
 
 .impact-network__incident-item:hover,
 .impact-network__incident-item[data-selected='true'] {
@@ -3119,9 +3255,7 @@
   z-index: 1;
 }
 
-.impact-network__canvas
-  .organizational-scene
-  .organizational-scene__stage {
+.impact-network__canvas .organizational-scene .organizational-scene__stage {
   transition: transform 680ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
@@ -3158,7 +3292,10 @@
 }
 
 .organizational-scene__direction-hub[data-context='true']
-  :is(.organizational-scene__direction-label, .organizational-scene__direction-pulse) {
+  :is(
+    .organizational-scene__direction-label,
+    .organizational-scene__direction-pulse
+  ) {
   opacity: 0;
 }
 
@@ -3194,12 +3331,8 @@
     filter 250ms ease-in-out;
 }
 
-.impact-network__canvas
-  .organizational-scene__island
-  .propagation-island__ring,
-.impact-network__canvas
-  .organizational-scene__island
-  .propagation-island__halo,
+.impact-network__canvas .organizational-scene__island .propagation-island__ring,
+.impact-network__canvas .organizational-scene__island .propagation-island__halo,
 .impact-network__canvas
   .organizational-scene__island
   .propagation-island__image {
@@ -3286,12 +3419,10 @@
   .impact-network__workspace--island-focus {
   grid-template-columns: minmax(0, 1fr) 0;
   grid-template-rows: minmax(0, 1fr);
-  transition: grid-template-columns 420ms
-    cubic-bezier(0.22, 0.61, 0.36, 1);
+  transition: grid-template-columns 420ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
-.impact-network__workspace--island-focus
-  > .operational-context-panel {
+.impact-network__workspace--island-focus > .operational-context-panel {
   min-width: 0;
   visibility: hidden;
   opacity: 0;
@@ -3314,9 +3445,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .impact-network__canvas
-    .organizational-scene
-    .organizational-scene__stage,
+  .impact-network__canvas .organizational-scene .organizational-scene__stage,
   .organizational-scene__direction-hub,
   .organizational-scene__structural-network,
   .organizational-scene__impact-network,
@@ -3457,8 +3586,8 @@
 
 .impact-network__scene-layer--organization[data-active='true']
   .organizational-scene__direction-hub {
-  animation: impact-hub-return 760ms 120ms
-    cubic-bezier(0.18, 0.86, 0.24, 1) both;
+  animation: impact-hub-return 760ms 120ms cubic-bezier(0.18, 0.86, 0.24, 1)
+    both;
 }
 
 @keyframes impact-scene-camera-enter {
@@ -3700,9 +3829,7 @@
     padding-inline: 14px;
   }
 
-  .operational-context-panel__dossier-header
-    .island-focus-dossier__close
-    span {
+  .operational-context-panel__dossier-header .island-focus-dossier__close span {
     display: none;
   }
 }
@@ -3768,7 +3895,11 @@
   border-radius: 20px;
   background:
     linear-gradient(180deg, rgb(4 12 27 / 0.94), rgb(1 7 16 / 0.98)),
-    radial-gradient(circle at 50% 44%, rgb(var(--impact-state-rgb) / 0.1), transparent 50%);
+    radial-gradient(
+      circle at 50% 44%,
+      rgb(var(--impact-state-rgb) / 0.1),
+      transparent 50%
+    );
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.06),
     inset 0 0 90px rgb(71 145 255 / 0.035),
@@ -3886,7 +4017,9 @@
 .impact-action--prediction {
   color: #ffe1a4;
   border-color: rgb(245 165 36 / 0.42);
-  box-shadow: 0 0 18px rgb(245 165 36 / 0.08), inset 0 1px 0 rgb(255 255 255 / 0.05);
+  box-shadow:
+    0 0 18px rgb(245 165 36 / 0.08),
+    inset 0 1px 0 rgb(255 255 255 / 0.05);
 }
 
 .impact-network__canvas .react-flow__viewport {
@@ -3923,7 +4056,9 @@
   width: 318px;
   border-color: rgb(var(--impact-state-rgb) / 0.42);
   border-radius: 14px;
-  box-shadow: 0 18px 40px rgb(0 0 0 / 0.38), 0 0 28px rgb(var(--impact-state-rgb) / 0.08);
+  box-shadow:
+    0 18px 40px rgb(0 0 0 / 0.38),
+    0 0 28px rgb(var(--impact-state-rgb) / 0.08);
 }
 
 .impact-network__legend {
@@ -4066,7 +4201,8 @@
   background: rgb(74 158 255 / 0.45);
   top: calc((var(--particle-i, 0) * 17px + 8%) % 100%);
   left: calc((var(--particle-i, 0) * 29px + 5%) % 100%);
-  animation: propagation-particle-drift calc(12s + (var(--particle-i, 0) * 0.4s)) linear infinite;
+  animation: propagation-particle-drift
+    calc(12s + (var(--particle-i, 0) * 0.4s)) linear infinite;
 }
 
 .propagation-scene__sparkles {
@@ -4190,8 +4326,7 @@
 
 .propagation-island--illuminated .propagation-island__image,
 .propagation-island--impacted .propagation-island__image {
-  filter:
-    drop-shadow(0 0 16px rgb(var(--island-glow-rgb) / 0.55))
+  filter: drop-shadow(0 0 16px rgb(var(--island-glow-rgb) / 0.55))
     drop-shadow(0 12px 28px rgb(0 0 0 / 0.45));
 }
 
@@ -4724,7 +4859,11 @@
   isolation: isolate;
   min-height: 520px;
   background:
-    radial-gradient(ellipse at 50% 48%, rgb(var(--island-glow-rgb) / 0.1), transparent 40%),
+    radial-gradient(
+      ellipse at 50% 48%,
+      rgb(var(--island-glow-rgb) / 0.1),
+      transparent 40%
+    ),
     radial-gradient(ellipse at 50% 100%, rgb(7 79 154 / 0.12), transparent 44%);
 }
 
@@ -4757,7 +4896,11 @@
   z-index: 0;
   overflow: hidden;
   background:
-    radial-gradient(circle at 50% 50%, transparent 0 24%, rgb(0 0 0 / 0.14) 68%),
+    radial-gradient(
+      circle at 50% 50%,
+      transparent 0 24%,
+      rgb(0 0 0 / 0.14) 68%
+    ),
     linear-gradient(180deg, rgb(1 7 17 / 0.2), rgb(0 3 10 / 0.48));
 }
 
@@ -4768,7 +4911,11 @@
     linear-gradient(90deg, rgb(62 155 255 / 0.22) 1px, transparent 1px),
     linear-gradient(rgb(163 91 255 / 0.08) 1px, transparent 1px),
     linear-gradient(90deg, rgb(163 91 255 / 0.08) 1px, transparent 1px);
-  background-size: 48px 48px, 48px 48px, 12px 12px, 12px 12px;
+  background-size:
+    48px 48px,
+    48px 48px,
+    12px 12px,
+    12px 12px;
   mask-image: radial-gradient(ellipse at center, black 15%, transparent 84%);
   transform: perspective(600px) rotateX(12deg) scale(1.1);
   transform-origin: center bottom;
@@ -4890,11 +5037,31 @@
 .propagation-scene__sparkles {
   opacity: 0.75;
   background:
-    radial-gradient(circle at 11% 39%, rgb(105 210 255 / 0.7) 0 1px, transparent 2px),
-    radial-gradient(circle at 82% 16%, rgb(184 100 255 / 0.7) 0 1px, transparent 2px),
-    radial-gradient(circle at 74% 88%, rgb(85 174 255 / 0.6) 0 1px, transparent 2px),
-    radial-gradient(circle at 38% 9%, rgb(105 210 255 / 0.6) 0 1px, transparent 2px);
-  background-size: 260px 180px, 320px 240px, 280px 210px, 410px 300px;
+    radial-gradient(
+      circle at 11% 39%,
+      rgb(105 210 255 / 0.7) 0 1px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 82% 16%,
+      rgb(184 100 255 / 0.7) 0 1px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 74% 88%,
+      rgb(85 174 255 / 0.6) 0 1px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 38% 9%,
+      rgb(105 210 255 / 0.6) 0 1px,
+      transparent 2px
+    );
+  background-size:
+    260px 180px,
+    320px 240px,
+    280px 210px,
+    410px 300px;
 }
 
 .propagation-scene__hud,
@@ -4983,7 +5150,11 @@
 
 .propagation-island__halo {
   inset: 16%;
-  background: radial-gradient(circle, rgb(var(--island-glow-rgb) / 0.28), transparent 68%);
+  background: radial-gradient(
+    circle,
+    rgb(var(--island-glow-rgb) / 0.28),
+    transparent 68%
+  );
   filter: blur(14px);
   opacity: 0.65;
   animation: propagation-island-breathe 4.4s ease-in-out infinite;
@@ -5001,21 +5172,18 @@
 .propagation-island__image {
   position: relative;
   z-index: 2;
-  filter:
-    drop-shadow(0 0 10px rgb(var(--island-glow-rgb) / 0.28))
+  filter: drop-shadow(0 0 10px rgb(var(--island-glow-rgb) / 0.28))
     drop-shadow(0 13px 18px rgb(0 0 0 / 0.5));
 }
 
 .propagation-island--origin .propagation-island__image {
-  filter:
-    drop-shadow(0 0 20px rgb(var(--island-glow-rgb) / 0.62))
+  filter: drop-shadow(0 0 20px rgb(var(--island-glow-rgb) / 0.62))
     drop-shadow(0 15px 22px rgb(0 0 0 / 0.54));
 }
 
 .propagation-island--illuminated .propagation-island__image,
 .propagation-island--impacted .propagation-island__image {
-  filter:
-    drop-shadow(0 0 22px rgb(var(--island-glow-rgb) / 0.82))
+  filter: drop-shadow(0 0 22px rgb(var(--island-glow-rgb) / 0.82))
     drop-shadow(0 14px 20px rgb(0 0 0 / 0.48));
 }
 
@@ -5093,7 +5261,9 @@
   background:
     linear-gradient(180deg, rgb(4 14 31 / 0.98), rgb(2 8 20 / 0.98)),
     radial-gradient(circle at 50% 0%, rgb(67 143 255 / 0.14), transparent 50%);
-  box-shadow: -18px 0 42px rgb(0 0 0 / 0.28), inset 1px 0 0 rgb(255 255 255 / 0.03);
+  box-shadow:
+    -18px 0 42px rgb(0 0 0 / 0.28),
+    inset 1px 0 0 rgb(255 255 255 / 0.03);
 }
 
 .situation-command-panel::before {
@@ -5131,7 +5301,9 @@
   height: 40px;
   border-radius: 12px;
   font-size: 1rem;
-  box-shadow: inset 0 0 16px rgb(var(--impact-state-rgb) / 0.1), 0 0 18px rgb(var(--impact-state-rgb) / 0.12);
+  box-shadow:
+    inset 0 0 16px rgb(var(--impact-state-rgb) / 0.1),
+    0 0 18px rgb(var(--impact-state-rgb) / 0.12);
 }
 
 .situation-command-panel__intro {
@@ -5155,15 +5327,23 @@
   border-radius: 12px;
   padding: 12px 13px 11px;
   background: linear-gradient(135deg, rgb(8 27 53 / 0.9), rgb(4 15 33 / 0.82));
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.035), 0 7px 18px rgb(0 0 0 / 0.12);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.035),
+    0 7px 18px rgb(0 0 0 / 0.12);
 }
 
 .situation-command-panel__item:hover,
 .situation-command-panel__item[data-selected='true'] {
   transform: translateX(-4px);
   border-color: rgb(var(--incident-rgb) / 0.68);
-  background: linear-gradient(135deg, rgb(var(--incident-rgb) / 0.16), rgb(5 18 38 / 0.92));
-  box-shadow: 0 0 22px rgb(var(--incident-rgb) / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.06);
+  background: linear-gradient(
+    135deg,
+    rgb(var(--incident-rgb) / 0.16),
+    rgb(5 18 38 / 0.92)
+  );
+  box-shadow:
+    0 0 22px rgb(var(--incident-rgb) / 0.1),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
 }
 
 .situation-command-panel__item-title {
@@ -5171,13 +5351,27 @@
 }
 
 @keyframes propagation-decor-pulse {
-  0%, 100% { opacity: 0.35; transform: scale(0.72); }
-  50% { opacity: 0.9; transform: scale(1.12); }
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.72);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.12);
+  }
 }
 
 @keyframes propagation-island-breathe {
-  0%, 100% { opacity: 0.44; transform: scale(0.9); }
-  50% { opacity: 0.8; transform: scale(1.08); }
+  0%,
+  100% {
+    opacity: 0.44;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.08);
+  }
 }
 
 @media (max-width: 1100px) {
@@ -5224,7 +5418,11 @@
   border: 0;
   border-radius: 0;
   background:
-    radial-gradient(ellipse at 48% 48%, rgb(36 121 255 / 0.09), transparent 38%),
+    radial-gradient(
+      ellipse at 48% 48%,
+      rgb(36 121 255 / 0.09),
+      transparent 38%
+    ),
     linear-gradient(145deg, #010711, #020c1a 56%, #01050e);
   box-shadow: none;
 }
@@ -5316,7 +5514,11 @@
   border: 0;
   border-radius: 0;
   background:
-    radial-gradient(ellipse at 50% 50%, transparent 0 34%, rgb(0 0 0 / 0.28) 92%),
+    radial-gradient(
+      ellipse at 50% 50%,
+      transparent 0 34%,
+      rgb(0 0 0 / 0.28) 92%
+    ),
     radial-gradient(ellipse at 20% 30%, rgb(94 72 255 / 0.09), transparent 26%),
     radial-gradient(ellipse at 75% 78%, rgb(42 142 255 / 0.09), transparent 28%);
   box-shadow: none;
@@ -5341,8 +5543,15 @@
   background-image:
     linear-gradient(rgb(74 170 255 / 0.26) 1px, transparent 1px),
     linear-gradient(90deg, rgb(74 170 255 / 0.26) 1px, transparent 1px),
-    radial-gradient(circle at 50% 50%, rgb(108 207 255 / 0.65) 0 1px, transparent 1.6px);
-  background-size: 54px 54px, 54px 54px, 162px 162px;
+    radial-gradient(
+      circle at 50% 50%,
+      rgb(108 207 255 / 0.65) 0 1px,
+      transparent 1.6px
+    );
+  background-size:
+    54px 54px,
+    54px 54px,
+    162px 162px;
   mask-image: radial-gradient(ellipse at center, black 10%, transparent 86%);
   animation: propagation-grid-drift 32s linear infinite;
 }
@@ -5354,7 +5563,10 @@
 
 .propagation-scene__orbits {
   opacity: 0.52;
-  transform: translate(calc(-50% + var(--scene-parallax-x)), calc(-50% + var(--scene-parallax-y)));
+  transform: translate(
+    calc(-50% + var(--scene-parallax-x)),
+    calc(-50% + var(--scene-parallax-y))
+  );
   transition: transform 900ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -5396,11 +5608,31 @@
 .propagation-scene__sparkles {
   opacity: 0.48;
   background:
-    radial-gradient(circle at 12% 22%, rgb(102 206 255 / 0.56) 0 1px, transparent 1.8px),
-    radial-gradient(circle at 82% 21%, rgb(164 102 255 / 0.5) 0 1px, transparent 1.8px),
-    radial-gradient(circle at 72% 81%, rgb(102 206 255 / 0.46) 0 1px, transparent 1.7px),
-    radial-gradient(circle at 24% 75%, rgb(116 187 255 / 0.42) 0 1px, transparent 1.7px);
-  background-size: 310px 220px, 370px 260px, 340px 260px, 400px 300px;
+    radial-gradient(
+      circle at 12% 22%,
+      rgb(102 206 255 / 0.56) 0 1px,
+      transparent 1.8px
+    ),
+    radial-gradient(
+      circle at 82% 21%,
+      rgb(164 102 255 / 0.5) 0 1px,
+      transparent 1.8px
+    ),
+    radial-gradient(
+      circle at 72% 81%,
+      rgb(102 206 255 / 0.46) 0 1px,
+      transparent 1.7px
+    ),
+    radial-gradient(
+      circle at 24% 75%,
+      rgb(116 187 255 / 0.42) 0 1px,
+      transparent 1.7px
+    );
+  background-size:
+    310px 220px,
+    370px 260px,
+    340px 260px,
+    400px 300px;
   animation: propagation-sparkle-drift 24s ease-in-out infinite alternate;
 }
 
@@ -5455,10 +5687,18 @@
   text-transform: capitalize;
 }
 
-.propagation-scene__focus-overlay strong[data-risk='critical'] { color: #ff8798; }
-.propagation-scene__focus-overlay strong[data-risk='high'] { color: #ffaf78; }
-.propagation-scene__focus-overlay strong[data-risk='moderate'] { color: #f0ce71; }
-.propagation-scene__focus-overlay strong[data-risk='low'] { color: #83df90; }
+.propagation-scene__focus-overlay strong[data-risk='critical'] {
+  color: #ff8798;
+}
+.propagation-scene__focus-overlay strong[data-risk='high'] {
+  color: #ffaf78;
+}
+.propagation-scene__focus-overlay strong[data-risk='moderate'] {
+  color: #f0ce71;
+}
+.propagation-scene__focus-overlay strong[data-risk='low'] {
+  color: #83df90;
+}
 
 .propagation-scene__edges,
 .propagation-scene__islands {
@@ -5513,8 +5753,7 @@
 
 .propagation-island__image {
   animation: propagation-island-float 6.4s ease-in-out infinite;
-  filter:
-    drop-shadow(0 0 12px rgb(var(--island-glow-rgb) / 0.28))
+  filter: drop-shadow(0 0 12px rgb(var(--island-glow-rgb) / 0.28))
     drop-shadow(0 18px 22px rgb(0 0 0 / 0.54));
 }
 
@@ -5531,8 +5770,7 @@
 .propagation-island[data-selected='true'] .propagation-island__image {
   animation-play-state: paused;
   transform: translateY(-4px) scale(1.05) rotate(0.7deg);
-  filter:
-    drop-shadow(0 0 24px rgb(var(--island-glow-rgb) / 0.76))
+  filter: drop-shadow(0 0 24px rgb(var(--island-glow-rgb) / 0.76))
     drop-shadow(0 20px 28px rgb(0 0 0 / 0.58));
 }
 
@@ -5657,43 +5895,91 @@
 }
 
 @keyframes propagation-grid-drift {
-  from { background-position: 0 0, 0 0, 0 0; }
-  to { background-position: 54px 54px, 54px 54px, 162px 162px; }
+  from {
+    background-position:
+      0 0,
+      0 0,
+      0 0;
+  }
+  to {
+    background-position:
+      54px 54px,
+      54px 54px,
+      162px 162px;
+  }
 }
 
 @keyframes propagation-scan-drift {
-  from { transform: translateY(0); }
-  to { transform: translateY(14px); }
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(14px);
+  }
 }
 
 @keyframes propagation-particle-float {
-  0%, 100% { opacity: 0.18; transform: translate3d(0, 0, 0); }
-  46% { opacity: 0.72; transform: translate3d(9px, -11px, 0); }
-  74% { opacity: 0.35; transform: translate3d(-5px, -18px, 0); }
+  0%,
+  100% {
+    opacity: 0.18;
+    transform: translate3d(0, 0, 0);
+  }
+  46% {
+    opacity: 0.72;
+    transform: translate3d(9px, -11px, 0);
+  }
+  74% {
+    opacity: 0.35;
+    transform: translate3d(-5px, -18px, 0);
+  }
 }
 
 @keyframes propagation-sparkle-drift {
-  from { transform: translate3d(-4px, 2px, 0); }
-  to { transform: translate3d(5px, -4px, 0); }
+  from {
+    transform: translate3d(-4px, 2px, 0);
+  }
+  to {
+    transform: translate3d(5px, -4px, 0);
+  }
 }
 
 @keyframes propagation-island-float {
-  0%, 100% { transform: translate3d(0, 2px, 0) rotate(-0.45deg); }
-  50% { transform: translate3d(0, -3px, 0) rotate(0.45deg); }
+  0%,
+  100% {
+    transform: translate3d(0, 2px, 0) rotate(-0.45deg);
+  }
+  50% {
+    transform: translate3d(0, -3px, 0) rotate(0.45deg);
+  }
 }
 
 @keyframes propagation-island-halo {
-  0%, 100% { opacity: 0.34; transform: scale(0.92); }
-  50% { opacity: 0.68; transform: scale(1.08); }
+  0%,
+  100% {
+    opacity: 0.34;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 0.68;
+    transform: scale(1.08);
+  }
 }
 
 @keyframes propagation-island-wave {
-  0% { opacity: 0.72; transform: translate(-50%, -50%) scale(0.55); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(5); }
+  0% {
+    opacity: 0.72;
+    transform: translate(-50%, -50%) scale(0.55);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(5);
+  }
 }
 
 @keyframes propagation-edge-flow {
-  to { stroke-dashoffset: -0.12; }
+  to {
+    stroke-dashoffset: -0.12;
+  }
 }
 
 @media (max-width: 1100px) {
@@ -5723,24 +6009,27 @@
     gap: 11px 22px;
   }
 
-  .impact-network--propagation .impact-toolbar__actions .impact-action:not(.impact-action--quiet) {
+  .impact-network--propagation
+    .impact-toolbar__actions
+    .impact-action:not(.impact-action--quiet) {
     display: none;
   }
 }
 
-.propagation-scene[data-reduced-motion='true'] :is(
-  .propagation-scene__grid,
-  .propagation-scene__scanlines,
-  .propagation-scene__sparkles,
-  .propagation-scene__particles span,
-  .propagation-scene__tech-stars,
-  .propagation-island__halo,
-  .propagation-island__image,
-  .propagation-island__wave,
-  .propagation-island__emitter,
-  .propagation-edge__track,
-  .propagation-edge__flow
-) {
+.propagation-scene[data-reduced-motion='true']
+  :is(
+    .propagation-scene__grid,
+    .propagation-scene__scanlines,
+    .propagation-scene__sparkles,
+    .propagation-scene__particles span,
+    .propagation-scene__tech-stars,
+    .propagation-island__halo,
+    .propagation-island__image,
+    .propagation-island__wave,
+    .propagation-island__emitter,
+    .propagation-edge__track,
+    .propagation-edge__flow
+  ) {
   animation: none;
 }
 
@@ -5797,10 +6086,11 @@
   inset: 0;
   z-index: 2;
   transform: translate3d(
-    calc(var(--scene-pan-x, 0px) + var(--scene-parallax-x, 0px)),
-    calc(var(--scene-pan-y, 0px) + var(--scene-parallax-y, 0px)),
-    0
-  ) scale(var(--scene-zoom, 1));
+      calc(var(--scene-pan-x, 0px) + var(--scene-parallax-x, 0px)),
+      calc(var(--scene-pan-y, 0px) + var(--scene-parallax-y, 0px)),
+      0
+    )
+    scale(var(--scene-zoom, 1));
   transform-origin: center center;
   transition: transform 80ms linear;
   will-change: transform;
@@ -5816,11 +6106,16 @@
   transition: none;
 }
 
-.propagation-scene:not(.propagation-scene--dragging):not(.propagation-scene--empty) {
+.propagation-scene:not(.propagation-scene--dragging):not(
+    .propagation-scene--empty
+  ) {
   cursor: grab;
 }
 
-.propagation-scene:not(.propagation-scene--dragging):not(.propagation-scene--empty) .propagation-island {
+.propagation-scene:not(.propagation-scene--dragging):not(
+    .propagation-scene--empty
+  )
+  .propagation-island {
   cursor: pointer;
 }
 
@@ -5853,7 +6148,11 @@
 
 .propagation-scene__ambient-halo[data-role='origin'] {
   opacity: 0.42;
-  background: radial-gradient(circle, rgb(var(--island-glow-rgb) / 0.28), transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgb(var(--island-glow-rgb) / 0.28),
+    transparent 70%
+  );
 }
 
 .propagation-scene__ambient-halo[data-role='affected'] {
@@ -5881,14 +6180,46 @@
   z-index: var(--layer-particles);
   opacity: 0.55;
   background:
-    radial-gradient(circle at 8% 14%, rgb(120 210 255 / 0.7) 0 1px, transparent 1.6px),
-    radial-gradient(circle at 22% 38%, rgb(164 120 255 / 0.55) 0 1px, transparent 1.6px),
-    radial-gradient(circle at 44% 18%, rgb(120 210 255 / 0.5) 0 1px, transparent 1.6px),
-    radial-gradient(circle at 61% 44%, rgb(120 210 255 / 0.45) 0 1px, transparent 1.6px),
-    radial-gradient(circle at 78% 28%, rgb(164 120 255 / 0.5) 0 1px, transparent 1.6px),
-    radial-gradient(circle at 88% 62%, rgb(120 210 255 / 0.42) 0 1px, transparent 1.6px),
-    radial-gradient(circle at 34% 72%, rgb(120 210 255 / 0.38) 0 1px, transparent 1.6px),
-    radial-gradient(circle at 56% 84%, rgb(164 120 255 / 0.36) 0 1px, transparent 1.6px);
+    radial-gradient(
+      circle at 8% 14%,
+      rgb(120 210 255 / 0.7) 0 1px,
+      transparent 1.6px
+    ),
+    radial-gradient(
+      circle at 22% 38%,
+      rgb(164 120 255 / 0.55) 0 1px,
+      transparent 1.6px
+    ),
+    radial-gradient(
+      circle at 44% 18%,
+      rgb(120 210 255 / 0.5) 0 1px,
+      transparent 1.6px
+    ),
+    radial-gradient(
+      circle at 61% 44%,
+      rgb(120 210 255 / 0.45) 0 1px,
+      transparent 1.6px
+    ),
+    radial-gradient(
+      circle at 78% 28%,
+      rgb(164 120 255 / 0.5) 0 1px,
+      transparent 1.6px
+    ),
+    radial-gradient(
+      circle at 88% 62%,
+      rgb(120 210 255 / 0.42) 0 1px,
+      transparent 1.6px
+    ),
+    radial-gradient(
+      circle at 34% 72%,
+      rgb(120 210 255 / 0.38) 0 1px,
+      transparent 1.6px
+    ),
+    radial-gradient(
+      circle at 56% 84%,
+      rgb(164 120 255 / 0.36) 0 1px,
+      transparent 1.6px
+    );
   background-size: 420px 320px;
   animation: propagation-tech-stars 36s linear infinite;
 }
@@ -5927,7 +6258,11 @@
   font-size: 1rem;
   font-weight: 700;
   line-height: 1;
-  background: linear-gradient(180deg, rgb(17 57 92 / 0.62), rgb(5 23 44 / 0.72));
+  background: linear-gradient(
+    180deg,
+    rgb(17 57 92 / 0.62),
+    rgb(5 23 44 / 0.72)
+  );
   cursor: pointer;
   transition:
     transform 180ms ease,
@@ -5939,7 +6274,11 @@
 .propagation-scene__zoom-btn:hover:not(:disabled) {
   transform: translateY(-1px);
   border-color: rgb(99 216 255 / 0.52);
-  background: linear-gradient(180deg, rgb(22 73 116 / 0.72), rgb(7 30 56 / 0.82));
+  background: linear-gradient(
+    180deg,
+    rgb(22 73 116 / 0.72),
+    rgb(7 30 56 / 0.82)
+  );
 }
 
 .propagation-scene__zoom-btn:focus-visible {
@@ -6033,6 +6372,149 @@
   will-change: transform, opacity;
 }
 
+/* El emblema ya vive dentro del arte. Esta capa de luz se alinea con cada
+   animal para destacarlo sin reemplazar ni tapar sus detalles. */
+.propagation-island__emblem-glow {
+  --island-emblem-x: 50%;
+  --island-emblem-y: 42%;
+  --island-emblem-size: 21%;
+  position: absolute;
+  z-index: 6;
+  top: var(--island-emblem-y);
+  left: var(--island-emblem-x);
+  width: var(--island-emblem-size);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgb(255 255 255 / 0.5) 0 5%,
+    rgb(var(--island-glow-rgb) / 0.54) 13%,
+    rgb(var(--island-glow-rgb) / 0.2) 35%,
+    transparent 70%
+  );
+  filter: drop-shadow(0 0 7px rgb(var(--island-glow-rgb) / 0.72));
+  mix-blend-mode: screen;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.84);
+  transform-origin: center;
+  animation: impact-island-emblem-heartbeat 3.2s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+.propagation-island__emblem-glow::before,
+.propagation-island__emblem-glow::after {
+  position: absolute;
+  border-radius: inherit;
+  content: '';
+  pointer-events: none;
+}
+
+.propagation-island__emblem-glow::before {
+  inset: 13%;
+  border: 1px solid rgb(var(--island-glow-rgb) / 0.56);
+  box-shadow:
+    0 0 9px rgb(var(--island-glow-rgb) / 0.48),
+    inset 0 0 8px rgb(var(--island-glow-rgb) / 0.22);
+  animation: impact-island-emblem-ring 3.2s ease-out infinite;
+}
+
+.propagation-island__emblem-glow::after {
+  inset: 34%;
+  background: radial-gradient(
+    circle,
+    rgb(255 255 255 / 0.82),
+    rgb(var(--island-glow-rgb) / 0.32) 42%,
+    transparent 74%
+  );
+  filter: blur(1px);
+}
+
+.propagation-island[data-coordination-id='coord-b2b'] {
+  --island-emblem-y: 45%;
+  --island-emblem-size: 19%;
+}
+
+.propagation-island[data-coordination-id='coord-general'] {
+  --island-emblem-y: 45%;
+  --island-emblem-size: 18%;
+}
+
+.propagation-island[data-coordination-id='coord-bellas-artes'] {
+  --island-emblem-x: 51%;
+  --island-emblem-y: 40%;
+  --island-emblem-size: 22%;
+}
+
+.propagation-island[data-coordination-id='coord-desarrollo-profesional'] {
+  --island-emblem-y: 44%;
+  --island-emblem-size: 19%;
+}
+
+.propagation-island[data-coordination-id='coord-empresarial'] {
+  --island-emblem-x: 51%;
+  --island-emblem-y: 41%;
+  --island-emblem-size: 25%;
+}
+
+.propagation-island[data-coordination-id='coord-especializaciones'] {
+  --island-emblem-x: 52%;
+  --island-emblem-y: 39%;
+  --island-emblem-size: 19%;
+}
+
+.propagation-island[data-coordination-id='coord-ingenierias'] {
+  --island-emblem-x: 52%;
+  --island-emblem-y: 31%;
+  --island-emblem-size: 18%;
+}
+
+.propagation-island[data-coordination-id='coord-operaciones-academicas'] {
+  --island-emblem-y: 43%;
+  --island-emblem-size: 18%;
+}
+
+.propagation-island[data-coordination-id='coord-proyeccion-social'] {
+  --island-emblem-x: 51%;
+  --island-emblem-y: 30%;
+  --island-emblem-size: 18%;
+}
+
+.propagation-island[data-coordination-id='coord-saber-pro'] {
+  --island-emblem-x: 52%;
+  --island-emblem-y: 41%;
+  --island-emblem-size: 20%;
+}
+
+.propagation-island[data-coordination-id='coord-transversales'] {
+  --island-emblem-x: 52%;
+  --island-emblem-y: 40%;
+  --island-emblem-size: 23%;
+}
+
+.propagation-island[data-coordination-id='coord-homologaciones'] {
+  --island-emblem-x: 52%;
+  --island-emblem-y: 39%;
+  --island-emblem-size: 19%;
+}
+
+.propagation-island[data-coordination-id='coord-negocios'] {
+  --island-emblem-x: 52%;
+  --island-emblem-y: 29%;
+  --island-emblem-size: 18%;
+}
+
+.propagation-island[data-coordination-id='coord-fabrica-contenidos'] {
+  --island-emblem-x: 51%;
+  --island-emblem-y: 28%;
+  --island-emblem-size: 21%;
+}
+
+.propagation-island[data-coordination-id='coord-servicios'] {
+  --island-emblem-x: 51%;
+  --island-emblem-y: 46%;
+  --island-emblem-size: 22%;
+}
+
 .propagation-island__label,
 .propagation-island__state {
   position: absolute;
@@ -6068,7 +6550,9 @@
   box-shadow: 0 10px 22px rgb(0 0 0 / 0.3);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 180ms ease, transform 180ms ease;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
 }
 
 .propagation-island__tooltip[data-placement='top'] {
@@ -6137,8 +6621,7 @@
 }
 
 .propagation-island--ambient .propagation-island__image {
-  filter:
-    drop-shadow(0 0 6px rgb(74 158 255 / 0.12))
+  filter: drop-shadow(0 0 6px rgb(74 158 255 / 0.12))
     drop-shadow(0 10px 16px rgb(0 0 0 / 0.38));
   animation-duration: 8s;
 }
@@ -6165,8 +6648,10 @@
   margin: 0;
 }
 
-.propagation-scene__island.propagation-island--origin .propagation-island__image,
-.propagation-scene__island.propagation-island--affected .propagation-island__image {
+.propagation-scene__island.propagation-island--origin
+  .propagation-island__image,
+.propagation-scene__island.propagation-island--affected
+  .propagation-island__image {
   animation: none;
 }
 
@@ -6195,11 +6680,21 @@
   animation: propagation-edge-flow 1.4s linear infinite;
 }
 
-.propagation-edge[data-risk='low'] { --edge-flow-rgb: 63 194 74; }
-.propagation-edge[data-risk='moderate'] { --edge-flow-rgb: 244 201 70; }
-.propagation-edge[data-risk='high'] { --edge-flow-rgb: 255 138 61; }
-.propagation-edge[data-risk='critical'] { --edge-flow-rgb: 255 70 91; }
-.propagation-edge[data-risk='dormant'] { --edge-flow-rgb: 74 158 255; }
+.propagation-edge[data-risk='low'] {
+  --edge-flow-rgb: 63 194 74;
+}
+.propagation-edge[data-risk='moderate'] {
+  --edge-flow-rgb: 244 201 70;
+}
+.propagation-edge[data-risk='high'] {
+  --edge-flow-rgb: 255 138 61;
+}
+.propagation-edge[data-risk='critical'] {
+  --edge-flow-rgb: 255 70 91;
+}
+.propagation-edge[data-risk='dormant'] {
+  --edge-flow-rgb: 74 158 255;
+}
 
 /* Panel derecho: scroll unificado y contenido legible */
 .situation-command-panel__content {
@@ -6318,24 +6813,46 @@
   margin-top: 4px;
   padding: 12px 0 2px;
   border-top: 1px solid rgb(100 161 245 / 0.14);
-  background:
-    linear-gradient(180deg, rgb(3 10 22 / 0), rgb(3 10 22 / 0.94) 28%, rgb(3 10 22 / 0.98));
+  background: linear-gradient(
+    180deg,
+    rgb(3 10 22 / 0),
+    rgb(3 10 22 / 0.94) 28%,
+    rgb(3 10 22 / 0.98)
+  );
 }
 
 @keyframes propagation-fog-drift {
-  from { transform: translate3d(-6px, 4px, 0); }
-  to { transform: translate3d(8px, -6px, 0); }
+  from {
+    transform: translate3d(-6px, 4px, 0);
+  }
+  to {
+    transform: translate3d(8px, -6px, 0);
+  }
 }
 
 @keyframes propagation-tech-stars {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(-18px, -12px, 0); }
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-18px, -12px, 0);
+  }
 }
 
 @keyframes propagation-island-emitter {
-  0%, 100% { opacity: 0; transform: translate3d(-50%, 0, 0) scale(0.6); }
-  40% { opacity: 0.7; transform: translate3d(-50%, -8px, 0) scale(1); }
-  70% { opacity: 0; transform: translate3d(-50%, -18px, 0) scale(1.4); }
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate3d(-50%, 0, 0) scale(0.6);
+  }
+  40% {
+    opacity: 0.7;
+    transform: translate3d(-50%, -8px, 0) scale(1);
+  }
+  70% {
+    opacity: 0;
+    transform: translate3d(-50%, -18px, 0) scale(1.4);
+  }
 }
 
 /* ── Island Focus Dossier ── */
@@ -6359,9 +6876,15 @@
   display: none;
 }
 
-.propagation-scene--dossier-visible .propagation-scene__island--focus-active .propagation-island__label,
-.propagation-scene--dossier-visible .propagation-scene__island--focus-active .propagation-island__tooltip,
-.propagation-scene--dossier-visible .propagation-scene__island--focus-active .propagation-island__state {
+.propagation-scene--dossier-visible
+  .propagation-scene__island--focus-active
+  .propagation-island__label,
+.propagation-scene--dossier-visible
+  .propagation-scene__island--focus-active
+  .propagation-island__tooltip,
+.propagation-scene--dossier-visible
+  .propagation-scene__island--focus-active
+  .propagation-island__state {
   opacity: 0;
   pointer-events: none;
   transition: opacity 320ms cubic-bezier(0.22, 0.84, 0.24, 1);
@@ -6406,7 +6929,8 @@
   transition: opacity 360ms cubic-bezier(0.22, 0.84, 0.24, 1) !important;
 }
 
-.propagation-scene:not(.propagation-scene--island-focus) .propagation-scene__island {
+.propagation-scene:not(.propagation-scene--island-focus)
+  .propagation-scene__island {
   transition: opacity 360ms cubic-bezier(0.22, 0.84, 0.24, 1);
 }
 
@@ -6416,17 +6940,22 @@
   transition: transform 1040ms cubic-bezier(0.22, 0.84, 0.24, 1) !important;
 }
 
-.propagation-scene--island-focus .propagation-scene__island--focus-active .propagation-island__image {
+.propagation-scene--island-focus
+  .propagation-scene__island--focus-active
+  .propagation-island__image {
   animation: none !important;
-  filter:
-    drop-shadow(0 0 26px rgb(var(--island-glow-rgb) / 0.58))
+  filter: drop-shadow(0 0 26px rgb(var(--island-glow-rgb) / 0.58))
     drop-shadow(0 22px 34px rgb(0 0 0 / 0.48));
   backface-visibility: hidden;
   transform: translateZ(0);
 }
 
-.propagation-scene--island-focus .propagation-scene__island--focus-active .propagation-island__halo,
-.propagation-scene--island-focus .propagation-scene__island--focus-active .propagation-island__ring {
+.propagation-scene--island-focus
+  .propagation-scene__island--focus-active
+  .propagation-island__halo,
+.propagation-scene--island-focus
+  .propagation-scene__island--focus-active
+  .propagation-island__ring {
   opacity: 0.72;
 }
 
@@ -6455,7 +6984,11 @@
   inset: 0;
   width: 42%;
   background:
-    radial-gradient(ellipse at 20% 50%, rgb(0 0 0 / 0.04) 0%, rgb(0 0 0 / 0.28) 78%),
+    radial-gradient(
+      ellipse at 20% 50%,
+      rgb(0 0 0 / 0.04) 0%,
+      rgb(0 0 0 / 0.28) 78%
+    ),
     linear-gradient(90deg, transparent 72%, rgb(0 0 0 / 0.18) 100%);
   pointer-events: none;
 }
@@ -6811,7 +7344,11 @@
 .island-focus-dossier__close--back {
   border-color: rgb(99 216 255 / 0.28);
   color: #dff7ff;
-  background: linear-gradient(180deg, rgb(22 73 116 / 0.72), rgb(7 30 56 / 0.82));
+  background: linear-gradient(
+    180deg,
+    rgb(22 73 116 / 0.72),
+    rgb(7 30 56 / 0.82)
+  );
 }
 
 .island-focus-dossier__close--back > span[aria-hidden='true'] {
@@ -7086,7 +7623,9 @@
   margin-bottom: 0;
 }
 
-.island-focus-panel--origin .novex-sit-grid .novex-sit-card:has(.novex-sit-ring) {
+.island-focus-panel--origin
+  .novex-sit-grid
+  .novex-sit-card:has(.novex-sit-ring) {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -7094,7 +7633,10 @@
   gap: 12px 16px;
 }
 
-.island-focus-panel--origin .novex-sit-grid .novex-sit-card:has(.novex-sit-ring) > header {
+.island-focus-panel--origin
+  .novex-sit-grid
+  .novex-sit-card:has(.novex-sit-ring)
+  > header {
   flex: 1 1 160px;
   margin-bottom: 0;
 }
@@ -7154,8 +7696,10 @@
 }
 
 .propagation-scene[data-reduced-motion='true'] .propagation-scene__stage,
-.propagation-scene[data-reduced-motion='true'] .propagation-scene__island--hidden,
-.propagation-scene[data-reduced-motion='true'] .propagation-scene__edges[data-focus-hidden='true'] {
+.propagation-scene[data-reduced-motion='true']
+  .propagation-scene__island--hidden,
+.propagation-scene[data-reduced-motion='true']
+  .propagation-scene__edges[data-focus-hidden='true'] {
   transition: none !important;
 }
 
@@ -7197,7 +7741,11 @@
   --map-summary-height: 108px;
   color: #e8f3ff;
   background:
-    radial-gradient(ellipse 62% 54% at 52% 48%, rgb(13 58 105 / 0.26), transparent 72%),
+    radial-gradient(
+      ellipse 62% 54% at 52% 48%,
+      rgb(13 58 105 / 0.26),
+      transparent 72%
+    ),
     radial-gradient(circle at 50% 42%, rgb(4 31 63 / 0.78), transparent 58%),
     linear-gradient(180deg, #020b18 0%, #020916 56%, #010711 100%);
 }
@@ -7207,9 +7755,24 @@
   z-index: 1;
   display: block;
   background:
-    linear-gradient(90deg, rgb(0 0 0 / 0.22), transparent 15% 83%, rgb(0 0 0 / 0.24)),
-    linear-gradient(180deg, rgb(1 5 12 / 0.06), transparent 42%, rgb(0 4 11 / 0.38)),
-    radial-gradient(ellipse at center, transparent 32%, rgb(0 4 11 / 0.24) 76%, rgb(0 2 8 / 0.62));
+    linear-gradient(
+      90deg,
+      rgb(0 0 0 / 0.22),
+      transparent 15% 83%,
+      rgb(0 0 0 / 0.24)
+    ),
+    linear-gradient(
+      180deg,
+      rgb(1 5 12 / 0.06),
+      transparent 42%,
+      rgb(0 4 11 / 0.38)
+    ),
+    radial-gradient(
+      ellipse at center,
+      transparent 32%,
+      rgb(0 4 11 / 0.24) 76%,
+      rgb(0 2 8 / 0.62)
+    );
   opacity: 1;
   transform: none;
 }
@@ -7243,8 +7806,15 @@
     linear-gradient(150deg, rgb(44 118 178 / 0.16) 1px, transparent 1px),
     linear-gradient(90deg, rgb(44 118 178 / 0.12) 1px, transparent 1px);
   background-position: center;
-  background-size: 42px 24px, 42px 24px, 42px 24px;
-  mask-image: radial-gradient(ellipse 64% 62% at 52% 52%, black 5%, transparent 92%);
+  background-size:
+    42px 24px,
+    42px 24px,
+    42px 24px;
+  mask-image: radial-gradient(
+    ellipse 64% 62% at 52% 52%,
+    black 5%,
+    transparent 92%
+  );
   animation: impact-reference-grid-drift 38s linear infinite;
   transform: perspective(780px) rotateX(63deg) scale(1.42) translateY(9%);
   transform-origin: center 58%;
@@ -7404,7 +7974,9 @@
   text-transform: uppercase;
 }
 
-.impact-network__canvas .impact-map-legend > span:not(.impact-map-legend__title) {
+.impact-network__canvas
+  .impact-map-legend
+  > span:not(.impact-map-legend__title) {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -7661,17 +8233,18 @@
 
 .impact-network__canvas .propagation-island__image,
 .impact-network__canvas .propagation-island--origin .propagation-island__image,
-.impact-network__canvas .propagation-island--illuminated .propagation-island__image,
-.impact-network__canvas .propagation-island--impacted .propagation-island__image {
+.impact-network__canvas
+  .propagation-island--illuminated
+  .propagation-island__image,
+.impact-network__canvas
+  .propagation-island--impacted
+  .propagation-island__image {
   width: 100%;
   height: 100%;
   object-fit: contain;
   opacity: 1;
-  filter:
-    hue-rotate(var(--island-hue))
-    saturate(var(--island-saturation))
-    brightness(var(--island-brightness))
-    contrast(1.06)
+  filter: hue-rotate(var(--island-hue)) saturate(var(--island-saturation))
+    brightness(var(--island-brightness)) contrast(1.06)
     drop-shadow(0 0 8px rgb(var(--island-glow-rgb) / 0.46))
     drop-shadow(0 10px 16px rgb(0 0 0 / 0.66)) !important;
   transform: translateZ(0);
@@ -7681,11 +8254,8 @@
 }
 
 .impact-network__canvas .propagation-island--origin .propagation-island__image {
-  filter:
-    hue-rotate(var(--island-hue))
-    saturate(var(--island-saturation))
-    brightness(var(--island-brightness))
-    contrast(1.08)
+  filter: hue-rotate(var(--island-hue)) saturate(var(--island-saturation))
+    brightness(var(--island-brightness)) contrast(1.08)
     drop-shadow(0 0 15px rgb(var(--island-glow-rgb) / 0.72))
     drop-shadow(0 13px 20px rgb(0 0 0 / 0.7)) !important;
 }
@@ -7698,11 +8268,8 @@
   )
   .propagation-island__image {
   transform: translate3d(0, -4px, 0) scale(1.035);
-  filter:
-    hue-rotate(var(--island-hue))
-    saturate(var(--island-saturation))
-    brightness(var(--island-brightness))
-    contrast(1.08)
+  filter: hue-rotate(var(--island-hue)) saturate(var(--island-saturation))
+    brightness(var(--island-brightness)) contrast(1.08)
     drop-shadow(0 0 20px rgb(var(--island-glow-rgb) / 0.82))
     drop-shadow(0 15px 22px rgb(0 0 0 / 0.7)) !important;
 }
@@ -7741,7 +8308,11 @@
   white-space: normal;
   background:
     linear-gradient(180deg, rgb(5 13 25 / 0.93), rgb(8 12 19 / 0.83)),
-    radial-gradient(circle at 50% 0%, rgb(var(--island-glow-rgb) / 0.16), transparent 70%);
+    radial-gradient(
+      circle at 50% 0%,
+      rgb(var(--island-glow-rgb) / 0.16),
+      transparent 70%
+    );
   box-shadow:
     0 7px 18px rgb(0 0 0 / 0.4),
     inset 0 1px 0 rgb(255 255 255 / 0.035);
@@ -7879,8 +8450,7 @@
 
 .impact-network__canvas .propagation-edge__particle {
   fill: #f7fcff;
-  filter:
-    drop-shadow(0 0 3px #fff)
+  filter: drop-shadow(0 0 3px #fff)
     drop-shadow(0 0 8px rgb(var(--edge-flow-rgb)));
 }
 
@@ -7888,8 +8458,7 @@
   fill: #fff;
   stroke: rgb(var(--junction-rgb));
   stroke-width: 2;
-  filter:
-    drop-shadow(0 0 3px #fff)
+  filter: drop-shadow(0 0 3px #fff)
     drop-shadow(0 0 8px rgb(var(--junction-rgb)));
 }
 
@@ -7943,15 +8512,15 @@
   filter: blur(5px);
 }
 
-.impact-network__canvas .propagation-relay[data-kind='return'] .propagation-relay__line {
+.impact-network__canvas
+  .propagation-relay[data-kind='return']
+  .propagation-relay__line {
   stroke-dasharray: 0.01 0.028;
 }
 
 .impact-network__canvas .propagation-relay__particle {
   fill: #efffff;
-  filter:
-    drop-shadow(0 0 3px #fff)
-    drop-shadow(0 0 7px rgb(var(--relay-rgb)));
+  filter: drop-shadow(0 0 3px #fff) drop-shadow(0 0 7px rgb(var(--relay-rgb)));
 }
 
 /* Tarjeta de situación seleccionada */
@@ -7972,7 +8541,11 @@
   color: #eaf4ff;
   background:
     linear-gradient(135deg, rgb(4 17 33 / 0.9), rgb(4 11 23 / 0.82)),
-    radial-gradient(circle at 85% 50%, rgb(var(--selection-rgb) / 0.13), transparent 46%);
+    radial-gradient(
+      circle at 85% 50%,
+      rgb(var(--selection-rgb) / 0.13),
+      transparent 46%
+    );
   box-shadow:
     0 14px 32px rgb(0 0 0 / 0.22),
     inset 0 1px 0 rgb(255 255 255 / 0.03);
@@ -8109,7 +8682,12 @@
   left: 7%;
   height: 1px;
   content: '';
-  background: linear-gradient(90deg, transparent, rgb(74 158 218 / 0.2), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(74 158 218 / 0.2),
+    transparent
+  );
 }
 
 .impact-network__canvas .impact-map-summary[data-risk='critical'] {
@@ -8144,14 +8722,16 @@
   bottom: 22%;
   width: 1px;
   content: '';
-  background: linear-gradient(
-    transparent,
-    rgb(80 133 180 / 0.16),
-    transparent
-  );
+  background: linear-gradient(transparent, rgb(80 133 180 / 0.16), transparent);
 }
 
-.impact-network__canvas .impact-map-summary__metric > span:not(.impact-map-summary__icon, .impact-map-summary__signal, .impact-map-summary__clock) {
+.impact-network__canvas
+  .impact-map-summary__metric
+  > span:not(
+    .impact-map-summary__icon,
+    .impact-map-summary__signal,
+    .impact-map-summary__clock
+  ) {
   display: grid;
   min-width: 0;
   gap: 5px;
@@ -8300,7 +8880,11 @@
   border-radius: 50%;
   color: #75d1cd;
   background:
-    conic-gradient(from 20deg, rgb(56 195 186 / 0.42) 0 18%, transparent 18% 100%),
+    conic-gradient(
+      from 20deg,
+      rgb(56 195 186 / 0.42) 0 18%,
+      transparent 18% 100%
+    ),
     rgb(7 28 40 / 0.62);
   box-shadow: 0 0 14px rgb(54 181 180 / 0.08);
 }
@@ -8376,13 +8960,15 @@
   outline-offset: 2px;
 }
 
-.impact-network__canvas .propagation-scene--island-focus :is(
-  .impact-map-guide,
-  .impact-map-recenter,
-  .impact-map-selection,
-  .impact-map-summary,
-  .propagation-scene__zoom-controls
-) {
+.impact-network__canvas
+  .propagation-scene--island-focus
+  :is(
+    .impact-map-guide,
+    .impact-map-recenter,
+    .impact-map-selection,
+    .impact-map-summary,
+    .propagation-scene__zoom-controls
+  ) {
   opacity: 0;
   pointer-events: none;
   transition: opacity 180ms ease;
@@ -8413,10 +8999,16 @@
 
 @keyframes impact-reference-grid-drift {
   from {
-    background-position: 0 0, 0 0, 0 0;
+    background-position:
+      0 0,
+      0 0,
+      0 0;
   }
   to {
-    background-position: 84px 48px, -84px 48px, 84px 0;
+    background-position:
+      84px 48px,
+      -84px 48px,
+      84px 0;
   }
 }
 
@@ -8588,7 +9180,9 @@
     padding: 12px 8px;
   }
 
-  .impact-network__canvas .impact-map-summary__metric--origin .impact-map-summary__icon {
+  .impact-network__canvas
+    .impact-map-summary__metric--origin
+    .impact-map-summary__icon {
     display: none;
   }
 
@@ -8728,7 +9322,9 @@
   background: linear-gradient(90deg, #7dff5a, rgb(125 255 90 / 0.45));
 }
 
-.impact-flow-nav__steps li > :is(button, span:not(.impact-flow-nav__connector)) {
+.impact-flow-nav__steps
+  li
+  > :is(button, span:not(.impact-flow-nav__connector)) {
   display: inline-flex;
   min-width: 0;
   align-items: center;
@@ -8765,7 +9361,10 @@
   background: rgb(8 18 34 / 0.85);
 }
 
-.impact-flow-nav__steps li > :is(button, span:not(.impact-flow-nav__connector)) > span {
+.impact-flow-nav__steps
+  li
+  > :is(button, span:not(.impact-flow-nav__connector))
+  > span {
   overflow: hidden;
   max-width: 118px;
   font-size: 0.72rem;
@@ -8775,7 +9374,8 @@
   white-space: nowrap;
 }
 
-.impact-flow-nav__steps li[data-state='done']
+.impact-flow-nav__steps
+  li[data-state='done']
   > :is(button, span:not(.impact-flow-nav__connector)) {
   color: #b7c8da;
 }
@@ -8787,12 +9387,14 @@
   box-shadow: 0 0 10px rgb(125 255 90 / 0.18);
 }
 
-.impact-flow-nav__steps li[data-state='current']
+.impact-flow-nav__steps
+  li[data-state='current']
   > :is(button, span:not(.impact-flow-nav__connector)) {
   color: #f4f8ff;
 }
 
-.impact-flow-nav__steps li[data-state='current']
+.impact-flow-nav__steps
+  li[data-state='current']
   > :is(button, span:not(.impact-flow-nav__connector))
   > span {
   font-weight: 750;
@@ -9263,11 +9865,15 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
-.impact-network--v2 .impact-network__workspace--island-focus .impact-network__panel-layer {
+.impact-network--v2
+  .impact-network__workspace--island-focus
+  .impact-network__panel-layer {
   display: none;
 }
 
-.impact-network--v2 .impact-network__workspace--island-focus .impact-network__canvas {
+.impact-network--v2
+  .impact-network__workspace--island-focus
+  .impact-network__canvas {
   border-right: none;
 }
 
@@ -9346,12 +9952,11 @@
 .impact-map-actions__simulation {
   border-color: rgb(var(--impact-predicted-rgb) / 0.42) !important;
   color: #ffd68c !important;
-  background:
-    linear-gradient(
-      180deg,
-      rgb(var(--impact-predicted-rgb) / 0.14),
-      rgb(45 27 8 / 0.72)
-    ) !important;
+  background: linear-gradient(
+    180deg,
+    rgb(var(--impact-predicted-rgb) / 0.14),
+    rgb(45 27 8 / 0.72)
+  ) !important;
 }
 
 @media (max-width: 820px) {
@@ -9369,7 +9974,9 @@
   cursor: grab;
 }
 
-.impact-network__canvas .organizational-scene .propagation-scene__zoom-controls {
+.impact-network__canvas
+  .organizational-scene
+  .propagation-scene__zoom-controls {
   right: 22px;
   bottom: 20px;
 }
@@ -9464,9 +10071,7 @@
 
 .organizational-scene__connection-particle {
   fill: #e8fbff;
-  filter:
-    drop-shadow(0 0 3px #fff)
-    drop-shadow(0 0 8px #36a9ed);
+  filter: drop-shadow(0 0 3px #fff) drop-shadow(0 0 8px #36a9ed);
 }
 
 .organizational-scene__direction-hub {
@@ -9503,9 +10108,7 @@
   width: 94%;
   height: 94%;
   object-fit: contain;
-  filter:
-    saturate(1.22)
-    brightness(1.04)
+  filter: saturate(1.22) brightness(1.04)
     drop-shadow(0 0 16px rgb(48 181 246 / 0.62))
     drop-shadow(0 14px 22px rgb(0 0 0 / 0.68));
 }
@@ -9845,11 +10448,15 @@
     filter 480ms ease;
 }
 
-.impact-network__canvas .organizational-scene__island .propagation-island__halo {
+.impact-network__canvas
+  .organizational-scene__island
+  .propagation-island__halo {
   opacity: 0.68;
 }
 
-.impact-network__canvas .organizational-scene__island .propagation-island__image {
+.impact-network__canvas
+  .organizational-scene__island
+  .propagation-island__image {
   opacity: 1;
   animation: propagation-island-float 7.4s ease-in-out infinite;
 }
@@ -9859,7 +10466,9 @@
  * bloque isla + etiqueta quepa entre los dos anillos. Las medidas deben
  * mantenerse sincronizadas con LABEL_BOX_* de engine/structure-layout.ts.
  */
-.impact-network__canvas .organizational-scene__island .propagation-island__label {
+.impact-network__canvas
+  .organizational-scene__island
+  .propagation-island__label {
   top: auto;
   bottom: auto;
   display: block;
@@ -9870,11 +10479,16 @@
   white-space: nowrap;
 }
 
-.impact-network__canvas .organizational-scene__island .propagation-island__badge {
+.impact-network__canvas
+  .organizational-scene__island
+  .propagation-island__badge {
   display: none;
 }
 
-.impact-network__canvas .organizational-scene__island .propagation-island__label b {
+.impact-network__canvas
+  .organizational-scene__island
+  .propagation-island__label
+  b {
   display: block;
   overflow: hidden;
   font-size: 0.5rem;
@@ -9882,7 +10496,10 @@
   text-overflow: ellipsis;
 }
 
-.impact-network__canvas .organizational-scene__island .propagation-island__label small {
+.impact-network__canvas
+  .organizational-scene__island
+  .propagation-island__label
+  small {
   display: none;
   margin-top: 3px;
   font-size: 0.4rem;
@@ -9904,16 +10521,20 @@
 
 /* En reposo y al enfocar, solo el nombre de la coordinación. */
 .impact-network__canvas
-  .organizational-scene__island:not(
-    .organizational-scene__island--selected
-  ):is(:hover, :focus-visible, :focus-within) {
+  .organizational-scene__island:not(.organizational-scene__island--selected):is(
+    :hover,
+    :focus-visible,
+    :focus-within
+  ) {
   z-index: 90 !important;
 }
 
 .impact-network__canvas
-  .organizational-scene__island:not(
-    .organizational-scene__island--selected
-  ):is(:hover, :focus-visible, :focus-within)
+  .organizational-scene__island:not(.organizational-scene__island--selected):is(
+    :hover,
+    :focus-visible,
+    :focus-within
+  )
   .propagation-island__label {
   border-color: rgb(var(--island-glow-rgb) / 0.5);
 }
@@ -9930,9 +10551,7 @@
   .organizational-scene__island--selected
   .propagation-island__image {
   animation: none;
-  filter:
-    saturate(1.3)
-    brightness(1.12)
+  filter: saturate(1.3) brightness(1.12)
     drop-shadow(0 0 18px rgb(74 231 145 / 0.76))
     drop-shadow(0 16px 24px rgb(0 0 0 / 0.72)) !important;
   transform: translate3d(0, -4px, 0) scale(1.06);
@@ -10029,7 +10648,12 @@
   left: 8%;
   height: 1px;
   content: '';
-  background: linear-gradient(90deg, transparent, rgb(73 176 231 / 0.46), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(73 176 231 / 0.46),
+    transparent
+  );
 }
 
 .operational-context-panel__hero {
@@ -10089,7 +10713,11 @@
   color: #dff7ff;
   font-size: 0.52rem;
   font-weight: 700;
-  background: linear-gradient(180deg, rgb(22 73 116 / 0.68), rgb(7 30 56 / 0.78));
+  background: linear-gradient(
+    180deg,
+    rgb(22 73 116 / 0.68),
+    rgb(7 30 56 / 0.78)
+  );
   cursor: pointer;
   white-space: nowrap;
 }
@@ -10377,7 +11005,11 @@
   text-align: left;
   background:
     linear-gradient(145deg, rgb(7 24 44 / 0.72), rgb(4 17 33 / 0.56)),
-    radial-gradient(circle at 0 50%, rgb(var(--context-risk-rgb) / 0.08), transparent 38%);
+    radial-gradient(
+      circle at 0 50%,
+      rgb(var(--context-risk-rgb) / 0.08),
+      transparent 38%
+    );
   cursor: pointer;
   transition:
     transform 180ms ease,
@@ -10540,7 +11172,11 @@
   color: #dff7ff;
   font-size: 0.52rem;
   font-weight: 700;
-  background: linear-gradient(180deg, rgb(22 73 116 / 0.68), rgb(7 30 56 / 0.78));
+  background: linear-gradient(
+    180deg,
+    rgb(22 73 116 / 0.68),
+    rgb(7 30 56 / 0.78)
+  );
   cursor: pointer;
   white-space: nowrap;
   transition:
@@ -10583,10 +11219,9 @@
   --detail-risk-rgb: 70 216 145;
 }
 
-.impact-network--v2 .impact-network__canvas > :is(
-  .organizational-scene,
-  .propagation-scene
-) {
+.impact-network--v2
+  .impact-network__canvas
+  > :is(.organizational-scene, .propagation-scene) {
   animation: impact-level-enter 360ms cubic-bezier(0.2, 0.78, 0.2, 1) both;
 }
 
@@ -10738,12 +11373,17 @@
     top: 14px;
   }
 
-  .impact-network__canvas .organizational-scene__island .propagation-island__label {
+  .impact-network__canvas
+    .organizational-scene__island
+    .propagation-island__label {
     max-width: 86px;
     padding: 4px 8px;
   }
 
-  .impact-network__canvas .organizational-scene__island .propagation-island__label b {
+  .impact-network__canvas
+    .organizational-scene__island
+    .propagation-island__label
+    b {
     font-size: 0.4rem;
   }
 
@@ -10793,10 +11433,9 @@
     transition: none;
   }
 
-  .impact-network--v2 .impact-network__canvas > :is(
-    .organizational-scene,
-    .propagation-scene
-  ) {
+  .impact-network--v2
+    .impact-network__canvas
+    > :is(.organizational-scene, .propagation-scene) {
     animation: none;
   }
 }
@@ -10821,9 +11460,7 @@
   transition: none;
 }
 
-.impact-network__canvas
-  .organizational-scene
-  .organizational-scene__stage {
+.impact-network__canvas .organizational-scene .organizational-scene__stage {
   transition: transform 680ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
@@ -10870,9 +11507,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .impact-network__canvas
-    .organizational-scene
-    .organizational-scene__stage,
+  .impact-network__canvas .organizational-scene .organizational-scene__stage,
   .impact-network__canvas
     .organizational-scene
     .organizational-scene__island.propagation-scene__island,
@@ -10884,8 +11519,7 @@
 
   .impact-network--v2[data-navigation-level='situation']
     .impact-network__workspace--island-focus,
-  .impact-network__workspace--island-focus
-    > .operational-context-panel {
+  .impact-network__workspace--island-focus > .operational-context-panel {
     transition: none;
   }
 }
@@ -10896,8 +11530,7 @@
   .impact-network__workspace.impact-network__workspace--island-focus {
   grid-template-columns: minmax(0, 1fr) 0;
   grid-template-rows: minmax(0, 1fr);
-  transition: grid-template-columns 420ms
-    cubic-bezier(0.22, 0.61, 0.36, 1);
+  transition: grid-template-columns 420ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 .impact-network__workspace.impact-network__workspace--island-focus
@@ -11279,11 +11912,7 @@
       rgb(26 111 188 / 0.17),
       transparent 72%
     ),
-    radial-gradient(
-      circle at 50% 52%,
-      rgb(6 34 70 / 0.72),
-      transparent 62%
-    ),
+    radial-gradient(circle at 50% 52%, rgb(6 34 70 / 0.72), transparent 62%),
     linear-gradient(180deg, #020b18 0%, #020914 56%, #01060f 100%);
 }
 
@@ -11293,7 +11922,12 @@
   inset: 0;
   content: '';
   background:
-    linear-gradient(90deg, rgb(0 3 9 / 0.34), transparent 16% 84%, rgb(0 3 9 / 0.38)),
+    linear-gradient(
+      90deg,
+      rgb(0 3 9 / 0.34),
+      transparent 16% 84%,
+      rgb(0 3 9 / 0.38)
+    ),
     linear-gradient(180deg, transparent 68%, rgb(0 3 10 / 0.32));
   pointer-events: none;
 }
@@ -11367,13 +12001,13 @@
   stroke: rgb(var(--island-glow-rgb) / 0.5);
   stroke-width: 1.4;
   stroke-dasharray: 4 9;
-  filter:
-    drop-shadow(0 0 3px rgb(var(--island-glow-rgb) / 0.5))
+  filter: drop-shadow(0 0 3px rgb(var(--island-glow-rgb) / 0.5))
     drop-shadow(0 0 8px rgb(var(--island-glow-rgb) / 0.18));
   animation: impact-premium-connection-flow 5.2s linear infinite;
 }
 
-.organizational-scene__structural-network > g:nth-child(even)
+.organizational-scene__structural-network
+  > g:nth-child(even)
   .organizational-scene__connection {
   animation-direction: reverse;
   animation-duration: 6.4s;
@@ -11393,8 +12027,7 @@
   fill: #e9fbff;
   stroke: rgb(var(--island-glow-rgb) / 0.92);
   stroke-width: 1.2;
-  filter:
-    drop-shadow(0 0 3px #fff)
+  filter: drop-shadow(0 0 3px #fff)
     drop-shadow(0 0 8px rgb(var(--island-glow-rgb)));
 }
 
@@ -11402,8 +12035,7 @@
   fill: #f4fdff;
   stroke: rgb(var(--island-glow-rgb) / 0.92);
   stroke-width: 0.8;
-  filter:
-    drop-shadow(0 0 3px #fff)
+  filter: drop-shadow(0 0 3px #fff)
     drop-shadow(0 0 9px rgb(var(--island-glow-rgb)));
 }
 
@@ -11443,11 +12075,7 @@
   border: 1px solid rgb(80 198 255 / 0.34);
   border-radius: 50%;
   content: '';
-  background: radial-gradient(
-    ellipse,
-    rgb(43 161 226 / 0.18),
-    transparent 68%
-  );
+  background: radial-gradient(ellipse, rgb(43 161 226 / 0.18), transparent 68%);
   box-shadow:
     0 0 26px rgb(43 161 226 / 0.2),
     inset 0 0 16px rgb(43 161 226 / 0.14);
@@ -11476,17 +12104,19 @@
     rgb(83 212 255 / 0.2) 86%,
     transparent 100%
   );
-  mask-image: radial-gradient(circle, transparent 0 61%, #000 63% 67%, transparent 69%);
+  mask-image: radial-gradient(
+    circle,
+    transparent 0 61%,
+    #000 63% 67%,
+    transparent 69%
+  );
   animation: organizational-hub-spin 8s linear infinite;
 }
 
 .organizational-scene__direction-hub img {
   width: 98%;
   height: 98%;
-  filter:
-    saturate(1.28)
-    brightness(1.08)
-    contrast(1.07)
+  filter: saturate(1.28) brightness(1.08) contrast(1.07)
     drop-shadow(0 0 12px rgb(49 188 249 / 0.48))
     drop-shadow(0 0 28px rgb(49 156 242 / 0.22))
     drop-shadow(0 19px 25px rgb(0 0 0 / 0.72));
@@ -11633,7 +12263,9 @@
   left: 20%;
 }
 
-.impact-network__canvas .organizational-scene__island .propagation-island__halo {
+.impact-network__canvas
+  .organizational-scene__island
+  .propagation-island__halo {
   inset: 6%;
   opacity: 0.68;
   background:
@@ -11650,7 +12282,9 @@
   filter: blur(12px);
 }
 
-.impact-network__canvas .organizational-scene__island .propagation-island__ring {
+.impact-network__canvas
+  .organizational-scene__island
+  .propagation-island__ring {
   right: 7%;
   bottom: 8%;
   left: 7%;
@@ -11662,20 +12296,23 @@
     inset 0 0 14px rgb(var(--island-glow-rgb) / 0.14);
 }
 
-.impact-network__canvas .organizational-scene__island .propagation-island__image {
+.impact-network__canvas
+  .organizational-scene__island
+  .propagation-island__image {
   opacity: 1;
-  filter:
-    hue-rotate(var(--island-hue, 0deg))
-    saturate(0.74)
-    brightness(0.92)
-    contrast(1.11)
-    drop-shadow(0 0 8px rgb(var(--island-glow-rgb) / 0.3))
-    drop-shadow(0 0 18px rgb(var(--island-glow-rgb) / 0.09))
+  filter: hue-rotate(var(--island-hue, 0deg)) saturate(1.04) brightness(1)
+    contrast(1.07) drop-shadow(0 0 9px rgb(var(--island-glow-rgb) / 0.36))
+    drop-shadow(0 0 20px rgb(var(--island-glow-rgb) / 0.12))
     drop-shadow(0 14px 18px rgb(0 0 0 / 0.72)) !important;
 }
 
-.organizational-scene[data-level='institutional']
-  .propagation-island--ambient {
+@media (min-width: 921px) and (max-height: 599px) {
+  .coordination-situation-nodes__hint {
+    display: none;
+  }
+}
+
+.organizational-scene[data-level='institutional'] .propagation-island--ambient {
   opacity: 1;
 }
 
@@ -11686,46 +12323,27 @@
 }
 
 .impact-network__canvas
-  .organizational-scene__island:not(
-    .organizational-scene__island--selected
-  ):is(:hover, :focus-visible, :focus-within)
+  .organizational-scene__island:not(.organizational-scene__island--selected):is(
+    :hover,
+    :focus-visible,
+    :focus-within
+  )
   .propagation-island__image {
   transform: translate3d(0, -5px, 0) scale(1.055);
-  filter:
-    hue-rotate(var(--island-hue, 0deg))
-    saturate(0.84)
-    brightness(0.98)
-    contrast(1.12)
-    drop-shadow(0 0 12px rgb(var(--island-glow-rgb) / 0.46))
-    drop-shadow(0 0 25px rgb(var(--island-glow-rgb) / 0.16))
+  filter: hue-rotate(var(--island-hue, 0deg)) saturate(1.14) brightness(1.05)
+    contrast(1.08) drop-shadow(0 0 13px rgb(var(--island-glow-rgb) / 0.5))
+    drop-shadow(0 0 27px rgb(var(--island-glow-rgb) / 0.18))
     drop-shadow(0 17px 22px rgb(0 0 0 / 0.74)) !important;
 }
 
 .impact-network__canvas
   .organizational-scene__island--selected
   .propagation-island__image {
-  filter:
-    hue-rotate(var(--island-hue, 0deg))
-    saturate(0.9)
-    brightness(1.01)
-    contrast(1.13)
-    drop-shadow(0 0 15px rgb(var(--island-glow-rgb) / 0.52))
+  filter: hue-rotate(var(--island-hue, 0deg)) saturate(1.18) brightness(1.07)
+    contrast(1.09) drop-shadow(0 0 15px rgb(var(--island-glow-rgb) / 0.52))
     drop-shadow(0 0 32px rgb(var(--island-glow-rgb) / 0.18))
     drop-shadow(0 20px 26px rgb(0 0 0 / 0.78)) !important;
   transform: translate3d(0, -5px, 0) scale(1.075);
-}
-
-.impact-network__canvas
-  .organizational-scene__island--selected[data-coordination-id='coord-ingenierias']
-  .propagation-island__image {
-  filter:
-    hue-rotate(var(--island-hue, 0deg))
-    saturate(0.68)
-    brightness(0.9)
-    contrast(1.14)
-    drop-shadow(0 0 14px rgb(var(--island-glow-rgb) / 0.42))
-    drop-shadow(0 0 28px rgb(var(--island-glow-rgb) / 0.14))
-    drop-shadow(0 20px 26px rgb(0 0 0 / 0.8)) !important;
 }
 
 .impact-network__canvas
@@ -11794,14 +12412,16 @@
 
 .impact-network__canvas
   .organizational-scene__island
-  .propagation-island__badge svg {
+  .propagation-island__badge
+  svg {
   width: 10px;
   height: 10px;
 }
 
 .impact-network__canvas
   .organizational-scene__island
-  .propagation-island__label b {
+  .propagation-island__label
+  b {
   min-width: 0;
   font-size: 0.48rem;
   line-height: 1.25;
@@ -11837,17 +12457,30 @@
   .organizational-scene[data-level='coordination']
   .organizational-scene__island--selected[data-label-placement]
   .propagation-island__label {
-  top: -18px;
+  top: -14px;
   bottom: auto;
+  min-width: 190px;
+  max-width: 230px;
+  min-height: 40px;
+  gap: 10px;
+  padding: 9px 15px 9px 10px;
+  border-radius: 12px;
   transform: translate(-50%, -100%) scale(1.045);
+}
+
+.impact-network__canvas
+  .organizational-scene[data-level='coordination']
+  .organizational-scene__island--selected
+  .propagation-island__label
+  b {
+  font-size: 0.64rem;
+  letter-spacing: 0.025em;
 }
 
 /* Al enfocar una coordinación, el contexto se desenfoca brevemente y sale de
    escena para que la isla seleccionada y sus situaciones sean protagonistas. */
 .impact-network__canvas
-  .organizational-scene[data-focused='true']:not(
-    [data-dossier-active='true']
-  )
+  .organizational-scene[data-focused='true']:not([data-dossier-active='true'])
   .organizational-scene__island--unrelated {
   visibility: hidden;
   opacity: 0;
@@ -11909,6 +12542,43 @@
   }
 }
 
+@keyframes impact-island-emblem-heartbeat {
+  0%,
+  100% {
+    opacity: 0.36;
+    transform: translate(-50%, -50%) scale(0.82);
+  }
+  9% {
+    opacity: 0.94;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+  18% {
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  30% {
+    opacity: 0.78;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  52% {
+    opacity: 0.38;
+    transform: translate(-50%, -50%) scale(0.84);
+  }
+}
+
+@keyframes impact-island-emblem-ring {
+  0%,
+  14% {
+    opacity: 0.72;
+    transform: scale(0.72);
+  }
+  42%,
+  100% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+
 @media (max-width: 720px) {
   .propagation-scene__coordinates {
     display: none;
@@ -11936,7 +12606,8 @@
 
   .impact-network__canvas
     .organizational-scene__island
-    .propagation-island__label b {
+    .propagation-island__label
+    b {
     font-size: 0.4rem;
   }
 
@@ -11959,8 +12630,15 @@
   .organizational-scene__direction-base,
   .organizational-scene__direction-scan,
   .propagation-island__ground-glow,
+  .propagation-island__emblem-glow,
+  .propagation-island__emblem-glow::before,
   .propagation-island__platform i {
     animation: none !important;
+  }
+
+  .propagation-island__emblem-glow {
+    opacity: 0.58;
+    transform: translate(-50%, -50%) scale(0.94);
   }
 }
 
@@ -12014,7 +12692,10 @@
   box-shadow:
     0 10px 24px rgb(24 70 180 / 0.28),
     inset 0 1px 0 rgb(255 255 255 / 0.16);
-  transition: transform 160ms ease, filter 160ms ease, box-shadow 160ms ease;
+  transition:
+    transform 160ms ease,
+    filter 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .operational-context-panel__create-btn:hover {
@@ -12108,8 +12789,11 @@
   padding: 0.85rem 0.9rem 0.95rem;
   border-radius: 14px;
   border: 1px solid rgb(120 150 210 / 0.18);
-  background:
-    linear-gradient(180deg, rgb(18 32 58 / 0.92), rgb(12 22 40 / 0.88));
+  background: linear-gradient(
+    180deg,
+    rgb(18 32 58 / 0.92),
+    rgb(12 22 40 / 0.88)
+  );
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
 }
 
@@ -12235,7 +12919,10 @@
   font-size: 0.8rem;
   font-weight: 620;
   cursor: pointer;
-  transition: filter 160ms ease, transform 160ms ease, opacity 160ms ease;
+  transition:
+    filter 160ms ease,
+    transform 160ms ease,
+    opacity 160ms ease;
 }
 
 .impact-situation-command__primary {
@@ -12289,8 +12976,7 @@
   scrollbar-width: thin;
 }
 
-.operational-context-panel[data-level='situation']
-  .situation-map-overview {
+.operational-context-panel[data-level='situation'] .situation-map-overview {
   min-width: 0;
   min-height: auto;
   flex: none;
@@ -12372,8 +13058,7 @@
   white-space: nowrap;
 }
 
-.operational-context-panel[data-level='situation']
-  .impact-situation-command {
+.operational-context-panel[data-level='situation'] .impact-situation-command {
   width: auto;
   min-width: 0;
   flex: none;
@@ -12416,8 +13101,7 @@
   stroke-width: 1.35;
   stroke-linecap: round;
   stroke-dasharray: 13 82;
-  filter:
-    drop-shadow(0 0 2px rgb(255 255 255 / 0.74))
+  filter: drop-shadow(0 0 2px rgb(255 255 255 / 0.74))
     drop-shadow(0 0 6px rgb(var(--island-glow-rgb) / 0.58));
   animation: impact-fiber-sheen 9.8s linear infinite;
   vector-effect: non-scaling-stroke;
@@ -12428,8 +13112,7 @@
   .organizational-scene__connection {
   stroke-width: 0.9;
   stroke-dasharray: none;
-  filter:
-    drop-shadow(0 0 2px rgb(255 255 255 / 0.44))
+  filter: drop-shadow(0 0 2px rgb(255 255 255 / 0.44))
     drop-shadow(0 0 5px rgb(var(--island-glow-rgb) / 0.38));
   animation: none;
   animation-direction: normal;
@@ -12457,8 +13140,7 @@
   fill: rgb(2 14 30 / 0.96);
   stroke: rgb(var(--island-glow-rgb) / 0.86);
   stroke-width: 0.85;
-  filter:
-    drop-shadow(0 0 3px rgb(var(--island-glow-rgb) / 0.88))
+  filter: drop-shadow(0 0 3px rgb(var(--island-glow-rgb) / 0.88))
     drop-shadow(0 0 8px rgb(var(--island-glow-rgb) / 0.36));
   animation: impact-fiber-terminal-breathe 3.8s ease-in-out infinite;
   vector-effect: non-scaling-stroke;
@@ -12469,8 +13151,7 @@
   fill: #f5fdff;
   stroke: rgb(var(--island-glow-rgb));
   stroke-width: 0.6;
-  filter:
-    drop-shadow(0 0 2px #fff)
+  filter: drop-shadow(0 0 2px #fff)
     drop-shadow(0 0 5px rgb(var(--island-glow-rgb)));
   vector-effect: non-scaling-stroke;
 }
@@ -12486,8 +13167,7 @@
 .organizational-scene[data-level='institutional']
   .organizational-scene__connection-relay-core {
   fill: #eafcff;
-  filter:
-    drop-shadow(0 0 2px #fff)
+  filter: drop-shadow(0 0 2px #fff)
     drop-shadow(0 0 4px rgb(var(--island-glow-rgb)));
 }
 
@@ -12496,8 +13176,7 @@
   fill: #f5feff;
   stroke: rgb(var(--island-glow-rgb) / 0.94);
   stroke-width: 0.45;
-  filter:
-    drop-shadow(0 0 2px #fff)
+  filter: drop-shadow(0 0 2px #fff)
     drop-shadow(0 0 5px rgb(var(--island-glow-rgb)));
 }
 
@@ -12571,12 +13250,8 @@
   .organizational-scene[data-level='institutional']
   .organizational-scene__island
   .propagation-island__image {
-  filter:
-    hue-rotate(var(--island-hue, 0deg))
-    saturate(0.92)
-    brightness(1.02)
-    contrast(1.12)
-    drop-shadow(0 0 9px rgb(var(--island-glow-rgb) / 0.46))
+  filter: hue-rotate(var(--island-hue, 0deg)) saturate(0.92) brightness(1.02)
+    contrast(1.12) drop-shadow(0 0 9px rgb(var(--island-glow-rgb) / 0.46))
     drop-shadow(0 0 22px rgb(var(--island-glow-rgb) / 0.16))
     drop-shadow(0 13px 17px rgb(0 0 0 / 0.76)) !important;
 }
@@ -12786,7 +13461,8 @@
 
 /* Cheaper connection glow: wide translucent stroke instead of SVG blur filters. */
 .propagation-scene[data-perf='balanced'] .organizational-scene__connection-glow,
-.organizational-scene[data-perf='balanced'] .organizational-scene__connection-glow {
+.organizational-scene[data-perf='balanced']
+  .organizational-scene__connection-glow {
   stroke: rgb(var(--island-glow-rgb) / 0.2);
   stroke-width: 8;
   filter: none;
@@ -12795,15 +13471,23 @@
 .propagation-scene[data-perf='balanced'] .organizational-scene__connection,
 .organizational-scene[data-perf='balanced'] .organizational-scene__connection,
 .propagation-scene[data-perf='balanced'] .organizational-scene__connection-rail,
-.organizational-scene[data-perf='balanced'] .organizational-scene__connection-rail,
-.propagation-scene[data-perf='balanced'] .organizational-scene__connection-sheen,
-.organizational-scene[data-perf='balanced'] .organizational-scene__connection-sheen,
+.organizational-scene[data-perf='balanced']
+  .organizational-scene__connection-rail,
+.propagation-scene[data-perf='balanced']
+  .organizational-scene__connection-sheen,
+.organizational-scene[data-perf='balanced']
+  .organizational-scene__connection-sheen,
 .propagation-scene[data-perf='balanced'] .organizational-scene__connection-node,
-.organizational-scene[data-perf='balanced'] .organizational-scene__connection-node,
-.propagation-scene[data-perf='balanced'] .organizational-scene__connection-node-core,
-.organizational-scene[data-perf='balanced'] .organizational-scene__connection-node-core,
-.propagation-scene[data-perf='balanced'] .organizational-scene__connection-particle,
-.organizational-scene[data-perf='balanced'] .organizational-scene__connection-particle {
+.organizational-scene[data-perf='balanced']
+  .organizational-scene__connection-node,
+.propagation-scene[data-perf='balanced']
+  .organizational-scene__connection-node-core,
+.organizational-scene[data-perf='balanced']
+  .organizational-scene__connection-node-core,
+.propagation-scene[data-perf='balanced']
+  .organizational-scene__connection-particle,
+.organizational-scene[data-perf='balanced']
+  .organizational-scene__connection-particle {
   filter: none;
 }
 
@@ -12891,15 +13575,19 @@
   .propagation-island__image {
   animation: none;
   transform: translate3d(0, -4px, 0) scale(1.05);
-  filter:
-    drop-shadow(0 0 18px rgb(var(--island-glow-rgb) / 0.55))
+  filter: drop-shadow(0 0 18px rgb(var(--island-glow-rgb) / 0.55))
     drop-shadow(0 14px 22px rgb(0 0 0 / 0.55));
 }
 
 /* Institutional hover: amplify glow without fighting existing hue filters. */
 .impact-network__canvas
   .propagation-scene[data-perf='balanced']
-  .organizational-scene__island:is(:hover, :focus-visible, :focus-within, [data-selected='true'])
+  .organizational-scene__island:is(
+    :hover,
+    :focus-visible,
+    :focus-within,
+    [data-selected='true']
+  )
   .propagation-island__halo {
   opacity: 0.9;
   filter: blur(12px);
@@ -12907,7 +13595,12 @@
 
 .impact-network__canvas
   .propagation-scene[data-perf='balanced']
-  .organizational-scene__island:is(:hover, :focus-visible, :focus-within, [data-selected='true'])
+  .organizational-scene__island:is(
+    :hover,
+    :focus-visible,
+    :focus-within,
+    [data-selected='true']
+  )
   .propagation-island__label {
   border-color: rgb(var(--island-glow-rgb) / 0.72);
   box-shadow:
@@ -12916,20 +13609,40 @@
     inset 0 1px 0 rgb(255 255 255 / 0.06);
 }
 
-.propagation-scene[data-perf='balanced'] .propagation-island:hover .propagation-island__halo,
-.propagation-scene[data-perf='balanced'] .propagation-island:focus-visible .propagation-island__halo,
-.propagation-scene[data-perf='balanced'] .propagation-island[data-selected='true'] .propagation-island__halo,
-.organizational-scene[data-perf='balanced'] .propagation-island:hover .propagation-island__halo,
-.organizational-scene[data-perf='balanced'] .propagation-island:focus-visible .propagation-island__halo,
-.organizational-scene[data-perf='balanced'] .propagation-island[data-selected='true'] .propagation-island__halo {
+.propagation-scene[data-perf='balanced']
+  .propagation-island:hover
+  .propagation-island__halo,
+.propagation-scene[data-perf='balanced']
+  .propagation-island:focus-visible
+  .propagation-island__halo,
+.propagation-scene[data-perf='balanced']
+  .propagation-island[data-selected='true']
+  .propagation-island__halo,
+.organizational-scene[data-perf='balanced']
+  .propagation-island:hover
+  .propagation-island__halo,
+.organizational-scene[data-perf='balanced']
+  .propagation-island:focus-visible
+  .propagation-island__halo,
+.organizational-scene[data-perf='balanced']
+  .propagation-island[data-selected='true']
+  .propagation-island__halo {
   opacity: 0.85;
   filter: blur(12px);
 }
 
-.propagation-scene[data-perf='balanced'] .propagation-island--ambient:hover .propagation-island__image,
-.propagation-scene[data-perf='balanced'] .propagation-island--ambient[data-selected='true'] .propagation-island__image,
-.organizational-scene[data-perf='balanced'] .propagation-island--ambient:hover .propagation-island__image,
-.organizational-scene[data-perf='balanced'] .propagation-island--ambient[data-selected='true'] .propagation-island__image {
+.propagation-scene[data-perf='balanced']
+  .propagation-island--ambient:hover
+  .propagation-island__image,
+.propagation-scene[data-perf='balanced']
+  .propagation-island--ambient[data-selected='true']
+  .propagation-island__image,
+.organizational-scene[data-perf='balanced']
+  .propagation-island--ambient:hover
+  .propagation-island__image,
+.organizational-scene[data-perf='balanced']
+  .propagation-island--ambient[data-selected='true']
+  .propagation-island__image {
   opacity: 1;
 }
 
@@ -12946,18 +13659,22 @@
   contain: none !important;
 }
 
-.propagation-scene[data-perf='balanced'] .organizational-scene__direction-hub img,
-.organizational-scene[data-perf='balanced'] .organizational-scene__direction-hub img {
-  filter:
-    saturate(1.18)
-    brightness(1.03)
+.propagation-scene[data-perf='balanced']
+  .organizational-scene__direction-hub
+  img,
+.organizational-scene[data-perf='balanced']
+  .organizational-scene__direction-hub
+  img {
+  filter: saturate(1.18) brightness(1.03)
     drop-shadow(0 0 14px rgb(48 181 246 / 0.55))
     drop-shadow(0 12px 18px rgb(0 0 0 / 0.62));
 }
 
 .propagation-scene[data-perf='balanced'] .organizational-scene__direction-orbit,
-.organizational-scene[data-perf='balanced'] .organizational-scene__direction-pulse,
-.organizational-scene[data-perf='balanced'] .organizational-scene__direction-scan {
+.organizational-scene[data-perf='balanced']
+  .organizational-scene__direction-pulse,
+.organizational-scene[data-perf='balanced']
+  .organizational-scene__direction-scan {
   animation-duration: 12s;
 }
 

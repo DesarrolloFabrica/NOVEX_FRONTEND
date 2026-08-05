@@ -7,10 +7,8 @@ export {
   type IncidentContextPanelData,
   type SimulationControlState,
 } from './ContextPanel'
-export {
-  CoordinationSituationNodes,
-  MAX_VISIBLE_SITUATION_NODES,
-} from './CoordinationSituationNodes'
+export { CoordinationSituationNodes } from './CoordinationSituationNodes'
+export { MAX_VISIBLE_SITUATION_NODES } from './coordination-situation-layout'
 export {
   IslandNode,
   type IslandImpactState,
@@ -30,7 +28,10 @@ export {
   type PropagationEdgeProps,
   type PropagationEdgeState,
 } from './PropagationEdge'
-export { PropagationScene, type PropagationSceneProps } from './PropagationScene'
+export {
+  PropagationScene,
+  type PropagationSceneProps,
+} from './PropagationScene'
 export {
   SituationCommandPanel,
   type SituationCommandPanelProps,

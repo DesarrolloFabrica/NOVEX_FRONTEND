@@ -20,7 +20,7 @@ const LAYOUT_IDS = [
   'coord-desarrollo-profesional',
   'coord-proyeccion-social',
   'coord-bellas-artes',
-  'coord-social-lab',
+  'coord-servicios',
   'coord-especializaciones',
   'coord-transversales',
 ] as const
@@ -143,12 +143,7 @@ describe('structure-layout', () => {
   })
 
   it('mantiene las placas institucionales sobre cada isla', () => {
-    const { nodes } = buildStructureLayout(
-      LAYOUT_IDS,
-      null,
-      1180,
-      640,
-    )
+    const { nodes } = buildStructureLayout(LAYOUT_IDS, null, 1180, 640)
 
     for (const node of nodes) {
       expect(node.labelPlacement).toBe('top')
@@ -179,13 +174,33 @@ describe('structure-layout', () => {
       640,
     )
 
-    expect(nodes).toHaveLength(LAYOUT_IDS.length)
-    expect(nodes.find((node) => node.coordinationId === 'coord-b2b')).toMatchObject({
+    expect(nodes).toHaveLength(1)
+    expect(nodes[0]).toMatchObject({
       coordinationId: 'coord-b2b',
+      x: center.x,
+      selected: true,
+      labelPlacement: 'bottom',
+    })
+    expect(nodes[0].y).toBeLessThan(center.y)
+    expect(nodes[0].size).toBeGreaterThan(270)
+  })
+
+  it('recupera el contexto de islas únicamente para la propagación', () => {
+    const { center, nodes } = buildStructureLayout(
+      LAYOUT_IDS,
+      'coord-b2b',
+      1180,
+      640,
+      true,
+    )
+
+    expect(nodes).toHaveLength(LAYOUT_IDS.length)
+    expect(
+      nodes.find((node) => node.coordinationId === 'coord-b2b'),
+    ).toMatchObject({
       x: center.x,
       y: center.y,
       selected: true,
-      labelPlacement: 'bottom',
     })
     expect(
       nodes

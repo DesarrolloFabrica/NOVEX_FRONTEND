@@ -30,7 +30,7 @@ import {
   mapSituationToImpactOperationalEvent,
 } from '@/modules/impact-network/services/impact-network-situations.service'
 import type { CoordinationNetworkStatusResponse } from '@/modules/api/coordinations.api'
-import { fetchSituationAffectedCoordinations } from '@/modules/api/impact.api'
+import { fetchSituationAffectedCoordinations, fetchSituationImpactContext } from '@/modules/api/impact.api'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { canCreateCoordinationSituations } from '@/modules/auth/utils/permissions'
 import { ConnectedSituationDetailModal } from '@/modules/operational-events/components/ConnectedSituationDetailModal'
@@ -40,14 +40,18 @@ import type { UpdateSituationStatusInput } from '@/modules/monitoring/utils/situ
 import { MainScreen, NovexFrame, NovexRoom } from '@/modules/room'
 import { updateSituationStatus } from '@/modules/services/situationManagementData.service'
 import type { Coordination } from '@/modules/impact-network/types/operational-network.types'
-import type { SituationResponse } from '@/modules/situations/types/situation.types'
+import type {
+  SituationImpactContextResponse,
+  SituationResponse,
+} from '@/modules/situations/types/situation.types'
 import { NovexProductHeader } from '@/shared/components/NovexProductHeader'
+import { ApiError } from '@/shared/api/http'
 import { getErrorMessage } from '@/shared/utils/error'
 import { isValidUuid } from '@/shared/utils/uuid'
 import '@/styles/impact-network.css'
 
 type ReplayPhase = 'idle' | 'playing' | 'paused' | 'complete'
-type SimulationPhase = 'idle' | 'loading' | 'visible'
+type SimulationPhase = 'idle' | 'loading' | 'visible' | 'empty' | 'error'
 
 const EMPTY_TOPOLOGY: ImpactTopology = {
   canvas: { width: 1440, height: 900, incidentCenter: { x: 720, y: 450 } },
@@ -65,6 +69,24 @@ function getCoordinatorInitialSelection(
 
   const candidate = selectedAreaId?.trim() || coordinationId?.trim()
   return candidate ? (candidate as CoordinationId) : null
+}
+
+function extractLegacyRelatedCodes(description: string): string[] {
+  const perceptionMatch =
+    description.match(
+      /Coordinaciones relacionadas \(percepción inicial\): (.+)/i,
+    ) ??
+    description.match(/Áreas relacionadas \(percepción inicial\): (.+)/i)
+  if (!perceptionMatch?.[1]) return []
+
+  return [
+    ...new Set(
+      perceptionMatch[1]
+        .split(',')
+        .map((label) => label.trim().split('·')[0]?.trim())
+        .filter((code): code is string => Boolean(code)),
+    ),
+  ]
 }
 
 function formatPropagationDuration(replay: IncidentReplay | null): string {
@@ -120,6 +142,11 @@ export function ImpactNetworkExperience() {
   const [affectedCoordinationIds, setAffectedCoordinationIds] = useState<
     readonly CoordinationId[]
   >([])
+  const [impactContext, setImpactContext] =
+    useState<SituationImpactContextResponse | null>(null)
+  const [simulationMessage, setSimulationMessage] = useState<string | null>(
+    null,
+  )
   const [replay, setReplay] = useState<IncidentReplay | null>(null)
   const [replayPhase, setReplayPhase] = useState<ReplayPhase>('idle')
   const [prediction, setPrediction] = useState<ImpactPrediction | null>(null)
@@ -381,6 +408,8 @@ export function ImpactNetworkExperience() {
       resetPropagation()
       setPrediction(null)
       setSimulationPhase('idle')
+      setSimulationMessage(null)
+      setImpactContext(null)
       setAffectedCoordinationIds([])
       syncSearchParams(incidentCoordinationId, eventId)
 
@@ -394,18 +423,76 @@ export function ImpactNetworkExperience() {
           // Mantener el evento base si el análisis aún no está disponible.
         }
 
+        let context: SituationImpactContextResponse | null = null
         try {
-          const affected = await fetchSituationAffectedCoordinations(eventId)
-          const codes = affected.items
+          context = await fetchSituationImpactContext(eventId)
+          setImpactContext(context)
+        } catch (error) {
+          if (error instanceof ApiError && error.status === 404) {
+            const legacyCodes = extractLegacyRelatedCodes(
+              situation.description,
+            ).filter((code) => code !== situation.coordinationCode)
+            const hasDeclaredRelated = legacyCodes.length > 0
+            context = {
+              situationId: eventId,
+              originCoordinationId: situation.coordinationId ?? '',
+              originCoordinationCode: situation.coordinationCode ?? '',
+              hasDeclaredRelated,
+              canSimulate: !hasDeclaredRelated,
+              simulationAvailable: !hasDeclaredRelated,
+              declaredRelated: legacyCodes.map((code) => ({
+                coordinationId: code,
+                coordinationCode: code,
+                coordinationName: code,
+                coordinationShortName: code,
+                impactLevel: null,
+                description: null,
+                source: 'declared' as const,
+              })),
+              message: hasDeclaredRelated
+                ? 'Se muestran las coordinaciones declaradas por el usuario.'
+                : 'Puede simular el impacto potencial con base en el análisis IA.',
+            }
+            setImpactContext(context)
+          } else {
+            setImpactContext(null)
+          }
+        }
+
+        if (context?.hasDeclaredRelated) {
+          const declaredCodes = context.declaredRelated
             .map(
               (item) =>
                 resolveCoordinationId(item.coordinationCode) ??
                 resolveCoordinationId(item.coordinationId),
             )
             .filter((id): id is CoordinationId => Boolean(id))
-          setAffectedCoordinationIds(codes)
-        } catch {
+          setAffectedCoordinationIds(declaredCodes)
+          setSimulationMessage(context.message)
+        } else {
+          // Sin declaración manual: el origen se ve por la situación enfocada;
+          // las islas potenciales se revelan solo con «Simular impacto».
           setAffectedCoordinationIds([])
+          setSimulationMessage(context?.message ?? null)
+
+          // Fallback si el endpoint nuevo aún no está desplegado: conservar
+          // el comportamiento previo con affected-coordinations.
+          if (!context) {
+            try {
+              const affected =
+                await fetchSituationAffectedCoordinations(eventId)
+              const codes = affected.items
+                .map(
+                  (item) =>
+                    resolveCoordinationId(item.coordinationCode) ??
+                    resolveCoordinationId(item.coordinationId),
+                )
+                .filter((id): id is CoordinationId => Boolean(id))
+              setAffectedCoordinationIds(codes)
+            } catch {
+              setAffectedCoordinationIds([])
+            }
+          }
         }
       }
 
@@ -462,7 +549,10 @@ export function ImpactNetworkExperience() {
       return
     }
 
-    if (coordinationFromQuery) {
+    if (
+      coordinationFromQuery &&
+      coordinationIds.includes(coordinationFromQuery)
+    ) {
       if (
         !coordinatorMode ||
         coordinationFromQuery === assignedCoordinationId
@@ -479,7 +569,7 @@ export function ImpactNetworkExperience() {
   }, [
     activeIncidents,
     assignedCoordinationId,
-    coordinationIds.length,
+    coordinationIds,
     coordinatorMode,
     events,
     focusIncident,
@@ -531,9 +621,11 @@ export function ImpactNetworkExperience() {
 
   const handleSimulation = useCallback(async () => {
     if (!focusedIncident) return
-    if (simulationPhase === 'visible') {
+    if (impactContext?.hasDeclaredRelated) return
+    if (simulationPhase === 'visible' || simulationPhase === 'empty') {
       setPrediction(null)
       setSimulationPhase('idle')
+      setSimulationMessage(impactContext?.message ?? null)
       return
     }
 
@@ -543,28 +635,55 @@ export function ImpactNetworkExperience() {
     }
 
     setSimulationPhase('loading')
+    setSimulationMessage('Calculando impacto potencial…')
     try {
       const result = await impactNetworkDataProvider.simulateImpact(
         focusedIncident.eventId,
         { horizonMinutes: 30 },
       )
-      setPrediction(result)
-      setSimulationPhase(result ? 'visible' : 'idle')
+      if (result && result.potentialAreaIds.length > 0) {
+        setPrediction(result)
+        setSimulationPhase('visible')
+        setSimulationMessage(
+          `Simulación: ${result.potentialAreaIds.length} isla${
+            result.potentialAreaIds.length === 1 ? '' : 's'
+          } con posible impacto.`,
+        )
+        return
+      }
+
+      setPrediction(null)
+      setSimulationPhase('empty')
+      setSimulationMessage(
+        'No hay una predicción válida para esta situación. Ejecute o revise el análisis IA.',
+      )
     } catch {
       setPrediction(null)
-      setSimulationPhase('idle')
+      setSimulationPhase('error')
+      setSimulationMessage(
+        'No fue posible simular el impacto. Intente de nuevo en unos momentos.',
+      )
     }
-  }, [focusedIncident, pause, replayPhase, simulationPhase])
+  }, [
+    focusedIncident,
+    impactContext?.hasDeclaredRelated,
+    impactContext?.message,
+    pause,
+    replayPhase,
+    simulationPhase,
+  ])
 
   const exitFocusMode = useCallback(() => {
     setIslandFocusActive(false)
     setFocusedEventId(null)
     setAffectedCoordinationIds([])
+    setImpactContext(null)
     setReplay(null)
     setReplayPhase('idle')
     resetPropagation()
     setPrediction(null)
     setSimulationPhase('idle')
+    setSimulationMessage(null)
     setShowAnalysisModal(false)
   }, [resetPropagation])
 
@@ -672,7 +791,15 @@ export function ImpactNetworkExperience() {
   const canReplay = Boolean(
     focusedIncident && replayAvailability[focusedIncident.eventId],
   )
-  const canSimulate = Boolean(focusedIncident)
+  const canSimulate = Boolean(
+    focusedIncident &&
+      impactContext &&
+      !impactContext.hasDeclaredRelated &&
+      impactContext.canSimulate,
+  )
+  const predictedCoordinationIds = (
+    prediction?.potentialAreaIds ?? []
+  ).filter((id): id is CoordinationId => Boolean(resolveCoordinationId(id)))
 
   const illuminatedCoordinationIds =
     currentFrame?.illuminatedCoordinationIds ??
@@ -698,9 +825,16 @@ export function ImpactNetworkExperience() {
       ? (networkSnapshot?.activeIncidentsCount ?? activeIncidents.length)
       : coordinationIncidents.length
 
-  const synchronizedLabel = networkSnapshot
-    ? `${networkSnapshot.synchronizedCoordinationsCount} coordinaciones sincronizadas`
+  const visibleSynchronizedCoordinations = networkSnapshot
+    ? Math.min(
+        coordinationIds.length,
+        networkSnapshot.synchronizedCoordinationsCount,
+      )
     : undefined
+  const synchronizedLabel =
+    visibleSynchronizedCoordinations == null
+      ? undefined
+      : `${visibleSynchronizedCoordinations} coordinaciones sincronizadas`
 
   return (
     <NovexRoom environment={environment} scene="impact" immersive={isImmersive}>
@@ -803,7 +937,7 @@ export function ImpactNetworkExperience() {
                           illuminatedCoordinationIds={
                             illuminatedCoordinationIds
                           }
-                          predictedCoordinationIds={[]}
+                          predictedCoordinationIds={predictedCoordinationIds}
                           predictionVisible={simulationPhase === 'visible'}
                           activeEdgeId={currentFrame?.activeEdgeId ?? null}
                           propagatingCoordinationId={
@@ -868,10 +1002,15 @@ export function ImpactNetworkExperience() {
                             className="impact-map-actions__simulate"
                             onClick={() => void handleSimulation()}
                             disabled={simulationPhase === 'loading'}
+                            aria-pressed={
+                              simulationPhase === 'visible' ||
+                              simulationPhase === 'empty'
+                            }
                           >
                             {simulationPhase === 'loading'
                               ? 'Simulando…'
-                              : simulationPhase === 'visible'
+                              : simulationPhase === 'visible' ||
+                                  simulationPhase === 'empty'
                                 ? 'Ocultar simulación'
                                 : 'Simular impacto'}
                           </button>
@@ -883,12 +1022,9 @@ export function ImpactNetworkExperience() {
                   <div className="impact-network__panel-layer">
                     <OperationalContextPanel
                       coordination={selectedCoordination}
-                      coordinationsCount={
-                        networkSnapshot?.coordinationsCount ??
-                        coordinationIds.length
-                      }
+                      coordinationsCount={coordinationIds.length}
                       synchronizedCoordinationsCount={
-                        networkSnapshot?.synchronizedCoordinationsCount
+                        visibleSynchronizedCoordinations
                       }
                       incidents={
                         navigationLevel === 'institutional'
@@ -947,7 +1083,13 @@ export function ImpactNetworkExperience() {
         />
       ) : null}
 
-      {prediction ? (
+      {simulationMessage ? (
+        <span className="sr-only" aria-live="polite">
+          {simulationMessage}
+        </span>
+      ) : null}
+
+      {prediction && simulationPhase === 'visible' ? (
         <span className="sr-only" aria-live="polite">
           Simulación disponible: {prediction.potentialAreaIds.length} áreas
           potenciales.

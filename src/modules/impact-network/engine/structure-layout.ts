@@ -259,13 +259,32 @@ export function buildStructureLayout(
   selectedCoordinationId: CoordinationId | null,
   width: number,
   height: number,
+  includeContext = false,
 ): StructureLayout {
   const center = { x: width / 2, y: height / 2 }
   const minSide = Math.min(width, height)
   const nodeSize = Math.max(64, Math.min(112, minSide * 0.125))
-  const selectedSize = Math.max(200, Math.min(270, minSide * 0.3))
+  const selectedSize = includeContext
+    ? Math.max(200, Math.min(270, minSide * 0.3))
+    : Math.max(220, Math.min(420, minSide * 0.48))
 
   if (selectedCoordinationId) {
+    const selectedNode: StructureNode = {
+      coordinationId: selectedCoordinationId,
+      x: center.x,
+      y: includeContext
+        ? center.y
+        : Math.max(selectedSize / 2 + 66, height * 0.38),
+      size: selectedSize,
+      selected: true,
+      labelPlacement: 'bottom',
+      depth: 100,
+    }
+
+    if (!includeContext) {
+      return { center, nodes: [selectedNode] }
+    }
+
     const institutionalLayout = buildStructureLayout(
       coordinationIds,
       null,
@@ -281,18 +300,7 @@ export function buildStructureLayout(
 
     return {
       center,
-      nodes: [
-        {
-          coordinationId: selectedCoordinationId,
-          x: center.x,
-          y: center.y,
-          size: selectedSize,
-          selected: true,
-          labelPlacement: 'bottom',
-          depth: 100,
-        },
-        ...contextNodes,
-      ],
+      nodes: [selectedNode, ...contextNodes],
     }
   }
 

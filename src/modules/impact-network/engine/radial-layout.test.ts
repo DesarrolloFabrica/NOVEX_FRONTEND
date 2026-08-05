@@ -102,7 +102,7 @@ describe('radial-layout', () => {
       const satelliteIds = [
         'coord-proyeccion-social',
         'coord-empresarial',
-        'coord-social-lab',
+        'coord-servicios',
         'coord-saber-pro',
       ] as const
       const layout = computeRadialLayout(

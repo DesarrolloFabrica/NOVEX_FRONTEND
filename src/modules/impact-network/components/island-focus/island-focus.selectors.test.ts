@@ -25,12 +25,12 @@ const CATALOG: CoordinationDefinition[] = [
     isActive: true,
   },
   {
-    id: 'coord-social-lab',
+    id: 'coord-servicios',
     uuid: '2',
-    name: 'Coordinador de Social - Social Lab',
-    shortName: 'Social Lab',
-    islandAsset: '/islas/CoordSociallab.webp',
-    color: '#FF8A5B',
+    name: 'Servicios',
+    shortName: 'Servicios',
+    islandAsset: '/islas/CoordServicios.webp',
+    color: '#3DDC97',
     displayOrder: 2,
     isActive: true,
   },
@@ -59,13 +59,13 @@ const CATALOG: CoordinationDefinition[] = [
 const propagation: FocusedPropagation = {
   originCoordinationId: 'coord-operaciones-academicas',
   originName: 'Coordinador Operaciones Académicas',
-  affectedCoordinationIds: ['coord-social-lab', 'coord-empresarial'],
+  affectedCoordinationIds: ['coord-servicios', 'coord-empresarial'],
   affectedNames: [
-    'Coordinador de Social - Social Lab',
+    'Servicios',
     'Coordinador Empresarial',
   ],
   edges: [],
-  propagationOrder: ['coord-social-lab', 'coord-empresarial'],
+  propagationOrder: ['coord-servicios', 'coord-empresarial'],
   riskLevel: 'high',
 }
 
@@ -78,7 +78,7 @@ describe('resolveIslandFocusRole', () => {
     expect(resolveIslandFocusRole('coord-operaciones-academicas', propagation)).toBe(
       'origin',
     )
-    expect(resolveIslandFocusRole('coord-social-lab', propagation)).toBe(
+    expect(resolveIslandFocusRole('coord-servicios', propagation)).toBe(
       'affected',
     )
     expect(resolveIslandFocusRole('coord-general', propagation)).toBe('ambient')
@@ -91,7 +91,7 @@ describe('resolveIslandAffectedBriefing', () => {
     expect(event).toBeDefined()
 
     const briefing = resolveIslandAffectedBriefing(
-      'coord-social-lab',
+      'coord-servicios',
       propagation,
       event!,
     )
@@ -143,7 +143,7 @@ describe('resolveIslandStageBriefing', () => {
     expect(event).toBeDefined()
 
     const stage = resolveIslandStageBriefing(
-      'coord-social-lab',
+      'coord-servicios',
       propagation,
       event!,
     )

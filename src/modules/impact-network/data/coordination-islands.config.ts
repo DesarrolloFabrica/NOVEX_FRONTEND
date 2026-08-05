@@ -1,9 +1,12 @@
 /**
  * Catálogo runtime de coordinaciones alimentado por GET /coordinations/graph.
- * El backend es la única fuente de verdad; no hay IDs ni aliases hardcodeados.
+ * El backend define la organización; el frontend conserva la presentación
+ * canónica de los assets que forman parte del bundle visual.
  */
 
 export type CoordinationId = string
+
+export const GENERAL_COORDINATION_ID: CoordinationId = 'coord-general'
 
 export interface CoordinationDefinition {
   id: CoordinationId
@@ -21,6 +24,46 @@ const byCode = new Map<string, CoordinationDefinition>()
 const byUuid = new Map<string, CoordinationDefinition>()
 const byNameToken = new Map<string, CoordinationDefinition>()
 
+/**
+ * El arte es una responsabilidad del frontend. Esta tabla evita que un
+ * imageAsset legado del backend haga que dos coordinaciones compartan isla.
+ */
+const ISLAND_ASSET_BY_COORDINATION_ID: Readonly<Record<string, string>> = {
+  'coord-general': 'CoordGeneral',
+  'coord-b2b': 'CoordB2B',
+  'coord-bellas-artes': 'CoordBellasArtes',
+  'coord-desarrollo-profesional': 'CoordDesarrolloprof',
+  'coord-empresarial': 'CoordTransformacionEmpresarial',
+  'coord-especializaciones': 'CoordEspecializaciones',
+  'coord-ingenierias': 'CoordIngenierias',
+  'coord-operaciones-academicas': 'CoordOperacionesAcademicas',
+  'coord-proyeccion-social': 'CoordProyeccionAcademica',
+  'coord-saber-pro': 'CoordSaberPro',
+  'coord-transversales': 'CoordTransversales',
+  'coord-homologaciones': 'CoordHomologaciones',
+  'coord-negocios': 'CoordNegocios',
+  'coord-fabrica-contenidos': 'CoordFabricaDeContenido',
+  'coord-servicios': 'CoordServicios',
+}
+
+const ISLAND_COLOR_BY_COORDINATION_ID: Readonly<Record<string, string>> = {
+  'coord-general': '#28C8F4',
+  'coord-b2b': '#FF5F66',
+  'coord-bellas-artes': '#6F7CFF',
+  'coord-desarrollo-profesional': '#B267FF',
+  'coord-empresarial': '#A95CFF',
+  'coord-especializaciones': '#FF626A',
+  'coord-ingenierias': '#FF8A2A',
+  'coord-operaciones-academicas': '#8FA7C8',
+  'coord-proyeccion-social': '#88AD5A',
+  'coord-saber-pro': '#9ACD50',
+  'coord-transversales': '#FF9A28',
+  'coord-homologaciones': '#FF6978',
+  'coord-negocios': '#FF7B20',
+  'coord-fabrica-contenidos': '#22D3E5',
+  'coord-servicios': '#C050FF',
+}
+
 export function normalizeCatalogToken(value: string): string {
   return value
     .normalize('NFD')
@@ -31,11 +74,26 @@ export function normalizeCatalogToken(value: string): string {
 }
 
 /** Convierte imageAsset del backend (ej. CoordGeneral.png) a ruta pública. */
-export function resolveIslandAssetPath(imageAsset: string): string {
-  const fileName = imageAsset.trim().replace(/^.*[/\\]/, '')
+export function resolveIslandAssetPath(
+  imageAsset: string,
+  coordinationId?: CoordinationId,
+): string {
+  const canonicalAsset = coordinationId
+    ? ISLAND_ASSET_BY_COORDINATION_ID[coordinationId]
+    : undefined
+  const fileName = (canonicalAsset ?? imageAsset)
+    .trim()
+    .replace(/^.*[/\\]/, '')
   if (!fileName) return '/islas/CoordGeneral.webp'
   const base = fileName.replace(/\.(png|jpg|jpeg|webp)$/i, '')
   return `/islas/${base}.webp`
+}
+
+export function resolveIslandColor(
+  coordinationId: CoordinationId,
+  backendColor: string,
+): string {
+  return ISLAND_COLOR_BY_COORDINATION_ID[coordinationId] ?? backendColor
 }
 
 export function setCoordinationCatalog(

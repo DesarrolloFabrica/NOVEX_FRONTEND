@@ -3,6 +3,7 @@ import {
   getCoordinationIslandAsset,
   resolveCoordinationId,
   resolveIslandAssetPath,
+  resolveIslandColor,
   setCoordinationCatalog,
   starEdgeId,
   type CoordinationDefinition,
@@ -67,6 +68,20 @@ describe('coordination catalog (backend-driven)', () => {
     expect(getCoordinationIslandAsset('coord-operaciones-academicas')).toBe(
       '/islas/CoordDesarrolloprof.webp',
     )
+  })
+
+  it('prioriza el arte canónico de la coordinación sobre assets legados', () => {
+    expect(resolveIslandAssetPath('CoordGeneral.png', 'coord-ingenierias')).toBe(
+      '/islas/CoordIngenierias.webp',
+    )
+    expect(resolveIslandAssetPath('CoordB2B.png', 'coord-empresarial')).toBe(
+      '/islas/CoordTransformacionEmpresarial.webp',
+    )
+    expect(
+      resolveIslandAssetPath('CoordSociallab.png', 'coord-proyeccion-social'),
+    ).toBe('/islas/CoordProyeccionAcademica.webp')
+    expect(resolveIslandColor('coord-b2b', '#000000')).toBe('#FF5F66')
+    expect(resolveIslandColor('coord-desconocida', '#123456')).toBe('#123456')
   })
 
   it('genera ids de arista estables', () => {

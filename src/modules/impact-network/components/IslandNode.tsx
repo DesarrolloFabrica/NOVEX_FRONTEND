@@ -128,6 +128,7 @@ function IslandNodeView({
           decoding="async"
           draggable={false}
         />
+        <span className="propagation-island__emblem-glow" />
       </div>
 
       <div className="propagation-island__overlays">

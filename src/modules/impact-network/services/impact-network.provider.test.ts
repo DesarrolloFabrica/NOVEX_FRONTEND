@@ -1,22 +1,129 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+  backendImpactPropagationAdapter,
   impactNetworkDataProvider,
   stubImpactPropagationAdapter,
 } from '@/modules/impact-network/services/impact-network.provider'
 import { mapCoordinationGraphToImpactNetwork } from '@/modules/impact-network/services/impact-network-graph.mapper'
-import { getCoordinationCatalog } from '@/modules/impact-network/data/coordination-islands.config'
+import {
+  getCoordination,
+  getCoordinationCatalog,
+  setCoordinationCatalog,
+} from '@/modules/impact-network/data/coordination-islands.config'
+import { simulateSituationImpact } from '@/modules/api/impact.api'
+import { ApiError } from '@/shared/api/http'
+
+vi.mock('@/modules/api/impact.api', () => ({
+  simulateSituationImpact: vi.fn(),
+}))
 
 describe('impact network backend provider', () => {
+  beforeEach(() => {
+    vi.mocked(simulateSituationImpact).mockReset()
+    setCoordinationCatalog([
+      {
+        id: 'coord-a',
+        uuid: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+        name: 'Coordinación A',
+        shortName: 'A',
+        islandAsset: '/islas/a.webp',
+        color: '#111111',
+        displayOrder: 1,
+        isActive: true,
+      },
+      {
+        id: 'coord-b',
+        uuid: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+        name: 'Coordinación B',
+        shortName: 'B',
+        islandAsset: '/islas/b.webp',
+        color: '#222222',
+        displayOrder: 2,
+        isActive: true,
+      },
+      {
+        id: 'coord-c',
+        uuid: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+        name: 'Coordinación C',
+        shortName: 'C',
+        islandAsset: '/islas/c.webp',
+        color: '#333333',
+        displayOrder: 3,
+        isActive: true,
+      },
+    ])
+  })
+
   it('no carga topología mock desde el provider legado', async () => {
     await expect(impactNetworkDataProvider.loadTopology()).rejects.toThrow(
       /loadImpactNetworkGraph/,
     )
   })
 
-  it('adapter de propagación no inventa replay ni simulación', async () => {
-    await expect(stubImpactPropagationAdapter.loadReplay('evt-001')).resolves.toBeNull()
+  it('adapter stub no inventa replay ni simulación', async () => {
+    await expect(
+      stubImpactPropagationAdapter.loadReplay('evt-001'),
+    ).resolves.toBeNull()
     await expect(
       stubImpactPropagationAdapter.simulateImpact('evt-001'),
+    ).resolves.toBeNull()
+  })
+
+  it('adapter real mapea hasta dos islas del análisis IA', async () => {
+    vi.mocked(simulateSituationImpact).mockResolvedValue({
+      situationId: 'sit-1',
+      generatedAt: '2026-08-05T12:00:00.000Z',
+      horizonMinutes: 30,
+      source: 'ai_assessment',
+      canSimulate: true,
+      hasDeclaredRelated: false,
+      potentialCoordinations: [
+        {
+          coordinationId: 'id-a',
+          coordinationCode: 'coord-a',
+          coordinationName: 'A',
+          coordinationShortName: 'A',
+          impactLevel: 'CRITICAL',
+          description: 'crit',
+          source: 'simulated',
+        },
+        {
+          coordinationId: 'id-b',
+          coordinationCode: 'coord-b',
+          coordinationName: 'B',
+          coordinationShortName: 'B',
+          impactLevel: 'HIGH',
+          description: 'high',
+          source: 'simulated',
+        },
+        {
+          coordinationId: 'id-c',
+          coordinationCode: 'coord-c',
+          coordinationName: 'C',
+          coordinationShortName: 'C',
+          impactLevel: 'LOW',
+          description: 'low',
+          source: 'simulated',
+        },
+      ],
+      message: null,
+    })
+
+    const prediction = await backendImpactPropagationAdapter.simulateImpact(
+      'sit-1',
+      { horizonMinutes: 30 },
+    )
+
+    expect(prediction?.potentialAreaIds).toEqual(['coord-a', 'coord-b'])
+  })
+
+  it('adapter real no inventa datos si el endpoint no existe', async () => {
+    vi.mocked(simulateSituationImpact).mockRejectedValue(
+      new ApiError('Not Found', 404),
+    )
+
+    await expect(
+      backendImpactPropagationAdapter.simulateImpact('sit-1'),
     ).resolves.toBeNull()
   })
 
@@ -60,20 +167,12 @@ describe('impact network backend provider', () => {
       ],
     })
 
-    expect(model.coordinationIds).toEqual([
-      'coord-general',
-      'coord-ingenierias',
-    ])
-    expect(model.dependencies).toEqual([
-      {
-        id: 'dep-1',
-        sourceAreaId: 'coord-general',
-        targetAreaId: 'coord-ingenierias',
-      },
-    ])
+    expect(model.coordinationIds).toEqual(['coord-ingenierias'])
+    expect(model.dependencies).toEqual([])
     expect(getCoordinationCatalog()).toHaveLength(2)
+    expect(getCoordination('coord-general').shortName).toBe('General')
     expect(model.topology.bindings[0]?.externalIds).toContain(
-      'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+      'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
     )
   })
 })

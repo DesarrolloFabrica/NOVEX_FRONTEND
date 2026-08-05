@@ -27,6 +27,16 @@ export interface CreateSituationPayload {
   categoryId: string
   severity: SituationSeverity
   occurredAt: string
+  relatedCoordinationIds?: string[]
+}
+
+export interface RelatedCoordinationResponse {
+  id: string
+  coordinationId: string
+  coordinationCode: string
+  coordinationName: string
+  coordinationShortName: string
+  displayOrder: number
 }
 
 export interface SituationResponse {
@@ -51,6 +61,7 @@ export interface SituationResponse {
   occurredAt: string
   createdAt: string
   updatedAt: string
+  relatedCoordinations?: RelatedCoordinationResponse[]
 }
 
 export type EvidenceType =
@@ -96,4 +107,38 @@ export interface SituationAffectedCoordinationsResponse {
     description: string
   }>
   total: number
+}
+
+export type ImpactCoordinationSource = 'declared' | 'simulated' | 'none'
+
+export interface ImpactCoordinationCandidate {
+  coordinationId: string
+  coordinationCode: string
+  coordinationName: string
+  coordinationShortName: string
+  impactLevel: SituationSeverity | null
+  description: string | null
+  source: ImpactCoordinationSource
+}
+
+export interface SituationImpactContextResponse {
+  situationId: string
+  originCoordinationId: string
+  originCoordinationCode: string
+  hasDeclaredRelated: boolean
+  canSimulate: boolean
+  simulationAvailable: boolean
+  declaredRelated: ImpactCoordinationCandidate[]
+  message: string | null
+}
+
+export interface SituationImpactSimulationResponse {
+  situationId: string
+  generatedAt: string
+  horizonMinutes: number
+  source: 'ai_assessment' | 'none'
+  canSimulate: boolean
+  hasDeclaredRelated: boolean
+  potentialCoordinations: ImpactCoordinationCandidate[]
+  message: string | null
 }

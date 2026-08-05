@@ -62,6 +62,9 @@ export async function registerSituation(
     categoryId: placeholderCategory.id,
     severity: 'MEDIUM',
     occurredAt: captureDateToOccurredAt(input.draft.reportedAt),
+    relatedCoordinationIds: input.draft.relatedCoordinationIds.filter(
+      (id) => id !== input.draft.coordinationId,
+    ),
   })
 
   assertBackendSituationId(situation)

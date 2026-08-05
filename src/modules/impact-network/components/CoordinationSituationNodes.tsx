@@ -1,12 +1,11 @@
 import { memo, useMemo, type CSSProperties } from 'react'
 import type { ImpactIncident } from '@/modules/impact-network/types/impact-network.types'
+import { buildSituationLayouts } from '@/modules/impact-network/components/coordination-situation-layout'
 import {
   EVENT_STATUS_LABEL,
   RISK_LEVEL_LABEL,
 } from '@/modules/operational-events/components/eventPresentation'
 import type { RiskLevel } from '@/modules/operational-events/types/operational-event.types'
-
-export const MAX_VISIBLE_SITUATION_NODES = 4
 
 interface CoordinationSituationNodesProps {
   incidents: readonly ImpactIncident[]
@@ -17,45 +16,11 @@ interface CoordinationSituationNodesProps {
   onSelectSituation: (eventId: string) => void
 }
 
-interface SituationNodeLayout {
-  incident: ImpactIncident
-  x: number
-  y: number
-  path: string
-}
-
 const RISK_TONE: Record<RiskLevel, string> = {
   critical: 'critical',
   high: 'high',
   moderate: 'moderate',
   low: 'low',
-}
-
-function buildSituationLayouts(
-  incidents: readonly ImpactIncident[],
-  origin: { x: number; y: number },
-  islandSize: number,
-): SituationNodeLayout[] {
-  const visible = incidents.slice(0, MAX_VISIBLE_SITUATION_NODES)
-  if (visible.length === 0) return []
-
-  const radiusX = Math.max(118, islandSize * 0.72)
-  const radiusY = Math.max(78, islandSize * 0.42)
-  const baseY = origin.y + islandSize * 0.42
-  const startAngle = visible.length === 1 ? 90 : 48
-  const endAngle = visible.length === 1 ? 90 : 132
-  const span = endAngle - startAngle
-
-  return visible.map((incident, index) => {
-    const t = visible.length === 1 ? 0.5 : index / (visible.length - 1)
-    const angleDeg = startAngle + span * t
-    const radians = (angleDeg * Math.PI) / 180
-    const x = origin.x + Math.cos(radians) * radiusX
-    const y = baseY + Math.sin(radians) * radiusY
-    const controlY = origin.y + islandSize * 0.28
-    const path = `M ${origin.x} ${origin.y + islandSize * 0.18} Q ${origin.x} ${controlY} ${x} ${y}`
-    return { incident, x, y, path }
-  })
 }
 
 function CoordinationSituationNodesView({
@@ -67,8 +32,8 @@ function CoordinationSituationNodesView({
   onSelectSituation,
 }: CoordinationSituationNodesProps) {
   const layouts = useMemo(
-    () => buildSituationLayouts(incidents, origin, islandSize),
-    [incidents, islandSize, origin],
+    () => buildSituationLayouts(incidents, origin, islandSize, stageSize),
+    [incidents, islandSize, origin, stageSize],
   )
   const hiddenCount = Math.max(0, incidents.length - layouts.length)
 
@@ -78,6 +43,8 @@ function CoordinationSituationNodesView({
     <div
       className="coordination-situation-nodes"
       data-reduced-motion={reducedMotion}
+      data-visible-count={layouts.length}
+      data-hidden-count={hiddenCount}
       aria-label="Situaciones de la coordinación"
     >
       <svg
@@ -126,7 +93,10 @@ function CoordinationSituationNodesView({
             onClick={() => onSelectSituation(incident.eventId)}
             onPointerDown={(event) => event.stopPropagation()}
           >
-            <span className="coordination-situation-node__orb" aria-hidden="true">
+            <span
+              className="coordination-situation-node__orb"
+              aria-hidden="true"
+            >
               <i />
               <b>{Math.round(incident.riskScore)}</b>
             </span>
