@@ -30,10 +30,7 @@ import {
   useIslandFocusCamera,
   type SceneView,
 } from '@/modules/impact-network/components/island-focus'
-import {
-  ImpactMapGuide,
-  ImpactMapTelemetry,
-} from './ImpactMapChrome'
+import { ImpactMapGuide, ImpactMapTelemetry } from './ImpactMapChrome'
 import { IslandNode, type IslandImpactState } from './IslandNode'
 import {
   PropagationEdge,
@@ -163,7 +160,13 @@ export function SceneBackdrop({
             <stop offset="100%" stopColor="#020a15" stopOpacity="0" />
           </radialGradient>
           {softAtlasBlur ? (
-            <filter id="impact-atlas-soft-glow" x="-40%" y="-40%" width="180%" height="180%">
+            <filter
+              id="impact-atlas-soft-glow"
+              x="-40%"
+              y="-40%"
+              width="180%"
+              height="180%"
+            >
               <feGaussianBlur stdDeviation="3.5" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
@@ -185,7 +188,10 @@ export function SceneBackdrop({
           fill="url(#impact-atlas-glow)"
         />
 
-        <g className="propagation-scene__atlas-sphere" clipPath="url(#impact-atlas-clip)">
+        <g
+          className="propagation-scene__atlas-sphere"
+          clipPath="url(#impact-atlas-clip)"
+        >
           <ellipse cx="600" cy="400" rx="520" ry="310" />
           <ellipse cx="600" cy="400" rx="520" ry="228" />
           <ellipse cx="600" cy="400" rx="520" ry="142" />
@@ -225,8 +231,20 @@ export function SceneBackdrop({
         </g>
 
         <g className="propagation-scene__atlas-orbits">
-          <ellipse cx="600" cy="400" rx="575" ry="346" transform="rotate(-8 600 400)" />
-          <ellipse cx="600" cy="400" rx="448" ry="350" transform="rotate(18 600 400)" />
+          <ellipse
+            cx="600"
+            cy="400"
+            rx="575"
+            ry="346"
+            transform="rotate(-8 600 400)"
+          />
+          <ellipse
+            cx="600"
+            cy="400"
+            rx="448"
+            ry="350"
+            transform="rotate(18 600 400)"
+          />
           <path d="M92 537C304 645 826 684 1112 458" />
           <path d="M126 195C378 75 868 83 1088 220" />
         </g>
@@ -240,7 +258,10 @@ export function SceneBackdrop({
       {particleCount > 0 ? (
         <div className="propagation-scene__particles">
           {Array.from({ length: particleCount }, (_, index) => (
-            <span key={index} style={{ '--particle-i': index } as CSSProperties} />
+            <span
+              key={index}
+              style={{ '--particle-i': index } as CSSProperties}
+            />
           ))}
         </div>
       ) : null}
@@ -267,10 +288,7 @@ const RISK_LADDER: readonly RiskLevel[] = [
   'critical',
 ]
 
-function attenuateRisk(
-  risk: RiskLevel | null,
-  steps: number,
-): RiskLevel {
+function attenuateRisk(risk: RiskLevel | null, steps: number): RiskLevel {
   const index = RISK_LADDER.indexOf(risk ?? 'moderate')
   return RISK_LADDER[Math.max(0, index - steps)]
 }
@@ -303,7 +321,9 @@ export function PropagationScene({
   const [isDragging, setIsDragging] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [pageHidden, setPageHidden] = useState(false)
-  const [focusIslandId, setFocusIslandId] = useState<CoordinationId | null>(null)
+  const [focusIslandId, setFocusIslandId] = useState<CoordinationId | null>(
+    null,
+  )
   const [islandFocusOpen, setIslandFocusOpen] = useState(false)
   const [dossierVisible, setDossierVisible] = useState(false)
   const preFocusWidthRef = useRef<number | null>(null)
@@ -520,7 +540,12 @@ export function PropagationScene({
     const handleWheel = (event: WheelEvent) => {
       event.preventDefault()
       const factor = Math.exp(-event.deltaY * ZOOM_WHEEL_SENSITIVITY)
-      applyZoomAtPoint(zoomRef.current * factor, event.clientX, event.clientY, false)
+      applyZoomAtPoint(
+        zoomRef.current * factor,
+        event.clientX,
+        event.clientY,
+        false,
+      )
       if (wheelCommitTimer !== null) window.clearTimeout(wheelCommitTimer)
       wheelCommitTimer = window.setTimeout(() => {
         commitSceneView({ pan: { ...panRef.current }, zoom: zoomRef.current })
@@ -548,17 +573,17 @@ export function PropagationScene({
     try {
       if (targetView) {
         const currentView = { pan: panRef.current, zoom: zoomRef.current }
-        await animateToView(currentView, targetView, ISLAND_RESTORE_ANIMATION_MS)
+        await animateToView(
+          currentView,
+          targetView,
+          ISLAND_RESTORE_ANIMATION_MS,
+        )
       }
 
       onIslandFocusChange?.(false)
 
       const element = containerRef.current
-      await waitForCanvasResize(
-        element,
-        (width) => width < wideWidth - 60,
-        320,
-      )
+      await waitForCanvasResize(element, (width) => width < wideWidth - 60, 320)
 
       if (targetView) {
         commitSceneView(targetView)
@@ -574,7 +599,13 @@ export function PropagationScene({
     } finally {
       isClosingFocusRef.current = false
     }
-  }, [animateToView, commitSceneView, clearSavedView, onIslandFocusChange, size.width])
+  }, [
+    animateToView,
+    commitSceneView,
+    clearSavedView,
+    onIslandFocusChange,
+    size.width,
+  ])
 
   const closeIslandFocus = useCallback(() => {
     if (dossierVisible) {
@@ -610,7 +641,13 @@ export function PropagationScene({
   )
 
   useEffect(() => {
-    if (isClosingFocusRef.current || !islandFocusOpen || !focusIslandId || !layout) return
+    if (
+      isClosingFocusRef.current ||
+      !islandFocusOpen ||
+      !focusIslandId ||
+      !layout
+    )
+      return
 
     const baseline = preFocusWidthRef.current
     if (baseline !== null && size.width < baseline + 80) {
@@ -631,13 +668,17 @@ export function PropagationScene({
 
     if (isInitialFocus) {
       const currentView = { pan: panRef.current, zoom: zoomRef.current }
-      void focusOnNode(currentView, node.x, node.y, size.width, size.height).then(
-        () => {
-          if (islandFocusOpenRef.current) {
-            setDossierVisible(true)
-          }
-        },
-      )
+      void focusOnNode(
+        currentView,
+        node.x,
+        node.y,
+        size.width,
+        size.height,
+      ).then(() => {
+        if (islandFocusOpenRef.current) {
+          setDossierVisible(true)
+        }
+      })
       return
     }
 
@@ -738,63 +779,72 @@ export function PropagationScene({
     ],
   )
 
-  const handlePointerDown = useCallback((event: PointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0 || islandFocusOpen) return
-    const target = event.target as HTMLElement
-    if (target.closest('.propagation-island')) return
+  const handlePointerDown = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      if (event.button !== 0 || islandFocusOpen) return
+      const target = event.target as HTMLElement
+      if (target.closest('.propagation-island')) return
 
-    // Starting a pan on a text/HUD layer must never enter the browser's
-    // native text-selection gesture.
-    event.preventDefault()
+      // Starting a pan on a text/HUD layer must never enter the browser's
+      // native text-selection gesture.
+      event.preventDefault()
 
-    dragRef.current = {
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      startY: event.clientY,
-      panX: panRef.current.x,
-      panY: panRef.current.y,
-      moved: false,
-    }
-    event.currentTarget.setPointerCapture(event.pointerId)
-  }, [islandFocusOpen])
-
-  const handlePointerMove = useCallback((event: PointerEvent<HTMLDivElement>) => {
-    const element = containerRef.current
-    if (!element) return
-
-    const drag = dragRef.current
-    if (drag && drag.pointerId === event.pointerId) {
-      const dx = event.clientX - drag.startX
-      const dy = event.clientY - drag.startY
-      if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) {
-        drag.moved = true
-        if (!isDragging) setIsDragging(true)
-        event.preventDefault()
+      dragRef.current = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        panX: panRef.current.x,
+        panY: panRef.current.y,
+        moved: false,
       }
-      writeStageView(
-        { x: drag.panX + dx, y: drag.panY + dy },
-        zoomRef.current,
-      )
-      return
-    }
+      event.currentTarget.setPointerCapture(event.pointerId)
+    },
+    [islandFocusOpen],
+  )
 
-    // Balanced mode skips continuous parallax to reduce style recalc cost.
-    if (reducedMotion || isDragging) return
-  }, [isDragging, reducedMotion, writeStageView])
+  const handlePointerMove = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      const element = containerRef.current
+      if (!element) return
 
-  const endDrag = useCallback((event: PointerEvent<HTMLDivElement>) => {
-    if (dragRef.current?.pointerId === event.pointerId) {
-      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-        event.currentTarget.releasePointerCapture(event.pointerId)
+      const drag = dragRef.current
+      if (drag && drag.pointerId === event.pointerId) {
+        const dx = event.clientX - drag.startX
+        const dy = event.clientY - drag.startY
+        if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) {
+          drag.moved = true
+          if (!isDragging) setIsDragging(true)
+          event.preventDefault()
+        }
+        writeStageView(
+          { x: drag.panX + dx, y: drag.panY + dy },
+          zoomRef.current,
+        )
+        return
       }
-      dragRef.current = null
-      commitSceneView({
-        pan: { ...panRef.current },
-        zoom: zoomRef.current,
-      })
-      setIsDragging(false)
-    }
-  }, [commitSceneView])
+
+      // Balanced mode skips continuous parallax to reduce style recalc cost.
+      if (reducedMotion || isDragging) return
+    },
+    [isDragging, reducedMotion, writeStageView],
+  )
+
+  const endDrag = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      if (dragRef.current?.pointerId === event.pointerId) {
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+          event.currentTarget.releasePointerCapture(event.pointerId)
+        }
+        dragRef.current = null
+        commitSceneView({
+          pan: { ...panRef.current },
+          zoom: zoomRef.current,
+        })
+        setIsDragging(false)
+      }
+    },
+    [commitSceneView],
+  )
 
   const resetParallax = useCallback(() => {
     const element = containerRef.current
@@ -947,7 +997,10 @@ export function PropagationScene({
         >
           {loading ? (
             <>
-              <span className="propagation-scene__status-signal" aria-hidden="true" />
+              <span
+                className="propagation-scene__status-signal"
+                aria-hidden="true"
+              />
               <p>Sincronizando situaciones operacionales…</p>
             </>
           ) : error ? (
@@ -1013,8 +1066,14 @@ export function PropagationScene({
         <button
           type="button"
           className="propagation-scene__zoom-btn propagation-scene__zoom-btn--fullscreen"
-          aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Ver mapa en pantalla completa'}
-          title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+          aria-label={
+            isFullscreen
+              ? 'Salir de pantalla completa'
+              : 'Ver mapa en pantalla completa'
+          }
+          title={
+            isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'
+          }
           onClick={() => void toggleFullscreen()}
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -1173,6 +1232,7 @@ export function PropagationScene({
                 disabled={!allowIslandFocus}
                 scale={node.scale}
                 sceneZoom={zoom}
+                imageVariant={node.role === 'origin' ? 'full' : 'preview'}
                 className={[
                   'propagation-scene__island',
                   hideIsland ? 'propagation-scene__island--hidden' : '',

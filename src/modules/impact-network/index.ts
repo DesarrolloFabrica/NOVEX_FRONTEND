@@ -39,6 +39,8 @@ export {
   getCoordination,
   getCoordinationCatalog,
   getCoordinationIslandAsset,
+  getCoordinationIslandPreviewAsset,
+  getIslandPreviewAssetPath,
   hexToRgbChannels,
   resolveCoordinationId,
   resolveCoordinationIdOrGeneral,

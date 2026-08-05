@@ -81,12 +81,14 @@ export function resolveIslandAssetPath(
   const canonicalAsset = coordinationId
     ? ISLAND_ASSET_BY_COORDINATION_ID[coordinationId]
     : undefined
-  const fileName = (canonicalAsset ?? imageAsset)
-    .trim()
-    .replace(/^.*[/\\]/, '')
+  const fileName = (canonicalAsset ?? imageAsset).trim().replace(/^.*[/\\]/, '')
   if (!fileName) return '/islas/CoordGeneral.webp'
   const base = fileName.replace(/\.(png|jpg|jpeg|webp)$/i, '')
   return `/islas/${base}.webp`
+}
+
+export function getIslandPreviewAssetPath(islandAsset: string): string {
+  return islandAsset.replace(/\.webp(?=($|[?#]))/i, '.preview.webp')
 }
 
 export function resolveIslandColor(
@@ -143,6 +145,12 @@ export function getCoordinationIslandAsset(
   coordinationId: CoordinationId,
 ): string {
   return getCoordination(coordinationId).islandAsset
+}
+
+export function getCoordinationIslandPreviewAsset(
+  coordinationId: CoordinationId,
+): string {
+  return getIslandPreviewAssetPath(getCoordinationIslandAsset(coordinationId))
 }
 
 /**

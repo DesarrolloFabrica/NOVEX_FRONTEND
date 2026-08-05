@@ -122,6 +122,27 @@ test('inicia en la vista institucional sin mostrar situaciones', async ({
     page.locator('.organizational-scene__direction-hub'),
   ).toBeVisible()
   await expect(page.locator('.organizational-scene__island')).toHaveCount(11)
+  const islandImages = page.locator(
+    '.organizational-scene__island .propagation-island__image',
+  )
+  await expect(islandImages).toHaveCount(11)
+  expect(
+    await islandImages.evaluateAll((images) =>
+      images.every((image) =>
+        image.getAttribute('src')?.endsWith('.preview.webp'),
+      ),
+    ),
+  ).toBe(true)
+  const bellasArtesImage = page.locator(
+    '.organizational-scene__island[data-coordination-id="coord-bellas-artes"] .propagation-island__image',
+  )
+  await expect(bellasArtesImage).toHaveAttribute(
+    'src',
+    '/islas/CoordBellasArtes.preview.webp',
+  )
+  await expect
+    .poll(() => bellasArtesImage.evaluate((image) => image.naturalWidth))
+    .toBeGreaterThan(0)
   await expect(
     page.locator(
       '.organizational-scene__island[data-coordination-id="coord-general"]',
@@ -201,6 +222,11 @@ test('seleccionar isla abre sus situaciones sin conexiones de impacto', async ({
   await expect(
     page.locator('.organizational-scene__direction-hub'),
   ).toHaveCount(0)
+  await expect(
+    page.locator(
+      '.organizational-scene__island--selected .propagation-island__image',
+    ),
+  ).toHaveAttribute('src', '/islas/CoordIngenierias.webp')
 
   const readPanelRatio = () =>
     page.evaluate(() => {

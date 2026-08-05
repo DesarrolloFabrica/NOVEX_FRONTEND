@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
   getCoordinationIslandAsset,
+  getCoordinationIslandPreviewAsset,
+  getIslandPreviewAssetPath,
   resolveCoordinationId,
   resolveIslandAssetPath,
   resolveIslandColor,
@@ -49,9 +51,9 @@ describe('coordination catalog (backend-driven)', () => {
 
   it('resuelve por code, uuid y nombre del catálogo cargado', () => {
     expect(resolveCoordinationId('coord-b2b')).toBe('coord-b2b')
-    expect(
-      resolveCoordinationId('11111111-1111-1111-1111-111111111111'),
-    ).toBe('coord-b2b')
+    expect(resolveCoordinationId('11111111-1111-1111-1111-111111111111')).toBe(
+      'coord-b2b',
+    )
     expect(resolveCoordinationId('Coordinador Ingenierías')).toBe(
       'coord-ingenierias',
     )
@@ -68,12 +70,21 @@ describe('coordination catalog (backend-driven)', () => {
     expect(getCoordinationIslandAsset('coord-operaciones-academicas')).toBe(
       '/islas/CoordDesarrolloprof.webp',
     )
+    expect(getIslandPreviewAssetPath('/islas/CoordB2B.webp')).toBe(
+      '/islas/CoordB2B.preview.webp',
+    )
+    expect(getCoordinationIslandPreviewAsset('coord-ingenierias')).toBe(
+      '/islas/CoordGeneral.preview.webp',
+    )
   })
 
   it('prioriza el arte canónico de la coordinación sobre assets legados', () => {
-    expect(resolveIslandAssetPath('CoordGeneral.png', 'coord-ingenierias')).toBe(
-      '/islas/CoordIngenierias.webp',
-    )
+    expect(
+      resolveIslandAssetPath('CoordBellasartes.png', 'coord-bellas-artes'),
+    ).toBe('/islas/CoordBellasArtes.webp')
+    expect(
+      resolveIslandAssetPath('CoordGeneral.png', 'coord-ingenierias'),
+    ).toBe('/islas/CoordIngenierias.webp')
     expect(resolveIslandAssetPath('CoordB2B.png', 'coord-empresarial')).toBe(
       '/islas/CoordTransformacionEmpresarial.webp',
     )

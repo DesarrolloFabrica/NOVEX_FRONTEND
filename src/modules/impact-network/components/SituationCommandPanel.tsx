@@ -1,12 +1,15 @@
 import { Link } from 'react-router-dom'
 import {
   getCoordination,
-  getCoordinationIslandAsset,
+  getCoordinationIslandPreviewAsset,
   type CoordinationId,
 } from '@/modules/impact-network/data/coordination-islands.config'
 import type { ImpactIncident } from '@/modules/impact-network/types/impact-network.types'
 import type { RiskLevel } from '@/modules/operational-events/types/operational-event.types'
-import type { LiveTimelineStep, ReplayControlState } from './LiveTimelineOverlay'
+import type {
+  LiveTimelineStep,
+  ReplayControlState,
+} from './LiveTimelineOverlay'
 
 export type SimulationControlState = 'idle' | 'loading' | 'showing' | 'visible'
 
@@ -84,7 +87,8 @@ export function SituationCommandPanel({
   onClearSelection,
 }: SituationCommandPanelProps) {
   const selectedIncident = selectedEventId
-    ? incidents.find((incident) => incident.eventId === selectedEventId) ?? null
+    ? (incidents.find((incident) => incident.eventId === selectedEventId) ??
+      null)
     : null
 
   return (
@@ -106,7 +110,7 @@ export function SituationCommandPanel({
           </span>
           <h2>
             {selectedIncident
-              ? coordinationName ?? originName ?? 'Coordinación operacional'
+              ? (coordinationName ?? originName ?? 'Coordinación operacional')
               : 'Impactos activos'}
           </h2>
         </div>
@@ -144,7 +148,10 @@ export function SituationCommandPanel({
       ) : null}
 
       <div className="situation-command-panel__content">
-        <div className="situation-command-panel__list" aria-label="Lista de situaciones">
+        <div
+          className="situation-command-panel__list"
+          aria-label="Lista de situaciones"
+        >
           {incidents.length > 0 ? (
             incidents.map((incident) => (
               <button
@@ -156,7 +163,10 @@ export function SituationCommandPanel({
                 onClick={() => onSelectIncident(incident.eventId)}
               >
                 <span className="situation-command-panel__item-topline">
-                  <span className="situation-command-panel__signal" aria-hidden="true" />
+                  <span
+                    className="situation-command-panel__signal"
+                    aria-hidden="true"
+                  />
                   <span className="situation-command-panel__item-origin">
                     {incident.sourceAreaName ?? 'Origen por confirmar'}
                   </span>
@@ -169,7 +179,8 @@ export function SituationCommandPanel({
                   {incident.title}
                 </strong>
                 <span className="situation-command-panel__item-meta">
-                  {incident.affectedAreaIds.length} áreas · {STATUS_LABEL[incident.status]}
+                  {incident.affectedAreaIds.length} áreas ·{' '}
+                  {STATUS_LABEL[incident.status]}
                 </span>
               </button>
             ))
@@ -185,7 +196,9 @@ export function SituationCommandPanel({
           <section className="situation-command-panel__detail">
             <header className="situation-command-panel__detail-header">
               <div>
-                <span className="situation-command-panel__eyebrow">Situación seleccionada</span>
+                <span className="situation-command-panel__eyebrow">
+                  Situación seleccionada
+                </span>
                 <h3 title={selectedIncident.title}>{selectedIncident.title}</h3>
               </div>
               <span
@@ -211,21 +224,27 @@ export function SituationCommandPanel({
                   {originCoordinationId ? (
                     <span className="situation-command-panel__origin">
                       <img
-                        src={getCoordinationIslandAsset(originCoordinationId)}
+                        src={getCoordinationIslandPreviewAsset(
+                          originCoordinationId,
+                        )}
                         alt=""
                         aria-hidden="true"
                       />
                       <span
                         className="situation-command-panel__origin-name"
                         title={
-                          originName ?? getCoordination(originCoordinationId).name
+                          originName ??
+                          getCoordination(originCoordinationId).name
                         }
                       >
-                        {originName ?? getCoordination(originCoordinationId).name}
+                        {originName ??
+                          getCoordination(originCoordinationId).name}
                       </span>
                     </span>
                   ) : (
-                    originName ?? selectedIncident.sourceAreaName ?? 'Por confirmar'
+                    (originName ??
+                    selectedIncident.sourceAreaName ??
+                    'Por confirmar')
                   )}
                 </dd>
               </div>
@@ -252,11 +271,17 @@ export function SituationCommandPanel({
                 <ul>
                   {affectedNames.map((name) => (
                     <li key={name}>
-                      <span className="situation-command-panel__affected-name" title={name}>
+                      <span
+                        className="situation-command-panel__affected-name"
+                        title={name}
+                      >
                         {name}
                       </span>
                       {riskLevel ? (
-                        <span className="situation-command-panel__chip" data-risk={riskLevel}>
+                        <span
+                          className="situation-command-panel__chip"
+                          data-risk={riskLevel}
+                        >
                           {RISK_LABELS[riskLevel]}
                         </span>
                       ) : null}
@@ -273,7 +298,11 @@ export function SituationCommandPanel({
                   {propagationSteps.map((step) => (
                     <li key={step.id}>
                       <time>{step.time ?? step.at ?? '—'}</time>
-                      <span>{step.label ?? step.title ?? 'Actualización operacional'}</span>
+                      <span>
+                        {step.label ??
+                          step.title ??
+                          'Actualización operacional'}
+                      </span>
                     </li>
                   ))}
                 </ol>
@@ -289,9 +318,15 @@ export function SituationCommandPanel({
                 type="button"
                 onClick={onReplay}
                 disabled={
-                  !onReplay || replayAvailable === false || simulationState === 'loading'
+                  !onReplay ||
+                  replayAvailable === false ||
+                  simulationState === 'loading'
                 }
-                title={replayAvailable === false ? replayUnavailableReason : undefined}
+                title={
+                  replayAvailable === false
+                    ? replayUnavailableReason
+                    : undefined
+                }
               >
                 {REPLAY_ACTION_LABELS[replayState]}
               </button>
@@ -305,12 +340,15 @@ export function SituationCommandPanel({
                   simulationState === 'loading'
                 }
                 title={
-                  predictionAvailable === false ? simulationUnavailableReason : undefined
+                  predictionAvailable === false
+                    ? simulationUnavailableReason
+                    : undefined
                 }
               >
                 {simulationState === 'loading'
                   ? 'Simulando…'
-                  : simulationState === 'showing' || simulationState === 'visible'
+                  : simulationState === 'showing' ||
+                      simulationState === 'visible'
                     ? 'Ocultar simulación'
                     : 'Simular impacto'}
               </button>

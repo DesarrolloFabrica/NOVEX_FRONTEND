@@ -12,7 +12,7 @@ import { createPortal } from 'react-dom'
 import {
   GENERAL_COORDINATION_ID,
   getCoordination,
-  getCoordinationIslandAsset,
+  getCoordinationIslandPreviewAsset,
   hexToRgbChannels,
   type CoordinationId,
 } from '@/modules/impact-network/data/coordination-islands.config'
@@ -352,7 +352,9 @@ function OrganizationalSceneView({
     ],
   )
 
-  const directionAsset = getCoordinationIslandAsset(GENERAL_COORDINATION_ID)
+  const directionAsset = getCoordinationIslandPreviewAsset(
+    GENERAL_COORDINATION_ID,
+  )
   const { center, nodes } = layout
   const visibleNodeCount = selectedCoordinationId
     ? propagation
@@ -1042,6 +1044,7 @@ function OrganizationalSceneView({
                 sceneZoom={zoom}
                 disabled={!isAssigned || isUnrelated || islandFocusOpen}
                 labelPlacement={node.labelPlacement}
+                imageVariant={node.selected ? 'full' : 'preview'}
                 onSelect={
                   focusedEvent && propagation
                     ? handleSelectIsland

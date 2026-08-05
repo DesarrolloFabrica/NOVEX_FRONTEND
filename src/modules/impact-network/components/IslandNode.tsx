@@ -1,20 +1,25 @@
-import { memo, useCallback, useState, type CSSProperties } from 'react'
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useState,
+  type CSSProperties,
+} from 'react'
 import {
   getCoordination,
+  getIslandPreviewAssetPath,
   type CoordinationId,
 } from '@/modules/impact-network/data/coordination-islands.config'
 import type { RiskLevel } from '@/modules/operational-events/types/operational-event.types'
 import { useSmartTooltipPlacement } from './useSmartTooltipPlacement'
 
 export type IslandImpactState =
-  | 'idle'
-  | 'propagating'
-  | 'impacted'
-  | 'illuminated'
+  'idle' | 'propagating' | 'impacted' | 'illuminated'
 
 export type IslandNodeRole = 'origin' | 'affected' | 'ambient' | 'predicted'
 
 export type IslandLabelPlacement = 'top' | 'bottom'
+export type IslandImageVariant = 'preview' | 'full'
 
 export interface IslandNodeProps {
   coordinationId: CoordinationId
@@ -28,6 +33,7 @@ export interface IslandNodeProps {
   sceneZoom?: number
   disabled?: boolean
   labelPlacement?: IslandLabelPlacement
+  imageVariant?: IslandImageVariant
   style?: CSSProperties
   className?: string
 }
@@ -44,10 +50,17 @@ function IslandNodeView({
   sceneZoom = 1,
   disabled = false,
   labelPlacement = 'top',
+  imageVariant = 'full',
   style,
   className = '',
 }: IslandNodeProps) {
   const coordination = getCoordination(coordinationId)
+  const fullImageAsset = coordination.islandAsset
+  const previewImageAsset = getIslandPreviewAssetPath(fullImageAsset)
+  const desiredImageAsset =
+    imageVariant === 'preview' ? previewImageAsset : fullImageAsset
+  const [displayedImageAsset, setDisplayedImageAsset] =
+    useState(desiredImageAsset)
   const risk = riskLevel ?? 'moderate'
   const tone = visualRisk ?? risk
   const isOrigin = role === 'origin'
@@ -62,7 +75,27 @@ function IslandNodeView({
     onSelect?.(coordinationId)
   }, [coordinationId, disabled, onSelect])
 
-  const displayState = isAmbient && impactState === 'idle' ? 'ambient' : impactState
+  useEffect(() => {
+    if (imageVariant === 'preview') {
+      setDisplayedImageAsset(previewImageAsset)
+      return
+    }
+
+    if (displayedImageAsset === fullImageAsset) return
+    const image = new Image()
+    image.decoding = 'async'
+    image.src = fullImageAsset
+    const revealFullImage = () => setDisplayedImageAsset(fullImageAsset)
+    if (image.complete) {
+      revealFullImage()
+      return
+    }
+    image.addEventListener('load', revealFullImage, { once: true })
+    return () => image.removeEventListener('load', revealFullImage)
+  }, [displayedImageAsset, fullImageAsset, imageVariant, previewImageAsset])
+
+  const displayState =
+    isAmbient && impactState === 'idle' ? 'ambient' : impactState
 
   return (
     <article
@@ -110,7 +143,10 @@ function IslandNodeView({
         <span className="propagation-island__ground-glow" />
         <span className="propagation-island__platform">
           {Array.from({ length: 8 }, (_, index) => (
-            <i key={index} style={{ '--platform-led': index } as CSSProperties} />
+            <i
+              key={index}
+              style={{ '--platform-led': index } as CSSProperties}
+            />
           ))}
         </span>
         <span className="propagation-island__detail-orbit propagation-island__detail-orbit--outer" />
@@ -120,12 +156,13 @@ function IslandNodeView({
         <span className="propagation-island__wave" />
         <span className="propagation-island__emitter" />
         <img
-          src={coordination.islandAsset}
+          src={displayedImageAsset}
           alt={coordination.shortName}
           className="propagation-island__image"
           width={640}
           height={640}
           decoding="async"
+          fetchPriority={imageVariant === 'full' ? 'high' : 'auto'}
           draggable={false}
         />
         <span className="propagation-island__emblem-glow" />
