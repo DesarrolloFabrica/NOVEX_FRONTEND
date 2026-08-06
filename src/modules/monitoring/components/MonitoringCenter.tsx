@@ -14,67 +14,119 @@ import { OperationalHistoryTimeline } from '@/modules/monitoring/components/Oper
 import { AiVersionCard } from '@/modules/monitoring/components/AiVersionCard'
 import type { SituationDossier } from '@/modules/api/types/situation-management.types'
 import type { SituationListItem } from '@/modules/api/types/situation-management.types'
-import { sortSituationsForQueue } from '@/modules/monitoring/utils/situation-management.presentation'
+import type {
+  SituationQueueQuery,
+  SituationQueueSeverityFilter,
+  SituationQueueStatusFilter,
+} from '@/modules/monitoring/utils/situation-queue-query'
 import type { UpdateSituationStatusInput } from '@/modules/monitoring/utils/situation-lifecycle'
 
 interface MonitoringCenterProps {
   user: User | null
-  situations: SituationListItem[]
+  pageItems: SituationListItem[]
   summary: SituationManagementSummary
+  queueQuery: SituationQueueQuery
+  totalFiltered: number
+  totalPages: number
+  totalAvailable: number
   selectedSituationId: string | null
   dossier: SituationDossier | null
   listLoading: boolean
   dossierLoading: boolean
   listError: string | null
   dossierError: string | null
+  updateError: string | null
   canUpdate: boolean
   isUpdating: boolean
   environment: EnvironmentStatus
   onSelectSituation: (situationId: string) => void
+  onSearchChange: (search: string) => void
+  onStatusFilterChange: (status: SituationQueueStatusFilter) => void
+  onSeverityFilterChange: (severity: SituationQueueSeverityFilter) => void
+  onPageChange: (page: number) => void
+  onPageSizeChange: (pageSize: number) => void
+  onSummaryFilter: (filter: SituationQueueStatusFilter | 'CRITICAL') => void
   onUpdateSituationStatus: (input: UpdateSituationStatusInput) => Promise<void>
   onLogout: () => void
 }
 
-function SituationSummary({ summary }: { summary: SituationManagementSummary }) {
-  const indicators = [
-    ['Registradas', summary.open],
-    ['En atención', summary.inProgress],
-    ['Resueltas', summary.resolved],
-    ['Cerradas', summary.closed],
-    ['Atención prioritaria', summary.critical],
-  ] as const
+function SituationSummary({
+  summary,
+  activeFilter,
+  onFilter,
+}: {
+  summary: SituationManagementSummary
+  activeFilter: SituationQueueStatusFilter | 'CRITICAL'
+  onFilter: (filter: SituationQueueStatusFilter | 'CRITICAL') => void
+}) {
+  const indicators: Array<{
+    key: SituationQueueStatusFilter | 'CRITICAL'
+    label: string
+    value: number
+  }> = [
+    { key: 'OPEN', label: 'Registradas', value: summary.open },
+    { key: 'IN_PROGRESS', label: 'En atención', value: summary.inProgress },
+    { key: 'CLOSED', label: 'Cerradas', value: summary.closed },
+    { key: 'CRITICAL', label: 'Atención prioritaria', value: summary.critical },
+  ]
 
   return (
     <section className="novex-execution-summary" aria-label="Resumen ejecutivo">
-      {indicators.map(([label, value]) => (
-        <div key={label} className="novex-execution-summary__item">
-          <strong>{value}</strong>
-          <span>{label}</span>
-        </div>
+      {indicators.map((item) => (
+        <button
+          key={item.key}
+          type="button"
+          className="novex-execution-summary__item"
+          data-active={activeFilter === item.key ? 'true' : 'false'}
+          onClick={() => onFilter(item.key)}
+          aria-pressed={activeFilter === item.key}
+        >
+          <strong>{item.value}</strong>
+          <span>{item.label}</span>
+        </button>
       ))}
     </section>
   )
 }
 
+function resolveActiveSummaryFilter(
+  query: SituationQueueQuery,
+): SituationQueueStatusFilter | 'CRITICAL' {
+  if (query.severity === 'PRIORITY' || query.severity === 'CRITICAL') {
+    return 'CRITICAL'
+  }
+  return query.status
+}
+
 export function MonitoringCenter({
   user,
-  situations,
+  pageItems,
   summary,
+  queueQuery,
+  totalFiltered,
+  totalPages,
+  totalAvailable,
   selectedSituationId,
   dossier,
   listLoading,
   dossierLoading,
   listError,
   dossierError,
+  updateError,
   canUpdate,
   isUpdating,
   environment,
   onSelectSituation,
+  onSearchChange,
+  onStatusFilterChange,
+  onSeverityFilterChange,
+  onPageChange,
+  onPageSizeChange,
+  onSummaryFilter,
   onUpdateSituationStatus,
   onLogout,
 }: MonitoringCenterProps) {
   const [showAnalysis, setShowAnalysis] = useState(false)
-  const sortedSituations = sortSituationsForQueue(situations)
 
   return (
     <ScreenDeck
@@ -89,14 +141,32 @@ export function MonitoringCenter({
       }
     >
       <main className="novex-execution-flow" data-tour="situation-management">
-        <SituationSummary summary={summary} />
+        <SituationSummary
+          summary={summary}
+          activeFilter={resolveActiveSummaryFilter(queueQuery)}
+          onFilter={onSummaryFilter}
+        />
+
+        <p className="novex-execution-flow__guidance" role="note">
+          Flujo: seleccione una situación en la cola, revise el expediente y use
+          <strong> Actualizar estado</strong> cuando corresponda.
+        </p>
 
         <SituationQueueConsole
-          situations={sortedSituations}
+          pageItems={pageItems}
           selectedSituationId={selectedSituationId}
           loading={listLoading}
           error={listError}
+          queueQuery={queueQuery}
+          totalFiltered={totalFiltered}
+          totalPages={totalPages}
+          totalAvailable={totalAvailable}
           onSelectSituation={onSelectSituation}
+          onSearchChange={onSearchChange}
+          onStatusChange={onStatusFilterChange}
+          onSeverityChange={onSeverityFilterChange}
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
         />
 
         <section className="novex-ops-command-center">
@@ -104,16 +174,16 @@ export function MonitoringCenter({
             className="novex-execution-detail"
             aria-label="Vista ejecutiva de la situación"
           >
-          <SituationDossierPanel
-            dossier={dossier}
-            loading={dossierLoading}
-            error={dossierError}
-          />
-          <SituationIntelligencePanel
-            dossier={dossier}
-            loading={dossierLoading}
-            onOpenAnalysis={() => setShowAnalysis(true)}
-          />
+            <SituationDossierPanel
+              dossier={dossier}
+              loading={dossierLoading}
+              error={dossierError}
+            />
+            <SituationIntelligencePanel
+              dossier={dossier}
+              loading={dossierLoading}
+              onOpenAnalysis={() => setShowAnalysis(true)}
+            />
           </div>
 
           {dossier ? (
@@ -122,6 +192,7 @@ export function MonitoringCenter({
                 situation={dossier.situation}
                 canUpdate={canUpdate}
                 isUpdating={isUpdating}
+                updateError={updateError}
                 onUpdate={onUpdateSituationStatus}
               />
               <AiRecommendationsReadOnly
@@ -135,6 +206,14 @@ export function MonitoringCenter({
                 />
               </div>
             </>
+          ) : !dossierLoading && !dossierError ? (
+            <section className="novex-action-detail novex-action-detail--empty">
+              <strong>Seleccione una situación de la cola</strong>
+              <p>
+                Elija un caso a la izquierda para revisar el expediente y, si
+                tiene permiso, actualizar su estado operacional.
+              </p>
+            </section>
           ) : null}
         </section>
       </main>

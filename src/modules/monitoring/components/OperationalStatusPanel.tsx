@@ -12,6 +12,7 @@ interface OperationalStatusPanelProps {
   situation: SituationResponse
   canUpdate: boolean
   isUpdating: boolean
+  updateError?: string | null
   onUpdate: (input: UpdateSituationStatusInput) => Promise<void>
 }
 
@@ -19,23 +20,25 @@ export function OperationalStatusPanel({
   situation,
   canUpdate,
   isUpdating,
+  updateError: externalUpdateError = null,
   onUpdate,
 }: OperationalStatusPanelProps) {
   const [modalOpen, setModalOpen] = useState(false)
-  const [updateError, setUpdateError] = useState<string | null>(null)
+  const [localUpdateError, setLocalUpdateError] = useState<string | null>(null)
   const [message, setMessage] = useState('')
+  const updateError = localUpdateError ?? externalUpdateError
   const canAdvance = Boolean(
     canUpdate && getNextOperationalStatus(situation.status),
   )
 
   const handleSubmit = async (input: UpdateSituationStatusInput) => {
-    setUpdateError(null)
+    setLocalUpdateError(null)
     try {
       await onUpdate(input)
       setModalOpen(false)
       setMessage('Estado actualizado correctamente.')
     } catch (error) {
-      setUpdateError(getErrorMessage(error))
+      setLocalUpdateError(getErrorMessage(error))
     }
   }
 
@@ -43,9 +46,14 @@ export function OperationalStatusPanel({
     <section
       className="novex-ops-state novex-ops-dashboard-section"
       data-tour="status-management"
+      data-can-update={canAdvance ? 'true' : 'false'}
     >
       <div className="novex-ops-section-heading">
         <h2>Estado operacional</h2>
+        <p className="novex-ops-state__hint">
+          Situación seleccionada. Revise el expediente y actualice el estado cuando
+          avance la atención.
+        </p>
       </div>
       <div className="novex-ops-state__body">
         <SituationLifecycleTimeline status={situation.status} />
@@ -54,10 +62,10 @@ export function OperationalStatusPanel({
             <button
               data-tour="status-update-trigger"
               type="button"
-              className="novex-ops-state__cta"
+              className="novex-ops-state__cta novex-ops-state__cta--ready"
               disabled={isUpdating}
               onClick={() => {
-                setUpdateError(null)
+                setLocalUpdateError(null)
                 setMessage('')
                 setModalOpen(true)
               }}
@@ -72,6 +80,11 @@ export function OperationalStatusPanel({
             </p>
           )}
           {message ? <span role="status">{message}</span> : null}
+          {updateError && !modalOpen ? (
+            <span role="alert" className="novex-ops-state__error">
+              {updateError}
+            </span>
+          ) : null}
         </div>
       </div>
 

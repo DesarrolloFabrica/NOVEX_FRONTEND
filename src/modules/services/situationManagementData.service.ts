@@ -34,11 +34,16 @@ function mapSituationToListItem(situation: SituationResponse): SituationListItem
 }
 
 function buildSummary(situations: SituationListItem[]): SituationManagementSummary {
+  const inProgress = situations.filter(
+    (item) => item.status === 'IN_PROGRESS' || item.status === 'RESOLVED',
+  ).length
+
   return {
     total: situations.length,
     open: situations.filter((item) => item.status === 'OPEN').length,
-    inProgress: situations.filter((item) => item.status === 'IN_PROGRESS').length,
-    resolved: situations.filter((item) => item.status === 'RESOLVED').length,
+    inProgress,
+    /** Campo legado: el ciclo de 3 estados pliega RESOLVED en inProgress. */
+    resolved: 0,
     closed: situations.filter((item) => item.status === 'CLOSED').length,
     critical: situations.filter(
       (item) => item.severity === 'CRITICAL' || item.severity === 'HIGH',
@@ -46,15 +51,39 @@ function buildSummary(situations: SituationListItem[]): SituationManagementSumma
   }
 }
 
+function mergeById(items: SituationResponse[]): SituationResponse[] {
+  const map = new Map<string, SituationResponse>()
+  for (const item of items) {
+    map.set(item.id, item)
+  }
+  return [...map.values()]
+}
+
+/**
+ * Carga sin cerrar primero (OPEN + IN_PROGRESS) y complementa con el resto del
+ * universo reciente para que los chips de resumen no mientan.
+ */
 export async function loadSituationManagementList(): Promise<{
   situations: SituationListItem[]
   summary: SituationManagementSummary
+  totalAvailable: number
 }> {
-  const response = await fetchSituations({ limit: 100, page: 1 })
-  const situations = response.items.map(mapSituationToListItem)
+  const [open, inProgress, all] = await Promise.all([
+    fetchSituations({ status: 'OPEN', limit: 100, page: 1 }),
+    fetchSituations({ status: 'IN_PROGRESS', limit: 100, page: 1 }),
+    fetchSituations({ limit: 100, page: 1 }),
+  ])
+
+  const merged = mergeById([
+    ...open.items,
+    ...inProgress.items,
+    ...all.items,
+  ]).map(mapSituationToListItem)
+
   return {
-    situations,
-    summary: buildSummary(situations),
+    situations: merged,
+    summary: buildSummary(merged),
+    totalAvailable: Math.max(all.total, merged.length),
   }
 }
 

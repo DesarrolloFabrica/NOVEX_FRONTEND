@@ -134,8 +134,9 @@ export function sortSituationsForQueue(
 
   const statusWeight: Record<SituationOperationalStatus, number> = {
     IN_PROGRESS: 4,
+    /** Legado: misma prioridad operativa que En atención. */
+    RESOLVED: 4,
     OPEN: 3,
-    RESOLVED: 2,
     CLOSED: 1,
   }
 

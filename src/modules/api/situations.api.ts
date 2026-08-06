@@ -1,4 +1,7 @@
 import type {
+  ExecuteAIAnalysisResponse,
+} from '@/modules/api/types/analysis.types'
+import type {
   CreateSituationPayload,
   IncidentCategorySummary,
   SituationResponse,
@@ -44,13 +47,21 @@ export async function fetchSituations(
   return apiRequest<SituationsListResponse>(`/situations${suffix}`)
 }
 
-export async function createSituation(
+export interface CreateSituationWithAnalysisResponse {
+  situation: SituationResponse
+  analysis: ExecuteAIAnalysisResponse
+}
+
+export async function createSituationWithAnalysis(
   payload: CreateSituationPayload,
-): Promise<SituationResponse> {
-  return apiRequest<SituationResponse>('/situations', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  })
+): Promise<CreateSituationWithAnalysisResponse> {
+  return apiRequest<CreateSituationWithAnalysisResponse>(
+    '/situations/register-with-analysis',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+  )
 }
 
 export async function fetchSituation(

@@ -158,7 +158,7 @@ const OPERATIONAL_FLOW: OnboardingTourStep[] = [
     eyebrow: 'Estados y trazabilidad',
     title: 'Actualice el estado con una razón verificable',
     description:
-      'Use Resuelta cuando el hecho esté controlado y Cerrada cuando la documentación esté completa.',
+      'Pase a En atención cuando inicie el seguimiento y a Cerrada cuando el caso esté documentado. Al cerrar, sale de la Red de impacto y de la cola de gestión.',
     expectation:
       'NOVEX validará las transiciones permitidas según el estado actual.',
   },

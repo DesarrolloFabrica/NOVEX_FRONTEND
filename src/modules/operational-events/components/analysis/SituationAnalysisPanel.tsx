@@ -21,6 +21,8 @@ interface SituationAnalysisPanelProps {
   situationTitle: string
   autoStart?: boolean
   onAnalysisComplete: (situationId: string) => void
+  onViewDossier?: (situationId: string) => void
+  onRegisterAnother?: () => void
 }
 
 export function SituationAnalysisPanel({
@@ -28,6 +30,8 @@ export function SituationAnalysisPanel({
   situationTitle: _situationTitle,
   autoStart = true,
   onAnalysisComplete,
+  onViewDossier,
+  onRegisterAnother,
 }: SituationAnalysisPanelProps) {
   const hasValidSituationId = isValidUuid(situationId)
   const analysisStartedAt = useRef(Date.now())
@@ -141,6 +145,12 @@ export function SituationAnalysisPanel({
         message={error ?? 'Ocurrió un error inesperado.'}
         onRetry={hasValidSituationId ? handleRetry : undefined}
         retrying={retrying}
+        onViewDossier={
+          onViewDossier && hasValidSituationId
+            ? () => onViewDossier(situationId)
+            : undefined
+        }
+        onRegisterAnother={onRegisterAnother}
       />
     )
   }

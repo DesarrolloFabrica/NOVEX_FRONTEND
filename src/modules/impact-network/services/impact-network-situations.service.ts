@@ -42,9 +42,9 @@ export function mapSituationStatusToEventStatus(
 ): OperationalEventStatus {
   switch (status) {
     case 'IN_PROGRESS':
-      return 'monitoring'
     case 'RESOLVED':
-      return 'resolved'
+      // RESOLVED es legado: permanece visible en el mapa como En atención.
+      return 'monitoring'
     case 'CLOSED':
       return 'archived'
     case 'OPEN':

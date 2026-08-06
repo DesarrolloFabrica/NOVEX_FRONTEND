@@ -105,6 +105,10 @@ jobs:
             echo "::error::VITE_API_BASE_URL debe apuntar a novex-backend (valor: ${VITE_API_BASE_URL})"
             exit 1
           fi
+          if [[ "${VITE_API_BASE_URL}" != https://*/api/v1 ]]; then
+            echo "::error::VITE_API_BASE_URL debe usar HTTPS e incluir /api/v1 (valor: ${VITE_API_BASE_URL})"
+            exit 1
+          fi
 
           REPOSITORY="${REPOSITORY:-novex}"
           IMAGE_NAME="${IMAGE_NAME:-novex-frontend}"
@@ -185,24 +189,37 @@ jobs:
         id: deploy
         run: |
           set -euo pipefail
+          CANDIDATE_TAG="candidate-${{ steps.meta.outputs.short_sha }}"
           gcloud run deploy "${{ steps.meta.outputs.service_name }}" \
             --image="${{ steps.digest.outputs.fully_qualified_digest }}" \
             --region="${{ steps.meta.outputs.region }}" \
             --platform=managed \
             --project="${{ steps.meta.outputs.project_id }}" \
+            --no-traffic \
+            --tag="${CANDIDATE_TAG}" \
             --quiet
 
-          SERVICE_URL="$(gcloud run services describe "${{ steps.meta.outputs.service_name }}" \
+          SERVICE_JSON="$(gcloud run services describe "${{ steps.meta.outputs.service_name }}" \
             --region="${{ steps.meta.outputs.region }}" \
             --project="${{ steps.meta.outputs.project_id }}" \
-            --format='value(status.url)')"
+            --format=json)"
+          SERVICE_URL="$(jq -r '.status.url' <<< "${SERVICE_JSON}")"
+          CANDIDATE_URL="$(jq -r --arg tag "${CANDIDATE_TAG}" '.status.traffic[] | select(.tag == $tag) | .url' <<< "${SERVICE_JSON}")"
+          CANDIDATE_REVISION="$(jq -r --arg tag "${CANDIDATE_TAG}" '.status.traffic[] | select(.tag == $tag) | .revisionName' <<< "${SERVICE_JSON}")"
+          if [[ -z "${CANDIDATE_URL}" || "${CANDIDATE_URL}" == "null" || -z "${CANDIDATE_REVISION}" || "${CANDIDATE_REVISION}" == "null" ]]; then
+            echo "::error::Cloud Run no publicó la URL de la revisión candidata"
+            exit 1
+          fi
           echo "service_url=${SERVICE_URL}" >> "$GITHUB_OUTPUT"
+          echo "candidate_url=${CANDIDATE_URL}" >> "$GITHUB_OUTPUT"
+          echo "candidate_revision=${CANDIDATE_REVISION}" >> "$GITHUB_OUTPUT"
 
       - name: Smoke test
         id: smoke
         run: |
           set -euo pipefail
-          BASE="${{ steps.deploy.outputs.service_url }}"
+          BASE="${{ steps.deploy.outputs.candidate_url }}"
+          STABLE_ORIGIN="${{ steps.deploy.outputs.service_url }}"
           echo "::notice::Smoke GET ${BASE}/"
           curl -fsS --retry 5 --retry-delay 3 --retry-all-errors "${BASE}/" | grep -qi '<div id="root"'
           echo "::notice::Smoke GET ${BASE}/health"
@@ -212,6 +229,59 @@ jobs:
             exit 1
           fi
           echo "${HEALTH}" | grep -qi 'ok'
+
+          API_BASE="${{ steps.meta.outputs.vite_api_base_url }}"
+          BACKEND_ROOT="${API_BASE%/api/v1}"
+          echo "::notice::Smoke GET ${BACKEND_ROOT}/health"
+          curl -fsS --retry 5 --retry-delay 3 --retry-all-errors "${BACKEND_ROOT}/health" | grep -qi '"status":"ok"'
+
+          PREFLIGHT_URL="${API_BASE}/situations/register-with-analysis"
+          PREFLIGHT_STATUS="$(curl -sS -o /dev/null -w '%{http_code}' -X OPTIONS \
+            -H "Origin: ${STABLE_ORIGIN}" \
+            -H 'Access-Control-Request-Method: POST' \
+            -H 'Access-Control-Request-Headers: authorization,content-type' \
+            "${PREFLIGHT_URL}")"
+          if [[ "${PREFLIGHT_STATUS}" != "204" ]]; then
+            echo "::error::Preflight CORS devolvió ${PREFLIGHT_STATUS} para ${PREFLIGHT_URL}"
+            exit 1
+          fi
+
+          PREFLIGHT_HEADERS="$(curl -sS -D - -o /dev/null -X OPTIONS \
+            -H "Origin: ${STABLE_ORIGIN}" \
+            -H 'Access-Control-Request-Method: POST' \
+            -H 'Access-Control-Request-Headers: authorization,content-type' \
+            "${PREFLIGHT_URL}")"
+          if ! grep -Fqi "access-control-allow-origin: ${STABLE_ORIGIN}" <<< "${PREFLIGHT_HEADERS}"; then
+            echo "::error::El backend no autorizó el origen desplegado ${STABLE_ORIGIN}"
+            exit 1
+          fi
+          echo "result=ok" >> "$GITHUB_OUTPUT"
+
+      - name: Remove failed candidate tag
+        if: failure() && steps.deploy.outcome == 'success'
+        continue-on-error: true
+        run: |
+          gcloud run services update-traffic "${{ steps.meta.outputs.service_name }}" \
+            --remove-tags="candidate-${{ steps.meta.outputs.short_sha }}" \
+            --region="${{ steps.meta.outputs.region }}" \
+            --project="${{ steps.meta.outputs.project_id }}" \
+            --quiet
+
+      - name: Promote verified revision
+        id: promote
+        run: |
+          set -euo pipefail
+          gcloud run services update-traffic "${{ steps.meta.outputs.service_name }}" \
+            --to-revisions="${{ steps.deploy.outputs.candidate_revision }}=100" \
+            --region="${{ steps.meta.outputs.region }}" \
+            --project="${{ steps.meta.outputs.project_id }}" \
+            --quiet
+          curl -fsS --retry 10 --retry-delay 3 --retry-all-errors "${{ steps.deploy.outputs.service_url }}/" | grep -qi '<div id="root"'
+          gcloud run services update-traffic "${{ steps.meta.outputs.service_name }}" \
+            --remove-tags="candidate-${{ steps.meta.outputs.short_sha }}" \
+            --region="${{ steps.meta.outputs.region }}" \
+            --project="${{ steps.meta.outputs.project_id }}" \
+            --quiet
           echo "result=ok" >> "$GITHUB_OUTPUT"
 
       - name: Job summary
@@ -230,7 +300,9 @@ jobs:
             echo "| VITE_API_BASE_URL | \`${{ steps.meta.outputs.vite_api_base_url }}\` |"
             echo "| VITE_GOOGLE_CLIENT_ID | \`${{ steps.meta.outputs.vite_google_client_id_masked }}\` |"
             echo "| URL | ${{ steps.deploy.outputs.service_url }} |"
+            echo "| Revisión | ${{ steps.deploy.outputs.candidate_revision }} |"
             echo "| Smoke | \`${{ steps.smoke.outputs.result || 'failed' }}\` |"
+            echo "| Promoción | ${{ steps.promote.outputs.result || 'not-promoted' }} |"
             echo "| Job | \`${{ job.status }}\` |"
             echo ""
             echo "Configuración previa del servicio **preservada** (solo cambia la imagen)."

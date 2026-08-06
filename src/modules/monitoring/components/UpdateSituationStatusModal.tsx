@@ -147,6 +147,12 @@ export function UpdateSituationStatusModal({
           Estado actual: <strong>{currentLabel}</strong>. Solo se permite avanzar
           al siguiente estado del ciclo.
         </p>
+        {nextStatus === 'CLOSED' ? (
+          <p className="novex-ops-modal__hint novex-ops-modal__hint--warning">
+            Al cerrar, la situación sale de la Red de impacto y de la cola de
+            gestión. Seguirá disponible en Situaciones registradas.
+          </p>
+        ) : null}
 
         <form className="novex-ops-modal__form" onSubmit={(e) => void handleSubmit(e)}>
           <fieldset disabled={isSubmitting}>

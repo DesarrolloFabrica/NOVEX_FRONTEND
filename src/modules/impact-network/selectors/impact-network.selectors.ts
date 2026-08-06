@@ -609,7 +609,8 @@ function resolveIncidentCoordinationIds(
     getCoordinationCatalog()[0]?.id ??
     'unknown'
 
-  if (affectedCoordinationIdsOverride) {
+  // `null` = sin override (usar áreas del incidente/IA). `[]` = confirmado vacío.
+  if (affectedCoordinationIdsOverride != null) {
     return {
       originCoordinationId,
       affectedCoordinationIds: uniqueCoordinationIds(

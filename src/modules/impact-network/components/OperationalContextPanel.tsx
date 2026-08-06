@@ -34,6 +34,7 @@ interface OperationalContextPanelProps {
   canUpdateSituation?: boolean
   isUpdatingSituation?: boolean
   isExportingPdf?: boolean
+  exportPdfError?: string | null
   onSelectSituation: (eventId: string) => void
   onCreateSituation?: () => void
   onUpdateSituationStatus?: (input: UpdateSituationStatusInput) => Promise<void>
@@ -157,6 +158,7 @@ function OperationalContextPanelView({
   canUpdateSituation = false,
   isUpdatingSituation = false,
   isExportingPdf = false,
+  exportPdfError = null,
   onSelectSituation,
   onCreateSituation,
   onUpdateSituationStatus,
@@ -252,6 +254,7 @@ function OperationalContextPanelView({
               canUpdate={canUpdateSituation}
               isUpdating={isUpdatingSituation}
               isExportingPdf={isExportingPdf}
+              exportError={exportPdfError}
               onUpdateStatus={onUpdateSituationStatus}
               onOpenAnalysis={onOpenAnalysis}
               onDownloadPdf={onDownloadPdf}

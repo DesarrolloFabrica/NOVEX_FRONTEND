@@ -26,3 +26,12 @@ export function readOnboardingSituation(
     return null
   }
 }
+
+export function clearOnboardingSituation(userId: string | undefined): void {
+  if (!userId) return
+  try {
+    localStorage.removeItem(keyFor(userId))
+  } catch {
+    // Sin storage el wizard sigue funcionando en memoria.
+  }
+}

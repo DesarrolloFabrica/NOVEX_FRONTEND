@@ -28,7 +28,7 @@ export function DashboardOperationalSummary({
     {
       id: 'resolved',
       value: kpis.resolvedSituations,
-      label: 'Resueltas',
+      label: 'Cerradas',
       hint: 'Casos cerrados en el historial',
       tone: 'resolved',
     },

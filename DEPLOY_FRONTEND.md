@@ -1,4 +1,4 @@
-# Despliegue del frontend OMEGA / NOVEX (Cloud Run)
+# Despliegue del frontend NOVEX (Cloud Run)
 
 Guía operativa para PowerShell. **No incluye secretos.**
 
@@ -7,7 +7,7 @@ Guía operativa para PowerShell. **No incluye secretos.**
 SPA React + Vite + TypeScript → build estático (`dist/`) → Nginx en contenedor → Cloud Run (puerto **8080**).
 
 ```
-Navegador → Cloud Run (omega-frontend) → Nginx
+Navegador → Cloud Run (novex-frontend) → Nginx
                 │
                 └── /health → "ok"
                 └── /* → index.html (SPA)
@@ -34,13 +34,13 @@ Las variables `VITE_*` se **incrustan en tiempo de compilación**. Cambiarlas ex
 | Project Name | Operacion Producto y LMS |
 | Project ID | `it-fab-contenido-edu-5` |
 | Región | `us-central1` |
-| Servicio Cloud Run | `omega-frontend` |
-| Artifact Registry | `omega` |
-| Imagen | `omega-frontend` |
-| Ruta imagen | `us-central1-docker.pkg.dev/it-fab-contenido-edu-5/omega/omega-frontend` |
-| Backend | `https://omega-backend-550902908078.us-central1.run.app` |
-| API base (`VITE_API_BASE_URL`) | `https://omega-backend-550902908078.us-central1.run.app/api/v1` |
-| SA runtime (sugerida) | `omega-frontend-runner@it-fab-contenido-edu-5.iam.gserviceaccount.com` |
+| Servicio Cloud Run | `novex-frontend` |
+| Artifact Registry | `novex` |
+| Imagen | `novex-frontend` |
+| Ruta imagen | `us-central1-docker.pkg.dev/it-fab-contenido-edu-5/novex/novex-frontend` |
+| Backend | `https://novex-backend-550902908078.us-central1.run.app` |
+| API base (`VITE_API_BASE_URL`) | `https://novex-backend-550902908078.us-central1.run.app/api/v1` |
+| SA runtime (sugerida) | `novex-frontend-runner@it-fab-contenido-edu-5.iam.gserviceaccount.com` |
 
 > No usar el proyecto Acervo ni `gen-lang-client-0049269139`.
 
@@ -61,7 +61,7 @@ El cliente usa `VITE_API_BASE_URL` como variable principal y recurre a
 Ejemplo local / desarrollo apuntando al backend desplegado:
 
 ```env
-VITE_API_BASE_URL=https://omega-backend-550902908078.us-central1.run.app/api/v1
+VITE_API_BASE_URL=https://novex-backend-550902908078.us-central1.run.app/api/v1
 VITE_GOOGLE_CLIENT_ID=tu-client-id.apps.googleusercontent.com
 VITE_ENABLE_EMAIL_LOGIN=true
 VITE_APP_NAME=NOVEX
@@ -71,7 +71,7 @@ VITE_APP_ENV=development
 Ejemplo producción (valor al construir la imagen):
 
 ```env
-VITE_API_BASE_URL=https://omega-backend-550902908078.us-central1.run.app/api/v1
+VITE_API_BASE_URL=https://novex-backend-550902908078.us-central1.run.app/api/v1
 VITE_GOOGLE_CLIENT_ID=tu-client-id.apps.googleusercontent.com
 VITE_ENABLE_EMAIL_LOGIN=false
 VITE_APP_NAME=NOVEX
@@ -142,13 +142,13 @@ npm run preview
 
 ```powershell
 docker build `
-  --build-arg VITE_API_BASE_URL=https://omega-backend-550902908078.us-central1.run.app/api/v1 `
+  --build-arg VITE_API_BASE_URL=https://novex-backend-550902908078.us-central1.run.app/api/v1 `
   --build-arg VITE_GOOGLE_CLIENT_ID=CLIENT_ID_DE_PRUEBA `
   --build-arg VITE_APP_NAME=NOVEX `
   --build-arg VITE_APP_ENV=production `
-  -t omega-frontend-local .
+  -t novex-frontend-local .
 
-docker run --rm -p 8080:8080 omega-frontend-local
+docker run --rm -p 8080:8080 novex-frontend-local
 # Probar: http://localhost:8080/health  → ok
 ```
 
@@ -162,7 +162,7 @@ Archivo: `cloudbuild.frontend.yaml`
 gcloud builds submit `
   --config=cloudbuild.frontend.yaml `
   --project=it-fab-contenido-edu-5 `
-  --substitutions=_BACKEND_URL="https://omega-backend-550902908078.us-central1.run.app/api/v1",_GOOGLE_CLIENT_ID="TU_CLIENT_ID",COMMIT_SHA="$(git rev-parse --short HEAD)"
+  --substitutions=_BACKEND_URL="https://novex-backend-550902908078.us-central1.run.app/api/v1",_GOOGLE_CLIENT_ID="TU_CLIENT_ID",COMMIT_SHA="$(git rev-parse --short HEAD)"
 ```
 
 ## 19. Despliegue manual (PowerShell)
@@ -183,15 +183,15 @@ Cualquier cambio de código o de `VITE_*` → nuevo build de imagen → nuevo de
 ## 21. Logs
 
 ```powershell
-gcloud run services logs read omega-frontend --region=us-central1 --project=it-fab-contenido-edu-5 --limit=50
+gcloud run services logs read novex-frontend --region=us-central1 --project=it-fab-contenido-edu-5 --limit=50
 ```
 
 ## 22–23. Revisiones y rollback
 
 ```powershell
-gcloud run revisions list --service=omega-frontend --region=us-central1 --project=it-fab-contenido-edu-5
+gcloud run revisions list --service=novex-frontend --region=us-central1 --project=it-fab-contenido-edu-5
 
-gcloud run services update-traffic omega-frontend `
+gcloud run services update-traffic novex-frontend `
   --region=us-central1 `
   --project=it-fab-contenido-edu-5 `
   --to-revisions=REVISION_ANTERIOR=100
@@ -230,8 +230,8 @@ Rutas internas relevantes: `/login`, `/dashboard`, `/red-impacto`, `/situaciones
 
 ## Cuenta de servicio
 
-Nombre sugerido: `omega-frontend-runner`  
-Email: `omega-frontend-runner@it-fab-contenido-edu-5.iam.gserviceaccount.com`
+Nombre sugerido: `novex-frontend-runner`
+Email: `novex-frontend-runner@it-fab-contenido-edu-5.iam.gserviceaccount.com`
 
 Un frontend estático **no** necesita Cloud SQL, Secret Manager, Storage ni Gemini. Mínimo privilegio (runtime Cloud Run). **No crear la SA desde este documento sin aprobación.**
 

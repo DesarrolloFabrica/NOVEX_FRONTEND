@@ -92,6 +92,31 @@ function extractLegacyRelatedCodes(description: string): string[] {
   ]
 }
 
+/** Relacionadas ya conocidas en el listado, para pintar islas sin esperar APIs. */
+function resolveRelatedIdsFromSituation(
+  situation: SituationResponse,
+): CoordinationId[] {
+  const originId =
+    resolveCoordinationId(situation.coordinationCode) ??
+    resolveCoordinationId(situation.coordinationId)
+
+  const fromRelated = (situation.relatedCoordinations ?? [])
+    .map(
+      (item) =>
+        resolveCoordinationId(item.coordinationCode) ??
+        resolveCoordinationId(item.coordinationId),
+    )
+    .filter((id): id is CoordinationId => Boolean(id))
+
+  const fromLegacy = extractLegacyRelatedCodes(situation.description)
+    .map((code) => resolveCoordinationId(code))
+    .filter((id): id is CoordinationId => Boolean(id))
+
+  return [...new Set([...fromRelated, ...fromLegacy])].filter(
+    (id) => id !== originId,
+  )
+}
+
 function formatPropagationDuration(replay: IncidentReplay | null): string {
   if (!replay || replay.steps.length === 0) return '—'
   const lastOffset = Math.max(...replay.steps.map((step) => step.offsetMs))
@@ -163,6 +188,7 @@ export function ImpactNetworkExperience() {
   >({})
   const [isUpdatingSituation, setIsUpdatingSituation] = useState(false)
   const [isExportingPdf, setIsExportingPdf] = useState(false)
+  const [exportPdfError, setExportPdfError] = useState<string | null>(null)
   const [showAnalysisModal, setShowAnalysisModal] = useState(false)
   const [isImmersive, setIsImmersive] = useState(() =>
     Boolean(typeof document !== 'undefined' && document.fullscreenElement),
@@ -404,6 +430,10 @@ export function ImpactNetworkExperience() {
         return
       }
 
+      const optimisticRelated = situation
+        ? resolveRelatedIdsFromSituation(situation)
+        : []
+
       setSelectedCoordinationId(incidentCoordinationId)
       setFocusedEventId(eventId)
       setIslandFocusActive(false)
@@ -411,32 +441,51 @@ export function ImpactNetworkExperience() {
       resetPropagation()
       setPrediction(null)
       setSimulationPhase('idle')
-      setSimulationMessage(null)
+      setSimulationMessage(
+        optimisticRelated.length > 0
+          ? 'Se muestran las coordinaciones declaradas mientras se confirma el contexto.'
+          : null,
+      )
       setImpactContext(null)
-      setAffectedCoordinationIds([])
+      // Pintar relacionadas conocidas de inmediato; no esperar análisis ni contexto.
+      setAffectedCoordinationIds(optimisticRelated)
+      setExportPdfError(null)
       syncSearchParams(incidentCoordinationId, eventId)
 
-      if (situation) {
-        try {
-          const enriched = await enrichSituationEvent(situation)
+      if (!situation) {
+        const loadedReplay = await impactNetworkDataProvider.loadReplay(eventId)
+        setReplay(loadedReplay)
+        setReplayAvailability((current) => ({
+          ...current,
+          [eventId]: loadedReplay !== null,
+        }))
+        if (loadedReplay && !reduceMotion) {
+          setReplayPhase('playing')
+        } else if (!loadedReplay) {
+          setReplayPhase('complete')
+        }
+        return
+      }
+
+      const enrichPromise = enrichSituationEvent(situation)
+        .then((enriched) => {
           setEvents((current) =>
             current.map((event) => (event.id === eventId ? enriched : event)),
           )
-        } catch {
+        })
+        .catch(() => {
           // Mantener el evento base si el análisis aún no está disponible.
-        }
+        })
 
-        let context: SituationImpactContextResponse | null = null
-        try {
-          context = await fetchSituationImpactContext(eventId)
-          setImpactContext(context)
-        } catch (error) {
+      const contextPromise = fetchSituationImpactContext(eventId)
+        .then((context) => context)
+        .catch((error: unknown) => {
           if (error instanceof ApiError && error.status === 404) {
             const legacyCodes = extractLegacyRelatedCodes(
               situation.description,
             ).filter((code) => code !== situation.coordinationCode)
             const hasDeclaredRelated = legacyCodes.length > 0
-            context = {
+            return {
               situationId: eventId,
               originCoordinationId: situation.coordinationId ?? '',
               originCoordinationCode: situation.coordinationCode ?? '',
@@ -455,51 +504,53 @@ export function ImpactNetworkExperience() {
               message: hasDeclaredRelated
                 ? 'Se muestran las coordinaciones declaradas por el usuario.'
                 : 'Puede simular el impacto potencial con base en el análisis IA.',
-            }
-            setImpactContext(context)
-          } else {
-            setImpactContext(null)
+            } satisfies SituationImpactContextResponse
           }
-        }
+          return null
+        })
 
-        if (context?.hasDeclaredRelated) {
-          const declaredCodes = context.declaredRelated
+      const [, context, loadedReplay] = await Promise.all([
+        enrichPromise,
+        contextPromise,
+        impactNetworkDataProvider.loadReplay(eventId),
+      ])
+
+      setImpactContext(context)
+
+      if (context?.hasDeclaredRelated) {
+        const declaredCodes = context.declaredRelated
+          .map(
+            (item) =>
+              resolveCoordinationId(item.coordinationCode) ??
+              resolveCoordinationId(item.coordinationId),
+          )
+          .filter((id): id is CoordinationId => Boolean(id))
+        setAffectedCoordinationIds(declaredCodes)
+        setSimulationMessage(context.message)
+      } else if (context) {
+        // Sin declaración: no inventar islas; el usuario usa «Simular impacto».
+        if (optimisticRelated.length === 0) {
+          setAffectedCoordinationIds([])
+        }
+        setSimulationMessage(context.message)
+      } else {
+        try {
+          const affected = await fetchSituationAffectedCoordinations(eventId)
+          const codes = affected.items
             .map(
               (item) =>
                 resolveCoordinationId(item.coordinationCode) ??
                 resolveCoordinationId(item.coordinationId),
             )
             .filter((id): id is CoordinationId => Boolean(id))
-          setAffectedCoordinationIds(declaredCodes)
-          setSimulationMessage(context.message)
-        } else {
-          // Sin declaración manual: el origen se ve por la situación enfocada;
-          // las islas potenciales se revelan solo con «Simular impacto».
-          setAffectedCoordinationIds([])
-          setSimulationMessage(context?.message ?? null)
-
-          // Fallback si el endpoint nuevo aún no está desplegado: conservar
-          // el comportamiento previo con affected-coordinations.
-          if (!context) {
-            try {
-              const affected =
-                await fetchSituationAffectedCoordinations(eventId)
-              const codes = affected.items
-                .map(
-                  (item) =>
-                    resolveCoordinationId(item.coordinationCode) ??
-                    resolveCoordinationId(item.coordinationId),
-                )
-                .filter((id): id is CoordinationId => Boolean(id))
-              setAffectedCoordinationIds(codes)
-            } catch {
-              setAffectedCoordinationIds([])
-            }
-          }
+          setAffectedCoordinationIds(
+            codes.length > 0 ? codes : optimisticRelated,
+          )
+        } catch {
+          setAffectedCoordinationIds(optimisticRelated)
         }
       }
 
-      const loadedReplay = await impactNetworkDataProvider.loadReplay(eventId)
       setReplay(loadedReplay)
       setReplayAvailability((current) => ({
         ...current,
@@ -525,6 +576,22 @@ export function ImpactNetworkExperience() {
       syncSearchParams,
     ],
   )
+
+  const handleDownloadPdf = useCallback(async () => {
+    if (isExportingPdf) return
+    setIsExportingPdf(true)
+    setExportPdfError(null)
+    try {
+      const { downloadSituationReportPdf } = await import(
+        '@/modules/impact-network/utils/downloadSituationReportPdf'
+      )
+      await downloadSituationReportPdf(focusedEvent)
+    } catch (error) {
+      setExportPdfError(getErrorMessage(error))
+    } finally {
+      setIsExportingPdf(false)
+    }
+  }, [focusedEvent, isExportingPdf])
 
   useEffect(() => {
     if (
@@ -1076,6 +1143,7 @@ export function ImpactNetworkExperience() {
                       )}
                       isUpdatingSituation={isUpdatingSituation}
                       isExportingPdf={isExportingPdf}
+                      exportPdfError={exportPdfError}
                       onSelectSituation={selectSituation}
                       onCreateSituation={
                         canCreateInSelectedCoordination
@@ -1085,8 +1153,7 @@ export function ImpactNetworkExperience() {
                       onUpdateSituationStatus={handleUpdateSituationStatus}
                       onOpenAnalysis={() => setShowAnalysisModal(true)}
                       onDownloadPdf={() => {
-                        setIsExportingPdf(true)
-                        window.setTimeout(() => setIsExportingPdf(false), 400)
+                        void handleDownloadPdf()
                       }}
                       onOpenSituationDetail={() => {
                         setFocusOriginRequestKey((key) => key + 1)

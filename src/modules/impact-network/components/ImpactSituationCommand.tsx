@@ -13,6 +13,7 @@ interface ImpactSituationCommandProps {
   canUpdate: boolean
   isUpdating: boolean
   isExportingPdf?: boolean
+  exportError?: string | null
   onUpdateStatus: (input: UpdateSituationStatusInput) => Promise<void>
   onOpenAnalysis: () => void
   onDownloadPdf: () => void
@@ -23,6 +24,7 @@ export function ImpactSituationCommand({
   canUpdate,
   isUpdating,
   isExportingPdf = false,
+  exportError = null,
   onUpdateStatus,
   onOpenAnalysis,
   onDownloadPdf,
@@ -96,9 +98,19 @@ export function ImpactSituationCommand({
           disabled={isExportingPdf}
           aria-busy={isExportingPdf}
         >
-          {isExportingPdf ? 'Generando PDF…' : 'Descargar PDF'}
+          {isExportingPdf
+            ? 'Generando PDF…'
+            : exportError
+              ? 'Reintentar PDF'
+              : 'Descargar PDF'}
         </button>
       </div>
+
+      {exportError ? (
+        <span className="impact-situation-command__status" role="alert">
+          {exportError}
+        </span>
+      ) : null}
 
       {message ? (
         <span className="impact-situation-command__status" role="status">

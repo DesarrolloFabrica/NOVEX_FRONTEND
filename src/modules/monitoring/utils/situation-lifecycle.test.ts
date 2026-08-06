@@ -4,26 +4,34 @@ import { groupRecommendationsByPriority } from '@/modules/monitoring/utils/situa
 import {
   getNextOperationalStatus,
   lifecyclePhase,
+  OPERATIONAL_STATUS_LABEL,
   requiresStatusComment,
 } from '@/modules/monitoring/utils/situation-lifecycle'
 
 describe('situation lifecycle', () => {
-  it('solo permite el estado inmediatamente siguiente', () => {
+  it('solo permite el estado inmediatamente siguiente (3 pasos)', () => {
     expect(getNextOperationalStatus('OPEN')).toBe('IN_PROGRESS')
-    expect(getNextOperationalStatus('IN_PROGRESS')).toBe('RESOLVED')
+    expect(getNextOperationalStatus('IN_PROGRESS')).toBe('CLOSED')
     expect(getNextOperationalStatus('RESOLVED')).toBe('CLOSED')
     expect(getNextOperationalStatus('CLOSED')).toBeNull()
+  })
+
+  it('trata RESOLVED legado como En atención en la línea de tiempo', () => {
+    expect(OPERATIONAL_STATUS_LABEL.RESOLVED).toBe('En atención')
+    expect(lifecyclePhase('RESOLVED', 'OPEN')).toBe('complete')
+    expect(lifecyclePhase('RESOLVED', 'IN_PROGRESS')).toBe('current')
+    expect(lifecyclePhase('RESOLVED', 'CLOSED')).toBe('pending')
   })
 
   it('marca fases complete / current / pending', () => {
     expect(lifecyclePhase('IN_PROGRESS', 'OPEN')).toBe('complete')
     expect(lifecyclePhase('IN_PROGRESS', 'IN_PROGRESS')).toBe('current')
-    expect(lifecyclePhase('IN_PROGRESS', 'RESOLVED')).toBe('pending')
+    expect(lifecyclePhase('IN_PROGRESS', 'CLOSED')).toBe('pending')
   })
 
-  it('exige comentario en Resuelta y Cerrada', () => {
+  it('exige comentario solo al cerrar', () => {
     expect(requiresStatusComment('IN_PROGRESS')).toBe(false)
-    expect(requiresStatusComment('RESOLVED')).toBe(true)
+    expect(requiresStatusComment('RESOLVED')).toBe(false)
     expect(requiresStatusComment('CLOSED')).toBe(true)
   })
 })

@@ -4,15 +4,8 @@
 import type { User } from '@/modules/auth/types/user.types'
 
 const AUTH_SESSION_KEY = 'novex.auth.session.v1'
-/**
- * Claves legacy del rebrand Omega → Cunmark → NOVEX.
- * Conservar hasta que no queden sesiones de usuarios en localStorage
- * (ver docs/LEGACY-OMEGA.md). No renombrar.
- */
-const LEGACY_AUTH_SESSION_KEYS = [
-  'cunmark.auth.session.v1',
-  'omega.auth.session.v1',
-] as const
+/** Claves anteriores que se migran una sola vez a la sesión NOVEX. */
+const LEGACY_AUTH_SESSION_KEYS = ['cunmark.auth.session.v1'] as const
 
 function getStorage(): Storage | null {
   try {
