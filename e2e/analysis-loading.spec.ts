@@ -123,26 +123,13 @@ test.beforeEach(async ({ page }) => {
       return
     }
 
-    if (path.endsWith('/situations') && method === 'POST') {
-      await route.fulfill({ json: situation })
-      return
-    }
-
-    if (path.endsWith(`/situations/${situationId}/analysis`)) {
-      await route.fulfill({
-        status: 404,
-        json: { message: 'Análisis en curso' },
-      })
-      return
-    }
-
     if (
-      path.endsWith(`/situations/${situationId}/analyze`) &&
+      path.endsWith('/situations/register-with-analysis') &&
       method === 'POST'
     ) {
       // Mantiene la solicitud en curso para validar el estado de procesamiento.
       await new Promise((resolve) => setTimeout(resolve, 20_000))
-      await route.fulfill({ json: { situationId } })
+      await route.fulfill({ json: { situation, analysis: { situationId } } })
       return
     }
 

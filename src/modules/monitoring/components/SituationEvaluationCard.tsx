@@ -17,24 +17,32 @@ export function SituationEvaluationCard({
   selected,
   onSelect,
 }: SituationEvaluationCardProps) {
+  const severityLabel =
+    SITUATION_SEVERITY_LABEL[situation.severity] ?? situation.severity
+  const statusLabel = SITUATION_STATUS_LABEL[situation.status] ?? situation.status
+
   return (
     <button
       type="button"
       onClick={() => onSelect(situation.id)}
       aria-pressed={selected}
+      aria-label={`${selected ? 'Seleccionada: ' : 'Seleccionar situación: '}${situation.title}. Severidad ${severityLabel}. Estado ${statusLabel}.`}
+      data-situation-id={situation.id}
       data-status={situation.status.toLowerCase()}
       data-priority={situation.severity.toLowerCase()}
-      className={`novex-action-row group relative w-full text-left ${FOCUS_VISIBLE}`}
+      className={`novex-action-row group relative w-full text-left ${FOCUS_VISIBLE}${
+        selected ? ' novex-action-row--selected' : ''
+      }`}
     >
       <div className="novex-action-row__layout relative z-10">
         <div className="novex-action-row__badges">
           <span className="novex-action-row__priority">
             <i aria-hidden="true" />
-            {SITUATION_SEVERITY_LABEL[situation.severity] ?? situation.severity}
+            {severityLabel}
           </span>
           <span className="novex-action-row__status">
             <i aria-hidden="true" />
-            {SITUATION_STATUS_LABEL[situation.status] ?? situation.status}
+            {statusLabel}
           </span>
           <time dateTime={situation.occurredAt} className="novex-action-row__date">
             {formatManagementDateShort(situation.occurredAt)}

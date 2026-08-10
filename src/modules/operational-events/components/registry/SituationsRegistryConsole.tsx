@@ -299,11 +299,13 @@ export function SituationsRegistryConsole({
                 className={`novex-registry-toolbar__select ${FOCUS_VISIBLE}`}
               >
                 <option value="all">Todos los estados</option>
-                {Object.entries(SITUATION_STATUS_LABEL).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
+                {Object.entries(SITUATION_STATUS_LABEL)
+                  .filter(([value]) => value !== 'RESOLVED')
+                  .map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
               </select>
 
               <select

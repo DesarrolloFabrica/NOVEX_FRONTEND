@@ -97,7 +97,15 @@ export function filterAndSortSituationRegistry(
 ): SituationRegistryRow[] {
   const filtered = rows.filter((row) => {
     if (!matchesSearch(row, query.search)) return false
-    if (query.status !== 'all' && row.status !== query.status) return false
+    if (query.status !== 'all') {
+      if (query.status === 'IN_PROGRESS') {
+        if (row.status !== 'IN_PROGRESS' && row.status !== 'RESOLVED') {
+          return false
+        }
+      } else if (row.status !== query.status) {
+        return false
+      }
+    }
     if (
       query.coordinationId !== 'all' &&
       row.coordinationId !== query.coordinationId

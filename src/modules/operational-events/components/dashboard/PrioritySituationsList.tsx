@@ -14,7 +14,7 @@ interface PrioritySituationsListProps {
 const STATUS_LABEL: Record<string, string> = {
   OPEN: 'Registrada',
   IN_PROGRESS: 'En atención',
-  RESOLVED: 'Resuelta',
+  RESOLVED: 'En atención',
   CLOSED: 'Cerrada',
 }
 

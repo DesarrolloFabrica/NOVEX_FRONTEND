@@ -101,7 +101,7 @@ describe('resolveIslandAffectedBriefing', () => {
     expect(briefing.propagationChain).toContain('Coordinador Operaciones Académicas')
   })
 
-  it('genera fallback cuando no hay reporte ejecutivo', () => {
+  it('no inventa motivo ni acciones cuando no hay reporte ejecutivo', () => {
     const base = OPERATIONAL_EVENTS[0]!
     const event: OperationalEvent = {
       ...base,
@@ -116,7 +116,9 @@ describe('resolveIslandAffectedBriefing', () => {
       event,
     )
 
-    expect(briefing.reason).toContain('Coordinador Empresarial')
+    expect(briefing.reason).toContain('Sin lectura específica')
+    expect(briefing.dependencies).toEqual([])
+    expect(briefing.suggestedActions).toEqual([])
     expect(briefing.affectationLevel).toBeTruthy()
   })
 })

@@ -289,7 +289,7 @@ function OperationalTrend({ data }: { data: ExecutiveDashboardData }) {
       tone: 'critical',
     },
     {
-      label: 'Resueltas',
+      label: 'Cerradas',
       value: data.kpis.resolvedSituations,
       tone: 'resolved',
     },

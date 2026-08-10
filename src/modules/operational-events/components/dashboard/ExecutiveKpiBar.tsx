@@ -45,7 +45,7 @@ export function ExecutiveKpiBar({ kpis, topPriority }: ExecutiveKpiBarProps) {
       icon: 'check',
       tone: 'resolved',
       value: kpis.resolvedSituations,
-      label: 'Resueltas',
+      label: 'Cerradas',
       detail: 'Situaciones cerradas',
     },
     {

@@ -21,20 +21,25 @@ export function IslandFocusAffectedPanel({
           <p>{briefing.propagationChain}</p>
         </section>
 
-        {briefing.dependencies.length > 0 ? (
-          <section className="island-focus-panel__block">
-            <h3>Dependencias involucradas</h3>
+        <section className="island-focus-panel__block">
+          <h3>Dependencias involucradas</h3>
+          {briefing.dependencies.length > 0 ? (
             <ul>
               {briefing.dependencies.map((dependency) => (
                 <li key={dependency}>{dependency}</li>
               ))}
             </ul>
-          </section>
-        ) : null}
+          ) : (
+            <p className="island-focus-panel__empty">
+              Sin dependencias específicas para esta área en el análisis
+              disponible.
+            </p>
+          )}
+        </section>
 
-        {briefing.suggestedActions.length > 0 ? (
-          <section className="island-focus-panel__block">
-            <h3>Acción sugerida para esta área</h3>
+        <section className="island-focus-panel__block">
+          <h3>Acción sugerida para esta área</h3>
+          {briefing.suggestedActions.length > 0 ? (
             <ol className="island-focus-panel__actions">
               {briefing.suggestedActions.map((action, index) => (
                 <li key={`${action.action}-${index}`}>
@@ -47,8 +52,12 @@ export function IslandFocusAffectedPanel({
                 </li>
               ))}
             </ol>
-          </section>
-        ) : null}
+          ) : (
+            <p className="island-focus-panel__empty">
+              Sin acciones recomendadas asignadas a esta coordinación.
+            </p>
+          )}
+        </section>
       </div>
     </div>
   )

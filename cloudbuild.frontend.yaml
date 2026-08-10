@@ -1,4 +1,4 @@
-# Cloud Build — frontend OMEGA / NOVEX → Artifact Registry + Cloud Run
+# Cloud Build — frontend NOVEX → Artifact Registry + Cloud Run
 # Proyecto: it-fab-contenido-edu-5 (Operacion Producto y LMS) | Región: us-central1
 #
 # Las variables VITE_* se pasan como build-args (públicas; no Secret Manager).
@@ -7,7 +7,6 @@
 # Sustituciones esperadas:
 #   _BACKEND_URL       → URL completa del API (incluye /api/v1)
 #   _GOOGLE_CLIENT_ID  → OAuth Client ID público
-#   _SERVICE_ACCOUNT   → SA de runtime (opcional)
 #   _MIN_INSTANCES     → default 0
 #   _MAX_INSTANCES     → default 5
 #   _MEMORY            → default 512Mi (mínimo gen2)
@@ -20,13 +19,11 @@
 
 substitutions:
   _REGION: us-central1
-  _SERVICE: omega-frontend
-  _REPOSITORY: omega
-  _IMAGE: omega-frontend
-  _BACKEND_URL: 'https://omega-backend-550902908078.us-central1.run.app/api/v1'
+  _SERVICE: novex-frontend
+  _REPOSITORY: novex
+  _IMAGE: novex-frontend
+  _BACKEND_URL: 'https://novex-backend-550902908078.us-central1.run.app/api/v1'
   _GOOGLE_CLIENT_ID: ''
-  # Vacío = no pasar --service-account (usa runtime default de Cloud Run)
-  _SERVICE_ACCOUNT: ''
   _MIN_INSTANCES: '0'
   _MAX_INSTANCES: '5'
   _MEMORY: 512Mi
@@ -51,6 +48,18 @@ steps:
         set -euo pipefail
         if [ -z "${_BACKEND_URL}" ]; then
           echo "ERROR: falta _BACKEND_URL (URL completa del API, p.ej. https://.../api/v1)"
+          exit 1
+        fi
+        if [[ "${_BACKEND_URL}" != https://*/api/v1 ]]; then
+          echo "ERROR: _BACKEND_URL debe usar HTTPS e incluir /api/v1"
+          exit 1
+        fi
+        if [[ "${_BACKEND_URL}" != *"novex-backend"* ]]; then
+          echo "ERROR: _BACKEND_URL debe apuntar al backend NOVEX"
+          exit 1
+        fi
+        if [[ "${_SERVICE}" != "novex-frontend" || "${_REPOSITORY}" != "novex" ]]; then
+          echo "ERROR: servicio y repositorio deben pertenecer exclusivamente a NOVEX"
           exit 1
         fi
         if [ -z "${_GOOGLE_CLIENT_ID}" ]; then
@@ -116,8 +125,66 @@ steps:
       - '--execution-environment=gen2'
       - '--ingress=all'
       - '--allow-unauthenticated'
+      - '--no-traffic'
+      - '--tag=candidate-$COMMIT_SHA'
       - '--startup-probe=httpGet.path=/health,httpGet.port=8080,periodSeconds=5,timeoutSeconds=2,failureThreshold=12'
       - '--liveness-probe=httpGet.path=/health,httpGet.port=8080,periodSeconds=30,timeoutSeconds=3,failureThreshold=3'
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    id: 'smoke-candidate'
+    waitFor: ['deploy-cloud-run']
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        CANDIDATE_TAG='candidate-$COMMIT_SHA'
+        SERVICE_JSON="$(gcloud run services describe '${_SERVICE}' --project='$PROJECT_ID' --region='${_REGION}' --format=json)"
+        CANDIDATE_URL="$(printf '%s' "$${SERVICE_JSON}" | python3 -c "import json,sys; tag=sys.argv[1]; data=json.load(sys.stdin); print(next((item.get('url','') for item in data.get('status',{}).get('traffic',[]) if item.get('tag') == tag), ''))" "$${CANDIDATE_TAG}")"
+        if [[ -z "$${CANDIDATE_URL}" ]]; then
+          echo 'ERROR: Cloud Run no publicó URL para la revisión candidata'
+          exit 1
+        fi
+        curl -fsS --retry 10 --retry-delay 3 --retry-all-errors "$${CANDIDATE_URL}/" | grep -qi '<div id="root"'
+        curl -fsS --retry 5 --retry-delay 3 --retry-all-errors "$${CANDIDATE_URL}/health" | grep -qi 'ok'
+        BACKEND_ROOT='${_BACKEND_URL}'
+        BACKEND_ROOT="$${BACKEND_ROOT%/api/v1}"
+        curl -fsS --retry 5 --retry-delay 3 --retry-all-errors "$${BACKEND_ROOT}/health/ready" | grep -q '"database":"up"'
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    id: 'promote'
+    waitFor: ['smoke-candidate']
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        REVISION="$(gcloud run services describe '${_SERVICE}' --project='$PROJECT_ID' --region='${_REGION}' --format='value(status.latestCreatedRevisionName)')"
+        gcloud run services update-traffic '${_SERVICE}' \
+          --project='$PROJECT_ID' \
+          --region='${_REGION}' \
+          --to-revisions="$${REVISION}=100" \
+          --quiet
+        SERVICE_URL="$(gcloud run services describe '${_SERVICE}' --project='$PROJECT_ID' --region='${_REGION}' --format='value(status.url)')"
+        curl -fsS --retry 10 --retry-delay 3 --retry-all-errors "$${SERVICE_URL}/" | grep -qi '<div id="root"'
+        API_BASE='${_BACKEND_URL}'
+        PREFLIGHT_URL="$${API_BASE}/situations/register-with-analysis"
+        STATUS="$(curl -sS -o /dev/null -w '%{http_code}' -X OPTIONS \
+          -H "Origin: $${SERVICE_URL}" \
+          -H 'Access-Control-Request-Method: POST' \
+          -H 'Access-Control-Request-Headers: authorization,content-type' \
+          "$${PREFLIGHT_URL}")"
+        [[ "$${STATUS}" == '204' ]]
+        curl -sS -D - -o /dev/null -X OPTIONS \
+          -H "Origin: $${SERVICE_URL}" \
+          -H 'Access-Control-Request-Method: POST' \
+          -H 'Access-Control-Request-Headers: authorization,content-type' \
+          "$${PREFLIGHT_URL}" | grep -Fqi "access-control-allow-origin: $${SERVICE_URL}"
+        gcloud run services update-traffic '${_SERVICE}' \
+          --project='$PROJECT_ID' \
+          --region='${_REGION}' \
+          --remove-tags='candidate-$COMMIT_SHA' \
+          --quiet
 
 images:
   - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}:$COMMIT_SHA'

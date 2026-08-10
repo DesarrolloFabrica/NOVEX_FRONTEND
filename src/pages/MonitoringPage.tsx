@@ -22,17 +22,28 @@ export function MonitoringPage() {
   const { user, logout } = useAuth()
 
   const {
-    situations,
+    pageItems,
     summary,
+    queueQuery,
+    totalFiltered,
+    totalPages,
+    totalAvailable,
     selectedSituationId,
     dossier,
-    listLoading,
-    dossierLoading,
+    loadingList,
+    loadingDossier,
+    updatingStatus,
     listError,
     dossierError,
-    isUpdating,
-    setSelectedSituationId,
-    updateSituation,
+    updateError,
+    selectSituation,
+    setQueueSearch,
+    setQueueStatus,
+    setQueueSeverity,
+    setQueuePage,
+    setQueuePageSize,
+    applySummaryFilter,
+    updateStatus,
   } = useSituationManagement()
 
   const environment = useMemo(() => resolveEnvironment(summary), [summary])
@@ -44,19 +55,30 @@ export function MonitoringPage() {
         <MainScreen environment={environment}>
           <MonitoringCenter
             user={user}
-            situations={situations}
+            pageItems={pageItems}
             summary={summary}
+            queueQuery={queueQuery}
+            totalFiltered={totalFiltered}
+            totalPages={totalPages}
+            totalAvailable={totalAvailable}
             selectedSituationId={selectedSituationId}
             dossier={dossier}
-            listLoading={listLoading}
-            dossierLoading={dossierLoading}
+            listLoading={loadingList}
+            dossierLoading={loadingDossier}
             listError={listError}
             dossierError={dossierError}
+            updateError={updateError}
             canUpdate={canUpdate}
-            isUpdating={isUpdating}
+            isUpdating={updatingStatus}
             environment={environment}
-            onSelectSituation={setSelectedSituationId}
-            onUpdateSituationStatus={updateSituation}
+            onSelectSituation={selectSituation}
+            onSearchChange={setQueueSearch}
+            onStatusFilterChange={setQueueStatus}
+            onSeverityFilterChange={setQueueSeverity}
+            onPageChange={setQueuePage}
+            onPageSizeChange={setQueuePageSize}
+            onSummaryFilter={applySummaryFilter}
+            onUpdateSituationStatus={updateStatus}
             onLogout={() => void logout()}
           />
         </MainScreen>

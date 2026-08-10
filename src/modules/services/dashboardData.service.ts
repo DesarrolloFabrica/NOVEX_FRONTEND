@@ -78,11 +78,16 @@ interface SituationEnrichment {
 }
 
 function isOpenStatus(status: string): boolean {
-  return status === 'OPEN' || status === 'IN_PROGRESS'
+  return (
+    status === 'OPEN' ||
+    status === 'IN_PROGRESS' ||
+    status === 'RESOLVED'
+  )
 }
 
-function isResolvedStatus(status: string): boolean {
-  return status === 'RESOLVED' || status === 'CLOSED'
+/** Solo CLOSED abandona el seguimiento; RESOLVED legado sigue abierto. */
+function isClosedStatus(status: string): boolean {
+  return status === 'CLOSED'
 }
 
 function severityToRiskScore(severity: SituationSeverity): number {
@@ -134,10 +139,10 @@ function buildExecutiveNarrative(
       latest.coordinationCode === ANALYST_REGISTRY_CODE
         ? 'registrado por un analista'
         : `en ${latest.coordinationName}`
-    return `Hay ${totalRegistered} situación${totalRegistered === 1 ? '' : 'es'} registrada${totalRegistered === 1 ? '' : 's'}: ${kpis.openSituations} en seguimiento y ${kpis.resolvedSituations} resuelta${kpis.resolvedSituations === 1 ? '' : 's'}. El registro más reciente es «${latest.title}» ${origin}.`
+    return `Hay ${totalRegistered} situación${totalRegistered === 1 ? '' : 'es'} registrada${totalRegistered === 1 ? '' : 's'}: ${kpis.openSituations} en seguimiento y ${kpis.resolvedSituations} cerrada${kpis.resolvedSituations === 1 ? '' : 's'}. El registro más reciente es «${latest.title}» ${origin}.`
   }
 
-  return `La plataforma documenta ${totalRegistered} situación${totalRegistered === 1 ? '' : 'es'}: ${kpis.openSituations} en seguimiento y ${kpis.resolvedSituations} resuelta${kpis.resolvedSituations === 1 ? '' : 's'}.`
+  return `La plataforma documenta ${totalRegistered} situación${totalRegistered === 1 ? '' : 'es'}: ${kpis.openSituations} en seguimiento y ${kpis.resolvedSituations} cerrada${kpis.resolvedSituations === 1 ? '' : 's'}.`
 }
 
 async function enrichSituation(
@@ -388,7 +393,7 @@ function buildKpis(enrichments: SituationEnrichment[]): ExecutiveDashboardKpis {
   const situations = enrichments.map((item) => item.situation)
   const openSituations = situations.filter((item) => isOpenStatus(item.status))
   const resolvedSituations = situations.filter((item) =>
-    isResolvedStatus(item.status),
+    isClosedStatus(item.status),
   )
 
   const criticalSituations = openSituations.filter(

@@ -9872,6 +9872,24 @@ textarea {
   cursor: not-allowed;
 }
 
+.novex-os[data-scene='commitments'] .novex-ops-state__cta--ready {
+  box-shadow:
+    0 0 0 1px rgb(186 170 255 / 0.35),
+    0 12px 28px rgb(65 52 153 / 0.28);
+}
+
+.novex-os[data-scene='commitments'] .novex-ops-state__hint {
+  margin: 4px 0 0;
+  color: #8fa2bb;
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.novex-os[data-scene='commitments'] .novex-ops-state__error {
+  color: #fda4af;
+  font-size: 0.7rem;
+}
+
 .novex-os[data-scene='commitments'] .novex-ops-state__locked {
   margin: 0;
   color: #8094b0;
@@ -10228,6 +10246,12 @@ textarea {
   color: #96a7c0;
   font-size: 0.74rem;
   line-height: 1.45;
+}
+
+.novex-ops-modal__hint--warning {
+  color: #fbbf77;
+  border-left: 2px solid rgb(251 191 119 / 0.55);
+  padding-left: 10px;
 }
 
 .novex-ops-modal__form {
@@ -11298,7 +11322,19 @@ textarea {
   gap: 9px;
   min-width: 0;
   padding: 2px 18px;
+  border: 1px solid transparent;
   border-right: 1px solid rgb(148 163 184 / 0.14);
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 140ms ease, background-color 140ms ease;
+}
+
+.novex-os[data-scene='commitments'] .novex-execution-summary__item[data-active='true'] {
+  border-color: rgb(124 108 255 / 0.45);
+  background: rgb(124 108 255 / 0.12);
 }
 
 .novex-os[data-scene='commitments'] .novex-execution-summary__item:first-child {
@@ -11362,14 +11398,80 @@ textarea {
   font-size: 0.7rem;
 }
 
+.novex-os[data-scene='commitments'] .novex-action-queue__guidance {
+  margin: 0 0 10px;
+  color: #9aacc4;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.novex-os[data-scene='commitments'] .novex-action-queue__filters {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.4fr) repeat(2, minmax(120px, 0.8fr));
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.novex-os[data-scene='commitments'] .novex-action-queue__filters input,
+.novex-os[data-scene='commitments'] .novex-action-queue__filters select,
+.novex-os[data-scene='commitments'] .novex-action-queue__pager select,
+.novex-os[data-scene='commitments'] .novex-action-queue__pager button {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid rgb(120 140 180 / 0.28);
+  border-radius: 8px;
+  background: rgb(12 22 42 / 0.72);
+  color: #d7e2f2;
+  font-size: 0.72rem;
+  padding: 0 10px;
+}
+
+.novex-os[data-scene='commitments'] .novex-action-queue__pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.novex-os[data-scene='commitments'] .novex-action-queue__pager-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #8fa2bb;
+  font-size: 0.7rem;
+}
+
+.novex-os[data-scene='commitments'] .novex-action-queue__pager button {
+  width: auto;
+  cursor: pointer;
+}
+
+.novex-os[data-scene='commitments'] .novex-action-queue__pager button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .novex-os[data-scene='commitments'] .novex-action-queue__list {
   display: grid;
   gap: 4px;
-  max-height: 320px;
+  max-height: min(52vh, 420px);
   margin: 0;
   padding: 0 3px 0 0;
   overflow-y: auto;
   list-style: none;
+}
+
+.novex-os[data-scene='commitments'] .novex-execution-flow__guidance {
+  margin: 0 0 10px;
+  color: #9aacc4;
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+.novex-os[data-scene='commitments'] .novex-execution-flow__guidance strong {
+  color: #e7eef9;
+  font-weight: 700;
 }
 
 .novex-os[data-scene='commitments'] .novex-action-row {
@@ -11392,11 +11494,12 @@ textarea {
   background: rgb(23 38 68 / 0.42);
 }
 
-.novex-os[data-scene='commitments'] .novex-action-row[aria-pressed='true'] {
+.novex-os[data-scene='commitments'] .novex-action-row[aria-pressed='true'],
+.novex-os[data-scene='commitments'] .novex-action-row--selected {
   background:
-    linear-gradient(90deg, rgb(124 108 255 / 0.16), transparent 68%),
-    rgb(20 33 61 / 0.44);
-  box-shadow: none;
+    linear-gradient(90deg, rgb(124 108 255 / 0.22), transparent 68%),
+    rgb(20 33 61 / 0.55);
+  box-shadow: inset 0 0 0 1px rgb(167 154 255 / 0.55);
 }
 
 .novex-os[data-scene='commitments'] .novex-action-row__layout {
@@ -11430,6 +11533,7 @@ textarea {
   box-shadow: 0 0 8px currentColor;
 }
 
+.novex-os[data-scene='commitments'] .novex-action-row[data-priority='critical'] .novex-action-row__priority,
 .novex-os[data-scene='commitments'] .novex-action-row[data-priority='immediate'] .novex-action-row__priority {
   color: #fb7185;
 }
@@ -11442,6 +11546,7 @@ textarea {
   color: #60a5fa;
 }
 
+.novex-os[data-scene='commitments'] .novex-action-row[data-priority='low'] .novex-action-row__priority,
 .novex-os[data-scene='commitments'] .novex-action-row[data-priority='scheduled'] .novex-action-row__priority {
   color: #94a3b8;
 }
@@ -11492,11 +11597,13 @@ textarea {
   white-space: nowrap;
 }
 
+.novex-os[data-scene='commitments'] .novex-action-row[data-status='open'] .novex-action-row__status,
 .novex-os[data-scene='commitments'] .novex-action-row[data-status='pending'] .novex-action-row__status {
   color: #7dd3fc;
 }
 
-.novex-os[data-scene='commitments'] .novex-action-row[data-status='in_progress'] .novex-action-row__status {
+.novex-os[data-scene='commitments'] .novex-action-row[data-status='in_progress'] .novex-action-row__status,
+.novex-os[data-scene='commitments'] .novex-action-row[data-status='resolved'] .novex-action-row__status {
   color: #c4b5fd;
 }
 
@@ -11504,6 +11611,7 @@ textarea {
   color: #6ee7b7;
 }
 
+.novex-os[data-scene='commitments'] .novex-action-row[data-status='closed'] .novex-action-row__status,
 .novex-os[data-scene='commitments'] .novex-action-row[data-status='not_executable'] .novex-action-row__status {
   color: #fda4af;
 }

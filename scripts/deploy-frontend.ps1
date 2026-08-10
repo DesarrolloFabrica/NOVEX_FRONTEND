@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Construye y despliega omega-frontend a Cloud Run (us-central1).
+  Construye y despliega novex-frontend a Cloud Run (us-central1).
 
 .NOTES
   - No contiene secretos.
@@ -15,10 +15,10 @@ $ErrorActionPreference = 'Stop'
 # ---------- Configuración (completar antes de ejecutar) ----------
 $PROJECT_ID = "it-fab-contenido-edu-5"
 $REGION = "us-central1"
-$SERVICE = "omega-frontend"
-$REPOSITORY = "omega"
-$IMAGE = "omega-frontend"
-$BACKEND_URL = "https://omega-backend-550902908078.us-central1.run.app/api/v1"
+$SERVICE = "novex-frontend"
+$REPOSITORY = "novex"
+$IMAGE = "novex-frontend"
+$BACKEND_URL = "https://novex-backend-550902908078.us-central1.run.app/api/v1"
 $GOOGLE_CLIENT_ID = "550902908078-biqvngn6c1eufs3occ54cnritqrfhvl5.apps.googleusercontent.com"
 # Vacío = usar la SA por defecto de Cloud Run (la dedicada aún no existe / no hay actAs).
 $SERVICE_ACCOUNT = ""
@@ -72,6 +72,9 @@ Assert-CommandExists -Name "docker"
 if ([string]::IsNullOrWhiteSpace($BACKEND_URL)) {
   throw "BACKEND_URL está vacío. Debe ser la URL completa del API (incluye /api/v1)."
 }
+if ($BACKEND_URL.TrimEnd('/') -notmatch '^https://.+/api/v1$') {
+  throw "BACKEND_URL debe usar HTTPS e incluir /api/v1."
+}
 if ([string]::IsNullOrWhiteSpace($GOOGLE_CLIENT_ID)) {
   throw "GOOGLE_CLIENT_ID está vacío."
 }
@@ -121,7 +124,7 @@ if (-not $repoExists) {
     --repository-format=docker `
     --location=$REGION `
     --project=$PROJECT_ID `
-    --description="Imágenes OMEGA"
+    --description="Imágenes NOVEX"
   Write-Host "  Repositorio '$REPOSITORY' creado."
 } else {
   Write-Host "  Repositorio existente."
@@ -135,7 +138,7 @@ Set-Location $repoRoot
 # OneDrive + Docker Desktop en Windows puede fallar con "invalid file request"
 # si los archivos están como reparse points. Hidratamos y construimos desde %TEMP%.
 Write-Host "`nPreparando contexto Docker (hidratación OneDrive + staging en TEMP)..."
-$staging = Join-Path $env:TEMP "omega-frontend-docker-context"
+$staging = Join-Path $env:TEMP "novex-frontend-docker-context"
 if (Test-Path $staging) {
   Remove-Item -LiteralPath $staging -Recurse -Force
 }
@@ -163,6 +166,8 @@ $copyItems = @(
   'tsconfig.app.json',
   'tsconfig.node.json',
   'Dockerfile',
+  'nginx.conf',
+  'docker-entrypoint.sh',
   'docker',
   '.dockerignore',
   'public',
@@ -210,6 +215,7 @@ if (-not [string]::IsNullOrWhiteSpace($SERVICE_ACCOUNT)) {
 
 Confirm-OrExit "¿Desplegar Cloud Run ($SERVICE) permitiendo acceso no autenticado?"
 
+$candidateTag = "candidate-$Tag"
 gcloud run deploy $SERVICE `
   --image=$FullImageSha `
   --region=$REGION `
@@ -225,24 +231,77 @@ gcloud run deploy $SERVICE `
   --execution-environment=gen2 `
   --ingress=all `
   --allow-unauthenticated `
+  --no-traffic `
+  --tag=$candidateTag `
   --startup-probe="httpGet.path=/health,httpGet.port=8080,periodSeconds=5,timeoutSeconds=2,failureThreshold=12" `
   --liveness-probe="httpGet.path=/health,httpGet.port=8080,periodSeconds=30,timeoutSeconds=3,failureThreshold=3" `
   @saArgs
 Assert-LastExitCode "gcloud run deploy"
-$serviceUrl = gcloud run services describe $SERVICE `
+$service = gcloud run services describe $SERVICE `
   --region=$REGION `
   --project=$PROJECT_ID `
-  --format="value(status.url)"
+  --format=json | ConvertFrom-Json
+$serviceUrl = $service.status.url
+$candidate = $service.status.traffic | Where-Object { $_.tag -eq $candidateTag }
+if (-not $candidate.url -or -not $candidate.revisionName) {
+  throw "Cloud Run no publicó la URL de la revisión candidata."
+}
+$candidateUrl = $candidate.url
+$candidateRevision = $candidate.revisionName
 
 Write-Host "`nURL del servicio: $serviceUrl" -ForegroundColor Green
+Write-Host "URL candidata: $candidateUrl"
 
 Write-Host "Probando /health ..."
 try {
-  $health = Invoke-WebRequest -Uri "$serviceUrl/health" -UseBasicParsing -TimeoutSec 30
+  $health = Invoke-WebRequest -Uri "$candidateUrl/health" -UseBasicParsing -TimeoutSec 30
   Write-Host "Health status: $($health.StatusCode) body=$($health.Content)"
 } catch {
   Write-Warning "No se pudo verificar /health: $($_.Exception.Message)"
 }
+
+$backendRoot = $BACKEND_URL.TrimEnd('/') -replace '/api/v1$', ''
+Write-Host "Probando salud del backend ..."
+$backendHealth = Invoke-WebRequest -Uri "$backendRoot/health" -UseBasicParsing -TimeoutSec 30
+if ($backendHealth.StatusCode -ne 200) {
+  throw "El backend configurado no está saludable (HTTP $($backendHealth.StatusCode))."
+}
+
+Write-Host "Probando preflight CORS del análisis IA ..."
+$preflight = Invoke-WebRequest `
+  -Uri "$($BACKEND_URL.TrimEnd('/'))/situations/register-with-analysis" `
+  -Method Options `
+  -Headers @{
+    Origin = $serviceUrl
+    'Access-Control-Request-Method' = 'POST'
+    'Access-Control-Request-Headers' = 'authorization,content-type'
+  } `
+  -UseBasicParsing `
+  -TimeoutSec 30
+if (
+  $preflight.StatusCode -ne 204 -or
+  $preflight.Headers['Access-Control-Allow-Origin'] -ne $serviceUrl
+) {
+  throw "El backend no autorizó CORS para el frontend desplegado ($serviceUrl)."
+}
+
+Write-Host "Promoviendo revisión validada ..."
+gcloud run services update-traffic $SERVICE `
+  --to-revisions="$candidateRevision=100" `
+  --region=$REGION `
+  --project=$PROJECT_ID `
+  --quiet
+Assert-LastExitCode "gcloud run services update-traffic"
+
+$stable = Invoke-WebRequest -Uri "$serviceUrl/" -UseBasicParsing -TimeoutSec 30
+if ($stable.StatusCode -ne 200 -or $stable.Content -notmatch '<div id="root"') {
+  throw "El frontend promovido no respondió correctamente."
+}
+gcloud run services update-traffic $SERVICE `
+  --remove-tags=$candidateTag `
+  --region=$REGION `
+  --project=$PROJECT_ID `
+  --quiet
 
 Write-Host "`nPost-despliegue:"
 Write-Host "  1) Registrar $serviceUrl como origen JavaScript autorizado en Google OAuth."

@@ -1,19 +1,20 @@
 // Componente: orquestador del wizard — capturar, confirmar y analizar.
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { fetchSituations } from '@/modules/api/situations.api'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { isCoordinator } from '@/modules/auth/utils/permissions'
 import { CRYSTAL_ZONE } from '@/modules/monitoring/constants/monitoringTheme'
 import { SituationAnalysisPanel } from '@/modules/operational-events/components/analysis/SituationAnalysisPanel'
+import { AnalysisIntelligenceCenter } from '@/modules/operational-events/components/analysis/AnalysisIntelligenceCenter'
 import { EventCaptureForm } from '@/modules/operational-events/components/EventCaptureForm'
 import { SituationCaptureSummary } from '@/modules/operational-events/components/SituationCaptureSummary'
 import {
   WizardStepRail,
   type WizardStepId,
 } from '@/modules/operational-events/components/WizardStepRail'
-import { registerSituationWithEvidences } from '@/modules/services/situationRegistration.service'
+import { registerSituationWithAnalysis } from '@/modules/services/situationRegistration.service'
 import { fetchCoordinationsRequest } from '@/modules/situations/services/coordinations.service'
 import { fetchIncidentCategoriesRequest } from '@/modules/situations/services/situations.service'
 import type { SituationCaptureDraft } from '@/modules/situations/types/situation-capture.types'
@@ -34,6 +35,7 @@ import { validateSituationCaptureDraft } from '@/modules/operational-events/util
 import { getErrorMessage } from '@/shared/utils/error'
 import { isValidUuid } from '@/shared/utils/uuid'
 import {
+  clearOnboardingSituation,
   readOnboardingSituation,
   rememberOnboardingSituation,
 } from '@/modules/onboarding/onboardingFirstSituation'
@@ -114,6 +116,10 @@ export function OperationalEventWizard() {
       ? rememberedSituationId
       : null
 
+  /** Impide que la recuperación de onboarding reenganche un expediente viejo. */
+  const skipRecoveryRef = useRef(false)
+  const registrationStartedAtRef = useRef(Date.now())
+
   const [step, setStep] = useState<WizardStepId>(() => {
     if (resumableSituationId) return 3
     const persisted = readSituationCaptureWizardStep()
@@ -144,6 +150,7 @@ export function OperationalEventWizard() {
   >(resumableSituationId)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const submissionInFlightRef = useRef(false)
 
   const captureValidation = validateSituationCaptureDraft(
     draft,
@@ -161,7 +168,9 @@ export function OperationalEventWizard() {
   }, [step])
 
   useEffect(() => {
-    if (!resumableSituationId || registeredSituationId) return
+    if (!resumableSituationId || registeredSituationId || skipRecoveryRef.current) {
+      return
+    }
 
     setRegisteredSituationId(resumableSituationId)
     setStep(3)
@@ -169,6 +178,7 @@ export function OperationalEventWizard() {
 
   useEffect(() => {
     if (
+      skipRecoveryRef.current ||
       user?.onboardingCompleted ||
       onboardingStepId !== 'analysis' ||
       registeredSituationId
@@ -181,7 +191,7 @@ export function OperationalEventWizard() {
     async function recoverRegisteredSituation() {
       try {
         const response = await fetchSituations({ limit: 100, page: 1 })
-        if (cancelled) return
+        if (cancelled || skipRecoveryRef.current) return
 
         const recovered = findLatestSituationCreatedByUser(
           response.items,
@@ -267,14 +277,40 @@ export function OperationalEventWizard() {
     }
   }, [analystMode, coordinatorMode, prefillCoordinationCode, user?.coordinationId])
 
+  function startFreshCapture() {
+    skipRecoveryRef.current = true
+    clearOnboardingSituation(user?.id)
+    clearSituationCapturePersistence()
+    setRegisteredSituationId(null)
+    setSituation(null)
+    setError(null)
+    setDraft(
+      createEmptyDraft(
+        coordinatorMode && user?.coordinationId ? user.coordinationId : '',
+      ),
+    )
+    setStep(1)
+  }
+
   function handleAnalysisComplete(situationId: string) {
-    rememberOnboardingSituation(user?.id, situationId)
+    clearOnboardingSituation(user?.id)
+    clearSituationCapturePersistence()
+    navigate(`/gestion?situation=${encodeURIComponent(situationId)}`, {
+      replace: true,
+    })
+  }
+
+  function handleViewDossier(situationId: string) {
+    clearOnboardingSituation(user?.id)
+    clearSituationCapturePersistence()
     navigate(`/gestion?situation=${encodeURIComponent(situationId)}`, {
       replace: true,
     })
   }
 
   async function handleConfirmAndRegister() {
+    if (submissionInFlightRef.current) return
+
     setError(null)
 
     if (registeredSituationId) {
@@ -282,10 +318,13 @@ export function OperationalEventWizard() {
       return
     }
 
+    submissionInFlightRef.current = true
     setSubmitting(true)
+    registrationStartedAtRef.current = Date.now()
+    setStep(3)
 
     try {
-      const created = await registerSituationWithEvidences({
+      const created = await registerSituationWithAnalysis({
         draft,
         coordinations: coordinationCatalog,
         categories,
@@ -297,8 +336,10 @@ export function OperationalEventWizard() {
       setRegisteredSituationId(created.id)
       setStep(3)
     } catch (submitError) {
+      setStep(2)
       setError(getErrorMessage(submitError))
     } finally {
+      submissionInFlightRef.current = false
       setSubmitting(false)
     }
   }
@@ -362,15 +403,37 @@ export function OperationalEventWizard() {
           </div>
         ) : null}
 
-        {step === 3 && registeredSituationId ? (
+        {step === 3 && submitting && !registeredSituationId ? (
           <div
-            className="novex-wizard-step-pane novex-wizard-step-pane--intelligence flex min-h-0 flex-1 flex-col"
+            className="novex-wizard-step-pane novex-wizard-step-pane--intelligence flex min-h-0 flex-1 flex-col gap-3"
             data-tour="analysis-stage"
           >
+            <AnalysisIntelligenceCenter
+              startedAt={registrationStartedAtRef.current}
+            />
+          </div>
+        ) : null}
+
+        {step === 3 && registeredSituationId ? (
+          <div
+            className="novex-wizard-step-pane novex-wizard-step-pane--intelligence flex min-h-0 flex-1 flex-col gap-3"
+            data-tour="analysis-stage"
+          >
+            <div className="flex justify-end px-1">
+              <button
+                type="button"
+                className="text-sm font-semibold text-slate-200 underline-offset-2 hover:underline"
+                onClick={startFreshCapture}
+              >
+                Registrar otra situación
+              </button>
+            </div>
             <SituationAnalysisPanel
               situationId={registeredSituationId}
               situationTitle={situation?.title ?? draft.title}
               onAnalysisComplete={handleAnalysisComplete}
+              onViewDossier={handleViewDossier}
+              onRegisterAnother={startFreshCapture}
             />
           </div>
         ) : null}

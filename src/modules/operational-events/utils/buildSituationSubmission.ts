@@ -63,6 +63,10 @@ export function buildSituationDescription(
     )
   }
 
+  if (draft.additionalNotes.trim()) {
+    contextLines.push(`Notas adicionales: ${draft.additionalNotes.trim()}`)
+  }
+
   if (contextLines.length > 0) {
     parts.push(
       '\n\n---\nContexto reportado por el usuario:\n' + contextLines.join('\n'),

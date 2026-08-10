@@ -40,8 +40,9 @@ export function MonitoringHeader({
         <NovexUserMenu onLogout={onLogout} />
         <NovexViewHelp>
           <p>
-            Supervisa el ciclo de vida de cada situación: Registrada, En atención,
-            Resuelta y Cerrada.
+            Supervisa el ciclo de vida de cada situación: Registrada, En atención
+            y Cerrada. Al cerrar, sale del mapa y de la cola; permanece en
+            Situaciones registradas.
           </p>
           <p>
             La IA entrega inteligencia estratégica. Tú tomas la decisión operacional

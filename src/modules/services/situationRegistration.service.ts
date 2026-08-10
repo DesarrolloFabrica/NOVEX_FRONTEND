@@ -1,5 +1,5 @@
 import { createSituationEvidence } from '@/modules/api/evidences.api'
-import { createSituation } from '@/modules/api/situations.api'
+import { createSituationWithAnalysis } from '@/modules/api/situations.api'
 import {
   buildSituationDescription,
   labelForDetection,
@@ -11,6 +11,7 @@ import { validateSituationCaptureDraft } from '@/modules/operational-events/util
 import type { SituationCaptureDraft } from '@/modules/situations/types/situation-capture.types'
 import type {
   CoordinationSummary,
+  CreateSituationPayload,
   IncidentCategorySummary,
   SituationResponse,
 } from '@/modules/situations/types/situation.types'
@@ -32,9 +33,9 @@ function assertBackendSituationId(situation: SituationResponse): string {
   return situation.id
 }
 
-export async function registerSituation(
+function buildCreateSituationPayload(
   input: RegisterSituationInput,
-): Promise<SituationResponse> {
+): CreateSituationPayload {
   const validation = validateSituationCaptureDraft(
     input.draft,
     input.coordinations,
@@ -55,7 +56,7 @@ export async function registerSituation(
     throw new Error('No hay categorías de incidente disponibles.')
   }
 
-  const situation = await createSituation({
+  return {
     title: input.draft.title.trim(),
     description: buildSituationDescription(input.draft, input.coordinations),
     coordinationId: input.allowUnassignedCoordination
@@ -67,9 +68,24 @@ export async function registerSituation(
     relatedCoordinationIds: input.draft.relatedCoordinationIds.filter(
       (id) => id !== input.draft.coordinationId,
     ),
-  })
+  }
+}
+
+export async function registerSituationWithAnalysis(
+  input: RegisterSituationInput,
+): Promise<SituationResponse> {
+  const { situation } = await createSituationWithAnalysis(
+    buildCreateSituationPayload(input),
+  )
 
   assertBackendSituationId(situation)
+
+  try {
+    await uploadCaptureEvidences(situation.id, input.draft, input.coordinations)
+  } catch {
+    // El análisis ya quedó persistido y la descripción conserva el contexto.
+  }
+
   return situation
 }
 
@@ -118,20 +134,4 @@ export async function uploadCaptureEvidences(
       description: draft.additionalNotes.trim(),
     })
   }
-}
-
-export async function registerSituationWithEvidences(
-  input: RegisterSituationInput,
-): Promise<SituationResponse> {
-  const situation = await registerSituation(input)
-
-  try {
-    await uploadCaptureEvidences(situation.id, input.draft, input.coordinations)
-  } catch {
-    // El expediente ya contiene el contexto estructurado en su descripción.
-    // Una evidencia auxiliar no debe interrumpir el análisis ni inducir al
-    // usuario a crear un expediente duplicado.
-  }
-
-  return situation
 }

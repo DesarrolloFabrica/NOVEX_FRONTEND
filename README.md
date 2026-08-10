@@ -9,7 +9,6 @@ NOVEX_FRONTEND/
 ├── src/              # Código fuente y pruebas unitarias
 ├── public/           # Assets estáticos
 ├── e2e/              # Pruebas Playwright
-├── DOCS/             # Documentación de producto
 ├── docker/           # Configuración de referencia para Nginx
 ├── scripts/          # Automatización de despliegue
 └── package.json      # Dependencias y scripts
@@ -24,7 +23,8 @@ NOVEX_FRONTEND/
 
 ```bash
 npm install
-npm run dev        # Servidor de desarrollo (http://localhost:5173)
+npm run dev        # Inicia backend + frontend en el workspace local
+npm run dev:frontend # Solo Vite (http://localhost:5173)
 npm run build      # Build de producción
 npm run preview    # Vista previa del build
 npm run test       # Tests (Vitest)
@@ -33,7 +33,6 @@ npm run typecheck  # Verificación de tipos
 npm run lint       # Oxlint
 ```
 
-## Documentación
+## Despliegue
 
-- [Estado del MVP](DOCS/mvp-estado-actual.md)
-- [Dirección de arte](DOCS/novex-direccion-arte-estado-actual.md)
+Ver [DEPLOY_FRONTEND.md](DEPLOY_FRONTEND.md).

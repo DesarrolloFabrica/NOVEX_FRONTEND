@@ -82,35 +82,15 @@ function buildPropagationChain(
   const order = propagation.affectedCoordinationIds.indexOf(coordinationId)
 
   if (role === 'ambient') {
-    return `${coordination.name} permanece en la red operacional como coordinación de contexto, sin impacto directo confirmado en esta propagación.`
+    return `${coordination.name} aparece en la red como contexto, sin afectación directa confirmada en esta propagación.`
   }
 
   if (order < 0) {
-    return `Impacto recibido desde ${propagation.originName} por dependencias operacionales activas.`
+    return `Relacionada con la situación originada en ${propagation.originName}. No hay secuencia de propagación confirmada para esta coordinación.`
   }
 
   const sequence = order + 1
-  return `Impacto propagado desde ${propagation.originName}. Esta coordinación aparece en la secuencia ${sequence} de ${propagation.affectedCoordinationIds.length} áreas afectadas.`
-}
-
-function buildFallbackReason(
-  coordinationId: CoordinationId,
-  propagation: FocusedPropagation,
-  event: OperationalEvent,
-  role: 'affected' | 'ambient',
-): string {
-  const coordination = getCoordination(coordinationId)
-  const interpretation = event.interpretation
-
-  if (interpretation?.executiveSummary) {
-    return `${coordination.name} se ve involucrada porque la situación reportada afecta procesos conectados con su operación. ${interpretation.executiveSummary}`
-  }
-
-  if (role === 'ambient') {
-    return `${coordination.name} forma parte del entramado institucional monitoreado, pero no registra afectación directa en esta situación.`
-  }
-
-  return `${coordination.name} recibe impacto operacional derivado de la situación originada en ${propagation.originName}.`
+  return `Impacto propagado desde ${propagation.originName}. Secuencia ${sequence} de ${propagation.affectedCoordinationIds.length} áreas afectadas.`
 }
 
 function filterSuggestedActions(
@@ -118,12 +98,12 @@ function filterSuggestedActions(
   coordinationName: string,
   shortName: string,
 ): RecommendedAction[] {
-  const matches = actions.filter(
+  // Solo acciones explícitamente asignadas a esta área; sin inventar genéricas.
+  return actions.filter(
     (action) =>
       labelsMatch(action.suggestedArea, coordinationName) ||
       labelsMatch(action.suggestedArea, shortName),
   )
-  return matches.length > 0 ? matches : actions.slice(0, 2)
 }
 
 export function resolveIslandAffectedBriefing(
@@ -141,15 +121,20 @@ export function resolveIslandAffectedBriefing(
 
   const affectationLevel =
     matchedArea?.affectationLevel ??
-    propagation.riskLevel ??
-    event.interpretation?.riskLevel ??
-    'moderate'
+    (focusRole === 'ambient'
+      ? 'low'
+      : (propagation.riskLevel ?? event.interpretation?.riskLevel ?? 'moderate'))
 
   const reason =
     matchedArea?.reason ??
-    buildFallbackReason(coordinationId, propagation, event, focusRole)
+    (focusRole === 'ambient'
+      ? `Sin afectación directa confirmada para ${coordination.name} en el análisis disponible.`
+      : `Sin lectura específica de afectación para ${coordination.name} en el análisis disponible.`)
 
-  const dependencies = report?.rootCause.dependencies.slice(0, 3) ?? []
+  // Dependencias globales del reporte solo si hay match de área; si no, vacío.
+  const dependencies = matchedArea
+    ? (report?.rootCause.dependencies.slice(0, 3) ?? [])
+    : []
   const suggestedActions = filterSuggestedActions(
     report?.recommendedActions ?? [],
     coordination.name,

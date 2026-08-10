@@ -39,11 +39,15 @@ function situationCode(id: string): string {
 }
 
 function isOpenStatus(status: string): boolean {
-  return status === 'OPEN' || status === 'IN_PROGRESS'
+  return (
+    status === 'OPEN' ||
+    status === 'IN_PROGRESS' ||
+    status === 'RESOLVED'
+  )
 }
 
 function isClosedStatus(status: string): boolean {
-  return status === 'CLOSED' || status === 'RESOLVED'
+  return status === 'CLOSED'
 }
 
 function average(values: number[]): number | null {

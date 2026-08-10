@@ -316,21 +316,18 @@ test('acompaña una primera situación real hasta informe, historial y estado', 
       return
     }
 
-    if (path.endsWith('/situations') && method === 'POST') {
-      const payload = request.postDataJSON() as Record<string, unknown>
-      expect(payload).not.toHaveProperty('coordinationId')
-      registered = true
-      await route.fulfill({ json: situation })
-      return
-    }
-
     if (
-      path.endsWith(`/situations/${situationId}/analyze`) &&
+      path.endsWith('/situations/register-with-analysis') &&
       method === 'POST'
     ) {
+      const payload = request.postDataJSON() as Record<string, unknown>
+      expect(payload).not.toHaveProperty('coordinationId')
       await new Promise((resolve) => setTimeout(resolve, 1_200))
+      registered = true
       analysisReady = true
-      await route.fulfill({ json: analysisResponse })
+      await route.fulfill({
+        json: { situation, analysis: analysisResponse },
+      })
       return
     }
 
@@ -453,15 +450,6 @@ test('acompaña una primera situación real hasta informe, historial y estado', 
     page.getByRole('heading', { name: 'NOVEX está preparando el informe' }),
   ).toBeVisible()
   await expect(page.getByText('Esperando el análisis IA…')).toBeVisible()
-  await expect
-    .poll(() =>
-      page.evaluate((userId) => {
-        return localStorage.getItem(
-          `novex.onboarding.first-situation.v1.${userId}`,
-        )
-      }, session.id),
-    )
-    .toBe(situationId)
   const analysisTourCard = page.locator('.novex-tour__card')
   await expect(
     analysisTourCard.getByRole('button', { name: 'Anterior' }),
@@ -504,11 +492,15 @@ test('acompaña una primera situación real hasta informe, historial y estado', 
     page.getByRole('button', { name: 'Exportar reporte PDF' }),
   ).toBeVisible()
 
-  await page.getByRole('button', { name: 'Siguiente', exact: true }).click()
+  await analysisTourCard
+    .getByRole('button', { name: 'Siguiente', exact: true })
+    .click()
   await expect(
     page.getByRole('heading', { name: 'Todo queda disponible para consulta' }),
   ).toBeVisible()
-  await page.getByRole('button', { name: 'Siguiente', exact: true }).click()
+  await analysisTourCard
+    .getByRole('button', { name: 'Siguiente', exact: true })
+    .click()
   await expect(page).toHaveURL(
     new RegExp(`/gestion\\?situation=${situationId}`),
   )
@@ -533,7 +525,9 @@ test('acompaña una primera situación real hasta informe, historial y estado', 
       return !overlaps
     })
     .toBe(true)
-  await page.getByRole('button', { name: 'Siguiente', exact: true }).click()
+  await analysisTourCard
+    .getByRole('button', { name: 'Siguiente', exact: true })
+    .click()
   await expect(
     page.getByRole('heading', {
       name: 'Actualice el estado con una razón verificable',
@@ -557,7 +551,9 @@ test('acompaña una primera situación real hasta informe, historial y estado', 
       )
     })
     .toBe(true)
-  await page.getByRole('button', { name: 'Siguiente', exact: true }).click()
+  await analysisTourCard
+    .getByRole('button', { name: 'Siguiente', exact: true })
+    .click()
   await expect(
     page.getByRole('heading', {
       name: 'Ya puede operar NOVEX de principio a fin',

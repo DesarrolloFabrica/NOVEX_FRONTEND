@@ -40,7 +40,7 @@ export function SituationRegistrySummaryBar({
       tone: 'open',
     },
     {
-      label: 'Resueltas',
+      label: 'Cerradas',
       value: summary.closedSituations,
       detail: 'Situaciones cerradas',
       icon: 'check',

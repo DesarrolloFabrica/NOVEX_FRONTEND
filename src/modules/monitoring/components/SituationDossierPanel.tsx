@@ -46,8 +46,11 @@ export function SituationDossierPanel({
   if (!dossier) {
     return (
       <section className="novex-action-detail novex-action-detail--empty">
-        <strong>Ninguna situación seleccionada</strong>
-        <p>Selecciona una situación para revisar su expediente operativo.</p>
+        <strong>Seleccione una situación de la cola</strong>
+        <p>
+          Elija un caso en la lista para revisar el expediente y, si corresponde,
+          actualizar su estado operacional.
+        </p>
       </section>
     )
   }

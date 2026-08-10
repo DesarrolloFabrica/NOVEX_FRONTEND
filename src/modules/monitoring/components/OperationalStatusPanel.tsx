@@ -16,6 +16,10 @@ export function OperationalStatusPanel({
     >
       <div className="novex-ops-section-heading">
         <h2>Estado operacional</h2>
+        <p className="novex-ops-state__hint">
+          Situación seleccionada. Revise el expediente y actualice el estado cuando
+          avance la atención.
+        </p>
       </div>
       <div className="novex-ops-state__body novex-ops-state__body--timeline">
         <SituationLifecycleTimeline status={situation.status} />
