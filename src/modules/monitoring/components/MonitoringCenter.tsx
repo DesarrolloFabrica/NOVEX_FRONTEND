@@ -8,6 +8,7 @@ import { ScreenDeck } from '@/modules/monitoring/components/ScreenDeck'
 import { SituationDossierPanel } from '@/modules/monitoring/components/SituationDossierPanel'
 import { SituationIntelligencePanel } from '@/modules/monitoring/components/SituationIntelligencePanel'
 import { SituationQueueConsole } from '@/modules/monitoring/components/SituationQueueConsole'
+import { SituationPrimaryActionBar } from '@/modules/monitoring/components/SituationPrimaryActionBar'
 import { OperationalStatusPanel } from '@/modules/monitoring/components/OperationalStatusPanel'
 import { AiRecommendationsReadOnly } from '@/modules/monitoring/components/AiRecommendationsReadOnly'
 import { OperationalHistoryTimeline } from '@/modules/monitoring/components/OperationalHistoryTimeline'
@@ -91,52 +92,68 @@ export function MonitoringCenter({
       <main className="novex-execution-flow" data-tour="situation-management">
         <SituationSummary summary={summary} />
 
-        <SituationQueueConsole
-          situations={sortedSituations}
-          selectedSituationId={selectedSituationId}
-          loading={listLoading}
-          error={listError}
-          onSelectSituation={onSelectSituation}
-        />
-
-        <section className="novex-ops-command-center">
-          <div
-            className="novex-execution-detail"
-            aria-label="Vista ejecutiva de la situación"
+        <div className="novex-gestion-workspace">
+          <aside
+            className="novex-gestion-workspace__queue"
+            aria-label="Cola de situaciones"
           >
-          <SituationDossierPanel
-            dossier={dossier}
-            loading={dossierLoading}
-            error={dossierError}
-          />
-          <SituationIntelligencePanel
-            dossier={dossier}
-            loading={dossierLoading}
-            onOpenAnalysis={() => setShowAnalysis(true)}
-          />
-          </div>
+            <SituationQueueConsole
+              situations={sortedSituations}
+              selectedSituationId={selectedSituationId}
+              loading={listLoading}
+              error={listError}
+              onSelectSituation={onSelectSituation}
+            />
+          </aside>
 
-          {dossier ? (
-            <>
-              <OperationalStatusPanel
-                situation={dossier.situation}
-                canUpdate={canUpdate}
-                isUpdating={isUpdating}
-                onUpdate={onUpdateSituationStatus}
-              />
-              <AiRecommendationsReadOnly
-                recommendations={dossier.recommendations}
-              />
-              <div className="novex-ops-secondary-grid">
-                <OperationalHistoryTimeline timeline={dossier.timeline} />
-                <AiVersionCard
-                  situationId={dossier.situation.id}
-                  history={dossier.analysisHistory}
+          <section
+            className="novex-gestion-workspace__dossier"
+            aria-label="Expediente operativo"
+          >
+            <div className="novex-gestion-workspace__scroll">
+              {dossier ? (
+                <SituationPrimaryActionBar
+                  situation={dossier.situation}
+                  canUpdate={canUpdate}
+                  isUpdating={isUpdating}
+                  onUpdate={onUpdateSituationStatus}
+                />
+              ) : null}
+
+              <div
+                className="novex-execution-detail"
+                aria-label="Vista ejecutiva de la situación"
+              >
+                <SituationDossierPanel
+                  dossier={dossier}
+                  loading={dossierLoading}
+                  error={dossierError}
+                />
+                <SituationIntelligencePanel
+                  dossier={dossier}
+                  loading={dossierLoading}
+                  onOpenAnalysis={() => setShowAnalysis(true)}
                 />
               </div>
-            </>
-          ) : null}
-        </section>
+
+              {dossier ? (
+                <>
+                  <OperationalStatusPanel situation={dossier.situation} />
+                  <AiRecommendationsReadOnly
+                    recommendations={dossier.recommendations}
+                  />
+                  <div className="novex-ops-secondary-grid">
+                    <OperationalHistoryTimeline timeline={dossier.timeline} />
+                    <AiVersionCard
+                      situationId={dossier.situation.id}
+                      history={dossier.analysisHistory}
+                    />
+                  </div>
+                </>
+              ) : null}
+            </div>
+          </section>
+        </div>
       </main>
 
       {showAnalysis && selectedSituationId ? (

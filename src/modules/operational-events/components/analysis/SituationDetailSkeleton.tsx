@@ -5,16 +5,8 @@ interface SituationDetailSkeletonProps {
   onClose: () => void
 }
 
-const SECTIONS = [
-  { question: '¿Qué ocurrió?', cards: 2 },
-  { question: '¿Qué tan grave es?', cards: 3 },
-  { question: '¿Qué hacemos?', cards: 2 },
-] as const
-
 /**
- * Reproduce la silueta del expediente mientras llegan los datos: el diálogo
- * conserva su tamaño definitivo y el contenido se sustituye en el sitio, sin
- * que la tarjeta crezca de golpe al terminar la carga.
+ * Silueta breve del expediente mientras llegan los datos.
  */
 export function SituationDetailSkeleton({
   title,
@@ -22,13 +14,10 @@ export function SituationDetailSkeleton({
 }: SituationDetailSkeletonProps) {
   return (
     <>
-      <header className="novex-sit-header">
+      <header className="novex-sit-header novex-sit-header--brief">
         <div className="novex-sit-header__lead">
-          <span className="novex-sit-header__icon" aria-hidden="true">
-            <NovexIcon name="alert" size={16} strokeWidth={1.7} />
-          </span>
           <div className="min-w-0">
-            <p className="novex-sit-header__eyebrow">Expediente operativo</p>
+            <p className="novex-sit-header__eyebrow">Detalle de situación</p>
             {title ? (
               <h2 className="novex-sit-header__title">{title}</h2>
             ) : (
@@ -55,34 +44,29 @@ export function SituationDetailSkeleton({
           </button>
           <p className="novex-sit-skeleton__status" aria-live="polite">
             <span className="novex-sit-skeleton__pulse" aria-hidden="true" />
-            Abriendo expediente…
+            Abriendo detalle…
           </p>
         </div>
       </header>
 
       <div className="novex-sit-scroll" aria-hidden="true">
-        <div className="novex-sit-skeleton__body">
-          {SECTIONS.map((section) => (
-            <section
-              key={section.question}
-              className="novex-sit-skeleton__section"
-            >
-              <p className="novex-sit-skeleton__question">{section.question}</p>
-              <div
-                className="novex-sit-skeleton__grid"
-                data-cards={section.cards}
-              >
-                {Array.from({ length: section.cards }, (_, index) => (
-                  <div key={index} className="novex-sit-skeleton__card">
-                    <span className="novex-skeleton novex-skeleton--heading" />
-                    <span className="novex-skeleton novex-skeleton--line" />
-                    <span className="novex-skeleton novex-skeleton--line" />
-                    <span className="novex-skeleton novex-skeleton--line novex-skeleton--short" />
-                  </div>
-                ))}
-              </div>
-            </section>
-          ))}
+        <div className="novex-sit-brief">
+          <section className="novex-sit-brief__block">
+            <span className="novex-skeleton novex-skeleton--heading" />
+            <span className="novex-skeleton novex-skeleton--line" />
+            <span className="novex-skeleton novex-skeleton--line" />
+            <span className="novex-skeleton novex-skeleton--line novex-skeleton--short" />
+          </section>
+          <section className="novex-sit-brief__metrics">
+            <span className="novex-skeleton novex-skeleton--line" />
+            <span className="novex-skeleton novex-skeleton--line" />
+            <span className="novex-skeleton novex-skeleton--line" />
+          </section>
+          <section className="novex-sit-brief__block">
+            <span className="novex-skeleton novex-skeleton--heading" />
+            <span className="novex-skeleton novex-skeleton--line" />
+            <span className="novex-skeleton novex-skeleton--line novex-skeleton--short" />
+          </section>
         </div>
       </div>
     </>

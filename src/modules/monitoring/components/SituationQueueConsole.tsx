@@ -31,10 +31,10 @@ export function SituationQueueConsole({
     <section className="novex-action-queue" aria-labelledby="situation-list-title">
       <header className="novex-action-queue__header">
         <div>
-          <p>Prioridad operativa</p>
-          <h2 id="situation-list-title">Situaciones registradas</h2>
+          <p>Selecciona la situación para actualizar el estado</p>
+          <h2 id="situation-list-title">Situaciones</h2>
         </div>
-        <span>{situations.length} situaciones</span>
+        <span>{situations.length}</span>
       </header>
 
       {loading ? (

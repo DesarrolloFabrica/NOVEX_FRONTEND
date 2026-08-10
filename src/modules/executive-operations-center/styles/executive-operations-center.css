@@ -1,0 +1,319 @@
+/* Executive Operations Center — shell aislado (prefijo eoc-) */
+
+.eoc-shell {
+  --eoc-bg: #0b1220;
+  --eoc-surface: #111a2e;
+  --eoc-border: rgb(148 163 184 / 0.16);
+  --eoc-text: #e2e8f0;
+  --eoc-muted: #94a3b8;
+  --eoc-accent: #38bdf8;
+  --eoc-accent-soft: rgb(56 189 248 / 0.12);
+
+  display: grid;
+  grid-template-columns: 17rem 1fr;
+  min-height: 100vh;
+  color: var(--eoc-text);
+  background: var(--eoc-bg);
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+}
+
+.eoc-shell__backdrop {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 50% at 10% 0%, rgb(56 189 248 / 0.08), transparent),
+    radial-gradient(ellipse 50% 40% at 90% 100%, rgb(99 102 241 / 0.06), transparent);
+}
+
+.eoc-shell__main {
+  position: relative;
+  z-index: 1;
+  overflow: auto;
+  padding: 1.5rem 2rem 2.5rem;
+}
+
+/* --- Navigation ---------------------------------------------------------- */
+
+.eoc-nav {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.25rem 1rem;
+  border-right: 1px solid var(--eoc-border);
+  background: var(--eoc-surface);
+}
+
+.eoc-nav__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.eoc-nav__mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: var(--eoc-accent-soft);
+  color: var(--eoc-accent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.eoc-nav__brand-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.eoc-nav__brand-copy strong {
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+}
+
+.eoc-nav__brand-copy span {
+  font-size: 0.72rem;
+  color: var(--eoc-muted);
+}
+
+.eoc-nav__links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.eoc-nav__link {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 0.65rem;
+  border-radius: 0.5rem;
+  color: var(--eoc-muted);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.eoc-nav__link:hover {
+  background: rgb(148 163 184 / 0.08);
+  color: var(--eoc-text);
+}
+
+.eoc-nav__link.is-active {
+  background: var(--eoc-accent-soft);
+  color: var(--eoc-accent);
+}
+
+.eoc-nav__icon {
+  display: flex;
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+.eoc-nav__link-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.eoc-nav__link-copy strong {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.eoc-nav__link-copy small {
+  font-size: 0.68rem;
+  opacity: 0.75;
+}
+
+.eoc-nav__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--eoc-border);
+}
+
+.eoc-nav__identity {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.eoc-nav__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: rgb(148 163 184 / 0.15);
+  font-size: 0.75rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.eoc-nav__identity-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  min-width: 0;
+}
+
+.eoc-nav__identity-copy strong {
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.eoc-nav__identity-copy small {
+  font-size: 0.65rem;
+  color: var(--eoc-muted);
+}
+
+.eoc-nav__logout {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--eoc-border);
+  border-radius: 0.35rem;
+  background: transparent;
+  color: var(--eoc-muted);
+  font-size: 0.7rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.eoc-nav__logout:hover {
+  color: var(--eoc-text);
+  border-color: rgb(148 163 184 / 0.35);
+}
+
+/* --- Page header --------------------------------------------------------- */
+
+.eoc-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: none;
+}
+
+.eoc-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.eoc-header__eyebrow {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--eoc-accent);
+  margin-bottom: 0.35rem;
+}
+
+.eoc-header__title {
+  margin: 0;
+  font-size: 1.65rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.eoc-header__context {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  color: var(--eoc-muted);
+  max-width: 40rem;
+}
+
+.eoc-header__badge {
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--eoc-border);
+  font-size: 0.68rem;
+  color: var(--eoc-muted);
+  white-space: nowrap;
+}
+
+/* --- Placeholders -------------------------------------------------------- */
+
+.eoc-placeholder {
+  padding: 2rem;
+  border-radius: 0.75rem;
+  border: 1px dashed var(--eoc-border);
+  background: rgb(17 26 46 / 0.6);
+}
+
+.eoc-placeholder__badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  margin-bottom: 0.75rem;
+  border-radius: 999px;
+  background: var(--eoc-accent-soft);
+  color: var(--eoc-accent);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.eoc-placeholder__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.eoc-placeholder__description {
+  margin: 0 0 1rem;
+  color: var(--eoc-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.eoc-placeholder__status {
+  margin: 0 0 0.5rem;
+  font-size: 0.82rem;
+  color: var(--eoc-muted);
+  font-style: italic;
+}
+
+.eoc-placeholder__role {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--eoc-muted);
+}
+
+/* --- Responsive ---------------------------------------------------------- */
+
+@media (max-width: 768px) {
+  .eoc-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .eoc-nav {
+    border-right: none;
+    border-bottom: 1px solid var(--eoc-border);
+  }
+
+  .eoc-nav__links {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .eoc-shell__main {
+    padding: 1rem;
+  }
+}

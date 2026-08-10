@@ -6,6 +6,11 @@ import type {
   SituationRegistryIndicators,
   SituationRegistrySummary,
 } from '@/modules/api/types/situation-registry.types'
+import { useAuth } from '@/modules/auth/hooks/useAuth'
+import {
+  normalizeRoleCode,
+  seesInstitutionalSituationRegistry,
+} from '@/modules/auth/utils/roleExperience'
 import { SituationRegistrySummaryBar } from '@/modules/operational-events/components/registry/SituationRegistrySummaryBar'
 import { SituationRegistryTableRow } from '@/modules/operational-events/components/registry/SituationRegistryTableRow'
 import {
@@ -74,6 +79,13 @@ export function SituationsRegistryConsole({
   onQueryChange,
   onSelectSituation,
 }: SituationsRegistryConsoleProps) {
+  const { user } = useAuth()
+  const auditView = seesInstitutionalSituationRegistry(
+    normalizeRoleCode(user?.roleCode),
+  )
+  const tableVariant = auditView ? 'audit' : 'own'
+  const columnCount = auditView ? 6 : 5
+
   const visible = useMemo(
     () => filterAndSortSituationRegistry(rows, query),
     [rows, query],
@@ -172,7 +184,7 @@ export function SituationsRegistryConsole({
                   </span>
                 </span>
               </div>
-              <p>Seleccione una fila para abrir el análisis ejecutivo.</p>
+              <p>Abra una fila para ver el resumen ejecutivo.</p>
             </div>
             <span className="novex-events-table__count" aria-live="polite">
               {visible.length === 1
@@ -189,7 +201,11 @@ export function SituationsRegistryConsole({
                 <input
                   type="search"
                   aria-label="Buscar situaciones"
-                  placeholder="Buscar por situación, código, coordinación o categoría"
+                  placeholder={
+                    auditView
+                      ? 'Buscar por situación, coordinación, autor o categoría'
+                      : 'Buscar por situación, código o categoría'
+                  }
                   value={query.search}
                   onChange={(event) =>
                     onQueryChange({ ...query, search: event.target.value })
@@ -375,22 +391,36 @@ export function SituationsRegistryConsole({
           </p>
         ) : (
           <div className="novex-events-table__scroll" tabIndex={0}>
-            <table className="novex-events-table__grid novex-events-table__grid--registry">
+            <table
+              className={`novex-events-table__grid novex-events-table__grid--registry${
+                auditView ? ' novex-events-table__grid--registry-audit' : ''
+              }`}
+            >
               <thead>
                 <tr>
                   <th scope="col">Situación</th>
-                  <th scope="col">Contexto</th>
-                  <th scope="col">Estado</th>
-                  <th scope="col">Riesgo</th>
-                  <th scope="col">IA</th>
-                  <th scope="col">Fecha</th>
-                  <th scope="col"><span className="sr-only">Acciones</span></th>
+                  {auditView ? (
+                    <>
+                      <th scope="col">Coordinación</th>
+                      <th scope="col">Registró</th>
+                      <th scope="col">Estado</th>
+                    </>
+                  ) : (
+                    <>
+                      <th scope="col">Estado</th>
+                      <th scope="col">Riesgo</th>
+                    </>
+                  )}
+                  <th scope="col">Registrada</th>
+                  <th scope="col">
+                    <span className="sr-only">Acciones</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {notice ? (
                   <tr>
-                    <td colSpan={7}>
+                    <td colSpan={columnCount}>
                       <ConsoleNotice state={notice.state} message={notice.message} />
                     </td>
                   </tr>
@@ -399,6 +429,7 @@ export function SituationsRegistryConsole({
                     <SituationRegistryTableRow
                       key={row.id}
                       row={row}
+                      variant={tableVariant}
                       selected={row.id === selectedSituationId}
                       onSelect={onSelectSituation}
                     />

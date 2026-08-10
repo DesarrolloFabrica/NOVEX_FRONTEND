@@ -122,6 +122,22 @@ export function formatRegistryTableDate(value: string): string {
   })
 }
 
+/** Fecha y hora compactas para auditoría en tablas (ej. 06/08/26 · 10:23 a. m.). */
+export function formatRegistryTableDateTime(value: string): string {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  const day = date.toLocaleDateString('es-CO', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+  })
+  const time = date.toLocaleTimeString('es-CO', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  return `${day} · ${time}`
+}
+
 export function sortSituationsForQueue(
   situations: SituationListItem[],
 ): SituationListItem[] {

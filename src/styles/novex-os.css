@@ -7564,6 +7564,51 @@ textarea {
   border-bottom: 1px solid rgb(var(--sit-brand) / 0.09);
 }
 
+.novex-sit-audit {
+  display: grid;
+  flex-shrink: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 18px;
+  padding: 14px 26px;
+  border-bottom: 1px solid rgb(var(--sit-brand) / 0.09);
+  background: linear-gradient(
+    180deg,
+    rgb(10 22 40 / 0.72),
+    rgb(8 16 30 / 0.35)
+  );
+}
+
+.novex-sit-audit--shell {
+  margin: 0 0 14px;
+  border: 1px solid rgb(111 157 229 / 0.14);
+  border-radius: 12px;
+}
+
+.novex-sit-audit__item {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.novex-sit-audit__item > span {
+  color: #7f95b3;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.novex-sit-audit__item > strong {
+  overflow: hidden;
+  color: #e8f0fb;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .novex-sit-header__lead {
   display: flex;
   min-width: 0;
@@ -8607,6 +8652,10 @@ textarea {
 
   .novex-sit-header {
     flex-direction: column;
+  }
+
+  .novex-sit-audit {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .novex-sit-header__aside {
@@ -11201,13 +11250,19 @@ textarea {
 
 /* Sprint 15 — flujo continuo del Centro de Ejecución Operativa */
 .novex-os[data-scene='commitments'] .novex-monitoring-deck {
+  display: flex;
   min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
 }
 
 .novex-os[data-scene='commitments'] .novex-monitoring-deck .novex-os-deck__content {
+  display: flex;
   min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
   padding-top: 0;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .novex-os[data-scene='commitments'] .novex-os-topbar--legacy {
@@ -11938,6 +11993,14 @@ textarea {
     display: none;
   }
 
+  .novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-row__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-row__responsible {
+    display: grid;
+  }
+
   .novex-os[data-scene='commitments'] .novex-execution-detail {
     grid-template-columns: 1fr;
   }
@@ -11972,6 +12035,19 @@ textarea {
   .novex-os[data-scene='commitments'] .novex-action-row__status,
   .novex-os[data-scene='commitments'] .novex-action-row__date {
     display: none;
+  }
+
+  .novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-row__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-row__status,
+  .novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-row__date {
+    display: inline-flex;
+  }
+
+  .novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-facts__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .novex-os[data-scene='commitments'] .novex-action-detail__header {
@@ -13012,35 +13088,35 @@ textarea {
   display: grid;
   flex-shrink: 0;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  gap: 0;
+  border: 1px solid rgb(112 159 222 / 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgb(6 14 29 / 0.45);
 }
 
 .novex-os .novex-registry-console .novex-execution-summary__item {
   position: relative;
   display: flex;
-  min-height: 78px;
+  min-height: 72px;
   min-width: 0;
   align-items: center;
   gap: 12px;
   overflow: hidden;
-  padding: 13px 15px;
-  border: 1px solid rgb(112 159 222 / 0.14);
-  border-radius: 11px;
-  background:
-    linear-gradient(135deg, rgb(52 103 154 / 0.07), transparent 58%),
-    rgb(6 14 29 / 0.72);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.025),
-    0 14px 32px -28px rgb(0 0 0 / 0.85);
+  padding: 14px 16px;
+  border: 0;
+  border-right: 1px solid rgb(112 159 222 / 0.08);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.novex-os .novex-registry-console .novex-execution-summary__item:last-child {
+  border-right: 0;
 }
 
 .novex-os .novex-registry-console .novex-execution-summary__item::after {
-  content: '';
-  position: absolute;
-  inset: auto 14px 0;
-  height: 1px;
-  opacity: 0.45;
-  background: linear-gradient(90deg, var(--registry-summary-accent), transparent);
+  content: none;
 }
 
 .novex-os .novex-registry-console .novex-execution-summary__item[data-tone='open'] {
@@ -13139,8 +13215,17 @@ textarea {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 14px;
-  padding: 16px 18px;
+  gap: 12px;
+  padding: 4px 2px 14px;
+  border-bottom: 1px solid rgb(112 159 222 / 0.08);
+  background: transparent;
+}
+
+.novex-os .novex-events-center--feed .novex-registry-console .novex-events-table--registry {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .novex-os .novex-registry-table-head {
@@ -13170,9 +13255,11 @@ textarea {
   min-height: 40px;
   min-width: 0;
   flex: 1 1 28rem;
-  border-radius: 9px;
+  border: 1px solid rgb(112 159 222 / 0.12);
+  border-radius: 10px;
   padding-inline: 12px 8px;
-  background: rgb(5 14 30 / 0.82);
+  background: rgb(5 14 30 / 0.55);
+  box-shadow: none;
 }
 
 .novex-os .novex-registry-toolbar__search input,
@@ -13214,10 +13301,10 @@ textarea {
   align-items: center;
   gap: 8px;
   padding-left: 11px;
-  border: 1px solid rgb(112 159 222 / 0.14);
-  border-radius: 9px;
+  border: 1px solid rgb(112 159 222 / 0.12);
+  border-radius: 10px;
   color: #7085a3;
-  background: rgb(6 15 31 / 0.68);
+  background: transparent;
   font-size: 0.56rem;
   white-space: nowrap;
 }
@@ -13242,12 +13329,10 @@ textarea {
   align-items: center;
   gap: 7px;
   padding: 0 11px;
-  border: 1px solid rgb(126 204 94 / 0.2);
-  border-radius: 9px;
+  border: 1px solid rgb(112 159 222 / 0.12);
+  border-radius: 10px;
   color: #aac0d9;
-  background:
-    linear-gradient(120deg, rgb(47 158 58 / 0.08), transparent 58%),
-    rgb(6 16 31 / 0.78);
+  background: transparent;
   font-size: 0.63rem;
   font-weight: 650;
   cursor: pointer;
@@ -13256,9 +13341,9 @@ textarea {
 
 .novex-os .novex-registry-toolbar__filter-toggle:hover,
 .novex-os .novex-registry-toolbar__filter-toggle[aria-expanded='true'] {
-  border-color: rgb(163 255 92 / 0.34);
+  border-color: rgb(163 255 92 / 0.28);
   color: #d7edce;
-  background-color: rgb(15 40 31 / 0.76);
+  background-color: rgb(15 40 31 / 0.35);
 }
 
 .novex-os .novex-registry-toolbar__filter-toggle > strong {
@@ -13283,12 +13368,11 @@ textarea {
 }
 
 .novex-os .novex-registry-toolbar__filter-panel {
-  padding: 13px;
-  border: 1px solid rgb(112 159 222 / 0.13);
-  border-radius: 10px;
-  background:
-    linear-gradient(100deg, rgb(47 158 58 / 0.04), transparent 38%),
-    rgb(4 12 27 / 0.72);
+  padding: 12px 0 4px;
+  border: 0;
+  border-top: 1px solid rgb(112 159 222 / 0.08);
+  border-radius: 0;
+  background: transparent;
   animation: novex-registry-filters-in 160ms ease-out both;
 }
 
@@ -13403,18 +13487,34 @@ textarea {
   white-space: nowrap;
 }
 
+.novex-os .novex-registry-console .novex-events-table__grid--registry td:first-child,
+.novex-os .novex-registry-console .novex-events-table__grid--registry-audit td:nth-child(2),
+.novex-os .novex-registry-console .novex-events-table__grid--registry-audit td:nth-child(3),
+.novex-os .novex-registry-console .novex-events-table__grid--registry td[data-label='Registrada'] {
+  white-space: normal;
+}
+
 .novex-os .novex-registry-console .novex-events-table__grid--registry th {
   font-size: 0.55rem;
   letter-spacing: 0.06em;
 }
 
-.novex-os .novex-registry-console .novex-events-table__grid--registry th:nth-child(1) { width: 33%; }
-.novex-os .novex-registry-console .novex-events-table__grid--registry th:nth-child(2) { width: 25%; }
-.novex-os .novex-registry-console .novex-events-table__grid--registry th:nth-child(3) { width: 11%; }
-.novex-os .novex-registry-console .novex-events-table__grid--registry th:nth-child(4) { width: 8%; }
-.novex-os .novex-registry-console .novex-events-table__grid--registry th:nth-child(5) { width: 7%; }
-.novex-os .novex-registry-console .novex-events-table__grid--registry th:nth-child(6) { width: 9%; }
-.novex-os .novex-registry-console .novex-events-table__grid--registry th:nth-child(7) { width: 7%; }
+.novex-os .novex-registry-console .novex-events-table__grid--registry th:nth-child(1) { width: 38%; }
+.novex-os .novex-registry-console .novex-events-table__grid--registry th:nth-child(2) { width: 14%; }
+.novex-os .novex-registry-console .novex-events-table__grid--registry th:nth-child(3) { width: 10%; }
+.novex-os .novex-registry-console .novex-events-table__grid--registry th:nth-child(4) { width: 22%; }
+.novex-os .novex-registry-console .novex-events-table__grid--registry th:nth-child(5) { width: 16%; }
+
+.novex-os .novex-registry-console .novex-events-table__grid--registry-audit {
+  min-width: 920px;
+}
+
+.novex-os .novex-registry-console .novex-events-table__grid--registry-audit th:nth-child(1) { width: 28%; }
+.novex-os .novex-registry-console .novex-events-table__grid--registry-audit th:nth-child(2) { width: 20%; }
+.novex-os .novex-registry-console .novex-events-table__grid--registry-audit th:nth-child(3) { width: 18%; }
+.novex-os .novex-registry-console .novex-events-table__grid--registry-audit th:nth-child(4) { width: 12%; }
+.novex-os .novex-registry-console .novex-events-table__grid--registry-audit th:nth-child(5) { width: 14%; }
+.novex-os .novex-registry-console .novex-events-table__grid--registry-audit th:nth-child(6) { width: 8%; }
 
 .novex-os .novex-registry-console .novex-events-table__grid--registry td:last-child {
   overflow: visible;
@@ -13430,22 +13530,584 @@ textarea {
 }
 
 .novex-os .novex-registry-console .novex-events-row__title {
+  display: -webkit-box;
+  overflow: hidden;
   color: #e3edf9;
-  font-size: 0.72rem;
-  line-height: 1.25;
+  font-size: 0.74rem;
+  line-height: 1.3;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .novex-os .novex-registry-console .novex-events-row__text,
-.novex-os .novex-registry-console .novex-events-row__date {
+.novex-os .novex-registry-console .novex-events-row__date,
+.novex-os .novex-registry-console .novex-events-row__when {
   font-size: 0.65rem;
 }
 
 .novex-os .novex-registry-console .novex-events-row__identity,
-.novex-os .novex-registry-console .novex-events-row__context {
+.novex-os .novex-registry-console .novex-events-row__context,
+.novex-os .novex-registry-console .novex-events-row__coord,
+.novex-os .novex-registry-console .novex-events-row__person {
   display: flex;
   min-width: 0;
   flex-direction: column;
   justify-content: center;
+}
+
+.novex-os .novex-registry-console .novex-events-row__coord > span,
+.novex-os .novex-registry-console .novex-events-row__person > span {
+  overflow: hidden;
+  color: #d5e3f5;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+}
+
+.novex-os .novex-registry-console .novex-events-row__coord > small {
+  overflow: hidden;
+  margin-top: 4px;
+  color: #7e93af;
+  font-size: 0.58rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+}
+
+.novex-os .novex-registry-console .novex-events-row__when {
+  display: block;
+  color: #9eb2cb;
+  white-space: normal;
+  line-height: 1.35;
+}
+
+.novex-os .novex-registry-console .novex-events-table__grid--registry tbody .novex-events-row td {
+  border-bottom: 1px solid rgb(112 159 222 / 0.07);
+  background: transparent;
+}
+
+.novex-os .novex-registry-console .novex-events-table__grid--registry tbody .novex-events-row:hover td {
+  background: rgb(109 164 255 / 0.04);
+}
+
+.novex-os .novex-registry-console .novex-events-table__grid--registry tbody .novex-events-row[data-selected] td {
+  background: rgb(163 255 92 / 0.05);
+}
+
+.novex-os .novex-registry-console .novex-events-row__action--detail {
+  border: 0;
+  border-radius: 8px;
+  color: #b7d0ef;
+  background: rgb(109 164 255 / 0.08);
+}
+
+.novex-os .novex-registry-console .novex-events-row__action--detail:hover {
+  color: #eef5ff;
+  background: rgb(109 164 255 / 0.16);
+}
+
+.novex-os .novex-registry-console .novex-events-table__footer {
+  border-top: 1px solid rgb(112 159 222 / 0.08);
+  background: transparent;
+}
+
+/* Modal breve — jerarquía plana, sin cajas anidadas */
+.novex-situation-modal__dialog--brief {
+  max-width: min(900px, calc(100vw - 28px));
+}
+
+.novex-sit-header--brief {
+  padding: 20px 24px 16px;
+}
+
+.novex-sit-header--brief .novex-sit-header__title {
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+}
+
+.novex-sit-audit--brief {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 20px;
+  padding: 12px 24px;
+  border-bottom: 1px solid rgb(112 159 222 / 0.1);
+  background: transparent;
+}
+
+.novex-sit-scroll--brief {
+  padding: 18px 24px 24px;
+  background: transparent;
+}
+
+.novex-sit-brief {
+  display: grid;
+  gap: 22px;
+}
+
+.novex-sit-brief__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid rgb(112 159 222 / 0.12);
+  border-radius: 12px;
+  background: rgb(10 20 38 / 0.55);
+}
+
+.novex-sit-brief__metrics > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 0;
+  border-right: 1px solid rgb(112 159 222 / 0.1);
+  border-radius: 0;
+  background: transparent;
+}
+
+.novex-sit-brief__metrics > div:last-child {
+  border-right: 0;
+}
+
+.novex-sit-brief__metrics > div[data-tone='risk'],
+.novex-sit-brief__metrics > div[data-tone='urgency'],
+.novex-sit-brief__metrics > div[data-tone='ai'] {
+  border-color: rgb(112 159 222 / 0.1);
+  background: transparent;
+}
+
+.novex-sit-brief__metrics span {
+  color: #7f95b3;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.novex-sit-brief__metrics strong {
+  color: #eef5ff;
+  font-size: 0.9rem;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.novex-sit-brief__panel {
+  padding: 14px 16px;
+  border: 1px solid rgb(112 159 222 / 0.12);
+  border-radius: 14px;
+  background:
+    linear-gradient(165deg, rgb(255 255 255 / 0.025), transparent 50%),
+    rgb(8 16 30 / 0.72);
+}
+
+.novex-sit-brief__panel--conclusion {
+  padding: 14px 16px;
+  border: 1px solid rgb(163 255 92 / 0.16);
+  border-radius: 14px;
+  background:
+    linear-gradient(160deg, rgb(163 255 92 / 0.05), transparent 55%),
+    rgb(8 18 28 / 0.78);
+}
+
+.novex-sit-brief__panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgb(112 159 222 / 0.1);
+}
+
+.novex-sit-brief__panel-head h3 {
+  margin: 0;
+  color: #9bc68b;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.novex-sit-brief__panel-head small {
+  color: #8096b3;
+  font-size: 0.7rem;
+}
+
+.novex-sit-brief__lead {
+  margin: 0;
+  color: #e8f0fb;
+  font-size: 0.9rem;
+  line-height: 1.58;
+}
+
+.novex-sit-brief__secondary {
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid rgb(112 159 222 / 0.08);
+  color: #a9bdd6;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.novex-sit-brief__hint {
+  margin: 10px 0 0;
+  color: #8096b3;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.novex-sit-brief__callout {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgb(103 216 255 / 0.14);
+  border-radius: 12px;
+  border-left: 3px solid rgb(103 216 255 / 0.4);
+  color: #b7d6e8;
+  background: rgb(46 137 171 / 0.07);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.novex-sit-brief__cause-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+}
+
+.novex-sit-brief__tile {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.novex-sit-brief__tile--wide {
+  grid-column: 1 / -1;
+  padding-top: 12px;
+  border-top: 1px solid rgb(112 159 222 / 0.1);
+}
+
+.novex-sit-brief__label {
+  margin: 0 0 8px;
+  color: #7f95b3;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.novex-sit-brief__tile ul {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding-left: 1rem;
+  color: #d7e4f5;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.novex-sit-brief__impact {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  list-style: none;
+  border: 1px solid rgb(112 159 222 / 0.12);
+  border-radius: 12px;
+}
+
+.novex-sit-brief__impact li {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 0;
+  border-right: 1px solid rgb(112 159 222 / 0.1);
+  border-radius: 0;
+  background: rgb(10 20 38 / 0.4);
+}
+
+.novex-sit-brief__impact li:last-child {
+  border-right: 0;
+}
+
+.novex-sit-brief__impact li[data-tone='cyan'],
+.novex-sit-brief__impact li[data-tone='violet'],
+.novex-sit-brief__impact li[data-tone='amber'] {
+  border-color: rgb(112 159 222 / 0.1);
+}
+
+.novex-sit-brief__impact strong {
+  color: #eef5ff;
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.novex-sit-brief__impact span {
+  color: #8fa6c4;
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.novex-sit-brief__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.novex-sit-brief__chips > span {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: #a9bdd6;
+  background: transparent;
+  font-size: 0.74rem;
+}
+
+.novex-sit-brief__chips > span:not(:last-child)::after {
+  content: '·';
+  margin-left: 8px;
+  color: #617895;
+}
+
+.novex-sit-brief__checks {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.novex-sit-brief__checks li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px solid rgb(112 159 222 / 0.08);
+  border-radius: 0;
+  color: #d7e4f5;
+  background: transparent;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.novex-sit-brief__checks li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.novex-sit-brief__checks li:first-child {
+  padding-top: 0;
+}
+
+.novex-sit-brief__icon {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  place-items: center;
+  margin-top: 2px;
+  border-radius: 0;
+  color: #8fd37a;
+  background: transparent;
+}
+
+.novex-sit-brief__checks--warn .novex-sit-brief__icon {
+  color: #ff8f9c;
+  background: transparent;
+}
+
+.novex-sit-brief__areas {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.novex-sit-brief__areas > li {
+  padding: 12px 0;
+  border: 0;
+  border-bottom: 1px solid rgb(112 159 222 / 0.08);
+  border-radius: 0;
+  background: transparent;
+}
+
+.novex-sit-brief__areas > li:first-child {
+  padding-top: 0;
+}
+
+.novex-sit-brief__areas > li:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.novex-sit-brief__areas > li > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.novex-sit-brief__areas strong {
+  color: #eef5ff;
+  font-size: 0.84rem;
+}
+
+.novex-sit-brief__areas span[data-risk] {
+  flex: none;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: #d7e6ff;
+  background: rgb(109 164 255 / 0.1);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.novex-sit-brief__areas span[data-risk='high'],
+.novex-sit-brief__areas span[data-risk='critical'] {
+  color: #ffd0d6;
+  background: rgb(255 83 103 / 0.12);
+}
+
+.novex-sit-brief__areas p {
+  margin: 0;
+  color: #a9bdd6;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.novex-sit-brief__actions {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.novex-sit-brief__actions > li {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px 0;
+  border: 0;
+  border-bottom: 1px solid rgb(112 159 222 / 0.08);
+  border-radius: 0;
+  background: transparent;
+}
+
+.novex-sit-brief__actions > li:first-child {
+  padding-top: 0;
+}
+
+.novex-sit-brief__actions > li:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.novex-sit-brief__step {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 999px;
+  color: #d7edce;
+  background: rgb(163 255 92 / 0.1);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.novex-sit-brief__action-body {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.novex-sit-brief__action-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.novex-sit-brief__action-top strong {
+  color: #eef5ff;
+  font-size: 0.88rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.novex-sit-brief__action-meta {
+  margin: 0;
+  color: #8fa6c4;
+  font-size: 0.74rem;
+}
+
+.novex-sit-brief__action-reason {
+  margin: 2px 0 0;
+  color: #b7c9df;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.novex-sit-brief__actions span[data-priority] {
+  flex: none;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #d7e6ff;
+  background: rgb(109 164 255 / 0.1);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.novex-sit-brief__actions span[data-priority='high'],
+.novex-sit-brief__actions span[data-priority='critical'] {
+  color: #ffd0d6;
+  background: rgb(255 83 103 / 0.12);
+}
+
+@media (max-width: 720px) {
+  .novex-sit-audit--brief,
+  .novex-sit-brief__metrics,
+  .novex-sit-brief__impact,
+  .novex-sit-brief__cause-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .novex-sit-brief__metrics > div,
+  .novex-sit-brief__impact li {
+    border-right: 0;
+    border-bottom: 1px solid rgb(112 159 222 / 0.1);
+  }
+
+  .novex-sit-brief__metrics > div:last-child,
+  .novex-sit-brief__impact li:last-child {
+    border-bottom: 0;
+  }
+
+  .novex-sit-brief__tile--wide {
+    grid-column: auto;
+  }
+
+  .novex-os .novex-registry-console .novex-execution-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .novex-os .novex-registry-console .novex-execution-summary__item {
+    border-right: 0;
+    border-bottom: 1px solid rgb(112 159 222 / 0.08);
+  }
 }
 
 .novex-os .novex-registry-console .novex-events-row__context > span {
@@ -13608,15 +14270,458 @@ textarea {
   }
 }
 
-/* Centro de Gestión Operativa — arquitectura compacta tipo command center. */
+/* Centro de Gestión Operativa — split maestro/detalle. */
 .novex-os[data-scene='commitments'] .novex-execution-flow {
-  grid-template-rows: auto auto auto;
-  gap: 14px;
-  padding-block: 14px 24px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+  padding: 12px 16px 18px;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+  gap: 0;
+  min-height: 0;
+  height: calc(100vh - 210px);
+  max-height: calc(100vh - 186px);
+  overflow: hidden;
+  border: 1px solid rgb(112 159 222 / 0.14);
+  border-radius: 16px;
+  background:
+    linear-gradient(165deg, rgb(255 255 255 / 0.02), transparent 42%),
+    rgb(5 12 26 / 0.72);
+  box-shadow:
+    0 24px 56px -40px rgb(0 0 0 / 0.75),
+    inset 0 1px 0 rgb(255 255 255 / 0.03);
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace__queue {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid rgb(112 159 222 / 0.12);
+  background:
+    linear-gradient(180deg, rgb(14 28 52 / 0.55), rgb(8 16 32 / 0.35));
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-queue {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  padding: 12px 10px 10px;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-queue__header {
+  flex: 0 0 auto;
+  align-items: start;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgb(112 159 222 / 0.1);
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-queue__header p {
+  max-width: 190px;
+  margin: 0 0 4px;
+  color: #8fa2bb;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+  text-transform: none;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-queue__header h2 {
+  font-size: 0.92rem;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-queue__header > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: rgb(163 255 92 / 0.1);
+  color: #c8f5a8;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-queue__list {
+  display: grid;
+  gap: 6px;
+  flex: 1 1 auto;
+  max-height: none;
+  min-height: 0;
+  margin: 0;
+  padding: 0 2px 2px 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  list-style: none;
+  align-content: start;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-row {
+  min-height: 0;
+  border: 1px solid rgb(112 159 222 / 0.1);
+  border-radius: 10px;
+  background: rgb(10 20 38 / 0.55);
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-row:hover {
+  border-color: rgb(112 159 222 / 0.22);
+  background: rgb(16 30 56 / 0.72);
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-row[aria-pressed='true'] {
+  border-color: rgb(163 255 92 / 0.28);
+  background:
+    linear-gradient(135deg, rgb(163 255 92 / 0.08), transparent 55%),
+    rgb(14 28 48 / 0.85);
+  box-shadow: inset 3px 0 0 rgb(163 255 92 / 0.55);
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-row__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  min-height: 0;
+  padding: 8px 10px;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-row__badges {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-row__priority,
+.novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-row__status {
+  font-size: 0.56rem;
+  gap: 5px;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-row__date {
+  margin-left: auto;
+  color: #7f91aa;
+  font-size: 0.56rem;
+  white-space: nowrap;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-row__title {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #eef4fc;
+  font-size: 0.72rem;
+  font-weight: 650;
+  line-height: 1.3;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-row__responsible {
+  display: block;
+  overflow: hidden;
+  color: #8096b0;
+  font-size: 0.62rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-row__responsible small,
+.novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-row__footer,
+.novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-row__chevron {
+  display: none;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace__dossier {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background:
+    linear-gradient(160deg, rgb(255 255 255 / 0.015), transparent 40%),
+    rgb(4 10 22 / 0.45);
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace__scroll {
+  display: grid;
+  gap: 12px;
+  flex: 1 1 auto;
+  align-content: start;
+  min-height: 0;
+  padding: 14px 16px 18px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-execution-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-dossier {
+  padding: 14px 16px !important;
+  border: 1px solid rgb(112 159 222 / 0.12);
+  border-radius: 12px !important;
+  background:
+    linear-gradient(165deg, rgb(255 255 255 / 0.025), transparent 50%),
+    rgb(8 16 30 / 0.72) !important;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-action-detail__heading h2 {
+  max-width: none;
+  font-size: clamp(0.95rem, 1.2vw, 1.15rem);
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-facts__grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (min-width: 1280px) {
+  .novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-facts__grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-actionbar {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  border: 1px solid rgb(163 255 92 / 0.18);
+  border-radius: 12px;
+  background:
+    linear-gradient(120deg, rgb(163 255 92 / 0.08), transparent 48%),
+    rgb(8 18 28 / 0.94);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 28px -18px rgb(0 0 0 / 0.7);
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-actionbar__context {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-actionbar__context p {
+  margin: 0;
+  color: #8faa78;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-actionbar__context strong {
+  color: #eef5ff;
+  font-size: 0.84rem;
+  font-weight: 650;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-actionbar__context strong span {
+  color: #c8f5a8;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-actionbar__context small {
+  color: #8fa2bb;
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-actionbar__actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-actionbar__toast {
+  color: #9fd98a;
+  font-size: 0.68rem;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-actionbar__locked {
+  color: #8096b0;
+  font-size: 0.7rem;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-actionbar__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 16px 0 18px;
+  border: 1px solid rgb(163 255 92 / 0.35);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgb(120 190 70 / 0.95), rgb(78 148 48 / 0.92));
+  color: #08140a;
+  cursor: pointer;
+  font-size: 0.76rem;
+  font-weight: 750;
+  letter-spacing: 0.01em;
+  box-shadow: 0 8px 20px -10px rgb(120 190 70 / 0.55);
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    filter 150ms ease;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-actionbar__cta:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 12px 24px -10px rgb(120 190 70 / 0.65);
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-actionbar__cta:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-brief {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px 14px 10px;
+  border: 1px solid rgb(124 108 255 / 0.16);
+  border-radius: 12px;
+  background:
+    linear-gradient(160deg, rgb(124 108 255 / 0.07), transparent 55%),
+    rgb(10 14 32 / 0.72);
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-brief__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgb(124 108 255 / 0.12);
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-brief__identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-brief__identity svg {
+  color: #b9afff;
+  flex: 0 0 auto;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-brief__identity p {
+  margin: 0 0 1px;
+  color: #8f9bb8;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-brief__identity h2 {
+  margin: 0;
+  color: #eef1ff;
+  font-size: 0.88rem;
+  font-weight: 680;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-brief__identity > span {
+  margin-left: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgb(124 108 255 / 0.12);
+  color: #b9afff;
+  font-size: 0.58rem;
+  font-weight: 700;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-brief__open {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid rgb(155 140 255 / 0.28);
+  border-radius: 999px;
+  background: transparent;
+  color: #d5ceff;
+  cursor: pointer;
+  font-size: 0.68rem;
+  font-weight: 650;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-brief__open:hover {
+  border-color: rgb(155 140 255 / 0.5);
+  background: rgb(124 108 255 / 0.12);
+  color: #fff;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-brief__accordion {
+  margin: 0;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-state__body--timeline {
+  grid-template-columns: 1fr;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-context p {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-action-detail--empty,
+.novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-action-outcome--empty {
+  min-height: 160px;
+  padding: 20px 16px;
+  border: 1px dashed rgb(112 159 222 / 0.18);
+  border-radius: 12px;
+  background: rgb(8 16 30 / 0.35);
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-dashboard-section,
+.novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-version-card,
+.novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-recommendations {
+  padding: 12px 14px;
+  border: 1px solid rgb(112 159 222 / 0.12);
+  border-top: 1px solid rgb(112 159 222 / 0.12);
+  border-radius: 12px;
+  background: rgb(8 16 30 / 0.55);
+}
+
+.novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-secondary-grid {
+  gap: 12px;
 }
 
 .novex-os[data-scene='commitments'] .novex-action-queue__list {
-  max-height: 156px;
+  max-height: none;
 }
 
 .novex-os[data-scene='commitments'] .novex-action-row {
@@ -13999,15 +15104,61 @@ textarea {
 }
 
 @media (max-width: 1050px) {
+  .novex-os[data-scene='commitments'] .novex-gestion-workspace {
+    grid-template-columns: 1fr;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .novex-os[data-scene='commitments'] .novex-gestion-workspace__queue {
+    border-right: 0;
+    border-bottom: 1px solid rgb(112 159 222 / 0.12);
+  }
+
+  .novex-os[data-scene='commitments'] .novex-gestion-workspace__queue .novex-action-queue__list {
+    max-height: 220px;
+  }
+
+  .novex-os[data-scene='commitments'] .novex-gestion-workspace__dossier {
+    overflow: visible;
+  }
+
+  .novex-os[data-scene='commitments'] .novex-gestion-workspace__scroll {
+    overflow: visible;
+  }
+
+  .novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-facts__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-brief {
+    grid-template-columns: 1fr;
+  }
+
+  .novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-brief__head {
+    flex-wrap: wrap;
+  }
+
+  .novex-os[data-scene='commitments'] .novex-gestion-actionbar {
+    flex-wrap: wrap;
+  }
+
+  .novex-os[data-scene='commitments'] .novex-gestion-actionbar__cta {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-execution-detail,
   .novex-os[data-scene='commitments'] .novex-execution-detail,
   .novex-os[data-scene='commitments'] .novex-ops-secondary-grid {
     grid-template-columns: 1fr;
   }
 
-  .novex-os[data-scene='commitments'] .novex-ops-brief {
-    padding: 18px 0 0;
-    border-top: 1px solid rgb(148 163 184 / .1);
-    border-left: 0;
+  .novex-os[data-scene='commitments'] .novex-ops-brief,
+  .novex-os[data-scene='commitments'] .novex-gestion-workspace .novex-ops-brief {
+    padding: 12px 14px 10px;
+    border-top: 0;
   }
 }
 

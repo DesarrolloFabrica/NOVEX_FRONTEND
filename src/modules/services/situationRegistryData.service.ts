@@ -93,6 +93,8 @@ async function enrichSituationRow(
     occurredAt: situation.occurredAt,
     updatedAt: situation.updatedAt,
     createdAt: situation.createdAt,
+    createdByUserId: situation.createdByUserId,
+    createdByUserName: situation.createdByUserName,
     hasAnalysis: Boolean(analysisValue),
     isReanalyzed: (historyValue?.total ?? 0) > 1,
     pendingRecommendations,

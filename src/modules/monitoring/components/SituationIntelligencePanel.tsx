@@ -107,14 +107,26 @@ function ExecutiveBrief({
       className="novex-action-outcome novex-ops-brief"
       data-tour="ai-report"
     >
-      <header>
-        <NovexIcon name="sparkles" size={20} />
-        <div>
-          <p>IA ejecutiva</p>
-          <h2>Executive Brief</h2>
+      <header className="novex-ops-brief__head">
+        <div className="novex-ops-brief__identity">
+          <NovexIcon name="sparkles" size={18} />
+          <div>
+            <p>IA ejecutiva</p>
+            <h2>Executive Brief</h2>
+          </div>
+          <span>{severity}</span>
         </div>
-        <span>{severity}</span>
+        <button
+          type="button"
+          className="novex-ops-brief__open"
+          aria-label="Ver análisis ejecutivo IA"
+          onClick={onOpenAnalysis}
+        >
+          Ver análisis ejecutivo
+          <NovexIcon name="arrow-up-right" size={14} />
+        </button>
       </header>
+
       <div className="novex-ops-brief__accordion">
         {sections.map((section) => {
           const open = expanded === section.id
@@ -133,13 +145,6 @@ function ExecutiveBrief({
           )
         })}
       </div>
-      <button
-        type="button"
-        className="novex-action-outcome__cta"
-        onClick={onOpenAnalysis}
-      >
-        Ver análisis ejecutivo IA
-      </button>
     </aside>
   )
 }

@@ -19,6 +19,8 @@ export interface SituationRegistryRow {
   occurredAt: string
   updatedAt: string
   createdAt: string
+  createdByUserId: string
+  createdByUserName: string
   hasAnalysis: boolean
   isReanalyzed: boolean
   pendingRecommendations: number

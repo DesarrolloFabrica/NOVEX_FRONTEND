@@ -64,12 +64,12 @@ function resolveCertaintyLevel(overall: number): CertaintyLevel {
 function buildCertaintyExplanation(analysis: AIAnalysisResult): string {
   if (analysis.confidenceExplanation) {
     const supporting = analysis.confidenceExplanation.supportingFactors
-      .map((factor) => `✓ ${factor}`)
+      .map((factor) => `+ ${factor}`)
       .join(' · ')
     const reducing = analysis.confidenceExplanation.reducingFactors
-      .map((factor) => `• ${factor}`)
+      .map((factor) => `- ${factor}`)
       .join(' · ')
-    return [supporting, reducing].filter(Boolean).join(' | ')
+    return [supporting, reducing].filter(Boolean).join('. ')
   }
 
   if (analysis.confidence.factors.length === 0) {

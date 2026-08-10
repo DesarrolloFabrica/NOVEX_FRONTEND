@@ -61,6 +61,7 @@ function matchesSearch(row: SituationRegistryRow, search: string): boolean {
       row.coordinationCode,
       row.categoryName,
       row.categoryCode,
+      row.createdByUserName,
       row.status,
       row.severity,
     ].join(' '),

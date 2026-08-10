@@ -15,6 +15,14 @@ import { RoleLandingRoute } from '@/shared/components/RoleLandingRoute'
 import { RequireRoleRoute } from '@/shared/components/RequireRoleRoute'
 import { RequireSituationCreationRoute } from '@/shared/components/RequireSituationCreationRoute'
 import { AdminConsolePage } from '@/pages/AdminConsolePage'
+import {
+  EXECUTIVE_ROLES,
+  ExecutiveOperationsHomePage,
+  ExecutiveOperationsLayout,
+  InteligenciaPage,
+  PanoramaPage,
+  ReportesPage,
+} from '@/modules/executive-operations-center'
 
 function RedirectPreservingSearch({ to }: { to: string }) {
   const location = useLocation()
@@ -50,6 +58,20 @@ export const router = createBrowserRouter([
                 <AdminConsolePage />
               </RequireRoleRoute>
             ),
+          },
+          {
+            path: '/centro-operacional',
+            element: (
+              <RequireRoleRoute role={EXECUTIVE_ROLES}>
+                <ExecutiveOperationsLayout />
+              </RequireRoleRoute>
+            ),
+            children: [
+              { index: true, element: <ExecutiveOperationsHomePage /> },
+              { path: 'panorama', element: <PanoramaPage /> },
+              { path: 'inteligencia', element: <InteligenciaPage /> },
+              { path: 'reportes', element: <ReportesPage /> },
+            ],
           },
           {
             path: '/red-impacto',

@@ -16,12 +16,15 @@ export function normalizeRoleCode(
   return normalized && KNOWN_ROLES.has(normalized) ? normalized : 'COORDINADOR'
 }
 
+export const EXECUTIVE_OPERATIONS_HOME = '/centro-operacional'
+
 export function getRoleLandingPath(
   user: Pick<User, 'roleCode' | 'selectedAreaId'> | null | undefined,
 ): string {
   const role = normalizeRoleCode(user?.roleCode)
-  if (role === 'ADMIN') return '/admin'
-  if (role === 'ANALISTA' || role === 'DIRECTOR') return '/dashboard'
+  if (role === 'ADMIN' || role === 'ANALISTA' || role === 'DIRECTOR') {
+    return EXECUTIVE_OPERATIONS_HOME
+  }
 
   const coordination = user?.selectedAreaId?.trim()
   return coordination
@@ -36,4 +39,11 @@ export function getEffectiveDashboardRole(
   const actual = normalizeRoleCode(user?.roleCode)
   if (actual !== 'ADMIN' || !preview) return actual
   return normalizeRoleCode(preview)
+}
+
+/** Roles que ven el historial institucional completo (no solo su coordinación). */
+export function seesInstitutionalSituationRegistry(
+  role: NovexRoleCode,
+): boolean {
+  return role === 'ANALISTA' || role === 'DIRECTOR' || role === 'ADMIN'
 }

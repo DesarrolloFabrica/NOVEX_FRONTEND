@@ -8,7 +8,6 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import type {
-  IndicatorTrend,
   OperationalEvent,
   RiskLevel,
 } from '@/modules/operational-events/types/operational-event.types'
@@ -17,26 +16,19 @@ import {
   RISK_LEVEL_LABEL,
   eventRef,
   formatEventDate,
-  timelineTypeLabel,
 } from '@/modules/operational-events/components/eventPresentation'
 import { NovexIcon } from '@/shared/components/NovexIcon'
 import {
-  CertaintyRing,
   EXEC_CERTAINTY_LABEL,
   EXEC_PRIORITY_LABEL,
   EXEC_URGENCY_LABEL,
-  ExecutiveSection,
 } from '@/modules/operational-events/components/situation-executive-report.shared'
 
 interface SituationDetailModalProps {
   event: OperationalEvent
   onClose: () => void
-}
-
-const TREND_LABEL: Record<IndicatorTrend, string> = {
-  up: 'Debe subir',
-  down: 'Debe bajar',
-  stable: 'Debe mantenerse',
+  /** Muestra ficha de auditoría (quién, cuándo, coordinación) para roles institucionales. */
+  showAuditTrail?: boolean
 }
 
 function formatEventDateTime(iso: string): string {
@@ -54,6 +46,7 @@ function formatEventDateTime(iso: string): string {
 export function SituationDetailModal({
   event,
   onClose,
+  showAuditTrail = false,
 }: SituationDetailModalProps) {
   const titleId = useId()
   const closeRef = useRef<HTMLButtonElement>(null)
@@ -64,24 +57,39 @@ export function SituationDetailModal({
   const report = interpretation?.executiveReport ?? null
   const risk: RiskLevel =
     report?.riskAssessment.riskLevel ?? interpretation?.riskLevel ?? 'moderate'
-  const where =
-    interpretation?.affectedAreaNames.join(' · ') || event.sourceAreaName
 
-  const timeline = useMemo(
-    () => [...event.timeline.entries].sort((a, b) => a.at.localeCompare(b.at)),
-    [event.timeline.entries],
+  const actions = useMemo(
+    () => report?.recommendedActions.slice(0, 5) ?? [],
+    [report],
   )
-
-  const responsibleAreas = useMemo(() => {
-    if (!report) return []
-    const map = new Map<string, string>()
-    for (const action of report.recommendedActions) {
-      if (!map.has(action.suggestedArea)) {
-        map.set(action.suggestedArea, action.action)
-      }
-    }
-    return [...map.entries()].map(([area, mandate]) => ({ area, mandate }))
-  }, [report])
+  const causes = useMemo(
+    () => report?.rootCause.detectedCauses.slice(0, 4) ?? [],
+    [report],
+  )
+  const hypotheses = useMemo(
+    () => report?.rootCause.hypotheses.slice(0, 3) ?? [],
+    [report],
+  )
+  const dependencies = useMemo(
+    () => report?.rootCause.dependencies.slice(0, 4) ?? [],
+    [report],
+  )
+  const decisionFactors = useMemo(
+    () => report?.decisionFactors.slice(0, 5) ?? [],
+    [report],
+  )
+  const consequences = useMemo(
+    () => report?.operationalConsequences.slice(0, 4) ?? [],
+    [report],
+  )
+  const affectedAreas = useMemo(
+    () => report?.affectedAreas.slice(0, 5) ?? [],
+    [report],
+  )
+  const processes = useMemo(
+    () => report?.impactAnalysis.affectedProcesses.slice(0, 6) ?? [],
+    [report],
+  )
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
@@ -124,31 +132,28 @@ export function SituationDetailModal({
       />
 
       <div
-        className="novex-situation-modal__dialog"
+        className="novex-situation-modal__dialog novex-situation-modal__dialog--brief"
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         data-risk={risk}
         data-tour="report-modal"
       >
-        <header className="novex-sit-header">
+        <header className="novex-sit-header novex-sit-header--brief">
           <div className="novex-sit-header__lead">
-            <span className="novex-sit-header__icon" aria-hidden="true">
-              <NovexIcon name="alert" size={16} strokeWidth={1.7} />
-            </span>
             <div className="min-w-0">
-              <p className="novex-sit-header__eyebrow">
-                Análisis ejecutivo de la situación
-              </p>
+              <p className="novex-sit-header__eyebrow">Detalle de situación</p>
               <h2 id={titleId} className="novex-sit-header__title">
                 {report?.incidentSummary.executiveTitle ?? event.title}
               </h2>
               <p className="novex-sit-header__meta">
                 <span>{eventRef(event.id)}</span>
-                <span aria-hidden="true">·</span>
-                <span>{where}</span>
-                <span aria-hidden="true">·</span>
-                <span>{event.reportedBy.name}</span>
+                {!showAuditTrail ? (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span>{event.sourceAreaName}</span>
+                  </>
+                ) : null}
               </p>
             </div>
           </div>
@@ -175,471 +180,293 @@ export function SituationDetailModal({
                 {EVENT_STATUS_LABEL[event.status]} · {RISK_LEVEL_LABEL[risk]}
               </strong>
             </div>
-            <p className="novex-sit-header__date">
-              <NovexIcon name="calendar" size={12} strokeWidth={1.6} />
-              <time dateTime={event.reportedAt}>
-                {formatEventDateTime(event.reportedAt)}
-              </time>
-            </p>
           </div>
         </header>
 
-        <div className="novex-sit-scroll" data-tour="report-scroll">
+        {showAuditTrail ? (
+          <section
+            className="novex-sit-audit novex-sit-audit--brief"
+            aria-label="Información de auditoría"
+          >
+            <div className="novex-sit-audit__item">
+              <span>Coordinación</span>
+              <strong>{event.sourceAreaName}</strong>
+            </div>
+            <div className="novex-sit-audit__item">
+              <span>Registró</span>
+              <strong>{event.reportedBy.name || 'Sin autor'}</strong>
+            </div>
+            <div className="novex-sit-audit__item">
+              <span>Registrada</span>
+              <strong>
+                <time dateTime={event.createdAt}>
+                  {formatEventDateTime(event.createdAt)}
+                </time>
+              </strong>
+            </div>
+          </section>
+        ) : null}
+
+        <div className="novex-sit-scroll novex-sit-scroll--brief" data-tour="report-scroll">
           {report ? (
-            <div className="novex-sit-report">
-              {/* 1. ¿Qué ocurrió? */}
-              <ExecutiveSection
-                number={1}
-                question="¿Qué ocurrió?"
-                hint="Resumen ejecutivo y causa raíz sobre el contexto recibido"
-              >
-                <div className="novex-sit-grid">
-                  <article className="novex-sit-card">
-                    <header>
-                      <h3>Resumen para dirección</h3>
-                    </header>
-                    <p className="novex-sit-narrative">
-                      {report.incidentSummary.executiveSummary}
-                    </p>
-                    {interpretation?.narrative ? (
-                      <p
-                        className="novex-sit-card__hint"
-                        style={{ marginTop: 10 }}
-                      >
-                        {interpretation.narrative}
-                      </p>
+            <div className="novex-sit-brief">
+              <section className="novex-sit-brief__metrics" aria-label="Indicadores">
+                <div data-tone="risk">
+                  <span>Riesgo</span>
+                  <strong>
+                    {RISK_LEVEL_LABEL[risk]} · {report.riskAssessment.riskScore}
+                    /100
+                  </strong>
+                </div>
+                <div data-tone="urgency">
+                  <span>Urgencia</span>
+                  <strong>
+                    {EXEC_URGENCY_LABEL[report.executiveConclusion.urgency]}
+                  </strong>
+                </div>
+                <div data-tone="ai">
+                  <span>Confianza IA</span>
+                  <strong>
+                    {Math.round(report.riskAssessment.certainty.percentage)}% ·{' '}
+                    {
+                      EXEC_CERTAINTY_LABEL[
+                        report.riskAssessment.certainty.level
+                      ]
+                    }
+                  </strong>
+                </div>
+              </section>
+
+              <section className="novex-sit-brief__panel">
+                <header className="novex-sit-brief__panel-head">
+                  <h3>Resumen</h3>
+                </header>
+                <p className="novex-sit-brief__lead">
+                  {report.incidentSummary.executiveSummary}
+                </p>
+                {interpretation?.narrative &&
+                interpretation.narrative !==
+                  report.incidentSummary.executiveSummary ? (
+                  <p className="novex-sit-brief__secondary">
+                    {interpretation.narrative}
+                  </p>
+                ) : null}
+              </section>
+
+              {(causes.length > 0 ||
+                hypotheses.length > 0 ||
+                dependencies.length > 0) && (
+                <section className="novex-sit-brief__panel">
+                  <header className="novex-sit-brief__panel-head">
+                    <h3>Por qué ocurrió</h3>
+                  </header>
+                  <div className="novex-sit-brief__cause-grid">
+                    {causes.length > 0 ? (
+                      <article className="novex-sit-brief__tile">
+                        <p className="novex-sit-brief__label">Causas detectadas</p>
+                        <ul>
+                          {causes.map((cause) => (
+                            <li key={cause}>{cause}</li>
+                          ))}
+                        </ul>
+                      </article>
                     ) : null}
-                  </article>
-                  <article className="novex-sit-card">
-                    <header>
-                      <h3>¿Por qué ocurrió?</h3>
-                    </header>
-                    <div className="novex-sit-cause">
-                      <p className="novex-sit-cause__label">
-                        Causas detectadas
-                      </p>
-                      <ul>
-                        {report.rootCause.detectedCauses.map((cause) => (
-                          <li key={cause}>{cause}</li>
-                        ))}
-                      </ul>
-                      <p className="novex-sit-cause__label">Hipótesis</p>
-                      <ul data-variant="hypothesis">
-                        {report.rootCause.hypotheses.map((hypothesis) => (
-                          <li key={hypothesis}>{hypothesis}</li>
-                        ))}
-                      </ul>
-                      <p className="novex-sit-cause__label">Dependencias</p>
-                      <ul>
-                        {report.rootCause.dependencies.map((dependency) => (
-                          <li key={dependency}>{dependency}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </article>
-                </div>
-              </ExecutiveSection>
+                    {hypotheses.length > 0 ? (
+                      <article className="novex-sit-brief__tile">
+                        <p className="novex-sit-brief__label">Hipótesis</p>
+                        <ul>
+                          {hypotheses.map((hypothesis) => (
+                            <li key={hypothesis}>{hypothesis}</li>
+                          ))}
+                        </ul>
+                      </article>
+                    ) : null}
+                    {dependencies.length > 0 ? (
+                      <article className="novex-sit-brief__tile novex-sit-brief__tile--wide">
+                        <p className="novex-sit-brief__label">Dependencias</p>
+                        <ul>
+                          {dependencies.map((dependency) => (
+                            <li key={dependency}>{dependency}</li>
+                          ))}
+                        </ul>
+                      </article>
+                    ) : null}
+                  </div>
+                </section>
+              )}
 
-              {/* 2. ¿Qué tan grave es? */}
-              <ExecutiveSection
-                number={2}
-                question="¿Qué tan grave es?"
-                hint="Riesgo, severidad y nivel de certeza del análisis"
-              >
-                <div className="novex-sit-grid">
-                  <article className="novex-sit-card novex-sit-card--risk">
-                    <header>
-                      <h3>Riesgo actual</h3>
-                      <span className="novex-sit-pill" data-risk={risk}>
-                        {RISK_LEVEL_LABEL[risk]}
-                      </span>
-                    </header>
-                    <div className="novex-sit-risk">
-                      <p className="novex-sit-risk__score">
-                        <strong>{report.riskAssessment.riskScore}</strong>
-                        <span>/ 100</span>
-                      </p>
-                      <div
-                        className="novex-sit-risk__bar"
-                        role="meter"
-                        aria-label="Nivel de riesgo"
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                        aria-valuenow={report.riskAssessment.riskScore}
-                      >
-                        <span
-                          style={{
-                            width: `${report.riskAssessment.riskScore}%`,
-                          }}
-                        />
-                      </div>
-                      <p className="novex-sit-card__hint">
-                        Severidad {report.riskAssessment.severity}/5 ·
-                        Categoría:{' '}
-                        {interpretation?.categoryName ?? 'Sin clasificar'}
-                      </p>
-                    </div>
-                  </article>
-                  <article className="novex-sit-card">
-                    <header>
-                      <h3>Nivel de certeza</h3>
-                      <span
-                        className="novex-sit-pill"
-                        data-risk={
-                          report.riskAssessment.certainty.level === 'high'
-                            ? 'low'
-                            : report.riskAssessment.certainty.level === 'medium'
-                              ? 'moderate'
-                              : 'high'
-                        }
-                      >
-                        {
-                          EXEC_CERTAINTY_LABEL[
-                            report.riskAssessment.certainty.level
-                          ]
-                        }
-                      </span>
-                    </header>
-                    <div className="novex-sit-tech">
-                      <p className="novex-sit-card__hint">
-                        {report.riskAssessment.certainty.explanation}
-                      </p>
-                      <CertaintyRing
-                        percentage={report.riskAssessment.certainty.percentage}
-                        level={report.riskAssessment.certainty.level}
-                      />
-                    </div>
-                  </article>
-                </div>
-              </ExecutiveSection>
+              {report.riskAssessment.certainty.explanation ? (
+                <p className="novex-sit-brief__callout">
+                  {report.riskAssessment.certainty.explanation}
+                </p>
+              ) : null}
 
-              {/* 3. ¿Por qué es grave? */}
-              <ExecutiveSection
-                number={3}
-                question="¿Por qué es grave?"
-                hint="Factores que determinaron la clasificación de la IA"
-              >
-                <article className="novex-sit-card">
-                  <ul className="novex-sit-factors">
-                    {report.decisionFactors.map((factor) => (
+              {decisionFactors.length > 0 ? (
+                <section className="novex-sit-brief__panel">
+                  <header className="novex-sit-brief__panel-head">
+                    <h3>Por qué es grave</h3>
+                  </header>
+                  <ul className="novex-sit-brief__checks">
+                    {decisionFactors.map((factor) => (
                       <li key={factor}>
-                        <span aria-hidden="true">
+                        <span className="novex-sit-brief__icon" aria-hidden="true">
                           <NovexIcon name="check" size={12} strokeWidth={2} />
                         </span>
-                        {factor}
+                        <span>{factor}</span>
                       </li>
                     ))}
                   </ul>
-                </article>
-              </ExecutiveSection>
+                </section>
+              ) : null}
 
-              {/* 4. ¿Quién está siendo afectado? */}
-              <ExecutiveSection
-                number={4}
-                question="¿Quién está siendo afectado?"
-                hint="Impacto cuantificado y áreas afectadas con su motivo"
-              >
-                <div className="novex-sit-grid">
-                  <article className="novex-sit-card">
-                    <header>
-                      <h3>Distribución del impacto</h3>
-                    </header>
-                    <ul className="novex-sit-dist">
-                      <li data-tone="cyan">
-                        <strong>
-                          {report.impactAnalysis.internalImpactPercentage}%
-                        </strong>
-                        <span>Interno</span>
-                        <p>Procesos y operación institucional</p>
+              <section className="novex-sit-brief__panel">
+                <header className="novex-sit-brief__panel-head">
+                  <h3>Impacto</h3>
+                  {report.impactAnalysis.estimatedAffectedStudents !== null ? (
+                    <small>
+                      ≈{' '}
+                      {report.impactAnalysis.estimatedAffectedStudents.toLocaleString(
+                        'es-CO',
+                      )}{' '}
+                      estudiantes
+                    </small>
+                  ) : null}
+                </header>
+                <ul className="novex-sit-brief__impact">
+                  <li data-tone="cyan">
+                    <strong>
+                      {report.impactAnalysis.internalImpactPercentage}%
+                    </strong>
+                    <span>Interno</span>
+                  </li>
+                  <li data-tone="violet">
+                    <strong>
+                      {report.impactAnalysis.externalImpactPercentage}%
+                    </strong>
+                    <span>Externo</span>
+                  </li>
+                  <li data-tone="amber">
+                    <strong>
+                      {report.impactAnalysis.studentImpactPercentage}%
+                    </strong>
+                    <span>Estudiantes</span>
+                  </li>
+                </ul>
+                {processes.filter((process) => process.length <= 42).length >
+                0 ? (
+                  <div className="novex-sit-brief__chips">
+                    {processes
+                      .filter((process) => process.length <= 42)
+                      .map((process) => (
+                        <span key={process}>{process}</span>
+                      ))}
+                  </div>
+                ) : null}
+              </section>
+
+              {affectedAreas.length > 0 ? (
+                <section className="novex-sit-brief__panel">
+                  <header className="novex-sit-brief__panel-head">
+                    <h3>Áreas afectadas</h3>
+                  </header>
+                  <ul className="novex-sit-brief__areas">
+                    {affectedAreas.map((area) => (
+                      <li key={area.name}>
+                        <div>
+                          <strong>{area.name}</strong>
+                          <span data-risk={area.affectationLevel}>
+                            {RISK_LEVEL_LABEL[area.affectationLevel]}
+                          </span>
+                        </div>
+                        <p>{area.reason}</p>
                       </li>
-                      <li data-tone="violet">
-                        <strong>
-                          {report.impactAnalysis.externalImpactPercentage}%
-                        </strong>
-                        <span>Externo</span>
-                        <p>Aliados, proveedores y reputación</p>
-                      </li>
-                      <li data-tone="amber">
-                        <strong>
-                          {report.impactAnalysis.studentImpactPercentage}%
-                        </strong>
-                        <span>Estudiantes</span>
-                        <p>Experiencia y continuidad académica</p>
-                      </li>
-                    </ul>
-                    <dl className="novex-sit-impact-facts">
-                      <div>
-                        <dt>Estudiantes afectados (estimado)</dt>
-                        <dd>
-                          {report.impactAnalysis.estimatedAffectedStudents !==
-                          null
-                            ? `≈ ${report.impactAnalysis.estimatedAffectedStudents.toLocaleString('es-CO')}`
-                            : 'No inferible con el contexto actual'}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>Áreas afectadas</dt>
-                        <dd>{report.impactAnalysis.estimatedAffectedAreas}</dd>
-                      </div>
-                    </dl>
-                    <p className="novex-sit-cause__label">Procesos afectados</p>
-                    <ul className="novex-sit-chips">
-                      {report.impactAnalysis.affectedProcesses.map(
-                        (process) => (
-                          <li key={process}>{process}</li>
-                        ),
-                      )}
-                    </ul>
-                  </article>
-                  <article className="novex-sit-card">
-                    <header>
-                      <h3>Áreas afectadas</h3>
-                    </header>
-                    <ul className="novex-sit-areas">
-                      {report.affectedAreas.map((area) => (
-                        <li key={area.name}>
-                          <div className="novex-sit-areas__head">
-                            <strong>{area.name}</strong>
-                            <span
-                              className="novex-sit-pill"
-                              data-risk={area.affectationLevel}
-                            >
-                              {RISK_LEVEL_LABEL[area.affectationLevel]}
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
+
+              {actions.length > 0 ? (
+                <section className="novex-sit-brief__panel">
+                  <header className="novex-sit-brief__panel-head">
+                    <h3>Acciones prioritarias</h3>
+                  </header>
+                  <ol className="novex-sit-brief__actions">
+                    {actions.map((action, index) => (
+                      <li key={`${action.action}-${index}`}>
+                        <span className="novex-sit-brief__step" aria-hidden="true">
+                          {index + 1}
+                        </span>
+                        <div className="novex-sit-brief__action-body">
+                          <div className="novex-sit-brief__action-top">
+                            <strong>{action.action}</strong>
+                            <span data-priority={action.priority}>
+                              {EXEC_PRIORITY_LABEL[action.priority]}
                             </span>
                           </div>
-                          <p>{area.reason}</p>
-                        </li>
-                      ))}
-                    </ul>
-                  </article>
-                </div>
-              </ExecutiveSection>
+                          <p className="novex-sit-brief__action-meta">
+                            {action.suggestedArea}
+                            {action.recommendedTime
+                              ? ` · ${action.recommendedTime}`
+                              : ''}
+                          </p>
+                          {action.reason ? (
+                            <p className="novex-sit-brief__action-reason">
+                              {action.reason}
+                            </p>
+                          ) : null}
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                </section>
+              ) : null}
 
-              {/* 5. ¿Qué recomienda la IA? */}
-              <ExecutiveSection
-                number={5}
-                question="¿Qué recomienda la IA?"
-                hint="Acciones priorizadas con motivo, área y tiempo recomendado"
-              >
-                <ol className="novex-sit-actions">
-                  {report.recommendedActions.map((action, index) => (
-                    <li
-                      key={`${action.action}-${index}`}
-                      className="novex-sit-card novex-sit-action"
-                      data-priority={action.priority}
-                    >
-                      <div className="novex-sit-action__head">
-                        <span
-                          className="novex-sit-action__priority"
-                          data-priority={action.priority}
-                        >
-                          {EXEC_PRIORITY_LABEL[action.priority]}
-                        </span>
-                        <span className="novex-sit-action__time">
-                          <NovexIcon name="clock" size={11} strokeWidth={1.8} />
-                          {action.recommendedTime}
-                        </span>
-                      </div>
-                      <strong className="novex-sit-action__title">
-                        {action.action}
-                      </strong>
-                      <p className="novex-sit-action__reason">
-                        {action.reason}
-                      </p>
-                      <p className="novex-sit-action__area">
-                        <NovexIcon name="users" size={11} strokeWidth={1.8} />
-                        {action.suggestedArea}
-                      </p>
-                    </li>
-                  ))}
-                </ol>
-              </ExecutiveSection>
-
-              {/* 6. ¿Qué pasa si no actuamos? */}
-              <ExecutiveSection
-                number={6}
-                question="¿Qué pasa si no actuamos?"
-                hint="Consecuencias operacionales proyectadas por la IA"
-              >
-                <article className="novex-sit-card">
-                  <ul className="novex-sit-factors" data-variant="warning">
-                    {report.operationalConsequences.map((consequence) => (
+              {consequences.length > 0 ? (
+                <section className="novex-sit-brief__panel">
+                  <header className="novex-sit-brief__panel-head">
+                    <h3>Si no se actúa</h3>
+                  </header>
+                  <ul className="novex-sit-brief__checks novex-sit-brief__checks--warn">
+                    {consequences.map((consequence) => (
                       <li key={consequence}>
-                        <span aria-hidden="true">
+                        <span className="novex-sit-brief__icon" aria-hidden="true">
                           <NovexIcon name="alert" size={12} strokeWidth={1.8} />
                         </span>
-                        {consequence}
+                        <span>{consequence}</span>
                       </li>
                     ))}
                   </ul>
-                </article>
-              </ExecutiveSection>
+                </section>
+              ) : null}
 
-              {/* 7. Indicadores afectados */}
-              <ExecutiveSection
-                number={7}
-                question="Indicadores afectados"
-                hint="Qué medir, en qué unidad y hacia dónde debe moverse"
-              >
-                <div className="novex-sit-indicators">
-                  {report.operationalIndicators.map((indicator) => (
-                    <article
-                      key={indicator.name}
-                      className="novex-sit-card novex-sit-indicator"
-                    >
-                      <header>
-                        <h3>{indicator.name}</h3>
-                        <span
-                          className="novex-sit-indicator__trend"
-                          data-trend={indicator.trend}
-                        >
-                          {TREND_LABEL[indicator.trend]}
-                        </span>
-                      </header>
-                      <p className="novex-sit-indicator__value">
-                        <strong>
-                          {indicator.suggestedValue.toLocaleString('es-CO')}
-                        </strong>
-                        <span>{indicator.unit}</span>
-                      </p>
-                      <p className="novex-sit-card__hint">
-                        {indicator.explanation}
-                      </p>
-                    </article>
-                  ))}
-                </div>
-              </ExecutiveSection>
-
-              {/* 8. Áreas responsables */}
-              <ExecutiveSection
-                number={8}
-                question="Áreas responsables"
-                hint="Quién debe intervenir y con qué mandato inicial"
-              >
-                <article className="novex-sit-card">
-                  <ul className="novex-sit-areas">
-                    {responsibleAreas.map(({ area, mandate }) => (
-                      <li key={area}>
-                        <div className="novex-sit-areas__head">
-                          <strong>{area}</strong>
-                        </div>
-                        <p>{mandate}</p>
-                      </li>
-                    ))}
-                  </ul>
-                </article>
-              </ExecutiveSection>
-
-              {/* 9. Cronología sugerida */}
-              <ExecutiveSection
-                number={9}
-                question="Cronología sugerida"
-                hint="Hitos de seguimiento propuestos y registro del evento"
-              >
-                <div className="novex-sit-grid">
-                  <article className="novex-sit-card">
-                    <header>
-                      <h3>Próximos hitos</h3>
-                    </header>
-                    <ol className="novex-sit-timeline">
-                      {report.timelineSuggestions.map((milestone) => (
-                        <li key={milestone.horizon}>
-                          <time>{milestone.horizon}</time>
-                          <div>
-                            <strong>Punto de control</strong>
-                            <p>{milestone.checkpoint}</p>
-                          </div>
-                        </li>
-                      ))}
-                    </ol>
-                  </article>
-                  <article className="novex-sit-card">
-                    <header>
-                      <h3>Registro del evento</h3>
-                    </header>
-                    {timeline.length === 0 ? (
-                      <p className="novex-sit-card__empty">Sin entradas.</p>
-                    ) : (
-                      <ol className="novex-sit-timeline">
-                        {timeline.map((entry) => (
-                          <li key={entry.id}>
-                            <time dateTime={entry.at}>
-                              {formatEventDateTime(entry.at)}
-                            </time>
-                            <div>
-                              <strong>{timelineTypeLabel(entry.type)}</strong>
-                              <p>{entry.description}</p>
-                            </div>
-                          </li>
-                        ))}
-                      </ol>
-                    )}
-                  </article>
-                </div>
-              </ExecutiveSection>
-
-              {/* 10. Conclusión ejecutiva */}
-              <ExecutiveSection
-                number={10}
-                question="Conclusión ejecutiva"
-                hint="Lectura final dirigida a la Dirección de Operaciones"
-              >
-                <article
-                  className="novex-sit-card novex-sit-conclusion"
-                  data-risk={risk}
-                >
-                  <div className="novex-sit-conclusion__grid">
-                    <div>
-                      <p className="novex-sit-cause__label">Gravedad</p>
-                      <p className="novex-sit-conclusion__text">
-                        {report.executiveConclusion.gravity}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="novex-sit-cause__label">Urgencia</p>
-                      <p className="novex-sit-conclusion__urgency">
-                        {EXEC_URGENCY_LABEL[report.executiveConclusion.urgency]}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="novex-sit-cause__label">
-                        Recomendación general
-                      </p>
-                      <p className="novex-sit-conclusion__text">
-                        {report.executiveConclusion.recommendation}
-                      </p>
-                    </div>
-                  </div>
-                  {report.dataGaps.length > 0 ? (
-                    <div className="novex-sit-gaps">
-                      <p className="novex-sit-cause__label">
-                        Vacíos de información declarados por la IA
-                      </p>
-                      <ul>
-                        {report.dataGaps.map((gap) => (
-                          <li key={gap}>{gap}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : null}
-                </article>
-              </ExecutiveSection>
+              <section className="novex-sit-brief__panel novex-sit-brief__panel--conclusion">
+                <header className="novex-sit-brief__panel-head">
+                  <h3>Conclusión</h3>
+                </header>
+                {report.executiveConclusion.gravity ? (
+                  <p className="novex-sit-brief__secondary">
+                    {report.executiveConclusion.gravity}
+                  </p>
+                ) : null}
+                <p className="novex-sit-brief__lead">
+                  {report.executiveConclusion.recommendation}
+                </p>
+              </section>
             </div>
           ) : (
-            <div className="novex-sit-grid">
-              <article className="novex-sit-card">
-                <header>
+            <div className="novex-sit-brief">
+              <section className="novex-sit-brief__panel">
+                <header className="novex-sit-brief__panel-head">
                   <h3>Descripción</h3>
                 </header>
-                <p className="novex-sit-narrative">
+                <p className="novex-sit-brief__lead">
                   {interpretation?.narrative ?? event.description}
                 </p>
-                <p className="novex-sit-card__hint" style={{ marginTop: 10 }}>
-                  Esta situación no cuenta con reporte ejecutivo de inteligencia
-                  (contrato v2). Registrada el{' '}
+                <p className="novex-sit-brief__hint">
+                  Sin reporte ejecutivo de inteligencia. Registrada el{' '}
                   {formatEventDate(event.reportedAt)}.
                 </p>
-              </article>
+              </section>
             </div>
           )}
           <span
@@ -670,7 +497,7 @@ export function SituationDetailModal({
             className="novex-sit-footer__primary"
             onClick={onClose}
           >
-            Cerrar detalle
+            Cerrar
             <NovexIcon name="chevron-right" size={14} />
           </button>
         </footer>

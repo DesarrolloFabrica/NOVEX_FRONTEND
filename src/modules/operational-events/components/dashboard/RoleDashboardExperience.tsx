@@ -1,13 +1,9 @@
 import { Link } from 'react-router-dom'
 import type { ExecutiveDashboardData } from '@/modules/api/types/dashboard.types'
 import type { NovexRoleCode } from '@/modules/auth/utils/roleExperience'
-import { AiIndicatorsPanel } from './AiIndicatorsPanel'
-import { CoordinationImpactMap } from './CoordinationImpactMap'
 import { DashboardOperationalSummary } from './DashboardOperationalSummary'
 import { ExecutiveKpiBar } from './ExecutiveKpiBar'
-import { IntelligenceExecutiveBrief } from './IntelligenceExecutiveBrief'
 import { PrioritySituationsList } from './PrioritySituationsList'
-import { RecentActivityFeed } from './RecentActivityFeed'
 import { RegisterSituationCta } from '@/shared/components/RegisterSituationCta'
 import { NovexIcon } from '@/shared/components/NovexIcon'
 
@@ -17,30 +13,134 @@ interface RoleDashboardExperienceProps {
   previewing?: boolean
 }
 
-const ROLE_COPY: Record<
-  NovexRoleCode,
-  { label: string; title: string; copy: string }
-> = {
-  COORDINADOR: {
-    label: 'Operación de coordinación',
-    title: 'Su operación, en contexto',
-    copy: 'Registre, consulte y acompañe el ciclo completo de las situaciones de su coordinación.',
-  },
-  ANALISTA: {
-    label: 'Centro de monitoreo',
-    title: 'Supervisión operacional global',
-    copy: 'Prioridades, actividad e inteligencia de todas las coordinaciones en una sola vista.',
-  },
-  DIRECTOR: {
-    label: 'Command Center ejecutivo',
-    title: 'Estado operativo institucional',
-    copy: 'Señales de riesgo, impacto y tendencia preparadas para decidir sin ruido operativo.',
-  },
-  ADMIN: {
-    label: 'Soporte de plataforma',
-    title: 'Vista operacional global',
-    copy: 'Supervise el producto y cambie de perspectiva para asistir a cada rol.',
-  },
+type RoleHeroCopy = {
+  label: string
+  title: string
+  copy: string
+  action?: { to: string; label: string }
+}
+
+function pluralSituations(count: number): string {
+  return count === 1 ? '1 situación' : `${count} situaciones`
+}
+
+function buildRoleHeroCopy(
+  role: NovexRoleCode,
+  data: ExecutiveDashboardData,
+): RoleHeroCopy {
+  const { openSituations, criticalSituations, pendingRecommendations } =
+    data.kpis
+  const topPriority = data.prioritySituations[0] ?? data.latestSituations[0]
+
+  switch (role) {
+    case 'COORDINADOR': {
+      const action = {
+        to: '/gestion',
+        label: 'Ir a Gestión de situaciones',
+      }
+
+      if (openSituations <= 0) {
+        return {
+          label: 'Qué hacer ahora',
+          title: 'Sin situaciones pendientes por ahora',
+          copy: 'Cuando registre un evento, use Gestión de situaciones para dar seguimiento hasta el cierre. También puede capturar una nueva desde este panel.',
+          action,
+        }
+      }
+
+      const criticalHint =
+        criticalSituations > 0
+          ? ` Priorice ${pluralSituations(criticalSituations)} críticas.`
+          : ''
+
+      return {
+        label: 'Qué hacer ahora',
+        title: `Tiene ${pluralSituations(openSituations)} pendientes de actualización`,
+        copy: `Vaya a Gestión de situaciones, revise las que siguen en seguimiento y actualice estado, evidencias o notas.${criticalHint}`,
+        action,
+      }
+    }
+    case 'ANALISTA': {
+      if (openSituations <= 0) {
+        return {
+          label: 'Qué monitorear',
+          title: 'Sin alertas abiertas en este momento',
+          copy: 'Revise la actividad reciente de todas las coordinaciones y registre contexto nuevo si aparece una señal.',
+          action: {
+            to: '/gestion',
+            label: 'Abrir Gestión de situaciones',
+          },
+        }
+      }
+
+      return {
+        label: 'Qué monitorear',
+        title: `${pluralSituations(openSituations)} activas en la red`,
+        copy:
+          criticalSituations > 0
+            ? `Hay ${pluralSituations(criticalSituations)} críticas. Priorice supervisión global y valide el seguimiento en Gestión de situaciones.`
+            : 'Supervise la actividad de todas las coordinaciones y confirme que los casos abiertos tengan seguimiento actualizado.',
+        action: {
+          to: '/gestion',
+          label: 'Abrir Gestión de situaciones',
+        },
+      }
+    }
+    case 'DIRECTOR': {
+      if (criticalSituations > 0) {
+        return {
+          label: 'Señal ejecutiva',
+          title: `${pluralSituations(criticalSituations)} críticas requieren atención`,
+          copy: topPriority
+            ? `Prioridad actual: «${topPriority.title}» (${topPriority.coordinationName}). Revise impacto y decida el siguiente paso.`
+            : 'Revise impacto institucional y la distribución operativa antes de decidir.',
+          action: {
+            to: '/red-impacto',
+            label: 'Ver red de impacto',
+          },
+        }
+      }
+
+      if (openSituations > 0) {
+        return {
+          label: 'Señal ejecutiva',
+          title: `${pluralSituations(openSituations)} en seguimiento institucional`,
+          copy:
+            pendingRecommendations > 0
+              ? `Hay ${pendingRecommendations} recomendaciones pendientes. Use esta vista para priorizar sin entrar al detalle operativo.`
+              : 'No hay críticas abiertas. Mantenga el panorama de impacto y tendencia bajo observación.',
+          action: {
+            to: '/red-impacto',
+            label: 'Ver red de impacto',
+          },
+        }
+      }
+
+      return {
+        label: 'Señal ejecutiva',
+        title: 'Operación estable por ahora',
+        copy: 'No hay situaciones abiertas. Conserve esta vista para detectar cambios de riesgo o impacto institucional.',
+      }
+    }
+    case 'ADMIN': {
+      return {
+        label: 'Soporte de plataforma',
+        title:
+          openSituations > 0
+            ? `Vista global: ${pluralSituations(openSituations)} abiertas`
+            : 'Vista global sin carga operativa abierta',
+        copy: 'Use esta perspectiva para asistir a coordinadores, analistas o dirección según lo que vean en su rol.',
+        action: {
+          to: '/admin',
+          label: 'Ir a administración',
+        },
+      }
+    }
+    default: {
+      const _exhaustive: never = role
+      return _exhaustive
+    }
+  }
 }
 
 export function RoleDashboardExperience({
@@ -48,7 +148,7 @@ export function RoleDashboardExperience({
   role,
   previewing = false,
 }: RoleDashboardExperienceProps) {
-  const copy = ROLE_COPY[role]
+  const copy = buildRoleHeroCopy(role, data)
 
   if (role === 'COORDINADOR') {
     return (
@@ -73,9 +173,6 @@ export function RoleDashboardExperience({
           </div>
           <RegisterSituationCta variant="footer" />
         </section>
-        <div data-tour="dashboard-overview">
-          <IntelligenceExecutiveBrief narrative={data.executiveNarrative} />
-        </div>
         <DashboardOperationalSummary data={data} />
         <div className="novex-intel-board">
           <PrioritySituationsList situations={data.latestSituations} />
@@ -104,9 +201,6 @@ export function RoleDashboardExperience({
           <RegisterSituationCta variant="footer" />
         </section>
       ) : null}
-      <div data-tour="executive-brief">
-        <IntelligenceExecutiveBrief narrative={data.executiveNarrative} />
-      </div>
       <div data-tour="executive-kpis">
         <ExecutiveKpiBar
           kpis={data.kpis}
@@ -136,16 +230,9 @@ export function RoleDashboardExperience({
             }
           />
         </div>
-        <div data-tour="impact-summary">
-          <CoordinationImpactMap entries={data.coordinationImpact} />
+        <div className="novex-role-dashboard__wide" data-tour="operational-trend">
+          <OperationalTrend data={data} />
         </div>
-        <div data-tour="recent-activity">
-          <RecentActivityFeed activity={data.recentActivity} />
-        </div>
-        <div data-tour="ai-indicators">
-          <AiIndicatorsPanel indicators={data.aiIndicators} />
-        </div>
-        <OperationalTrend data={data} />
       </div>
     </div>
   )
@@ -155,13 +242,9 @@ function RoleHero({
   label,
   title,
   copy,
+  action,
   previewing,
-}: {
-  label: string
-  title: string
-  copy: string
-  previewing: boolean
-}) {
+}: RoleHeroCopy & { previewing: boolean }) {
   return (
     <header className="novex-role-dashboard__hero" data-tour="role-dashboard">
       <div>
@@ -171,13 +254,19 @@ function RoleHero({
         </span>
         <h2>{title}</h2>
         <p>{copy}</p>
+        {action && !previewing ? (
+          <Link to={action.to} className="novex-role-dashboard__cta">
+            {action.label}
+            <NovexIcon name="chevron-right" />
+          </Link>
+        ) : null}
       </div>
       {previewing ? (
         <Link to="/admin" className="novex-role-dashboard__return">
           <NovexIcon name="chevron-left" />
           Volver a administración
         </Link>
-      ) : (
+      ) : action ? null : (
         <span className="novex-role-dashboard__live">
           <i />
           Datos en vivo
@@ -213,12 +302,21 @@ function OperationalTrend({ data }: { data: ExecutiveDashboardData }) {
   return (
     <section
       className="novex-role-dashboard__trend"
-      data-tour="operational-trend"
       aria-labelledby="trend-title"
     >
-      <div>
-        <span>Tendencia consolidada</span>
-        <h3 id="trend-title">Distribución operativa</h3>
+      <div className="novex-role-dashboard__trend-header">
+        <div>
+          <span>Tendencia consolidada</span>
+          <h3 id="trend-title">Distribución operativa</h3>
+          <p>
+            Resumen de la carga actual. Gestione el historial completo de
+            situaciones desde el registro operativo.
+          </p>
+        </div>
+        <Link to="/situaciones" className="novex-role-dashboard__trend-cta">
+          Ir a gestionar
+          <NovexIcon name="chevron-right" />
+        </Link>
       </div>
       <ul>
         {series.map((item) => (

@@ -118,13 +118,21 @@ const LOGO_PATH = 'novex-mark.png'
 function pdfText(value: string | null | undefined): string {
   return (value ?? '')
     .replace(/\u2014|\u2013/g, '-')
-    .replace(/\u2022|\u00B7/g, '-')
+    .replace(/\u2022|\u00B7|\u2219|\u25CF|\u25E6/g, '-')
+    .replace(/\u2713|\u2714|\u2705|\u2611/g, '+')
+    .replace(/\u2717|\u2718|\u274C|\u2612/g, '-')
     .replace(/\u2026/g, '...')
     .replace(/[“”]/g, '"')
     .replace(/[‘’]/g, "'")
-    .replace(/\u00A0/g, ' ')
+    .replace(/\u00A0|\u202F|\u2007/g, ' ')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
     .replace(/\u2248/g, 'aprox. ')
+    .replace(/[^\x09\x0A\x0D\x20-\x7E\xA0-\xFF]/g, '')
+    .replace(/[ \t]+\|[ \t]+/g, '. ')
+    .replace(/\|/g, ' - ')
+    .replace(/[ \t]{2,}/g, ' ')
     .normalize('NFC')
+    .trim()
 }
 
 function formatDateTime(iso: string): string {
@@ -256,6 +264,7 @@ class PdfReportLayout {
   private setFont(style: 'normal' | 'bold' | 'italic', sizePt: number): void {
     this.doc.setFont('helvetica', style)
     this.doc.setFontSize(sizePt)
+    this.doc.setCharSpace(0)
   }
 
   /** Renderiza lineas envueltas sin el bug de espaciado de jsPDF con arrays. */
@@ -265,25 +274,42 @@ class PdfReportLayout {
     y: number,
     fontSizePt: number,
   ): number {
+    this.doc.setCharSpace(0)
     const lh = lineHeightMm(fontSizePt)
     let cy = y
     for (const line of lines) {
-      if (line) this.doc.text(line, x, cy)
+      const safe = pdfText(line)
+      if (safe) this.doc.text(safe, x, cy)
       cy += lh
     }
     return cy - y
   }
 
-  splitText(text: string, maxWidth: number): string[] {
-    return this.doc.splitTextToSize(pdfText(text), maxWidth) as string[]
+  splitText(
+    text: string,
+    maxWidth: number,
+    options?: { style?: 'normal' | 'bold' | 'italic'; sizePt?: number },
+  ): string[] {
+    const style = options?.style ?? 'normal'
+    const sizePt = options?.sizePt ?? FONT.body
+    this.setFont(style, sizePt)
+    const safeWidth = Math.max(12, maxWidth)
+    const lines = this.doc.splitTextToSize(pdfText(text), safeWidth) as string[]
+    return lines
+      .map((line) => pdfText(line))
+      .filter((line) => line.length > 0)
   }
 
   textBlockHeight(
     text: string,
     maxWidth: number,
     fontSizePt: number,
+    style: 'normal' | 'bold' | 'italic' = 'normal',
   ): number {
-    const lines = this.splitText(text, maxWidth)
+    const lines = this.splitText(text, maxWidth, {
+      style,
+      sizePt: fontSizePt,
+    })
     return lines.length * lineHeightMm(fontSizePt)
   }
 
@@ -321,19 +347,39 @@ class PdfReportLayout {
     date: string
     reference: string
   }): void {
-    const metaColW = 54
-    const titleMaxW = this.contentWidth - metaColW - 2
+    const metaColW = 58
+    const titleGap = 8
+    const titleMaxW = Math.max(40, this.contentWidth - metaColW - titleGap)
     const titleFont = FONT.section
-    const titleLines = this.splitText(meta.title, titleMaxW).slice(0, 3)
-    const titleBlockH = titleLines.length * lineHeightMm(titleFont)
-    const headerH = Math.max(LAYOUT.headerHeight, 22 + titleBlockH + 6)
+    const titleLines = this.splitText(meta.title, titleMaxW, {
+      style: 'bold',
+      sizePt: titleFont,
+    }).slice(0, 4)
+    const titleBlockH = Math.max(
+      lineHeightMm(titleFont),
+      titleLines.length * lineHeightMm(titleFont),
+    )
+
+    const logoBox = 9
+    const topY = 7
+    const metaRowH = 4.2
+    const metaRows: Array<[string, string]> = [
+      ['Estado', meta.status],
+      ['Prioridad', meta.priority],
+      ['Fecha', meta.date],
+      ['Codigo', meta.reference],
+    ]
+    const titleY = topY + logoBox + 6
+    const headerH = Math.max(
+      LAYOUT.headerHeight,
+      titleY + titleBlockH + 6,
+      topY + 1.5 + metaRows.length * metaRowH + 4,
+    )
 
     this.setColor('fill', COLORS.navy)
     this.doc.rect(0, 0, this.pageWidth, headerH, 'F')
 
-    const logoBox = 9
     const logoX = LAYOUT.marginLeft
-    const topY = 7
     if (this.logo) {
       const aspect = this.logo.width / this.logo.height
       const logoH = logoBox
@@ -360,24 +406,20 @@ class PdfReportLayout {
 
     const metaRight = this.pageWidth - LAYOUT.marginRight
     const metaLeft = metaRight - metaColW
-    const metaRows: Array<[string, string]> = [
-      ['Estado', meta.status],
-      ['Prioridad', meta.priority],
-      ['Fecha', meta.date],
-      ['Codigo', meta.reference],
-    ]
     metaRows.forEach(([label, value], index) => {
-      const rowY = topY + 1.5 + index * 4.2
+      const rowY = topY + 1.5 + index * metaRowH
       this.setFont('bold', FONT.note - 0.5)
       this.setColor('text', [130, 150, 176])
       this.doc.text(pdfText(`${label}:`), metaLeft, rowY)
       this.setFont('normal', FONT.note)
       this.setColor('text', COLORS.white)
-      const valueLines = this.splitText(value, metaColW - 16)
+      const valueLines = this.splitText(value, metaColW - 14, {
+        style: 'normal',
+        sizePt: FONT.note,
+      })
       this.doc.text(valueLines[0] ?? '', metaRight, rowY, { align: 'right' })
     })
 
-    const titleY = topY + logoBox + 5
     this.setColor('text', COLORS.white)
     this.setFont('bold', titleFont)
     this.drawLines(titleLines, LAYOUT.marginLeft, titleY, titleFont)
@@ -540,7 +582,10 @@ class PdfReportLayout {
 
   measureParagraph(text: string): number {
     const innerW = this.contentWidth - LAYOUT.cardPadding * 2
-    const lines = this.splitText(text || 'Sin informacion.', innerW)
+    const lines = this.splitText(text || 'Sin informacion.', innerW, {
+      style: 'normal',
+      sizePt: FONT.body,
+    })
     return (
       LAYOUT.cardPadding * 2 +
       lines.length * lineHeightMm(FONT.body) +
@@ -553,7 +598,10 @@ class PdfReportLayout {
     const innerW = this.contentWidth - LAYOUT.cardPadding - 4
     let h = 0
     for (const item of items) {
-      const lines = this.splitText(item, innerW)
+      const lines = this.splitText(item, innerW, {
+        style: 'normal',
+        sizePt: FONT.body,
+      })
       h += lines.length * lineHeightMm(FONT.body) + 2
     }
     return h + LAYOUT.gapBlocks / 3
@@ -633,8 +681,11 @@ class PdfReportLayout {
 
   paragraph(text: string, options?: { muted?: boolean; fill?: RGB }): void {
     const innerW = this.contentWidth - LAYOUT.cardPadding * 2
-    const lines = this.splitText(text || 'Sin informacion.', innerW)
-    const bodyH = lines.length * lineHeightMm(FONT.body)
+    const lines = this.splitText(text || 'Sin informacion.', innerW, {
+      style: 'normal',
+      sizePt: FONT.body,
+    })
+    const bodyH = Math.max(lineHeightMm(FONT.body), lines.length * lineHeightMm(FONT.body))
     const cardH = LAYOUT.cardPadding * 2 + bodyH
     this.ensureSpace(cardH + LAYOUT.gapBlocks / 2)
     this.drawCardShell(
@@ -662,7 +713,10 @@ class PdfReportLayout {
     }
     const innerW = this.contentWidth - LAYOUT.cardPadding - 4
     for (const item of items) {
-      const lines = this.splitText(item, innerW)
+      const lines = this.splitText(item, innerW, {
+        style: 'normal',
+        sizePt: FONT.body,
+      })
       const rowH = lines.length * lineHeightMm(FONT.body) + 2
       this.ensureSpace(rowH)
       this.setColor('fill', COLORS.green)
@@ -764,7 +818,10 @@ class PdfReportLayout {
       innerY += lineHeightMm(FONT.note) + 1
       this.setColor('text', index === 0 ? COLORS.white : COLORS.ink)
       this.setFont('bold', FONT.section)
-      const valueLines = this.splitText(card.value, innerW)
+      const valueLines = this.splitText(card.value, innerW, {
+        style: 'bold',
+        sizePt: FONT.section,
+      })
       this.drawLines(valueLines, textX, innerY, FONT.section)
       innerY += valueLines.length * lineHeightMm(FONT.section)
       if (barH > 0 && card.percentage !== undefined) {
@@ -950,7 +1007,10 @@ class PdfReportLayout {
     const x = LAYOUT.marginLeft + LAYOUT.cardPadding
     this.setColor('text', COLORS.ink)
     this.setFont('bold', FONT.body)
-    const actionLines = this.splitText(action.action, innerW)
+    const actionLines = this.splitText(action.action, innerW, {
+      style: 'bold',
+      sizePt: FONT.body,
+    })
     this.drawLines(actionLines, x, innerY, FONT.body)
     innerY += actionLines.length * lineHeightMm(FONT.body) + 4
     for (const [label, value] of fields) {
@@ -960,7 +1020,10 @@ class PdfReportLayout {
       innerY += lineHeightMm(FONT.note) + 0.8
       this.setColor('text', COLORS.ink)
       this.setFont('normal', FONT.body)
-      const lines = this.splitText(value, innerW)
+      const lines = this.splitText(value, innerW, {
+        style: 'normal',
+        sizePt: FONT.body,
+      })
       this.drawLines(lines, x, innerY, FONT.body)
       innerY += lines.length * lineHeightMm(FONT.body) + 2
     }
@@ -1161,10 +1224,19 @@ class PdfReportLayout {
     recommendedActionTime: string
     initialResponsible: string
   }): void {
-    const innerW = this.contentWidth - LAYOUT.cardPadding * 2
-    const decisionLines = this.splitText(decision.decision, innerW)
-    const meta = `Urgencia: ${URGENCY_LABEL[decision.urgencyLevel]}  |  Tiempo: ${decision.recommendedActionTime}  |  Responsable: ${decision.initialResponsible}`
-    const metaLines = this.splitText(meta, innerW)
+    const innerW = Math.max(
+      12,
+      this.contentWidth - LAYOUT.cardPadding * 2 - 1,
+    )
+    const decisionLines = this.splitText(decision.decision, innerW, {
+      style: 'bold',
+      sizePt: FONT.subtitle,
+    })
+    const meta = `Urgencia: ${URGENCY_LABEL[decision.urgencyLevel]}. Tiempo: ${decision.recommendedActionTime}. Responsable: ${decision.initialResponsible}`
+    const metaLines = this.splitText(meta, innerW, {
+      style: 'normal',
+      sizePt: FONT.body,
+    })
     const cardH =
       LAYOUT.cardPadding * 2 +
       decisionLines.length * lineHeightMm(FONT.subtitle) +
@@ -1464,7 +1536,8 @@ export async function exportSituationReportPdf(
       report.riskAssessment.certainty.percentage,
       { accent: COLORS.green },
     )
-    layout.paragraph(report.riskAssessment.certainty.explanation, { muted: true })
+    // Evita el bloque "pegado" con simbolos Unicode (✓ · |) que rompen Helvetica
+    // y estiran letras; si hay factores estructurados, se listan debajo.
     if (report.confidenceExplanation) {
       layout.bulletList(
         [
@@ -1473,6 +1546,10 @@ export async function exportSituationReportPdf(
         ],
         { muted: true },
       )
+    } else if (report.riskAssessment.certainty.explanation) {
+      layout.paragraph(report.riskAssessment.certainty.explanation, {
+        muted: true,
+      })
     }
 
     if (report.decisionMatrix) {

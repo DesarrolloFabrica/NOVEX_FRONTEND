@@ -3,9 +3,16 @@ import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { getRoleDisplayName } from '@/modules/auth/utils/roleDisplay'
 import { NovexBrandMark } from '@/shared/components/NovexBrandMark'
 import { RegisterSituationCta } from '@/shared/components/RegisterSituationCta'
+import { EXECUTIVE_CENTER_RAIL_ITEM } from '@/modules/executive-operations-center/constants/navigation'
 
 type IconName =
-  'intelligence' | 'impact' | 'events' | 'monitoring' | 'admin' | 'logout'
+  | 'intelligence'
+  | 'impact'
+  | 'events'
+  | 'monitoring'
+  | 'admin'
+  | 'command'
+  | 'logout'
 
 type NavItem = {
   to: string
@@ -45,9 +52,15 @@ const OPERATIONAL_NAV_ITEMS: NavItem[] = [
   },
 ]
 
-const DIRECTOR_NAV_ITEMS: NavItem[] = OPERATIONAL_NAV_ITEMS.filter(
-  (item) => item.to !== '/gestion',
-)
+const DIRECTOR_NAV_ITEMS: NavItem[] = [
+  EXECUTIVE_CENTER_RAIL_ITEM,
+  ...OPERATIONAL_NAV_ITEMS.filter((item) => item.to !== '/gestion'),
+]
+
+const ANALISTA_NAV_ITEMS: NavItem[] = [
+  EXECUTIVE_CENTER_RAIL_ITEM,
+  ...OPERATIONAL_NAV_ITEMS,
+]
 
 const ADMIN_NAV_ITEMS: NavItem[] = [
   {
@@ -57,7 +70,8 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
     icon: 'admin',
     end: true,
   },
-  ...DIRECTOR_NAV_ITEMS,
+  EXECUTIVE_CENTER_RAIL_ITEM,
+  ...OPERATIONAL_NAV_ITEMS.filter((item) => item.to !== '/gestion'),
 ]
 
 function NovexRailIcon({ name }: { name: IconName }) {
@@ -99,6 +113,13 @@ function NovexRailIcon({ name }: { name: IconName }) {
         <path d="M8 10h3M8 14h5M16.5 9.5v5" />
       </>
     ),
+    command: (
+      <>
+        <circle cx="12" cy="12" r="8" />
+        <circle cx="12" cy="12" r="3" />
+        <path d="M12 4v2M12 18v2M4 12h2M18 12h2" />
+      </>
+    ),
     logout: (
       <>
         <path d="M10 5H5v14h5M14 8l4 4-4 4M9 12h9" />
@@ -129,7 +150,9 @@ export function NovexSystemRail() {
       ? ADMIN_NAV_ITEMS
       : roleCode === 'DIRECTOR'
         ? DIRECTOR_NAV_ITEMS
-        : OPERATIONAL_NAV_ITEMS
+        : roleCode === 'ANALISTA'
+          ? ANALISTA_NAV_ITEMS
+          : OPERATIONAL_NAV_ITEMS
 
   return (
     <aside className="novex-os-rail" aria-label="Navegación principal">

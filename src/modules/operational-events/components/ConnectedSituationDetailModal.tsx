@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { fetchSituation } from '@/modules/api/situations.api'
+import { useAuth } from '@/modules/auth/hooks/useAuth'
+import {
+  normalizeRoleCode,
+  seesInstitutionalSituationRegistry,
+} from '@/modules/auth/utils/roleExperience'
 import { SituationDetailModal } from '@/modules/operational-events/components/SituationDetailModal'
 import { SituationModalShell } from '@/modules/operational-events/components/SituationModalShell'
 import { AnalysisErrorState } from '@/modules/operational-events/components/analysis/AnalysisErrorState'
@@ -7,11 +12,15 @@ import { SituationDetailSkeleton } from '@/modules/operational-events/components
 import { splitSituationDescription } from '@/modules/operational-events/utils/parseSituationDescription'
 import type { OperationalEvent } from '@/modules/operational-events/types/operational-event.types'
 import {
+  formatManagementDate,
+} from '@/modules/monitoring/utils/situation-management.presentation'
+import {
   mapAnalysisToInterpretation,
   mapSituationToOperationalEvent,
 } from '@/modules/services/mappers/analysisPresentation.mapper'
 import { loadAnalysis } from '@/modules/services/situationAnalysis.service'
 import type { SituationResponse } from '@/modules/situations/types/situation.types'
+import { situationOwnerLabel } from '@/modules/situations/utils/situationOwner'
 import { getErrorMessage } from '@/shared/utils/error'
 import { isValidUuid } from '@/shared/utils/uuid'
 
@@ -25,9 +34,11 @@ interface ConnectedSituationDetailModalProps {
 function SituationWithoutAnalysisModal({
   situation,
   onClose,
+  showAuditTrail,
 }: {
   situation: SituationResponse
   onClose: () => void
+  showAuditTrail: boolean
 }) {
   const { narrative } = splitSituationDescription(situation.description)
 
@@ -37,6 +48,25 @@ function SituationWithoutAnalysisModal({
         <p>Expediente operativo</p>
         <h2>{situation.title}</h2>
       </header>
+      {showAuditTrail ? (
+        <section
+          className="novex-sit-audit novex-sit-audit--shell"
+          aria-label="Información de auditoría"
+        >
+          <div className="novex-sit-audit__item">
+            <span>Coordinación</span>
+            <strong>{situationOwnerLabel(situation)}</strong>
+          </div>
+          <div className="novex-sit-audit__item">
+            <span>Registró</span>
+            <strong>{situation.createdByUserName || 'Sin autor'}</strong>
+          </div>
+          <div className="novex-sit-audit__item">
+            <span>Registrada</span>
+            <strong>{formatManagementDate(situation.createdAt)}</strong>
+          </div>
+        </section>
+      ) : null}
       <p>{narrative}</p>
       <p>
         El análisis ejecutivo IA aún no está disponible. Consulte el expediente
@@ -54,6 +84,10 @@ export function ConnectedSituationDetailModal({
   onClose,
   title,
 }: ConnectedSituationDetailModalProps) {
+  const { user } = useAuth()
+  const showAuditTrail = seesInstitutionalSituationRegistry(
+    normalizeRoleCode(user?.roleCode),
+  )
   const [event, setEvent] = useState<OperationalEvent | null>(null)
   const [situationWithoutAnalysis, setSituationWithoutAnalysis] =
     useState<SituationResponse | null>(null)
@@ -132,6 +166,7 @@ export function ConnectedSituationDetailModal({
       <SituationWithoutAnalysisModal
         situation={situationWithoutAnalysis}
         onClose={onClose}
+        showAuditTrail={showAuditTrail}
       />
     )
   }
@@ -140,5 +175,11 @@ export function ConnectedSituationDetailModal({
     return null
   }
 
-  return <SituationDetailModal event={event} onClose={onClose} />
+  return (
+    <SituationDetailModal
+      event={event}
+      onClose={onClose}
+      showAuditTrail={showAuditTrail}
+    />
+  )
 }
