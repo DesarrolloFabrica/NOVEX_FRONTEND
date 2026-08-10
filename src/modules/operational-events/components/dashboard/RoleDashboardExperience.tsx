@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom'
 import type { ExecutiveDashboardData } from '@/modules/api/types/dashboard.types'
-import type { NovexRoleCode } from '@/modules/auth/utils/roleExperience'
+import {
+  EXECUTIVE_OPERATIONS_HOME,
+  type NovexRoleCode,
+} from '@/modules/auth/utils/roleExperience'
 import { DashboardOperationalSummary } from './DashboardOperationalSummary'
 import { ExecutiveKpiBar } from './ExecutiveKpiBar'
 import { PrioritySituationsList } from './PrioritySituationsList'
@@ -131,8 +134,8 @@ function buildRoleHeroCopy(
             : 'Vista global sin carga operativa abierta',
         copy: 'Use esta perspectiva para asistir a coordinadores, analistas o dirección según lo que vean en su rol.',
         action: {
-          to: '/admin',
-          label: 'Ir a administración',
+          to: EXECUTIVE_OPERATIONS_HOME,
+          label: 'Ir a Centro operacional',
         },
       }
     }

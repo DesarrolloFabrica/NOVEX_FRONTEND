@@ -10983,11 +10983,68 @@
   display: grid;
   min-height: 0;
   gap: 8px;
+  max-height: min(52vh, 520px);
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 2px 4px 4px;
   scrollbar-color: rgb(80 148 205 / 0.34) transparent;
   scrollbar-width: thin;
+}
+
+.operational-context-panel__situation-pager {
+  display: grid;
+  gap: 8px;
+  flex: 0 0 auto;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgb(74 138 194 / 0.12);
+}
+
+.operational-context-panel__situation-pager-controls {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.operational-context-panel__situation-pager-controls span {
+  color: #8fa9c0;
+  font-size: 0.66rem;
+  font-weight: 650;
+  line-height: 1.3;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.operational-context-panel__situation-pager-controls button {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid rgb(76 143 198 / 0.22);
+  border-radius: 8px;
+  background: rgb(8 24 42 / 0.72);
+  color: #d7e8f7;
+  cursor: pointer;
+  font-size: 0.66rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.operational-context-panel__situation-pager-controls button:hover:not(:disabled) {
+  border-color: rgb(96 189 233 / 0.42);
+  background: rgb(12 34 58 / 0.88);
+}
+
+.operational-context-panel__situation-pager-controls button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.operational-context-panel__situation-pager-meta {
+  margin: 0;
+  color: #6f8aa4;
+  font-size: 0.62rem;
+  line-height: 1.35;
+  text-align: center;
 }
 
 .operational-context-panel__situation {
@@ -11636,7 +11693,8 @@
 .operational-context-panel[data-level='coordination']
   .operational-context-panel__situation-list {
   grid-template-columns: minmax(0, 1fr);
-  overflow: visible;
+  max-height: min(46vh, 480px);
+  overflow-y: auto;
 }
 
 .operational-context-panel[data-level='coordination']
@@ -13246,13 +13304,52 @@
   filter: blur(10px);
 }
 
+/* El arte institucional proviene de lotes con exposiciones muy distintas.
+   Se normaliza solo su luz, sin alterar color, geometría ni assets. */
+.impact-network__canvas
+  .organizational-scene[data-level='institutional']
+  .organizational-scene__island {
+  --institutional-island-brightness: 1.7;
+  --institutional-island-glow: 0.58;
+  --institutional-island-soft-glow: 0.22;
+}
+
+.impact-network__canvas
+  .organizational-scene[data-level='institutional']
+  .organizational-scene__island:is(
+    [data-coordination-id='coord-bellas-artes'],
+    [data-coordination-id='coord-servicios']
+  ) {
+  --institutional-island-brightness: 1.34;
+  --institutional-island-glow: 0.52;
+  --institutional-island-soft-glow: 0.19;
+}
+
+.impact-network__canvas
+  .organizational-scene[data-level='institutional']
+  .organizational-scene__island:is(
+    [data-coordination-id='coord-empresarial'],
+    [data-coordination-id='coord-transversales']
+  ) {
+  --institutional-island-brightness: 1.02;
+  --institutional-island-glow: 0.46;
+  --institutional-island-soft-glow: 0.16;
+}
+
 .impact-network__canvas
   .organizational-scene[data-level='institutional']
   .organizational-scene__island
   .propagation-island__image {
-  filter: hue-rotate(var(--island-hue, 0deg)) saturate(0.92) brightness(1.02)
-    contrast(1.12) drop-shadow(0 0 9px rgb(var(--island-glow-rgb) / 0.46))
-    drop-shadow(0 0 22px rgb(var(--island-glow-rgb) / 0.16))
+  filter: hue-rotate(var(--island-hue, 0deg)) saturate(0.96)
+    brightness(var(--institutional-island-brightness)) contrast(1.12)
+    drop-shadow(
+      0 0 9px
+        rgb(var(--island-glow-rgb) / var(--institutional-island-glow))
+    )
+    drop-shadow(
+      0 0 22px
+        rgb(var(--island-glow-rgb) / var(--institutional-island-soft-glow))
+    )
     drop-shadow(0 13px 17px rgb(0 0 0 / 0.76)) !important;
 }
 

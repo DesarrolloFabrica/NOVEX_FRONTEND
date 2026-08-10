@@ -1,4 +1,5 @@
 import type { PropsWithChildren, ReactNode } from 'react'
+import { useId } from 'react'
 import { NovexIcon, type NovexIconName } from '@/shared/components/NovexIcon'
 import type { SituationSeverity } from '@/modules/situations/types/situation.types'
 import {
@@ -18,6 +19,7 @@ interface OperationsPageHeaderProps {
   onRefresh?: () => void
   action?: ReactNode
   compact?: boolean
+  actionsClassName?: string
 }
 
 export function OperationsPageHeader({
@@ -29,6 +31,7 @@ export function OperationsPageHeader({
   onRefresh,
   action,
   compact = false,
+  actionsClassName = '',
 }: OperationsPageHeaderProps) {
   return (
     <header
@@ -41,7 +44,9 @@ export function OperationsPageHeader({
         <h2>{title}</h2>
         {description ? <p>{description}</p> : null}
       </div>
-      <div className="eoc-view-header__actions">
+      <div
+        className={`eoc-view-header__actions ${actionsClassName}`.trim()}
+      >
         {generatedAt ? (
           <span className="eoc-live-stamp">
             <i /> Actualizado {formatDateTime(generatedAt)}
@@ -73,6 +78,9 @@ interface OperationsPanelProps extends PropsWithChildren {
   action?: ReactNode
   className?: string
   id?: string
+  help?: ReactNode
+  helpLabel?: string
+  helpAlign?: 'start' | 'end'
 }
 
 export function OperationsPanel({
@@ -82,6 +90,9 @@ export function OperationsPanel({
   action,
   className = '',
   id,
+  help,
+  helpLabel,
+  helpAlign = 'start',
   children,
 }: OperationsPanelProps) {
   return (
@@ -89,7 +100,17 @@ export function OperationsPanel({
       <div className="eoc-panel__header">
         <div>
           {eyebrow ? <span>{eyebrow}</span> : null}
-          <h3>{title}</h3>
+          <h3>
+            {title}
+            {help ? (
+              <EocSectionHelp
+                label={helpLabel ?? `Qué muestra ${title}`}
+                align={helpAlign}
+              >
+                {help}
+              </EocSectionHelp>
+            ) : null}
+          </h3>
           {description ? <p>{description}</p> : null}
         </div>
         {action ? <div className="eoc-panel__action">{action}</div> : null}
@@ -105,17 +126,28 @@ export function MetricCard({
   hint,
   tone = 'default',
   icon,
+  help,
+  helpLabel,
 }: {
   label: string
   value: string | number
   hint: string
   tone?: string
   icon?: NovexIconName
+  help?: ReactNode
+  helpLabel?: string
 }) {
   return (
     <article className="eoc-metric" data-tone={tone}>
       <div className="eoc-metric__top">
-        <span>{label}</span>
+        <span className="eoc-metric__label">
+          {label}
+          {help ? (
+            <EocSectionHelp label={helpLabel ?? `Qué significa ${label}`}>
+              {help}
+            </EocSectionHelp>
+          ) : null}
+        </span>
         {icon ? <NovexIcon name={icon} size={15} /> : null}
       </div>
       <strong>{value}</strong>
@@ -275,4 +307,32 @@ export function paginateItems<T>(items: T[], page: number, pageSize: number): T[
   const currentPage = Math.min(Math.max(1, page), totalPages)
   const start = (currentPage - 1) * pageSize
   return items.slice(start, start + pageSize)
+}
+
+export function EocSectionHelp({
+  label,
+  children,
+  align = 'start',
+}: {
+  label: string
+  children: ReactNode
+  align?: 'start' | 'end'
+}) {
+  const tipId = useId()
+
+  return (
+    <span className="novex-table-help eoc-section-help" data-align={align}>
+      <button
+        type="button"
+        className="novex-table-help__trigger"
+        aria-label={label}
+        aria-describedby={tipId}
+      >
+        <NovexIcon name="help" size={11} strokeWidth={1.6} />
+      </button>
+      <span id={tipId} className="novex-table-help__tip" role="tooltip">
+        {children}
+      </span>
+    </span>
+  )
 }

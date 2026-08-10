@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef } from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, LayoutGroup, motion } from 'motion/react'
 import { ImpactSituationCommand } from '@/modules/impact-network/components/ImpactSituationCommand'
 import type { CoordinationId } from '@/modules/impact-network/data/coordination-islands.config'
@@ -83,6 +83,8 @@ const PANEL_VARIANTS = {
     x: direction * -24,
   }),
 }
+
+const SITUATION_PAGE_SIZE = 6
 
 const dateFormatter = new Intl.DateTimeFormat('es-CO', {
   day: '2-digit',
@@ -172,6 +174,7 @@ function OperationalContextPanelView({
       ? 'coordination'
       : 'institutional'
   const previousLevelRef = useRef<PanelLevel>(panelLevel)
+  const [situationPage, setSituationPage] = useState(1)
   const direction =
     PANEL_DEPTH[panelLevel] >= PANEL_DEPTH[previousLevelRef.current] ? 1 : -1
   const coordinationRisk = strongestRisk(incidents)
@@ -179,10 +182,29 @@ function OperationalContextPanelView({
   const coordinationLastActivity = coordination
     ? resolveCoordinationLastActivity(incidents, coordination.lastActivityAt)
     : 'Sin actividad registrada'
+  const totalSituationPages = Math.max(
+    1,
+    Math.ceil(incidents.length / SITUATION_PAGE_SIZE),
+  )
+  const paginatedIncidents = useMemo(() => {
+    const start = (situationPage - 1) * SITUATION_PAGE_SIZE
+    return incidents.slice(start, start + SITUATION_PAGE_SIZE)
+  }, [incidents, situationPage])
+  const showSituationPager = incidents.length > SITUATION_PAGE_SIZE
 
   useEffect(() => {
     previousLevelRef.current = panelLevel
   }, [panelLevel])
+
+  useEffect(() => {
+    setSituationPage(1)
+  }, [coordination?.id, incidents.length])
+
+  useEffect(() => {
+    if (situationPage > totalSituationPages) {
+      setSituationPage(totalSituationPages)
+    }
+  }, [situationPage, totalSituationPages])
 
   let content
 
@@ -344,7 +366,7 @@ function OperationalContextPanelView({
 
           <div className="operational-context-panel__situation-list">
             {incidents.length > 0 ? (
-              incidents.map((incident) => (
+              paginatedIncidents.map((incident) => (
                 <motion.button
                   type="button"
                   key={incident.eventId}
@@ -405,6 +427,33 @@ function OperationalContextPanelView({
               </div>
             )}
           </div>
+
+          {showSituationPager ? (
+            <footer className="operational-context-panel__situation-pager">
+              <div className="operational-context-panel__situation-pager-controls">
+                <button
+                  type="button"
+                  disabled={situationPage <= 1}
+                  onClick={() => setSituationPage((page) => page - 1)}
+                >
+                  Anterior
+                </button>
+                <span>
+                  Página {situationPage} de {totalSituationPages}
+                </span>
+                <button
+                  type="button"
+                  disabled={situationPage >= totalSituationPages}
+                  onClick={() => setSituationPage((page) => page + 1)}
+                >
+                  Siguiente
+                </button>
+              </div>
+              <p className="operational-context-panel__situation-pager-meta">
+                Mostrando {paginatedIncidents.length} de {incidents.length}
+              </p>
+            </footer>
+          ) : null}
         </section>
       </>
     )

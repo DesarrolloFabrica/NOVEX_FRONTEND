@@ -86,60 +86,58 @@ export function SituationQueueConsole({
   return (
     <section className="novex-action-queue" aria-labelledby="situation-list-title">
       <header className="novex-action-queue__header">
-        <div>
+        <div className="novex-action-queue__heading">
           <p>Selecciona la situación para actualizar el estado</p>
           <h2 id="situation-list-title">Situaciones</h2>
         </div>
-        <span>
+        <p className="novex-action-queue__count" aria-live="polite">
           Mostrando {pageItems.length} de {totalFiltered}
           {totalAvailable > totalFiltered ? ` · ${totalAvailable} en total` : ''}
-        </span>
+        </p>
       </header>
-
-      <p className="novex-action-queue__guidance">
-        Seleccione una situación → revise el expediente → Actualizar estado
-      </p>
 
       <div className="novex-action-queue__filters" role="search" aria-label="Filtros de la cola">
         <label className="novex-action-queue__search">
-          <span className="sr-only">Buscar situación</span>
+          <span>Buscar</span>
           <input
             type="search"
             value={queueQuery.search}
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Buscar por título, coordinación o categoría"
+            placeholder="Título, coordinación o categoría"
           />
         </label>
-        <label>
-          <span className="sr-only">Filtrar por estado</span>
-          <select
-            value={queueQuery.status}
-            onChange={(event) =>
-              onStatusChange(event.target.value as SituationQueueStatusFilter)
-            }
-          >
-            {STATUS_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          <span className="sr-only">Filtrar por severidad</span>
-          <select
-            value={queueQuery.severity}
-            onChange={(event) =>
-              onSeverityChange(event.target.value as SituationQueueSeverityFilter)
-            }
-          >
-            {SEVERITY_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="novex-action-queue__filter-row">
+          <label>
+            <span>Estado</span>
+            <select
+              value={queueQuery.status}
+              onChange={(event) =>
+                onStatusChange(event.target.value as SituationQueueStatusFilter)
+              }
+            >
+              {STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>Severidad</span>
+            <select
+              value={queueQuery.severity}
+              onChange={(event) =>
+                onSeverityChange(event.target.value as SituationQueueSeverityFilter)
+              }
+            >
+              {SEVERITY_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </div>
 
       {loading ? (
@@ -177,8 +175,27 @@ export function SituationQueueConsole({
           </ol>
 
           <footer className="novex-action-queue__pager">
-            <label>
-              <span className="sr-only">Tamaño de página</span>
+            <div className="novex-action-queue__pager-controls">
+              <button
+                type="button"
+                disabled={queueQuery.page <= 1}
+                onClick={() => onPageChange(queueQuery.page - 1)}
+              >
+                Anterior
+              </button>
+              <span className="novex-action-queue__pager-status">
+                Página {queueQuery.page} de {totalPages}
+              </span>
+              <button
+                type="button"
+                disabled={queueQuery.page >= totalPages}
+                onClick={() => onPageChange(queueQuery.page + 1)}
+              >
+                Siguiente
+              </button>
+            </div>
+            <label className="novex-action-queue__pager-size">
+              <span>Mostrar</span>
               <select
                 value={queueQuery.pageSize}
                 onChange={(event) => onPageSizeChange(Number(event.target.value))}
@@ -190,25 +207,6 @@ export function SituationQueueConsole({
                 ))}
               </select>
             </label>
-            <div className="novex-action-queue__pager-controls">
-              <button
-                type="button"
-                disabled={queueQuery.page <= 1}
-                onClick={() => onPageChange(queueQuery.page - 1)}
-              >
-                Anterior
-              </button>
-              <span>
-                Página {queueQuery.page} de {totalPages}
-              </span>
-              <button
-                type="button"
-                disabled={queueQuery.page >= totalPages}
-                onClick={() => onPageChange(queueQuery.page + 1)}
-              >
-                Siguiente
-              </button>
-            </div>
           </footer>
         </>
       )}

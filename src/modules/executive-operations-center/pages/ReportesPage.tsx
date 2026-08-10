@@ -10,7 +10,7 @@ import {
   StatusPill,
 } from '@/modules/executive-operations-center/components/shared/OperationalCenterUI'
 import {
-  escapeCsvCell,
+  downloadExcelCompatibleCsv,
   eventTypeLabel,
   formatConfidence,
   formatDateTime,
@@ -146,16 +146,11 @@ export function ReportesPage() {
       item.evidencesCount,
       item.timelineEventsCount,
     ])
-    const csv = [headers, ...rows]
-      .map((row) => row.map((cell) => escapeCsvCell(cell)).join(','))
-      .join('\r\n')
-    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = `novex-auditoria-${new Date().toISOString().slice(0, 10)}.csv`
-    anchor.click()
-    URL.revokeObjectURL(url)
+    downloadExcelCompatibleCsv(
+      `novex-auditoria-${new Date().toISOString().slice(0, 10)}.csv`,
+      headers,
+      rows,
+    )
   }
 
   return (
@@ -167,10 +162,17 @@ export function ReportesPage() {
         loading={false}
         onRefresh={() => void reload()}
         compact
+        actionsClassName="eoc-view-header__actions--subtle"
         action={
-          <button type="button" className="eoc-primary-action" onClick={downloadCsv}>
-            <NovexIcon name="download" />
-            Exportar {filteredSituations.length} registros
+          <button
+            type="button"
+            className="eoc-ghost-action"
+            onClick={downloadCsv}
+            aria-label={`Exportar ${filteredSituations.length} registros filtrados`}
+          >
+            <NovexIcon name="download" size={14} />
+            <span>Exportar CSV</span>
+            <em>{filteredSituations.length}</em>
           </button>
         }
       />

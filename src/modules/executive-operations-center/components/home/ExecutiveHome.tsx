@@ -4,7 +4,7 @@ import { ConnectedSituationDetailModal } from '@/modules/operational-events/comp
 import { useExecutiveOperations } from '@/modules/executive-operations-center/hooks/useExecutiveOperations'
 import {
   DataState,
-  PanelLink,
+  EocSectionHelp,
   SeverityPill,
   StatusPill,
 } from '@/modules/executive-operations-center/components/shared/OperationalCenterUI'
@@ -74,7 +74,6 @@ export function ExecutiveHome() {
   }
 
   const { metrics } = data
-  const topPriority = priorities[0] ?? null
   const visiblePriorities = priorities.slice(0, 3)
   const visibleEvents = data.auditEvents.slice(0, 5)
   const visibleCoordinations = activeCoordinations.slice(0, 5)
@@ -136,28 +135,28 @@ export function ExecutiveHome() {
         aria-labelledby="home-status-title"
       >
         <div className="eoc-home-command__summary">
-          <span className="eoc-home-kicker">Estado operativo</span>
+          <span className="eoc-home-kicker">
+            Estado operativo
+            <EocSectionHelp label="Qué significa Estado operativo">
+              Lectura consolidada del momento actual: resume la carga activa, la
+              prioridad ejecutiva y el nivel de cobertura con inteligencia
+              asistida en toda la operación.
+            </EocSectionHelp>
+          </span>
           <h2 id="home-status-title">{headline}</h2>
           <p>{brief}</p>
         </div>
-        <aside className="eoc-home-command__focus">
-          <span className="eoc-home-kicker">Siguiente paso</span>
-          <strong>
-            {topPriority
-              ? `Revisar “${topPriority.title}” en ${topPriority.coordinationName}.`
-              : 'Mantener la trazabilidad al día y vigilar nuevos registros.'}
-          </strong>
-          {topPriority ? (
-            <PanelLink onClick={() => setSelectedSituationId(topPriority.id)}>
-              Abrir expediente
-            </PanelLink>
-          ) : null}
-        </aside>
       </section>
 
       <dl className="eoc-home-kpis" aria-label="Indicadores esenciales">
         <div data-tone="attention">
-          <dt>En seguimiento</dt>
+          <dt>
+            En seguimiento
+            <EocSectionHelp label="Qué significa En seguimiento">
+              Situaciones abiertas o en gestión que aún no se han cerrado. Mide
+              la carga activa que requiere seguimiento operativo.
+            </EocSectionHelp>
+          </dt>
           <dd>{metrics.openSituations + metrics.inProgressSituations}</dd>
           <small>
             {metrics.openSituations} abiertas · {metrics.inProgressSituations} en
@@ -165,12 +164,25 @@ export function ExecutiveHome() {
           </small>
         </div>
         <div data-tone={metrics.criticalOpenSituations > 0 ? 'critical' : 'stable'}>
-          <dt>Alta o crítica</dt>
+          <dt>
+            Alta o crítica
+            <EocSectionHelp label="Qué significa Alta o crítica">
+              Situaciones con severidad alta o crítica que permanecen abiertas.
+              Señalan dónde conviene priorizar la decisión ejecutiva.
+            </EocSectionHelp>
+          </dt>
           <dd>{metrics.criticalOpenSituations}</dd>
           <small>Requieren prioridad inmediata</small>
         </div>
         <div data-tone={metrics.analysisCoverage >= 80 ? 'stable' : 'attention'}>
-          <dt>Cobertura IA</dt>
+          <dt>
+            Cobertura IA
+            <EocSectionHelp label="Qué significa Cobertura IA">
+              Porcentaje de situaciones con lectura o análisis generado por
+              inteligencia artificial. Indica qué tan documentada está la
+              operación.
+            </EocSectionHelp>
+          </dt>
           <dd>{metrics.analysisCoverage}%</dd>
           <small>
             {metrics.situationsWithAnalysis} de {metrics.totalSituations}{' '}
@@ -182,7 +194,13 @@ export function ExecutiveHome() {
             metrics.pendingRecommendations > 0 ? 'attention' : 'stable'
           }
         >
-          <dt>Acciones pendientes</dt>
+          <dt>
+            Acciones pendientes
+            <EocSectionHelp label="Qué significan Acciones pendientes" align="end">
+              Recomendaciones sugeridas por la IA que aún no se han marcado
+              como completadas en los expedientes de situación.
+            </EocSectionHelp>
+          </dt>
           <dd>{metrics.pendingRecommendations}</dd>
           <small>
             {metrics.completedRecommendations} recomendaciones completadas
@@ -193,7 +211,14 @@ export function ExecutiveHome() {
       <section className="eoc-home-priority" aria-labelledby="home-priority-title">
         <header className="eoc-home-section-heading">
           <div>
-            <h3 id="home-priority-title">Prioridades</h3>
+            <h3 id="home-priority-title">
+              Prioridades
+              <EocSectionHelp label="Qué muestra Prioridades">
+                Las situaciones más severas y antiguas que siguen abiertas o en
+                gestión. Sirve para decidir por dónde empezar la revisión
+                ejecutiva.
+              </EocSectionHelp>
+            </h3>
             <p>Situaciones más severas y antiguas que aún requieren gestión.</p>
           </div>
           <Link to="/centro-operacional/panorama" className="eoc-section-link">
@@ -252,7 +277,13 @@ export function ExecutiveHome() {
         <section className="eoc-home-stream" aria-labelledby="home-activity-title">
           <header className="eoc-home-section-heading eoc-home-section-heading--compact">
             <div>
-              <h3 id="home-activity-title">Actividad reciente</h3>
+              <h3 id="home-activity-title">
+                Actividad reciente
+                <EocSectionHelp label="Qué muestra Actividad reciente">
+                  Últimos movimientos registrados en la plataforma: cambios de
+                  estado, notas y eventos generados por personas o por la IA.
+                </EocSectionHelp>
+              </h3>
               <p>Últimos movimientos de personas y de la IA.</p>
             </div>
             <Link to="/centro-operacional/reportes" className="eoc-section-link">
@@ -306,7 +337,13 @@ export function ExecutiveHome() {
         >
           <header className="eoc-home-section-heading eoc-home-section-heading--compact">
             <div>
-              <h3 id="home-coordination-title">Carga por área</h3>
+              <h3 id="home-coordination-title">
+                Carga por área
+                <EocSectionHelp label="Qué muestra Carga por área" align="end">
+                  Coordinaciones con situaciones activas o impactos declarados.
+                  Muestra dónde se concentra la presión operativa institucional.
+                </EocSectionHelp>
+              </h3>
               <p>Solo coordinaciones con situaciones o impactos activos.</p>
             </div>
             <Link to="/centro-operacional/panorama" className="eoc-section-link">
@@ -355,7 +392,14 @@ export function ExecutiveHome() {
       >
         <header className="eoc-home-section-heading eoc-home-section-heading--compact">
           <div>
-            <h3 id="home-integrity-title">Integridad del registro</h3>
+            <h3 id="home-integrity-title">
+              Integridad del registro
+              <EocSectionHelp label="Qué muestra Integridad del registro">
+                Indicadores de trazabilidad: análisis IA, eventos de auditoría,
+                notas de captura y áreas afectadas. Confirma la evidencia
+                disponible para reconstruir hechos.
+              </EocSectionHelp>
+            </h3>
             <p>Base disponible para explicar decisiones y reconstruir hechos.</p>
           </div>
         </header>

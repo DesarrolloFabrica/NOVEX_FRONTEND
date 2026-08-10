@@ -108,7 +108,61 @@ export function situationAge(createdAt: string): string {
   return formatDuration(Math.max(0, Math.floor((Date.now() - created) / 60_000)))
 }
 
-export function escapeCsvCell(value: string | number | null): string {
-  const text = value === null ? '' : String(value)
+export function escapeCsvCell(value: string | number | null | undefined): string {
+  const text = sanitizeCsvValue(value)
   return `"${text.replaceAll('"', '""')}"`
+}
+
+export function sanitizeCsvValue(value: string | number | null | undefined): string {
+  if (value === null || value === undefined) return ''
+  return String(value)
+    .replace(/\r\n/g, '\n')
+    .replace(/[\r\n]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+const CSV_DELIMITER = ';'
+
+export function buildCsvContent(
+  headers: string[],
+  rows: Array<Array<string | number | null | undefined>>,
+  delimiter: string = CSV_DELIMITER,
+): string {
+  const formatRow = (row: Array<string | number | null | undefined>) =>
+    row.map((cell) => escapeCsvCell(cell)).join(delimiter)
+
+  return [`sep=${delimiter}`, formatRow(headers), ...rows.map(formatRow)].join('\r\n')
+}
+
+/** CSV en UTF-16 LE: Excel en Windows abre tildes y ñ correctamente. */
+export function createExcelCompatibleCsvBlob(
+  headers: string[],
+  rows: Array<Array<string | number | null | undefined>>,
+  delimiter: string = CSV_DELIMITER,
+): Blob {
+  const csv = buildCsvContent(headers, rows, delimiter)
+  const bytes = new Uint8Array((csv.length + 1) * 2)
+  const view = new DataView(bytes.buffer)
+  view.setUint16(0, 0xfeff, true)
+
+  for (let index = 0; index < csv.length; index += 1) {
+    view.setUint16(2 + index * 2, csv.charCodeAt(index), true)
+  }
+
+  return new Blob([bytes], { type: 'text/csv;charset=utf-16le;' })
+}
+
+export function downloadExcelCompatibleCsv(
+  filename: string,
+  headers: string[],
+  rows: Array<Array<string | number | null | undefined>>,
+): void {
+  const blob = createExcelCompatibleCsvBlob(headers, rows)
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  anchor.click()
+  URL.revokeObjectURL(url)
 }

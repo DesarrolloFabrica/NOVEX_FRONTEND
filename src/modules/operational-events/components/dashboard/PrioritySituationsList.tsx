@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { PrioritySituationCard } from '@/modules/api/types/dashboard.types'
 import { FOCUS_VISIBLE } from '@/modules/monitoring/constants/monitoringTheme'
@@ -17,6 +18,8 @@ const STATUS_LABEL: Record<string, string> = {
   RESOLVED: 'En atención',
   CLOSED: 'Cerrada',
 }
+
+const PAGE_SIZE = 8
 
 function formatRelativeTime(value: string): string {
   const time = new Date(value).getTime()
@@ -43,6 +46,24 @@ export function PrioritySituationsList({
   description,
 }: PrioritySituationsListProps) {
   const { user } = useAuth()
+  const [page, setPage] = useState(1)
+  const totalPages = Math.max(1, Math.ceil(situations.length / PAGE_SIZE))
+  const pageItems = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE
+    return situations.slice(start, start + PAGE_SIZE)
+  }, [page, situations])
+  const showPager = situations.length > PAGE_SIZE
+
+  useEffect(() => {
+    setPage(1)
+  }, [situations.length])
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages)
+    }
+  }, [page, totalPages])
+
   return (
     <section
       className="novex-intel-priority"
@@ -82,63 +103,92 @@ export function PrioritySituationsList({
           ) : null}
         </p>
       ) : (
-        <div className="novex-intel-priority__table-wrap">
-          <table className="novex-intel-priority__table">
-            <thead>
-              <tr>
-                <th scope="col">Situación</th>
-                <th scope="col">Área / Proceso</th>
-                <th scope="col">Estado</th>
-                <th scope="col">Actualizado</th>
-                <th scope="col">Detalle</th>
-              </tr>
-            </thead>
-            <tbody>
-              {situations.map((situation) => (
-                <tr key={situation.id}>
-                  <td data-label="Situación">
-                    <strong className="novex-intel-priority__event-title">
-                      {situation.title}
-                    </strong>
-                  </td>
-                  <td data-label="Área / Proceso">
-                    <span className="novex-intel-priority__area">
-                      {situation.coordinationName}
-                      {situation.categoryName
-                        ? ` · ${situation.categoryName}`
-                        : ''}
-                      {' · '}
-                      {situationRef(situation.id)}
-                    </span>
-                  </td>
-                  <td data-label="Estado">
-                    <span
-                      className="novex-intel-priority__status"
-                      data-status={situation.status.toLowerCase()}
-                    >
-                      {STATUS_LABEL[situation.status] ?? situation.status}
-                    </span>
-                  </td>
-                  <td data-label="Actualizado">
-                    <time dateTime={situation.updatedAt}>
-                      {formatRelativeTime(situation.updatedAt)}
-                    </time>
-                  </td>
-                  <td data-label="Detalle">
-                    <Link
-                      to={`/situaciones?situation=${situation.id}`}
-                      viewTransition
-                      className={`novex-intel-priority__detail ${FOCUS_VISIBLE}`}
-                    >
-                      Ver detalle
-                      <NovexIcon name="arrow-up-right" size={11} />
-                    </Link>
-                  </td>
+        <>
+          <div className="novex-intel-priority__table-wrap">
+            <table className="novex-intel-priority__table">
+              <thead>
+                <tr>
+                  <th scope="col">Situación</th>
+                  <th scope="col">Área / Proceso</th>
+                  <th scope="col">Estado</th>
+                  <th scope="col">Actualizado</th>
+                  <th scope="col">Detalle</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {pageItems.map((situation) => (
+                  <tr key={situation.id}>
+                    <td data-label="Situación">
+                      <strong className="novex-intel-priority__event-title">
+                        {situation.title}
+                      </strong>
+                    </td>
+                    <td data-label="Área / Proceso">
+                      <span className="novex-intel-priority__area">
+                        {situation.coordinationName}
+                        {situation.categoryName
+                          ? ` · ${situation.categoryName}`
+                          : ''}
+                        {' · '}
+                        {situationRef(situation.id)}
+                      </span>
+                    </td>
+                    <td data-label="Estado">
+                      <span
+                        className="novex-intel-priority__status"
+                        data-status={situation.status.toLowerCase()}
+                      >
+                        {STATUS_LABEL[situation.status] ?? situation.status}
+                      </span>
+                    </td>
+                    <td data-label="Actualizado">
+                      <time dateTime={situation.updatedAt}>
+                        {formatRelativeTime(situation.updatedAt)}
+                      </time>
+                    </td>
+                    <td data-label="Detalle">
+                      <Link
+                        to={`/situaciones?situation=${situation.id}`}
+                        viewTransition
+                        className={`novex-intel-priority__detail ${FOCUS_VISIBLE}`}
+                      >
+                        Ver detalle
+                        <NovexIcon name="arrow-up-right" size={11} />
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {showPager ? (
+            <footer className="novex-intel-priority__pager">
+              <div className="novex-intel-priority__pager-controls">
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => setPage((current) => current - 1)}
+                >
+                  Anterior
+                </button>
+                <span>
+                  Página {page} de {totalPages}
+                </span>
+                <button
+                  type="button"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((current) => current + 1)}
+                >
+                  Siguiente
+                </button>
+              </div>
+              <p className="novex-intel-priority__pager-meta">
+                Mostrando {pageItems.length} de {situations.length}
+              </p>
+            </footer>
+          ) : null}
+        </>
       )}
     </section>
   )

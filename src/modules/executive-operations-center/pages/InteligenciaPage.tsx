@@ -1,13 +1,15 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ConnectedSituationDetailModal } from '@/modules/operational-events/components/ConnectedSituationDetailModal'
 import { useExecutiveOperations } from '@/modules/executive-operations-center/hooks/useExecutiveOperations'
 import {
   DataState,
   MetricCard,
   OperationsPageHeader,
+  OperationsPagination,
   OperationsPanel,
   PanelLink,
   SeverityPill,
+  paginateItems,
 } from '@/modules/executive-operations-center/components/shared/OperationalCenterUI'
 import {
   formatConfidence,
@@ -22,9 +24,12 @@ function confidenceTone(confidence: number | null): string {
   return 'critical'
 }
 
+const ANALYSIS_PAGE_SIZE = 6
+
 export function InteligenciaPage() {
   const { data, status, error, reload } = useExecutiveOperations()
   const [selectedSituationId, setSelectedSituationId] = useState<string | null>(null)
+  const [analysisPage, setAnalysisPage] = useState(1)
 
   const analyzed = useMemo(
     () =>
@@ -37,6 +42,15 @@ export function InteligenciaPage() {
         ),
     [data],
   )
+
+  const pagedAnalyzed = useMemo(
+    () => paginateItems(analyzed, analysisPage, ANALYSIS_PAGE_SIZE),
+    [analysisPage, analyzed],
+  )
+
+  useEffect(() => {
+    setAnalysisPage(1)
+  }, [analyzed.length])
 
   if (status !== 'ready' || !data) {
     return (
@@ -93,6 +107,7 @@ export function InteligenciaPage() {
           hint={`${metrics.situationsWithAnalysis} de ${metrics.totalSituations} expedientes`}
           tone={metrics.analysisCoverage >= 80 ? 'stable' : 'ai'}
           icon="sparkles"
+          help="Porcentaje de expedientes con al menos un análisis IA registrado respecto al total de situaciones en NOVEX."
         />
         <MetricCard
           label="Confianza promedio"
@@ -100,6 +115,7 @@ export function InteligenciaPage() {
           hint="Promedio de los análisis disponibles"
           tone={confidenceTone(metrics.averageAiConfidence)}
           icon="shield"
+          help="Nivel medio de certeza que declara la IA en sus lecturas. Una cifra más alta indica conclusiones más consistentes."
         />
         <MetricCard
           label="Versiones generadas"
@@ -107,6 +123,7 @@ export function InteligenciaPage() {
           hint={`${metrics.reanalyzedSituations} situaciones reanalizadas`}
           tone="ai"
           icon="activity"
+          help="Número total de versiones de análisis conservadas en la plataforma, incluyendo reanálisis posteriores."
         />
         <MetricCard
           label="Acciones pendientes"
@@ -114,6 +131,7 @@ export function InteligenciaPage() {
           hint={`${metrics.completedRecommendations} completadas`}
           tone={metrics.pendingRecommendations > 0 ? 'attention' : 'stable'}
           icon="check"
+          help="Recomendaciones sugeridas por la IA que aún no se han marcado como completadas en los expedientes."
         />
         <MetricCard
           label="Sin análisis"
@@ -121,6 +139,7 @@ export function InteligenciaPage() {
           hint="Expedientes sin lectura asistida"
           tone={metrics.situationsWithoutAnalysis > 0 ? 'critical' : 'stable'}
           icon="alert"
+          help="Expedientes que aún no cuentan con lectura o análisis asistido por inteligencia artificial."
         />
         <MetricCard
           label="Preguntas abiertas"
@@ -128,6 +147,7 @@ export function InteligenciaPage() {
           hint="Datos faltantes identificados por IA"
           tone={missingInformation > 0 ? 'attention' : 'stable'}
           icon="help"
+          help="Total de datos faltantes identificados por la IA en los análisis disponibles; indican brechas informativas a completar."
         />
       </div>
 
@@ -136,6 +156,7 @@ export function InteligenciaPage() {
           eyebrow="Gobierno del análisis"
           title="Cobertura y confiabilidad"
           description="La cobertura mide expedientes analizados; la confianza mide certeza declarada por la IA."
+          help="Compara cuántos expedientes tienen análisis frente al nivel medio de confianza declarado. Incluye señales de reanálisis, reclasificación y lecturas de baja certeza."
         >
           <div className="eoc-ai-gauges">
             <div
@@ -179,6 +200,8 @@ export function InteligenciaPage() {
           eyebrow="Trazabilidad técnica"
           title="Motores y versiones"
           description="Proveedor/modelo reportado por la versión más reciente de cada análisis."
+          help="Proveedor y modelo reportados por la versión más reciente de cada análisis. Permite auditar qué motor generó cada lectura."
+          helpAlign="end"
         >
           {providerCounts.size > 0 ? (
             <ul className="eoc-provider-list">
@@ -203,14 +226,16 @@ export function InteligenciaPage() {
         eyebrow="Conclusiones por expediente"
         title="Lecturas más recientes de la IA"
         description="Cada tarjeta diferencia lo declarado por el usuario de la clasificación y recomendación generada por IA."
+        help="Expedientes ordenados por fecha de análisis. Cada tarjeta contrasta lo declarado por el usuario con la clasificación y recomendación generada por IA."
       >
         {analyzed.length > 0 ? (
-          <div className="eoc-ai-analysis-list">
-            {analyzed.map((situation) => (
+          <>
+            <div className="eoc-ai-analysis-list">
+              {pagedAnalyzed.map((situation) => (
               <article key={situation.id} data-confidence={confidenceTone(situation.ai.confidence)}>
                 <div className="eoc-ai-analysis-list__header">
-                  <div>
-                    <span>{situation.code} · {situation.coordinationName}</span>
+                  <div className="eoc-ai-analysis-list__identity">
+                    <span className="eoc-ai-analysis-list__code">{situation.code}</span>
                     <h4>{situation.title}</h4>
                   </div>
                   <div className="eoc-ai-analysis-list__version">
@@ -218,6 +243,22 @@ export function InteligenciaPage() {
                     <strong>{formatConfidence(situation.ai.confidence)}</strong>
                   </div>
                 </div>
+                <dl className="eoc-ai-analysis-list__context">
+                  <div>
+                    <dt>Coordinación</dt>
+                    <dd title={situation.coordinationName}>{situation.coordinationName}</dd>
+                  </div>
+                  <div>
+                    <dt>Responsable</dt>
+                    <dd title={situation.createdByUserName}>{situation.createdByUserName}</dd>
+                  </div>
+                  <div>
+                    <dt>Análisis IA</dt>
+                    <dd title={formatDateTime(situation.ai.analyzedAt)}>
+                      {formatDateTime(situation.ai.analyzedAt)}
+                    </dd>
+                  </div>
+                </dl>
                 <div className="eoc-ai-analysis-list__classification">
                   <span>Declarada <SeverityPill severity={situation.severity} /></span>
                   <NovexIcon name="chevron-right" />
@@ -243,8 +284,8 @@ export function InteligenciaPage() {
                 </div>
                 <footer>
                   <span>
-                    Analizado {formatDateTime(situation.ai.analyzedAt)} ·{' '}
-                    {situation.ai.versionsCount} {situation.ai.versionsCount === 1 ? 'versión' : 'versiones'}
+                    {situation.ai.versionsCount}{' '}
+                    {situation.ai.versionsCount === 1 ? 'versión' : 'versiones'} conservadas
                   </span>
                   <span>
                     {situation.ai.immediateRisksCount} riesgos inmediatos ·{' '}
@@ -255,8 +296,16 @@ export function InteligenciaPage() {
                   </PanelLink>
                 </footer>
               </article>
-            ))}
-          </div>
+              ))}
+            </div>
+            <OperationsPagination
+              page={analysisPage}
+              pageSize={ANALYSIS_PAGE_SIZE}
+              total={analyzed.length}
+              onPageChange={setAnalysisPage}
+              label="lecturas"
+            />
+          </>
         ) : (
           <div className="eoc-inline-empty">No hay análisis IA disponibles todavía.</div>
         )}
@@ -268,6 +317,7 @@ export function InteligenciaPage() {
           title="Brechas que requieren revisión humana"
           description="Casos sin análisis o con confianza inferior al 65 %."
           className="eoc-panel--gaps"
+          help="Casos sin análisis IA o con confianza inferior al 65 % que conviene revisar manualmente antes de decidir."
         >
           <div className="eoc-gap-list">
             {withoutAnalysis.map((situation) => (

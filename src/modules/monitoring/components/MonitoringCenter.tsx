@@ -148,11 +148,6 @@ export function MonitoringCenter({
           onFilter={onSummaryFilter}
         />
 
-        <p className="novex-execution-flow__guidance" role="note">
-          Flujo: seleccione una situación en la cola, revise el expediente y use
-          <strong> Actualizar estado</strong> cuando corresponda.
-        </p>
-
         <div className="novex-gestion-workspace">
           <aside
             className="novex-gestion-workspace__queue"
