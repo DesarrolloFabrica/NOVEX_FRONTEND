@@ -299,7 +299,7 @@ test('acompaña una primera situación real hasta informe, historial y estado', 
       return
     }
 
-    if (path.endsWith('/intelligence/categories')) {
+    if (path.endsWith('/situations/categories')) {
       await route.fulfill({ json: [category] })
       return
     }

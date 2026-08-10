@@ -118,7 +118,7 @@ test.beforeEach(async ({ page }) => {
       return
     }
 
-    if (path.endsWith('/intelligence/categories')) {
+    if (path.endsWith('/situations/categories')) {
       await route.fulfill({ json: [category] })
       return
     }

@@ -27,7 +27,7 @@ export interface SituationsListResponse {
 }
 
 export async function fetchIncidentCategories(): Promise<IncidentCategorySummary[]> {
-  return apiRequest<IncidentCategorySummary[]>('/intelligence/categories')
+  return apiRequest<IncidentCategorySummary[]>('/situations/categories')
 }
 
 export async function fetchSituations(
