@@ -28,6 +28,9 @@ function mapSituationToListItem(situation: SituationResponse): SituationListItem
     createdAt: situation.createdAt,
     updatedAt: situation.updatedAt,
     occurredAt: situation.occurredAt,
+    dueAt: situation.dueAt ?? null,
+    slaBreachedAt: situation.slaBreachedAt ?? null,
+    slaHealth: situation.slaHealth,
     createdByUserName: situation.createdByUserName,
     assignedUserName: situation.assignedUserName ?? null,
   }

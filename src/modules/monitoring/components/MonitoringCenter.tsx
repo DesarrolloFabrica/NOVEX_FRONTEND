@@ -18,6 +18,7 @@ import type { SituationListItem } from '@/modules/api/types/situation-management
 import type {
   SituationQueueQuery,
   SituationQueueSeverityFilter,
+  SituationQueueSlaFilter,
   SituationQueueStatusFilter,
 } from '@/modules/monitoring/utils/situation-queue-query'
 import type { UpdateSituationStatusInput } from '@/modules/monitoring/utils/situation-lifecycle'
@@ -44,6 +45,7 @@ interface MonitoringCenterProps {
   onSearchChange: (search: string) => void
   onStatusFilterChange: (status: SituationQueueStatusFilter) => void
   onSeverityFilterChange: (severity: SituationQueueSeverityFilter) => void
+  onSlaFilterChange: (sla: SituationQueueSlaFilter) => void
   onPageChange: (page: number) => void
   onPageSizeChange: (pageSize: number) => void
   onSummaryFilter: (filter: SituationQueueStatusFilter | 'CRITICAL') => void
@@ -121,6 +123,7 @@ export function MonitoringCenter({
   onSearchChange,
   onStatusFilterChange,
   onSeverityFilterChange,
+  onSlaFilterChange,
   onPageChange,
   onPageSizeChange,
   onSummaryFilter,
@@ -166,6 +169,7 @@ export function MonitoringCenter({
               onSearchChange={onSearchChange}
               onStatusChange={onStatusFilterChange}
               onSeverityChange={onSeverityFilterChange}
+              onSlaChange={onSlaFilterChange}
               onPageChange={onPageChange}
               onPageSizeChange={onPageSizeChange}
             />

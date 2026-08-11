@@ -4,6 +4,7 @@ import { useReducedMotion } from 'motion/react'
 import { OrganizationalScene } from '@/modules/impact-network/components/OrganizationalScene'
 import { OperationalContextPanel } from '@/modules/impact-network/components/OperationalContextPanel'
 import {
+  getCoordination,
   resolveCoordinationId,
   type CoordinationId,
 } from '@/modules/impact-network/data/coordination-islands.config'
@@ -72,6 +73,53 @@ function getCoordinatorInitialSelection(
 
   const candidate = selectedAreaId?.trim() || coordinationId?.trim()
   return candidate ? (candidate as CoordinationId) : null
+}
+
+/**
+ * Resuelve la coordinación del coordinador sin esperar el bootstrap del grafo.
+ * El código de sesión (`selectedAreaId`) ya es el id canónico; el catálogo solo
+ * afina UUID → code cuando ya está cargado.
+ */
+function resolveAssignedCoordinationId(
+  selectedAreaId: string | undefined,
+  coordinationId: string | undefined,
+  coordinationIds: readonly CoordinationId[],
+): CoordinationId | null {
+  const code = selectedAreaId?.trim()
+  if (code) {
+    const resolved = resolveCoordinationId(code)
+    if (resolved) return resolved
+    if (coordinationIds.length === 0 || coordinationIds.includes(code)) {
+      return code as CoordinationId
+    }
+  }
+
+  const fromUuid = resolveCoordinationId(coordinationId)
+  if (fromUuid) return fromUuid
+
+  // Antes del catálogo: conservar el UUID de sesión como id provisional.
+  const uuid = coordinationId?.trim()
+  if (uuid && coordinationIds.length === 0) {
+    return uuid as CoordinationId
+  }
+
+  return null
+}
+
+function buildProvisionalCoordination(
+  coordinationId: CoordinationId,
+): Coordination {
+  const definition = getCoordination(coordinationId)
+  return {
+    id: definition.id,
+    name: definition.name,
+    shortName: definition.shortName,
+    islandAsset: definition.islandAsset,
+    operationalStatus: 'stable',
+    responsiblePeople: [],
+    situationIds: [],
+    lastActivityAt: null,
+  }
 }
 
 function extractLegacyRelatedCodes(description: string): string[] {
@@ -195,21 +243,19 @@ export function ImpactNetworkExperience() {
   )
 
   const coordinatorMode = user?.roleCode === 'COORDINADOR'
-  const assignedCoordinationId = useMemo(() => {
-    const selectedAreaId = user?.selectedAreaId?.trim() as
-      CoordinationId | undefined
-    if (selectedAreaId && coordinationIds.includes(selectedAreaId)) {
-      return selectedAreaId
-    }
-
-    return (
-      resolveCoordinationId(user?.selectedAreaId) ??
-      resolveCoordinationId(user?.coordinationId)
-    )
-  }, [user?.coordinationId, user?.selectedAreaId, coordinationIds])
+  const assignedCoordinationId = useMemo(
+    () =>
+      resolveAssignedCoordinationId(
+        user?.selectedAreaId,
+        user?.coordinationId,
+        coordinationIds,
+      ),
+    [coordinationIds, user?.coordinationId, user?.selectedAreaId],
+  )
   const canCreateInSelectedCoordination =
     canCreateCoordinationSituations(user) &&
     selectedCoordinationId !== null &&
+    assignedCoordinationId !== null &&
     selectedCoordinationId === assignedCoordinationId
 
   const reloadSituations = useCallback(async () => {
@@ -265,17 +311,27 @@ export function ImpactNetworkExperience() {
   }, [reloadSituations])
 
   useEffect(() => {
-    if (
-      coordinatorMode &&
-      assignedCoordinationId &&
-      !coordinatorInitialFocusRef.current
-    ) {
+    if (!coordinatorMode || !assignedCoordinationId) return
+
+    if (!coordinatorInitialFocusRef.current) {
       coordinatorInitialFocusRef.current = true
       const coordinationParam = searchParams.get('coordination')
       if (!coordinationParam) {
         setSelectedCoordinationId(assignedCoordinationId)
+        return
       }
     }
+
+    // Cuando el catálogo resuelve UUID → code, alinear la selección provisional.
+    setSelectedCoordinationId((current) => {
+      if (!current) return assignedCoordinationId
+      if (current === assignedCoordinationId) return current
+      const resolvedCurrent = resolveCoordinationId(current)
+      if (resolvedCurrent === assignedCoordinationId) {
+        return assignedCoordinationId
+      }
+      return current
+    })
   }, [assignedCoordinationId, coordinatorMode, searchParams])
 
   useEffect(() => {
@@ -344,15 +400,14 @@ export function ImpactNetworkExperience() {
     return result
   }, [activeIncidents, situations])
 
-  const selectedCoordination = useMemo(
-    () =>
-      selectedCoordinationId
-        ? (coordinations.find(
-            (coordination) => coordination.id === selectedCoordinationId,
-          ) ?? null)
-        : null,
-    [coordinations, selectedCoordinationId],
-  )
+  const selectedCoordination = useMemo(() => {
+    if (!selectedCoordinationId) return null
+    return (
+      coordinations.find(
+        (coordination) => coordination.id === selectedCoordinationId,
+      ) ?? buildProvisionalCoordination(selectedCoordinationId)
+    )
+  }, [coordinations, selectedCoordinationId])
 
   const coordinationIncidents = useMemo(
     () =>
@@ -1038,6 +1093,7 @@ export function ImpactNetworkExperience() {
                             replay,
                           )}
                           coordinationSituations={coordinationIncidents}
+                          activeIncidents={activeIncidents}
                           synchronizedLabel={synchronizedLabel}
                           onIslandFocusChange={setIslandFocusActive}
                           onSelectCoordination={openCoordinationFromMap}
@@ -1119,6 +1175,9 @@ export function ImpactNetworkExperience() {
                         navigationLevel === 'institutional'
                           ? activeIncidents
                           : coordinationIncidents
+                      }
+                      incidentsLoading={
+                        navigationLevel !== 'institutional' && situationsLoading
                       }
                       globalIncidentCount={
                         networkSnapshot?.activeIncidentsCount ??

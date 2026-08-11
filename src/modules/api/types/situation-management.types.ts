@@ -34,6 +34,9 @@ export interface SituationListItem {
   createdAt: string
   updatedAt: string
   occurredAt: string
+  dueAt?: string | null
+  slaBreachedAt?: string | null
+  slaHealth?: SituationResponse['slaHealth']
   createdByUserName: string
   assignedUserName?: string | null
 }

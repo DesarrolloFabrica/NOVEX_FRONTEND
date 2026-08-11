@@ -21,8 +21,9 @@ import {
   situationOwnerCode,
   situationOwnerLabel,
 } from '@/modules/situations/utils/situationOwner'
+import { getSituationSlaHealth } from '@/modules/situations/utils/situation-sla'
 
-const OPEN_STATUSES = new Set(['OPEN', 'IN_PROGRESS'])
+const OPEN_STATUSES = new Set(['OPEN', 'IN_PROGRESS', 'RESOLVED'])
 const PENDING_RECOMMENDATION_STATUSES = new Set(['PENDING', 'IN_PROGRESS'])
 
 function situationCode(id: string): string {
@@ -167,6 +168,16 @@ async function enrichSituation(
       updatedAt: source.updatedAt,
       resolvedAt: source.resolvedAt ?? null,
       closedAt: source.closedAt ?? null,
+      dueAt: source.dueAt ?? null,
+      slaBreachedAt: source.slaBreachedAt ?? null,
+      slaHealth:
+        source.slaHealth ??
+        getSituationSlaHealth({
+          dueAt: source.dueAt,
+          status: source.status,
+          severity: source.severity,
+        }),
+      closedOnTime: source.closedOnTime ?? null,
       createdByUserId: source.createdByUserId,
       createdByUserName: source.createdByUserName || 'Usuario no identificado',
       assignedUserName: source.assignedUserName ?? null,
@@ -217,8 +228,9 @@ async function enrichSituation(
 function healthForRollup(
   active: number,
   critical: number,
+  overdue: number,
 ): OperationalHealth {
-  if (critical > 0) return 'critical'
+  if (critical > 0 || overdue > 0) return 'critical'
   if (active > 0) return 'attention'
   return 'stable'
 }
@@ -238,6 +250,7 @@ function buildCoordinationRollups(
       totalSituations: 0,
       activeSituations: 0,
       criticalSituations: 0,
+      overdueSituations: 0,
       affectedBySituations: 0,
       pendingRecommendations: 0,
       analyzedSituations: 0,
@@ -255,6 +268,7 @@ function buildCoordinationRollups(
       totalSituations: 0,
       activeSituations: 0,
       criticalSituations: 0,
+      overdueSituations: 0,
       affectedBySituations: 0,
       pendingRecommendations: 0,
       analyzedSituations: 0,
@@ -269,6 +283,12 @@ function buildCoordinationRollups(
     ) {
       existing.criticalSituations += 1
     }
+    if (
+      OPEN_STATUSES.has(situation.status) &&
+      situation.slaHealth === 'overdue'
+    ) {
+      existing.overdueSituations += 1
+    }
     existing.pendingRecommendations += situation.recommendationsPending
     if (situation.ai.hasAnalysis) existing.analyzedSituations += 1
     if (
@@ -281,6 +301,7 @@ function buildCoordinationRollups(
     existing.health = healthForRollup(
       existing.activeSituations,
       existing.criticalSituations,
+      existing.overdueSituations,
     )
     rollups.set(existing.id, existing)
 
@@ -292,6 +313,7 @@ function buildCoordinationRollups(
 
   return [...rollups.values()].sort(
     (left, right) =>
+      right.overdueSituations - left.overdueSituations ||
       right.criticalSituations - left.criticalSituations ||
       right.activeSituations - left.activeSituations ||
       right.totalSituations - left.totalSituations ||
@@ -320,6 +342,32 @@ function buildMetrics(
     })
     .filter((value): value is number => value !== null)
 
+  const closedWithDue = situations.filter(
+    (item) => item.status === 'CLOSED' && item.dueAt && item.closedAt,
+  )
+  const closedOnTimeCount = closedWithDue.filter(
+    (item) => item.closedOnTime === true,
+  ).length
+  const closureDelays = closedWithDue
+    .map((item) => {
+      const due = Date.parse(item.dueAt!)
+      const closed = Date.parse(item.closedAt!)
+      if (!Number.isFinite(due) || !Number.isFinite(closed) || closed <= due) {
+        return null
+      }
+      return Math.round((closed - due) / 60_000)
+    })
+    .filter((value): value is number => value !== null)
+
+  const overdueActiveSituations = situations.filter(
+    (item) =>
+      OPEN_STATUSES.has(item.status) && item.slaHealth === 'overdue',
+  ).length
+  const atRiskActiveSituations = situations.filter(
+    (item) =>
+      OPEN_STATUSES.has(item.status) && item.slaHealth === 'at_risk',
+  ).length
+
   return {
     totalSituations: situations.length,
     openSituations,
@@ -331,6 +379,14 @@ function buildMetrics(
         OPEN_STATUSES.has(item.status) &&
         (item.severity === 'CRITICAL' || item.severity === 'HIGH'),
     ).length,
+    overdueActiveSituations,
+    atRiskActiveSituations,
+    closedOnTimeRate:
+      closedWithDue.length > 0
+        ? Math.round((closedOnTimeCount / closedWithDue.length) * 100)
+        : null,
+    averageClosureDelayMinutes:
+      closureDelays.length > 0 ? Math.round(average(closureDelays) ?? 0) : null,
     situationsWithAnalysis: analyzed.length,
     situationsWithoutAnalysis: situations.length - analyzed.length,
     analysisCoverage:

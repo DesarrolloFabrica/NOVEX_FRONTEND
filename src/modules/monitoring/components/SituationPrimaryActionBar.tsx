@@ -95,6 +95,8 @@ export function SituationPrimaryActionBar({
       {modalOpen ? (
         <UpdateSituationStatusModal
           currentStatus={situation.status}
+          dueAt={situation.dueAt}
+          severity={situation.severity}
           isSubmitting={isUpdating}
           error={updateError}
           onClose={() => {

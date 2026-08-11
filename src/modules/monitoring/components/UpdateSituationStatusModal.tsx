@@ -15,9 +15,19 @@ import {
   type SituationOperationalStatus,
   type UpdateSituationStatusInput,
 } from '@/modules/monitoring/utils/situation-lifecycle'
+import type { SituationSeverity } from '@/modules/situations/types/situation.types'
+import {
+  CLOSURE_COMMENT_TEMPLATES,
+  formatSlaDeadlineLabel,
+  getSituationSlaHealth,
+  getSlaActionRecommendation,
+} from '@/modules/situations/utils/situation-sla'
+import { formatManagementDate } from '@/modules/monitoring/utils/situation-management.presentation'
 
 interface UpdateSituationStatusModalProps {
   currentStatus: string
+  dueAt?: string | null
+  severity?: SituationSeverity | string | null
   isSubmitting: boolean
   error: string | null
   onClose: () => void
@@ -26,6 +36,8 @@ interface UpdateSituationStatusModalProps {
 
 export function UpdateSituationStatusModal({
   currentStatus,
+  dueAt = null,
+  severity = null,
   isSubmitting,
   error,
   onClose,
@@ -40,6 +52,16 @@ export function UpdateSituationStatusModal({
   const [localError, setLocalError] = useState<string | null>(null)
   /** Estructura preparada para evidencias futuras. */
   const [evidenceIds] = useState<string[]>([])
+
+  const slaHealth = getSituationSlaHealth({
+    dueAt,
+    status: currentStatus,
+    severity,
+  })
+  const slaRecommendation = getSlaActionRecommendation({
+    status: currentStatus,
+    health: slaHealth,
+  })
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
@@ -147,6 +169,15 @@ export function UpdateSituationStatusModal({
           Estado actual: <strong>{currentLabel}</strong>. Solo se permite avanzar
           al siguiente estado del ciclo.
         </p>
+
+        {dueAt ? (
+          <div className="novex-ops-modal__sla" data-sla={slaHealth}>
+            <strong>{formatSlaDeadlineLabel(dueAt, slaHealth)}</strong>
+            <span>Límite: {formatManagementDate(dueAt)}</span>
+            {slaRecommendation ? <p>{slaRecommendation}</p> : null}
+          </div>
+        ) : null}
+
         {nextStatus === 'CLOSED' ? (
           <p className="novex-ops-modal__hint novex-ops-modal__hint--warning">
             Al cerrar, la situación sale de la Red de impacto y de la cola de
@@ -173,20 +204,38 @@ export function UpdateSituationStatusModal({
           </fieldset>
 
           {needsComment ? (
-            <label className="novex-ops-modal__comment">
-              <span>{statusCommentLabel(selectedStatus)}</span>
-              <textarea
-                value={comment}
-                required
-                rows={4}
-                maxLength={4000}
-                placeholder="Describa el motivo o comentario de forma clara…"
-                onChange={(event) => {
-                  setComment(event.target.value)
-                  setLocalError(null)
-                }}
-              />
-            </label>
+            <>
+              <div className="novex-ops-modal__templates" role="group" aria-label="Plantillas de cierre">
+                {CLOSURE_COMMENT_TEMPLATES.map((template) => (
+                  <button
+                    key={template.id}
+                    type="button"
+                    className="novex-ops-modal__template"
+                    disabled={isSubmitting}
+                    onClick={() => {
+                      setComment(template.text)
+                      setLocalError(null)
+                    }}
+                  >
+                    {template.label}
+                  </button>
+                ))}
+              </div>
+              <label className="novex-ops-modal__comment">
+                <span>{statusCommentLabel(selectedStatus)}</span>
+                <textarea
+                  value={comment}
+                  required
+                  rows={4}
+                  maxLength={4000}
+                  placeholder="Describa el motivo o comentario de forma clara…"
+                  onChange={(event) => {
+                    setComment(event.target.value)
+                    setLocalError(null)
+                  }}
+                />
+              </label>
+            </>
           ) : null}
 
           {/* Estructura preparada para adjuntar evidencias en una iteración posterior. */}

@@ -5,6 +5,7 @@ import {
   SITUATION_QUEUE_PAGE_SIZES,
   type SituationQueueQuery,
   type SituationQueueSeverityFilter,
+  type SituationQueueSlaFilter,
   type SituationQueueStatusFilter,
 } from '@/modules/monitoring/utils/situation-queue-query'
 import {
@@ -26,6 +27,7 @@ interface SituationQueueConsoleProps {
   onSearchChange: (search: string) => void
   onStatusChange: (status: SituationQueueStatusFilter) => void
   onSeverityChange: (severity: SituationQueueSeverityFilter) => void
+  onSlaChange: (sla: SituationQueueSlaFilter) => void
   onPageChange: (page: number) => void
   onPageSizeChange: (pageSize: number) => void
 }
@@ -45,6 +47,12 @@ const SEVERITY_OPTIONS: Array<{ value: SituationQueueSeverityFilter; label: stri
   { value: 'HIGH', label: SITUATION_SEVERITY_LABEL.HIGH },
   { value: 'MEDIUM', label: SITUATION_SEVERITY_LABEL.MEDIUM },
   { value: 'LOW', label: SITUATION_SEVERITY_LABEL.LOW },
+]
+
+const SLA_OPTIONS: Array<{ value: SituationQueueSlaFilter; label: string }> = [
+  { value: 'ALL', label: 'Todos los plazos' },
+  { value: 'OVERDUE', label: 'Vencidas' },
+  { value: 'AT_RISK', label: 'Por vencer' },
 ]
 
 function QueueSkeleton() {
@@ -70,6 +78,7 @@ export function SituationQueueConsole({
   onSearchChange,
   onStatusChange,
   onSeverityChange,
+  onSlaChange,
   onPageChange,
   onPageSizeChange,
 }: SituationQueueConsoleProps) {
@@ -131,6 +140,21 @@ export function SituationQueueConsole({
               }
             >
               {SEVERITY_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>Plazo</span>
+            <select
+              value={queueQuery.sla}
+              onChange={(event) =>
+                onSlaChange(event.target.value as SituationQueueSlaFilter)
+              }
+            >
+              {SLA_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>

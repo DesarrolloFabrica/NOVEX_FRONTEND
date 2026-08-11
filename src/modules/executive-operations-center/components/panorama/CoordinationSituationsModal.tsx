@@ -133,6 +133,10 @@ export function CoordinationSituationsModal({
             <strong>{coordination.activeSituations}</strong>
           </div>
           <div>
+            <span>Vencidas</span>
+            <strong>{coordination.overdueSituations}</strong>
+          </div>
+          <div>
             <span>Alta / crítica</span>
             <strong>{coordination.criticalSituations}</strong>
           </div>

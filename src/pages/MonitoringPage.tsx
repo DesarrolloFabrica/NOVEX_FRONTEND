@@ -40,6 +40,7 @@ export function MonitoringPage() {
     setQueueSearch,
     setQueueStatus,
     setQueueSeverity,
+    setQueueSla,
     setQueuePage,
     setQueuePageSize,
     applySummaryFilter,
@@ -75,6 +76,7 @@ export function MonitoringPage() {
             onSearchChange={setQueueSearch}
             onStatusFilterChange={setQueueStatus}
             onSeverityFilterChange={setQueueSeverity}
+            onSlaFilterChange={setQueueSla}
             onPageChange={setQueuePage}
             onPageSizeChange={setQueuePageSize}
             onSummaryFilter={applySummaryFilter}

@@ -4,6 +4,7 @@ import {
   OPERATIONAL_STATUS_LABEL,
   type SituationOperationalStatus,
 } from '@/modules/monitoring/utils/situation-lifecycle'
+import { getSituationSlaHealth } from '@/modules/situations/utils/situation-sla'
 
 export const SITUATION_STATUS_LABEL: Record<string, string> = {
   OPEN: OPERATIONAL_STATUS_LABEL.OPEN,
@@ -75,6 +76,8 @@ export const TIMELINE_EVENT_LABEL: Record<string, string> = {
   RECOMMENDATION_COMPLETED: 'Recomendación completada',
   CLOSED: 'Situación cerrada',
   REOPENED: 'Situación reabierta',
+  SLA_WARNING: 'Aviso de plazo',
+  SLA_BREACHED: 'Plazo vencido',
 }
 
 export function situationRef(id: string): string {
@@ -156,16 +159,44 @@ export function sortSituationsForQueue(
     CLOSED: 1,
   }
 
+  const slaWeight: Record<string, number> = {
+    overdue: 3,
+    at_risk: 2,
+    on_track: 1,
+    closed: 0,
+  }
+
   return [...situations].sort((left, right) => {
-    const statusDiff =
-      (statusWeight[right.status as SituationOperationalStatus] ?? 0) -
-      (statusWeight[left.status as SituationOperationalStatus] ?? 0)
-    if (statusDiff !== 0) return statusDiff
+    const leftHealth = getSituationSlaHealth({
+      dueAt: left.dueAt,
+      status: left.status,
+      severity: left.severity,
+    })
+    const rightHealth = getSituationSlaHealth({
+      dueAt: right.dueAt,
+      status: right.status,
+      severity: right.severity,
+    })
+
+    const overdueDiff =
+      (slaWeight[rightHealth] ?? 0) - (slaWeight[leftHealth] ?? 0)
+    if (overdueDiff !== 0) return overdueDiff
 
     const severityDiff =
       (severityWeight[right.severity] ?? 0) -
       (severityWeight[left.severity] ?? 0)
     if (severityDiff !== 0) return severityDiff
+
+    const leftDue = left.dueAt ? Date.parse(left.dueAt) : Number.POSITIVE_INFINITY
+    const rightDue = right.dueAt
+      ? Date.parse(right.dueAt)
+      : Number.POSITIVE_INFINITY
+    if (leftDue !== rightDue) return leftDue - rightDue
+
+    const statusDiff =
+      (statusWeight[right.status as SituationOperationalStatus] ?? 0) -
+      (statusWeight[left.status as SituationOperationalStatus] ?? 0)
+    if (statusDiff !== 0) return statusDiff
 
     return (
       new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()

@@ -26,6 +26,10 @@ export interface IslandNodeProps {
   role: IslandNodeRole
   riskLevel?: RiskLevel | null
   visualRisk?: RiskLevel | null
+  /** Situaciones activas de la coordinación (Nivel 01). */
+  activeSituationCount?: number
+  /** Severidad máxima entre las situaciones activas; null si no hay. */
+  statusRisk?: RiskLevel | null
   impactState?: IslandImpactState
   selected?: boolean
   onSelect?: (coordinationId: CoordinationId) => void
@@ -38,11 +42,42 @@ export interface IslandNodeProps {
   className?: string
 }
 
+const RISK_RANK: Record<RiskLevel, number> = {
+  low: 1,
+  moderate: 2,
+  high: 3,
+  critical: 4,
+}
+
+export function formatAmbientSituationLabel(activeCount: number): string {
+  if (activeCount <= 0) return 'Sin activas'
+  if (activeCount === 1) return '1 activa'
+  return `${activeCount} activas`
+}
+
+export function resolveAmbientStatusTone(
+  activeCount: number,
+  statusRisk: RiskLevel | null | undefined,
+): RiskLevel {
+  if (activeCount <= 0) return 'low'
+  if (!statusRisk) {
+    return activeCount >= 3 ? 'high' : activeCount >= 2 ? 'moderate' : 'low'
+  }
+  // Volumen alto empuja un escalón si aún no es crítico.
+  if (activeCount >= 4 && RISK_RANK[statusRisk] < RISK_RANK.critical) {
+    return statusRisk === 'high' ? 'critical' : 'high'
+  }
+  if (activeCount >= 3 && statusRisk === 'moderate') return 'high'
+  return statusRisk
+}
+
 function IslandNodeView({
   coordinationId,
   role,
   riskLevel = null,
   visualRisk = null,
+  activeSituationCount = 0,
+  statusRisk = null,
   impactState = 'idle',
   selected = false,
   onSelect,
@@ -63,6 +98,10 @@ function IslandNodeView({
     useState(desiredImageAsset)
   const risk = riskLevel ?? 'moderate'
   const tone = visualRisk ?? risk
+  const ambientStatusTone = resolveAmbientStatusTone(
+    activeSituationCount,
+    statusRisk,
+  )
   const isOrigin = role === 'origin'
   const isAmbient = role === 'ambient'
   const [hovered, setHovered] = useState(false)
@@ -123,7 +162,11 @@ function IslandNodeView({
       data-label-placement={labelPlacement}
       style={style}
       role="button"
-      aria-label={`Enfocar ${coordination.name}`}
+      aria-label={
+        isAmbient
+          ? `Enfocar ${coordination.name}. ${formatAmbientSituationLabel(activeSituationCount)}`
+          : `Enfocar ${coordination.name}`
+      }
       aria-disabled={disabled}
       tabIndex={disabled ? -1 : 0}
       onClick={handleSelect}
@@ -177,8 +220,11 @@ function IslandNodeView({
           </i>
           <b>{coordination.shortName}</b>
           {isAmbient ? (
-            <small className="propagation-island__sync">
-              Sincronizado
+            <small
+              className="propagation-island__sync"
+              data-status={ambientStatusTone}
+            >
+              {formatAmbientSituationLabel(activeSituationCount)}
               <i aria-hidden="true" />
             </small>
           ) : (
@@ -217,7 +263,9 @@ function IslandNodeView({
             {isOrigin
               ? 'Situación origen'
               : isAmbient
-                ? 'Coordinación en red'
+                ? activeSituationCount > 0
+                  ? `${formatAmbientSituationLabel(activeSituationCount)} · monitoreo`
+                  : 'Sin situaciones activas'
                 : 'Coordinación afectada'}
           </small>
         </span>

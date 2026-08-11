@@ -11718,6 +11718,136 @@ textarea {
   white-space: nowrap;
 }
 
+.novex-os[data-scene='commitments'] .novex-action-row__sla {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-self: start;
+  color: #7ea0b8;
+  font-size: 0.6rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.novex-os[data-scene='commitments'] .novex-action-row__sla i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.novex-os[data-scene='commitments'] .novex-action-row__sla[data-sla='on_track'] {
+  color: #6ee7b7;
+}
+
+.novex-os[data-scene='commitments'] .novex-action-row__sla[data-sla='at_risk'] {
+  color: #f0c36a;
+}
+
+.novex-os[data-scene='commitments'] .novex-action-row__sla[data-sla='overdue'] {
+  color: #ff7b8a;
+}
+
+.novex-ops-sla {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0 0 0.85rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid rgb(90 140 180 / 0.18);
+  border-radius: 10px;
+  background: rgb(6 20 36 / 0.45);
+}
+
+.novex-ops-sla[data-sla='at_risk'] {
+  border-color: rgb(240 195 106 / 0.28);
+}
+
+.novex-ops-sla[data-sla='overdue'] {
+  border-color: rgb(255 123 138 / 0.3);
+}
+
+.novex-ops-sla__copy {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.novex-ops-sla__copy small {
+  color: #718ba1;
+  font-size: 0.58rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.novex-ops-sla__copy strong {
+  color: #e8f3ff;
+  font-size: 0.86rem;
+}
+
+.novex-ops-sla__copy span {
+  color: #8aa0b4;
+  font-size: 0.68rem;
+}
+
+.novex-ops-sla__recommendation {
+  margin: 0;
+  color: #c5d6e6;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.novex-ops-modal__sla {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0 0 0.75rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid rgb(90 140 180 / 0.2);
+  border-radius: 8px;
+  background: rgb(8 22 38 / 0.55);
+}
+
+.novex-ops-modal__sla[data-sla='at_risk'] {
+  border-color: rgb(240 195 106 / 0.3);
+}
+
+.novex-ops-modal__sla[data-sla='overdue'] {
+  border-color: rgb(255 123 138 / 0.32);
+}
+
+.novex-ops-modal__sla strong {
+  color: #eef6ff;
+  font-size: 0.82rem;
+}
+
+.novex-ops-modal__sla span,
+.novex-ops-modal__sla p {
+  margin: 0;
+  color: #9bb0c3;
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.novex-ops-modal__templates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.55rem;
+}
+
+.novex-ops-modal__template {
+  border: 1px solid rgb(100 150 190 / 0.28);
+  border-radius: 999px;
+  padding: 0.28rem 0.65rem;
+  background: transparent;
+  color: #b7c9da;
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+
+.novex-ops-modal__template:hover {
+  border-color: rgb(120 175 230 / 0.45);
+  color: #e8f4ff;
+}
+
 .novex-os[data-scene='commitments'] .novex-action-row[data-status='open'] .novex-action-row__status,
 .novex-os[data-scene='commitments'] .novex-action-row[data-status='pending'] .novex-action-row__status {
   color: #7dd3fc;

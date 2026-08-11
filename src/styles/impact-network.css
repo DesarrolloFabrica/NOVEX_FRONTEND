@@ -11158,6 +11158,19 @@
   font-style: normal;
 }
 
+.operational-context-panel__empty--loading i {
+  border-color: rgb(80 160 230 / 0.22);
+  border-top-color: #5eb8ff;
+  color: transparent;
+  animation: operational-context-panel-spin 0.85s linear infinite;
+}
+
+@keyframes operational-context-panel-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .operational-context-panel__empty strong {
   color: #a9c1d3;
   font-size: 0.61rem;
@@ -13438,6 +13451,28 @@
   font-size: 0.4rem;
   line-height: 1.2;
   text-overflow: ellipsis;
+  letter-spacing: 0.01em;
+}
+
+.impact-network__canvas
+  .organizational-scene[data-level='institutional']
+  .organizational-scene__island
+  .propagation-island__sync[data-status='moderate'] {
+  color: #8a9db0;
+}
+
+.impact-network__canvas
+  .organizational-scene[data-level='institutional']
+  .organizational-scene__island
+  .propagation-island__sync[data-status='high'] {
+  color: #9aa6b5;
+}
+
+.impact-network__canvas
+  .organizational-scene[data-level='institutional']
+  .organizational-scene__island
+  .propagation-island__sync[data-status='critical'] {
+  color: #a8b0bc;
 }
 
 .impact-network__canvas
@@ -13451,6 +13486,30 @@
   border-radius: 50%;
   background: #44e795;
   box-shadow: 0 0 7px rgb(68 231 149 / 0.82);
+}
+
+.impact-network__canvas
+  .organizational-scene[data-level='institutional']
+  .propagation-island__sync[data-status='moderate']
+  i {
+  background: #e8c15a;
+  box-shadow: 0 0 7px rgb(232 193 90 / 0.72);
+}
+
+.impact-network__canvas
+  .organizational-scene[data-level='institutional']
+  .propagation-island__sync[data-status='high']
+  i {
+  background: #ff8a3d;
+  box-shadow: 0 0 7px rgb(255 138 61 / 0.78);
+}
+
+.impact-network__canvas
+  .organizational-scene[data-level='institutional']
+  .propagation-island__sync[data-status='critical']
+  i {
+  background: #ff465b;
+  box-shadow: 0 0 8px rgb(255 70 91 / 0.82);
 }
 
 @media (max-width: 720px) {

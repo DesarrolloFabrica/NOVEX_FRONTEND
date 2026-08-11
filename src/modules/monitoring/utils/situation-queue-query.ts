@@ -1,5 +1,6 @@
 import type { SituationListItem } from '@/modules/api/types/situation-management.types'
 import type { SituationSeverity } from '@/modules/situations/types/situation.types'
+import { getSituationSlaHealth } from '@/modules/situations/utils/situation-sla'
 
 export type SituationQueueStatusFilter =
   | 'ACTIVE'
@@ -10,10 +11,13 @@ export type SituationQueueStatusFilter =
 
 export type SituationQueueSeverityFilter = SituationSeverity | 'ALL' | 'PRIORITY'
 
+export type SituationQueueSlaFilter = 'ALL' | 'OVERDUE' | 'AT_RISK'
+
 export interface SituationQueueQuery {
   search: string
   status: SituationQueueStatusFilter
   severity: SituationQueueSeverityFilter
+  sla: SituationQueueSlaFilter
   page: number
   pageSize: number
 }
@@ -22,6 +26,7 @@ export const DEFAULT_SITUATION_QUEUE_QUERY: SituationQueueQuery = {
   search: '',
   status: 'ACTIVE',
   severity: 'ALL',
+  sla: 'ALL',
   page: 1,
   pageSize: 15,
 }
@@ -40,6 +45,27 @@ function matchesStatusFilter(
   return situation.status === status
 }
 
+export function resolveQueueSlaHealth(situation: SituationListItem) {
+  return (
+    situation.slaHealth ??
+    getSituationSlaHealth({
+      dueAt: situation.dueAt,
+      status: situation.status,
+      severity: situation.severity,
+    })
+  )
+}
+
+function matchesSlaFilter(
+  situation: SituationListItem,
+  sla: SituationQueueSlaFilter,
+): boolean {
+  if (sla === 'ALL') return true
+  const health = resolveQueueSlaHealth(situation)
+  if (sla === 'OVERDUE') return health === 'overdue'
+  return health === 'at_risk'
+}
+
 export function filterSituationsForQueue(
   situations: readonly SituationListItem[],
   query: SituationQueueQuery,
@@ -48,6 +74,10 @@ export function filterSituationsForQueue(
 
   return situations.filter((situation) => {
     if (!matchesStatusFilter(situation, query.status)) {
+      return false
+    }
+
+    if (!matchesSlaFilter(situation, query.sla)) {
       return false
     }
 

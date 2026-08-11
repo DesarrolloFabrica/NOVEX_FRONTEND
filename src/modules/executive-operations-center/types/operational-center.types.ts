@@ -40,6 +40,10 @@ export interface OperationalCenterSituation {
   updatedAt: string
   resolvedAt: string | null
   closedAt: string | null
+  dueAt: string | null
+  slaBreachedAt: string | null
+  slaHealth: 'on_track' | 'at_risk' | 'overdue' | 'closed'
+  closedOnTime: boolean | null
   createdByUserId: string
   createdByUserName: string
   assignedUserName: string | null
@@ -81,6 +85,7 @@ export interface OperationalCoordinationRollup {
   totalSituations: number
   activeSituations: number
   criticalSituations: number
+  overdueSituations: number
   affectedBySituations: number
   pendingRecommendations: number
   analyzedSituations: number
@@ -95,6 +100,10 @@ export interface OperationalCenterMetrics {
   resolvedSituations: number
   closedSituations: number
   criticalOpenSituations: number
+  overdueActiveSituations: number
+  atRiskActiveSituations: number
+  closedOnTimeRate: number | null
+  averageClosureDelayMinutes: number | null
   situationsWithAnalysis: number
   situationsWithoutAnalysis: number
   analysisCoverage: number

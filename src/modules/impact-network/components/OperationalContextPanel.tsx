@@ -22,6 +22,7 @@ interface OperationalContextPanelProps {
   coordinationsCount: number
   synchronizedCoordinationsCount?: number
   incidents: readonly ImpactIncident[]
+  incidentsLoading?: boolean
   globalIncidentCount: number
   globalRiskScore: number
   networkStatus: ImpactNetworkStatus
@@ -148,6 +149,7 @@ function OperationalContextPanelView({
   coordinationsCount,
   synchronizedCoordinationsCount,
   incidents,
+  incidentsLoading = false,
   globalIncidentCount,
   globalRiskScore,
   networkStatus,
@@ -299,6 +301,18 @@ function OperationalContextPanelView({
           </p>
         </header>
 
+        {onCreateSituation ? (
+          <div className="operational-context-panel__create">
+            <button
+              type="button"
+              className="operational-context-panel__create-btn"
+              onClick={onCreateSituation}
+            >
+              Crear situación
+            </button>
+          </div>
+        ) : null}
+
         <section className="operational-context-panel__coordination-state">
           <span
             className="operational-context-panel__status-dot"
@@ -307,7 +321,11 @@ function OperationalContextPanelView({
           <div>
             <small>Estado operacional</small>
             <strong>
-              {incidents.length > 0 ? 'Bajo seguimiento' : 'Operación estable'}
+              {incidentsLoading
+                ? 'Sincronizando…'
+                : incidents.length > 0
+                  ? 'Bajo seguimiento'
+                  : 'Operación estable'}
             </strong>
           </div>
           <span
@@ -321,12 +339,12 @@ function OperationalContextPanelView({
         <dl className="operational-context-panel__metrics operational-context-panel__metrics--compact">
           <div>
             <dt>Situaciones</dt>
-            <dd>{incidents.length}</dd>
+            <dd>{incidentsLoading ? '…' : incidents.length}</dd>
             <small>Activas</small>
           </div>
           <div>
             <dt>Riesgo promedio</dt>
-            <dd>{coordinationRiskScore}</dd>
+            <dd>{incidentsLoading ? '…' : coordinationRiskScore}</dd>
             <small>Escala 0–100</small>
           </div>
           <div>
@@ -343,29 +361,33 @@ function OperationalContextPanelView({
           </div>
         </dl>
 
-        {onCreateSituation ? (
-          <div className="operational-context-panel__create">
-            <button
-              type="button"
-              className="operational-context-panel__create-btn"
-              onClick={onCreateSituation}
-            >
-              Crear situación
-            </button>
-          </div>
-        ) : null}
-
         <section className="operational-context-panel__situations">
           <header>
             <div>
               <span>Situaciones activas</span>
-              <h3>Seleccione una situación</h3>
+              <h3>
+                {incidentsLoading
+                  ? 'Cargando situaciones…'
+                  : 'Seleccione una situación'}
+              </h3>
             </div>
-            <strong>{incidents.length}</strong>
+            <strong>{incidentsLoading ? '…' : incidents.length}</strong>
           </header>
 
           <div className="operational-context-panel__situation-list">
-            {incidents.length > 0 ? (
+            {incidentsLoading ? (
+              <div className="operational-context-panel__empty-state">
+                <div className="operational-context-panel__empty operational-context-panel__empty--loading">
+                  <i aria-hidden="true" />
+                  <div className="operational-context-panel__empty-copy">
+                    <strong>Preparando expedientes</strong>
+                    <span>
+                      Mientras tanto puede registrar una nueva situación.
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : incidents.length > 0 ? (
               paginatedIncidents.map((incident) => (
                 <motion.button
                   type="button"

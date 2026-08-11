@@ -14,6 +14,7 @@ import {
   getCoordination,
   getCoordinationIslandPreviewAsset,
   hexToRgbChannels,
+  resolveCoordinationId,
   type CoordinationId,
 } from '@/modules/impact-network/data/coordination-islands.config'
 import { CoordinationSituationNodes } from '@/modules/impact-network/components/CoordinationSituationNodes'
@@ -66,6 +67,8 @@ interface OrganizationalSceneProps {
   showAllIlluminated?: boolean
   propagationDurationLabel?: string
   coordinationSituations?: readonly ImpactIncident[]
+  /** Situaciones activas globales para el estado de cada isla en Nivel 01. */
+  activeIncidents?: readonly ImpactIncident[]
   synchronizedLabel?: string
   onIslandFocusChange?: (active: boolean) => void
   onSelectCoordination: (coordinationId: CoordinationId) => void
@@ -73,6 +76,51 @@ interface OrganizationalSceneProps {
   isImmersive?: boolean
   onToggleImmersive?: () => void
   focusOriginRequestKey?: number
+}
+
+interface IslandSituationSignal {
+  activeCount: number
+  maxRisk: RiskLevel | null
+}
+
+const RISK_RANK: Record<RiskLevel, number> = {
+  low: 1,
+  moderate: 2,
+  high: 3,
+  critical: 4,
+}
+
+function pickStrongerRisk(
+  current: RiskLevel | null,
+  next: RiskLevel | null,
+): RiskLevel | null {
+  if (!next) return current
+  if (!current) return next
+  return RISK_RANK[next] > RISK_RANK[current] ? next : current
+}
+
+/** Agrega situaciones activas por coordinación de origen (ownership). */
+function buildIslandSituationSignals(
+  incidents: readonly ImpactIncident[],
+): Map<CoordinationId, IslandSituationSignal> {
+  const signals = new Map<CoordinationId, IslandSituationSignal>()
+
+  for (const incident of incidents) {
+    if (!incident.active) continue
+    const coordinationId = resolveCoordinationId(incident.sourceAreaId)
+    if (!coordinationId) continue
+
+    const current = signals.get(coordinationId) ?? {
+      activeCount: 0,
+      maxRisk: null,
+    }
+    signals.set(coordinationId, {
+      activeCount: current.activeCount + 1,
+      maxRisk: pickStrongerRisk(current.maxRisk, incident.riskLevel),
+    })
+  }
+
+  return signals
 }
 
 interface DragState {
@@ -149,6 +197,7 @@ function OrganizationalSceneView({
   showAllIlluminated = false,
   propagationDurationLabel = '—',
   coordinationSituations = [],
+  activeIncidents = [],
   synchronizedLabel,
   onIslandFocusChange,
   onSelectCoordination,
@@ -330,6 +379,11 @@ function OrganizationalSceneView({
         ? [assignedCoordinationId]
         : coordinationIds,
     [assignedCoordinationId, coordinationIds, coordinatorMode, focusedEvent],
+  )
+
+  const islandSituationSignals = useMemo(
+    () => buildIslandSituationSignals(activeIncidents),
+    [activeIncidents],
   )
 
   const includeContextNodes = Boolean(focusedEvent && propagation)
@@ -1032,6 +1086,11 @@ function OrganizationalSceneView({
             const isFocusedIsland =
               islandFocusOpen && focusIslandId === node.coordinationId
             const hideDuringDossier = islandFocusOpen && !isFocusedIsland
+            const situationSignal = islandSituationSignals.get(
+              node.coordinationId,
+            )
+            const activeSituationCount = situationSignal?.activeCount ?? 0
+            const statusRisk = situationSignal?.maxRisk ?? null
             return (
               <IslandNode
                 key={node.coordinationId}
@@ -1045,6 +1104,8 @@ function OrganizationalSceneView({
                       ? 'moderate'
                       : riskLevel
                 }
+                activeSituationCount={activeSituationCount}
+                statusRisk={statusRisk}
                 impactState={impactState}
                 selected={isFocusedIsland}
                 sceneZoom={zoom}

@@ -12,6 +12,7 @@ import {
   paginateSituations,
   type SituationQueueQuery,
   type SituationQueueSeverityFilter,
+  type SituationQueueSlaFilter,
   type SituationQueueStatusFilter,
 } from '@/modules/monitoring/utils/situation-queue-query'
 import { sortSituationsForQueue } from '@/modules/monitoring/utils/situation-management.presentation'
@@ -43,6 +44,7 @@ interface UseSituationManagementResult {
   setQueueSearch: (search: string) => void
   setQueueStatus: (status: SituationQueueStatusFilter) => void
   setQueueSeverity: (severity: SituationQueueSeverityFilter) => void
+  setQueueSla: (sla: SituationQueueSlaFilter) => void
   setQueuePage: (page: number) => void
   setQueuePageSize: (pageSize: number) => void
   applySummaryFilter: (filter: SituationQueueStatusFilter | 'CRITICAL') => void
@@ -243,6 +245,10 @@ export function useSituationManagement(): UseSituationManagementResult {
     setQueueQuery((current) => ({ ...current, severity, page: 1 }))
   }, [])
 
+  const setQueueSla = useCallback((sla: SituationQueueSlaFilter) => {
+    setQueueQuery((current) => ({ ...current, sla, page: 1 }))
+  }, [])
+
   const setQueuePage = useCallback((page: number) => {
     setQueueQuery((current) => ({ ...current, page }))
   }, [])
@@ -293,6 +299,7 @@ export function useSituationManagement(): UseSituationManagementResult {
     setQueueSearch,
     setQueueStatus,
     setQueueSeverity,
+    setQueueSla,
     setQueuePage,
     setQueuePageSize,
     applySummaryFilter,

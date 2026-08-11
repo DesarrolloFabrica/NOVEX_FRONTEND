@@ -121,6 +121,8 @@ export function ImpactSituationCommand({
       {modalOpen ? (
         <UpdateSituationStatusModal
           currentStatus={situation.status}
+          dueAt={situation.dueAt}
+          severity={situation.severity}
           isSubmitting={isUpdating}
           error={updateError}
           onClose={() => {

@@ -507,6 +507,32 @@ export function PanoramaPage() {
           icon="check"
         />
         <MetricCard
+          label="Vencidas activas"
+          value={data.metrics.overdueActiveSituations}
+          hint={`${data.metrics.atRiskActiveSituations} por vencer`}
+          tone={
+            data.metrics.overdueActiveSituations > 0 ? 'critical' : 'stable'
+          }
+          icon="activity"
+        />
+        <MetricCard
+          label="Cierre a tiempo"
+          value={
+            data.metrics.closedOnTimeRate == null
+              ? '—'
+              : `${data.metrics.closedOnTimeRate}%`
+          }
+          hint={
+            data.metrics.averageClosureDelayMinutes == null
+              ? 'Sin cierres con plazo'
+              : `Atraso medio ${formatDuration(data.metrics.averageClosureDelayMinutes)}`
+          }
+          tone={
+            (data.metrics.closedOnTimeRate ?? 100) >= 80 ? 'stable' : 'attention'
+          }
+          icon="check"
+        />
+        <MetricCard
           label="Tiempo de registro"
           value={formatDuration(data.metrics.averageRegistrationDelayMinutes)}
           hint="Promedio desde el evento hasta la captura"
@@ -625,6 +651,7 @@ export function PanoramaPage() {
                 <th>Estado</th>
                 <th>Históricas</th>
                 <th>Activas</th>
+                <th>Vencidas</th>
                 <th>Alta/crítica</th>
                 <th>Impactos</th>
                 <th>Cobertura IA</th>
@@ -665,6 +692,7 @@ export function PanoramaPage() {
                       </td>
                       <td>{coordination.totalSituations}</td>
                       <td>{coordination.activeSituations}</td>
+                      <td>{coordination.overdueSituations}</td>
                       <td>{coordination.criticalSituations}</td>
                       <td>{coordination.affectedBySituations}</td>
                       <td>

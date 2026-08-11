@@ -58,6 +58,11 @@ export interface SituationResponse {
   lastStatusComment?: string | null
   resolvedAt?: string | null
   closedAt?: string | null
+  dueAt?: string | null
+  slaPolicyCode?: string | null
+  slaBreachedAt?: string | null
+  slaHealth?: 'on_track' | 'at_risk' | 'overdue' | 'closed'
+  closedOnTime?: boolean | null
   occurredAt: string
   createdAt: string
   updatedAt: string

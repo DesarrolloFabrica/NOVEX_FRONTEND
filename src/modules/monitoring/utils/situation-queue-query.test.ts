@@ -82,6 +82,30 @@ describe('filterSituationsForQueue', () => {
     })
     expect(filtered.map((row) => row.id)).toEqual(['4'])
   })
+
+  it('filtra situaciones vencidas', () => {
+    const withSla = [
+      item({
+        id: '1',
+        title: 'Vencida',
+        status: 'OPEN',
+        dueAt: '2020-01-01T00:00:00.000Z',
+        slaHealth: 'overdue',
+      }),
+      item({
+        id: '2',
+        title: 'A tiempo',
+        status: 'OPEN',
+        dueAt: '2099-01-01T00:00:00.000Z',
+        slaHealth: 'on_track',
+      }),
+    ]
+    const filtered = filterSituationsForQueue(withSla, {
+      ...DEFAULT_SITUATION_QUEUE_QUERY,
+      sla: 'OVERDUE',
+    })
+    expect(filtered.map((row) => row.id)).toEqual(['1'])
+  })
 })
 
 describe('paginateSituations', () => {
