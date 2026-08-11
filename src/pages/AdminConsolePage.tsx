@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import {
   fetchAdminOverview,
   updateAdminUserStatus,
@@ -51,6 +50,9 @@ export function AdminConsolePage() {
   const [loading, setLoading] = useState(true)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [pendingStatusUser, setPendingStatusUser] = useState<AdminUser | null>(
+    null,
+  )
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -79,7 +81,9 @@ export function AdminConsolePage() {
     )
   }, [data.users, query])
 
-  async function toggleUser(user: AdminUser) {
+  async function confirmToggleUser() {
+    if (!pendingStatusUser) return
+    const user = pendingStatusUser
     const status = user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
     setUpdatingId(user.id)
     setError(null)
@@ -91,6 +95,7 @@ export function AdminConsolePage() {
           item.id === updated.id ? updated : item,
         ),
       }))
+      setPendingStatusUser(null)
     } catch (updateError) {
       setError(getErrorMessage(updateError))
     } finally {
@@ -113,7 +118,7 @@ export function AdminConsolePage() {
               <NovexProductHeader
                 eyebrow="Administración de plataforma"
                 title="Control del sistema"
-                context="Usuarios, acceso, catálogos y soporte operacional"
+                context="Usuarios, acceso, catálogos y configuración institucional"
                 help={
                   <p>
                     Administre el acceso y consulte la configuración efectiva de
@@ -148,21 +153,6 @@ export function AdminConsolePage() {
                   <strong>{data.permissions.length}</strong>
                   <span>Permisos centralizados</span>
                 </article>
-              </section>
-
-              <section
-                className="novex-admin__support"
-                data-tour="role-preview"
-              >
-                <div>
-                  <span>Modo soporte</span>
-                  <strong>Previsualizar una experiencia por rol</strong>
-                </div>
-                <div className="novex-admin__support-links">
-                  <Link to="/dashboard?preview=COORDINADOR">Coordinador</Link>
-                  <Link to="/dashboard?preview=ANALISTA">Analista</Link>
-                  <Link to="/dashboard?preview=DIRECTOR">Director</Link>
-                </div>
               </section>
 
               <div className="novex-admin__workspace">
@@ -256,7 +246,7 @@ export function AdminConsolePage() {
                                     type="button"
                                     className="novex-admin__row-action"
                                     disabled={updatingId === user.id}
-                                    onClick={() => void toggleUser(user)}
+                                    onClick={() => setPendingStatusUser(user)}
                                   >
                                     {updatingId === user.id
                                       ? 'Guardando…'
@@ -322,6 +312,75 @@ export function AdminConsolePage() {
                 </section>
               </div>
             </main>
+            {pendingStatusUser ? (
+              <div className="novex-ops-modal" role="presentation">
+                <button
+                  type="button"
+                  className="novex-ops-modal__backdrop"
+                  aria-label="Cerrar confirmación"
+                  disabled={updatingId === pendingStatusUser.id}
+                  onClick={() => setPendingStatusUser(null)}
+                />
+                <div
+                  className="novex-ops-modal__dialog"
+                  role="alertdialog"
+                  aria-modal="true"
+                  aria-labelledby="novex-admin-status-title"
+                  aria-describedby="novex-admin-status-desc"
+                >
+                  <header>
+                    <div>
+                      <p>Confirmación requerida</p>
+                      <h2 id="novex-admin-status-title">
+                        {pendingStatusUser.status === 'ACTIVE'
+                          ? 'Desactivar usuario'
+                          : 'Activar usuario'}
+                      </h2>
+                    </div>
+                    <button
+                      type="button"
+                      className="novex-ops-modal__close"
+                      disabled={updatingId === pendingStatusUser.id}
+                      onClick={() => setPendingStatusUser(null)}
+                    >
+                      Cerrar
+                    </button>
+                  </header>
+                  <p className="novex-ops-modal__hint" id="novex-admin-status-desc">
+                    {pendingStatusUser.status === 'ACTIVE'
+                      ? `¿Confirma desactivar a ${pendingStatusUser.fullName}? Perderá el acceso a NOVEX hasta que se reactive.`
+                      : `¿Confirma activar a ${pendingStatusUser.fullName}? Recuperará el acceso según su rol vigente.`}
+                  </p>
+                  <p className="novex-ops-modal__hint">
+                    <strong>{pendingStatusUser.email}</strong>
+                    {' · '}
+                    {pendingStatusUser.roleName}
+                  </p>
+                  <footer className="novex-admin__confirm-actions">
+                    <button
+                      type="button"
+                      className="novex-ops-modal__secondary"
+                      disabled={updatingId === pendingStatusUser.id}
+                      onClick={() => setPendingStatusUser(null)}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      className="novex-ops-modal__primary"
+                      disabled={updatingId === pendingStatusUser.id}
+                      onClick={() => void confirmToggleUser()}
+                    >
+                      {updatingId === pendingStatusUser.id
+                        ? 'Guardando…'
+                        : pendingStatusUser.status === 'ACTIVE'
+                          ? 'Sí, desactivar'
+                          : 'Sí, activar'}
+                    </button>
+                  </footer>
+                </div>
+              </div>
+            ) : null}
           </ScreenDeck>
         </MainScreen>
       </NovexFrame>

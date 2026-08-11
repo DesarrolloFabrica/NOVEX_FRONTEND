@@ -142,8 +142,7 @@
   background: rgb(163 255 92 / 0.14);
 }
 
-.novex-role-dashboard__analyst-action,
-.novex-admin__support {
+.novex-role-dashboard__analyst-action {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -393,34 +392,12 @@
   color: #7892ae;
   font-size: 0.68rem;
 }
-.novex-admin__support > div:first-child {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-.novex-admin__support > div:first-child span {
-  color: #4adcf9;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-.novex-admin__support > div:first-child strong {
-  font-size: 0.82rem;
-}
-.novex-admin__support-links {
+.novex-admin__confirm-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
-}
-.novex-admin__support-links a {
-  padding: 7px 11px;
-  border: 1px solid rgb(75 206 235 / 0.18);
-  border-radius: 8px;
-  color: #bfeefa;
-  font-size: 0.7rem;
-  text-decoration: none;
-  background: rgb(12 43 56 / 0.48);
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
 }
 .novex-admin__workspace {
   display: grid;
@@ -885,7 +862,6 @@
     padding: 10px;
   }
   .novex-role-dashboard__hero,
-  .novex-admin__support,
   .novex-role-dashboard__analyst-action {
     align-items: stretch;
     flex-direction: column;
