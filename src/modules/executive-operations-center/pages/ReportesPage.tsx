@@ -5,7 +5,9 @@ import {
   DataState,
   MetricCard,
   OperationsPageHeader,
+  OperationsPagination,
   OperationsPanel,
+  paginateItems,
   SeverityPill,
   StatusPill,
 } from '@/modules/executive-operations-center/components/shared/OperationalCenterUI'
@@ -15,6 +17,7 @@ import {
   formatConfidence,
   formatDateTime,
   formatRelativeTime,
+  isInstitutionalAuditEvent,
   severityLabel,
   statusLabel,
 } from '@/modules/executive-operations-center/utils/operational-center.presentation'
@@ -22,7 +25,10 @@ import type { OperationalAuditEvent } from '@/modules/executive-operations-cente
 import { NovexIcon } from '@/shared/components/NovexIcon'
 
 type AiFilter = 'all' | 'with' | 'without' | 'reanalyzed'
-type EventFilter = 'all' | 'human' | 'ai'
+type EventFilter = 'relevant' | 'human' | 'ai'
+
+const INVENTORY_PAGE_SIZE = 15
+const TIMELINE_PAGE_SIZE = 5
 
 export function ReportesPage() {
   const { data, status, error, reload } = useExecutiveOperations()
@@ -30,8 +36,9 @@ export function ReportesPage() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [severityFilter, setSeverityFilter] = useState('all')
   const [aiFilter, setAiFilter] = useState<AiFilter>('all')
-  const [eventFilter, setEventFilter] = useState<EventFilter>('all')
-  const [visibleRows, setVisibleRows] = useState(25)
+  const [eventFilter, setEventFilter] = useState<EventFilter>('relevant')
+  const [timelinePage, setTimelinePage] = useState(1)
+  const [inventoryPage, setInventoryPage] = useState(1)
   const [selectedSituationId, setSelectedSituationId] = useState<string | null>(null)
 
   const filteredSituations = useMemo(() => {
@@ -60,16 +67,40 @@ export function ReportesPage() {
     })
   }, [aiFilter, data, query, severityFilter, statusFilter])
 
+  const pagedSituations = useMemo(
+    () => paginateItems(filteredSituations, inventoryPage, INVENTORY_PAGE_SIZE),
+    [filteredSituations, inventoryPage],
+  )
+
   const filteredEvents = useMemo(
     () =>
-      (data?.auditEvents ?? []).filter(
-        (event) =>
-          eventFilter === 'all' ||
-          (eventFilter === 'ai' && event.isAiEvent) ||
-          (eventFilter === 'human' && !event.isAiEvent),
-      ),
+      (data?.auditEvents ?? []).filter((event) => {
+        if (!isInstitutionalAuditEvent(event.eventType)) return false
+        if (eventFilter === 'ai') return event.isAiEvent
+        if (eventFilter === 'human') return !event.isAiEvent
+        return true
+      }),
     [data, eventFilter],
   )
+
+  const pagedEvents = useMemo(
+    () => paginateItems(filteredEvents, timelinePage, TIMELINE_PAGE_SIZE),
+    [filteredEvents, timelinePage],
+  )
+
+  const hasInstitutionalEvents = useMemo(
+    () => (data?.auditEvents ?? []).some((event) => isInstitutionalAuditEvent(event.eventType)),
+    [data],
+  )
+
+  function resetInventoryPage() {
+    setInventoryPage(1)
+  }
+
+  function changeEventFilter(filter: EventFilter) {
+    setEventFilter(filter)
+    setTimelinePage(1)
+  }
 
   if (status !== 'ready' || !data) {
     return (
@@ -193,7 +224,7 @@ export function ReportesPage() {
         <MetricCard
           label="Eventos trazables"
           value={data.metrics.auditEventCount}
-          hint="Movimientos en líneas de tiempo"
+          hint="Total en historiales de expediente"
           icon="activity"
         />
         <MetricCard
@@ -218,39 +249,67 @@ export function ReportesPage() {
         />
       </div>
 
-      <div className="eoc-audit-overview">
-        <OperationsPanel
-          eyebrow="Actividad verificable"
-          title="Línea de tiempo institucional"
-          description="Movimientos registrados por usuarios, sistema e inteligencia artificial."
-          action={
-            <div className="eoc-segmented" aria-label="Filtrar eventos por origen">
-              {(['all', 'human', 'ai'] as EventFilter[]).map((filter) => (
-                <button
-                  key={filter}
-                  type="button"
-                  className={eventFilter === filter ? 'is-active' : ''}
-                  onClick={() => setEventFilter(filter)}
-                >
-                  {filter === 'all' ? 'Todos' : filter === 'human' ? 'Personas' : 'IA'}
-                </button>
-              ))}
-            </div>
-          }
-        >
-          <ol className="eoc-audit-timeline">
-            {filteredEvents.slice(0, 10).map((event) => (
-              <AuditEventRow
-                key={event.id}
-                event={event}
-                onOpen={() => setSelectedSituationId(event.situationId)}
-              />
-            ))}
-          </ol>
-          {filteredEvents.length === 0 ? (
-            <div className="eoc-inline-empty">No hay eventos para este filtro.</div>
-          ) : null}
-        </OperationsPanel>
+      <div
+        className={
+          hasInstitutionalEvents
+            ? 'eoc-audit-overview'
+            : 'eoc-audit-overview eoc-audit-overview--compact'
+        }
+      >
+        {hasInstitutionalEvents ? (
+          <OperationsPanel
+            eyebrow="Actividad verificable"
+            title="Línea de tiempo institucional"
+            description="Hitos decisivos: creación, cambios de estado o severidad, cierre, evidencias y análisis IA. El historial fino de cada expediente está en Auditar."
+            action={
+              <div className="eoc-segmented" aria-label="Filtrar eventos por origen">
+                {(['relevant', 'human', 'ai'] as EventFilter[]).map((filter) => (
+                  <button
+                    key={filter}
+                    type="button"
+                    className={eventFilter === filter ? 'is-active' : ''}
+                    onClick={() => changeEventFilter(filter)}
+                  >
+                    {filter === 'relevant'
+                      ? 'Relevantes'
+                      : filter === 'human'
+                        ? 'Personas'
+                        : 'IA'}
+                  </button>
+                ))}
+              </div>
+            }
+          >
+            {filteredEvents.length > 0 ? (
+              <>
+                <ol className="eoc-audit-timeline">
+                  {pagedEvents.map((event) => (
+                    <AuditEventRow
+                      key={event.id}
+                      event={event}
+                      onOpen={() => setSelectedSituationId(event.situationId)}
+                    />
+                  ))}
+                </ol>
+                <OperationsPagination
+                  page={timelinePage}
+                  pageSize={TIMELINE_PAGE_SIZE}
+                  total={filteredEvents.length}
+                  onPageChange={setTimelinePage}
+                  label="hitos"
+                />
+              </>
+            ) : (
+              <div className="eoc-inline-empty eoc-inline-empty--compact">
+                {eventFilter === 'ai'
+                  ? 'No hay hitos de IA en este periodo.'
+                  : eventFilter === 'human'
+                    ? 'No hay hitos de personas en este periodo.'
+                    : 'No hay hitos relevantes en este periodo.'}
+              </div>
+            )}
+          </OperationsPanel>
+        ) : null}
 
         <div className="eoc-stack">
           <OperationsPanel eyebrow="Origen del registro" title="Principales autores">
@@ -298,14 +357,20 @@ export function ReportesPage() {
               value={query}
               onChange={(event) => {
                 setQuery(event.target.value)
-                setVisibleRows(25)
+                resetInventoryPage()
               }}
               placeholder="Buscar código, situación, autor, área o categoría…"
             />
           </label>
           <label>
             <span>Estado</span>
-            <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+            <select
+              value={statusFilter}
+              onChange={(event) => {
+                setStatusFilter(event.target.value)
+                resetInventoryPage()
+              }}
+            >
               <option value="all">Todos</option>
               <option value="OPEN">Abiertas</option>
               <option value="IN_PROGRESS">En gestión</option>
@@ -315,7 +380,13 @@ export function ReportesPage() {
           </label>
           <label>
             <span>Severidad</span>
-            <select value={severityFilter} onChange={(event) => setSeverityFilter(event.target.value)}>
+            <select
+              value={severityFilter}
+              onChange={(event) => {
+                setSeverityFilter(event.target.value)
+                resetInventoryPage()
+              }}
+            >
               <option value="all">Todas</option>
               <option value="CRITICAL">Crítica</option>
               <option value="HIGH">Alta</option>
@@ -325,7 +396,13 @@ export function ReportesPage() {
           </label>
           <label>
             <span>Inteligencia IA</span>
-            <select value={aiFilter} onChange={(event) => setAiFilter(event.target.value as AiFilter)}>
+            <select
+              value={aiFilter}
+              onChange={(event) => {
+                setAiFilter(event.target.value as AiFilter)
+                resetInventoryPage()
+              }}
+            >
               <option value="all">Todos</option>
               <option value="with">Con análisis</option>
               <option value="without">Sin análisis</option>
@@ -340,7 +417,7 @@ export function ReportesPage() {
               setStatusFilter('all')
               setSeverityFilter('all')
               setAiFilter('all')
-              setVisibleRows(25)
+              resetInventoryPage()
             }}
           >
             Limpiar
@@ -369,7 +446,7 @@ export function ReportesPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredSituations.slice(0, visibleRows).map((situation) => (
+              {pagedSituations.map((situation) => (
                 <tr key={situation.id}>
                   <td>
                     <span className="eoc-table__primary eoc-table__primary--wide">
@@ -446,16 +523,15 @@ export function ReportesPage() {
 
         {filteredSituations.length === 0 ? (
           <div className="eoc-inline-empty">No hay expedientes que coincidan con los filtros.</div>
-        ) : null}
-        {visibleRows < filteredSituations.length ? (
-          <button
-            type="button"
-            className="eoc-load-more"
-            onClick={() => setVisibleRows((current) => current + 25)}
-          >
-            Mostrar 25 más
-          </button>
-        ) : null}
+        ) : (
+          <OperationsPagination
+            page={inventoryPage}
+            pageSize={INVENTORY_PAGE_SIZE}
+            total={filteredSituations.length}
+            onPageChange={setInventoryPage}
+            label="expedientes"
+          />
+        )}
       </OperationsPanel>
 
       {selectedSituationId ? (

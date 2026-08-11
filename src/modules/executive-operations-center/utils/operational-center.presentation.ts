@@ -93,13 +93,41 @@ export function eventTypeLabel(eventType: string): string {
   const labels: Record<string, string> = {
     SITUATION_CREATED: 'Registro creado',
     STATUS_CHANGED: 'Estado actualizado',
+    SEVERITY_CHANGED: 'Severidad actualizada',
+    CLOSED: 'Expediente cerrado',
+    REOPENED: 'Expediente reabierto',
+    ATTACHMENT_ADDED: 'Evidencia agregada',
+    EVIDENCE_ADDED: 'Evidencia agregada',
+    AI_ANALYZED: 'Análisis IA completado',
     AI_ANALYSIS_COMPLETED: 'Análisis IA completado',
+    AI_ANALYSIS_FAILED: 'Análisis IA fallido',
     AI_REANALYZED: 'Reanálisis IA',
     AI_ANALYSIS_VERSION_CREATED: 'Nueva versión IA',
-    EVIDENCE_ADDED: 'Evidencia agregada',
+    RECOMMENDATION_GENERATED: 'Recomendación generada',
     RECOMMENDATION_UPDATED: 'Recomendación actualizada',
   }
   return labels[eventType] ?? eventType.replaceAll('_', ' ').toLowerCase()
+}
+
+/** Hitos útiles para dirección/admin; el detalle fino queda en Auditar. */
+const INSTITUTIONAL_AUDIT_EVENT_TYPES = new Set([
+  'SITUATION_CREATED',
+  'STATUS_CHANGED',
+  'SEVERITY_CHANGED',
+  'CLOSED',
+  'REOPENED',
+  'ATTACHMENT_ADDED',
+  'EVIDENCE_ADDED',
+  'AI_ANALYZED',
+  'AI_ANALYSIS_COMPLETED',
+  'AI_ANALYSIS_FAILED',
+  'AI_REANALYZED',
+  'AI_ANALYSIS_VERSION_CREATED',
+  'RECOMMENDATION_GENERATED',
+])
+
+export function isInstitutionalAuditEvent(eventType: string): boolean {
+  return INSTITUTIONAL_AUDIT_EVENT_TYPES.has(eventType)
 }
 
 export function situationAge(createdAt: string): string {

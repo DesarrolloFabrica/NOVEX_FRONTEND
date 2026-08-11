@@ -2141,6 +2141,12 @@
   font-size: 0.65rem;
 }
 
+.eoc-inline-empty--compact {
+  min-height: 2.4rem;
+  justify-content: flex-start;
+  padding: 0.15rem 0 0.35rem;
+}
+
 /* Semántica */
 
 .eoc-pill {
@@ -2674,7 +2680,18 @@
 
 /* Auditoría */
 
-.eoc-audit-overview { grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.65fr); }
+.eoc-audit-overview { grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.85fr); align-items: start; }
+.eoc-audit-overview--compact { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.eoc-audit-overview--compact > .eoc-stack { display: contents; }
+.eoc-audit-overview > .eoc-panel .eoc-pagination {
+  margin-top: 0.35rem;
+}
+.eoc-audit-overview .eoc-panel__header p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
 .eoc-segmented { display: inline-flex; padding: 0.15rem; border: 1px solid rgb(108 153 216 / 0.13); border-radius: 7px; background: rgb(3 10 22 / 0.55); }
 .eoc-segmented button { padding: 0.25rem 0.45rem; border: 0; border-radius: 5px; color: #627995; background: transparent; font-size: 0.48rem; cursor: pointer; }
 .eoc-segmented button.is-active { color: #bfeefa; background: rgb(30 99 119 / 0.3); }
@@ -2685,11 +2702,11 @@
 .eoc-audit-timeline li[data-ai] .eoc-audit-timeline__rail > i { border-color: rgb(164 105 238 / 0.24); color: #b687ef; }
 .eoc-audit-timeline__rail > span { width: 1px; min-height: 1.8rem; flex: 1; background: rgb(106 150 212 / 0.11); }
 .eoc-audit-timeline > li:last-child .eoc-audit-timeline__rail > span { display: none; }
-.eoc-audit-timeline li > div:last-child { min-width: 0; padding-bottom: 0.65rem; }
+.eoc-audit-timeline li > div:last-child { min-width: 0; padding-bottom: 0.4rem; }
 .eoc-audit-timeline li div > span { color: #5e748e; font-size: 0.45rem; }
 .eoc-audit-timeline li div > button { display: block; max-width: 100%; margin-top: 0.12rem; overflow: hidden; padding: 0; border: 0; color: #d3deec; background: transparent; font-size: 0.58rem; font-weight: 620; text-align: left; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
 .eoc-audit-timeline li div > button:hover { color: #67e1ff; }
-.eoc-audit-timeline li p { display: -webkit-box; margin: 0.18rem 0; overflow: hidden; color: #70839c; font-size: 0.49rem; line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.eoc-audit-timeline li p { display: -webkit-box; margin: 0.12rem 0; overflow: hidden; color: #70839c; font-size: 0.49rem; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
 .eoc-audit-timeline li small { color: #526983; font-size: 0.43rem; }
 
 .eoc-ranking-list { display: grid; }
@@ -2742,6 +2759,7 @@
   .eoc-content-grid--panorama,
   .eoc-ai-overview,
   .eoc-audit-overview { grid-template-columns: 1fr; }
+  .eoc-audit-overview--compact { grid-template-columns: 1fr; }
   .eoc-ai-analysis-list { grid-template-columns: 1fr; }
 }
 
