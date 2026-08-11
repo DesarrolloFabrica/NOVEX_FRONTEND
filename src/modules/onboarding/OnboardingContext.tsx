@@ -114,6 +114,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const pause = useCallback(() => setActive(false), [])
   const skip = finish
   const resume = useCallback(() => {
+    if (steps.length === 0) return
     setActive(true)
     const currentStep = steps[stepIndex]
     if (
@@ -126,6 +127,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     goTo(stepIndex)
   }, [goTo, stepIndex, steps])
   const restart = useCallback(() => {
+    if (steps.length === 0) return
     setActive(true)
     setStepIndex(0)
     try {
@@ -149,6 +151,24 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       return
     if (autoStartedForUserRef.current === user.id) return
     if (autoStartTimerRef.current !== null) return
+
+    // Roles sin recorrido (ADMIN): cerrar el gate sin overlay.
+    if (steps.length === 0) {
+      autoStartedForUserRef.current = user.id
+      void (async () => {
+        try {
+          await completeOnboarding()
+          try {
+            localStorage.setItem(storageKey, 'completed')
+          } catch {
+            /* privado */
+          }
+        } catch {
+          /* reintentará en la próxima sesión */
+        }
+      })()
+      return
+    }
 
     let local: string | null = null
     try {
@@ -174,7 +194,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       autoStartTimerRef.current = null
       autoStartedForUserRef.current = user.id
       setActive(true)
-      // Navega a la ruta del paso guardado (crítico para ADMIN/DIRECTOR/ANALISTA).
+      // Navega a la ruta del paso guardado (crítico para DIRECTOR/ANALISTA).
       goTo(Math.min(Math.max(0, saved), steps.length - 1))
     }, 500)
     autoStartTimerRef.current = timer
@@ -188,6 +208,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   }, [
     active,
     bootSplashActive,
+    completeOnboarding,
     goTo,
     isAuthenticated,
     steps.length,

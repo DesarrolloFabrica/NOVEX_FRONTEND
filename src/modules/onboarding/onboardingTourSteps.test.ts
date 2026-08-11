@@ -13,10 +13,8 @@ describe('getOnboardingSteps', () => {
     )
   })
 
-  it('arranca el admin en /admin', () => {
-    const [first] = getOnboardingSteps('ADMIN')
-    expect(first.route).toBe('/admin')
-    expect(first.target).toBe('[data-tour="admin-console"]')
+  it('no ofrece tutorial al administrador', () => {
+    expect(getOnboardingSteps('ADMIN')).toEqual([])
   })
 
   it('acompaña al analista por el flujo operacional completo', () => {
@@ -74,12 +72,5 @@ describe('getOnboardingSteps', () => {
     const [welcome] = getOnboardingSteps('COORDINADOR')
 
     expect(welcome.route).toBe('/red-impacto')
-  })
-
-  it('limita el recorrido administrativo a control y soporte por rol', () => {
-    expect(getOnboardingSteps('ADMIN').map((step) => step.id)).toEqual([
-      'admin',
-      'support',
-    ])
   })
 })

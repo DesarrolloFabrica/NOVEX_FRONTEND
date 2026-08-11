@@ -10,11 +10,12 @@ interface NovexUserMenuProps {
 
 export function NovexUserMenu({ onLogout }: NovexUserMenuProps) {
   const { user, logout } = useAuth()
-  const { restart, resume } = useOnboarding()
+  const { restart, resume, steps } = useOnboarding()
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const firstName = user?.name?.split(' ')[0] ?? 'Operador'
   const role = getRoleDisplayName(user)
+  const tutorialAvailable = steps.length > 0
 
   useEffect(() => {
     if (!open) return
@@ -75,20 +76,22 @@ export function NovexUserMenu({ onLogout }: NovexUserMenuProps) {
             </div>
           </div>
           <div className="novex-user-menu__items">
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                setOpen(false)
-                if (user?.onboardingCompleted) restart()
-                else resume()
-              }}
-            >
-              <NovexIcon name="sparkles" />
-              {user?.onboardingCompleted
-                ? 'Ver tutorial nuevamente'
-                : 'Continuar tutorial'}
-            </button>
+            {tutorialAvailable ? (
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setOpen(false)
+                  if (user?.onboardingCompleted) restart()
+                  else resume()
+                }}
+              >
+                <NovexIcon name="sparkles" />
+                {user?.onboardingCompleted
+                  ? 'Ver tutorial nuevamente'
+                  : 'Continuar tutorial'}
+              </button>
+            ) : null}
           </div>
           <button
             type="button"

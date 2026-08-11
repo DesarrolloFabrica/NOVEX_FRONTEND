@@ -232,30 +232,10 @@ const EXECUTIVE_FLOW: OnboardingTourStep[] = [
   },
 ]
 
-const ADMIN_FLOW: OnboardingTourStep[] = [
-  {
-    id: 'admin',
-    route: '/admin',
-    target: '[data-tour="admin-console"]',
-    eyebrow: 'Administración',
-    title: 'Control central de la plataforma',
-    description:
-      'Usuarios, roles, coordinaciones, permisos y sistema viven en este espacio.',
-    expectation: 'Los datos provienen de los catálogos vigentes del backend.',
-  },
-  {
-    id: 'support',
-    route: '/admin',
-    target: '[data-tour="role-preview"]',
-    eyebrow: 'Soporte por rol',
-    title: 'Vea NOVEX desde la perspectiva de cada equipo',
-    description:
-      'Entre a cualquier dashboard sin alterar el rol ni los permisos de su sesión.',
-    expectation: 'Siempre podrá regresar al control administrativo.',
-  },
-]
+const ADMIN_FLOW: OnboardingTourStep[] = []
 
 export function getOnboardingSteps(role: NovexRoleCode): OnboardingTourStep[] {
+  // Admin opera sin recorrido guiado: la consola es su espacio principal.
   if (role === 'ADMIN') return ADMIN_FLOW
   if (role === 'DIRECTOR') return [SHARED_INTRO, ...EXECUTIVE_FLOW]
   if (role === 'ANALISTA')
