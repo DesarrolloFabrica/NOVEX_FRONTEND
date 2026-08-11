@@ -209,13 +209,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const completeOnboarding = useCallback(async () => {
     if (!state.user || state.user.onboardingCompleted) return
     const current = state.user
-    try {
-      const updated = await completeOnboardingRequest(current)
-      writeAuthSession(updated)
-      dispatch({ type: 'AUTH_SUCCESS', user: updated })
-    } catch (error) {
-      dispatch({ type: 'AUTH_ERROR', error: getErrorMessage(error) })
-    }
+    const updated = await completeOnboardingRequest(current)
+    writeAuthSession(updated)
+    dispatch({ type: 'AUTH_SUCCESS', user: updated })
   }, [state.user])
 
   const saveOnboardingProgress = useCallback(

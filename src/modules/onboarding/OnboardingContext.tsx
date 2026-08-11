@@ -11,7 +11,10 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { normalizeRoleCode } from '@/modules/auth/utils/roleExperience'
-import { readOnboardingSituation } from './onboardingFirstSituation'
+import {
+  clearOnboardingSituation,
+  readOnboardingSituation,
+} from './onboardingFirstSituation'
 import { getOnboardingSteps } from './onboardingTourSteps'
 
 interface OnboardingContextValue {
@@ -83,13 +86,21 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
   const finish = useCallback(() => {
     setActive(false)
-    try {
-      localStorage.setItem(storageKey, 'completed')
-    } catch {
-      /* privado */
-    }
-    void completeOnboarding()
-  }, [completeOnboarding, storageKey])
+    void (async () => {
+      try {
+        await completeOnboarding()
+        try {
+          localStorage.setItem(storageKey, 'completed')
+        } catch {
+          /* privado */
+        }
+        clearOnboardingSituation(user?.id)
+      } catch {
+        // Si falla el backend, no marcar como completado en local:
+        // el tour podrá reanudarse y no se pierde el gate institucional.
+      }
+    })()
+  }, [completeOnboarding, storageKey, user?.id])
 
   const next = useCallback(() => {
     if (stepIndex >= steps.length - 1) {
@@ -123,7 +134,8 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       /* privado */
     }
     void saveOnboardingProgress(0, false)
-    if (location.pathname !== steps[0]?.route) navigate(steps[0]?.route ?? '/')
+    const firstRoute = steps[0]?.route ?? '/'
+    if (location.pathname !== firstRoute) navigate(firstRoute)
   }, [location.pathname, navigate, saveOnboardingProgress, steps, storageKey])
 
   useEffect(() => {
@@ -144,15 +156,26 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     } catch {
       /* privado */
     }
-    if (local === 'completed') return
+    // Solo el backend es fuente de verdad para omitir el tour.
+    // Si local dice completed pero el usuario aún no completó en servidor,
+    // limpiamos el espejo local y reanudamos el recorrido.
+    if (local === 'completed') {
+      try {
+        localStorage.removeItem(storageKey)
+      } catch {
+        /* privado */
+      }
+      local = null
+    }
     const saved =
       local && /^\d+$/.test(local) ? Number(local) : user.onboardingStep
     const timer = window.setTimeout(() => {
       if (autoStartTimerRef.current !== timer) return
       autoStartTimerRef.current = null
-      setStepIndex(Math.min(saved, steps.length - 1))
-      setActive(true)
       autoStartedForUserRef.current = user.id
+      setActive(true)
+      // Navega a la ruta del paso guardado (crítico para ADMIN/DIRECTOR/ANALISTA).
+      goTo(Math.min(Math.max(0, saved), steps.length - 1))
     }, 500)
     autoStartTimerRef.current = timer
 
@@ -162,7 +185,15 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         autoStartTimerRef.current = null
       }
     }
-  }, [active, bootSplashActive, isAuthenticated, steps.length, storageKey, user])
+  }, [
+    active,
+    bootSplashActive,
+    goTo,
+    isAuthenticated,
+    steps.length,
+    storageKey,
+    user,
+  ])
 
   const value = useMemo(
     () => ({

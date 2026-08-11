@@ -293,7 +293,8 @@ export function OperationalEventWizard() {
   }
 
   function handleAnalysisComplete(situationId: string) {
-    clearOnboardingSituation(user?.id)
+    // Conservar el ID de onboarding para que el tour pueda reabrir /gestion
+    // con la misma situación en pasos posteriores (historial → gestión).
     clearSituationCapturePersistence()
     navigate(`/gestion?situation=${encodeURIComponent(situationId)}`, {
       replace: true,
@@ -301,7 +302,6 @@ export function OperationalEventWizard() {
   }
 
   function handleViewDossier(situationId: string) {
-    clearOnboardingSituation(user?.id)
     clearSituationCapturePersistence()
     navigate(`/gestion?situation=${encodeURIComponent(situationId)}`, {
       replace: true,

@@ -8,6 +8,15 @@ describe('getOnboardingSteps', () => {
     expect(steps.every((step) => step.route === '/dashboard')).toBe(true)
     expect(steps.some((step) => step.id === 'capture')).toBe(false)
     expect(steps.some((step) => step.id === 'trends')).toBe(true)
+    expect(steps.find((step) => step.id === 'impact')?.target).toBe(
+      '[data-tour="impact-summary"]',
+    )
+  })
+
+  it('arranca el admin en /admin', () => {
+    const [first] = getOnboardingSteps('ADMIN')
+    expect(first.route).toBe('/admin')
+    expect(first.target).toBe('[data-tour="admin-console"]')
   })
 
   it('acompaña al analista por el flujo operacional completo', () => {
@@ -42,7 +51,7 @@ describe('getOnboardingSteps', () => {
       '[data-tour="analysis-stage"]',
     )
     expect(steps.find((step) => step.id === 'analysis')?.advanceOnTarget).toBe(
-      '[data-tour="situation-management"]',
+      '[data-tour="ai-report"]',
     )
     expect(steps.find((step) => step.id === 'analysis')?.lockNavigation).toBe(
       true,
@@ -51,8 +60,11 @@ describe('getOnboardingSteps', () => {
       steps.find((step) => step.id === 'report-detail')
         ?.advanceOnVisibleTarget,
     ).toBe('[data-tour="report-end"]')
-    expect(steps.find((step) => step.id === 'status')?.target).toBe(
-      '[data-tour="status-update-trigger"]',
+    expect(steps.find((step) => step.id === 'status')?.target).toContain(
+      'status-update-trigger',
+    )
+    expect(steps.find((step) => step.id === 'status')?.target).toContain(
+      'status-management',
     )
     expect(steps.at(-1)?.placement).toBe('center')
     expect(steps.at(-1)?.id).toBe('complete')

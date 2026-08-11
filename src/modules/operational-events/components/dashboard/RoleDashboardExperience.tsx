@@ -233,6 +233,30 @@ export function RoleDashboardExperience({
             }
           />
         </div>
+        <div
+          className="novex-role-dashboard__wide"
+          data-tour="impact-summary"
+        >
+          <section
+            className="novex-role-dashboard__impact-card"
+            aria-label="Impacto institucional"
+          >
+            <header>
+              <span>Impacto institucional</span>
+              <strong>{data.kpis.affectedCoordinations}</strong>
+            </header>
+            <p>
+              Coordinaciones con situaciones documentadas. La intensidad combina
+              volumen y severidad operativa.
+            </p>
+            {!previewing ? (
+              <Link to="/red-impacto" className="novex-role-dashboard__cta">
+                Ver red de impacto
+                <NovexIcon name="chevron-right" />
+              </Link>
+            ) : null}
+          </section>
+        </div>
         <div className="novex-role-dashboard__wide" data-tour="operational-trend">
           <OperationalTrend data={data} />
         </div>

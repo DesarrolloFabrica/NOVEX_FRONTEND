@@ -201,6 +201,44 @@
 .novex-role-dashboard__wide {
   grid-column: 1 / -1;
 }
+
+.novex-role-dashboard__impact-card {
+  display: grid;
+  gap: 0.55rem;
+  min-height: 100%;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgb(90 140 190 / 0.2);
+  border-radius: 12px;
+  background: rgb(8 22 40 / 0.55);
+}
+
+.novex-role-dashboard__impact-card header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.novex-role-dashboard__impact-card header span {
+  color: #7f96b0;
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.novex-role-dashboard__impact-card header strong {
+  color: #e8f4ff;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.novex-role-dashboard__impact-card p {
+  margin: 0;
+  color: #9bb0c4;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
 .novex-role-dashboard__grid > div > section,
 .novex-role-dashboard__trend {
   height: 100%;

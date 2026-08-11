@@ -88,7 +88,7 @@ const OPERATIONAL_FLOW: OnboardingTourStep[] = [
       'El recorrido esperará aquí mientras se clasifican riesgo, impacto y recomendaciones. Si ocurre un error, puede reintentar sin duplicar la situación.',
     expectation:
       'Al terminar será llevado al expediente operativo recién creado.',
-    advanceOnTarget: '[data-tour="situation-management"]',
+    advanceOnTarget: '[data-tour="ai-report"]',
     lockNavigation: true,
     waitingLabel: 'Esperando el análisis IA…',
   },
@@ -154,7 +154,8 @@ const OPERATIONAL_FLOW: OnboardingTourStep[] = [
   {
     id: 'status',
     route: '/gestion',
-    target: '[data-tour="status-update-trigger"]',
+    target:
+      '[data-tour="status-update-trigger"], [data-tour="status-management"]',
     eyebrow: 'Estados y trazabilidad',
     title: 'Actualice el estado con una razón verificable',
     description:
