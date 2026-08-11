@@ -231,6 +231,13 @@
   text-align: center;
 }
 
+.novex-login__wordmark-title {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.55rem;
+}
+
 .novex-login__wordmark h1 {
   margin: 0;
   color: #f4fbf6;
@@ -245,7 +252,7 @@
   color: #dfffe0;
 }
 
-.novex-login__wordmark div {
+.novex-login__wordmark-tagline {
   display: flex;
   align-items: center;
   gap: 0.65rem;
@@ -258,13 +265,13 @@
   white-space: nowrap;
 }
 
-.novex-login__wordmark div > span {
+.novex-login__wordmark-tagline > span {
   width: clamp(1.2rem, 2.8vw, 2.5rem);
   height: 1px;
   background: linear-gradient(90deg, #7ee361, rgb(126 227 97 / 0.18));
 }
 
-.novex-login__wordmark div > span:last-child {
+.novex-login__wordmark-tagline > span:last-child {
   background: linear-gradient(90deg, rgb(126 227 97 / 0.18), #7ee361);
 }
 
@@ -274,6 +281,24 @@
   color: rgb(209 229 216 / 0.78);
   font-size: clamp(0.9rem, 1.08vw, 1.06rem);
   line-height: 1.75;
+}
+
+.novex-login__beta-note {
+  max-width: 30rem;
+  margin: 0.55rem 0 0;
+  color: rgb(168 196 178 / 0.52);
+  font-size: clamp(0.68rem, 0.78vw, 0.78rem);
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+}
+
+.novex-login .novex-beta-mark {
+  position: relative;
+  top: -0.35em;
+  border-color: rgb(148 196 164 / 0.2);
+  color: rgb(176 210 186 / 0.7);
+  font-size: 0.48rem;
+  background: rgb(8 20 14 / 0.45);
 }
 
 .novex-login__capabilities {
@@ -696,6 +721,7 @@
 
   .novex-login__eyebrow,
   .novex-login__intro-copy,
+  .novex-login__beta-note,
   .novex-login__capabilities {
     display: none;
   }
@@ -732,7 +758,7 @@
     font-size: 2.35rem;
   }
 
-  .novex-login__wordmark div {
+  .novex-login__wordmark-tagline {
     font-size: 0.45rem;
   }
 
@@ -763,7 +789,7 @@
     font-size: 2rem;
   }
 
-  .novex-login__wordmark div {
+  .novex-login__wordmark-tagline {
     letter-spacing: 0.17em;
   }
 

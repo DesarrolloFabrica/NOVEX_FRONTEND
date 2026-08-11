@@ -7,6 +7,10 @@ import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { getRoleLandingPath } from '@/modules/auth/utils/roleExperience'
+import {
+  NOVEX_BETA_HINT,
+  NOVEX_BETA_LABEL,
+} from '@/shared/constants/platformStatus'
 
 /** Solo en local: VITE_ENABLE_EMAIL_LOGIN=true. En deploy no se define → solo Google. */
 const emailLoginEnabled = import.meta.env.VITE_ENABLE_EMAIL_LOGIN === 'true'
@@ -87,8 +91,19 @@ export function LoginPage() {
             </div>
 
             <div className="novex-login__wordmark">
-              <h1 id="novex-login-title">NOVEX</h1>
-              <div><span /> Inteligencia para decidir <span /></div>
+              <div className="novex-login__wordmark-title">
+                <h1 id="novex-login-title">NOVEX</h1>
+                <span
+                  className="novex-beta-mark"
+                  title={NOVEX_BETA_HINT}
+                  aria-label={NOVEX_BETA_HINT}
+                >
+                  {NOVEX_BETA_LABEL}
+                </span>
+              </div>
+              <div className="novex-login__wordmark-tagline">
+                <span /> Inteligencia para decidir <span />
+              </div>
             </div>
           </div>
 
@@ -96,6 +111,7 @@ export function LoginPage() {
             Plataforma de monitoreo e inteligencia operacional para una gestión
             estratégica y decisiones oportunas.
           </p>
+          <p className="novex-login__beta-note">{NOVEX_BETA_HINT}</p>
 
           <dl className="novex-login__capabilities" aria-label="Capacidades de la plataforma">
             <div>

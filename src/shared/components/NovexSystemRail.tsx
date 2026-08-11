@@ -3,6 +3,10 @@ import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { getRoleDisplayName } from '@/modules/auth/utils/roleDisplay'
 import { NovexBrandMark } from '@/shared/components/NovexBrandMark'
 import { RegisterSituationCta } from '@/shared/components/RegisterSituationCta'
+import {
+  NOVEX_BETA_HINT,
+  NOVEX_BETA_LABEL,
+} from '@/shared/constants/platformStatus'
 import { EXECUTIVE_CENTER_RAIL_ITEM } from '@/modules/executive-operations-center/constants/navigation'
 
 type IconName =
@@ -157,10 +161,24 @@ export function NovexSystemRail() {
   return (
     <aside className="novex-os-rail" aria-label="Navegación principal">
       <div className="novex-os-rail__brand" data-tour="platform-brand">
-        <NovexBrandMark size="rail" className="novex-os-mark" />
+        <span className="novex-os-rail__mark-wrap" title={NOVEX_BETA_HINT}>
+          <NovexBrandMark size="rail" className="novex-os-mark" />
+          <span className="novex-os-rail__mark-beta" aria-hidden="true">
+            {NOVEX_BETA_LABEL}
+          </span>
+        </span>
         <div className="novex-os-rail__brand-copy">
-          <strong>NOVEX</strong>
-          <span>Visión general</span>
+          <div className="novex-os-rail__brand-title">
+            <strong>NOVEX</strong>
+            <span
+              className="novex-beta-mark"
+              title={NOVEX_BETA_HINT}
+              aria-label={NOVEX_BETA_HINT}
+            >
+              {NOVEX_BETA_LABEL}
+            </span>
+          </div>
+          <span>Despliegue piloto</span>
         </div>
       </div>
 

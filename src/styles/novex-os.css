@@ -292,18 +292,65 @@ textarea {
   flex-direction: column;
 }
 
+.novex-os-rail__mark-wrap {
+  position: relative;
+  display: inline-grid;
+  flex: 0 0 auto;
+}
+
+.novex-os-rail__mark-beta {
+  position: absolute;
+  right: -5px;
+  bottom: -4px;
+  display: none;
+  padding: 1px 4px;
+  border: 1px solid rgb(148 168 196 / 0.22);
+  border-radius: 999px;
+  color: rgb(168 186 210 / 0.72);
+  font-size: 0.38rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgb(6 12 22 / 0.92);
+  pointer-events: none;
+}
+
+.novex-os-rail__brand-title {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+}
+
 .novex-os-rail__brand-copy strong {
   color: #f6f9ff;
   font-size: 0.9rem;
   letter-spacing: 0.14em;
 }
 
-.novex-os-rail__brand-copy span {
+.novex-os-rail__brand-copy > span {
   margin-top: 3px;
   color: var(--os-subtle);
   font-size: 0.48rem;
   letter-spacing: 0.13em;
   text-transform: uppercase;
+}
+
+.novex-beta-mark {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 5px;
+  border: 1px solid rgb(148 168 196 / 0.18);
+  border-radius: 999px;
+  color: rgb(156 176 202 / 0.78);
+  font-size: 0.42rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1.35;
+  text-transform: uppercase;
+  background: rgb(255 255 255 / 0.03);
+  cursor: help;
+  opacity: 0.85;
 }
 
 .novex-os-rail__primary {
@@ -3741,6 +3788,10 @@ textarea {
   .novex-os-rail__identity-copy,
   .novex-os-rail__signal {
     display: none;
+  }
+
+  .novex-os-rail__mark-beta {
+    display: inline-flex;
   }
 
   .novex-os-rail__primary {
