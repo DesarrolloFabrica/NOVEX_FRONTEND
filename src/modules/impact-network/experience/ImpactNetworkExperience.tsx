@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useReducedMotion } from 'motion/react'
 import { OrganizationalScene } from '@/modules/impact-network/components/OrganizationalScene'
 import { OperationalContextPanel } from '@/modules/impact-network/components/OperationalContextPanel'
+import { ExecutiveOperationalOverview } from '@/modules/impact-network/components/executive'
+import { operationalOverview } from '@/modules/impact-network/data/executive-operational-overview.mock'
 import {
   getCoordination,
   resolveCoordinationId,
@@ -53,6 +55,8 @@ import { ApiError } from '@/shared/api/http'
 import { getErrorMessage } from '@/shared/utils/error'
 import { isValidUuid } from '@/shared/utils/uuid'
 import '@/styles/impact-network.css'
+import '@/styles/impact-network-executive.css'
+import '@/styles/impact-network-command-map.css'
 
 type ReplayPhase = 'idle' | 'playing' | 'paused' | 'complete'
 type SimulationPhase = 'idle' | 'loading' | 'visible' | 'empty' | 'error'
@@ -243,6 +247,8 @@ export function ImpactNetworkExperience() {
   )
 
   const coordinatorMode = user?.roleCode === 'COORDINADOR'
+  /** Vista General Operacional mock — DIRECTOR / ADMIN / ANALISTA. */
+  const executiveOperationalView = !coordinatorMode
   const assignedCoordinationId = useMemo(
     () =>
       resolveAssignedCoordinationId(
@@ -964,6 +970,9 @@ export function ImpactNetworkExperience() {
       ? 'coordination'
       : 'institutional'
 
+  const useExecutiveOverview =
+    executiveOperationalView && navigationLevel === 'institutional'
+
   const visibleIncidentCount =
     navigationLevel === 'institutional'
       ? (networkSnapshot?.activeIncidentsCount ?? activeIncidents.length)
@@ -1000,34 +1009,62 @@ export function ImpactNetworkExperience() {
                 <NovexProductHeader
                   title="Red de impacto"
                   eyebrow="Inteligencia operacional"
-                  context="Relaciones e impacto entre coordinaciones"
+                  context={
+                    useExecutiveOverview
+                      ? 'Estado actual de la operación'
+                      : 'Relaciones e impacto entre coordinaciones'
+                  }
                   middle={
-                    <ImpactNetworkToolbar
-                      status={networkStatus}
-                      loading={loading}
-                      error={networkError}
-                      navigationLevel={navigationLevel}
-                      selectedCoordinationName={
-                        selectedCoordination?.shortName ?? null
-                      }
-                      activeCount={visibleIncidentCount}
-                      onNavigateDirection={navigateToDirection}
-                      onNavigateCoordination={navigateToCoordination}
-                    />
+                    useExecutiveOverview ? (
+                      <p
+                        className="impact-executive__header-live"
+                        aria-live="polite"
+                      >
+                        <i aria-hidden="true" />
+                        {operationalOverview.updatedLabel}
+                      </p>
+                    ) : (
+                      <ImpactNetworkToolbar
+                        status={networkStatus}
+                        loading={loading}
+                        error={networkError}
+                        navigationLevel={navigationLevel}
+                        selectedCoordinationName={
+                          selectedCoordination?.shortName ?? null
+                        }
+                        activeCount={visibleIncidentCount}
+                        onNavigateDirection={navigateToDirection}
+                        onNavigateCoordination={navigateToCoordination}
+                      />
+                    )
                   }
                   helpTitle="Acerca de Red de impacto"
                   help={
-                    <>
-                      <p>
-                        Visualice cómo las situaciones operacionales conectan y
-                        afectan a las coordinaciones de la Dirección.
-                      </p>
-                      <p>
-                        Desde una coordinación puede crear situaciones,
-                        actualizar estados y descargar el análisis IA sin salir
-                        del mapa.
-                      </p>
-                    </>
+                    useExecutiveOverview ? (
+                      <>
+                        <p>
+                          Vista general del estado operacional: dónde hay
+                          problemas, qué requiere atención y el panorama de las
+                          coordinaciones.
+                        </p>
+                        <p>
+                          Seleccione una coordinación afectada para abrir el
+                          panel contextual sin salir del mapa.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p>
+                          Visualice cómo las situaciones operacionales conectan y
+                          afectan a las coordinaciones de la Dirección.
+                        </p>
+                        <p>
+                          Desde una coordinación puede crear situaciones,
+                          actualizar estados y descargar el análisis IA sin salir
+                          del mapa.
+                        </p>
+                      </>
+                    )
                   }
                 />
               }
@@ -1051,10 +1088,22 @@ export function ImpactNetworkExperience() {
                     islandFocusActive
                       ? 'impact-network__workspace--island-focus'
                       : '',
+                    useExecutiveOverview
+                      ? 'impact-network__workspace--executive'
+                      : '',
                   ]
                     .filter(Boolean)
                     .join(' ')}
                 >
+                  {useExecutiveOverview ? (
+                    <ExecutiveOperationalOverview
+                      coordinationIds={sceneCoordinationIds}
+                      reducedMotion={Boolean(reduceMotion)}
+                      loading={loading}
+                      error={networkError}
+                    />
+                  ) : (
+                    <>
                   <div className="impact-network__canvas">
                     <div
                       className="impact-network__scene-stack"
@@ -1219,6 +1268,8 @@ export function ImpactNetworkExperience() {
                       }}
                     />
                   </div>
+                    </>
+                  )}
                 </div>
               </section>
             </ScreenDeck>
