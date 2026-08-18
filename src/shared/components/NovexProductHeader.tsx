@@ -10,6 +10,7 @@ interface NovexProductHeaderProps {
   /** Contenido del popover de ayuda. Si se omite, no se muestra el botón. */
   help?: ReactNode
   helpTitle?: string
+  onRestartImpactNetworkTutorial?: () => void
 }
 
 export function NovexProductHeader({
@@ -19,6 +20,7 @@ export function NovexProductHeader({
   middle,
   help,
   helpTitle,
+  onRestartImpactNetworkTutorial,
 }: NovexProductHeaderProps) {
   return (
     <header className="novex-os-topbar">
@@ -38,7 +40,9 @@ export function NovexProductHeader({
       ) : null}
 
       <div className="novex-os-topbar__actions" aria-label="Acciones del encabezado">
-        <NovexUserMenu />
+        <NovexUserMenu
+          onRestartImpactNetworkTutorial={onRestartImpactNetworkTutorial}
+        />
         {help ? (
           <NovexViewHelp title={helpTitle}>{help}</NovexViewHelp>
         ) : null}

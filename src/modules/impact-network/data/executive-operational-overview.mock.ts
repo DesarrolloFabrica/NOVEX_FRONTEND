@@ -112,8 +112,14 @@ export const operationalOverview: OperationalOverviewMetrics = {
 /** Estados visuales de prueba desacoplados del backend. */
 const STATUS_BY_ID: Readonly<Record<string, OperationalStatus>> = {
   'coord-fabrica-contenidos': 'critical',
+  'coord-operaciones-academicas': 'critical',
   'coord-homologaciones': 'high',
+  'coord-ingenierias': 'high',
+  'coord-especializaciones': 'high',
   'coord-servicios': 'attention',
+  'coord-b2b': 'attention',
+  'coord-negocios': 'attention',
+  'coord-bellas-artes': 'attention',
 }
 
 const PROBLEMS_BY_ID: Readonly<

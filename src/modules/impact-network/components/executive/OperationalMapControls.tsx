@@ -13,6 +13,9 @@ interface OperationalMapControlsProps {
   onZoomOut: () => void
   onReset: () => void
   onToggleFullscreen: () => void
+  minZoom?: number
+  maxZoom?: number
+  surfaceLabel?: string
 }
 
 function FullscreenGlyph({ active }: { active: boolean }) {
@@ -45,11 +48,14 @@ export function OperationalMapControls({
   onZoomOut,
   onReset,
   onToggleFullscreen,
+  minZoom = OPERATIONAL_MAP_MIN_ZOOM,
+  maxZoom = OPERATIONAL_MAP_MAX_ZOOM,
+  surfaceLabel = 'mapa',
 }: OperationalMapControlsProps) {
   return (
     <div
       className="impact-executive__map-controls"
-      aria-label="Controles del mapa operacional"
+      aria-label={`Controles del ${surfaceLabel} operacional`}
       data-operational-map-control="true"
       onPointerDown={(event) => event.stopPropagation()}
     >
@@ -59,7 +65,7 @@ export function OperationalMapControls({
         aria-label={
           isFullscreen
             ? 'Salir de pantalla completa'
-            : 'Ver mapa en pantalla completa'
+            : `Ver ${surfaceLabel} en pantalla completa`
         }
         title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
         onClick={onToggleFullscreen}
@@ -82,7 +88,7 @@ export function OperationalMapControls({
         className="impact-executive__map-control impact-executive__map-control--zoom"
         aria-label="Alejar mapa"
         title="Alejar"
-        disabled={zoom <= OPERATIONAL_MAP_MIN_ZOOM + 0.005}
+        disabled={zoom <= minZoom + 0.005}
         onClick={onZoomOut}
       >
         −
@@ -99,7 +105,7 @@ export function OperationalMapControls({
         className="impact-executive__map-control impact-executive__map-control--zoom"
         aria-label="Acercar mapa"
         title="Acercar"
-        disabled={zoom >= OPERATIONAL_MAP_MAX_ZOOM - 0.005}
+        disabled={zoom >= maxZoom - 0.005}
         onClick={onZoomIn}
       >
         +

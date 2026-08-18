@@ -16807,16 +16807,19 @@ textarea {
   }
 }
 
-/* Modo inmersivo de Red de impacto: oculta el rail y expande el stage */
+/* Pantalla completa de Red de impacto: conserva toda la plataforma y su navegación. */
 .novex-os[data-immersive='true'] {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.novex-os[data-immersive='true'] .novex-os-rail {
-  display: none;
+  width: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
 }
 
 .novex-os[data-immersive='true'] .novex-os__stage {
-  padding: 0;
   height: 100dvh;
+}
+
+@media (max-width: 820px) {
+  .novex-os[data-immersive='true'] .novex-os__stage {
+    height: auto;
+  }
 }

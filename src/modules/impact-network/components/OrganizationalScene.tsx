@@ -52,6 +52,7 @@ interface OrganizationalSceneProps {
   selectedCoordinationId: CoordinationId | null
   assignedCoordinationId?: CoordinationId | null
   coordinatorMode?: boolean
+  executiveMode?: boolean
   reducedMotion?: boolean
   loading?: boolean
   error?: string | null
@@ -73,6 +74,7 @@ interface OrganizationalSceneProps {
   onIslandFocusChange?: (active: boolean) => void
   onSelectCoordination: (coordinationId: CoordinationId) => void
   onSelectSituation?: (eventId: string) => void
+  onExitToCoordination?: () => void
   isImmersive?: boolean
   onToggleImmersive?: () => void
   focusOriginRequestKey?: number
@@ -182,6 +184,7 @@ function OrganizationalSceneView({
   selectedCoordinationId,
   assignedCoordinationId = null,
   coordinatorMode = false,
+  executiveMode = false,
   reducedMotion = false,
   loading = false,
   error = null,
@@ -202,6 +205,7 @@ function OrganizationalSceneView({
   onIslandFocusChange,
   onSelectCoordination,
   onSelectSituation,
+  onExitToCoordination,
   isImmersive = false,
   onToggleImmersive,
   focusOriginRequestKey = 0,
@@ -229,6 +233,7 @@ function OrganizationalSceneView({
   const dossierPortalTargetRef = useRef<HTMLElement | null>(null)
   const isClosingFocusRef = useRef(false)
   const focusOriginRequestRef = useRef(focusOriginRequestKey)
+  const dismissedSituationRef = useRef<string | null>(null)
 
   const writeStageView = useCallback(
     (nextPan: { x: number; y: number }, nextZoom: number) => {
@@ -266,6 +271,7 @@ function OrganizationalSceneView({
   const {
     animateToView,
     clearSavedView,
+    cancelAnimation,
     isAnimating: isCameraAnimating,
   } = useIslandFocusCamera({
     reducedMotion,
@@ -396,9 +402,11 @@ function OrganizationalSceneView({
         size.width,
         size.height,
         includeContextNodes,
+        executiveMode,
       ),
     [
       includeContextNodes,
+      executiveMode,
       selectedCoordinationId,
       size.height,
       size.width,
@@ -420,6 +428,16 @@ function OrganizationalSceneView({
     : coordinationIds.length
   const syncBadgeLabel =
     synchronizedLabel ?? `${visibleNodeCount} coordinaciones sincronizadas`
+  const executiveImpactMode =
+    executiveMode && focusedEvent && propagation
+      ? propagation.affectedCoordinationIds.length > 0
+        ? 'propagated'
+        : 'contained'
+      : null
+  const focusedEventId = focusedEvent?.id ?? null
+  const hiddenAffectedCount = propagation
+    ? Math.max(0, propagation.affectedCoordinationIds.length - 5)
+    : 0
 
   const graphEdges = useMemo(() => {
     if (selectedCoordinationId) return []
@@ -538,15 +556,33 @@ function OrganizationalSceneView({
     focusStartedRef.current = false
     savedSceneViewRef.current = null
     dossierPortalTargetRef.current = null
+    if (dismissedSituationRef.current !== focusedEventId) {
+      dismissedSituationRef.current = null
+    }
+    cancelAnimation()
     setFocusIslandId(null)
     setIslandFocusOpen(false)
     setDossierVisible(false)
     clearSavedView()
+    if (!focusedEventId) {
+      commitSceneView({ pan: { x: 0, y: 0 }, zoom: 1 })
+    }
     onIslandFocusChange?.(false)
-  }, [clearSavedView, focusedEvent?.id, onIslandFocusChange])
+  }, [
+    cancelAnimation,
+    clearSavedView,
+    commitSceneView,
+    focusedEventId,
+    onIslandFocusChange,
+  ])
 
   useEffect(() => {
-    if (!islandFocusOpen || !focusIslandId || focusStartedRef.current) {
+    if (
+      !focusedEvent ||
+      !islandFocusOpen ||
+      !focusIslandId ||
+      focusStartedRef.current
+    ) {
       return
     }
 
@@ -609,6 +645,7 @@ function OrganizationalSceneView({
       },
     )
   }, [
+    focusedEvent,
     focusIslandId,
     animateToView,
     islandFocusOpen,
@@ -646,8 +683,13 @@ function OrganizationalSceneView({
   }, [animateToView, clearSavedView, onIslandFocusChange])
 
   const closeIslandFocus = useCallback(() => {
+    if (executiveMode && onExitToCoordination) {
+      onExitToCoordination()
+      return
+    }
+    dismissedSituationRef.current = focusedEvent?.id ?? null
     setDossierVisible(false)
-  }, [])
+  }, [executiveMode, focusedEvent?.id, onExitToCoordination])
 
   const handleDossierExitComplete = useCallback(() => {
     if (!islandFocusOpenRef.current || isClosingFocusRef.current) return
@@ -697,6 +739,19 @@ function OrganizationalSceneView({
     handleSelectIsland(propagation.originCoordinationId as CoordinationId)
   }, [focusOriginRequestKey, handleSelectIsland, propagation])
 
+  useEffect(() => {
+    if (!executiveMode || !focusedEvent || !propagation) return
+    if (dismissedSituationRef.current === focusedEvent.id) return
+    if (islandFocusOpen || isClosingFocusRef.current) return
+    handleSelectIsland(propagation.originCoordinationId as CoordinationId)
+  }, [
+    executiveMode,
+    focusedEvent,
+    handleSelectIsland,
+    islandFocusOpen,
+    propagation,
+  ])
+
   return (
     <div
       ref={containerRef}
@@ -723,6 +778,7 @@ function OrganizationalSceneView({
       data-reduced-motion={reducedMotion}
       data-perf={reducedMotion ? 'reduced' : 'balanced'}
       data-page-hidden={pageHidden}
+      data-impact-mode={executiveImpactMode ?? undefined}
       onPointerDown={(event: PointerEvent<HTMLDivElement>) => {
         if (event.button !== 0 || islandFocusOpen) return
         const target = event.target as HTMLElement
@@ -784,21 +840,37 @@ function OrganizationalSceneView({
 
       <section className="organizational-scene__guide" aria-live="polite">
         <span>
-          {focusedEvent
+          {executiveMode && focusedEvent
+            ? 'Impacto actual'
+            : executiveMode && selectedCoordinationId
+              ? 'Dentro de la coordinación'
+              : focusedEvent
             ? 'Nivel 03 · Mapa de impacto'
             : selectedCoordinationId
               ? 'Nivel 02 · Mapa de conexiones'
               : 'Nivel 01 · Mapa organizacional'}
         </span>
         <h2>
-          {focusedEvent
+          {executiveMode && focusedEvent
+            ? '¿A quién más está afectando?'
+            : executiveMode && selectedCoordinationId
+              ? '¿Qué debe revisar aquí?'
+              : focusedEvent
             ? 'Propagación de la situación'
             : selectedCoordinationId
               ? 'Coordinación focalizada'
               : 'Estructura institucional'}
         </h2>
         <p>
-          {focusedEvent
+          {executiveMode && focusedEvent
+            ? executiveImpactMode === 'contained'
+              ? 'El impacto permanece en la coordinación de origen.'
+              : 'Solo se muestran las coordinaciones cuya afectación está confirmada.'
+            : executiveMode && selectedCoordinationId
+              ? coordinationSituations.length > 0
+                ? 'La situación prioritaria está destacada; las demás permanecen como contexto.'
+                : 'No hay situaciones activas que requieran revisión.'
+              : focusedEvent
             ? 'Use Volver para regresar a la coordinación sin perder el contexto.'
             : selectedCoordinationId
               ? coordinationSituations.length > 0
@@ -808,7 +880,15 @@ function OrganizationalSceneView({
         </p>
         <div>
           <i aria-hidden="true" />
-          {focusedEvent
+          {executiveMode && focusedEvent
+            ? executiveImpactMode === 'contained'
+              ? 'Sin propagación detectada'
+              : `${visibleNodeCount} coordinaciones visibles`
+            : executiveMode && selectedCoordinationId
+              ? coordinationSituations.length > 0
+                ? `${coordinationSituations.length} situación${coordinationSituations.length === 1 ? '' : 'es'} activa${coordinationSituations.length === 1 ? '' : 's'}`
+                : 'Operación estable'
+              : focusedEvent
             ? `${visibleNodeCount} nodos relacionados visibles`
             : selectedCoordinationId
               ? coordinationSituations.length > 0
@@ -821,6 +901,41 @@ function OrganizationalSceneView({
               : syncBadgeLabel}
         </div>
       </section>
+
+      {executiveImpactMode && propagation && !islandFocusOpen ? (
+        <section
+          className="executive-impact-state"
+          data-mode={executiveImpactMode}
+          aria-live="polite"
+        >
+          <span>
+            {executiveImpactMode === 'contained'
+              ? 'Impacto contenido'
+              : 'Impacto propagado'}
+          </span>
+          <h3>
+            {executiveImpactMode === 'contained'
+              ? `Permanece dentro de ${propagation.originName}`
+              : `Afecta ${propagation.affectedCoordinationIds.length} coordinación${propagation.affectedCoordinationIds.length === 1 ? '' : 'es'}`}
+          </h3>
+          <p>
+            {executiveImpactMode === 'contained'
+              ? 'No se detectan otras coordinaciones afectadas actualmente.'
+              : `La situación se origina en ${propagation.originName} y se conecta únicamente con las coordinaciones confirmadas.`}
+          </p>
+          <div>
+            <strong>
+              {propagation.affectedCoordinationIds.length} coordinaciones afectadas
+            </strong>
+            <small>
+              Estado: {executiveImpactMode === 'contained' ? 'Contenido' : 'Propagado'}
+            </small>
+            {hiddenAffectedCount > 0 ? (
+              <small>+{hiddenAffectedCount} coordinaciones relacionadas</small>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       <div
         className="propagation-scene__zoom-controls"
@@ -1164,6 +1279,7 @@ function OrganizationalSceneView({
                   islandSize={selectedNode.size}
                   stageSize={size}
                   reducedMotion={reducedMotion}
+                  executiveMode={executiveMode}
                   onSelectSituation={onSelectSituation}
                 />
               )
@@ -1171,7 +1287,7 @@ function OrganizationalSceneView({
           : null}
       </div>
 
-      {propagation && focusedEvent ? (
+      {propagation && focusedEvent && !islandFocusOpen ? (
         <ImpactMapTelemetry
           propagation={propagation}
           event={focusedEvent}

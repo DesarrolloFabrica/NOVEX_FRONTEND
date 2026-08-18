@@ -321,13 +321,16 @@ export function buildStructureLayout(
   width: number,
   height: number,
   includeContext = false,
+  compactSelected = false,
 ): StructureLayout {
   const center = { x: width / 2, y: height / 2 }
   const minSide = Math.min(width, height)
   const nodeSize = Math.max(64, Math.min(112, minSide * 0.125))
   const selectedSize = includeContext
     ? Math.max(200, Math.min(270, minSide * 0.3))
-    : Math.max(220, Math.min(420, minSide * 0.48))
+    : compactSelected
+      ? Math.max(180, Math.min(330, minSide * 0.38))
+      : Math.max(220, Math.min(420, minSide * 0.48))
 
   if (selectedCoordinationId) {
     const selectedNode: StructureNode = {

@@ -90,7 +90,9 @@ export async function loadImpactNetworkGraph(): Promise<ImpactNetworkGraphModel>
 
 
 
-export async function loadImpactNetworkBootstrap(): Promise<ImpactNetworkBootstrap> {
+export async function loadImpactNetworkBootstrap(
+  catalogPromise?: Promise<readonly CoordinationSummary[]>,
+): Promise<ImpactNetworkBootstrap> {
 
   const [graphResult, statusResult, catalogResult] = await Promise.allSettled([
 
@@ -98,7 +100,7 @@ export async function loadImpactNetworkBootstrap(): Promise<ImpactNetworkBootstr
 
     fetchCoordinationNetworkStatus(),
 
-    fetchCoordinations(false, { catalog: true }),
+    catalogPromise ?? fetchCoordinations(false, { catalog: true }),
 
   ])
 

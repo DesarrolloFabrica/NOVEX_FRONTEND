@@ -44,7 +44,6 @@ export function IslandFocusDossier({
     ? null
     : resolveIslandAffectedBriefing(coordinationId, propagation, event)
   const coordination = getCoordination(coordinationId)
-  const panelTitle = affectedBriefing?.coordinationName ?? coordination.name
   const panelKicker = isOrigin ? 'Situación origen' : 'Coordinación afectada'
   const panelSubtitle = isOrigin
     ? 'Análisis ejecutivo generado por la IA'
@@ -119,6 +118,7 @@ export function IslandFocusDossier({
 
           <motion.aside
             className="island-focus-dossier__panel"
+            data-impact-tour="situation-dossier"
             initial={reducedMotion ? false : { opacity: 0, x: 36 }}
             animate={{ opacity: 1, x: 0 }}
             exit={
@@ -148,11 +148,13 @@ export function IslandFocusDossier({
             >
               <div className="island-focus-dossier__topbar-copy">
                 <span className="island-focus-dossier__topbar-kicker">
-                  {panelKicker}
+                  {isOrigin ? 'Situación' : panelKicker} · {coordination.shortName}
                 </span>
-                <strong>{panelTitle}</strong>
+                <strong>{event.title}</strong>
                 <span className="island-focus-dossier__topbar-subtitle">
-                  {panelSubtitle}
+                  {isOrigin
+                    ? 'Expediente y análisis en un solo lugar'
+                    : panelSubtitle}
                 </span>
               </div>
               <div className="island-focus-dossier__topbar-actions">
@@ -188,8 +190,36 @@ export function IslandFocusDossier({
             </motion.header>
 
             <div id={titleId} className="island-focus-sr-only">
-              {panelTitle}
+              {event.title}
             </div>
+
+            {isOrigin ? (
+              <dl className="island-focus-dossier__facts" aria-label="Síntesis de la situación">
+                <div>
+                  <dt>Riesgo</dt>
+                  <dd>
+                    {RISK_LEVEL_LABEL[event.interpretation?.riskLevel ?? 'moderate']}
+                    {event.interpretation?.riskScore != null
+                      ? ` · ${Math.round(event.interpretation.riskScore)}/100`
+                      : ''}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Impacto</dt>
+                  <dd>
+                    {propagation.affectedNames.length > 0
+                      ? propagation.affectedNames.length === 1
+                        ? '1 coordinación'
+                        : `${propagation.affectedNames.length} coordinaciones`
+                      : 'Contenido'}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Origen</dt>
+                  <dd>{coordination.shortName}</dd>
+                </div>
+              </dl>
+            ) : null}
 
             <motion.div
               className="island-focus-dossier__content"

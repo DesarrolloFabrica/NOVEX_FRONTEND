@@ -1,4 +1,6 @@
 export { ExecutiveOperationalOverview } from './ExecutiveOperationalOverview'
+export { ExecutiveOperationalHeader } from './ExecutiveOperationalHeader'
+export type { OperationalStatusFilter } from './OperationalStatusBoard'
 export { OperationalMetricsStrip } from './OperationalMetricsStrip'
 export { OperationalMapStage } from './OperationalMapStage'
 export { OperationalIslandMarker } from './OperationalIslandMarker'

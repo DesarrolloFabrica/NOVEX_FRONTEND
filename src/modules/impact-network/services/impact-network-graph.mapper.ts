@@ -52,6 +52,41 @@ function sortActiveDefinitions(
     .map(toDefinition)
 }
 
+function toVisibleCoordinations(
+  definitions: readonly CoordinationDefinition[],
+): Coordination[] {
+  return definitions.map((item) => ({
+    id: item.id,
+    name: item.name,
+    shortName: item.shortName,
+    islandAsset: item.islandAsset,
+    operationalStatus: 'stable',
+    responsiblePeople: [],
+    situationIds: [],
+    lastActivityAt: null,
+  }))
+}
+
+/**
+ * Hidrata el catálogo y las islas visibles sin esperar el grafo.
+ * Sirve para pintar la vista ejecutiva mientras llega la topología.
+ */
+export function hydrateVisibleCoordinationsFromCatalog(
+  institutionalCatalog: readonly CoordinationSummary[],
+): Pick<ImpactNetworkGraphModel, 'coordinationIds' | 'coordinations'> {
+  const definitions = sortActiveDefinitions(institutionalCatalog)
+  setCoordinationCatalog(definitions)
+
+  const visibleDefinitions = definitions.filter(
+    (item) => item.id !== GENERAL_COORDINATION_ID,
+  )
+
+  return {
+    coordinationIds: visibleDefinitions.map((item) => item.id),
+    coordinations: toVisibleCoordinations(visibleDefinitions),
+  }
+}
+
 /**
  * Adapta GET /coordinations/graph al modelo de la Red de impacto.
  * Identificador de isla = code del backend.
@@ -141,16 +176,7 @@ export function mapCoordinationGraphToImpactNetwork(
     })),
   }
 
-  const coordinations: Coordination[] = visibleDefinitions.map((item) => ({
-    id: item.id,
-    name: item.name,
-    shortName: item.shortName,
-    islandAsset: item.islandAsset,
-    operationalStatus: 'stable',
-    responsiblePeople: [],
-    situationIds: [],
-    lastActivityAt: null,
-  }))
+  const coordinations: Coordination[] = toVisibleCoordinations(visibleDefinitions)
 
   return {
     topology,

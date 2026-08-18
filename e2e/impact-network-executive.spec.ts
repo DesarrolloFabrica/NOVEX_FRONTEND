@@ -9,29 +9,17 @@ const COORDINATIONS = [
   ['coord-general', 'Coordinación General', 'CoordGeneral'],
   ['coord-b2b', 'B2B', 'CoordB2B'],
   ['coord-bellas-artes', 'Bellas Artes', 'CoordBellasArtes'],
-  [
-    'coord-desarrollo-profesional',
-    'Desarrollo Profesional',
-    'CoordDesarrolloprof',
-  ],
+  ['coord-desarrollo-profesional', 'Desarrollo Profesional', 'CoordDesarrolloprof'],
   ['coord-empresarial', 'Empresarial', 'CoordTransformacionEmpresarial'],
   ['coord-especializaciones', 'Especializaciones', 'CoordEspecializaciones'],
   ['coord-ingenierias', 'Ingenierías', 'CoordIngenierias'],
-  [
-    'coord-operaciones-academicas',
-    'Operaciones Académicas',
-    'CoordOperacionesAcademicas',
-  ],
+  ['coord-operaciones-academicas', 'Operaciones Académicas', 'CoordOperacionesAcademicas'],
   ['coord-proyeccion-social', 'Proyección Social', 'CoordProyeccionAcademica'],
   ['coord-saber-pro', 'Saber Pro', 'CoordSaberPro'],
   ['coord-transversales', 'Transversales', 'CoordTransversales'],
   ['coord-homologaciones', 'Homologaciones', 'CoordHomologaciones'],
   ['coord-negocios', 'Negocios', 'CoordNegocios'],
-  [
-    'coord-fabrica-contenidos',
-    'Fábrica de contenidos',
-    'CoordFabricaDeContenido',
-  ],
+  ['coord-fabrica-contenidos', 'Fábrica de contenidos', 'CoordFabricaDeContenido'],
   ['coord-servicios', 'Servicios', 'CoordServicios'],
 ] as const
 
@@ -47,10 +35,37 @@ const COORDINATION_RESPONSE = COORDINATIONS.map(
     imageAsset: `${imageAsset}.png`,
     displayOrder: index + 1,
     isActive: true,
-    createdAt: '2026-08-14T00:00:00.000Z',
-    updatedAt: '2026-08-14T00:00:00.000Z',
+    createdAt: '2026-08-18T00:00:00.000Z',
+    updatedAt: '2026-08-18T00:00:00.000Z',
   }),
 )
+
+const ACTIVE_SITUATIONS = [
+  ['6ce4e56e-1111-4111-8111-111111111111', 'coord-fabrica-contenidos', 'CRITICAL', 'PLATFORM', 'Plataformas', 'Interrupción del tablero operativo'],
+  ['6ce4e56e-2222-4222-8222-222222222222', 'coord-homologaciones', 'HIGH', 'NETWORK', 'Conectividad', 'Caídas recurrentes esta semana'],
+  ['6ce4e56e-3333-4333-8333-333333333333', 'coord-servicios', 'MEDIUM', 'STAFF', 'Personal', 'Vacante crítica sin cobertura'],
+  ['6ce4e56e-4444-4444-8444-444444444444', 'coord-b2b', 'LOW', 'PROCESS', 'Procesos', 'Seguimiento de flujo pendiente'],
+].map(([id, coordinationCode, severity, categoryCode, categoryName, title], index) => ({
+  id,
+  title,
+  description: `Contexto ejecutivo para ${title.toLowerCase()}.`,
+  coordinationId: coordinationCode,
+  coordinationCode,
+  coordinationName: COORDINATIONS.find(([code]) => code === coordinationCode)?.[1],
+  createdByUserId: 'e2e-director',
+  createdByUserName: 'Directora E2E',
+  assignedUserId: null,
+  assignedUserName: null,
+  categoryId: `category-${index + 1}`,
+  categoryCode,
+  categoryName,
+  severity,
+  status: 'OPEN',
+  occurredAt: '2026-08-18T13:00:00.000Z',
+  createdAt: '2026-08-18T13:00:00.000Z',
+  updatedAt: `2026-08-18T13:0${index}:00.000Z`,
+  relatedCoordinations: [],
+}))
 
 const PERMISSIONS = [
   'AUTH_VIEW_PROFILE',
@@ -70,17 +85,24 @@ function accessToken(roleCode: RoleCode): string {
     roleCode,
     coordinationId:
       roleCode === 'COORDINADOR'
-        ? COORDINATION_RESPONSE.find(
-            (item) => item.code === 'coord-ingenierias',
-          )?.id
+        ? COORDINATION_RESPONSE.find((item) => item.code === 'coord-ingenierias')?.id
         : null,
     permissions: PERMISSIONS,
     status: 'ACTIVE',
   })}.e2e`
 }
 
-async function installRole(page: Page, roleCode: RoleCode) {
+async function installRole(
+  page: Page,
+  roleCode: RoleCode,
+  options: {
+    impactTourSeen?: boolean
+    networkFailure?: boolean
+    situations?: typeof ACTIVE_SITUATIONS
+  } = {},
+) {
   const coordinator = roleCode === 'COORDINADOR'
+  const servedSituations = options.situations ?? ACTIVE_SITUATIONS
   const coordination = COORDINATION_RESPONSE.find(
     (item) => item.code === 'coord-ingenierias',
   )
@@ -95,19 +117,30 @@ async function installRole(page: Page, roleCode: RoleCode) {
     coordinationId: coordinator ? coordination?.id : undefined,
     onboardingStep: 100,
     onboardingCompleted: true,
-    onboardingSeenAt: '2026-08-14T00:00:00.000Z',
+    onboardingSeenAt: '2026-08-18T00:00:00.000Z',
   }
 
   await page.addInitScript(
-    ({ sessionKey, tokenKey, currentSession, token }) => {
+    ({ sessionKey, tokenKey, currentSession, token, tourSeen }) => {
       localStorage.setItem(sessionKey, JSON.stringify(currentSession))
       localStorage.setItem(tokenKey, token)
+      if (tourSeen && currentSession.roleCode !== 'COORDINADOR') {
+        localStorage.setItem(
+          `novex.impact-network.tour.v1.${encodeURIComponent(currentSession.id)}`,
+          JSON.stringify({
+            version: 1,
+            outcome: 'completed',
+            seenAt: '2026-08-18T00:00:00.000Z',
+          }),
+        )
+      }
     },
     {
       sessionKey: AUTH_SESSION_KEY,
       tokenKey: AUTH_TOKEN_KEY,
       currentSession: session,
       token: accessToken(roleCode),
+      tourSeen: options.impactTourSeen ?? true,
     },
   )
 
@@ -135,6 +168,10 @@ async function installRole(page: Page, roleCode: RoleCode) {
     }
 
     if (path.endsWith('/coordinations/graph')) {
+      if (options.networkFailure) {
+        await route.fulfill({ status: 503, json: { message: 'Red E2E no disponible' } })
+        return
+      }
       await route.fulfill({
         json: { coordinations: COORDINATION_RESPONSE, dependencies: [] },
       })
@@ -146,26 +183,125 @@ async function installRole(page: Page, roleCode: RoleCode) {
         json: {
           networkStatus: 'attention',
           globalRiskScore: 68,
-          activeIncidentsCount: 12,
-          coordinationsCount: 14,
-          synchronizedCoordinationsCount: 14,
-          lastSynchronizedAt: '2026-08-14T14:42:00.000Z',
+          activeIncidentsCount: servedSituations.length,
+          coordinationsCount: COORDINATION_RESPONSE.length,
+          synchronizedCoordinationsCount: COORDINATION_RESPONSE.length,
+          lastSynchronizedAt: '2026-08-18T13:05:00.000Z',
         },
       })
       return
     }
 
-    if (
-      path.endsWith('/coordinations') &&
-      request.method() === 'GET'
-    ) {
+    if (path.endsWith('/coordinations') && request.method() === 'GET') {
       await route.fulfill({ json: COORDINATION_RESPONSE })
       return
     }
 
     if (path.endsWith('/situations') && request.method() === 'GET') {
       await route.fulfill({
-        json: { items: [], total: 0, page: 1, limit: 100 },
+        json: {
+          items: servedSituations,
+          total: servedSituations.length,
+          page: 1,
+          limit: 100,
+        },
+      })
+      return
+    }
+
+    const matchedSituation = servedSituations.find((item) =>
+      path.endsWith(`/situations/${item.id}`),
+    )
+    if (matchedSituation && request.method() === 'GET') {
+      await route.fulfill({ json: matchedSituation })
+      return
+    }
+
+    if (/\/situations\/[^/]+\/analysis$/.test(path)) {
+      const situationId = path.split('/').at(-2) ?? ACTIVE_SITUATIONS[0].id
+      await route.fulfill({
+        json: {
+          situationId,
+          sessionId: 'analysis-executive-e2e',
+          analysisVersion: 1,
+          isLatest: true,
+          provider: 'gemini',
+          confidence: 0.88,
+          createdAt: '2026-08-18T13:08:00.000Z',
+          updatedAt: '2026-08-18T13:08:00.000Z',
+          analysis: {
+            schemaVersion: '1',
+            analyzedAt: '2026-08-18T13:08:00.000Z',
+            provider: 'gemini',
+            executiveSummary: {
+              headline: 'Interrupción operativa concentrada',
+              summary:
+                'La indisponibilidad requiere atención inmediata y permanece contenida en la coordinación de origen.',
+              keyPoints: ['Continuidad del servicio', 'Seguimiento inmediato'],
+            },
+            incidentClassification: {
+              categoryCode: 'PLATFORM',
+              categoryName: 'Plataformas',
+              operationalSeverity: 'CRITICAL',
+              tags: ['disponibilidad'],
+            },
+            rootCause: { summary: 'Intermitencia del servicio', hypotheses: [] },
+            impactAssessment: {
+              operationalSeverity: 'CRITICAL',
+              confidence: 0.88,
+              estimatedDurationMinutes: 90,
+              summary: 'Impacto contenido en el origen.',
+              reasoning: 'No hay afectación confirmada en otras coordinaciones.',
+              affectedCoordinations: [],
+              propagation: [],
+            },
+            recommendations: [
+              {
+                title: 'Validar recuperación del servicio',
+                description: 'Confirmar estabilidad antes de cerrar el seguimiento.',
+                priority: 'CRITICAL',
+              },
+            ],
+            immediateRisks: [
+              {
+                title: 'Continuidad',
+                description: 'La indisponibilidad puede extender el tiempo de respuesta.',
+                severity: 'HIGH',
+              },
+            ],
+            futureRisks: [],
+            missingInformation: [],
+            executiveConclusion: {
+              conclusion: 'Mantener seguimiento hasta confirmar estabilidad.',
+              recommendedNextStep: 'Validar recuperación y monitorear recurrencia.',
+            },
+            confidence: { overall: 0.88, factors: [] },
+          },
+        },
+      })
+      return
+    }
+
+    if (/\/situations\/[^/]+\/impact-context$/.test(path)) {
+      const situationId = path.split('/').at(-2) ?? ACTIVE_SITUATIONS[0].id
+      await route.fulfill({
+        json: {
+          situationId,
+          originCoordinationId: '',
+          originCoordinationCode: 'coord-fabrica-contenidos',
+          hasDeclaredRelated: false,
+          canSimulate: true,
+          simulationAvailable: true,
+          declaredRelated: [],
+          message: 'No hay otras coordinaciones afectadas.',
+        },
+      })
+      return
+    }
+
+    if (/\/situations\/[^/]+\/affected-coordinations$/.test(path)) {
+      await route.fulfill({
+        json: { situationId: '', impactAssessmentId: null, items: [], total: 0 },
       })
       return
     }
@@ -175,150 +311,574 @@ async function installRole(page: Page, roleCode: RoleCode) {
 }
 
 for (const roleCode of ['DIRECTOR', 'ADMIN', 'ANALISTA'] as const) {
-  test(`${roleCode} abre y cierra el contexto desde mapa y rail`, async ({
+  test(`${roleCode} ve la red agrupada por estados y abre contexto`, async ({
     page,
   }) => {
-    test.setTimeout(60_000)
     await page.setViewportSize({ width: 1440, height: 900 })
     await installRole(page, roleCode)
     await page.goto('/red-impacto', { waitUntil: 'domcontentloaded' })
 
-    const overview = page.locator('.impact-executive')
-    await expect(overview).toBeVisible()
+    await expect(page.locator('.impact-executive')).toBeVisible()
+    await expect(page.locator('.impact-executive__status-board')).toBeVisible()
+    await expect(page.locator('.impact-executive__cartography')).toHaveCount(0)
+    await expect(page.locator('.impact-status-island')).toHaveCount(14)
+    await expect(page.locator('.impact-status-coordination')).toHaveCount(14)
     await expect(
-      page.locator('.impact-network[data-role-view="director"]'),
-    ).toBeVisible()
-    await expect(
-      page.locator('.impact-executive__rail-general > section').first(),
-    ).toHaveAttribute('aria-label', 'Requiere atención')
-    await expect(
-      page.locator('.impact-executive__cartography .propagation-scene__atlas'),
-    ).toBeVisible()
-    await expect(page.locator('.impact-executive__territory')).toBeVisible()
-    await expect(
-      page.locator('.impact-executive__territory-land'),
-    ).toHaveCount(1)
-    await expect(
-      page.locator('.impact-executive__territory-border'),
-    ).toHaveCount(2)
-    await expect(
-      page.locator('.impact-executive__territory-labels span'),
-    ).toHaveCount(4)
-    // El lenguaje de líneas queda reservado al impacto real entre coordinaciones.
-    await expect(
-      page.locator('.impact-executive__territory-routes'),
-    ).toHaveCount(0)
-    await expect(page.locator('.impact-executive__map')).toHaveAttribute(
-      'data-status-scenario',
-      'mixed',
+      page.locator('.impact-status-coordination__effect'),
+    ).toHaveCount(14)
+    await expect(page.locator('.impact-status-island__platform')).toHaveCount(0)
+    await expect(page.locator('.impact-status-group[data-status="critical"]')).toContainText('Crítico')
+    await expect(page.locator('.impact-status-group[data-status="critical"] .impact-status-island')).toHaveCount(1)
+    await expect(page.locator('.impact-status-group[data-status="high"] .impact-status-island')).toHaveCount(1)
+    await expect(page.locator('.impact-status-group[data-status="attention"] .impact-status-island')).toHaveCount(2)
+    await expect(page.locator('.impact-status-group[data-status="normal"] .impact-status-island')).toHaveCount(10)
+    await expect(page.locator('.impact-executive__panel').first()).toHaveAttribute(
+      'aria-label',
+      'Prioridad operacional',
     )
+    await expect(page.getByText('Ahora mismo', { exact: true })).toBeVisible()
     await expect(
-      page.locator('.impact-executive-island[data-focal="true"]'),
-    ).toHaveCount(1)
+      page.getByText('Seleccione una coordinación', { exact: true }),
+    ).toBeVisible()
     await expect(
-      page.locator(
-        '.impact-executive-island[data-focal="true"] .impact-executive-island__focus',
-      ),
-    ).toHaveText('Foco operacional')
+      page.getByText('1 coordinación requiere atención inmediata', {
+        exact: true,
+      }),
+    ).toBeVisible()
     await expect(
-      page.locator(
-        '.impact-executive-island[data-coordination-id="coord-homologaciones"] .impact-executive-island__badge',
-      ),
-    ).toHaveText('Alta')
-    await expect(
-      page.locator(
-        '.impact-executive-island[data-coordination-id="coord-servicios"] .impact-executive-island__badge',
-      ),
-    ).toHaveText('Atención')
-    await expect(
-      page.locator('.impact-executive__metric[data-metric="attention"]'),
-    ).toContainText('Coordinaciones afectadas')
+      page.locator('.impact-executive__attention-rank').first(),
+    ).toHaveText('01')
 
     const fabrica = page.locator(
-      '.impact-executive-island[data-coordination-id="coord-fabrica-contenidos"]',
+      '.impact-status-island[data-coordination-id="coord-fabrica-contenidos"]',
     )
-    await expect(fabrica).toBeVisible()
-    await expect(page.locator('.impact-executive__patterns')).toBeInViewport()
-    if (roleCode === 'DIRECTOR') {
-      await expect
-        .poll(() =>
-          page
-            .locator('.impact-executive-island__image')
-            .evaluateAll((images: HTMLImageElement[]) =>
-              images.every(
-                (image) =>
-                  image.complete &&
-                  image.naturalWidth > 0 &&
-                  !image.currentSrc.includes('.preview.'),
-              ),
-            ),
-        )
-        .toBe(true)
-      if (process.env.NOVEX_CAPTURE === '1') {
-        await page.waitForTimeout(2_500)
-        await page.screenshot({
-          path: 'test-results/director-operational-map.png',
-          fullPage: true,
-        })
-      }
-    }
+    await expect(fabrica.locator('img')).toHaveAttribute(
+      'src',
+      '/iconos/display/IconoFabrica.png',
+    )
     await fabrica.click()
     await expect(
       page.locator(
         '.impact-executive-context[data-coordination-id="coord-fabrica-contenidos"]',
       ),
     ).toBeVisible()
-    await expect(fabrica).toHaveClass(/impact-executive-island--selected/)
+    await expect(fabrica).toHaveAttribute('data-selected', 'true')
     await expect(
-      page.locator('.impact-executive-island--dimmed').first(),
+      page.getByText('Seleccione una coordinación', { exact: true }),
+    ).toHaveCount(0)
+    await expect(
+      page.locator('.impact-executive-context__cta--primary'),
     ).toBeVisible()
-
-    if (roleCode === 'DIRECTOR') {
-      if (process.env.NOVEX_CAPTURE === '1') {
-        await page.screenshot({
-          path: 'test-results/director-fabrica-contexto.png',
-          fullPage: true,
-        })
-      }
-    }
 
     await page.getByRole('button', { name: 'Cerrar panel' }).click()
     await expect(page.locator('.impact-executive-context')).toHaveCount(0)
-    await expect(page.locator('.impact-executive__rail-general')).toBeVisible()
-
-    await page
-      .locator(
-        '.impact-executive__attention-item[data-coordination-id="coord-homologaciones"]',
-      )
-      .click()
-    await expect(
-      page.locator(
-        '.impact-executive-context[data-coordination-id="coord-homologaciones"]',
-      ),
-    ).toBeVisible()
-
-    await page.getByRole('button', { name: 'Cerrar panel' }).click()
-    await page
-      .locator(
-        '.impact-executive__attention-item[data-coordination-id="coord-servicios"]',
-      )
-      .click()
-    await expect(
-      page.locator(
-        '.impact-executive-context[data-coordination-id="coord-servicios"]',
-      ),
-    ).toBeVisible()
   })
 }
 
+test('muestra el error institucional sin dejar un skeleton infinito', async ({
+  page,
+}) => {
+  await installRole(page, 'DIRECTOR', { networkFailure: true })
+  await page.goto('/red-impacto', { waitUntil: 'domcontentloaded' })
+
+  await expect(page.locator('.impact-executive')).toBeVisible()
+  await expect(page.getByRole('alert')).toContainText('Red E2E no disponible')
+  await expect(page.locator('.impact-executive__skeleton-board')).toHaveCount(0)
+})
+
+test('los filtros reorganizan el tablero sin perder la navegación', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await installRole(page, 'DIRECTOR')
+  await page.goto('/red-impacto', { waitUntil: 'domcontentloaded' })
+
+  await page.getByRole('button', { name: /Normal 10/ }).click()
+  await expect(page.locator('.impact-status-group')).toHaveCount(1)
+  await expect(page.locator('.impact-status-group[data-status="normal"]')).toBeVisible()
+  await expect(page.locator('.impact-status-island')).toHaveCount(10)
+
+  await page.getByRole('button', { name: /Normal 10/ }).click()
+  await page.getByRole('button', { name: /Plataformas/ }).click()
+  await expect(page.locator('.impact-executive__active-filter')).toBeVisible()
+  await expect(page.locator('.impact-status-island')).toHaveCount(1)
+  await expect(
+    page.locator(
+      '.impact-status-island[data-coordination-id="coord-fabrica-contenidos"]',
+    ),
+  ).toBeVisible()
+  await page.locator('.impact-executive__active-filter').click()
+  await expect(page.locator('.impact-status-island')).toHaveCount(14)
+})
+
+test('el tablero usa zoom y desplazamiento sin scroll interno', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await installRole(page, 'DIRECTOR')
+  await page.goto('/red-impacto', { waitUntil: 'domcontentloaded' })
+
+  const board = page.locator('.impact-executive__status-board')
+  const canvas = page.locator('.impact-executive__status-canvas')
+  const viewport = page.locator('.impact-executive__status-viewport')
+  await expect(page.locator('.impact-executive__status-scroll')).toHaveCount(0)
+  await expect(canvas).toHaveCSS('overflow', 'hidden')
+
+  const canvasBox = await canvas.boundingBox()
+  expect(canvasBox).not.toBeNull()
+  if (canvasBox) {
+    await page.mouse.move(canvasBox.x + 28, canvasBox.y + canvasBox.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(
+      canvasBox.x + 104,
+      canvasBox.y + canvasBox.height / 2 + 34,
+      { steps: 6 },
+    )
+    await page.mouse.up()
+  }
+  await expect
+    .poll(() =>
+      viewport.evaluate((element) =>
+        element.style.getPropertyValue('--status-pan-x'),
+      ),
+    )
+    .not.toBe('0px')
+
+  await page.getByRole('button', { name: 'Centrar mapa' }).click()
+  await expect
+    .poll(() =>
+      viewport.evaluate((element) =>
+        element.style.getPropertyValue('--status-pan-x'),
+      ),
+    )
+    .toBe('0px')
+
+  const draggableCoordination = page.locator(
+    '.impact-status-coordination[data-coordination-id="coord-proyeccion-social"]',
+  )
+  const coordinationBox = await draggableCoordination.boundingBox()
+  expect(coordinationBox).not.toBeNull()
+  if (coordinationBox) {
+    const centerX = coordinationBox.x + coordinationBox.width / 2
+    const centerY = coordinationBox.y + coordinationBox.height / 2
+    await page.mouse.move(centerX, centerY)
+    await page.mouse.down()
+    await page.mouse.move(centerX - 62, centerY - 28, { steps: 6 })
+    await page.mouse.up()
+  }
+  await expect
+    .poll(() =>
+      viewport.evaluate((element) =>
+        element.style.getPropertyValue('--status-pan-x'),
+      ),
+    )
+    .not.toBe('0px')
+  await expect(page.locator('.impact-executive-context')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Centrar mapa' }).click()
+
+  const initialZoom = Number(await board.getAttribute('data-zoom'))
+  await page.getByRole('button', { name: 'Acercar mapa' }).click()
+  await expect
+    .poll(async () => Number(await board.getAttribute('data-zoom')))
+    .toBeGreaterThan(initialZoom)
+  await page.getByRole('button', { name: 'Acercar mapa' }).click()
+  await page.getByRole('button', { name: 'Acercar mapa' }).click()
+
+  const zoomedCanvasBox = await canvas.boundingBox()
+  expect(zoomedCanvasBox).not.toBeNull()
+  if (zoomedCanvasBox) {
+    await page.mouse.move(
+      zoomedCanvasBox.x + 30,
+      zoomedCanvasBox.y + zoomedCanvasBox.height / 2,
+    )
+    await page.mouse.down()
+    await page.mouse.move(
+      zoomedCanvasBox.x + 80,
+      zoomedCanvasBox.y + zoomedCanvasBox.height / 2 + 28,
+      { steps: 5 },
+    )
+    await page.mouse.up()
+  }
+  await expect
+    .poll(() =>
+      viewport.evaluate((element) =>
+        element.style.getPropertyValue('--status-pan-x'),
+      ),
+    )
+    .not.toBe('0px')
+
+  for (let index = 0; index < 6; index += 1) {
+    await page.getByRole('button', { name: 'Alejar mapa' }).click()
+  }
+  await expect(board).toHaveAttribute('data-overview', 'true')
+  await expect(page.locator('.impact-executive__status-ambient')).toHaveCSS(
+    'opacity',
+    '1',
+  )
+
+  if (process.env.NOVEX_CAPTURE === '1') {
+    await page.screenshot({
+      path: 'test-results/status-board-overview-background.png',
+      fullPage: true,
+    })
+  }
+})
+
+test('abrir una coordinación entra al detalle institucional existente', async ({ page }) => {
+  await installRole(page, 'DIRECTOR')
+  await page.goto('/red-impacto', { waitUntil: 'domcontentloaded' })
+
+  await page
+    .locator('.impact-status-island[data-coordination-id="coord-servicios"]')
+    .click()
+  await page.locator('.impact-executive-context__cta--map').click()
+  await expect(page.locator('.impact-executive')).toHaveCount(0)
+  await expect(page.locator('.organizational-scene')).toBeVisible()
+})
+
+test('la pantalla completa conserva la navegación durante todo el flujo', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1920, height: 1080 })
+  await installRole(page, 'DIRECTOR')
+  await page.goto('/red-impacto', { waitUntil: 'domcontentloaded' })
+
+  const platform = page.locator('.novex-os')
+  const navigation = page.getByRole('complementary', {
+    name: 'Navegación principal',
+  })
+
+  await page
+    .getByRole('button', { name: 'Ver tablero en pantalla completa' })
+    .click()
+  await expect(platform).toHaveAttribute('data-immersive', 'true')
+  await expect(navigation).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Red de impacto' })).toBeVisible()
+  await expect
+    .poll(() =>
+      page.evaluate(() => document.fullscreenElement?.classList.contains('novex-os')),
+    )
+    .toBe(true)
+
+  await page
+    .locator('.impact-status-island[data-coordination-id="coord-fabrica-contenidos"]')
+    .click()
+  await page.locator('.impact-executive-context__cta--map').click()
+  await expect(
+    page.locator('.organizational-scene[data-level="coordination"]'),
+  ).toBeVisible()
+  await expect(platform).toHaveAttribute('data-immersive', 'true')
+  await expect(navigation).toBeVisible()
+
+  if (process.env.NOVEX_CAPTURE === '1') {
+    await page.screenshot({
+      path: 'test-results/impact-network-fullscreen-coordination.png',
+    })
+  }
+
+  await page
+    .locator('.coordination-situation-node[data-priority="true"]')
+    .click()
+  await expect(
+    page.locator('.organizational-scene[data-level="situation"]'),
+  ).toBeVisible()
+  await expect(page.locator('.island-focus-dossier')).toBeVisible()
+  await expect(platform).toHaveAttribute('data-immersive', 'true')
+  await expect(navigation).toBeVisible()
+
+  if (process.env.NOVEX_CAPTURE === '1') {
+    await page.screenshot({
+      path: 'test-results/impact-network-fullscreen-flow.png',
+    })
+  }
+
+  await page.evaluate(() => document.exitFullscreen())
+  await expect(platform).not.toHaveAttribute('data-immersive', 'true')
+})
+
+test('el recorrido ejecutivo explica coordinación, contención, análisis y regreso', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await installRole(page, 'DIRECTOR')
+  await page.goto('/red-impacto', { waitUntil: 'domcontentloaded' })
+
+  const critical = page.locator(
+    '.impact-status-island[data-coordination-id="coord-fabrica-contenidos"]',
+  )
+  await critical.click()
+  await expect(page.locator('.impact-executive-context[data-status="critical"]')).toBeVisible()
+  await expect(page.getByText('Qué está pasando', { exact: true })).toBeVisible()
+  await expect(page.getByText('Principal situación', { exact: true })).toBeVisible()
+
+  await page.locator('.impact-executive-context__cta--primary').click()
+  await expect(
+    page.locator('.organizational-scene[data-level="situation"]'),
+  ).toBeVisible()
+  const dossier = page.locator('.island-focus-dossier')
+  await expect(dossier).toBeVisible({ timeout: 4_000 })
+  await expect(dossier.getByText('¿Qué ocurrió?', { exact: true })).toBeVisible({
+    timeout: 4_000,
+  })
+  await expect(dossier.getByRole('button', { name: /Descargar PDF/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Entender la situación' })).toHaveCount(0)
+
+  await dossier.locator('.island-focus-dossier__close').click()
+  await expect(dossier).toHaveCount(0)
+  await expect(
+    page.locator('.organizational-scene[data-level="coordination"]'),
+  ).toBeVisible()
+  await expect(
+    page.locator('.coordination-situation-node[data-priority="true"]'),
+  ).toBeVisible()
+})
+
+test('una situación propagada muestra únicamente coordinaciones confirmadas', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await installRole(page, 'DIRECTOR')
+  await page.route('**/api/v1/**', async (route) => {
+    const path = new URL(route.request().url()).pathname
+    if (/\/situations\/[^/]+\/impact-context$/.test(path)) {
+      const situationId = path.split('/').at(-2) ?? ACTIVE_SITUATIONS[0].id
+      await route.fulfill({
+        json: {
+          situationId,
+          originCoordinationId: '',
+          originCoordinationCode: 'coord-fabrica-contenidos',
+          hasDeclaredRelated: true,
+          canSimulate: false,
+          simulationAvailable: false,
+          declaredRelated: [
+            {
+              coordinationId: 'coord-homologaciones',
+              coordinationCode: 'coord-homologaciones',
+              coordinationName: 'Homologaciones',
+              coordinationShortName: 'Homologaciones',
+              impactLevel: 'HIGH',
+              description: 'Dependencia confirmada',
+              source: 'declared',
+            },
+            {
+              coordinationId: 'coord-servicios',
+              coordinationCode: 'coord-servicios',
+              coordinationName: 'Servicios',
+              coordinationShortName: 'Servicios',
+              impactLevel: 'MEDIUM',
+              description: 'Dependencia confirmada',
+              source: 'declared',
+            },
+          ],
+          message: 'Se muestran únicamente las coordinaciones confirmadas.',
+        },
+      })
+      return
+    }
+    await route.fallback()
+  })
+  await page.goto('/red-impacto', { waitUntil: 'domcontentloaded' })
+
+  await page
+    .locator('.impact-status-island[data-coordination-id="coord-fabrica-contenidos"]')
+    .click()
+  await page.getByRole('button', { name: 'Revisar situación' }).click()
+
+  await expect(
+    page.locator('.organizational-scene[data-impact-mode="propagated"]'),
+  ).toBeVisible()
+  const dossier = page.locator('.island-focus-dossier')
+  await expect(dossier).toBeVisible({ timeout: 4_000 })
+  await expect(dossier.getByText(/2 coordinaciones/i)).toBeVisible()
+  await dossier.locator('.island-focus-dossier__close').click()
+  await expect(dossier).toHaveCount(0)
+  await expect(
+    page.locator('.organizational-scene[data-level="coordination"]'),
+  ).toBeVisible()
+})
+
+for (const viewportSize of [
+  { width: 1366, height: 768 },
+  { width: 1440, height: 900 },
+  { width: 1600, height: 900 },
+  { width: 1920, height: 1080 },
+] as const) {
+  test(`la jerarquía ejecutiva aprovecha el viewport ${viewportSize.width}x${viewportSize.height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewportSize)
+    await installRole(page, 'DIRECTOR')
+    await page.goto('/red-impacto', { waitUntil: 'domcontentloaded' })
+
+    await expect(page.locator('.impact-executive__status-board')).toBeVisible()
+    await expect(page.locator('.impact-executive__rail')).toBeVisible()
+    await expect
+      .poll(() =>
+        page.locator('.impact-status-coordination img').evaluateAll((icons) =>
+          icons.every(
+            (icon) =>
+              icon instanceof HTMLImageElement &&
+              icon.complete &&
+              icon.naturalWidth > 0,
+          ),
+        ),
+      )
+      .toBe(true)
+    await page.locator('.impact-status-coordination img').evaluateAll(
+      async (icons) => {
+        await Promise.all(
+          icons.map((icon) =>
+            icon instanceof HTMLImageElement
+              ? icon.decode().catch(() => undefined)
+              : Promise.resolve(),
+          ),
+        )
+      },
+    )
+    await expect(page.locator('.impact-executive__map-controls')).toBeInViewport()
+    await expect(page.locator('.impact-executive__status-canvas')).toHaveCSS(
+      'overflow',
+      'hidden',
+    )
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth + 1,
+      ),
+    ).toBe(true)
+
+    if (process.env.NOVEX_CAPTURE === '1') {
+      await page.waitForTimeout(1_000)
+      await page.screenshot({
+        path: `test-results/executive-hierarchy-${viewportSize.width}x${viewportSize.height}.png`,
+        fullPage: true,
+      })
+    }
+  })
+}
+
+test('DIRECTOR completa una revisión guiada y el tutorial se muestra una sola vez', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await installRole(page, 'DIRECTOR', { impactTourSeen: false })
+  await page.goto('/red-impacto', { waitUntil: 'domcontentloaded' })
+
+  const tour = page.locator('.impact-network-tour')
+  await expect(tour).toHaveAttribute('data-impact-tour-step', 'welcome')
+  await expect(
+    tour.getByRole('button', { name: 'Omitir tutorial', exact: true }),
+  ).toBeVisible()
+
+  await tour.getByRole('button', { name: 'Siguiente' }).click()
+  await expect(tour).toHaveAttribute(
+    'data-impact-tour-step',
+    'coordination-map',
+  )
+  await tour.getByRole('button', { name: 'Siguiente' }).click()
+  await expect(tour).toHaveAttribute(
+    'data-impact-tour-step',
+    'coordination-summary',
+  )
+  await expect(tour).toHaveAttribute('data-impact-tour-ready', 'true')
+  await expect(
+    page.locator('[data-impact-tour="coordination-summary"]'),
+  ).toBeVisible()
+
+  await tour.getByRole('button', { name: 'Siguiente' }).click()
+  await expect(tour).toHaveAttribute('data-impact-tour-step', 'situation-list')
+  await expect(page.locator('[data-impact-tour="situation-list"]')).toBeVisible()
+
+  await tour.getByRole('button', { name: 'Siguiente' }).click()
+  await expect(tour).toHaveAttribute('data-impact-tour-step', 'impact-map')
+  await expect(page.locator('[data-impact-tour="impact-map"]')).toBeVisible()
+  await expect(tour.locator('.impact-network-tour__card')).toHaveCSS(
+    'left',
+    '16px',
+  )
+
+  await tour.getByRole('button', { name: 'Siguiente' }).click()
+  await expect(tour).toHaveAttribute('data-impact-tour-step', 'situation-detail')
+  await expect(tour).toHaveAttribute('data-impact-tour-ready', 'true')
+  await expect(
+    page.locator('[data-impact-tour="situation-dossier"]'),
+  ).toBeVisible()
+  await expect(page.locator('.impact-map-actions__back')).toHaveCount(0)
+  await expect(
+    page.locator('.island-focus-dossier__close--back'),
+  ).toBeVisible()
+
+  await tour.getByRole('button', { name: 'Siguiente' }).click()
+  await expect(tour).toHaveAttribute('data-impact-tour-step', 'complete')
+  await tour.getByRole('button', { name: 'Finalizar' }).click()
+  await expect(tour).toHaveCount(0)
+
+  await expect(page.locator('.impact-network')).toHaveAttribute(
+    'data-navigation-level',
+    'situation',
+  )
+  await page.getByRole('button', { name: /Menú de usuario/ }).click()
+  await page
+    .getByRole('menuitem', { name: 'Volver a ver tutorial' })
+    .click()
+  await expect(tour).toHaveAttribute('data-impact-tour-step', 'welcome')
+  await expect(page.locator('.impact-network')).toHaveAttribute(
+    'data-navigation-level',
+    'institutional',
+  )
+  await expect(page).toHaveURL(/\/red-impacto$/)
+  await tour
+    .getByRole('button', { name: 'Omitir tutorial', exact: true })
+    .click()
+
+  await page.goto('/red-impacto', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.impact-executive')).toBeVisible()
+  await page.waitForTimeout(700)
+  await expect(tour).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Acerca de Red de impacto' }).click()
+  await page.getByRole('button', { name: 'Ver tutorial guiado' }).click()
+  await expect(tour).toHaveAttribute('data-impact-tour-step', 'welcome')
+  await tour
+    .getByRole('button', { name: 'Omitir tutorial', exact: true })
+    .click()
+})
+
+test('sin situaciones el tutorial usa un ejemplo didáctico sin alterar la red', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await installRole(page, 'ADMIN', {
+    impactTourSeen: false,
+    situations: [],
+  })
+  await page.goto('/red-impacto', { waitUntil: 'domcontentloaded' })
+
+  const tour = page.locator('.impact-network-tour')
+  await expect(tour).toHaveAttribute('data-impact-tour-step', 'welcome')
+  for (const step of [
+    'coordination-map',
+    'coordination-summary',
+    'situation-list',
+    'example',
+  ]) {
+    await tour.getByRole('button', { name: 'Siguiente' }).click()
+    await expect(tour).toHaveAttribute('data-impact-tour-step', step)
+  }
+
+  await expect(tour.getByText('Ejemplo de tutorial · No es un dato real')).toBeVisible()
+  await expect(page.locator('.operational-context-panel__situation')).toHaveCount(0)
+  await expect(page.locator('[data-impact-tour="empty-situations"]')).toBeVisible()
+
+  await tour
+    .getByRole('button', { name: 'Omitir tutorial', exact: true })
+    .click()
+  await expect(tour).toHaveCount(0)
+})
+
 test('COORDINADOR conserva la experiencia anterior', async ({ page }) => {
-  test.setTimeout(60_000)
   await installRole(page, 'COORDINADOR')
   await page.goto('/red-impacto?coordination=coord-ingenierias', {
     waitUntil: 'domcontentloaded',
   })
 
   await expect(page.locator('.impact-executive')).toHaveCount(0)
+  await expect(page.locator('.impact-network-tour')).toHaveCount(0)
   await expect(page.locator('.organizational-scene')).toBeVisible()
   await expect(
     page.locator('.operational-context-panel[data-level="coordination"]'),
@@ -326,372 +886,9 @@ test('COORDINADOR conserva la experiencia anterior', async ({ page }) => {
   await expect(
     page.locator('.organizational-scene__island--selected'),
   ).toHaveAttribute('data-coordination-id', 'coord-ingenierias')
+
+  await page.getByRole('button', { name: /Menú de usuario/ }).click()
+  await expect(
+    page.getByRole('menuitem', { name: 'Volver a ver tutorial' }),
+  ).toHaveCount(0)
 })
-
-test('viewport ejecutivo soporta zoom, pan, reset y fullscreen real', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1440, height: 900 })
-  await installRole(page, 'DIRECTOR')
-  await page.goto('/red-impacto', { waitUntil: 'domcontentloaded' })
-
-  const map = page.locator('.impact-executive__map')
-  const stage = page.locator('.impact-executive__map-stage')
-  const viewport = page.locator('.impact-executive__map-viewport')
-  await expect(map).toBeVisible()
-
-  // Panorama de entrada al 92%: todas las coordinaciones visibles y legibles.
-  await expect(map).toHaveAttribute('data-zoom', '92')
-
-  await page.getByRole('button', { name: 'Acercar mapa' }).click()
-  await expect(map).toHaveAttribute('data-zoom', '102')
-  await expect(page.locator('.impact-executive__map-zoom')).toHaveText('102%')
-
-  await page.getByRole('button', { name: 'Alejar mapa' }).click()
-  await page.getByRole('button', { name: 'Alejar mapa' }).click()
-  await page.getByRole('button', { name: 'Alejar mapa' }).click()
-  await page.getByRole('button', { name: 'Alejar mapa' }).click()
-  await expect(map).toHaveAttribute('data-zoom', '62')
-  await expect(page.locator('.impact-executive__map-zoom')).toHaveText('62%')
-
-  const cartography = page.locator('.impact-executive__cartography')
-  await expect(viewport.locator('.impact-executive__cartography')).toHaveCount(0)
-  await expect(
-    cartography.locator('.propagation-scene__atlas'),
-  ).toBeVisible()
-  await expect(
-    cartography.locator('.propagation-scene__atlas-land path'),
-  ).toHaveCount(7)
-  await expect(
-    cartography.locator('.impact-executive__territory-coast'),
-  ).toHaveCount(1)
-  await expect(
-    cartography.locator('.impact-executive__territory-border'),
-  ).toHaveCount(2)
-  const cartographyBox = await cartography.boundingBox()
-  const zoomedOutStageBox = await stage.boundingBox()
-  expect(cartographyBox).not.toBeNull()
-  expect(zoomedOutStageBox).not.toBeNull()
-  if (cartographyBox && zoomedOutStageBox) {
-    expect(cartographyBox.width).toBeGreaterThan(zoomedOutStageBox.width * 1.03)
-    expect(cartographyBox.height).toBeGreaterThan(zoomedOutStageBox.height * 1.03)
-  }
-
-  if (process.env.NOVEX_CAPTURE === '1') {
-    await page.waitForTimeout(500)
-    await page.screenshot({
-      path: 'test-results/director-operational-map-zoomout.png',
-      fullPage: true,
-    })
-  }
-
-  const box = await stage.boundingBox()
-  expect(box).not.toBeNull()
-  if (!box) return
-
-  await page.mouse.move(box.x + box.width * 0.62, box.y + 42)
-  await page.mouse.down()
-  await page.mouse.move(box.x + box.width * 0.67, box.y + 74, { steps: 6 })
-  await page.mouse.up()
-
-  await expect
-    .poll(() =>
-      viewport.evaluate((element) =>
-        element.style.getPropertyValue('--operational-pan-x'),
-      ),
-    )
-    .not.toBe('0px')
-
-  const reset = page.getByRole('button', { name: 'Centrar mapa' })
-  await expect(reset).toBeEnabled()
-  await reset.click()
-  await expect(map).toHaveAttribute('data-zoom', '92')
-  await expect(reset).toBeDisabled()
-
-  for (const coordinationId of [
-    'coord-fabrica-contenidos',
-    'coord-homologaciones',
-    'coord-servicios',
-  ]) {
-    const island = page.locator(
-      `.impact-executive-island[data-coordination-id="${coordinationId}"]`,
-    )
-    const islandBox = await island.boundingBox()
-    const metaBox = await island
-      .locator('.impact-executive-island__meta')
-      .boundingBox()
-    expect(islandBox).not.toBeNull()
-    expect(metaBox).not.toBeNull()
-    if (islandBox && metaBox) {
-      expect(metaBox.y + metaBox.height).toBeLessThan(
-        islandBox.y + islandBox.height * 0.5,
-      )
-    }
-  }
-
-  await page
-    .getByRole('button', { name: 'Ver mapa en pantalla completa' })
-    .click()
-  await expect
-    .poll(() =>
-      page.evaluate(() =>
-        document.fullscreenElement?.classList.contains('impact-executive__body') ??
-        false,
-      ),
-    )
-    .toBe(true)
-  await expect(
-    page.getByRole('button', { name: 'Salir de pantalla completa' }),
-  ).toBeVisible()
-  await expect(map).toHaveAttribute('data-density', 'expanded')
-
-  if (process.env.NOVEX_CAPTURE === '1') {
-    await page.waitForTimeout(1_200)
-    await page.screenshot({
-      path: 'test-results/director-operational-map-fullscreen.png',
-      fullPage: true,
-    })
-  }
-
-  await page
-    .locator(
-      '.impact-executive-island[data-coordination-id="coord-fabrica-contenidos"]',
-    )
-    .click()
-  await expect(
-    page.locator(
-      '.impact-executive-context[data-coordination-id="coord-fabrica-contenidos"]',
-    ),
-  ).toBeVisible()
-  await page.getByRole('button', { name: 'Cerrar panel' }).click()
-  await page.getByRole('button', { name: 'Salir de pantalla completa' }).click()
-  await expect.poll(() => page.evaluate(() => document.fullscreenElement)).toBeNull()
-})
-
-test('hover respira sin mover vecinos y el mapa selecciona cada coordinación', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1600, height: 900 })
-  await installRole(page, 'DIRECTOR')
-  await page.goto('/red-impacto', { waitUntil: 'domcontentloaded' })
-
-  const islands = page.locator('.impact-executive-island')
-  await expect(islands).toHaveCount(14)
-  const positions = () =>
-    islands.evaluateAll((elements) =>
-      elements.map((element) => {
-        const island = element as HTMLElement
-        return `${island.dataset.coordinationId}:${island.style.left},${island.style.top},${island.style.width}`
-      }),
-    )
-  const restingPositions = await positions()
-
-  const ingenierias = page.locator(
-    '.impact-executive-island[data-coordination-id="coord-ingenierias"]',
-  )
-  await expect(ingenierias).toHaveCSS('cursor', 'pointer')
-  const restingScale = await ingenierias
-    .locator('.impact-executive-island__body')
-    .evaluate((element) => getComputedStyle(element).transform)
-
-  await ingenierias.hover()
-  await expect
-    .poll(() =>
-      ingenierias
-        .locator('.impact-executive-island__body')
-        .evaluate((element) => getComputedStyle(element).transform),
-    )
-    .not.toBe(restingScale)
-  // El hover es un respiro local: la composición territorial no se recalcula.
-  expect(await positions()).toEqual(restingPositions)
-
-  for (const coordinationId of ['coord-homologaciones', 'coord-servicios']) {
-    await page
-      .locator(`.impact-executive-island[data-coordination-id="${coordinationId}"]`)
-      .click()
-    await expect(
-      page.locator(
-        `.impact-executive-context[data-coordination-id="${coordinationId}"]`,
-      ),
-    ).toBeVisible()
-    await page.getByRole('button', { name: 'Cerrar panel' }).click()
-  }
-})
-
-test('la jerarquía geométrica no cambia en estados operacionales uniformes', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1600, height: 900 })
-  await installRole(page, 'DIRECTOR')
-  await page.goto('/red-impacto', { waitUntil: 'domcontentloaded' })
-
-  const map = page.locator('.impact-executive__map')
-  const islands = page.locator('.impact-executive-island')
-  await expect(islands).toHaveCount(14)
-  const geometry = () =>
-    islands.evaluateAll((elements) =>
-      elements.map((element) => {
-        const htmlElement = element as HTMLElement
-        return {
-          id: htmlElement.dataset.coordinationId,
-          left: htmlElement.style.left,
-          top: htmlElement.style.top,
-          width: htmlElement.style.width,
-          height: htmlElement.style.height,
-          focal: htmlElement.dataset.focal,
-        }
-      }),
-    )
-  const initialGeometry = await geometry()
-
-  for (const status of ['normal', 'attention', 'critical'] as const) {
-    await map.evaluate((element, nextStatus) => {
-      element.setAttribute('data-status-scenario', `uniform-${nextStatus}`)
-      const statusLabel = {
-        normal: 'Normal',
-        attention: 'Atención',
-        critical: 'Crítica',
-      }[nextStatus]
-      element
-        .querySelectorAll<HTMLElement>('.impact-executive-island')
-        .forEach((island) => {
-          island.setAttribute('data-status', nextStatus)
-          const badge = island.querySelector<HTMLElement>(
-            '.impact-executive-island__badge',
-          )
-          const labelNode = badge?.lastChild
-          if (labelNode) labelNode.textContent = statusLabel
-        })
-    }, status)
-
-    await expect(
-      page.locator('.impact-executive-island[data-focal="true"]'),
-    ).toHaveCount(1)
-    expect(await geometry()).toEqual(initialGeometry)
-
-    if (process.env.NOVEX_CAPTURE === '1') {
-      await map.screenshot({
-        path: `test-results/director-operational-map-all-${status}.png`,
-      })
-    }
-  }
-})
-
-for (const viewportSize of [
-  { width: 1366, height: 768 },
-  { width: 1600, height: 900 },
-  { width: 1920, height: 1080 },
-] as const) {
-  test(`mapa y rail permanecen accesibles a ${viewportSize.width}px`, async ({
-    page,
-  }) => {
-    await page.setViewportSize(viewportSize)
-    await installRole(page, 'DIRECTOR')
-    await page.goto('/red-impacto', { waitUntil: 'domcontentloaded' })
-
-    const map = page.locator('.impact-executive__map')
-    const rail = page.locator('.impact-executive__rail')
-    const controls = page.locator('.impact-executive__map-controls')
-    await expect(map).toBeVisible()
-    await expect(rail).toBeVisible()
-    await expect(controls).toBeInViewport()
-    await expect(page.locator('.impact-executive__patterns')).toBeInViewport()
-
-    if (process.env.NOVEX_CAPTURE === '1') {
-      await page.waitForTimeout(1_200)
-      await page.screenshot({
-        path: `test-results/director-operational-map-${viewportSize.width}.png`,
-        fullPage: true,
-      })
-    }
-
-    const mapBox = await map.boundingBox()
-    const railBox = await rail.boundingBox()
-    const guideBox = await page
-      .locator('.impact-executive__map-header h3')
-      .boundingBox()
-    const b2bLabelBox = await page
-      .locator(
-        '.impact-executive-island[data-coordination-id="coord-b2b"] .impact-executive-island__meta',
-      )
-      .boundingBox()
-    const labelRects = await page
-      .locator('.impact-executive-island__meta')
-      .evaluateAll((elements) =>
-        elements.map((element) => {
-          const rect = element.getBoundingClientRect()
-          return {
-            id: element.closest<HTMLElement>('.impact-executive-island')
-              ?.dataset.coordinationId,
-            left: rect.left,
-            right: rect.right,
-            top: rect.top,
-            bottom: rect.bottom,
-          }
-        }),
-      )
-    expect(mapBox).not.toBeNull()
-    expect(railBox).not.toBeNull()
-    expect(guideBox).not.toBeNull()
-    expect(b2bLabelBox).not.toBeNull()
-    if (mapBox && railBox) {
-      expect(mapBox.x + mapBox.width).toBeLessThanOrEqual(railBox.x)
-    }
-    if (guideBox && b2bLabelBox) {
-      const separatedHorizontally =
-        b2bLabelBox.x >= guideBox.x + guideBox.width + 6
-      const separatedVertically =
-        b2bLabelBox.y >= guideBox.y + guideBox.height + 6
-      expect(separatedHorizontally || separatedVertically).toBe(true)
-    }
-
-    for (let leftIndex = 0; leftIndex < labelRects.length; leftIndex += 1) {
-      for (
-        let rightIndex = leftIndex + 1;
-        rightIndex < labelRects.length;
-        rightIndex += 1
-      ) {
-        const left = labelRects[leftIndex]
-        const right = labelRects[rightIndex]
-        const overlapX = Math.min(left.right, right.right) - Math.max(left.left, right.left)
-        const overlapY = Math.min(left.bottom, right.bottom) - Math.max(left.top, right.top)
-
-        expect(
-          overlapX > 2 && overlapY > 2,
-          `${left.id} solapa la etiqueta de ${right.id}`,
-        ).toBe(false)
-      }
-    }
-
-    // Las etiquetas de sector no deben leerse como el nombre de una coordinación.
-    const sectorRects = await page
-      .locator('.impact-executive__territory-labels span')
-      .evaluateAll((elements) =>
-        elements.map((element) => {
-          const rect = element.getBoundingClientRect()
-          return {
-            id: element.textContent?.trim() ?? '',
-            left: rect.left,
-            right: rect.right,
-            top: rect.top,
-            bottom: rect.bottom,
-          }
-        }),
-      )
-    expect(sectorRects).toHaveLength(4)
-
-    for (const sector of sectorRects) {
-      for (const label of labelRects) {
-        const overlapX =
-          Math.min(sector.right, label.right) - Math.max(sector.left, label.left)
-        const overlapY =
-          Math.min(sector.bottom, label.bottom) - Math.max(sector.top, label.top)
-
-        expect(
-          overlapX > -6 && overlapY > -6,
-          `${sector.id} compite con el nombre de ${label.id}`,
-        ).toBe(false)
-      }
-    }
-  })
-}

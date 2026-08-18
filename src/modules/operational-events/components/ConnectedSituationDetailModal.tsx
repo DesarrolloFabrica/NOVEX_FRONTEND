@@ -29,6 +29,8 @@ interface ConnectedSituationDetailModalProps {
   onClose: () => void
   /** Título ya visible en la lista, para no abrir el expediente en blanco. */
   title?: string
+  /** Presenta primero una lectura ejecutiva; el PDF conserva el detalle técnico. */
+  executiveSummary?: boolean
 }
 
 function SituationWithoutAnalysisModal({
@@ -83,6 +85,7 @@ export function ConnectedSituationDetailModal({
   situationId,
   onClose,
   title,
+  executiveSummary = false,
 }: ConnectedSituationDetailModalProps) {
   const { user } = useAuth()
   const showAuditTrail = seesInstitutionalSituationRegistry(
@@ -180,6 +183,7 @@ export function ConnectedSituationDetailModal({
       event={event}
       onClose={onClose}
       showAuditTrail={showAuditTrail}
+      executiveSummary={executiveSummary}
     />
   )
 }

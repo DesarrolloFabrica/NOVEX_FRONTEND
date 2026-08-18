@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ReactNode, Ref } from 'react'
 import type { RoomEnvironment } from '@/modules/room/constants/roomTheme'
 import { NovexSystemRail } from '@/shared/components/NovexSystemRail'
 
@@ -12,8 +12,10 @@ interface NovexRoomProps {
   environment?: RoomEnvironment
   /** Identidad visual del módulo activo; no modifica la estructura. */
   scene: NovexScene
-  /** Oculta el rail lateral cuando la Red de impacto está en modo inmersivo. */
+  /** Activa los ajustes visuales de pantalla completa de la plataforma. */
   immersive?: boolean
+  /** Contenedor estable que puede convertirse en la superficie de pantalla completa. */
+  rootRef?: Ref<HTMLDivElement>
 }
 
 export function NovexRoom({
@@ -21,9 +23,11 @@ export function NovexRoom({
   environment,
   scene,
   immersive = false,
+  rootRef,
 }: NovexRoomProps) {
   return (
     <div
+      ref={rootRef}
       data-environment-status={environment}
       data-scene={scene}
       data-immersive={immersive ? 'true' : undefined}

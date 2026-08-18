@@ -3437,7 +3437,8 @@
     .organizational-scene__guide,
     .impact-map-recenter,
     .impact-map-selection,
-    .impact-map-summary
+    .impact-map-summary,
+    .executive-impact-state
   ) {
   opacity: 0;
   pointer-events: none;
@@ -7225,7 +7226,7 @@
   z-index: 2;
   display: flex;
   flex-shrink: 0;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   padding: 14px 16px 12px;
@@ -7235,6 +7236,7 @@
 
 .island-focus-dossier__topbar-copy {
   min-width: 0;
+  flex: 1;
 }
 
 .island-focus-dossier__topbar-kicker {
@@ -7247,12 +7249,16 @@
 }
 
 .island-focus-dossier__topbar-copy strong {
-  display: block;
+  display: -webkit-box;
   margin-top: 4px;
+  overflow: hidden;
   color: #e8f3ff;
   font-size: 0.92rem;
   font-weight: 700;
   line-height: 1.25;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .island-focus-dossier__topbar-subtitle {
@@ -7356,9 +7362,55 @@
   line-height: 1;
 }
 
+.island-focus-dossier__facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  flex-shrink: 0;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 16px 12px;
+  border-bottom: 1px solid rgb(102 162 232 / 0.1);
+  background: linear-gradient(180deg, rgb(6 16 32 / 0.55), rgb(4 12 24 / 0.28));
+}
+
+.island-focus-dossier__facts > div {
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid rgb(107 165 255 / 0.12);
+  border-radius: 10px;
+  background: rgb(8 22 44 / 0.55);
+}
+
+.island-focus-dossier__facts dt,
+.island-focus-dossier__facts dd {
+  margin: 0;
+}
+
+.island-focus-dossier__facts dt {
+  color: #7d96b3;
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.island-focus-dossier__facts dd {
+  margin-top: 4px;
+  overflow: hidden;
+  color: #e8f3ff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .island-focus-dossier__content {
+  display: flex;
   min-height: 0;
   flex: 1;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .island-focus-panel {
@@ -7535,12 +7587,12 @@
 }
 
 .island-focus-panel--origin .novex-sit-report {
-  gap: 12px;
+  gap: 8px;
 }
 
 .island-focus-panel--origin .novex-sit-section {
   margin-bottom: 0;
-  padding: 16px 16px 14px;
+  padding: 10px 12px 10px;
   border: 1px solid rgb(102 162 232 / 0.12);
   border-radius: 12px;
   background: rgb(6 18 38 / 0.5);
@@ -7548,14 +7600,14 @@
 }
 
 .island-focus-panel--origin .novex-sit-section__head {
-  gap: 14px;
-  margin-bottom: 14px;
-  padding-bottom: 12px;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
 }
 
 .island-focus-panel--origin .novex-sit-section__head::after {
   right: 0;
-  left: 42px;
+  left: 36px;
   width: auto;
   background: linear-gradient(
     90deg,
@@ -7566,19 +7618,22 @@
 }
 
 .island-focus-panel--origin .novex-sit-section__num {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
+  font-size: 0.62rem;
   border-color: rgb(var(--os-green-bright-rgb) / 0.28);
   color: rgb(var(--os-green-bright-rgb) / 0.88);
-  box-shadow: 0 0 0 4px rgb(var(--os-green-bright-rgb) / 0.06);
+  box-shadow: 0 0 0 3px rgb(var(--os-green-bright-rgb) / 0.06);
 }
 
 .island-focus-panel--origin .novex-sit-section__title {
   color: #e8f3ff;
+  font-size: 0.78rem;
 }
 
 .island-focus-panel--origin .novex-sit-section__hint {
   color: #7d96b3;
+  font-size: 0.62rem;
 }
 
 .island-focus-panel--origin .novex-sit-section__body {
@@ -7594,15 +7649,21 @@
 }
 
 .island-focus-panel--origin .novex-sit-card {
-  padding: 14px 16px;
+  padding: 10px 12px;
   border-color: rgb(102 162 232 / 0.1);
   background: rgb(4 14 30 / 0.55);
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.02);
 }
 
+.island-focus-panel--origin .novex-sit-narrative,
+.island-focus-panel--origin .novex-sit-card__hint {
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
 .island-focus-panel--origin .novex-sit-grid {
-  grid-template-columns: 1fr;
-  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .island-focus-panel--origin .novex-sit-grid .novex-sit-card {
@@ -11620,7 +11681,8 @@
     .organizational-scene__guide,
     .impact-map-recenter,
     .impact-map-selection,
-    .impact-map-summary
+    .impact-map-summary,
+    .executive-impact-state
   ) {
   opacity: 0;
   pointer-events: none;
@@ -11659,7 +11721,9 @@
     .propagation-scene__zoom-controls,
     .impact-map-selection,
     .impact-map-summary,
-    .organizational-scene__status
+    .organizational-scene__status,
+    .executive-impact-state,
+    .coordination-situation-nodes
   ) {
   visibility: hidden !important;
   opacity: 0 !important;
@@ -12736,7 +12800,7 @@
 .impact-network-immersive:fullscreen .impact-network-deck,
 .impact-network-immersive--active .impact-network-deck {
   height: 100%;
-  min-height: 100dvh;
+  min-height: 0;
 }
 
 .impact-network-immersive:fullscreen .novex-os-deck__content,
@@ -13848,4 +13912,98 @@
 .organizational-scene[data-page-hidden='true'],
 .organizational-scene[data-page-hidden='true'] * {
   animation-play-state: paused !important;
+}
+/* Tutorial contextual de Red de impacto (ADMIN / DIRECTOR / ANALISTA). */
+.impact-network__help-tour {
+  display: inline-flex;
+  width: 100%;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 13px;
+  border: 1px solid rgb(163 255 92 / 0.24);
+  border-radius: 8px;
+  color: #eaffde;
+  background: rgb(49 133 58 / 0.28);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.impact-network__help-tour:hover {
+  border-color: rgb(163 255 92 / 0.46);
+  background: rgb(49 133 58 / 0.42);
+}
+
+.impact-network-tour__card {
+  width: min(390px, calc(100vw - 32px));
+}
+
+.impact-network-tour__example {
+  display: grid;
+  gap: 9px;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid rgb(73 205 229 / 0.24);
+  border-radius: 10px;
+  background:
+    linear-gradient(145deg, rgb(17 48 68 / 0.72), rgb(7 21 39 / 0.86));
+}
+
+.impact-network-tour__example > span {
+  color: #67dbe8;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.impact-network-tour__example > strong {
+  color: #e9f6ff;
+  font-size: 0.78rem;
+}
+
+.impact-network-tour__example dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+}
+
+.impact-network-tour__example dl > div {
+  min-width: 0;
+  padding: 7px;
+  border: 1px solid rgb(114 165 218 / 0.12);
+  border-radius: 7px;
+  background: rgb(5 15 29 / 0.48);
+}
+
+.impact-network-tour__example dt {
+  margin-bottom: 3px;
+  color: #6f86a2;
+  font-size: 0.52rem;
+  text-transform: uppercase;
+}
+
+.impact-network-tour__example dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #c8d8e8;
+  font-size: 0.61rem;
+  line-height: 1.35;
+}
+
+.impact-network-tour__example > p {
+  margin: 0;
+  color: #a3ff5c;
+  font-size: 0.61rem;
+  text-align: center;
+}
+
+@media (max-width: 560px) {
+  .impact-network-tour__example dl {
+    grid-template-columns: 1fr;
+  }
 }

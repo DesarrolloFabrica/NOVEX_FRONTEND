@@ -6,9 +6,13 @@ import { useOnboarding } from '@/modules/onboarding/OnboardingContext'
 
 interface NovexUserMenuProps {
   onLogout?: () => void
+  onRestartImpactNetworkTutorial?: () => void
 }
 
-export function NovexUserMenu({ onLogout }: NovexUserMenuProps) {
+export function NovexUserMenu({
+  onLogout,
+  onRestartImpactNetworkTutorial,
+}: NovexUserMenuProps) {
   const { user, logout } = useAuth()
   const { restart, resume, steps } = useOnboarding()
   const [open, setOpen] = useState(false)
@@ -76,6 +80,19 @@ export function NovexUserMenu({ onLogout }: NovexUserMenuProps) {
             </div>
           </div>
           <div className="novex-user-menu__items">
+            {onRestartImpactNetworkTutorial ? (
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setOpen(false)
+                  onRestartImpactNetworkTutorial()
+                }}
+              >
+                <NovexIcon name="sparkles" />
+                Volver a ver tutorial
+              </button>
+            ) : null}
             {tutorialAvailable ? (
               <button
                 type="button"
@@ -87,9 +104,13 @@ export function NovexUserMenu({ onLogout }: NovexUserMenuProps) {
                 }}
               >
                 <NovexIcon name="sparkles" />
-                {user?.onboardingCompleted
-                  ? 'Ver tutorial nuevamente'
-                  : 'Continuar tutorial'}
+                {onRestartImpactNetworkTutorial
+                  ? user?.onboardingCompleted
+                    ? 'Ver tutorial general'
+                    : 'Continuar tutorial general'
+                  : user?.onboardingCompleted
+                    ? 'Ver tutorial nuevamente'
+                    : 'Continuar tutorial'}
               </button>
             ) : null}
           </div>

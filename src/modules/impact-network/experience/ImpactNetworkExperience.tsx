@@ -3,8 +3,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useReducedMotion } from 'motion/react'
 import { OrganizationalScene } from '@/modules/impact-network/components/OrganizationalScene'
 import { OperationalContextPanel } from '@/modules/impact-network/components/OperationalContextPanel'
-import { ExecutiveOperationalOverview } from '@/modules/impact-network/components/executive'
-import { operationalOverview } from '@/modules/impact-network/data/executive-operational-overview.mock'
+import {
+  ExecutiveOperationalHeader,
+  ExecutiveOperationalOverview,
+  type OperationalStatusFilter,
+} from '@/modules/impact-network/components/executive'
+import { buildExecutiveOverviewModel } from '@/modules/impact-network/data/executive-operational-overview.model'
+import { extractLegacyRelatedCodes } from '@/modules/impact-network/data/legacy-related-coordinations'
 import {
   getCoordination,
   resolveCoordinationId,
@@ -27,18 +32,25 @@ import {
 } from '@/modules/impact-network/experience/ImpactNetworkToolbar'
 import { usePropagationSequence } from '@/modules/impact-network/hooks/usePropagationSequence'
 import { loadImpactNetworkBootstrap } from '@/modules/impact-network/services/impact-network-bootstrap.service'
+import { hydrateVisibleCoordinationsFromCatalog } from '@/modules/impact-network/services/impact-network-graph.mapper'
 import {
   enrichSituationEvent,
   loadImpactNetworkSituations,
   mapSituationToImpactOperationalEvent,
 } from '@/modules/impact-network/services/impact-network-situations.service'
 import type { CoordinationNetworkStatusResponse } from '@/modules/api/coordinations.api'
+import { fetchCoordinations } from '@/modules/api/coordinations.api'
 import { fetchSituationAffectedCoordinations, fetchSituationImpactContext } from '@/modules/api/impact.api'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
+import { useOnboarding } from '@/modules/onboarding/OnboardingContext'
 import {
   canCreateCoordinationSituations,
   canUpdateSituationStatus,
 } from '@/modules/auth/utils/permissions'
+import {
+  normalizeRoleCode,
+  seesInstitutionalSituationRegistry,
+} from '@/modules/auth/utils/roleExperience'
 import { ConnectedSituationDetailModal } from '@/modules/operational-events/components/ConnectedSituationDetailModal'
 import type { OperationalEvent } from '@/modules/operational-events/types/operational-event.types'
 import { ScreenDeck } from '@/modules/monitoring/components/ScreenDeck'
@@ -54,9 +66,14 @@ import { NovexProductHeader } from '@/shared/components/NovexProductHeader'
 import { ApiError } from '@/shared/api/http'
 import { getErrorMessage } from '@/shared/utils/error'
 import { isValidUuid } from '@/shared/utils/uuid'
+import { NovexIcon } from '@/shared/components/NovexIcon'
+import { ImpactNetworkTour } from '@/modules/impact-network/tutorial/ImpactNetworkTour'
+import { isImpactNetworkTourRole } from '@/modules/impact-network/tutorial/impactNetworkTourStorage'
 import '@/styles/impact-network.css'
 import '@/styles/impact-network-executive.css'
 import '@/styles/impact-network-command-map.css'
+import '@/styles/impact-network-status-board.css'
+import '@/styles/impact-network-status-effects.css'
 
 type ReplayPhase = 'idle' | 'playing' | 'paused' | 'complete'
 type SimulationPhase = 'idle' | 'loading' | 'visible' | 'empty' | 'error'
@@ -126,24 +143,6 @@ function buildProvisionalCoordination(
   }
 }
 
-function extractLegacyRelatedCodes(description: string): string[] {
-  const perceptionMatch =
-    description.match(
-      /Coordinaciones relacionadas \(percepción inicial\): (.+)/i,
-    ) ??
-    description.match(/Áreas relacionadas \(percepción inicial\): (.+)/i)
-  if (!perceptionMatch?.[1]) return []
-
-  return [
-    ...new Set(
-      perceptionMatch[1]
-        .split(',')
-        .map((label) => label.trim().split('·')[0]?.trim())
-        .filter((code): code is string => Boolean(code)),
-    ),
-  ]
-}
-
 /** Relacionadas ya conocidas en el listado, para pintar islas sin esperar APIs. */
 function resolveRelatedIdsFromSituation(
   situation: SituationResponse,
@@ -188,7 +187,8 @@ function getEnvironment(
 }
 
 export function ImpactNetworkExperience() {
-  const { user } = useAuth()
+  const { user, bootSplashActive } = useAuth()
+  const { active: onboardingActive } = useOnboarding()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const reduceMotion = useReducedMotion()
@@ -218,6 +218,8 @@ export function ImpactNetworkExperience() {
   const [situationsError, setSituationsError] = useState<string | null>(null)
   const [selectedCoordinationId, setSelectedCoordinationId] =
     useState<CoordinationId | null>(() => initialCoordinatorSelection)
+  const [executiveStatusFilter, setExecutiveStatusFilter] =
+    useState<OperationalStatusFilter>('all')
   const [focusedEventId, setFocusedEventId] = useState<string | null>(null)
   const [affectedCoordinationIds, setAffectedCoordinationIds] = useState<
     readonly CoordinationId[]
@@ -242,13 +244,17 @@ export function ImpactNetworkExperience() {
   const [isExportingPdf, setIsExportingPdf] = useState(false)
   const [exportPdfError, setExportPdfError] = useState<string | null>(null)
   const [showAnalysisModal, setShowAnalysisModal] = useState(false)
+  const [guidedCoordinationId, setGuidedCoordinationId] =
+    useState<CoordinationId | null>(null)
+  const [impactTourStartKey, setImpactTourStartKey] = useState(0)
   const [isImmersive, setIsImmersive] = useState(() =>
     Boolean(typeof document !== 'undefined' && document.fullscreenElement),
   )
 
-  const coordinatorMode = user?.roleCode === 'COORDINADOR'
-  /** Vista General Operacional mock — DIRECTOR / ADMIN / ANALISTA. */
-  const executiveOperationalView = !coordinatorMode
+  const normalizedRole = normalizeRoleCode(user?.roleCode)
+  const coordinatorMode = normalizedRole === 'COORDINADOR'
+  /** Vista general operacional exclusiva de DIRECTOR / ADMIN / ANALISTA. */
+  const executiveOperationalView = seesInstitutionalSituationRegistry(normalizedRole)
   const assignedCoordinationId = useMemo(
     () =>
       resolveAssignedCoordinationId(
@@ -282,12 +288,26 @@ export function ImpactNetworkExperience() {
 
   useEffect(() => {
     let active = true
+    const catalogPromise = fetchCoordinations(false, { catalog: true }).catch(
+      () => [],
+    )
+
+    void catalogPromise.then((catalog) => {
+      if (!active || catalog.length === 0) return
+      const primed = hydrateVisibleCoordinationsFromCatalog(catalog)
+      setCoordinationIds((current) =>
+        current.length > 0 ? current : primed.coordinationIds,
+      )
+      setCoordinations((current) =>
+        current.length > 0 ? current : primed.coordinations,
+      )
+    })
 
     async function loadNetwork() {
       setTopologyLoading(true)
       setTopologyError(null)
       try {
-        const bootstrap = await loadImpactNetworkBootstrap()
+        const bootstrap = await loadImpactNetworkBootstrap(catalogPromise)
         if (!active) return
         setTopology(bootstrap.graph.topology)
         setCoordinationIds(bootstrap.graph.coordinationIds)
@@ -296,8 +316,6 @@ export function ImpactNetworkExperience() {
       } catch (error) {
         if (!active) return
         setTopology(EMPTY_TOPOLOGY)
-        setCoordinationIds([])
-        setCoordinations([])
         setNetworkSnapshot(null)
         setTopologyError(
           error instanceof Error
@@ -354,8 +372,12 @@ export function ImpactNetworkExperience() {
       void document.exitFullscreen()
       return
     }
-    void document.documentElement.requestFullscreen().catch(() => {
-      void immersiveRef.current?.requestFullscreen()
+
+    const target = immersiveRef.current ?? document.documentElement
+    void target.requestFullscreen().catch(() => {
+      if (target !== document.documentElement) {
+        void document.documentElement.requestFullscreen()
+      }
     })
   }, [])
 
@@ -825,6 +847,12 @@ export function ImpactNetworkExperience() {
     syncSearchParams(null, null)
   }, [exitFocusMode, syncSearchParams])
 
+  const restartImpactNetworkTutorial = useCallback(() => {
+    setGuidedCoordinationId(null)
+    navigateToDirection()
+    setImpactTourStartKey((current) => current + 1)
+  }, [navigateToDirection])
+
   const navigateToCoordination = useCallback(() => {
     exitFocusMode()
     setMapViewResetKey((key) => key + 1)
@@ -842,6 +870,10 @@ export function ImpactNetworkExperience() {
       }
 
       if (islandFocusActive) {
+        if (executiveOperationalView) {
+          navigateToCoordination()
+          return
+        }
         setIslandFocusActive(false)
         return
       }
@@ -854,6 +886,7 @@ export function ImpactNetworkExperience() {
     window.addEventListener('keydown', handleEscape)
     return () => window.removeEventListener('keydown', handleEscape)
   }, [
+    executiveOperationalView,
     focusedIncident,
     islandFocusActive,
     navigateToCoordination,
@@ -941,6 +974,13 @@ export function ImpactNetworkExperience() {
   const sceneCoordinationIds = useMemo(() => {
     if (!propagation) return coordinationIds
 
+    if (executiveOperationalView) {
+      return [
+        propagation.originCoordinationId,
+        ...propagation.affectedCoordinationIds.slice(0, 5),
+      ]
+    }
+
     return [
       ...new Set([
         ...coordinationIds,
@@ -949,7 +989,12 @@ export function ImpactNetworkExperience() {
         ...predictedCoordinationIds,
       ]),
     ]
-  }, [coordinationIds, predictedCoordinationIds, propagation])
+  }, [
+    coordinationIds,
+    executiveOperationalView,
+    predictedCoordinationIds,
+    propagation,
+  ])
 
   const illuminatedCoordinationIds =
     currentFrame?.illuminatedCoordinationIds ??
@@ -970,8 +1015,48 @@ export function ImpactNetworkExperience() {
       ? 'coordination'
       : 'institutional'
 
+  const showMapBackAction =
+    !executiveOperationalView || navigationLevel !== 'situation'
+  const showMapReplayAction =
+    navigationLevel === 'situation' && canReplay && replayPhase !== 'complete'
+  const showMapSimulationAction =
+    navigationLevel === 'situation' &&
+    canSimulate &&
+    !executiveOperationalView
+  const showMapActions =
+    navigationLevel !== 'institutional' &&
+    (showMapBackAction || showMapReplayAction || showMapSimulationAction)
+
   const useExecutiveOverview =
     executiveOperationalView && navigationLevel === 'institutional'
+  const executiveLoading = topologyLoading || situationsLoading
+
+  const executiveOverviewModel = useMemo(
+    () =>
+      buildExecutiveOverviewModel(sceneCoordinationIds, situations, {
+        operationalRisk: networkSnapshot?.globalRiskScore,
+        updatedAt: networkSnapshot?.lastSynchronizedAt,
+      }),
+    [networkSnapshot, sceneCoordinationIds, situations],
+  )
+
+  const tutorialCoordination = useMemo(
+    () =>
+      executiveOverviewModel.coordinations.find(
+        (coordination) => coordination.situations.length > 0,
+      ) ??
+      executiveOverviewModel.coordinations[0] ??
+      null,
+    [executiveOverviewModel.coordinations],
+  )
+  const tutorialSituation = tutorialCoordination?.situations[0] ?? null
+  const impactTourEligible = isImpactNetworkTourRole(normalizedRole)
+  const impactTourReady = Boolean(
+    executiveOperationalView &&
+      tutorialCoordination &&
+      !loading &&
+      !networkError,
+  )
 
   const visibleIncidentCount =
     navigationLevel === 'institutional'
@@ -990,14 +1075,19 @@ export function ImpactNetworkExperience() {
       : `${visibleSynchronizedCoordinations} coordinaciones sincronizadas`
 
   return (
-    <NovexRoom environment={environment} scene="impact" immersive={isImmersive}>
+    <NovexRoom
+      environment={environment}
+      scene="impact"
+      immersive={isImmersive}
+      rootRef={immersiveRef}
+    >
       <NovexFrame environment={environment}>
         <MainScreen environment={environment}>
           <div
-            ref={immersiveRef}
             className={[
               'impact-network-immersive',
               isImmersive ? 'impact-network-immersive--active' : '',
+              useExecutiveOverview ? 'impact-network-immersive--executive' : '',
             ]
               .filter(Boolean)
               .join(' ')}
@@ -1009,6 +1099,11 @@ export function ImpactNetworkExperience() {
                 <NovexProductHeader
                   title="Red de impacto"
                   eyebrow="Inteligencia operacional"
+                  onRestartImpactNetworkTutorial={
+                    impactTourEligible
+                      ? restartImpactNetworkTutorial
+                      : undefined
+                  }
                   context={
                     useExecutiveOverview
                       ? 'Estado actual de la operación'
@@ -1016,13 +1111,12 @@ export function ImpactNetworkExperience() {
                   }
                   middle={
                     useExecutiveOverview ? (
-                      <p
-                        className="impact-executive__header-live"
-                        aria-live="polite"
-                      >
-                        <i aria-hidden="true" />
-                        {operationalOverview.updatedLabel}
-                      </p>
+                      <ExecutiveOperationalHeader
+                        model={executiveOverviewModel}
+                        statusFilter={executiveStatusFilter}
+                        loading={executiveLoading}
+                        onStatusFilterChange={setExecutiveStatusFilter}
+                      />
                     ) : (
                       <ImpactNetworkToolbar
                         status={networkStatus}
@@ -1032,6 +1126,12 @@ export function ImpactNetworkExperience() {
                         selectedCoordinationName={
                           selectedCoordination?.shortName ?? null
                         }
+                        focusedSituationLabel={
+                          focusedEvent
+                            ? `Situación #${focusedEvent.id.slice(-4).toUpperCase()}`
+                            : null
+                        }
+                        executiveMode={executiveOperationalView}
                         activeCount={visibleIncidentCount}
                         onNavigateDirection={navigateToDirection}
                         onNavigateCoordination={navigateToCoordination}
@@ -1051,6 +1151,18 @@ export function ImpactNetworkExperience() {
                           Seleccione una coordinación afectada para abrir el
                           panel contextual sin salir del mapa.
                         </p>
+                        {impactTourEligible ? (
+                          <button
+                            type="button"
+                            className="impact-network__help-tour"
+                            onClick={() =>
+                              setImpactTourStartKey((current) => current + 1)
+                            }
+                          >
+                            <NovexIcon name="sparkles" size={14} />
+                            Ver tutorial guiado
+                          </button>
+                        ) : null}
                       </>
                     ) : (
                       <>
@@ -1063,6 +1175,18 @@ export function ImpactNetworkExperience() {
                           actualizar estados y descargar el análisis IA sin salir
                           del mapa.
                         </p>
+                        {impactTourEligible ? (
+                          <button
+                            type="button"
+                            className="impact-network__help-tour"
+                            onClick={() =>
+                              setImpactTourStartKey((current) => current + 1)
+                            }
+                          >
+                            <NovexIcon name="sparkles" size={14} />
+                            Ver tutorial guiado
+                          </button>
+                        ) : null}
                       </>
                     )
                   }
@@ -1074,6 +1198,7 @@ export function ImpactNetworkExperience() {
                 className={[
                   'impact-network impact-network--propagation impact-network--v2',
                   islandFocusActive ? 'impact-network--island-focus' : '',
+                  useExecutiveOverview ? 'impact-network--executive' : '',
                 ]
                   .filter(Boolean)
                   .join(' ')}
@@ -1097,14 +1222,25 @@ export function ImpactNetworkExperience() {
                 >
                   {useExecutiveOverview ? (
                     <ExecutiveOperationalOverview
-                      coordinationIds={sceneCoordinationIds}
+                      model={executiveOverviewModel}
+                      statusFilter={executiveStatusFilter}
+                      fullscreenTargetRef={immersiveRef}
+                      guidedCoordinationId={guidedCoordinationId}
                       reducedMotion={Boolean(reduceMotion)}
-                      loading={loading}
+                      loading={executiveLoading}
                       error={networkError}
+                      onOpenCoordination={openCoordinationFromMap}
+                      onOpenSituation={(situationId) => {
+                        void focusIncident(situationId)
+                      }}
+                      onStatusFilterChange={setExecutiveStatusFilter}
                     />
                   ) : (
                     <>
-                  <div className="impact-network__canvas">
+                  <div
+                    className="impact-network__canvas"
+                    data-impact-tour="impact-map"
+                  >
                     <div
                       className="impact-network__scene-stack"
                       data-active-scene={
@@ -1121,6 +1257,7 @@ export function ImpactNetworkExperience() {
                           selectedCoordinationId={selectedCoordinationId}
                           assignedCoordinationId={assignedCoordinationId}
                           coordinatorMode={coordinatorMode}
+                          executiveMode={executiveOperationalView}
                           reducedMotion={Boolean(reduceMotion)}
                           loading={loading}
                           error={networkError}
@@ -1147,6 +1284,11 @@ export function ImpactNetworkExperience() {
                           onIslandFocusChange={setIslandFocusActive}
                           onSelectCoordination={openCoordinationFromMap}
                           onSelectSituation={selectSituation}
+                          onExitToCoordination={
+                            executiveOperationalView
+                              ? navigateToCoordination
+                              : undefined
+                          }
                           isImmersive={isImmersive}
                           onToggleImmersive={toggleImmersive}
                           focusOriginRequestKey={focusOriginRequestKey}
@@ -1154,29 +1296,29 @@ export function ImpactNetworkExperience() {
                       </div>
                     </div>
 
-                    {navigationLevel !== 'institutional' ? (
+                    {showMapActions ? (
                       <div
                         className="impact-map-actions"
                         aria-label="Acciones del mapa"
                       >
-                        <button
-                          type="button"
-                          className="impact-map-actions__back"
-                          onClick={
-                            navigationLevel === 'situation'
-                              ? navigateToCoordination
-                              : navigateToDirection
-                          }
-                        >
-                          <span aria-hidden="true">←</span>
-                          {navigationLevel === 'situation'
-                            ? `Volver a ${selectedCoordination?.shortName ?? 'la coordinación'}`
-                            : 'Volver a la Dirección'}
-                        </button>
+                        {showMapBackAction ? (
+                          <button
+                            type="button"
+                            className="impact-map-actions__back"
+                            onClick={
+                              navigationLevel === 'situation'
+                                ? navigateToCoordination
+                                : navigateToDirection
+                            }
+                          >
+                            <span aria-hidden="true">←</span>
+                            {navigationLevel === 'situation'
+                              ? `Volver a ${selectedCoordination?.shortName ?? 'la coordinación'}`
+                              : 'Volver a la Dirección'}
+                          </button>
+                        ) : null}
 
-                        {navigationLevel === 'situation' &&
-                        canReplay &&
-                        replayPhase !== 'complete' ? (
+                        {showMapReplayAction ? (
                           <button
                             type="button"
                             className="impact-map-actions__playback"
@@ -1190,7 +1332,7 @@ export function ImpactNetworkExperience() {
                           </button>
                         ) : null}
 
-                        {navigationLevel === 'situation' && canSimulate ? (
+                        {showMapSimulationAction ? (
                           <button
                             type="button"
                             className="impact-map-actions__simulate"
@@ -1245,6 +1387,7 @@ export function ImpactNetworkExperience() {
                       }
                       affectedNames={propagation?.affectedNames ?? []}
                       reducedMotion={Boolean(reduceMotion)}
+                      executiveMode={executiveOperationalView}
                       canUpdateSituation={canUpdateSituationStatus(
                         user,
                         focusedSituation,
@@ -1281,6 +1424,7 @@ export function ImpactNetworkExperience() {
         <ConnectedSituationDetailModal
           situationId={focusedSituation.id}
           title={focusedSituation.title}
+          executiveSummary={executiveOperationalView}
           onClose={() => setShowAnalysisModal(false)}
         />
       ) : null}
@@ -1297,6 +1441,22 @@ export function ImpactNetworkExperience() {
           potenciales.
         </span>
       ) : null}
+
+      <ImpactNetworkTour
+        userId={user?.id}
+        role={normalizedRole}
+        ready={impactTourReady}
+        autoStartAllowed={Boolean(
+          user?.onboardingCompleted && !onboardingActive && !bootSplashActive,
+        )}
+        forceStartKey={impactTourStartKey}
+        coordination={tutorialCoordination}
+        situation={tutorialSituation}
+        onShowInstitutional={navigateToDirection}
+        onPreviewCoordination={setGuidedCoordinationId}
+        onOpenCoordination={openCoordinationFromMap}
+        onOpenSituation={selectSituation}
+      />
     </NovexRoom>
   )
 }

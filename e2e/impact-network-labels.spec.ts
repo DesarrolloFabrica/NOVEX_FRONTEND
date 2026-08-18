@@ -45,7 +45,7 @@ interface LabelRect {
 async function readIslandBoxes(page: Page) {
   return page.evaluate(() => {
     const islands = Array.from(
-      document.querySelectorAll<HTMLElement>('.organizational-scene__island'),
+      document.querySelectorAll<HTMLElement>('.impact-status-island'),
     )
     const read = (element: Element) => {
       const rect = element.getBoundingClientRect()
@@ -58,10 +58,8 @@ async function readIslandBoxes(page: Page) {
     }
     return islands.map((island) => ({
       id: island.dataset.coordinationId ?? '',
-      label: read(
-        island.querySelector('.propagation-island__label') as Element,
-      ),
-      body: read(island.querySelector('.propagation-island__image') as Element),
+      label: read(island.querySelector('.impact-status-island__copy') as Element),
+      body: read(island.querySelector('.impact-status-island__image') as Element),
     }))
   })
 }
@@ -79,6 +77,14 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(
     ({ sessionKey, tokenKey, session }) => {
       localStorage.setItem(sessionKey, JSON.stringify(session))
+      localStorage.setItem(
+        `novex.impact-network.tour.v1.${encodeURIComponent(session.id)}`,
+        JSON.stringify({
+          version: 1,
+          outcome: 'completed',
+          seenAt: '2026-07-22T00:00:00.000Z',
+        }),
+      )
       localStorage.setItem(
         tokenKey,
         'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJlMmUtc3VwZXJ2aXNvciIsImVtYWlsIjoiZTJlQG5vdmV4LnRlc3QiLCJyb2xlSWQiOiJyb2xlLWUyZSIsInJvbGVDb2RlIjoiQU5BTElTVEEiLCJjb29yZGluYXRpb25JZCI6bnVsbCwicGVybWlzc2lvbnMiOlsiQVVUSF9WSUVXX1BST0ZJTEUiLCJDT09SRElOQVRJT05TX1ZJRVciLCJTSVRVQVRJT05TX1ZJRVciLCJTSVRVQVRJT05TX0NSRUFURSIsIlNJVFVBVElPTlNfVVBEQVRFIiwiQUlfQU5BTFlaRSIsIkFJX1ZJRVdfUkVQT1JUUyIsIlJFUE9SVFNfVklFVyJdLCJzdGF0dXMiOiJBQ1RJVkUifQ.e2e',
@@ -109,13 +115,13 @@ test.beforeEach(async ({ page }) => {
 })
 
 for (const viewport of VIEWPORTS) {
-  test(`las etiquetas del mapa institucional no se tapan en ${viewport.width}x${viewport.height}`, async ({
+  test(`las etiquetas del tablero institucional no se tapan en ${viewport.width}x${viewport.height}`, async ({
     page,
   }) => {
     await page.setViewportSize(viewport)
     await page.goto('/red-impacto', { waitUntil: 'domcontentloaded' })
-    await expect(page.locator('.organizational-scene')).toBeVisible()
-    await expect(page.locator('.organizational-scene__island')).toHaveCount(11)
+    await expect(page.locator('.impact-executive__status-board')).toBeVisible()
+    await expect(page.locator('.impact-status-island')).toHaveCount(11)
     await page.waitForTimeout(1200)
 
     const islands = await readIslandBoxes(page)
@@ -133,21 +139,6 @@ for (const viewport of VIEWPORTS) {
       }
     }
 
-    const hubLabel = await page
-      .locator('.organizational-scene__direction-label')
-      .boundingBox()
-    expect(hubLabel).not.toBeNull()
-    for (const island of islands) {
-      expect(
-        intersects(island.label, {
-          left: hubLabel!.x,
-          right: hubLabel!.x + hubLabel!.width,
-          top: hubLabel!.y,
-          bottom: hubLabel!.y + hubLabel!.height,
-        }),
-        `etiqueta ${island.id} choca con la etiqueta del nodo institucional`,
-      ).toBe(false)
-    }
   })
 }
 
@@ -176,27 +167,32 @@ test('la isla focalizada distribuye muchas situaciones sin superposiciones', asy
 
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/red-impacto', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.impact-executive__status-board')).toBeVisible()
+
+  await page
+    .locator(
+      '.impact-status-island[data-coordination-id="coord-ingenierias"]',
+    )
+    .click()
+  await page.locator('.impact-executive-context__cta--map').click()
   await expect(page.locator('.organizational-scene')).toBeVisible()
 
   const selectedIsland = page.locator(
-    '.organizational-scene__island[data-coordination-id="coord-ingenierias"]',
+    '.organizational-scene__island--selected[data-coordination-id="coord-ingenierias"]',
   )
-  await selectedIsland.click()
   await expect(
     page.locator('.operational-context-panel[data-level="coordination"]'),
   ).toBeVisible()
 
   const situationLayer = page.locator('.coordination-situation-nodes')
   const situationNodes = page.locator('.coordination-situation-node')
-  await expect(situationLayer).toHaveAttribute('data-visible-count', '6')
-  await expect(situationLayer).toHaveAttribute('data-hidden-count', '2')
-  await expect(situationNodes).toHaveCount(6)
+  await expect(situationLayer).toHaveAttribute('data-visible-count', '8')
+  await expect(situationLayer).toHaveAttribute('data-hidden-count', '0')
+  await expect(situationNodes).toHaveCount(8)
   await expect(
     page.locator('.operational-context-panel__situation'),
-  ).toHaveCount(8)
-  await expect(
-    page.locator('.coordination-situation-nodes__hint'),
-  ).toContainText('+2')
+  ).toHaveCount(4)
+  await expect(page.locator('.coordination-situation-nodes__hint')).toBeVisible()
   await page.waitForTimeout(900)
 
   const labelBox = await selectedIsland

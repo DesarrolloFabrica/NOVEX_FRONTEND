@@ -29,6 +29,8 @@ interface SituationDetailModalProps {
   onClose: () => void
   /** Muestra ficha de auditoría (quién, cuándo, coordinación) para roles institucionales. */
   showAuditTrail?: boolean
+  /** Reduce la lectura en pantalla a decisión, impacto y seguimiento. */
+  executiveSummary?: boolean
 }
 
 function formatEventDateTime(iso: string): string {
@@ -47,6 +49,7 @@ export function SituationDetailModal({
   event,
   onClose,
   showAuditTrail = false,
+  executiveSummary = false,
 }: SituationDetailModalProps) {
   const titleId = useId()
   const closeRef = useRef<HTMLButtonElement>(null)
@@ -142,7 +145,9 @@ export function SituationDetailModal({
         <header className="novex-sit-header novex-sit-header--brief">
           <div className="novex-sit-header__lead">
             <div className="min-w-0">
-              <p className="novex-sit-header__eyebrow">Detalle de situación</p>
+              <p className="novex-sit-header__eyebrow">
+                {executiveSummary ? 'Análisis de la situación' : 'Detalle de situación'}
+              </p>
               <h2 id={titleId} className="novex-sit-header__title">
                 {report?.incidentSummary.executiveTitle ?? event.title}
               </h2>
@@ -208,7 +213,63 @@ export function SituationDetailModal({
         ) : null}
 
         <div className="novex-sit-scroll novex-sit-scroll--brief" data-tour="report-scroll">
-          {report ? (
+          {executiveSummary && report ? (
+            <div className="novex-sit-executive-analysis">
+              <section className="novex-sit-executive-analysis__lead">
+                <span>Lectura ejecutiva</span>
+                <h3>{report.incidentSummary.executiveTitle}</h3>
+                <p>{report.incidentSummary.executiveSummary}</p>
+              </section>
+
+              <div className="novex-sit-executive-analysis__questions">
+                <section>
+                  <span>Qué está ocurriendo</span>
+                  <p>
+                    {interpretation?.narrative ??
+                      report.incidentSummary.executiveSummary}
+                  </p>
+                </section>
+                <section>
+                  <span>Qué puede pasar</span>
+                  <p>
+                    {report.operationalConsequences[0] ??
+                      'No se proyecta una propagación adicional con la evidencia disponible.'}
+                  </p>
+                </section>
+                <section data-tone="attention">
+                  <span>Qué requiere atención</span>
+                  <p>
+                    {report.recommendedActions[0]?.action ??
+                      report.executiveConclusion.recommendation}
+                  </p>
+                </section>
+              </div>
+
+              <dl className="novex-sit-executive-analysis__metrics">
+                <div>
+                  <dt>Impacto actual</dt>
+                  <dd>
+                    {report.affectedAreas.length > 0
+                      ? `${report.affectedAreas.length} área${report.affectedAreas.length === 1 ? '' : 's'}`
+                      : 'Contenido en origen'}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Riesgo</dt>
+                  <dd>
+                    {RISK_LEVEL_LABEL[risk]} · {report.riskAssessment.riskScore}/100
+                  </dd>
+                </div>
+                <div>
+                  <dt>Confianza</dt>
+                  <dd>
+                    {Math.round(report.riskAssessment.certainty.percentage)}% ·{' '}
+                    {EXEC_CERTAINTY_LABEL[report.riskAssessment.certainty.level]}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          ) : report ? (
             <div className="novex-sit-brief">
               <section className="novex-sit-brief__metrics" aria-label="Indicadores">
                 <div data-tone="risk">
@@ -490,7 +551,9 @@ export function SituationDetailModal({
               ? 'Generando PDF…'
               : exportState === 'error'
                 ? 'Reintentar exportación'
-                : 'Exportar reporte PDF'}
+                : executiveSummary
+                  ? 'Descargar informe técnico PDF'
+                  : 'Exportar reporte PDF'}
           </button>
           <button
             type="button"

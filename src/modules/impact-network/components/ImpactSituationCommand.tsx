@@ -14,6 +14,7 @@ interface ImpactSituationCommandProps {
   isUpdating: boolean
   isExportingPdf?: boolean
   exportError?: string | null
+  executiveMode?: boolean
   onUpdateStatus: (input: UpdateSituationStatusInput) => Promise<void>
   onOpenAnalysis: () => void
   onDownloadPdf: () => void
@@ -25,6 +26,7 @@ export function ImpactSituationCommand({
   isUpdating,
   isExportingPdf = false,
   exportError = null,
+  executiveMode = false,
   onUpdateStatus,
   onOpenAnalysis,
   onDownloadPdf,
@@ -49,17 +51,18 @@ export function ImpactSituationCommand({
 
   return (
     <section
-      className="impact-situation-command"
+      className={[
+        'impact-situation-command',
+        executiveMode ? 'impact-situation-command--executive' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
       aria-label="Comando operacional"
     >
       <header className="impact-situation-command__header">
-        <span>Comando operacional</span>
-        <h3>Estado y análisis</h3>
+        <span>{executiveMode ? 'Seguimiento' : 'Comando operacional'}</span>
+        <h3>{executiveMode ? 'Estado del caso' : 'Estado y análisis'}</h3>
       </header>
-
-      <div className="impact-situation-command__timeline">
-        <SituationLifecycleTimeline status={situation.status} />
-      </div>
 
       <div className="impact-situation-command__actions">
         {canAdvance ? (
@@ -79,17 +82,21 @@ export function ImpactSituationCommand({
           <p className="impact-situation-command__locked">
             {situation.status === 'CLOSED'
               ? 'Caso cerrado'
-              : 'Vista informativa: el seguimiento lo gestiona quien registró la situación.'}
+              : executiveMode
+                ? 'El seguimiento lo gestiona quien registró el caso.'
+                : 'Vista informativa: el seguimiento lo gestiona quien registró la situación.'}
           </p>
         )}
 
-        <button
-          type="button"
-          className="impact-situation-command__secondary"
-          onClick={onOpenAnalysis}
-        >
-          Ver análisis IA
-        </button>
+        {executiveMode ? null : (
+          <button
+            type="button"
+            className="impact-situation-command__secondary"
+            onClick={onOpenAnalysis}
+          >
+            Ver análisis IA
+          </button>
+        )}
 
         <button
           type="button"
@@ -104,6 +111,10 @@ export function ImpactSituationCommand({
               ? 'Reintentar PDF'
               : 'Descargar PDF'}
         </button>
+      </div>
+
+      <div className="impact-situation-command__timeline">
+        <SituationLifecycleTimeline status={situation.status} />
       </div>
 
       {exportError ? (

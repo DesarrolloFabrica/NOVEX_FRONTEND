@@ -17,13 +17,14 @@ export function normalizeRoleCode(
 }
 
 export const EXECUTIVE_OPERATIONS_HOME = '/centro-operacional'
+export const EXECUTIVE_ROLE_LANDING_PATH = '/red-impacto'
 
 export function getRoleLandingPath(
   user: Pick<User, 'roleCode' | 'selectedAreaId'> | null | undefined,
 ): string {
   const role = normalizeRoleCode(user?.roleCode)
   if (role === 'ADMIN' || role === 'ANALISTA' || role === 'DIRECTOR') {
-    return EXECUTIVE_OPERATIONS_HOME
+    return EXECUTIVE_ROLE_LANDING_PATH
   }
 
   const coordination = user?.selectedAreaId?.trim()

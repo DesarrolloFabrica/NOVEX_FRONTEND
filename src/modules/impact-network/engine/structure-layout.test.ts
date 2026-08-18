@@ -185,6 +185,26 @@ describe('structure-layout', () => {
     expect(nodes[0].size).toBeGreaterThan(270)
   })
 
+  it('reduce la isla focal solo en la lectura ejecutiva de coordinación', () => {
+    const regular = buildStructureLayout(
+      LAYOUT_IDS,
+      'coord-b2b',
+      1180,
+      640,
+    ).nodes[0]
+    const executive = buildStructureLayout(
+      LAYOUT_IDS,
+      'coord-b2b',
+      1180,
+      640,
+      false,
+      true,
+    ).nodes[0]
+
+    expect(executive.size).toBeLessThan(regular.size)
+    expect(executive.size / regular.size).toBeCloseTo(0.79, 1)
+  })
+
   it('recupera el contexto de islas únicamente para la propagación', () => {
     const { center, nodes } = buildStructureLayout(
       LAYOUT_IDS,

@@ -200,8 +200,9 @@ export function useIslandFocusCamera({
   }, [])
 
   const clearSavedView = useCallback(() => {
+    cancelAnimation()
     savedViewRef.current = null
-  }, [])
+  }, [cancelAnimation])
 
   useEffect(() => cancelAnimation, [cancelAnimation])
 
@@ -211,6 +212,7 @@ export function useIslandFocusCamera({
     animateToView,
     peekSavedView,
     clearSavedView,
+    cancelAnimation,
     isAnimating,
   }
 }

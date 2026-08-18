@@ -10,6 +10,8 @@ interface ImpactNetworkToolbarProps {
   error: string | null
   navigationLevel: ImpactNavigationLevel
   selectedCoordinationName: string | null
+  focusedSituationLabel?: string | null
+  executiveMode?: boolean
   activeCount: number
   onNavigateDirection: () => void
   onNavigateCoordination: () => void
@@ -53,6 +55,8 @@ function ImpactNetworkToolbarView({
   error,
   navigationLevel,
   selectedCoordinationName,
+  focusedSituationLabel = null,
+  executiveMode = false,
   activeCount,
   onNavigateDirection,
   onNavigateCoordination,
@@ -63,6 +67,21 @@ function ImpactNetworkToolbarView({
     : error
       ? 'Sin datos'
       : `${STATUS_LABEL[status]} · ${activeCount} activas`
+  const flowSteps = executiveMode
+    ? [
+        { id: 'institutional' as const, number: '01', label: 'Panorama' },
+        {
+          id: 'coordination' as const,
+          number: '02',
+          label: selectedCoordinationName ?? 'Coordinación',
+        },
+        {
+          id: 'situation' as const,
+          number: '03',
+          label: focusedSituationLabel ?? 'Situación',
+        },
+      ]
+    : FLOW_STEPS
 
   return (
     <nav
@@ -75,9 +94,11 @@ function ImpactNetworkToolbarView({
         {selectedCoordinationName ? `, ${selectedCoordinationName}` : ''}
       </span>
       <div className="impact-flow-nav__trail">
-        <span className="impact-flow-nav__eyebrow">Ruta de navegación</span>
+        <span className="impact-flow-nav__eyebrow">
+          {executiveMode ? 'Contexto actual' : 'Ruta de navegación'}
+        </span>
         <ol className="impact-flow-nav__steps" aria-label="Niveles del flujo">
-          {FLOW_STEPS.map((step, index) => {
+          {flowSteps.map((step, index) => {
             const state = stepState(step.id, navigationLevel)
             const canJumpToDirection =
               step.id === 'institutional' && navigationLevel !== 'institutional'

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
+  getCanonicalIslandPreviewAssets,
   getCoordinationIslandAsset,
   getCoordinationIslandPreviewAsset,
   getIslandPreviewAssetPath,
@@ -99,5 +100,13 @@ describe('coordination catalog (backend-driven)', () => {
     expect(starEdgeId('coord-ingenierias', 'coord-b2b')).toBe(
       'coord-ingenierias-->coord-b2b',
     )
+  })
+
+  it('lista previews canónicos para precargar la vista ejecutiva', () => {
+    expect(getCanonicalIslandPreviewAssets(3)).toEqual([
+      '/islas/CoordGeneral.preview.webp',
+      '/islas/CoordB2B.preview.webp',
+      '/islas/CoordBellasArtes.preview.webp',
+    ])
   })
 })

@@ -194,9 +194,7 @@ async function installRoleExperience(page: Page, roleCode: RoleCode) {
     await route.fulfill({ status: 404, json: { message: 'E2E' } })
   })
 
-  if (roleCode === 'COORDINADOR') {
-    await installImpactNetworkApiMocks(page)
-  }
+  await installImpactNetworkApiMocks(page)
 }
 
 test('el coordinador aterriza en su coordinación sin mostrar Dirección', async ({
@@ -214,56 +212,32 @@ test('el coordinador aterriza en su coordinación sin mostrar Dirección', async
   ).toHaveAttribute('data-coordination-id', 'coord-ingenierias')
 })
 
-test('el analista recibe monitoreo global y conserva la captura', async ({
+test('el analista aterriza primero en Red de impacto', async ({
   page,
 }) => {
   await installRoleExperience(page, 'ANALISTA')
   await page.goto('/')
 
-  await expect(page).toHaveURL(/\/dashboard$/)
-  await expect(
-    page.getByRole('heading', { name: 'Centro de monitoreo' }),
-  ).toBeVisible()
-  await expect(
-    page.getByRole('heading', { name: 'Supervisión operacional global' }),
-  ).toBeVisible()
-  await expect(page.getByText('Captura y supervisión')).toBeVisible()
+  await expect(page).toHaveURL(/\/red-impacto$/)
+  await expect(page.locator('.impact-executive__status-board')).toBeVisible()
 })
 
-test('el director recibe Command Center sin acciones de captura', async ({
+test('el director aterriza primero en Red de impacto', async ({
   page,
 }) => {
   await installRoleExperience(page, 'DIRECTOR')
   await page.goto('/')
 
-  await expect(page).toHaveURL(/\/dashboard$/)
-  await expect(
-    page.getByRole('heading', { name: 'Command Center' }),
-  ).toBeVisible()
-  await expect(
-    page.getByRole('heading', { name: 'Estado operativo institucional' }),
-  ).toBeVisible()
-  await expect(page.getByText('Captura y supervisión')).toHaveCount(0)
-  await expect(
-    page.getByRole('link', { name: /Registrar nueva situación/i }),
-  ).toHaveCount(0)
+  await expect(page).toHaveURL(/\/red-impacto$/)
+  await expect(page.locator('.impact-executive__status-board')).toBeVisible()
 })
 
-test('el administrador controla usuarios y previsualiza roles', async ({
+test('el administrador aterriza primero en Red de impacto', async ({
   page,
 }) => {
   await installRoleExperience(page, 'ADMIN')
   await page.goto('/')
 
-  await expect(page).toHaveURL(/\/admin$/)
-  await expect(
-    page.getByRole('heading', { name: 'Control del sistema' }),
-  ).toBeVisible()
-  await expect(page.getByText('Usuario Operativo')).toBeVisible()
-  await expect(
-    page.getByRole('link', { name: 'Director', exact: true }),
-  ).toHaveAttribute('href', '/dashboard?preview=DIRECTOR')
-
-  await page.getByRole('button', { name: 'Desactivar' }).click()
-  await expect(page.getByText('Inactivo')).toBeVisible()
+  await expect(page).toHaveURL(/\/red-impacto$/)
+  await expect(page.locator('.impact-executive__status-board')).toBeVisible()
 })

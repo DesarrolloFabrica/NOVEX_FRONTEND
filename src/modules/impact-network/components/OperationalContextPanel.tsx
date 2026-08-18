@@ -1,8 +1,9 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react'
-import { AnimatePresence, LayoutGroup, motion } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import { ImpactSituationCommand } from '@/modules/impact-network/components/ImpactSituationCommand'
 import type { CoordinationId } from '@/modules/impact-network/data/coordination-islands.config'
 import type { Coordination } from '@/modules/impact-network/types/operational-network.types'
+import { cleanExecutiveCopy } from '@/modules/impact-network/data/executive-operational-overview.model'
 import type {
   ImpactIncident,
   ImpactNetworkStatus,
@@ -32,6 +33,7 @@ interface OperationalContextPanelProps {
   originCoordinationId?: CoordinationId | null
   affectedNames?: readonly string[]
   reducedMotion?: boolean
+  executiveMode?: boolean
   canUpdateSituation?: boolean
   isUpdatingSituation?: boolean
   isExportingPdf?: boolean
@@ -85,7 +87,7 @@ const PANEL_VARIANTS = {
   }),
 }
 
-const SITUATION_PAGE_SIZE = 6
+const SITUATION_PAGE_SIZE = 4
 
 const dateFormatter = new Intl.DateTimeFormat('es-CO', {
   day: '2-digit',
@@ -159,6 +161,7 @@ function OperationalContextPanelView({
   originCoordinationId = null,
   affectedNames = [],
   reducedMotion = false,
+  executiveMode = false,
   canUpdateSituation = false,
   isUpdatingSituation = false,
   isExportingPdf = false,
@@ -170,6 +173,8 @@ function OperationalContextPanelView({
   onDownloadPdf,
   onOpenSituationDetail,
 }: OperationalContextPanelProps) {
+  const displayCopy = (value: string, fallback = 'Situación activa') =>
+    executiveMode ? cleanExecutiveCopy(value, fallback) : value
   const panelLevel: PanelLevel = focusedEvent
     ? 'situation'
     : coordination
@@ -184,15 +189,29 @@ function OperationalContextPanelView({
   const coordinationLastActivity = coordination
     ? resolveCoordinationLastActivity(incidents, coordination.lastActivityAt)
     : 'Sin actividad registrada'
+  const coordinationRelatedAreaCount = new Set(
+    incidents.flatMap((incident) => incident.affectedAreaIds),
+  ).size
   const totalSituationPages = Math.max(
     1,
     Math.ceil(incidents.length / SITUATION_PAGE_SIZE),
   )
+  const prioritizedIncidents = useMemo(
+    () =>
+      [...incidents].sort(
+        (left, right) =>
+          right.riskScore - left.riskScore ||
+          right.lastUpdateAt.localeCompare(left.lastUpdateAt),
+      ),
+    [incidents],
+  )
+  const listedIncidents = executiveMode ? prioritizedIncidents : incidents
   const paginatedIncidents = useMemo(() => {
     const start = (situationPage - 1) * SITUATION_PAGE_SIZE
-    return incidents.slice(start, start + SITUATION_PAGE_SIZE)
-  }, [incidents, situationPage])
-  const showSituationPager = incidents.length > SITUATION_PAGE_SIZE
+    return listedIncidents.slice(start, start + SITUATION_PAGE_SIZE)
+  }, [listedIncidents, situationPage])
+  const visibleCoordinationIncidents = paginatedIncidents
+  const showSituationPager = listedIncidents.length > SITUATION_PAGE_SIZE
 
   useEffect(() => {
     previousLevelRef.current = panelLevel
@@ -221,31 +240,71 @@ function OperationalContextPanelView({
 
     content = (
       <>
-        <motion.header
-          layoutId={`impact-situation-${focusedEvent.id}`}
-          className="island-focus-dossier__topbar operational-context-panel__dossier-header"
-          transition={{
-            layout: {
-              duration: reducedMotion ? 0.01 : 0.22,
-              ease: [0.22, 0.61, 0.36, 1],
-            },
-          }}
-        >
+        <motion.header className="island-focus-dossier__topbar operational-context-panel__dossier-header">
           <div className="island-focus-dossier__topbar-copy">
             <span className="island-focus-dossier__topbar-kicker">
-              Situación activa · {coordination.shortName}
+              {executiveMode ? 'Situación seleccionada' : 'Situación activa'} ·{' '}
+              {coordination.shortName}
             </span>
-            <strong>{focusedEvent.title}</strong>
+            <strong>{displayCopy(focusedEvent.title)}</strong>
             <span className="island-focus-dossier__topbar-subtitle">
-              Mapa de impacto · {affectedNames.length}{' '}
-              {affectedNames.length === 1 ? 'conexión' : 'conexiones'} · Riesgo{' '}
-              {RISK_LABEL[focusedRisk]} {Math.round(focusedScore)}/100
+              {executiveMode
+                ? `${RISK_LABEL[focusedRisk]} · ${STATUS_LABEL[focusedEvent.status]} · ${affectedNames.length} coordinación${affectedNames.length === 1 ? '' : 'es'} afectada${affectedNames.length === 1 ? '' : 's'}`
+                : `Mapa de impacto · ${affectedNames.length} ${affectedNames.length === 1 ? 'conexión' : 'conexiones'} · Riesgo ${RISK_LABEL[focusedRisk]} ${Math.round(focusedScore)}/100`}
             </span>
           </div>
         </motion.header>
 
         <div className="island-focus-dossier__content operational-context-panel__dossier-content">
-          {onOpenSituationDetail ? (
+          {focusedSituation &&
+          onUpdateSituationStatus &&
+          onOpenAnalysis &&
+          onDownloadPdf ? (
+            <ImpactSituationCommand
+              situation={focusedSituation}
+              canUpdate={canUpdateSituation}
+              isUpdating={isUpdatingSituation}
+              isExportingPdf={isExportingPdf}
+              exportError={exportPdfError}
+              executiveMode={executiveMode}
+              onUpdateStatus={onUpdateSituationStatus}
+              onOpenAnalysis={onOpenAnalysis}
+              onDownloadPdf={onDownloadPdf}
+            />
+          ) : null}
+
+          {executiveMode ? (
+            <dl className="operational-context-panel__selected-facts">
+              <div>
+                <dt>Riesgo</dt>
+                <dd>
+                  {RISK_LABEL[focusedRisk]} · {Math.round(focusedScore)}/100
+                </dd>
+              </div>
+              <div>
+                <dt>Estado</dt>
+                <dd>{STATUS_LABEL[focusedEvent.status]}</dd>
+              </div>
+              <div>
+                <dt>Impacto</dt>
+                <dd>
+                  {affectedNames.length > 0
+                    ? `${affectedNames.length} relacionada${affectedNames.length === 1 ? '' : 's'}`
+                    : 'Contenido'}
+                </dd>
+              </div>
+              <div>
+                <dt>Última actualización</dt>
+                <dd>
+                  {formatDate(
+                    focusedEvent.lastUpdateAt ?? focusedEvent.reportedAt,
+                  )}
+                </dd>
+              </div>
+            </dl>
+          ) : null}
+
+          {onOpenSituationDetail && !executiveMode ? (
             <button
               type="button"
               className="operational-context-panel__detail-cta"
@@ -258,31 +317,19 @@ function OperationalContextPanelView({
                 <NovexIcon name="grid" size={17} strokeWidth={1.8} />
               </span>
               <span className="operational-context-panel__detail-cta-copy">
-                <strong>Ver detalle de la situación</strong>
-                <small>Abrir expediente ejecutivo en la isla origen</small>
+                <strong>
+                  {executiveMode
+                    ? 'Ver contexto en la isla origen'
+                    : 'Ver detalle de la situación'}
+                </strong>
+                <small>
+                  {executiveMode
+                    ? 'Identificar el punto donde comenzó'
+                    : 'Abrir expediente ejecutivo en la isla origen'}
+                </small>
               </span>
-              <NovexIcon
-                name="chevron-right"
-                size={17}
-                strokeWidth={1.8}
-              />
+              <NovexIcon name="chevron-right" size={17} strokeWidth={1.8} />
             </button>
-          ) : null}
-
-          {focusedSituation &&
-          onUpdateSituationStatus &&
-          onOpenAnalysis &&
-          onDownloadPdf ? (
-            <ImpactSituationCommand
-              situation={focusedSituation}
-              canUpdate={canUpdateSituation}
-              isUpdating={isUpdatingSituation}
-              isExportingPdf={isExportingPdf}
-              exportError={exportPdfError}
-              onUpdateStatus={onUpdateSituationStatus}
-              onOpenAnalysis={onOpenAnalysis}
-              onDownloadPdf={onDownloadPdf}
-            />
           ) : null}
         </div>
       </>
@@ -291,13 +338,16 @@ function OperationalContextPanelView({
     content = (
       <>
         <header className="operational-context-panel__hero">
-          <span>Nivel 02 · Situaciones de la coordinación</span>
+          <span>
+            {executiveMode ? 'Coordinación' : 'Nivel 02 · Situaciones de la coordinación'}
+          </span>
           <div>
             <h2>{coordination.name}</h2>
           </div>
           <p>
-            Registre una situación o abra un expediente existente sin abandonar
-            el mapa operacional.
+            {executiveMode
+              ? 'Estas son las situaciones que requieren revisión dentro de la coordinación.'
+              : 'Registre una situación o abra un expediente existente sin abandonar el mapa operacional.'}
           </p>
         </header>
 
@@ -336,39 +386,84 @@ function OperationalContextPanelView({
           </span>
         </section>
 
+        {executiveMode ? (
+          <ul className="operational-context-panel__state-signals">
+            <li>{incidents.length} situaciones activas</li>
+            <li>
+              {coordinationRelatedAreaCount > 0
+                ? `${coordinationRelatedAreaCount} área${coordinationRelatedAreaCount === 1 ? '' : 's'} relacionada${coordinationRelatedAreaCount === 1 ? '' : 's'}`
+                : 'Impacto contenido'}
+            </li>
+            <li>
+              {incidents.length >= 3 ? 'Recurrencia detectada' : 'Incidencia activa'}
+            </li>
+          </ul>
+        ) : null}
+
         <dl className="operational-context-panel__metrics operational-context-panel__metrics--compact">
-          <div>
-            <dt>Situaciones</dt>
-            <dd>{incidentsLoading ? '…' : incidents.length}</dd>
-            <small>Activas</small>
-          </div>
-          <div>
-            <dt>Riesgo promedio</dt>
-            <dd>{incidentsLoading ? '…' : coordinationRiskScore}</dd>
-            <small>Escala 0–100</small>
-          </div>
-          <div>
-            <dt>Responsables</dt>
-            <dd>{coordination.responsiblePeople.length}</dd>
-            <small>{coordination.responsiblePeople.join(' · ')}</small>
-          </div>
-          <div>
-            <dt>Última actividad</dt>
-            <dd className="operational-context-panel__date">
-              {coordinationLastActivity}
-            </dd>
-            <small>Actualización operacional</small>
-          </div>
+          {executiveMode ? (
+            <>
+              <div>
+                <dt>Riesgo</dt>
+                <dd>{incidentsLoading ? '…' : coordinationRiskScore}</dd>
+                <small>Escala 0–100</small>
+              </div>
+              <div>
+                <dt>Áreas relacionadas</dt>
+                <dd>{incidentsLoading ? '…' : coordinationRelatedAreaCount}</dd>
+                <small>Impacto actual</small>
+              </div>
+              <div>
+                <dt>Última actualización</dt>
+                <dd className="operational-context-panel__date">
+                  {coordinationLastActivity}
+                </dd>
+                <small>Actividad reciente</small>
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <dt>Situaciones</dt>
+                <dd>{incidentsLoading ? '…' : incidents.length}</dd>
+                <small>Activas</small>
+              </div>
+              <div>
+                <dt>Riesgo promedio</dt>
+                <dd>{incidentsLoading ? '…' : coordinationRiskScore}</dd>
+                <small>Escala 0–100</small>
+              </div>
+              <div>
+                <dt>Responsables</dt>
+                <dd>{coordination.responsiblePeople.length}</dd>
+                <small>{coordination.responsiblePeople.join(' · ')}</small>
+              </div>
+              <div>
+                <dt>Última actividad</dt>
+                <dd className="operational-context-panel__date">
+                  {coordinationLastActivity}
+                </dd>
+                <small>Actualización operacional</small>
+              </div>
+            </>
+          )}
         </dl>
 
-        <section className="operational-context-panel__situations">
+        <section
+          className="operational-context-panel__situations"
+          data-impact-tour="situation-list"
+        >
           <header>
             <div>
-              <span>Situaciones activas</span>
+              <span>
+                {executiveMode ? 'Requiere atención primero' : 'Situaciones activas'}
+              </span>
               <h3>
                 {incidentsLoading
                   ? 'Cargando situaciones…'
-                  : 'Seleccione una situación'}
+                  : incidents.length === 1
+                    ? '1 situación por revisar'
+                    : `${incidents.length} situaciones por revisar`}
               </h3>
             </div>
             <strong>{incidentsLoading ? '…' : incidents.length}</strong>
@@ -388,43 +483,52 @@ function OperationalContextPanelView({
                 </div>
               </div>
             ) : incidents.length > 0 ? (
-              paginatedIncidents.map((incident) => (
-                <motion.button
+              visibleCoordinationIncidents.map((incident, index) => (
+                <button
                   type="button"
                   key={incident.eventId}
-                  layoutId={`impact-situation-${incident.eventId}`}
                   className="operational-context-panel__situation"
                   data-risk={incident.riskLevel ?? 'moderate'}
-                  aria-label={`Abrir expediente IA de ${incident.title}`}
+                  data-priority={executiveMode && index === 0 ? 'true' : 'false'}
+                  aria-label={`Abrir expediente IA de ${displayCopy(incident.title)}`}
                   onClick={() => onSelectSituation(incident.eventId)}
-                  transition={{
-                    layout: {
-                      duration: reducedMotion ? 0.01 : 0.22,
-                      ease: [0.22, 0.61, 0.36, 1],
-                    },
-                  }}
                 >
                   <span
                     className="operational-context-panel__situation-signal"
                     aria-hidden="true"
                   />
                   <span className="operational-context-panel__situation-copy">
-                    <strong>{incident.title}</strong>
+                    {executiveMode && index === 0 ? (
+                      <span className="operational-context-panel__situation-priority">
+                        Situación principal
+                      </span>
+                    ) : null}
+                    <strong>{displayCopy(incident.title)}</strong>
                     <small>
                       {incident.riskLevel
                         ? RISK_LABEL[incident.riskLevel]
                         : 'Por clasificar'}{' '}
                       · {STATUS_LABEL[incident.status]}
                     </small>
+                    {executiveMode ? (
+                      <em>
+                        Afecta {incident.affectedAreaIds.length} área
+                        {incident.affectedAreaIds.length === 1 ? '' : 's'} ·{' '}
+                        Revisar situación
+                      </em>
+                    ) : null}
                   </span>
                   <span className="operational-context-panel__situation-score">
                     {Math.round(incident.riskScore)}
                     <small>{formatDate(incident.reportedAt)}</small>
                   </span>
-                </motion.button>
+                </button>
               ))
             ) : (
-              <div className="operational-context-panel__empty-state">
+              <div
+                className="operational-context-panel__empty-state"
+                data-impact-tour="empty-situations"
+              >
                 <div className="operational-context-panel__empty">
                   <i aria-hidden="true">✓</i>
                   <div className="operational-context-panel__empty-copy">
@@ -472,7 +576,7 @@ function OperationalContextPanelView({
                 </button>
               </div>
               <p className="operational-context-panel__situation-pager-meta">
-                Mostrando {paginatedIncidents.length} de {incidents.length}
+                Mostrando {paginatedIncidents.length} de {listedIncidents.length}
               </p>
             </footer>
           ) : null}
@@ -554,7 +658,15 @@ function OperationalContextPanelView({
   return (
     <aside
       className="operational-context-panel operational-context-panel--smart"
+      data-impact-tour={
+        focusedEvent
+          ? 'situation-detail'
+          : coordination
+            ? 'coordination-panel'
+            : 'institutional-panel'
+      }
       data-level={panelLevel}
+      data-executive={executiveMode}
       aria-label={
         focusedEvent
           ? `Mapa de impacto de ${focusedEvent.title}`
@@ -563,8 +675,7 @@ function OperationalContextPanelView({
             : 'Resumen de la Dirección de Operaciones'
       }
     >
-      <LayoutGroup id="operational-context-panel">
-        <AnimatePresence initial={false} custom={direction} mode="sync">
+      <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
             key={`${panelLevel}:${coordination?.id ?? 'all'}:${focusedEvent?.id ?? 'none'}`}
             className="operational-context-panel__view"
@@ -581,7 +692,6 @@ function OperationalContextPanelView({
             {content}
           </motion.div>
         </AnimatePresence>
-      </LayoutGroup>
     </aside>
   )
 }

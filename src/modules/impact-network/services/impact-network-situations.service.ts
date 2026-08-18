@@ -109,8 +109,19 @@ export async function loadImpactNetworkSituations(): Promise<{
   situations: SituationResponse[]
   lastSynchronizedAt: string
 }> {
-  const response = await fetchSituations({ limit: 100, page: 1 })
-  const situations = response.items
+  const firstPage = await fetchSituations({ limit: 100, page: 1 })
+  const pageCount = Math.ceil(firstPage.total / firstPage.limit)
+  const remainingPages =
+    pageCount > 1
+      ? await Promise.all(
+          Array.from({ length: pageCount - 1 }, (_, index) =>
+            fetchSituations({ limit: firstPage.limit, page: index + 2 }),
+          ),
+        )
+      : []
+  const situations = [firstPage, ...remainingPages].flatMap(
+    (response) => response.items,
+  )
   const events = situations.map((situation) =>
     mapSituationToImpactOperationalEvent(situation),
   )

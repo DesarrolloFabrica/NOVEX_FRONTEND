@@ -7,13 +7,9 @@ import {
 
 describe('roleExperience', () => {
   it('envía cada rol a su experiencia inicial', () => {
-    expect(getRoleLandingPath({ roleCode: 'ANALISTA' })).toBe(
-      '/centro-operacional',
-    )
-    expect(getRoleLandingPath({ roleCode: 'DIRECTOR' })).toBe(
-      '/centro-operacional',
-    )
-    expect(getRoleLandingPath({ roleCode: 'ADMIN' })).toBe('/centro-operacional')
+    expect(getRoleLandingPath({ roleCode: 'ANALISTA' })).toBe('/red-impacto')
+    expect(getRoleLandingPath({ roleCode: 'DIRECTOR' })).toBe('/red-impacto')
+    expect(getRoleLandingPath({ roleCode: 'ADMIN' })).toBe('/red-impacto')
     expect(
       getRoleLandingPath({ roleCode: 'COORDINADOR', selectedAreaId: 'B2B' }),
     ).toBe('/red-impacto?coordination=B2B')

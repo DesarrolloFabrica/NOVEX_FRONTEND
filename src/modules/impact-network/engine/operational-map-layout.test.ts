@@ -121,7 +121,9 @@ describe('buildOperationalMapLayout', () => {
     const fabrica = layout.nodes.find(
       (node) => node.coordinationId === 'coord-fabrica-contenidos',
     )
-    const b2b = layout.nodes.find((node) => node.coordinationId === 'coord-b2b')
+    const empresarial = layout.nodes.find(
+      (node) => node.coordinationId === 'coord-empresarial',
+    )
     const servicios = layout.nodes.find(
       (node) => node.coordinationId === 'coord-servicios',
     )
@@ -129,9 +131,9 @@ describe('buildOperationalMapLayout', () => {
     expect(sizes.size).toBe(3)
     expect(fabrica?.scaleTier).toBe('focal')
     expect(servicios?.scaleTier).toBe('affected')
-    expect(b2b?.scaleTier).toBe('normal')
-    expect((fabrica?.size ?? 0) / (b2b?.size ?? 1)).toBeCloseTo(1.26, 5)
-    expect((servicios?.size ?? 0) / (b2b?.size ?? 1)).toBeCloseTo(1.1, 5)
+    expect(empresarial?.scaleTier).toBe('normal')
+    expect((fabrica?.size ?? 0) / (empresarial?.size ?? 1)).toBeCloseTo(1.26, 5)
+    expect((servicios?.size ?? 0) / (empresarial?.size ?? 1)).toBeCloseTo(1.1, 5)
   })
 
   it('no mueve las islas cuando cambia el estado operacional', () => {

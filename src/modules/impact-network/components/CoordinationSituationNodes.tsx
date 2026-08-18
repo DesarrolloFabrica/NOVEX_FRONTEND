@@ -13,6 +13,7 @@ interface CoordinationSituationNodesProps {
   islandSize: number
   stageSize: { width: number; height: number }
   reducedMotion?: boolean
+  executiveMode?: boolean
   onSelectSituation: (eventId: string) => void
 }
 
@@ -29,13 +30,25 @@ function CoordinationSituationNodesView({
   islandSize,
   stageSize,
   reducedMotion = false,
+  executiveMode = false,
   onSelectSituation,
 }: CoordinationSituationNodesProps) {
-  const layouts = useMemo(
-    () => buildSituationLayouts(incidents, origin, islandSize, stageSize),
-    [incidents, islandSize, origin, stageSize],
+  const orderedIncidents = useMemo(
+    () =>
+      executiveMode
+        ? [...incidents].sort(
+            (left, right) =>
+              right.riskScore - left.riskScore ||
+              right.lastUpdateAt.localeCompare(left.lastUpdateAt),
+          )
+        : incidents,
+    [executiveMode, incidents],
   )
-  const hiddenCount = Math.max(0, incidents.length - layouts.length)
+  const layouts = useMemo(
+    () => buildSituationLayouts(orderedIncidents, origin, islandSize, stageSize),
+    [islandSize, orderedIncidents, origin, stageSize],
+  )
+  const hiddenCount = Math.max(0, orderedIncidents.length - layouts.length)
 
   if (layouts.length === 0) return null
 
@@ -45,6 +58,7 @@ function CoordinationSituationNodesView({
       data-reduced-motion={reducedMotion}
       data-visible-count={layouts.length}
       data-hidden-count={hiddenCount}
+      data-executive={executiveMode}
       aria-label="Situaciones de la coordinación"
     >
       <svg
@@ -65,7 +79,9 @@ function CoordinationSituationNodesView({
       </svg>
 
       <div className="coordination-situation-nodes__hint">
-        <span>Seleccione una situación</span>
+        <span>
+          {executiveMode ? 'Requiere atención primero' : 'Seleccione una situación'}
+        </span>
         {hiddenCount > 0 ? (
           <small>+{hiddenCount} en el panel derecho</small>
         ) : null}
@@ -82,6 +98,7 @@ function CoordinationSituationNodesView({
             type="button"
             className="coordination-situation-node"
             data-risk={RISK_TONE[risk]}
+            data-priority={executiveMode && index === 0 ? 'true' : 'false'}
             style={
               {
                 left: x,
@@ -101,11 +118,22 @@ function CoordinationSituationNodesView({
               <b>{Math.round(incident.riskScore)}</b>
             </span>
             <span className="coordination-situation-node__copy">
+              {executiveMode && index === 0 ? (
+                <span className="coordination-situation-node__priority">
+                  Prioridad principal
+                </span>
+              ) : null}
               <strong title={incident.title}>{incident.title}</strong>
               <small>
-                {riskLabel} · {statusLabel}
+                {executiveMode
+                  ? `${riskLabel} · ${Math.round(incident.riskScore)}/100`
+                  : `${riskLabel} · ${statusLabel}`}
               </small>
-              <em>Seleccionar situación</em>
+              <em>
+                {executiveMode
+                  ? 'Revisar situación'
+                  : 'Seleccionar situación'}
+              </em>
             </span>
           </button>
         )
