@@ -45,6 +45,7 @@ import type {
   OperationalEvent,
   RiskLevel,
 } from '@/modules/operational-events/types/operational-event.types'
+import type { SituationResponse } from '@/modules/situations/types/situation.types'
 
 interface OrganizationalSceneProps {
   coordinationIds: readonly CoordinationId[]
@@ -59,6 +60,7 @@ interface OrganizationalSceneProps {
   viewResetKey?: number
   propagation?: FocusedPropagation | null
   focusedEvent?: OperationalEvent | null
+  focusedSituation?: Pick<SituationResponse, 'status' | 'lastStatusComment'> | null
   illuminatedCoordinationIds?: readonly CoordinationId[]
   predictedCoordinationIds?: readonly CoordinationId[]
   predictionVisible?: boolean
@@ -191,6 +193,7 @@ function OrganizationalSceneView({
   viewResetKey = 0,
   propagation = null,
   focusedEvent = null,
+  focusedSituation = null,
   illuminatedCoordinationIds = [],
   predictedCoordinationIds = [],
   predictionVisible = false,
@@ -1307,6 +1310,7 @@ function OrganizationalSceneView({
               coordinationId={focusIslandId}
               propagation={propagation}
               event={focusedEvent}
+              situation={focusedSituation}
               reducedMotion={reducedMotion}
               onClose={closeIslandFocus}
               onExitComplete={handleDossierExitComplete}

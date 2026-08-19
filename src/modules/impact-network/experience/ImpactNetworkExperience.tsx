@@ -1264,6 +1264,7 @@ export function ImpactNetworkExperience() {
                           viewResetKey={mapViewResetKey}
                           propagation={propagation}
                           focusedEvent={focusedEvent}
+                          focusedSituation={focusedSituation}
                           illuminatedCoordinationIds={
                             illuminatedCoordinationIds
                           }

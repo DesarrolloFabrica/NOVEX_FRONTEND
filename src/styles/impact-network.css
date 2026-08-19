@@ -7250,7 +7250,7 @@
 
 .island-focus-dossier__topbar-copy strong {
   display: -webkit-box;
-  margin-top: 4px;
+  margin-top: 0;
   overflow: hidden;
   color: #e8f3ff;
   font-size: 0.92rem;
@@ -7259,6 +7259,48 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
+}
+
+.island-focus-dossier__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px 10px;
+  margin-top: 6px;
+}
+
+.island-focus-dossier__status {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  margin-top: 2px;
+  border: 1px solid rgb(148 176 214 / 0.28);
+  border-radius: 999px;
+  padding: 4px 10px;
+  color: #d7e6f8;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgb(18 38 68 / 0.72);
+}
+
+.island-focus-dossier__status[data-status='open'] {
+  border-color: rgb(232 196 92 / 0.45);
+  color: #ffe7a8;
+  background: rgb(72 52 8 / 0.55);
+}
+
+.island-focus-dossier__status[data-status='attention'] {
+  border-color: rgb(92 211 151 / 0.42);
+  color: #c9f5dd;
+  background: rgb(10 58 46 / 0.62);
+}
+
+.island-focus-dossier__status[data-status='closed'] {
+  border-color: rgb(148 176 214 / 0.38);
+  color: #c5d4e6;
+  background: rgb(22 34 52 / 0.72);
 }
 
 .island-focus-dossier__topbar-subtitle {
@@ -7364,7 +7406,7 @@
 
 .island-focus-dossier__facts {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   flex-shrink: 0;
   gap: 8px;
   margin: 0;

@@ -5,7 +5,9 @@ import type { CoordinationId } from '@/modules/impact-network/data/coordination-
 import type { FocusedPropagation } from '@/modules/impact-network/types/impact-network.types'
 import type { OperationalEvent } from '@/modules/operational-events/types/operational-event.types'
 import { RISK_LEVEL_LABEL } from '@/modules/operational-events/components/eventPresentation'
+import type { SituationResponse } from '@/modules/situations/types/situation.types'
 import { NovexIcon } from '@/shared/components/NovexIcon'
+import { resolveSituationCoordinatorState } from './situation-coordinator-state'
 import {
   isIslandFocusOrigin,
   resolveIslandAffectedBriefing,
@@ -20,6 +22,7 @@ interface IslandFocusDossierProps {
   coordinationId: CoordinationId
   propagation: FocusedPropagation
   event: OperationalEvent
+  situation?: Pick<SituationResponse, 'status' | 'lastStatusComment'> | null
   reducedMotion?: boolean
   onClose: () => void
   onExitComplete?: () => void
@@ -30,6 +33,7 @@ export function IslandFocusDossier({
   coordinationId,
   propagation,
   event,
+  situation = null,
   reducedMotion = false,
   onClose,
   onExitComplete,
@@ -53,6 +57,10 @@ export function IslandFocusDossier({
   const stageBriefing = useMemo(
     () => resolveIslandStageBriefing(coordinationId, propagation, event),
     [coordinationId, propagation, event],
+  )
+  const coordinatorState = useMemo(
+    () => resolveSituationCoordinatorState(event, situation),
+    [event, situation],
   )
 
   useEffect(() => {
@@ -150,11 +158,17 @@ export function IslandFocusDossier({
                 <span className="island-focus-dossier__topbar-kicker">
                   {isOrigin ? 'Situación' : panelKicker} · {coordination.shortName}
                 </span>
-                <strong>{event.title}</strong>
+                <div className="island-focus-dossier__title-row">
+                  <strong>{event.title}</strong>
+                  <span
+                    className="island-focus-dossier__status"
+                    data-status={coordinatorState.tone}
+                  >
+                    {coordinatorState.label}
+                  </span>
+                </div>
                 <span className="island-focus-dossier__topbar-subtitle">
-                  {isOrigin
-                    ? 'Expediente y análisis en un solo lugar'
-                    : panelSubtitle}
+                  {isOrigin ? coordinatorState.detail : panelSubtitle}
                 </span>
               </div>
               <div className="island-focus-dossier__topbar-actions">
@@ -217,6 +231,10 @@ export function IslandFocusDossier({
                 <div>
                   <dt>Origen</dt>
                   <dd>{coordination.shortName}</dd>
+                </div>
+                <div>
+                  <dt>Estado</dt>
+                  <dd>{coordinatorState.label}</dd>
                 </div>
               </dl>
             ) : null}
