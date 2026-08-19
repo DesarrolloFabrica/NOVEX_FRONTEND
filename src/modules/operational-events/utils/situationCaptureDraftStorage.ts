@@ -110,6 +110,10 @@ export function readSituationCaptureDraft(): SituationCaptureDraft | null {
     return {
       ...stored,
       reportedAt: normalizeCaptureDate(stored.reportedAt),
+      categoryId:
+        typeof (stored as { categoryId?: unknown }).categoryId === 'string'
+          ? (stored as { categoryId: string }).categoryId
+          : '',
     }
   } catch {
     return null
@@ -131,6 +135,7 @@ export function writeSituationCaptureDraft(draft: SituationCaptureDraft): void {
     affectedPartyOther: draft.affectedPartyOther,
     relatedCoordinationIds: draft.relatedCoordinationIds,
     additionalNotes: draft.additionalNotes,
+    categoryId: draft.categoryId,
   }
 
   try {

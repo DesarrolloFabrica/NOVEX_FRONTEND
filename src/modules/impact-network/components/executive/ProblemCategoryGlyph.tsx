@@ -1,11 +1,11 @@
-import type { ProblemCategoryId } from '@/modules/impact-network/data/executive-operational-overview.mock'
+import type { IncidentCategoryIcon } from '@/modules/situations/data/incident-category-visual'
 
 /** Iconos SVG inline (sin lucide) alineados al lenguaje visual NOVEX. */
 export function ProblemCategoryGlyph({
   categoryId,
   size = 14,
 }: {
-  categoryId: ProblemCategoryId
+  categoryId: IncidentCategoryIcon
   size?: number
 }) {
   const common = {
@@ -21,49 +21,66 @@ export function ProblemCategoryGlyph({
   }
 
   switch (categoryId) {
-    case 'connectivity':
+    case 'internet':
       return (
         <svg {...common}>
           <circle cx="12" cy="12" r="9" />
           <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
         </svg>
       )
-    case 'platforms':
+    case 'apps':
       return (
         <svg {...common}>
           <rect x="3" y="4" width="18" height="12" rx="1.5" />
           <path d="M8 20h8M12 16v4" />
         </svg>
       )
-    case 'staff':
+    case 'devices':
       return (
         <svg {...common}>
-          <circle cx="9" cy="8" r="2.6" />
-          <path d="M3.8 19c.6-2.6 2.3-3.9 5.2-3.9" />
-          <circle cx="16" cy="8.5" r="2.2" />
-          <path d="M12.8 19c.5-2.2 2-3.4 4.4-3.4 2.3 0 3.9 1.2 4.4 3.4" />
+          <rect x="5" y="4" width="14" height="12" rx="1.5" />
+          <path d="M9 20h6M12 16v4" />
         </svg>
       )
-    case 'processes':
+    case 'zoho':
       return (
         <svg {...common}>
-          <path d="M4 6h10M4 12h16M4 18h12" />
-          <circle cx="17" cy="6" r="2" />
-          <circle cx="8" cy="12" r="2" />
-          <circle cx="18" cy="18" r="2" />
+          <rect x="4" y="5" width="16" height="14" rx="2" />
+          <path d="M8 9h8M8 12.5h5" />
+        </svg>
+      )
+    case 'iceberg':
+      return (
+        <svg {...common}>
+          <path d="M4 14h16l-4 6H8z" />
+          <path d="M7 14 12 5l5 9" />
+        </svg>
+      )
+    case 'acas':
+      return (
+        <svg {...common}>
+          <path d="M4 18V8l8-4 8 4v10" />
+          <path d="M9 18v-5h6v5" />
+        </svg>
+      )
+    case 'diplomas':
+      return (
+        <svg {...common}>
+          <path d="M4 7.5 12 4l8 3.5-8 3.5z" />
+          <path d="M7 10.5v4.2c0 1.6 2.2 2.8 5 2.8s5-1.2 5-2.8v-4.2" />
+        </svg>
+      )
+    case 'tickets':
+      return (
+        <svg {...common}>
+          <path d="M5 7h14v4a2 2 0 0 1 0 4v4H5v-4a2 2 0 0 1 0-4z" />
+          <path d="M9 10h6M9 14h4" />
         </svg>
       )
     case 'infrastructure':
       return (
         <svg {...common}>
           <path d="M4 20V8l8-4v16M12 10h8v10M2 20h20" />
-        </svg>
-      )
-    case 'documentation':
-      return (
-        <svg {...common}>
-          <path d="M6 3.5h8l4 4v13H6z" />
-          <path d="M14 3.5v4h4M9 12h6M9 15.5h5" />
         </svg>
       )
     default:

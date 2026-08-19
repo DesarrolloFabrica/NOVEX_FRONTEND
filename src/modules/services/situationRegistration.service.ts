@@ -41,6 +41,7 @@ function buildCreateSituationPayload(
     input.coordinations,
     undefined,
     !input.allowUnassignedCoordination,
+    input.categories,
   )
   if (!validation.valid) {
     throw new Error(
@@ -48,11 +49,11 @@ function buildCreateSituationPayload(
     )
   }
 
-  const placeholderCategory =
-    input.categories.find((item) => item.code === 'TECH_DEGRADATION') ??
-    input.categories[0]
+  const selectedCategory =
+    input.categories.find((item) => item.id === input.draft.categoryId) ??
+    input.categories.find((item) => item.isSelectable !== false)
 
-  if (!placeholderCategory) {
+  if (!selectedCategory) {
     throw new Error('No hay categorías de incidente disponibles.')
   }
 
@@ -62,7 +63,7 @@ function buildCreateSituationPayload(
     coordinationId: input.allowUnassignedCoordination
       ? undefined
       : input.draft.coordinationId || undefined,
-    categoryId: placeholderCategory.id,
+    categoryId: selectedCategory.id,
     severity: 'MEDIUM',
     occurredAt: captureDateToOccurredAt(input.draft.reportedAt),
     relatedCoordinationIds: input.draft.relatedCoordinationIds.filter(

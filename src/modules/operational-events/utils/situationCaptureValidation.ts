@@ -1,5 +1,8 @@
 import type { SituationCaptureDraft } from '@/modules/situations/types/situation-capture.types'
-import type { CoordinationSummary } from '@/modules/situations/types/situation.types'
+import type {
+  CoordinationSummary,
+  IncidentCategorySummary,
+} from '@/modules/situations/types/situation.types'
 import { isValidUuid } from '@/shared/utils/uuid'
 import {
   isFutureCaptureDate,
@@ -21,6 +24,7 @@ export function validateSituationCaptureDraft(
   coordinations: CoordinationSummary[],
   responsibleCoordinations?: CoordinationSummary[],
   requiresCoordination = true,
+  categories: IncidentCategorySummary[] = [],
 ): SituationCaptureValidationResult {
   const coordinationIds = new Set(coordinations.map((item) => item.id))
   const responsibleIds = new Set(
@@ -66,6 +70,19 @@ export function validateSituationCaptureDraft(
     !draft.affectedPartyOther.trim()
   ) {
     missingRequirements.push('especificar quiénes están siendo afectados')
+  }
+  const selectableCategories = categories.filter(
+    (item) => item.isSelectable !== false,
+  )
+  const categoryPool =
+    selectableCategories.length > 0 ? selectableCategories : categories
+  if (categoryPool.length > 0) {
+    const selected = categoryPool.find((item) => item.id === draft.categoryId)
+    if (!selected) {
+      missingRequirements.push('la categoría del caso')
+    }
+  } else if (!draft.categoryId || !isValidUuid(draft.categoryId)) {
+    missingRequirements.push('la categoría del caso')
   }
 
   const invalidRelated = draft.relatedCoordinationIds.filter(

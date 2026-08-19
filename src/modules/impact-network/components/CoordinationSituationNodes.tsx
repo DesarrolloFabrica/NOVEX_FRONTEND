@@ -1,5 +1,7 @@
 import { memo, useMemo, type CSSProperties } from 'react'
 import type { ImpactIncident } from '@/modules/impact-network/types/impact-network.types'
+import { ProblemCategoryGlyph } from '@/modules/impact-network/components/executive/ProblemCategoryGlyph'
+import { INCIDENT_CATEGORY_ICON_LABEL } from '@/modules/situations/data/incident-category-visual'
 import { buildSituationLayouts } from '@/modules/impact-network/components/coordination-situation-layout'
 import {
   EVENT_STATUS_LABEL,
@@ -91,6 +93,10 @@ function CoordinationSituationNodesView({
         const risk = incident.riskLevel ?? 'moderate'
         const riskLabel = RISK_LEVEL_LABEL[risk]
         const statusLabel = EVENT_STATUS_LABEL[incident.status]
+        const categoryIcon = incident.categoryIcon ?? 'other'
+        const categoryLabel =
+          incident.categoryName?.trim() ||
+          INCIDENT_CATEGORY_ICON_LABEL[categoryIcon]
 
         return (
           <button
@@ -98,6 +104,7 @@ function CoordinationSituationNodesView({
             type="button"
             className="coordination-situation-node"
             data-risk={RISK_TONE[risk]}
+            data-category={categoryIcon}
             data-priority={executiveMode && index === 0 ? 'true' : 'false'}
             style={
               {
@@ -106,7 +113,7 @@ function CoordinationSituationNodesView({
                 '--situation-order': index,
               } as CSSProperties
             }
-            aria-label={`Seleccionar situación ${incident.title}. Riesgo ${riskLabel}. ${statusLabel}.`}
+            aria-label={`Seleccionar situación ${incident.title}. ${categoryLabel}. Riesgo ${riskLabel}. ${statusLabel}.`}
             onClick={() => onSelectSituation(incident.eventId)}
             onPointerDown={(event) => event.stopPropagation()}
           >
@@ -115,7 +122,7 @@ function CoordinationSituationNodesView({
               aria-hidden="true"
             >
               <i />
-              <b>{Math.round(incident.riskScore)}</b>
+              <ProblemCategoryGlyph categoryId={categoryIcon} size={18} />
             </span>
             <span className="coordination-situation-node__copy">
               {executiveMode && index === 0 ? (
@@ -126,8 +133,8 @@ function CoordinationSituationNodesView({
               <strong title={incident.title}>{incident.title}</strong>
               <small>
                 {executiveMode
-                  ? `${riskLabel} · ${Math.round(incident.riskScore)}/100`
-                  : `${riskLabel} · ${statusLabel}`}
+                  ? `${categoryLabel} · ${riskLabel}`
+                  : `${categoryLabel} · ${statusLabel}`}
               </small>
               <em>
                 {executiveMode

@@ -10410,6 +10410,12 @@
   font-weight: 800;
 }
 
+.coordination-situation-node__orb svg {
+  position: relative;
+  z-index: 1;
+  color: #f4fbff;
+}
+
 .coordination-situation-node__copy {
   display: grid;
   min-width: 0;

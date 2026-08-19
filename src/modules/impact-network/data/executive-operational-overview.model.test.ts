@@ -45,8 +45,8 @@ function situation(
     createdByUserId: 'user-1',
     createdByUserName: 'Usuario',
     categoryId: 'category-1',
-    categoryCode: 'PLATFORM',
-    categoryName: 'Plataformas tecnológicas',
+    categoryCode: 'APLICATIVOS',
+    categoryName: 'Aplicativos',
     severity,
     status: 'OPEN',
     occurredAt: '2026-08-18T11:00:00.000Z',
@@ -149,16 +149,16 @@ describe('buildExecutiveOverviewModel', () => {
   })
 
   it('clasifica categorías de backend con un fallback de procesos', () => {
-    expect(resolveProblemCategoryId('NETWORK', 'Internet institucional')).toBe(
-      'connectivity',
+    expect(resolveProblemCategoryId('INTERNET', 'Internet institucional')).toBe(
+      'internet',
     )
-    expect(resolveProblemCategoryId('HR', 'Vacante de personal')).toBe('staff')
-    expect(resolveProblemCategoryId('DOCS', 'Documentación pendiente')).toBe(
-      'documentation',
+    expect(resolveProblemCategoryId('EQUIPOS', 'Falla de equipos')).toBe(
+      'devices',
     )
-    expect(resolveProblemCategoryId('OTHER', 'Caso operativo')).toBe(
-      'processes',
+    expect(resolveProblemCategoryId('DIPLOMADOS', 'Diplomados')).toBe(
+      'diplomas',
     )
+    expect(resolveProblemCategoryId('OTHER', 'Caso operativo')).toBe('other')
   })
 
   it('no convierte una coordinación en crítica por acumular situaciones', () => {

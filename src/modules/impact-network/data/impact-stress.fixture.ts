@@ -101,6 +101,9 @@ function buildIncidents(): ImpactIncident[] {
       active: true,
       expansionState: index % 3 === 0 ? 'contained' : 'active',
       hasInterpretation: true,
+      categoryCode: 'APLICATIVOS',
+      categoryName: 'Aplicativos',
+      categoryIcon: 'apps',
     }
   })
 }

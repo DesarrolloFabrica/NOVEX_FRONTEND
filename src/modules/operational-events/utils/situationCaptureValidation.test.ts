@@ -1,7 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import type { SituationCaptureDraft } from '@/modules/situations/types/situation-capture.types'
-import type { CoordinationSummary } from '@/modules/situations/types/situation.types'
+import type {
+  CoordinationSummary,
+  IncidentCategorySummary,
+} from '@/modules/situations/types/situation.types'
 import { validateSituationCaptureDraft } from '@/modules/operational-events/utils/situationCaptureValidation'
+
+const categories: IncidentCategorySummary[] = [
+  {
+    id: '4ce4e56e-1111-4111-8111-111111111111',
+    code: 'INTERNET',
+    name: 'Internet',
+    description: null,
+    isSelectable: true,
+    icon: 'internet',
+  },
+]
 
 const coordinations: CoordinationSummary[] = [
   {
@@ -33,13 +47,20 @@ function buildDraft(
     affectedPartyOther: '',
     relatedCoordinationIds: [],
     additionalNotes: '',
+    categoryId: '4ce4e56e-1111-4111-8111-111111111111',
     ...overrides,
   }
 }
 
 describe('situationCaptureValidation', () => {
   it('acepta un borrador completo con coordinación real', () => {
-    const result = validateSituationCaptureDraft(buildDraft(), coordinations)
+    const result = validateSituationCaptureDraft(
+      buildDraft(),
+      coordinations,
+      undefined,
+      true,
+      categories,
+    )
     expect(result.valid).toBe(true)
   })
 
@@ -69,5 +90,18 @@ describe('situationCaptureValidation', () => {
     expect(result.missingRequirements).toContain(
       'una fecha de ocurrencia que no sea futura',
     )
+  })
+
+  it('exige una categoría seleccionable', () => {
+    const result = validateSituationCaptureDraft(
+      buildDraft({ categoryId: '' }),
+      coordinations,
+      undefined,
+      true,
+      categories,
+    )
+
+    expect(result.valid).toBe(false)
+    expect(result.missingRequirements).toContain('la categoría del caso')
   })
 })

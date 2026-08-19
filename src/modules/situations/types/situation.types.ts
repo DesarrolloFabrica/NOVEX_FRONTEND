@@ -18,6 +18,8 @@ export interface IncidentCategorySummary {
   code: string
   name: string
   description: string | null
+  isSelectable: boolean
+  icon: string
 }
 
 export interface CreateSituationPayload {
@@ -53,6 +55,7 @@ export interface SituationResponse {
   categoryId: string
   categoryCode: string
   categoryName: string
+  categoryIcon?: string
   severity: SituationSeverity
   status: string
   lastStatusComment?: string | null

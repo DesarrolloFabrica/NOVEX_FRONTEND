@@ -15,6 +15,7 @@ describe('buildSituationDescription', () => {
       affectedPartyOther: '',
       relatedCoordinationIds: [],
       additionalNotes: 'El corte inició después de las 14:00.',
+      categoryId: '4ce4e56e-1111-4111-8111-111111111111',
     }
 
     expect(buildSituationDescription(draft, [])).toContain(

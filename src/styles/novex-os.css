@@ -2455,6 +2455,9 @@ textarea {
 }
 
 .novex-os .novex-capture-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   min-height: 28px;
   padding: 5px 10px;
   border: 1px solid rgb(111 178 255 / 0.18);

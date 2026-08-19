@@ -8,15 +8,11 @@ import {
   type CoordinationId,
 } from '@/modules/impact-network/data/coordination-islands.config'
 
+import type { IncidentCategoryIcon } from '@/modules/situations/data/incident-category-visual'
+
 export type OperationalStatus = 'normal' | 'attention' | 'high' | 'critical'
 
-export type ProblemCategoryId =
-  | 'connectivity'
-  | 'platforms'
-  | 'staff'
-  | 'processes'
-  | 'infrastructure'
-  | 'documentation'
+export type ProblemCategoryId = IncidentCategoryIcon
 
 export interface OperationalOverviewMetrics {
   coordinations: number
@@ -126,17 +122,17 @@ const PROBLEMS_BY_ID: Readonly<
   Record<string, readonly CoordinationProblemTag[]>
 > = {
   'coord-fabrica-contenidos': [
-    { categoryId: 'connectivity', label: 'Conectividad', activeCount: 2 },
-    { categoryId: 'platforms', label: 'Plataforma', activeCount: 1 },
-    { categoryId: 'staff', label: 'Personal', activeCount: 1 },
+    { categoryId: 'internet', label: 'Internet', activeCount: 2 },
+    { categoryId: 'apps', label: 'Aplicativos', activeCount: 1 },
+    { categoryId: 'tickets', label: 'Tickets', activeCount: 1 },
   ],
   'coord-homologaciones': [
-    { categoryId: 'platforms', label: 'Plataforma', activeCount: 1 },
-    { categoryId: 'processes', label: 'Proceso', activeCount: 1 },
-    { categoryId: 'documentation', label: 'Documentación', activeCount: 1 },
+    { categoryId: 'apps', label: 'Aplicativos', activeCount: 1 },
+    { categoryId: 'zoho', label: 'Zoho', activeCount: 1 },
+    { categoryId: 'diplomas', label: 'Diplomados', activeCount: 1 },
   ],
   'coord-servicios': [
-    { categoryId: 'staff', label: 'Personal', activeCount: 1 },
+    { categoryId: 'devices', label: 'Equipos', activeCount: 1 },
   ],
 }
 
@@ -155,33 +151,33 @@ export function resolveCoordinationOperationalState(
 
 export const problemCategories: readonly ProblemCategoryItem[] = [
   {
-    id: 'connectivity',
-    name: 'Conectividad',
-    shortDescription: 'Internet y redes',
+    id: 'internet',
+    name: 'Internet',
+    shortDescription: 'Red, wifi y conectividad',
     count: 6,
   },
   {
-    id: 'platforms',
-    name: 'Plataformas',
-    shortDescription: 'Sistemas y tableros',
+    id: 'apps',
+    name: 'Aplicativos',
+    shortDescription: 'Sistemas y aplicativos',
     count: 4,
   },
   {
-    id: 'staff',
-    name: 'Personal',
-    shortDescription: 'Vacantes y cobertura',
+    id: 'tickets',
+    name: 'Tickets',
+    shortDescription: 'Mesa de ayuda y tickets',
     count: 3,
   },
   {
-    id: 'processes',
-    name: 'Procesos',
-    shortDescription: 'Flujos operativos',
+    id: 'zoho',
+    name: 'Zoho',
+    shortDescription: 'Plataforma Zoho',
     count: 2,
   },
   {
     id: 'infrastructure',
     name: 'Infraestructura',
-    shortDescription: 'Recursos físicos',
+    shortDescription: 'Sedes, planta y recursos físicos',
     count: 1,
   },
 ]
@@ -247,18 +243,18 @@ export const coordinationContextPanels: Readonly<
     statusLabel: 'Atención crítica',
     whatIsHappening: [
       {
-        categoryId: 'connectivity',
-        label: 'Conectividad',
+        categoryId: 'internet',
+        label: 'Internet',
         detail: '2 problemas activos',
       },
       {
-        categoryId: 'platforms',
-        label: 'Plataformas',
+        categoryId: 'apps',
+        label: 'Aplicativos',
         detail: '1 situación crítica',
       },
       {
-        categoryId: 'staff',
-        label: 'Personal',
+        categoryId: 'tickets',
+        label: 'Tickets',
         detail: '1 problema activo',
       },
     ],
@@ -296,18 +292,18 @@ export const coordinationContextPanels: Readonly<
     statusLabel: 'Atención alta',
     whatIsHappening: [
       {
-        categoryId: 'platforms',
-        label: 'Plataformas',
+        categoryId: 'apps',
+        label: 'Aplicativos',
         detail: '1 problema activo',
       },
       {
-        categoryId: 'processes',
-        label: 'Procesos',
+        categoryId: 'zoho',
+        label: 'Zoho',
         detail: 'Incidencias recurrentes',
       },
       {
-        categoryId: 'documentation',
-        label: 'Documentación',
+        categoryId: 'diplomas',
+        label: 'Diplomados',
         detail: '1 registro pendiente',
       },
     ],
@@ -338,9 +334,9 @@ export const coordinationContextPanels: Readonly<
     statusLabel: 'Requiere atención',
     whatIsHappening: [
       {
-        categoryId: 'staff',
-        label: 'Personal',
-        detail: '1 vacante sin cubrir',
+        categoryId: 'devices',
+        label: 'Equipos',
+        detail: '1 equipo sin cobertura',
       },
     ],
     mainSituation: {

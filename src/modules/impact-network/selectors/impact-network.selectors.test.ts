@@ -83,6 +83,9 @@ function makeIncident(
     active: true,
     expansionState: 'active',
     hasInterpretation: true,
+    categoryCode: 'INTERNET',
+    categoryName: 'Internet',
+    categoryIcon: 'internet',
     ...overrides,
   }
 }

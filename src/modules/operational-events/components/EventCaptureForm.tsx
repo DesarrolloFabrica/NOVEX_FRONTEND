@@ -2,7 +2,12 @@
 // Izquierda: relato. Derecha: contexto operativo.
 
 import type { FormEvent } from 'react'
-import type { CoordinationSummary } from '@/modules/situations/types/situation.types'
+import type {
+  CoordinationSummary,
+  IncidentCategorySummary,
+} from '@/modules/situations/types/situation.types'
+import { ProblemCategoryGlyph } from '@/modules/impact-network/components/executive/ProblemCategoryGlyph'
+import { resolveIncidentCategoryIcon } from '@/modules/situations/data/incident-category-visual'
 import {
   AFFECTED_PARTY_OPTIONS,
   DETECTION_METHOD_OPTIONS,
@@ -44,6 +49,7 @@ const DESCRIPTION_PLACEHOLDER =
 interface EventCaptureFormProps {
   draft: SituationCaptureDraft
   coordinations: CoordinationSummary[]
+  categories?: IncidentCategorySummary[]
   relatedCoordinations?: CoordinationSummary[]
   loadingCoordinations?: boolean
   coordinationLocked?: boolean
@@ -58,6 +64,7 @@ interface EventCaptureFormProps {
 export function EventCaptureForm({
   draft,
   coordinations,
+  categories = [],
   relatedCoordinations,
   loadingCoordinations = false,
   coordinationLocked = false,
@@ -77,6 +84,7 @@ export function EventCaptureForm({
     relatedCoordinations ?? coordinations,
     coordinations,
     requiresCoordination,
+    categories,
   )
   const canContinue = validation.valid
 
@@ -246,6 +254,37 @@ export function EventCaptureForm({
               </span>
             </div>
           )}
+
+          <fieldset className="novex-capture-categories block space-y-1.5">
+            <legend className={TEXT_LABEL}>Categoría del caso</legend>
+            <div className="novex-capture-chips">
+              {categories.map((category) => {
+                const checked = draft.categoryId === category.id
+                const icon = resolveIncidentCategoryIcon(
+                  category.code,
+                  category.name,
+                  category.icon,
+                )
+                return (
+                  <button
+                    key={category.id}
+                    type="button"
+                    className={`novex-capture-chip${checked ? ' is-selected' : ''}`}
+                    aria-pressed={checked}
+                    title={category.description ?? category.name}
+                    onClick={() => onChange({ ...draft, categoryId: category.id })}
+                  >
+                    <ProblemCategoryGlyph categoryId={icon} size={14} />
+                    {category.name}
+                  </button>
+                )
+              })}
+            </div>
+            <span className="novex-capture-field__hint">
+              Tipo de problema común. Se guarda con el expediente y se muestra
+              en la isla con su icono, aunque no haya coordinaciones relacionadas.
+            </span>
+          </fieldset>
 
           <label className="block space-y-1.5">
             <span className={TEXT_LABEL}>Fecha de ocurrencia</span>

@@ -24,6 +24,7 @@ const draft = {
   affectedPartyOther: '',
   relatedCoordinationIds: [],
   additionalNotes: '',
+  categoryId,
 }
 
 const coordination = {
@@ -41,11 +42,11 @@ const coordination = {
 
 const category = {
   id: categoryId,
-  code: 'TECH_DEGRADATION',
-  name: 'Degradación tecnológica',
+  code: 'INTERNET',
+  name: 'Internet',
   description: null,
-  displayOrder: 1,
-  isActive: true,
+  isSelectable: true,
+  icon: 'internet',
 }
 
 const situation = {
@@ -62,6 +63,7 @@ const situation = {
   categoryId,
   categoryCode: category.code,
   categoryName: category.name,
+  categoryIcon: 'internet',
   severity: 'MEDIUM',
   status: 'OPEN',
   lastStatusComment: null,

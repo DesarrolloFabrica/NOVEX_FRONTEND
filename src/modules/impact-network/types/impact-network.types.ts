@@ -3,6 +3,7 @@ import type {
   OperationalEventStatus,
   RiskLevel,
 } from '@/modules/operational-events/types/operational-event.types'
+import type { IncidentCategoryIcon } from '@/modules/situations/data/incident-category-visual'
 
 export type InstitutionalImpactAreaId =
   | 'technology'
@@ -160,6 +161,9 @@ export interface ImpactIncident {
   active: boolean
   expansionState: ImpactExpansionState
   hasInterpretation: boolean
+  categoryCode: string | null
+  categoryName: string | null
+  categoryIcon: IncidentCategoryIcon
 }
 
 export type ImpactNetworkStatus = 'stable' | 'attention' | 'critical'

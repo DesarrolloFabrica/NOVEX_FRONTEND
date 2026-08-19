@@ -25,6 +25,7 @@ export function evaluateContextQuality(
     Boolean(draft.reportedAt),
     Boolean(draft.detectionMethod),
     draft.affectedParties.length > 0,
+    Boolean(draft.categoryId),
     draft.relatedCoordinationIds.length > 0,
     Boolean(draft.additionalNotes.trim()),
   ].filter(Boolean).length

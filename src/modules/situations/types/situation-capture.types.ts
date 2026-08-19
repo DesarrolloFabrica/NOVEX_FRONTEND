@@ -26,6 +26,7 @@ export interface SituationCaptureDraft {
   affectedPartyOther: string
   relatedCoordinationIds: string[]
   additionalNotes: string
+  categoryId: string
 }
 
 export const DETECTION_METHOD_OPTIONS: Array<{

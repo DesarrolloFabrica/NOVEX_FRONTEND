@@ -3,7 +3,7 @@ import {
   DETECTION_METHOD_OPTIONS,
   type SituationCaptureDraft,
 } from '@/modules/situations/types/situation-capture.types'
-import type { CoordinationSummary } from '@/modules/situations/types/situation.types'
+import type { CoordinationSummary, IncidentCategorySummary } from '@/modules/situations/types/situation.types'
 import { formatCaptureDateLabel } from '@/modules/operational-events/utils/situationCaptureDate'
 import { FOCUS_VISIBLE } from '@/modules/monitoring/constants/monitoringTheme'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
@@ -12,6 +12,7 @@ import { NovexIcon } from '@/shared/components/NovexIcon'
 interface SituationCaptureSummaryProps {
   draft: SituationCaptureDraft
   coordinations: CoordinationSummary[]
+  categories?: IncidentCategorySummary[]
   onBack: () => void
   onConfirm: () => void
   confirming?: boolean
@@ -30,6 +31,7 @@ const AI_ANALYSIS_POINTS = [
 export function SituationCaptureSummary({
   draft,
   coordinations,
+  categories = [],
   onBack,
   onConfirm,
   confirming = false,
@@ -42,6 +44,7 @@ export function SituationCaptureSummary({
   const related = draft.relatedCoordinationIds
     .map((id) => coordinations.find((item) => item.id === id))
     .filter((item): item is CoordinationSummary => Boolean(item))
+  const selectedCategory = categories.find((item) => item.id === draft.categoryId)
 
   const detectionLabel =
     draft.detectionMethod === 'OTRO'
@@ -137,6 +140,14 @@ export function SituationCaptureSummary({
                     ? `${responsible.code} · ${responsible.name}`
                     : 'Sin coordinación asignada'}
                 </strong>
+              </div>
+            </div>
+
+            <div className="novex-executive-dossier__fact">
+              <NovexIcon name="grid" size={15} />
+              <div>
+                <span>Categoría del caso</span>
+                <strong>{selectedCategory?.name ?? 'Sin categoría'}</strong>
               </div>
             </div>
 

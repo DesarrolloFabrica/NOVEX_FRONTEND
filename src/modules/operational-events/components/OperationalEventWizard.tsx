@@ -54,6 +54,7 @@ function createEmptyDraft(defaultCoordinationId = ''): SituationCaptureDraft {
     affectedPartyOther: '',
     relatedCoordinationIds: [],
     additionalNotes: '',
+    categoryId: '',
   }
 }
 
@@ -156,11 +157,16 @@ export function OperationalEventWizard() {
   const [error, setError] = useState<string | null>(null)
   const submissionInFlightRef = useRef(false)
 
+  const selectableCategories = useMemo(
+    () => categories.filter((item) => item.isSelectable !== false),
+    [categories],
+  )
   const captureValidation = validateSituationCaptureDraft(
     draft,
     coordinationCatalog,
     responsibleCoordinations,
     !analystMode,
+    selectableCategories,
   )
 
   useEffect(() => {
@@ -250,9 +256,18 @@ export function OperationalEventWizard() {
               analystMode,
             },
           )
+          const selectableIds = new Set(
+            categoriesResponse
+              .filter((item) => item.isSelectable !== false)
+              .map((item) => item.id),
+          )
+          const nextCategoryId = selectableIds.has(current.categoryId)
+            ? current.categoryId
+            : ''
 
           if (
             current.coordinationId === nextCoordinationId &&
+            current.categoryId === nextCategoryId &&
             (!analystMode || current.relatedCoordinationIds.length === 0)
           ) {
             return current
@@ -260,6 +275,7 @@ export function OperationalEventWizard() {
           return {
             ...current,
             coordinationId: nextCoordinationId,
+            categoryId: nextCategoryId,
             relatedCoordinationIds: analystMode ? [] : current.relatedCoordinationIds,
           }
         })
@@ -370,6 +386,7 @@ export function OperationalEventWizard() {
               draft={draft}
               coordinations={responsibleCoordinations}
               relatedCoordinations={coordinationCatalog}
+              categories={selectableCategories}
               loadingCoordinations={loadingCatalogs}
               coordinationLocked={coordinationLocked}
               requiresCoordination={!analystMode}
@@ -395,6 +412,7 @@ export function OperationalEventWizard() {
             <SituationCaptureSummary
               draft={draft}
               coordinations={coordinationCatalog}
+              categories={selectableCategories}
               confirming={submitting}
               canConfirm={!loadingCatalogs && captureValidation.valid}
               onBack={() => {

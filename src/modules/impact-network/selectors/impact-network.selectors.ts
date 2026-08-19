@@ -32,6 +32,7 @@ import type {
   OperationalEvent,
   RiskLevel,
 } from '@/modules/operational-events/types/operational-event.types'
+import { resolveIncidentCategoryIcon } from '@/modules/situations/data/incident-category-visual'
 
 export const EMPTY_IMPACT_FILTERS: ImpactNetworkFilters = {
   statuses: [],
@@ -130,6 +131,12 @@ export function mapOperationalEventToImpactIncident(
     active: isActiveStatus(event.status),
     expansionState: toExpansionState(event.status),
     hasInterpretation: interpretation !== null,
+    categoryCode: interpretation?.categoryId ?? null,
+    categoryName: interpretation?.categoryName ?? null,
+    categoryIcon: resolveIncidentCategoryIcon(
+      interpretation?.categoryId ?? '',
+      interpretation?.categoryName ?? '',
+    ),
   }
 }
 

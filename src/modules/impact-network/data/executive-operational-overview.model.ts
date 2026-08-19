@@ -1,6 +1,5 @@
 import {
   getCoordination,
-  normalizeCatalogToken,
   resolveCoordinationId,
   type CoordinationId,
 } from '@/modules/impact-network/data/coordination-islands.config'
@@ -13,6 +12,11 @@ import {
 } from '@/modules/impact-network/data/executive-operational-overview.mock'
 import { extractLegacyRelatedCodes } from '@/modules/impact-network/data/legacy-related-coordinations'
 import type { SituationResponse } from '@/modules/situations/types/situation.types'
+import {
+  INCIDENT_CATEGORY_ICON_DESCRIPTION,
+  INCIDENT_CATEGORY_ICON_LABEL,
+  resolveIncidentCategoryIcon,
+} from '@/modules/situations/data/incident-category-visual'
 
 const STATUS_WEIGHT: Readonly<Record<OperationalStatus, number>> = {
   normal: 0,
@@ -30,23 +34,8 @@ const SEVERITY_STATUS: Readonly<
   CRITICAL: 'critical',
 }
 
-const CATEGORY_LABEL: Readonly<Record<ProblemCategoryId, string>> = {
-  connectivity: 'Conectividad',
-  platforms: 'Plataformas',
-  staff: 'Personal',
-  processes: 'Procesos',
-  infrastructure: 'Infraestructura',
-  documentation: 'Documentación',
-}
-
-const CATEGORY_DESCRIPTION: Readonly<Record<ProblemCategoryId, string>> = {
-  connectivity: 'Internet y redes',
-  platforms: 'Sistemas y tableros',
-  staff: 'Vacantes y cobertura',
-  processes: 'Flujos operativos',
-  infrastructure: 'Recursos físicos',
-  documentation: 'Documentos y registros',
-}
+const CATEGORY_LABEL = INCIDENT_CATEGORY_ICON_LABEL
+const CATEGORY_DESCRIPTION = INCIDENT_CATEGORY_ICON_DESCRIPTION
 
 export const EXECUTIVE_STATUS_ORDER: readonly OperationalStatus[] = [
   'critical',
@@ -177,21 +166,9 @@ function buildSituationOperationalReason(
 export function resolveProblemCategoryId(
   code: string,
   name: string,
+  icon?: string | null,
 ): ProblemCategoryId {
-  const token = normalizeCatalogToken(`${code} ${name}`)
-
-  if (/conect|internet|redes|wifi|telefon/.test(token)) return 'connectivity'
-  if (/plataform|sistema|software|aplicacion|tablero|tecnolog/.test(token)) {
-    return 'platforms'
-  }
-  if (/personal|vacante|talento|cobertura|equipo humano/.test(token)) {
-    return 'staff'
-  }
-  if (/infraestructura|recurso fisico|sede|espacio|mobiliario/.test(token)) {
-    return 'infrastructure'
-  }
-  if (/document|archivo|registro|formato/.test(token)) return 'documentation'
-  return 'processes'
+  return resolveIncidentCategoryIcon(code, name, icon)
 }
 
 function resolveSituationCoordinationIds(
@@ -286,6 +263,7 @@ export function buildExecutiveOverviewModel(
     const categoryId = resolveProblemCategoryId(
       situation.categoryCode,
       situation.categoryName,
+      situation.categoryIcon,
     )
     const view: ExecutiveSituationItem = {
       id: situation.id,
