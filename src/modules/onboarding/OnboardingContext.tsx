@@ -52,15 +52,17 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const autoStartTimerRef = useRef<number | null>(null)
 
   const goTo = useCallback(
-    (index: number) => {
+    (index: number, persist = true) => {
       const bounded = Math.max(0, Math.min(steps.length - 1, index))
       setStepIndex(bounded)
-      try {
-        localStorage.setItem(storageKey, String(bounded))
-      } catch {
-        /* privado */
+      if (persist) {
+        try {
+          localStorage.setItem(storageKey, String(bounded))
+        } catch {
+          /* privado */
+        }
+        void saveOnboardingProgress(bounded)
       }
-      void saveOnboardingProgress(bounded)
       const route = steps[bounded]?.route
       const situationId = readOnboardingSituation(user?.id)
       const destination =
@@ -115,6 +117,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const skip = finish
   const resume = useCallback(() => {
     if (steps.length === 0) return
+    if (user?.id) autoStartedForUserRef.current = user.id
     setActive(true)
     const currentStep = steps[stepIndex]
     if (
@@ -125,9 +128,10 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       return
     }
     goTo(stepIndex)
-  }, [goTo, stepIndex, steps])
+  }, [goTo, stepIndex, steps, user?.id])
   const restart = useCallback(() => {
     if (steps.length === 0) return
+    if (user?.id) autoStartedForUserRef.current = user.id
     setActive(true)
     setStepIndex(0)
     try {
@@ -138,7 +142,20 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     void saveOnboardingProgress(0, false)
     const firstRoute = steps[0]?.route ?? '/'
     if (location.pathname !== firstRoute) navigate(firstRoute)
-  }, [location.pathname, navigate, saveOnboardingProgress, steps, storageKey])
+  }, [
+    location.pathname,
+    navigate,
+    saveOnboardingProgress,
+    steps,
+    storageKey,
+    user?.id,
+  ])
+
+  useEffect(() => {
+    // El provider sobrevive al logout. Liberar esta marca permite que el mismo
+    // usuario reanude automáticamente el recorrido al iniciar otra sesión.
+    if (!isAuthenticated) autoStartedForUserRef.current = null
+  }, [isAuthenticated])
 
   useEffect(() => {
     if (
@@ -195,7 +212,9 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       autoStartedForUserRef.current = user.id
       setActive(true)
       // Navega a la ruta del paso guardado (crítico para DIRECTOR/ANALISTA).
-      goTo(Math.min(Math.max(0, saved), steps.length - 1))
+      // Mostrar/reanudar el paso guardado no es un avance nuevo. Evitar esta
+      // escritura también elimina una carrera con "Omitir recorrido".
+      goTo(Math.min(Math.max(0, saved), steps.length - 1), false)
     }, 500)
     autoStartTimerRef.current = timer
 

@@ -96,8 +96,12 @@ function resolveCoordinationAfterCatalogLoad(
 export function OperationalEventWizard() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { stepIndex: onboardingStepIndex, steps: onboardingSteps } =
-    useOnboarding()
+  const {
+    active: onboardingActive,
+    stepIndex: onboardingStepIndex,
+    steps: onboardingSteps,
+    previous: previousOnboardingStep,
+  } = useOnboarding()
   const [searchParams] = useSearchParams()
   const prefillCoordinationCode = searchParams.get('coordination')
   const coordinationLocked =
@@ -338,6 +342,12 @@ export function OperationalEventWizard() {
     } catch (submitError) {
       setStep(2)
       setError(getErrorMessage(submitError))
+      if (onboardingActive && onboardingStepId === 'analysis') {
+        // El hito de análisis aparece mientras se envía el expediente. Si el
+        // alta falla, devolver también el tutorial a revisión evita bloquearlo
+        // sobre una etapa que ya no existe.
+        previousOnboardingStep()
+      }
     } finally {
       submissionInFlightRef.current = false
       setSubmitting(false)
@@ -419,21 +429,27 @@ export function OperationalEventWizard() {
             className="novex-wizard-step-pane novex-wizard-step-pane--intelligence flex min-h-0 flex-1 flex-col gap-3"
             data-tour="analysis-stage"
           >
-            <div className="flex justify-end px-1">
-              <button
-                type="button"
-                className="text-sm font-semibold text-slate-200 underline-offset-2 hover:underline"
-                onClick={startFreshCapture}
-              >
-                Registrar otra situación
-              </button>
-            </div>
+            {!(onboardingActive && onboardingStepId === 'analysis') ? (
+              <div className="flex justify-end px-1">
+                <button
+                  type="button"
+                  className="text-sm font-semibold text-slate-200 underline-offset-2 hover:underline"
+                  onClick={startFreshCapture}
+                >
+                  Registrar otra situación
+                </button>
+              </div>
+            ) : null}
             <SituationAnalysisPanel
               situationId={registeredSituationId}
               situationTitle={situation?.title ?? draft.title}
               onAnalysisComplete={handleAnalysisComplete}
               onViewDossier={handleViewDossier}
-              onRegisterAnother={startFreshCapture}
+              onRegisterAnother={
+                onboardingActive && onboardingStepId === 'analysis'
+                  ? undefined
+                  : startFreshCapture
+              }
             />
           </div>
         ) : null}

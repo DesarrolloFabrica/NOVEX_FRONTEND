@@ -199,6 +199,20 @@ test('auto-inicia el recorrido después de completar el splash de login', async 
       }, coordinatorSession.id),
     )
     .toBeNull()
+
+  for (const expectedTitle of [
+    'Entienda el alcance antes de actuar',
+    'Registre una situación desde cualquier vista',
+    'Registre ahora su primera situación',
+  ]) {
+    await page.getByRole('button', { name: 'Siguiente', exact: true }).click()
+    await expect(
+      page.getByRole('heading', { name: expectedTitle }),
+    ).toBeVisible()
+  }
+  await expect(page).toHaveURL(/\/situaciones\/nueva$/)
+  await expect(page.locator('[data-tour="capture-form"]')).toBeVisible()
+  await page.getByRole('button', { name: 'Pausar tutorial' }).click()
 })
 
 test('acompaña una primera situación real hasta informe, historial y estado', async ({
@@ -206,6 +220,7 @@ test('acompaña una primera situación real hasta informe, historial y estado', 
 }) => {
   let registered = false
   let analysisReady = false
+  let registrationAttempts = 0
 
   await page.setViewportSize({ width: 1536, height: 864 })
 
@@ -322,6 +337,15 @@ test('acompaña una primera situación real hasta informe, historial y estado', 
     ) {
       const payload = request.postDataJSON() as Record<string, unknown>
       expect(payload).not.toHaveProperty('coordinationId')
+      registrationAttempts += 1
+      if (registrationAttempts === 1) {
+        await new Promise((resolve) => setTimeout(resolve, 450))
+        await route.fulfill({
+          status: 503,
+          json: { message: 'No fue posible registrar temporalmente.' },
+        })
+        return
+      }
       await new Promise((resolve) => setTimeout(resolve, 1_200))
       registered = true
       analysisReady = true
@@ -447,6 +471,17 @@ test('acompaña una primera situación real hasta informe, historial y estado', 
     .getByRole('button', { name: 'Crear expediente e iniciar análisis IA' })
     .click()
   await expect(
+    page.getByRole('heading', {
+      name: 'Revise el expediente antes de enviarlo',
+    }),
+  ).toBeVisible()
+  await expect(
+    page.getByText('No fue posible registrar temporalmente.'),
+  ).toBeVisible()
+  await page
+    .getByRole('button', { name: 'Crear expediente e iniciar análisis IA' })
+    .click()
+  await expect(
     page.getByRole('heading', { name: 'NOVEX está preparando el informe' }),
   ).toBeVisible()
   await expect(page.getByText('Esperando el análisis IA…')).toBeVisible()
@@ -459,6 +494,9 @@ test('acompaña una primera situación real hasta informe, historial y estado', 
   ).toHaveCount(0)
   await expect(
     analysisTourCard.getByRole('button', { name: 'Pausar tutorial' }),
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole('button', { name: 'Registrar otra situación' }),
   ).toHaveCount(0)
 
   await expect(
@@ -491,6 +529,11 @@ test('acompaña una primera situación real hasta informe, historial y estado', 
   await expect(
     page.getByRole('button', { name: 'Exportar reporte PDF' }),
   ).toBeVisible()
+  const downloadPromise = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Exportar reporte PDF' }).click()
+  const download = await downloadPromise
+  expect(download.suggestedFilename()).toMatch(/\.pdf$/i)
+  expect(registrationAttempts).toBe(2)
 
   await analysisTourCard
     .getByRole('button', { name: 'Siguiente', exact: true })

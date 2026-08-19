@@ -9,6 +9,7 @@ import {
   useEffect,
   useMemo,
   useReducer,
+  useRef,
   useState,
 } from 'react'
 import type { ReactNode } from 'react'
@@ -121,8 +122,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     createInitialState,
   )
   const [bootSplashActive, setBootSplashActive] = useState(false)
+  const currentUserRef = useRef(state.user)
+  const onboardingMutationQueueRef = useRef<Promise<void>>(Promise.resolve())
+  currentUserRef.current = state.user
 
   const clearSession = useCallback(() => {
+    currentUserRef.current = null
     clearAccessToken()
     clearAuthSession()
     setBootSplashActive(false)
@@ -206,31 +211,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [clearSession])
 
-  const completeOnboarding = useCallback(async () => {
-    if (!state.user || state.user.onboardingCompleted) return
-    const current = state.user
-    const updated = await completeOnboardingRequest(current)
-    writeAuthSession(updated)
-    dispatch({ type: 'AUTH_SUCCESS', user: updated })
-  }, [state.user])
+  const completeOnboarding = useCallback((): Promise<void> => {
+    const requestedBy = currentUserRef.current
+    if (!requestedBy) return Promise.resolve()
 
-  const saveOnboardingProgress = useCallback(
-    async (step: number, completed = false) => {
-      if (!state.user) return
-      const current = state.user
-      try {
-        const updated = await saveOnboardingProgressRequest(
-          current,
-          step,
-          completed,
-        )
+    const mutation = onboardingMutationQueueRef.current
+      .catch(() => undefined)
+      .then(async () => {
+        const current = currentUserRef.current
+        if (!current || current.id !== requestedBy.id) return
+
+        // Siempre confirma en servidor. Esto evita que un reinicio del tutorial
+        // pendiente pueda finalizar después y dejar el onboarding reabierto.
+        const updated = await completeOnboardingRequest(current)
+        if (currentUserRef.current?.id !== requestedBy.id) return
+
+        currentUserRef.current = updated
         writeAuthSession(updated)
         dispatch({ type: 'AUTH_SUCCESS', user: updated })
-      } catch {
-        // El recorrido conserva una copia local si la sincronización falla.
-      }
+      })
+
+    onboardingMutationQueueRef.current = mutation.catch(() => undefined)
+    return mutation
+  }, [])
+
+  const saveOnboardingProgress = useCallback(
+    (step: number, completed?: boolean): Promise<void> => {
+      const requestedBy = currentUserRef.current
+      if (!requestedBy) return Promise.resolve()
+
+      const mutation = onboardingMutationQueueRef.current
+        .catch(() => undefined)
+        .then(async () => {
+          const current = currentUserRef.current
+          if (!current || current.id !== requestedBy.id) return
+
+          const updated = await saveOnboardingProgressRequest(
+            current,
+            step,
+            completed,
+          )
+          if (currentUserRef.current?.id !== requestedBy.id) return
+
+          currentUserRef.current = updated
+          writeAuthSession(updated)
+          dispatch({ type: 'AUTH_SUCCESS', user: updated })
+        })
+
+      // Una única cola conserva el orden avance/reinicio/finalización. La copia
+      // local sigue siendo el respaldo si una sincronización de progreso falla.
+      onboardingMutationQueueRef.current = mutation.catch(() => undefined)
+      return mutation.catch(() => undefined)
     },
-    [state.user],
+    [],
   )
 
   const value = useMemo<AuthContextValue>(

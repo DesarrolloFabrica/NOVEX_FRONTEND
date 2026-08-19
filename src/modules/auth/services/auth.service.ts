@@ -51,7 +51,7 @@ export async function completeOnboardingRequest(user: User): Promise<User> {
 export async function saveOnboardingProgressRequest(
   user: User,
   step: number,
-  completed = false,
+  completed?: boolean,
 ): Promise<User> {
   const response = await apiRequest<UserApiResponse>('/users/me/onboarding', {
     method: 'PATCH',
