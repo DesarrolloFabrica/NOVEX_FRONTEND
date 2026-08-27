@@ -172,7 +172,7 @@ function buildSteps(
       description:
         'Este panel explica el estado, cuántas situaciones siguen activas, el impacto relacionado y la actividad reciente.',
       expectation:
-        'Use “Explorar” para entrar al mapa de esa coordinación. Si el impacto viene de otra área, verá el origen marcado y podrá abrirlo de forma explícita.',
+        'Use “Explorar” para entrar al mapa de esa coordinación o “Revisar situación” para abrir un expediente propio de esa área.',
       target: '[data-impact-tour="coordination-summary"]',
       placement: 'left',
       scene: 'summary',

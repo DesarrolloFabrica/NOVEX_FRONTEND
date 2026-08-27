@@ -174,13 +174,24 @@ export function resolveProblemCategoryId(
   return resolveIncidentCategoryIcon(code, name, icon)
 }
 
-function resolveSituationCoordinationIds(
+function resolveOwnerCoordinationId(
   situation: SituationResponse,
   availableIds: ReadonlySet<CoordinationId>,
+): CoordinationId | null {
+  const ownerId =
+    resolveCoordinationId(situation.coordinationCode) ??
+    resolveCoordinationId(situation.coordinationId)
+  if (!ownerId || !availableIds.has(ownerId)) return null
+  return ownerId
+}
+
+/** Coordinaciones relacionadas declaradas; no se usan para listar la situación en otras islas. */
+function resolveRelatedCoordinationIds(
+  situation: SituationResponse,
+  availableIds: ReadonlySet<CoordinationId>,
+  ownerCoordinationId: CoordinationId,
 ): CoordinationId[] {
   const candidates = [
-    situation.coordinationCode,
-    situation.coordinationId,
     ...(situation.relatedCoordinations ?? []).flatMap((related) => [
       related.coordinationCode,
       related.coordinationId,
@@ -194,7 +205,9 @@ function resolveSituationCoordinationIds(
         .map((candidate) => resolveCoordinationId(candidate))
         .filter(
           (coordinationId): coordinationId is CoordinationId =>
-            coordinationId !== null && availableIds.has(coordinationId),
+            coordinationId !== null &&
+            availableIds.has(coordinationId) &&
+            coordinationId !== ownerCoordinationId,
         ),
     ),
   ]
@@ -254,11 +267,11 @@ export function buildExecutiveOverviewModel(
   const mappedSituationIds = new Set<string>()
 
   for (const situation of activeSituations) {
-    const coordinationTargets = resolveSituationCoordinationIds(
+    const ownerCoordinationId = resolveOwnerCoordinationId(
       situation,
       availableIds,
     )
-    if (coordinationTargets.length === 0) continue
+    if (!ownerCoordinationId) continue
     mappedSituationIds.add(situation.id)
 
     const operationalStatus = resolveSituationOperationalStatus(situation)
@@ -268,14 +281,12 @@ export function buildExecutiveOverviewModel(
       situation.categoryName,
       situation.categoryIcon,
     )
-    const ownerCoordinationId =
-      resolveCoordinationId(situation.coordinationCode) ??
-      resolveCoordinationId(situation.coordinationId) ??
-      coordinationTargets[0]
-    if (!ownerCoordinationId) continue
-    const ownerDefinition = availableIds.has(ownerCoordinationId)
-      ? getCoordination(ownerCoordinationId)
-      : null
+    const relatedCoordinationIds = resolveRelatedCoordinationIds(
+      situation,
+      availableIds,
+      ownerCoordinationId,
+    )
+    const ownerDefinition = getCoordination(ownerCoordinationId)
     const view: ExecutiveSituationItem = {
       id: situation.id,
       title: cleanExecutiveCopy(situation.title, 'Situación activa'),
@@ -290,10 +301,11 @@ export function buildExecutiveOverviewModel(
         operationalStatus,
       ),
       updatedAt: situation.updatedAt,
-      affectedCoordinationCount: coordinationTargets.length,
+      // Dueña + relacionadas (la relación se ve en el expediente, no replica islas).
+      affectedCoordinationCount: 1 + relatedCoordinationIds.length,
       ownerCoordinationId,
       ownerShortName:
-        ownerDefinition?.shortName ??
+        ownerDefinition.shortName ||
         cleanExecutiveCopy(situation.coordinationName, 'Origen'),
     }
 
@@ -304,7 +316,8 @@ export function buildExecutiveOverviewModel(
 
     const categoryCoordinationSet =
       categoryCoordinationIds.get(categoryId) ?? new Set<CoordinationId>()
-    coordinationTargets.forEach((coordinationId) =>
+    categoryCoordinationSet.add(ownerCoordinationId)
+    relatedCoordinationIds.forEach((coordinationId) =>
       categoryCoordinationSet.add(coordinationId),
     )
     categoryCoordinationIds.set(categoryId, categoryCoordinationSet)
@@ -314,11 +327,10 @@ export function buildExecutiveOverviewModel(
       categoryTone.set(categoryId, operationalStatus)
     }
 
-    for (const coordinationId of coordinationTargets) {
-      const items = situationsByCoordination.get(coordinationId) ?? []
-      items.push(view)
-      situationsByCoordination.set(coordinationId, items)
-    }
+    // Solo la coordinación creadora lista la situación.
+    const items = situationsByCoordination.get(ownerCoordinationId) ?? []
+    items.push(view)
+    situationsByCoordination.set(ownerCoordinationId, items)
   }
 
   const coordinations = canonicalIds
@@ -326,17 +338,12 @@ export function buildExecutiveOverviewModel(
       const definition = getCoordination(coordinationId)
       const coordinationSituations = [
         ...(situationsByCoordination.get(coordinationId) ?? []),
-      ].sort((left, right) => {
-        // Dueñas primero: al abrir desde el panel no debe “teleportar” a otra isla.
-        const leftOwned = left.ownerCoordinationId === coordinationId ? 1 : 0
-        const rightOwned = right.ownerCoordinationId === coordinationId ? 1 : 0
-        return (
-          rightOwned - leftOwned ||
+      ].sort(
+        (left, right) =>
           STATUS_WEIGHT[right.operationalStatus] -
             STATUS_WEIGHT[left.operationalStatus] ||
-          new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
-        )
-      })
+          new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime(),
+      )
       const status = coordinationSituations[0]?.operationalStatus ?? 'normal'
 
       return {
