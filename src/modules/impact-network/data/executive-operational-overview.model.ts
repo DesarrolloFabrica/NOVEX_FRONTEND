@@ -56,6 +56,9 @@ export interface ExecutiveSituationItem {
   operationalReason: string
   updatedAt: string
   affectedCoordinationCount: number
+  /** Coordinación dueña real de la situación (no la relacionada). */
+  ownerCoordinationId: CoordinationId
+  ownerShortName: string
 }
 
 export interface ExecutiveCoordinationView {
@@ -265,6 +268,14 @@ export function buildExecutiveOverviewModel(
       situation.categoryName,
       situation.categoryIcon,
     )
+    const ownerCoordinationId =
+      resolveCoordinationId(situation.coordinationCode) ??
+      resolveCoordinationId(situation.coordinationId) ??
+      coordinationTargets[0]
+    if (!ownerCoordinationId) continue
+    const ownerDefinition = availableIds.has(ownerCoordinationId)
+      ? getCoordination(ownerCoordinationId)
+      : null
     const view: ExecutiveSituationItem = {
       id: situation.id,
       title: cleanExecutiveCopy(situation.title, 'Situación activa'),
@@ -280,6 +291,10 @@ export function buildExecutiveOverviewModel(
       ),
       updatedAt: situation.updatedAt,
       affectedCoordinationCount: coordinationTargets.length,
+      ownerCoordinationId,
+      ownerShortName:
+        ownerDefinition?.shortName ??
+        cleanExecutiveCopy(situation.coordinationName, 'Origen'),
     }
 
     const categorySituationSet =
@@ -311,12 +326,17 @@ export function buildExecutiveOverviewModel(
       const definition = getCoordination(coordinationId)
       const coordinationSituations = [
         ...(situationsByCoordination.get(coordinationId) ?? []),
-      ].sort(
-        (left, right) =>
+      ].sort((left, right) => {
+        // Dueñas primero: al abrir desde el panel no debe “teleportar” a otra isla.
+        const leftOwned = left.ownerCoordinationId === coordinationId ? 1 : 0
+        const rightOwned = right.ownerCoordinationId === coordinationId ? 1 : 0
+        return (
+          rightOwned - leftOwned ||
           STATUS_WEIGHT[right.operationalStatus] -
             STATUS_WEIGHT[left.operationalStatus] ||
-          new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime(),
-      )
+          new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
+        )
+      })
       const status = coordinationSituations[0]?.operationalStatus ?? 'normal'
 
       return {

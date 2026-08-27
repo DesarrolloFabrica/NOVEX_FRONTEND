@@ -56,7 +56,18 @@ function CoordinationContextPanelView({
     return [...groups.values()].sort((left, right) => right.count - left.count)
   }, [coordination.situations])
 
-  const primarySituation = coordination.situations[0] ?? null
+  const ownedSituations = useMemo(
+    () =>
+      coordination.situations.filter(
+        (situation) => situation.ownerCoordinationId === coordination.id,
+      ),
+    [coordination.id, coordination.situations],
+  )
+  const primarySituation =
+    ownedSituations[0] ?? coordination.situations[0] ?? null
+  const primaryIsForeign =
+    primarySituation !== null &&
+    primarySituation.ownerCoordinationId !== coordination.id
   const relatedCoordinationCount = Math.max(
     0,
     ...coordination.situations.map(
@@ -165,16 +176,22 @@ function CoordinationContextPanelView({
 
           {primarySituation ? (
             <section className="impact-executive-context__section">
-              <h4>Principal situación</h4>
+              <h4>
+                {primaryIsForeign
+                  ? 'Impacto recibido'
+                  : 'Principal situación'}
+              </h4>
               <article className="impact-executive-context__situation">
                 <strong>{primarySituation.title}</strong>
                 <p>{primarySituation.description}</p>
                 <small>
-                  {primarySituation.affectedCoordinationCount > 1
-                    ? `Impacta ${primarySituation.affectedCoordinationCount} coordinaciones`
-                    : 'Impacto concentrado en esta coordinación'}
+                  {primaryIsForeign
+                    ? `Origen: ${primarySituation.ownerShortName}`
+                    : primarySituation.affectedCoordinationCount > 1
+                      ? `Impacta ${primarySituation.affectedCoordinationCount} coordinaciones`
+                      : 'Impacto concentrado en esta coordinación'}
                 </small>
-                {onOpenSituation ? (
+                {onOpenSituation && !primaryIsForeign ? (
                   <button
                     type="button"
                     className="impact-executive-context__situation-action"
@@ -236,16 +253,7 @@ function CoordinationContextPanelView({
         </div>
 
         <div className="impact-executive-context__actions">
-          {onOpenSituation && primarySituation ? (
-            <button
-              type="button"
-              className="impact-executive-context__cta impact-executive-context__cta--primary"
-              onClick={() => onOpenSituation(primarySituation.id)}
-            >
-              Revisar situación
-              <NovexIcon name="arrow-up-right" size={14} />
-            </button>
-          ) : onOpenCoordination ? (
+          {onOpenCoordination ? (
             <button
               type="button"
               className="impact-executive-context__cta impact-executive-context__cta--primary"
@@ -254,14 +262,34 @@ function CoordinationContextPanelView({
               Explorar {coordination.shortName}
               <NovexIcon name="arrow-up-right" size={14} />
             </button>
+          ) : onOpenSituation && primarySituation && !primaryIsForeign ? (
+            <button
+              type="button"
+              className="impact-executive-context__cta impact-executive-context__cta--primary"
+              onClick={() => onOpenSituation(primarySituation.id)}
+            >
+              Revisar situación
+              <NovexIcon name="arrow-up-right" size={14} />
+            </button>
           ) : null}
-          {onOpenSituation && primarySituation && onOpenCoordination ? (
+          {onOpenCoordination &&
+          onOpenSituation &&
+          primarySituation &&
+          !primaryIsForeign ? (
             <button
               type="button"
               className="impact-executive-context__cta impact-executive-context__cta--map"
-              onClick={() => onOpenCoordination(coordination.id)}
+              onClick={() => onOpenSituation(primarySituation.id)}
             >
-              Ver mapa de {coordination.shortName}
+              Revisar situación
+            </button>
+          ) : onOpenSituation && primarySituation && primaryIsForeign ? (
+            <button
+              type="button"
+              className="impact-executive-context__cta impact-executive-context__cta--map"
+              onClick={() => onOpenSituation(primarySituation.id)}
+            >
+              Ver origen · {primarySituation.ownerShortName}
             </button>
           ) : null}
         </div>
