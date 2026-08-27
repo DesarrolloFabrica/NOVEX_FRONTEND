@@ -84,7 +84,7 @@ describe('buildExecutiveOverviewModel', () => {
     expect(model.metrics.openSituations).toBe(3)
   })
 
-  it('incluye las coordinaciones relacionadas sin duplicar situaciones', () => {
+  it('lista la situación solo en la coordinación creadora', () => {
     const model = buildExecutiveOverviewModel(
       COORDINATIONS.map((item) => item.id),
       [
@@ -98,27 +98,40 @@ describe('buildExecutiveOverviewModel', () => {
               coordinationShortName: 'Dos',
               displayOrder: 2,
             },
+            {
+              id: 'related-2',
+              coordinationId: 'coord-tres',
+              coordinationCode: 'coord-tres',
+              coordinationName: 'Coordinación Tres',
+              coordinationShortName: 'Tres',
+              displayOrder: 3,
+            },
           ],
         }),
       ],
       { operationalRisk: 71 },
     )
 
-    expect(model.groups.high.map((item) => item.id)).toEqual([
+    expect(model.groups.high.map((item) => item.id)).toEqual(['coord-uno'])
+    expect(model.groups.normal.map((item) => item.id)).toEqual([
+      'coord-cinco',
+      'coord-cuatro',
       'coord-dos',
-      'coord-uno',
+      'coord-tres',
     ])
-    expect(model.metrics.activeProblems).toBe(2)
+    expect(model.metrics.activeProblems).toBe(1)
     expect(model.metrics.openSituations).toBe(1)
     expect(model.metrics.operationalRisk).toBe(71)
-    expect(model.priorities[0]?.affectedCoordinationCount).toBe(2)
+    expect(model.priorities[0]?.affectedCoordinationCount).toBe(3)
 
+    const ownerView = model.coordinations.find((item) => item.id === 'coord-uno')
     const relatedView = model.coordinations.find((item) => item.id === 'coord-dos')
-    expect(relatedView?.situations[0]?.ownerCoordinationId).toBe('coord-uno')
-    expect(relatedView?.situations[0]?.ownerShortName).toBe('Uno')
+    expect(ownerView?.situations.map((item) => item.id)).toEqual(['shared'])
+    expect(relatedView?.situations).toEqual([])
+    expect(ownerView?.situations[0]?.ownerCoordinationId).toBe('coord-uno')
   })
 
-  it('prioriza situaciones propias sobre las solo relacionadas', () => {
+  it('no replica una situación ajena aunque declare relación', () => {
     const model = buildExecutiveOverviewModel(
       COORDINATIONS.map((item) => item.id),
       [
@@ -141,12 +154,11 @@ describe('buildExecutiveOverviewModel', () => {
     const coordDos = model.coordinations.find((item) => item.id === 'coord-dos')
     expect(coordDos?.situations.map((item) => item.id)).toEqual([
       'owned-medium',
-      'foreign-high',
     ])
     expect(coordDos?.situations[0]?.ownerCoordinationId).toBe('coord-dos')
   })
 
-  it('incluye relaciones legacy declaradas dentro de la descripción', () => {
+  it('cuenta relaciones legacy solo dentro del expediente, sin listarlas en otras islas', () => {
     const model = buildExecutiveOverviewModel(
       COORDINATIONS.map((item) => item.id),
       [
@@ -157,13 +169,13 @@ describe('buildExecutiveOverviewModel', () => {
       ],
     )
 
-    expect(model.groups.high.map((item) => item.id)).toEqual([
-      'coord-dos',
-      'coord-uno',
-    ])
-    expect(model.metrics.activeProblems).toBe(2)
+    expect(model.groups.high.map((item) => item.id)).toEqual(['coord-uno'])
+    expect(model.metrics.activeProblems).toBe(1)
     expect(model.metrics.openSituations).toBe(1)
     expect(model.priorities[0]?.affectedCoordinationCount).toBe(2)
+    expect(
+      model.coordinations.find((item) => item.id === 'coord-dos')?.situations,
+    ).toEqual([])
   })
 
   it('mantiene todas las coordinaciones normales cuando no hay situaciones', () => {
