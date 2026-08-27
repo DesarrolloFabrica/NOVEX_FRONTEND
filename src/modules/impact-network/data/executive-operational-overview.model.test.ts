@@ -112,6 +112,38 @@ describe('buildExecutiveOverviewModel', () => {
     expect(model.metrics.openSituations).toBe(1)
     expect(model.metrics.operationalRisk).toBe(71)
     expect(model.priorities[0]?.affectedCoordinationCount).toBe(2)
+
+    const relatedView = model.coordinations.find((item) => item.id === 'coord-dos')
+    expect(relatedView?.situations[0]?.ownerCoordinationId).toBe('coord-uno')
+    expect(relatedView?.situations[0]?.ownerShortName).toBe('Uno')
+  })
+
+  it('prioriza situaciones propias sobre las solo relacionadas', () => {
+    const model = buildExecutiveOverviewModel(
+      COORDINATIONS.map((item) => item.id),
+      [
+        situation('foreign-high', 'coord-uno', 'CRITICAL', {
+          relatedCoordinations: [
+            {
+              id: 'related-1',
+              coordinationId: 'coord-dos',
+              coordinationCode: 'coord-dos',
+              coordinationName: 'Coordinación Dos',
+              coordinationShortName: 'Dos',
+              displayOrder: 2,
+            },
+          ],
+        }),
+        situation('owned-medium', 'coord-dos', 'MEDIUM'),
+      ],
+    )
+
+    const coordDos = model.coordinations.find((item) => item.id === 'coord-dos')
+    expect(coordDos?.situations.map((item) => item.id)).toEqual([
+      'owned-medium',
+      'foreign-high',
+    ])
+    expect(coordDos?.situations[0]?.ownerCoordinationId).toBe('coord-dos')
   })
 
   it('incluye relaciones legacy declaradas dentro de la descripción', () => {
