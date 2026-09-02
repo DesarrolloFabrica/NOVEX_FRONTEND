@@ -17,12 +17,12 @@ import { RequireSituationCreationRoute } from '@/shared/components/RequireSituat
 import { AdminConsolePage } from '@/pages/AdminConsolePage'
 import {
   EXECUTIVE_ROLES,
-  ExecutiveOperationsHomePage,
   ExecutiveOperationsLayout,
   InteligenciaPage,
   PanoramaPage,
   ReportesPage,
 } from '@/modules/executive-operations-center'
+import { OperationalCardExperience } from '@/modules/operational-cards'
 
 function RedirectPreservingSearch({ to }: { to: string }) {
   const location = useLocation()
@@ -67,7 +67,10 @@ export const router = createBrowserRouter([
               </RequireRoleRoute>
             ),
             children: [
-              { index: true, element: <ExecutiveOperationsHomePage /> },
+              // Fase 4: la home del Centro Operacional es la nueva experiencia
+              // ADMIN de estado operacional. Las secciones hijas siguen
+              // intactas, igual que /red-impacto.
+              { index: true, element: <OperationalCardExperience /> },
               { path: 'panorama', element: <PanoramaPage /> },
               { path: 'inteligencia', element: <InteligenciaPage /> },
               { path: 'reportes', element: <ReportesPage /> },

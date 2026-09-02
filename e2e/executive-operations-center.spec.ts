@@ -1,4 +1,5 @@
 import { expect, test, type Page } from 'playwright/test'
+import { operationalOverviewFixture } from './operational-overview.fixture'
 
 const SESSION_KEY = 'novex.auth.session.v1'
 const TOKEN_KEY = 'novex.auth.accessToken.v1'
@@ -220,25 +221,28 @@ async function installMocks(page: Page) {
   })
 }
 
+/** LEVEL 0 de la experiencia nueva, que es la home del Centro Operacional. */
+async function installOverviewMock(page: Page) {
+  await page.route('**/api/v1/operational-overview', async (route) => {
+    await route.fulfill({ json: operationalOverviewFixture() })
+  })
+}
+
 test('presenta el centro ejecutivo completo sin placeholders', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 1000 })
   await installMocks(page)
+  await installOverviewMock(page)
   await page.goto('/centro-operacional')
 
   await expect(page.getByRole('heading', { name: 'Centro operacional' })).toBeVisible()
-  await expect(
-    page.getByRole('heading', { name: '1 situación prioritaria requiere decisión' }),
-  ).toBeVisible()
-  await expect(
-    page.getByRole('heading', { name: '1 situación prioritaria requiere decisión' }),
-  ).toBeInViewport()
-  await expect(page.getByText('2 situaciones en su historial')).toBeVisible()
+  // La home del Centro Operacional es la experiencia nueva de estado
+  // operacional; las secciones hijas siguen siendo las de siempre.
+  await expect(page.getByTestId('operational-cards-experience')).toBeVisible()
+  await expect(page.getByTestId('direction-status')).toHaveAttribute(
+    'data-status',
+    'ALERTA',
+  )
   await expect(page.getByText('Contenido en desarrollo')).toHaveCount(0)
-  await expect(page.locator('.eoc-home-v4 .eoc-panel')).toHaveCount(0)
-  expect(await page.locator('.eoc-home-priority-list > li').count()).toBeLessThanOrEqual(3)
-  await expect(page.locator('.eoc-home-activity-list > li')).toHaveCount(5)
-  expect(await page.locator('.eoc-home-coordination-list > div').count()).toBeLessThanOrEqual(5)
-  await expect(page.getByText('2 movimientos adicionales en Auditoría.')).toBeVisible()
   await expect(page.locator('[data-tour="user-menu"]')).toBeVisible()
 
   await page.getByRole('link', { name: 'Panorama global', exact: true }).click()

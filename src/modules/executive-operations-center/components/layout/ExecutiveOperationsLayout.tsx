@@ -21,7 +21,7 @@ export function ExecutiveOperationsLayout() {
   }, [location.pathname])
 
   return (
-    <ExecutiveOperationsProvider>
+    <ExecutiveOperationsProvider enabled={!isHome}>
       <NovexRoom scene="intelligence" environment="pending">
         <NovexFrame environment="pending">
           <MainScreen environment="pending">

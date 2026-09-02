@@ -13,7 +13,17 @@ import type {
 } from '@/modules/executive-operations-center/types/operational-center.types'
 import { getErrorMessage } from '@/shared/utils/error'
 
-export function ExecutiveOperationsProvider({ children }: PropsWithChildren) {
+/**
+ * `enabled` permite montar el proveedor sin disparar su carga. La home del
+ * Centro Operacional es la experiencia nueva de cartas, que trae su propio
+ * LEVEL 0 en una sola petición; cargar aquí además el agregado legacy
+ * añadiría cientos de peticiones que esa pantalla no usa. Panorama,
+ * Inteligencia y Reportes siguen consumiéndolo igual que antes.
+ */
+export function ExecutiveOperationsProvider({
+  children,
+  enabled = true,
+}: PropsWithChildren<{ enabled?: boolean }>) {
   const [data, setData] = useState<OperationalCenterData | null>(null)
   const [status, setStatus] = useState<OperationalCenterLoadStatus>('loading')
   const [error, setError] = useState<string | null>(null)
@@ -33,8 +43,9 @@ export function ExecutiveOperationsProvider({ children }: PropsWithChildren) {
   }, [])
 
   useEffect(() => {
+    if (!enabled) return
     void reload()
-  }, [reload])
+  }, [enabled, reload])
 
   const value = useMemo(
     () => ({ data, status, error, reload }),
