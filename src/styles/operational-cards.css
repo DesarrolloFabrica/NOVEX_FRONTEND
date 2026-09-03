@@ -1,0 +1,752 @@
+/*
+ * Baraja de coordinaciones — experiencia ADMIN de estado operacional.
+ *
+ * Hoja propia: no importa ni depende del CSS de la Red de impacto. Del aura de
+ * `.impact-status-island__aura` se toma solo la IDEA (capa aparte, gradiente
+ * radial, blur contenido, transición corta), no sus selectores.
+ *
+ * Dos conceptos que nunca se mezclan:
+ * - `--coord-rgb`  : identidad cromática de la coordinación.
+ * - `data-status`  : integridad operacional.
+ */
+
+.operational-deck {
+  --deck-text: var(--os-text, #edf5ff);
+  --deck-muted: var(--os-muted, #8b9cb6);
+  --deck-line: rgb(126 168 224 / 0.16);
+  --deck-line-strong: rgb(150 196 255 / 0.34);
+  --deck-surface: linear-gradient(
+    180deg,
+    rgb(20 32 52 / 0.92) 0%,
+    rgb(10 18 34 / 0.94) 100%
+  );
+
+  /* Integridad operacional. Verde apagado a propósito: lo estable no grita. */
+  --status-stable-rgb: 122 196 138;
+  --status-alert-rgb: 240 176 84;
+  --status-critical-rgb: 244 96 104;
+  --status-unknown-rgb: 132 150 176;
+
+  --card-width: 148px;
+  --card-height: 196px;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  gap: 12px;
+}
+
+/* ---------- Título accesible ---------- */
+
+/* La lectura visible la da el personaje; el encabezado existe para lectores
+   de pantalla y para nombrar la región. */
+.operational-deck__sr-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- Stage del personaje ---------- */
+
+.operational-deck__stage {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  /* min-height: 0 para que el stage ceda ante la baraja en vez de desbordar. */
+  min-height: 0;
+  padding-bottom: 4px;
+}
+
+/* Frase institucional: acompaña al personaje, no es un KPI ni una tarjeta. */
+.operational-deck__summary {
+  margin: 0;
+  color: var(--deck-muted);
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  text-align: center;
+}
+
+/* ---------- Bandas de la baraja ---------- */
+
+.operational-deck__bands {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding-bottom: 6px;
+}
+
+.operational-deck__band {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  /* Encaje leve: muerde el hombro de la banda superior, nunca su etiqueta. */
+  margin-top: -10px;
+}
+
+.operational-deck__band:first-child {
+  margin-top: 0;
+}
+
+.operational-deck__slot {
+  /* Mordida lateral mínima: toca el borde, nunca el nombre. */
+  margin-inline: -5px;
+  transform: translateY(calc(var(--lift) * 1px)) rotate(calc(var(--tilt) * 1deg));
+  transform-origin: 50% 120%;
+  transition: transform 200ms ease;
+}
+
+/* ---------- Carta ---------- */
+
+.coordination-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: var(--card-width);
+  min-height: var(--card-height);
+  padding: 10px 8px 12px;
+  border: 1px solid var(--deck-line);
+  border-radius: 17px;
+  background: var(--deck-surface);
+  box-shadow:
+    0 10px 22px rgb(2 6 16 / 0.5),
+    inset 0 1px 0 rgb(190 220 255 / 0.07);
+  color: var(--deck-text);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  isolation: isolate;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+/* Identidad cromática: hairline superior y tinte muy contenido. */
+.coordination-card::after {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  right: 16px;
+  left: 16px;
+  height: 2px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(var(--coord-rgb) / 0.85),
+    transparent
+  );
+  content: '';
+}
+
+/* Aura de integridad: capa propia detrás de la carta. */
+.coordination-card__aura {
+  position: absolute;
+  z-index: -1;
+  inset: -14%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 55%,
+    rgb(var(--status-rgb) / var(--aura-core)),
+    transparent 68%
+  );
+  opacity: var(--aura-opacity);
+  filter: blur(14px);
+  transition:
+    opacity 180ms ease,
+    filter 180ms ease;
+}
+
+.coordination-card[data-status='ESTABLE'] {
+  --status-rgb: var(--status-stable-rgb);
+  --aura-core: 0.2;
+  --aura-opacity: 0.5;
+}
+
+.coordination-card[data-status='ALERTA'] {
+  --status-rgb: var(--status-alert-rgb);
+  --aura-core: 0.34;
+  --aura-opacity: 0.85;
+}
+
+.coordination-card[data-status='CRITICO'] {
+  --status-rgb: var(--status-critical-rgb);
+  --aura-core: 0.42;
+  --aura-opacity: 1;
+}
+
+.coordination-card[data-status='DESCONOCIDO'] {
+  --status-rgb: var(--status-unknown-rgb);
+  --aura-core: 0.16;
+  --aura-opacity: 0.6;
+  border-style: dashed;
+  border-color: rgb(var(--status-unknown-rgb) / 0.4);
+}
+
+/* Solo CRITICO late: lento, en opacidad, sin escala ni destello. */
+@media (prefers-reduced-motion: no-preference) {
+  .coordination-card[data-status='CRITICO'] .coordination-card__aura {
+    animation: operational-critical-pulse 5.5s ease-in-out infinite;
+  }
+}
+
+@keyframes operational-critical-pulse {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ---------- Isla: firma escultórica, no fondo de la carta ---------- */
+
+.coordination-card__island {
+  position: relative;
+  display: grid;
+  width: 100%;
+  flex: 0 0 auto;
+  /* Proporción en vez de alto fijo: sobrevive al escalado del shell. */
+  aspect-ratio: 3 / 2;
+  place-items: center;
+}
+
+.coordination-card__island::before {
+  position: absolute;
+  inset: 12% 8% 2%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 70%,
+    rgb(var(--coord-rgb) / 0.22),
+    transparent 70%
+  );
+  content: '';
+}
+
+.coordination-card__island img {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 10px rgb(2 6 16 / 0.55));
+}
+
+.coordination-card__icon {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  margin-top: 2px;
+  border: 1px solid rgb(var(--coord-rgb) / 0.45);
+  border-radius: 50%;
+  background: rgb(8 16 30 / 0.85);
+  object-fit: cover;
+}
+
+/* ---------- Texto ---------- */
+
+.coordination-card__name {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  overflow: hidden;
+  color: var(--deck-text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.coordination-card__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  /* Se aparta del borde inferior: ahí muerde la banda siguiente. */
+  margin-top: 7px;
+  margin-bottom: 6px;
+  padding: 2px 8px;
+  border: 1px solid rgb(var(--status-rgb) / 0.4);
+  border-radius: 999px;
+  background: rgb(var(--status-rgb) / 0.13);
+  color: rgb(var(--status-rgb) / 0.98);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.coordination-card__status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentcolor;
+}
+
+/* ---------- Hover / foco: elevación, sin selección ---------- */
+
+.coordination-card:hover,
+.coordination-card:focus-visible {
+  border-color: var(--deck-line-strong);
+  box-shadow:
+    0 16px 30px rgb(2 6 16 / 0.6),
+    inset 0 1px 0 rgb(200 230 255 / 0.12);
+  transform: translateY(-8px) scale(1.03);
+}
+
+.coordination-card:hover .coordination-card__aura,
+.coordination-card:focus-visible .coordination-card__aura {
+  opacity: 1;
+  filter: blur(18px);
+}
+
+.coordination-card:focus-visible {
+  outline: 2px solid rgb(120 200 255 / 0.85);
+  outline-offset: 3px;
+}
+
+.operational-deck__slot:hover,
+.operational-deck__slot:focus-within {
+  z-index: 5;
+}
+
+/* ---------- Carga y error ---------- */
+
+.operational-deck__skeleton {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.operational-deck__skeleton span {
+  width: var(--card-width);
+  min-height: var(--card-height);
+  border: 1px solid var(--deck-line);
+  border-radius: 17px;
+  background: rgb(14 24 42 / 0.6);
+}
+
+.operational-deck__notice {
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid rgb(var(--status-unknown-rgb) / 0.35);
+  border-radius: 12px;
+  background: rgb(14 24 42 / 0.7);
+  color: var(--deck-muted);
+  font-size: 13px;
+}
+
+.operational-deck__provisional {
+  margin: 0;
+  color: var(--deck-muted);
+  font-size: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coordination-card,
+  .coordination-card__aura,
+  .operational-deck__slot {
+    transition-duration: 0ms;
+    animation: none !important;
+  }
+}
+
+/* 1920×1080: la baraja respira sin recomponerse. */
+@media (min-width: 1700px) {
+  .operational-deck {
+    --card-width: 164px;
+    --card-height: 212px;
+  }
+
+  .operational-deck__slot {
+    margin-inline: -3px;
+  }
+}
+
+/* ==========================================================================
+   Selección: carta activa, baraja comprimida y migas
+   ========================================================================== */
+
+.operational-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 4px;
+  color: var(--deck-muted);
+  font-size: 12px;
+}
+
+.operational-breadcrumb__root {
+  padding: 2px 6px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  color: var(--deck-muted);
+  font: inherit;
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease;
+}
+
+.operational-breadcrumb__root:hover,
+.operational-breadcrumb__root:focus-visible {
+  border-color: var(--deck-line-strong);
+  color: var(--deck-text);
+}
+
+.operational-breadcrumb__root:focus-visible {
+  outline: 2px solid rgb(120 200 255 / 0.85);
+  outline-offset: 2px;
+}
+
+.operational-breadcrumb__current {
+  color: var(--deck-text);
+  font-weight: 600;
+}
+
+/* ---------- Área focal ---------- */
+
+.operational-deck__focus {
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: center;
+  perspective: 1400px;
+}
+
+/* La carta activa sigue siendo una carta: superficie propia, borde fino y
+   aura de integridad. Ni overlay, ni sombra de modal, ni pantalla oscurecida. */
+.active-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: clamp(360px, 34vw, 470px);
+  padding: 12px 14px 13px;
+  border: 1px solid var(--deck-line-strong);
+  border-radius: 20px;
+  background: var(--deck-surface);
+  box-shadow:
+    0 18px 38px rgb(2 6 16 / 0.55),
+    inset 0 1px 0 rgb(200 230 255 / 0.1);
+  isolation: isolate;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+.active-card::after {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  right: 22px;
+  left: 22px;
+  height: 2px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(var(--coord-rgb) / 0.9),
+    transparent
+  );
+  content: '';
+}
+
+.active-card__aura {
+  position: absolute;
+  z-index: -1;
+  inset: -9%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgb(var(--status-rgb) / var(--aura-core)),
+    transparent 70%
+  );
+  opacity: var(--aura-opacity);
+  filter: blur(18px);
+}
+
+.active-card[data-status='ESTABLE'] {
+  --status-rgb: var(--status-stable-rgb);
+  --aura-core: 0.18;
+  --aura-opacity: 0.5;
+}
+
+.active-card[data-status='ALERTA'] {
+  --status-rgb: var(--status-alert-rgb);
+  --aura-core: 0.28;
+  --aura-opacity: 0.8;
+}
+
+.active-card[data-status='CRITICO'] {
+  --status-rgb: var(--status-critical-rgb);
+  --aura-core: 0.34;
+  --aura-opacity: 0.9;
+}
+
+.active-card[data-status='DESCONOCIDO'] {
+  --status-rgb: var(--status-unknown-rgb);
+  --aura-core: 0.14;
+  --aura-opacity: 0.55;
+}
+
+/* ---------- Cabecera de la carta activa ---------- */
+
+.active-card__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.active-card__icon {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border: 1px solid rgb(var(--coord-rgb) / 0.5);
+  border-radius: 50%;
+  background: rgb(8 16 30 / 0.85);
+  object-fit: cover;
+}
+
+.active-card__heading {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.active-card__name {
+  margin: 0;
+  overflow: hidden;
+  color: var(--deck-text);
+  font-size: 15px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.active-card__summary {
+  margin: 0;
+  color: var(--deck-muted);
+  font-size: 12px;
+}
+
+.active-card__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  padding: 3px 9px;
+  border: 1px solid rgb(var(--status-rgb) / 0.42);
+  border-radius: 999px;
+  background: rgb(var(--status-rgb) / 0.14);
+  color: rgb(var(--status-rgb) / 0.98);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.active-card__status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentcolor;
+}
+
+/* ---------- Lista de problemas: ~3 visibles, scroll propio ---------- */
+
+.active-card__problems {
+  display: flex;
+  max-height: 118px;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  padding-right: 3px;
+  scrollbar-gutter: stable;
+}
+
+.active-card__problems:focus-visible {
+  outline: 2px solid rgb(120 200 255 / 0.7);
+  outline-offset: 2px;
+}
+
+.problem-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  padding: 9px 11px;
+  border: 1px solid var(--deck-line);
+  border-radius: 11px;
+  background: rgb(12 22 40 / 0.72);
+  color: var(--deck-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.problem-row:hover,
+.problem-row:focus-visible {
+  border-color: var(--deck-line-strong);
+  background: rgb(18 30 52 / 0.85);
+}
+
+.problem-row:focus-visible {
+  outline: 2px solid rgb(120 200 255 / 0.85);
+  outline-offset: 2px;
+}
+
+.problem-row__title {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  font-size: 12.5px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.problem-row__severity {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border: 1px solid rgb(var(--severity-rgb) / 0.4);
+  border-radius: 999px;
+  background: rgb(var(--severity-rgb) / 0.14);
+  color: rgb(var(--severity-rgb) / 0.98);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.problem-row[data-severity='CRITICAL'] {
+  --severity-rgb: var(--status-critical-rgb);
+}
+
+.problem-row[data-severity='HIGH'] {
+  --severity-rgb: 244 140 90;
+}
+
+.problem-row[data-severity='MEDIUM'] {
+  --severity-rgb: var(--status-alert-rgb);
+}
+
+.problem-row[data-severity='LOW'] {
+  --severity-rgb: var(--status-unknown-rgb);
+}
+
+/* ---------- Estados de LEVEL 1 ---------- */
+
+.active-card__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.active-card__skeleton span {
+  height: 38px;
+  border: 1px solid var(--deck-line);
+  border-radius: 11px;
+  background: rgb(14 24 42 / 0.6);
+}
+
+.active-card__empty {
+  margin: 0;
+  padding: 14px 12px;
+  border: 1px dashed rgb(var(--status-stable-rgb) / 0.35);
+  border-radius: 12px;
+  color: rgb(var(--status-stable-rgb) / 0.95);
+  font-size: 13px;
+  text-align: center;
+}
+
+.active-card__notice {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid rgb(var(--status-unknown-rgb) / 0.4);
+  border-radius: 12px;
+  color: var(--deck-muted);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+/* ---------- Baraja comprimida ---------- */
+
+.operational-deck__bands[data-compressed='true'] {
+  --card-width: 104px;
+  --card-height: 136px;
+}
+
+.operational-deck__bands[data-compressed='true'] .coordination-card {
+  padding: 7px 6px 7px;
+  border-radius: 14px;
+}
+
+.operational-deck__bands[data-compressed='true'] .coordination-card__island {
+  height: 62px;
+}
+
+.operational-deck__bands[data-compressed='true'] .coordination-card__icon {
+  width: 20px;
+  height: 20px;
+}
+
+.operational-deck__bands[data-compressed='true'] .coordination-card__name {
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+.operational-deck__bands[data-compressed='true'] .coordination-card__status {
+  padding: 1px 6px;
+  font-size: 9px;
+}
+
+/* La carta seleccionada no se pinta en la baraja: vive en el área focal. */
+.coordination-card[data-selected='true'] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .active-card,
+  .active-card__aura,
+  .problem-row {
+    transition-duration: 0ms;
+    animation: none !important;
+  }
+}
+
+/* ---------- Reparto vertical con una coordinación seleccionada ---------- */
+
+/* El área focal se apila sobre la baraja: la carta activa nunca queda
+   recortada por las cartas comprimidas. */
+.operational-deck__focus {
+  position: relative;
+  z-index: 3;
+}
+
+/* Con selección, el personaje cede altura para que quepan carta activa y
+   baraja sin scroll de página. Sigue presente y reaccionando. */
+.operational-deck:not([data-selected='']) .direction-character__figure {
+  height: clamp(92px, 11vh, 150px);
+}
+
+.operational-deck:not([data-selected='']) .operational-deck__stage {
+  gap: 2px;
+}
+
+.operational-deck:not([data-selected='']) .direction-character__status {
+  font-size: 13px;
+}

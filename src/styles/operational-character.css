@@ -1,0 +1,348 @@
+/*
+ * Personaje de la Dirección de Operaciones.
+ *
+ * Reactor guardián en SVG inline. Todo el comportamiento visual cuelga de
+ * `data-status`, de modo que el SVG puede sustituirse por arte final sin
+ * tocar el contrato `CharacterPresentation`.
+ *
+ * Regla: el estado NUNCA se distingue solo por color. Cada estado cambia
+ * también postura del núcleo, forma de los sensores, trazo del anillo y
+ * apertura de los soportes.
+ */
+
+.direction-character {
+  --dc-rgb: var(--status-unknown-rgb, 132 150 176);
+  --dc-ink: rgb(214 232 255 / 0.92);
+  --dc-shell: rgb(24 38 60 / 0.96);
+  --dc-shell-edge: rgb(150 196 255 / 0.28);
+
+  /* Postura y expresión por estado; los valores se sobrescriben abajo. */
+  --dc-tilt: 0deg;
+  --dc-drop: 0px;
+  --dc-brace-spread: 0px;
+  --dc-ring-dash: 8 10;
+  --dc-ring-arc: 96 320;
+  --dc-glow: 0.14;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  /* Presencia proporcional al aire disponible: el personaje toma el espacio
+     que deja la baraja y nunca la empuja fuera del viewport. Sin altos fijos,
+     porque el shell escala el contenido (~1.13 medido en la fase 5). */
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+/* Altura acotada en vh: el contenedor de la experiencia no tiene altura
+   definida —el layout es dirigido por contenido—, así que flex nunca repartiría
+   espacio libre. clamp + vh da presencia real sin empujar la baraja fuera del
+   viewport, y sobrevive al escalado ~1.13 del shell medido en la fase 5. */
+.direction-character__figure {
+  width: 100%;
+  height: clamp(146px, 20vh, 250px);
+  overflow: visible;
+}
+
+/* ---------- Halo de energía ---------- */
+
+.dc-glow {
+  fill: rgb(var(--dc-rgb) / var(--dc-glow));
+  filter: blur(14px);
+}
+
+/* ---------- Anillo técnico ---------- */
+
+.dc-ring {
+  transform-origin: 100px 104px;
+}
+
+.dc-ring__track {
+  fill: none;
+  stroke: rgb(var(--dc-rgb) / 0.3);
+  stroke-dasharray: var(--dc-ring-dash);
+  stroke-width: 1.5;
+}
+
+.dc-ring__arc {
+  fill: none;
+  stroke: rgb(var(--dc-rgb) / 0.85);
+  stroke-dasharray: var(--dc-ring-arc);
+  stroke-linecap: round;
+  stroke-width: 2.5;
+  transform-origin: 100px 104px;
+}
+
+/* ---------- Soportes laterales ---------- */
+
+.dc-brace {
+  fill: none;
+  stroke: rgb(var(--dc-rgb) / 0.7);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
+  transition: transform 320ms ease;
+}
+
+.dc-brace--left {
+  transform: translateX(calc(var(--dc-brace-spread) * -1));
+}
+
+.dc-brace--right {
+  transform: translateX(var(--dc-brace-spread));
+}
+
+/* ---------- Núcleo ---------- */
+
+.dc-core {
+  transform: translateY(var(--dc-drop)) rotate(var(--dc-tilt));
+  transform-origin: 100px 150px;
+  transition:
+    transform 380ms ease,
+    opacity 280ms ease;
+}
+
+.dc-core__shell {
+  fill: var(--dc-shell);
+  stroke: var(--dc-shell-edge);
+  stroke-width: 1.5;
+}
+
+.dc-core__visor {
+  fill: rgb(8 16 30 / 0.9);
+  stroke: rgb(var(--dc-rgb) / 0.42);
+  stroke-width: 1.25;
+}
+
+.dc-core__mark {
+  fill: rgb(var(--dc-rgb) / 0.9);
+}
+
+/* ---------- Sensores: tres formas, una activa por estado ---------- */
+
+.dc-eye {
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+
+.dc-eye--soft {
+  fill: rgb(var(--dc-rgb) / 0.95);
+}
+
+.dc-eye--slit {
+  fill: rgb(var(--dc-rgb) / 1);
+}
+
+.dc-eye--hollow {
+  fill: none;
+  stroke: rgb(var(--dc-rgb) / 0.75);
+  stroke-dasharray: 4 4;
+  stroke-width: 2.5;
+}
+
+/* ---------- Base ---------- */
+
+.dc-base__plate,
+.dc-base__stem {
+  fill: rgb(18 30 50 / 0.9);
+  stroke: rgb(150 196 255 / 0.18);
+  stroke-width: 1.25;
+}
+
+/* ---------- Lectura textual ---------- */
+
+.direction-character__readout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  margin: 0;
+  text-align: center;
+}
+
+.direction-character__eyebrow {
+  color: var(--deck-muted, #8b9cb6);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.direction-character__status {
+  color: rgb(var(--dc-rgb) / 0.98);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* ==========================================================================
+   Estados expresivos
+   ========================================================================== */
+
+/* ESTABLE: hombros bajos, sensores suaves, anillo regular, energía mínima. */
+.direction-character[data-status='ESTABLE'] {
+  --dc-rgb: var(--status-stable-rgb, 122 196 138);
+  --dc-tilt: 0deg;
+  --dc-drop: 3px;
+  --dc-brace-spread: 0px;
+  --dc-ring-dash: 6 12;
+  --dc-ring-arc: 70 345;
+  --dc-glow: 0.12;
+}
+
+.direction-character[data-status='ESTABLE'] .dc-eye--soft {
+  opacity: 1;
+}
+
+/* ALERTA: se yergue, los sensores se afilan, el anillo se cierra. */
+.direction-character[data-status='ALERTA'] {
+  --dc-rgb: var(--status-alert-rgb, 240 176 84);
+  --dc-tilt: 0deg;
+  --dc-drop: -4px;
+  --dc-brace-spread: 5px;
+  --dc-ring-dash: 10 7;
+  --dc-ring-arc: 150 265;
+  --dc-glow: 0.2;
+}
+
+.direction-character[data-status='ALERTA'] .dc-eye--slit {
+  opacity: 1;
+}
+
+/* CRITICO: firme y volcado sobre la baraja, soportes recogidos, anillo casi
+   cerrado. Sin temblor, sin destello. */
+.direction-character[data-status='CRITICO'] {
+  --dc-rgb: var(--status-critical-rgb, 244 96 104);
+  --dc-tilt: 3deg;
+  --dc-drop: -2px;
+  --dc-brace-spread: -6px;
+  --dc-ring-dash: 14 5;
+  --dc-ring-arc: 260 155;
+  --dc-glow: 0.26;
+}
+
+.direction-character[data-status='CRITICO'] .dc-eye--slit {
+  opacity: 1;
+}
+
+.direction-character[data-status='CRITICO'] .dc-core__visor {
+  stroke: rgb(var(--dc-rgb) / 0.7);
+  stroke-width: 1.75;
+}
+
+/* DESCONOCIDO: postura neutra, sensores huecos —no hay lectura—, anillo
+   escaso y asimétrico. No es calma ni avería. */
+.direction-character[data-status='DESCONOCIDO'] {
+  --dc-rgb: var(--status-unknown-rgb, 132 150 176);
+  --dc-tilt: 0deg;
+  --dc-drop: 0px;
+  --dc-brace-spread: 3px;
+  --dc-ring-dash: 3 16;
+  --dc-ring-arc: 40 375;
+  --dc-glow: 0.1;
+}
+
+.direction-character[data-status='DESCONOCIDO'] .dc-eye--hollow {
+  opacity: 1;
+}
+
+.direction-character[data-status='DESCONOCIDO'] .dc-core__mark {
+  fill: none;
+  stroke: rgb(var(--dc-rgb) / 0.65);
+  stroke-dasharray: 3 3;
+  stroke-width: 2;
+}
+
+.direction-character[data-status='DESCONOCIDO'] .dc-base__plate,
+.direction-character[data-status='DESCONOCIDO'] .dc-base__stem {
+  stroke-dasharray: 5 4;
+}
+
+/* ==========================================================================
+   Animación idle: lenta, continua y no distractora
+   ========================================================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+  .direction-character[data-interaction='IDLE'] .dc-core {
+    animation: dc-breathe 6.5s ease-in-out infinite;
+  }
+
+  .direction-character[data-interaction='IDLE'] .dc-glow {
+    animation: dc-glow-breathe 6.5s ease-in-out infinite;
+  }
+
+  .dc-ring__arc {
+    animation: dc-ring-drift 34s linear infinite;
+  }
+
+  .dc-eye--soft,
+  .dc-eye--slit {
+    animation: dc-blink 8.5s ease-in-out infinite;
+  }
+
+  /* En crítico el pulso del núcleo se acelera un poco, sin temblar. */
+  .direction-character[data-status='CRITICO'] .dc-core__mark {
+    animation: dc-mark-pulse 3.4s ease-in-out infinite;
+  }
+}
+
+@keyframes dc-breathe {
+  0%,
+  100% {
+    transform: translateY(var(--dc-drop)) rotate(var(--dc-tilt));
+  }
+  50% {
+    transform: translateY(calc(var(--dc-drop) - 4px)) rotate(var(--dc-tilt));
+  }
+}
+
+@keyframes dc-glow-breathe {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes dc-ring-drift {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Parpadeo por opacidad: un instante corto dentro de un ciclo largo. */
+@keyframes dc-blink {
+  0%,
+  92%,
+  100% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes dc-mark-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .direction-character *,
+  .direction-character {
+    animation: none !important;
+    transition-duration: 0ms !important;
+  }
+}

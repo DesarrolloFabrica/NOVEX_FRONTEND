@@ -44,7 +44,7 @@ export type {
 
 export type {
   ActiveSituationStatus,
-  CoordinationProblemSummary,
+  CoordinationProblem,
   CoordinationProblemsCache,
   LoadState,
   OperationalCardsState,

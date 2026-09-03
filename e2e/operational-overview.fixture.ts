@@ -81,17 +81,44 @@ function coordinationFixture(
   }
 }
 
+/** Distribución observada en la BD local: 7 críticas, 1 en alerta, 7 estables. */
+const SEVERE_CRITICAL_CODES = [
+  'coord-b2b',
+  'coord-especializaciones',
+  'coord-ingenierias',
+  'coord-operaciones-academicas',
+  'coord-homologaciones',
+  'coord-negocios',
+  'coord-servicios',
+]
+
 export function operationalOverviewFixture(
   overrides: {
     directionStatus?: OverviewCoordinationFixture['status']
     analystRegistryActiveProblems?: number
+    /** Reproduce el reparto real de la BD para calibrar el aura. */
+    severe?: boolean
   } = {},
 ) {
-  const coordinations = CATALOG.map(coordinationFixture)
+  const coordinations = CATALOG.map(coordinationFixture).map((item) =>
+    overrides.severe
+      ? {
+          ...item,
+          status: SEVERE_CRITICAL_CODES.includes(item.code)
+            ? ('CRITICO' as const)
+            : item.code === 'coord-bellas-artes'
+              ? ('ALERTA' as const)
+              : ('ESTABLE' as const),
+        }
+      : item,
+  )
   const activeProblems = overrides.analystRegistryActiveProblems ?? 0
 
   return {
-    directionStatus: overrides.directionStatus ?? 'ALERTA',
+    // El backend es la autoridad del estado global; el fixture solo reproduce
+    // lo que devolvería: con 7 críticas, CRITICO; con 1, ALERTA.
+    directionStatus:
+      overrides.directionStatus ?? (overrides.severe ? 'CRITICO' : 'ALERTA'),
     generatedAt: '2026-09-02T14:50:27.703Z',
     totals: {
       critical: coordinations.filter((item) => item.status === 'CRITICO').length,

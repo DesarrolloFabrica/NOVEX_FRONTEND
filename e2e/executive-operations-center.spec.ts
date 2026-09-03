@@ -238,7 +238,7 @@ test('presenta el centro ejecutivo completo sin placeholders', async ({ page }) 
   // La home del Centro Operacional es la experiencia nueva de estado
   // operacional; las secciones hijas siguen siendo las de siempre.
   await expect(page.getByTestId('operational-cards-experience')).toBeVisible()
-  await expect(page.getByTestId('direction-status')).toHaveAttribute(
+  await expect(page.getByTestId('direction-character')).toHaveAttribute(
     'data-status',
     'ALERTA',
   )
