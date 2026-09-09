@@ -36,8 +36,8 @@ const session = {
 
 const UUID_OF = {
   general: '00000000-0000-4000-8000-000000000001',
-  ingenierias: '00000000-0000-4000-8000-000000000007',
-  negocios: '00000000-0000-4000-8000-000000000013',
+  operacionesAcademicas: '00000000-0000-4000-8000-000000000008',
+  especializaciones: '00000000-0000-4000-8000-000000000006',
 } as const
 
 function base64Url(value: string): string {
@@ -90,7 +90,7 @@ function situationFixture(
 
 /** Problemas por coordinación y estado. `coord-general` queda sin ninguno. */
 const PROBLEMS: Record<string, Record<string, unknown[]>> = {
-  [UUID_OF.ingenierias]: {
+  [UUID_OF.operacionesAcademicas]: {
     OPEN: [
       situationFixture('ing-1', 'Aulas sin conectividad', 'CRITICAL', 'OPEN'),
       situationFixture('ing-2', 'Retraso en laboratorios', 'LOW', 'OPEN'),
@@ -106,7 +106,7 @@ const PROBLEMS: Record<string, Record<string, unknown[]>> = {
       ),
     ],
   },
-  [UUID_OF.negocios]: {
+  [UUID_OF.especializaciones]: {
     OPEN: [situationFixture('neg-1', 'Convenio vencido', 'HIGH', 'OPEN')],
     IN_PROGRESS: [],
   },
@@ -185,6 +185,30 @@ function level1Calls(requested: readonly string[]): string[] {
   return requested.filter((entry) => entry.includes('/situations'))
 }
 
+
+/**
+ * Selecciona una coordinación desde el carrusel como lo haría el usuario:
+ * gira con la flecha hasta que la carta llega al slot frontal y la pulsa allí.
+ *
+ * La fase 8.2 revocó que las 14 restantes estén simultáneamente visibles, así
+ * que ya no se puede clicar una coordinación por código sin traerla antes al
+ * conjunto de cinco.
+ */
+async function selectFromCarousel(page: Page, code: string) {
+  const front = page.locator(
+    `[data-testid="carousel-slot"][data-slot="0"][data-code="${code}"]`,
+  )
+  const total = await page.getByTestId('carousel-slot').count()
+  expect(total).toBeGreaterThan(0)
+
+  for (let turn = 0; turn < 15 && (await front.count()) === 0; turn += 1) {
+    await page.getByTestId('carousel-next').click()
+  }
+
+  await expect(front).toHaveCount(1)
+  await front.locator('[data-testid="coordination-card"]').click()
+}
+
 test.describe('selección de coordinación', () => {
   test.use({ viewport: { width: 1440, height: 900 } })
 
@@ -200,16 +224,18 @@ test.describe('selección de coordinación', () => {
     await expect(character).toHaveAttribute('data-orientation', 'NEUTRAL')
     await expect(character).toHaveAttribute('data-interaction', 'IDLE')
 
-    // Extremo izquierdo de la banda superior.
+    // Extremo izquierdo del arco.
     await page.locator(`${CARD}[data-code="coord-general"]`).hover()
     await expect(character).toHaveAttribute('data-orientation', 'LEFT')
     await expect(character).toHaveAttribute('data-interaction', 'HOVER')
     // El estado sigue siendo el de la Dirección, no el de la carta.
     await expect(character).toHaveAttribute('data-status', 'CRITICO')
 
-    // Extremo derecho de la banda superior.
+    // Extremo derecho del arco. Operación Académica es el nodo CENTRAL de los
+    // nueve, así que ya no sirve para comprobar el giro: ahí el personaje mira
+    // al frente, que es justo lo que debe hacer.
     await page
-      .locator(`${CARD}[data-code="coord-operaciones-academicas"]`)
+      .locator(`${CARD}[data-code="coord-fabrica-contenidos"]`)
       .hover()
     await expect(character).toHaveAttribute('data-orientation', 'RIGHT')
     await expect(character).toHaveAttribute('data-status', 'CRITICO')
@@ -223,25 +249,29 @@ test.describe('selección de coordinación', () => {
     const requested = await installApi(page)
     await openExperience(page)
 
-    await page.locator(`${CARD}[data-code="coord-ingenierias"]`).click()
+    await page.locator(`${CARD}[data-code="coord-operaciones-academicas"]`).click()
 
     const active = page.getByTestId('active-coordination-card')
     await expect(active).toBeVisible()
-    await expect(active).toHaveAttribute('data-code', 'coord-ingenierias')
+    await expect(active).toHaveAttribute('data-code', 'coord-operaciones-academicas')
     // El estado de la carta activa es el de LEVEL 0: no se recalcula.
     await expect(active).toHaveAttribute('data-status', 'CRITICO')
 
     await expect(page.getByTestId('operational-breadcrumb')).toContainText(
-      'Ingenierías',
+      'Operación Académica',
     )
     await expect(page.getByTestId('breadcrumb-direction')).toBeVisible()
 
-    // Las otras 14 siguen visibles y comprimidas, no ocultas.
-    await expect(page.getByTestId('coordination-card')).toHaveCount(14)
-    await expect(page.getByTestId('coordination-card-deck')).toHaveAttribute(
-      'data-compressed',
-      'true',
-    )
+    // Cinco alternativas grandes en el carrusel; la baraja de reposo se retira
+    // y la coordinación activa no se duplica dentro del carrusel.
+    await expect(page.getByTestId('carousel-slot')).toHaveCount(5)
+    await expect(page.getByTestId('coordination-table')).toHaveCount(0)
+    await expect(
+      page.locator(
+        '[data-testid="carousel-slot"][data-code="coord-operaciones-academicas"]',
+      ),
+    ).toHaveCount(0)
+    await expect(page.getByTestId('carousel-position')).toContainText('/ 8')
 
     const character = page.getByTestId('direction-character')
     await expect(character).toHaveAttribute('data-interaction', 'SELECTED')
@@ -263,7 +293,7 @@ test.describe('selección de coordinación', () => {
     expect(level1Calls(requested)).toHaveLength(2)
     expect(
       level1Calls(requested).every((entry) =>
-        entry.includes(UUID_OF.ingenierias),
+        entry.includes(UUID_OF.operacionesAcademicas),
       ),
     ).toBe(true)
     expect(level1Calls(requested).join(' ')).not.toContain('CLOSED')
@@ -318,17 +348,17 @@ test.describe('selección de coordinación', () => {
     const requested = await installApi(page)
     await openExperience(page)
 
-    await page.locator(`${CARD}[data-code="coord-ingenierias"]`).click()
+    await page.locator(`${CARD}[data-code="coord-operaciones-academicas"]`).click()
     await expect(page.getByTestId('problem-row')).toHaveCount(5)
     expect(level1Calls(requested)).toHaveLength(2)
 
     // Cambio directo, sin volver primero al estado global.
-    await page.locator(`${CARD}[data-code="coord-negocios"]`).click()
+    await selectFromCarousel(page, 'coord-especializaciones')
     const active = page.getByTestId('active-coordination-card')
-    await expect(active).toHaveAttribute('data-code', 'coord-negocios')
+    await expect(active).toHaveAttribute('data-code', 'coord-especializaciones')
     await expect(page.getByTestId('problem-row')).toHaveCount(1)
     await expect(page.getByTestId('operational-breadcrumb')).toContainText(
-      'Negocios',
+      'Especializaciones',
     )
     expect(level1Calls(requested)).toHaveLength(4)
 
@@ -338,8 +368,8 @@ test.describe('selección de coordinación', () => {
     })
 
     // Volver a Ingenierías no cuesta ninguna petición: estaba en caché.
-    await page.locator(`${CARD}[data-code="coord-ingenierias"]`).click()
-    await expect(active).toHaveAttribute('data-code', 'coord-ingenierias')
+    await selectFromCarousel(page, 'coord-operaciones-academicas')
+    await expect(active).toHaveAttribute('data-code', 'coord-operaciones-academicas')
     await expect(page.getByTestId('problem-row')).toHaveCount(5)
     expect(level1Calls(requested)).toHaveLength(4)
   })
@@ -350,14 +380,14 @@ test.describe('selección de coordinación', () => {
     await installApi(page)
     await openExperience(page)
 
-    await page.locator(`${CARD}[data-code="coord-negocios"]`).click()
+    await page.locator(`${CARD}[data-code="coord-especializaciones"]`).click()
     await expect(page.getByTestId('active-coordination-card')).toBeVisible()
 
     await page.getByTestId('breadcrumb-direction').click()
 
     await expect(page.getByTestId('active-coordination-card')).toHaveCount(0)
     await expect(page.getByTestId('operational-breadcrumb')).toHaveCount(0)
-    await expect(page.getByTestId('coordination-card')).toHaveCount(15)
+    await expect(page.getByTestId('coordination-card')).toHaveCount(9)
     await expect(page.getByTestId('direction-character')).toHaveAttribute(
       'data-interaction',
       'IDLE',
@@ -378,7 +408,7 @@ test.describe('selección de coordinación', () => {
       'Todo bajo control',
     )
     await expect(page.getByTestId('problem-row')).toHaveCount(0)
-    await expect(page.getByTestId('coordination-card')).toHaveCount(14)
+    await expect(page.getByTestId('carousel-slot')).toHaveCount(5)
 
     await page.screenshot({
       path: testInfo.outputPath('selected-stable-empty-1440x900.png'),
@@ -394,7 +424,7 @@ test.describe('selección de coordinación', () => {
     await installApi(page, { fail: true })
     await openExperience(page)
 
-    await page.locator(`${CARD}[data-code="coord-ingenierias"]`).click()
+    await page.locator(`${CARD}[data-code="coord-operaciones-academicas"]`).click()
 
     await expect(page.getByTestId('active-card-error')).toBeVisible()
     await expect(page.getByTestId('active-card-empty')).toHaveCount(0)
@@ -404,10 +434,10 @@ test.describe('selección de coordinación', () => {
       'CRITICO',
     )
     // Y se puede cambiar a otra.
-    await page.locator(`${CARD}[data-code="coord-negocios"]`).click()
+    await selectFromCarousel(page, 'coord-especializaciones')
     await expect(page.getByTestId('active-coordination-card')).toHaveAttribute(
       'data-code',
-      'coord-negocios',
+      'coord-especializaciones',
     )
   })
 
@@ -419,9 +449,9 @@ test.describe('selección de coordinación', () => {
     await installApi(page)
     await openExperience(page)
 
-    await page.locator(`${CARD}[data-code="coord-ingenierias"]`).click()
+    await page.locator(`${CARD}[data-code="coord-operaciones-academicas"]`).click()
 
-    await expect(page.locator(`${CARD}[aria-pressed="false"]`)).toHaveCount(14)
+    await expect(page.locator(`${CARD}[aria-pressed="false"]`)).toHaveCount(5)
     await expect(page.getByTestId('problem-row').first()).toHaveAttribute(
       'aria-label',
       /Severidad Crítica/,
@@ -440,7 +470,7 @@ test.describe('composición seleccionada 1920x1080', () => {
     await installApi(page)
     await openExperience(page)
 
-    await page.locator(`${CARD}[data-code="coord-ingenierias"]`).click()
+    await page.locator(`${CARD}[data-code="coord-operaciones-academicas"]`).click()
     await expect(page.getByTestId('problem-row')).toHaveCount(5)
 
     const overflow = await page.evaluate(() => ({
@@ -455,7 +485,7 @@ test.describe('composición seleccionada 1920x1080', () => {
     expect(overflow.y).toBeLessThanOrEqual(0)
 
     await expect(page.getByTestId('direction-character')).toBeVisible()
-    await expect(page.getByTestId('coordination-card')).toHaveCount(14)
+    await expect(page.getByTestId('carousel-slot')).toHaveCount(5)
 
     await page.screenshot({
       path: testInfo.outputPath('selected-engineering-1920x1080.png'),

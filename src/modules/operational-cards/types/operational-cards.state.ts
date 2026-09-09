@@ -1,6 +1,11 @@
 import type { CoordinationId } from '@/modules/impact-network/data/coordination-islands.config'
 import type { SituationSeverity } from '@/modules/situations/types/situation.types'
 import type { OperationalOverview } from '@/modules/operational-cards/types/operational-overview.contract'
+import type {
+  ProblemDetail,
+  ProblemSectionId,
+  ProblemSectionsState,
+} from '@/modules/operational-cards/types/problem-detail.types'
 
 /** Estado de carga, independiente por nivel: un fallo en LEVEL 1 no borra la baraja. */
 export type LoadState = 'idle' | 'loading' | 'ready' | 'error'
@@ -54,4 +59,34 @@ export interface OperationalCardsState {
 
   level1: OperationalCardsLevel1State
   problemsByCoordination: CoordinationProblemsCache
+
+  /** Problema abierto en la isla flotante. null = sin isla. */
+  selectedProblemId: string | null
+  level2: OperationalCardsLevel2State
+  detailByProblem: ProblemDetailCache
 }
+
+/**
+ * Rama de LEVEL 2. `problemId` dice a qué problema pertenece, de modo que una
+ * respuesta que llega tarde tras cerrar la isla se descarta en el reducer.
+ */
+export interface OperationalCardsLevel2State {
+  status: LoadState
+  problemId: string | null
+  detail: ProblemDetail | null
+  errorMessage: string | null
+  /** Secciones que necesitan su propia petición, con su propio estado. */
+  sections: ProblemSectionsState
+  /** Secciones desplegadas. El contenido se pide al abrirse por primera vez. */
+  expanded: readonly ProblemSectionId[]
+}
+
+/** Caché de detalle y de secciones por problema, viva mientras el componente. */
+export type ProblemDetailCache = Readonly<
+  Partial<
+    Record<
+      string,
+      { detail: ProblemDetail; sections: ProblemSectionsState }
+    >
+  >
+>

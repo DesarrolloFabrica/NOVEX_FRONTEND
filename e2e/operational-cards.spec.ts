@@ -4,8 +4,8 @@ import { operationalOverviewFixture } from './operational-overview.fixture'
 /**
  * Experiencia ADMIN de estado operacional.
  *
- * Cubre la cadena ruta -> API -> estado -> contrato -> personaje + 15 cartas
- * en reposo. Todavía NO hay selección, flip, carta activa, problemas ni isla:
+ * Cubre la cadena ruta -> API -> estado -> contrato -> personaje + los nueve
+ * mazos de producto en reposo. Todavía NO hay selección, flip, carta activa, problemas ni isla:
  * esos tests llegan con las fases que los construyen.
  */
 
@@ -179,31 +179,34 @@ test.describe('estado operacional', () => {
       '1 coordinación crítica · 1 en alerta',
     )
 
-    await expect(page.getByTestId('coordination-card')).toHaveCount(15)
-    await expect(page.getByTestId('coordination-card-deck')).toHaveAttribute(
+    await expect(page.getByTestId('coordination-card')).toHaveCount(9)
+    await expect(page.getByTestId('coordination-table')).toHaveAttribute(
       'data-count',
-      '15',
+      '9',
     )
-    // Baraja en bandas, no grid: 15 se reparten en 8 + 7.
-    await expect(page.getByTestId('coordination-card-band')).toHaveCount(2)
+    // Mesa de producto: nueve mazos en UN SOLO arco.
+    await expect(page.locator('[data-arc="0"]')).toHaveCount(9)
+    await expect(page.locator('[data-arc="1"]')).toHaveCount(0)
 
-    // Coordinación General es una coordinación más de las 15.
+    // Coordinación General es uno de los nueve nodos de producto.
     const general = page.locator(`${CARD}[data-code="coord-general"]`)
     await expect(general).toBeVisible()
     await expect(general).toHaveAttribute('data-status', 'ESTABLE')
 
     // Los estados del fixture se reflejan en las cartas.
+    // Bellas Artes (ALERTA en el fixture) es ahora una SUBORDINACIÓN: no tiene
+    // carta propia, así que su estado no aparece en la mesa de primer nivel.
     await expect(page.locator(`${CARD}[data-status="CRITICO"]`)).toHaveCount(1)
-    await expect(page.locator(`${CARD}[data-status="ALERTA"]`)).toHaveCount(1)
-    await expect(page.locator(`${CARD}[data-status="ESTABLE"]`)).toHaveCount(13)
+    await expect(page.locator(`${CARD}[data-status="ALERTA"]`)).toHaveCount(0)
+    await expect(page.locator(`${CARD}[data-status="ESTABLE"]`)).toHaveCount(8)
 
     // El estado también es texto, nunca solo aura.
-    await expect(page.getByTestId('coordination-card-status')).toHaveCount(15)
+    await expect(page.getByTestId('coordination-card-status')).toHaveCount(9)
     await expect(
       page
-        .locator(`${CARD}[data-code="coord-bellas-artes"]`)
+        .locator(`${CARD}[data-code="coord-operaciones-academicas"]`)
         .getByTestId('coordination-card-status'),
-    ).toHaveText('Alerta')
+    ).toHaveText('Crítico')
 
     // LEVEL 0 es una sola petición y no arrastra el agregado legacy.
     expect(
@@ -239,7 +242,7 @@ test.describe('estado operacional', () => {
     await expect(page.getByTestId('direction-summary')).toHaveText(
       '7 coordinaciones críticas · 1 en alerta',
     )
-    await expect(page.getByTestId('coordination-card')).toHaveCount(15)
+    await expect(page.getByTestId('coordination-card')).toHaveCount(9)
   })
 
   test('un fallo de LEVEL 0 se comunica como DESCONOCIDO, nunca como estable', async ({
@@ -259,7 +262,7 @@ test.describe('estado operacional', () => {
       'Desconocido',
     )
     await expect(page.getByTestId('coordination-card')).toHaveCount(0)
-    await expect(page.getByTestId('coordination-card-deck')).toHaveCount(0)
+    await expect(page.getByTestId('coordination-table')).toHaveCount(0)
     await expect(page.getByTestId('direction-summary')).toHaveText(
       'Estado no disponible',
     )
@@ -292,7 +295,7 @@ test.describe('estado operacional', () => {
     const placeholder = page.getByTestId('analyst-registry-placeholder')
     await expect(placeholder).toBeVisible()
     await expect(placeholder).toContainText('3 problemas activos')
-    await expect(page.getByTestId('coordination-card')).toHaveCount(15)
+    await expect(page.getByTestId('coordination-card')).toHaveCount(9)
     await expect(page.getByTestId('direction-character')).toHaveCount(1)
   })
 
@@ -346,7 +349,7 @@ for (const viewport of VIEWPORTS) {
 
       await page.goto('/centro-operacional')
       await waitForOverviewReady(page)
-      await expect(page.getByTestId('coordination-card')).toHaveCount(15)
+      await expect(page.getByTestId('coordination-card')).toHaveCount(9)
 
       // Sin scroll horizontal en el viewport objetivo.
       const overflowX = await page.evaluate(
@@ -356,7 +359,7 @@ for (const viewport of VIEWPORTS) {
       )
       expect(overflowX).toBeLessThanOrEqual(0)
 
-      // Las 15 cartas dentro del viewport y con nombre legible.
+      // Las 15 cartas dentro del viewport y con la identidad legible.
       const boxes = await page
         .getByTestId('coordination-card')
         .evaluateAll((nodes) =>
@@ -365,6 +368,9 @@ for (const viewport of VIEWPORTS) {
             const nameRect = node
               .querySelector('.coordination-card__name')
               ?.getBoundingClientRect()
+            const faceRect = node
+              .querySelector('.coordination-card__face')
+              ?.getBoundingClientRect()
             return {
               left: rect.left,
               right: rect.right,
@@ -372,18 +378,32 @@ for (const viewport of VIEWPORTS) {
               bottom: rect.bottom,
               width: rect.width,
               nameWidth: nameRect?.width ?? 0,
+              faceWidth: faceRect?.width ?? 0,
+              illustrated: faceRect !== undefined,
             }
           }),
         )
 
-      expect(boxes).toHaveLength(15)
+      expect(boxes).toHaveLength(9)
       for (const box of boxes) {
         expect(box.left).toBeGreaterThanOrEqual(0)
         expect(box.right).toBeLessThanOrEqual(viewport.width + 1)
         expect(box.bottom).toBeLessThanOrEqual(viewport.height + 1)
         expect(box.width).toBeGreaterThan(120)
-        expect(box.nameWidth).toBeGreaterThan(80)
+
+        // Quién es la coordinación tiene que leerse en la carta. En las
+        // ilustradas lo dice el arte, que ocupa la carta entera y ya rotula el
+        // nombre; en la legacy lo dice el texto, y ahí sigue exigiéndose ancho.
+        if (box.illustrated) {
+          expect(box.faceWidth).toBeGreaterThan(120)
+        } else {
+          expect(box.nameWidth).toBeGreaterThan(80)
+        }
       }
+
+      // Los nueve nodos de producto tienen cara ilustrada: ni una carta muda.
+      // Ocho ilustradas; Servicio va en legacy hasta que tenga arte propio.
+      expect(boxes.filter((box) => box.illustrated)).toHaveLength(8)
 
       // El personaje tiene presencia real y no invade la baraja.
       const characterBox = await page
@@ -415,10 +435,13 @@ test.describe('composición con 7 coordinaciones críticas', () => {
     await page.goto('/centro-operacional')
     await waitForOverviewReady(page)
 
-    // Reparto real de la BD local validada en la fase 3.1.
-    await expect(page.locator(`${CARD}[data-status="CRITICO"]`)).toHaveCount(7)
-    await expect(page.locator(`${CARD}[data-status="ALERTA"]`)).toHaveCount(1)
-    await expect(page.locator(`${CARD}[data-status="ESTABLE"]`)).toHaveCount(7)
+    // El fixture severo pone siete filas técnicas en CRITICO, pero tres de
+    // ellas —Ingenierías, Negocios y la legacy Servicios— ya no son nodos de
+    // primer nivel, así que la mesa muestra cuatro. Es la divergencia esperada
+    // entre coordinaciones técnicas y mazos visibles.
+    await expect(page.locator(`${CARD}[data-status="CRITICO"]`)).toHaveCount(4)
+    await expect(page.locator(`${CARD}[data-status="ALERTA"]`)).toHaveCount(0)
+    await expect(page.locator(`${CARD}[data-status="ESTABLE"]`)).toHaveCount(5)
 
     // Los nombres siguen legibles y las etiquetas de estado no quedan tapadas.
     const hidden = await page
@@ -439,3 +462,119 @@ test.describe('composición con 7 coordinaciones críticas', () => {
   })
 })
 
+
+/**
+ * Cara ilustrada (CoordCards).
+ *
+ * El fallback por imagen rota no se puede cubrir en unitarios: `onError` es un
+ * evento del navegador y la suite de Vitest renderiza con `react-dom/server`,
+ * sin DOM. Aquí sí es comprobable de verdad, abortando la ruta del asset.
+ */
+test.describe('cara ilustrada de las cartas', () => {
+  test.use({ viewport: { width: 1440, height: 900 } })
+
+  test('las coordinaciones con arte propio lo pintan, y ocultan el nombre duplicado', async ({
+    page,
+  }) => {
+    await blockExternalFonts(page)
+    await installAdminSession(page)
+    await installApi(page)
+    await page.goto('/centro-operacional')
+    await waitForOverviewReady(page)
+
+    const especializaciones = page.locator(
+      `${CARD}[data-code="coord-especializaciones"]`,
+    )
+    await expect(
+      especializaciones.locator('.coordination-card__face img'),
+    ).toHaveAttribute('src', '/CoordCards/especializaciones.png')
+
+    // El nombre sigue en el DOM y con su texto, pero recortado a 1px: es la
+    // técnica sr-only, así que para Playwright sigue siendo «visible» y lo que
+    // hay que medir es su caja, no su visibilidad.
+    const name = especializaciones.locator('.coordination-card__name')
+    await expect(name).toHaveCount(1)
+    await expect(name).toHaveText('Especializaciones')
+    const nameBox = await name.boundingBox()
+    expect(nameBox!.width).toBeLessThanOrEqual(2)
+    expect(nameBox!.height).toBeLessThanOrEqual(2)
+    await expect(especializaciones).toHaveAttribute(
+      'aria-label',
+      /Especializaciones\. Estado operacional:/,
+    )
+
+    // El estado NO se oculta con el nombre.
+    await expect(
+      especializaciones.getByTestId('coordination-card-status'),
+    ).toBeVisible()
+
+    // Los nueve nodos principales tienen cara ilustrada propia.
+    // Ocho de los nueve nodos; Servicio usa presentación legacy.
+    await expect(page.locator('.coordination-card__face')).toHaveCount(8)
+  })
+
+  test('Servicio se lee como Servicio, y la fila legacy no se pinta', async ({
+    page,
+  }) => {
+    await blockExternalFonts(page)
+    await installAdminSession(page)
+    await installApi(page)
+    await page.goto('/centro-operacional')
+    await waitForOverviewReady(page)
+
+    // La fila legacy `coord-servicios` sigue existiendo en la base de datos y
+    // conserva sus problemas activos, pero no tiene carta en la mesa de
+    // producto: está pendiente de reconciliación.
+    await expect(page.locator(`${CARD}[data-code="coord-servicios"]`)).toHaveCount(0)
+
+    // El nodo de producto Servicio se apoya en `coord-homologaciones`.
+    const servicio = page.locator(`${CARD}[data-code="coord-homologaciones"]`)
+    await expect(servicio).toBeVisible()
+    await expect(servicio).toHaveAttribute(
+      'aria-label',
+      /^Servicio\. Estado operacional:/,
+    )
+
+    // NO pinta el arte de Homologaciones: una carta rotulada «Servicio» que
+    // muestre un PNG con «HOMOLOGACIONES» se lee como un error de identidad.
+    await expect(servicio.locator('.coordination-card__face')).toHaveCount(0)
+    await expect(
+      servicio.locator('.coordination-card__island img'),
+    ).toHaveAttribute('src', '/islas/CoordServicios.webp')
+
+    // Y en presentación legacy su nombre se ve sin necesidad de excepciones.
+    const name = servicio.locator('.coordination-card__name')
+    await expect(name).toBeVisible()
+    await expect(name).toHaveText('Servicio')
+  })
+
+  test('si el arte no carga, la carta cae a la legacy de SU coordinación', async ({
+    page,
+  }) => {
+    await blockExternalFonts(page)
+    await installAdminSession(page)
+    await installApi(page)
+    // Se rompen todas las caras ilustradas, no solo una.
+    await page.route('**/CoordCards/**', (route) => route.abort())
+    await page.goto('/centro-operacional')
+    await waitForOverviewReady(page)
+
+    const especializaciones = page.locator(
+      `${CARD}[data-code="coord-especializaciones"]`,
+    )
+
+    await expect(especializaciones.locator('.coordination-card__face')).toHaveCount(0)
+    await expect(
+      especializaciones.locator('.coordination-card__island img'),
+    ).toHaveAttribute('src', '/islas/CoordEspecializaciones.webp')
+
+    // Recupera su nombre visible: sin arte no puede quedarse muda.
+    const name = especializaciones.locator('.coordination-card__name')
+    await expect(name).toBeVisible()
+    await expect(name).toHaveText('Especializaciones')
+
+    // Las 15 siguen presentes, con su estado.
+    await expect(page.locator(CARD)).toHaveCount(9)
+    await expect(page.getByTestId('coordination-card-status')).toHaveCount(9)
+  })
+})

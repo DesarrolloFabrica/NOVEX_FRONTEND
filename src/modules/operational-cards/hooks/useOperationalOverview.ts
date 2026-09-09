@@ -6,6 +6,17 @@ import type { OperationalCardsState } from '@/modules/operational-cards/types/op
 import { fetchOperationalOverview } from '@/modules/operational-cards/services/operational-overview.service'
 import { fetchCoordinationProblems } from '@/modules/operational-cards/services/coordination-problems.service'
 import {
+  fetchProblemDetail,
+  fetchProblemEvidences,
+  fetchProblemRecommendations,
+  fetchProblemTimeline,
+} from '@/modules/operational-cards/services/problem-detail.service'
+import {
+  isLazySection,
+  type LazyProblemSectionId,
+  type ProblemSectionId,
+} from '@/modules/operational-cards/types/problem-detail.types'
+import {
   initialOperationalCardsState,
   operationalCardsReducer,
 } from '@/modules/operational-cards/state/operationalCards.reducer'
@@ -29,6 +40,19 @@ export interface OperationalCardsController extends OperationalCardsState {
   selectCoordination: (code: CoordinationId) => void
   clearCoordination: () => void
   hoverCoordination: (code: CoordinationId | null) => void
+  selectProblem: (problemId: string) => void
+  closeProblem: () => void
+  toggleSection: (section: ProblemSectionId) => void
+}
+
+/** Cargador por sección perezosa. Impacto e IA no están: salen del análisis. */
+const SECTION_LOADERS: Record<
+  LazyProblemSectionId,
+  (problemId: string) => Promise<readonly unknown[]>
+> = {
+  recommendations: fetchProblemRecommendations,
+  evidences: fetchProblemEvidences,
+  timeline: fetchProblemTimeline,
 }
 
 export function useOperationalOverview(): OperationalCardsController {
@@ -98,6 +122,84 @@ export function useOperationalOverview(): OperationalCardsController {
       })
   }, [selectedCode, level1Status, state.overview])
 
+  const selectedProblemId = state.selectedProblemId
+  const level2Status = state.level2.status
+
+  // Detalle del problema: dos peticiones en paralelo, y ninguna si el problema
+  // ya estaba en caché (el reducer entra directo en `ready`).
+  useEffect(() => {
+    if (!selectedProblemId || level2Status !== 'idle') return
+
+    dispatch({ type: 'LOAD_DETAIL', problemId: selectedProblemId })
+
+    void fetchProblemDetail(selectedProblemId)
+      .then((detail) => {
+        dispatch({
+          type: 'LOAD_DETAIL_SUCCESS',
+          problemId: selectedProblemId,
+          detail,
+        })
+      })
+      .catch((error: unknown) => {
+        dispatch({
+          type: 'LOAD_DETAIL_ERROR',
+          problemId: selectedProblemId,
+          message: getErrorMessage(error),
+        })
+      })
+  }, [selectedProblemId, level2Status])
+
+  const expandedSections = state.level2.expanded
+  const sectionsState = state.level2.sections
+
+  // Secciones perezosas: una petición la primera vez que se despliegan, y
+  // ninguna al cerrarlas y volverlas a abrir.
+  useEffect(() => {
+    if (!selectedProblemId) return
+
+    for (const section of expandedSections) {
+      if (!isLazySection(section)) continue
+      if (sectionsState[section].status !== 'idle') continue
+
+      const problemId = selectedProblemId
+      dispatch({ type: 'LOAD_SECTION', problemId, section })
+
+      void SECTION_LOADERS[section](problemId)
+        .then((items) => {
+          dispatch({
+            type: 'LOAD_SECTION_SUCCESS',
+            problemId,
+            section,
+            items,
+          })
+        })
+        .catch((error: unknown) => {
+          dispatch({
+            type: 'LOAD_SECTION_ERROR',
+            problemId,
+            section,
+            message: getErrorMessage(error),
+          })
+        })
+    }
+  }, [selectedProblemId, expandedSections, sectionsState])
+
+  const selectProblem = useCallback((problemId: string) => {
+    dispatch({ type: 'SELECT_PROBLEM', problemId })
+  }, [])
+
+  const closeProblem = useCallback(() => {
+    dispatch({ type: 'CLOSE_PROBLEM' })
+  }, [])
+
+  const toggleSection = useCallback(
+    (section: ProblemSectionId) => {
+      if (!selectedProblemId) return
+      dispatch({ type: 'TOGGLE_SECTION', problemId: selectedProblemId, section })
+    },
+    [selectedProblemId],
+  )
+
   const selectCoordination = useCallback((code: CoordinationId) => {
     dispatch({ type: 'SELECT_COORDINATION', code })
   }, [])
@@ -115,5 +217,8 @@ export function useOperationalOverview(): OperationalCardsController {
     selectCoordination,
     clearCoordination,
     hoverCoordination,
+    selectProblem,
+    closeProblem,
+    toggleSection,
   }
 }

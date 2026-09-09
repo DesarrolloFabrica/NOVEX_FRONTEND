@@ -42,6 +42,33 @@ export function resolveCoordinationVisualIdentity(
   }
 }
 
+/**
+ * Identidad visual con el ARTE de otro code.
+ *
+ * Existe para un caso concreto y declarado: el nodo de producto «Servicio» se
+ * apoya en la fila técnica `coord-homologaciones`, cuyo arte ilustrado lleva
+ * «HOMOLOGACIONES» rotulado. Mostrar esa cara bajo la etiqueta «Servicio» se
+ * lee como un error de identidad, así que el nodo toma prestados los assets de
+ * `coord-servicios` —que existen, no se usan y sí corresponden al concepto—
+ * hasta que exista arte propio.
+ *
+ * Lo que NO cambia es el `code`: sigue siendo el técnico, porque es la clave de
+ * selección, del `data-code`, de la petición de LEVEL 1 y del estado. Aquí solo
+ * se sustituyen color, icono e isla. Separar las dos cosas es justamente lo que
+ * evita que una decisión de presentación se convierta en una de datos.
+ */
+export function withArtOf(
+  identity: CoordinationVisualIdentity,
+  artCode: CoordinationId,
+): CoordinationVisualIdentity {
+  return {
+    ...identity,
+    color: resolveIslandColor(artCode, identity.color),
+    iconAsset: getCoordinationIconAsset(artCode),
+    islandAsset: resolveIslandAssetPath(artCode, artCode),
+  }
+}
+
 /** Forma mínima que necesita el compositor: la fila de `CoordinationOverview`. */
 export interface CoordinationVisualIdentitySource {
   /** UUID de la coordinación; se expone como `uuid` en la identidad. */

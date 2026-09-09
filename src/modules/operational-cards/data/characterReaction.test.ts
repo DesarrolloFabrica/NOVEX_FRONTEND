@@ -3,7 +3,7 @@ import {
   buildCharacterPresentation,
   deriveCharacterOrientation,
 } from '@/modules/operational-cards/data/characterReaction'
-import { buildDeckLayout } from '@/modules/operational-cards/data/deckLayout'
+import { buildTableLayout } from '@/modules/operational-cards/data/tableLayout'
 import type { CoordinationOverview } from '@/modules/operational-cards/types/operational-overview.contract'
 import type { OperationalIntegrityStatus } from '@/modules/operational-cards/types/operational-status.types'
 
@@ -49,7 +49,7 @@ describe('deriveCharacterOrientation', () => {
   })
 
   it('sale de la posición real en la baraja, no de un mapa por nombre', () => {
-    const { orientationByCode } = buildDeckLayout(coordinations(15))
+    const { orientationByCode } = buildTableLayout(coordinations(15))
     // Banda superior: 8 cartas, coord-1 en el extremo izquierdo.
     expect(orientationByCode['coord-1']).toBe('LEFT')
     expect(orientationByCode['coord-8']).toBe('RIGHT')

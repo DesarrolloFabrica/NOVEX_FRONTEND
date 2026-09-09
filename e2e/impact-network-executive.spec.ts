@@ -144,6 +144,12 @@ async function installRole(
     },
   )
 
+  // Corta las fuentes externas: `index.html` enlaza Google Fonts y sin salida
+  // a internet esa petición cuelga, de modo que el evento `load` no se dispara
+  // y el test muere por timeout. Solo estabiliza el entorno: no cambia
+  // aserciones ni selectores.
+  await page.route(/fonts\.(googleapis|gstatic)\.com/, (route) => route.abort())
+
   await page.route('**/api/v1/**', async (route) => {
     const request = route.request()
     const path = new URL(request.url()).pathname

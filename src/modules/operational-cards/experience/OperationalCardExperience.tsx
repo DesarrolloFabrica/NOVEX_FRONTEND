@@ -1,17 +1,22 @@
 import { useMemo } from 'react'
 import { AnimatePresence } from 'motion/react'
 import { ActiveCoordinationCard } from '@/modules/operational-cards/components/ActiveCoordinationCard'
-import { CoordinationCardDeck } from '@/modules/operational-cards/components/CoordinationCardDeck'
+import { CoordinationTable } from '@/modules/operational-cards/components/CoordinationTable'
+import { CoordinationCarousel } from '@/modules/operational-cards/components/CoordinationCarousel'
 import { DirectionCharacter } from '@/modules/operational-cards/components/DirectionCharacter'
 import { OperationalBreadcrumb } from '@/modules/operational-cards/components/OperationalBreadcrumb'
+import { ProblemIsland } from '@/modules/operational-cards/components/ProblemIsland'
 import { buildCharacterPresentation } from '@/modules/operational-cards/data/characterReaction'
 import { resolveCoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
-import { buildDeckLayout } from '@/modules/operational-cards/data/deckLayout'
+import { buildAlternatives } from '@/modules/operational-cards/data/carouselLayout'
+import { buildTableLayout } from '@/modules/operational-cards/data/tableLayout'
+import { buildProductTable } from '@/modules/operational-cards/data/productHierarchy'
 import { buildDirectionSummary } from '@/modules/operational-cards/data/directionSummary'
 import { useOperationalOverview } from '@/modules/operational-cards/hooks/useOperationalOverview'
 import type { OperationalIntegrityStatus } from '@/modules/operational-cards/types/operational-status.types'
 import '@/styles/operational-cards.css'
 import '@/styles/operational-character.css'
+import '@/styles/operational-island.css'
 
 /**
  * Orquestador de la experiencia ADMIN de estado operacional.
@@ -36,9 +41,14 @@ export function OperationalCardExperience() {
     selectedCoordinationCode,
     hoveredCoordinationCode,
     level1,
+    selectedProblemId,
+    level2,
     selectCoordination,
     clearCoordination,
     hoverCoordination,
+    selectProblem,
+    closeProblem,
+    toggleSection,
   } = useOperationalOverview()
 
   // Un fallo de red, HTTP, parseo o contrato se comunica como DESCONOCIDO.
@@ -54,21 +64,66 @@ export function OperationalCardExperience() {
     [overview, selectedCoordinationCode],
   )
 
-  // Una sola geometría para renderizar y para orientar al personaje: no pueden
-  // desincronizarse. La carta activa sale de las bandas.
-  const layout = useMemo(
-    () =>
-      buildDeckLayout(overview?.coordinations ?? [], {
-        excludeCode: selectedCoordination?.code ?? null,
-      }),
-    [overview, selectedCoordination],
+  /**
+   * Proyección de las filas técnicas sobre la ESTRUCTURA DE PRODUCTO: quince
+   * coordinaciones en la base de datos, nueve mazos en la mesa. Las cinco
+   * subordinaciones de Operación Académica dejan de ser nodos principales y
+   * pasan a vivir dentro de su padre; `coord-servicios` no se pinta y sus
+   * problemas siguen existiendo técnicamente.
+   */
+  const productTable = useMemo(
+    () => buildProductTable(overview?.coordinations ?? []),
+    [overview],
   )
 
-  // La orientación de la carta activa se calcula sobre la baraja completa,
-  // porque en la comprimida ya no está.
+  /** Las filas técnicas que SÍ tienen carta: solo los nodos principales. */
+  const topLevelRows = useMemo(
+    () => productTable.nodes.map((node) => node.coordination),
+    [productTable],
+  )
+
+  /** Nombre de producto por code, para las superficies de primer nivel. */
+  const labelsByCode = useMemo(
+    () =>
+      Object.fromEntries(
+        productTable.nodes.map((node) => [
+          node.coordination.code,
+          { label: node.label, artCode: node.artCode },
+        ]),
+      ),
+    [productTable],
+  )
+
+  const nodesByCode = useMemo(
+    () =>
+      Object.fromEntries(
+        productTable.nodes.map((node) => [node.coordination.code, node]),
+      ),
+    [productTable],
+  )
+
+  // Una sola geometría para renderizar y para orientar al personaje: no pueden
+  // desincronizarse. La carta activa sale de la mesa.
+  //
+  // `sortByDisplayOrder: false` porque la mesa de producto ya llega en su
+  // orden declarado, y el `displayOrder` de la base de datos no refleja el
+  // organigrama.
+  const layout = useMemo(
+    () =>
+      buildTableLayout(topLevelRows, {
+        excludeCode: selectedCoordination?.code ?? null,
+        sortByDisplayOrder: false,
+      }),
+    [topLevelRows, selectedCoordination],
+  )
+
+  // La orientación de la carta activa se calcula sobre la mesa COMPLETA,
+  // porque en la que excluye la activa ya no está.
   const fullOrientation = useMemo(
-    () => buildDeckLayout(overview?.coordinations ?? []).orientationByCode,
-    [overview],
+    () =>
+      buildTableLayout(topLevelRows, { sortByDisplayOrder: false })
+        .orientationByCode,
+    [topLevelRows],
   )
 
   const characterPresentation = buildCharacterPresentation({
@@ -104,23 +159,35 @@ export function OperationalCardExperience() {
 
       {selectedCoordination && (
         <OperationalBreadcrumb
-          coordinationName={selectedCoordination.name}
+          /* La miga usa el nombre de PRODUCTO, no el técnico: si no, pulsar la
+             carta «Servicio» abriría una miga que dice «Homologaciones». */
+          coordinationName={
+            nodesByCode[selectedCoordination.code]?.label ??
+            selectedCoordination.name
+          }
+          summary={summary}
           onBackToDirection={clearCoordination}
         />
       )}
 
-      {/* Stage del personaje: la lectura institucional vive junto a él. */}
+      {/* Stage del personaje. Sin selección, la lectura institucional vive
+          junto a él; con selección se muda a la miga, que tiene espacio
+          horizontal libre, y devuelve ese alto al carrusel. En todo momento hay
+          exactamente un `direction-summary` en el DOM, así que la región
+          aria-live nunca se duplica. */}
       <div className="operational-deck__stage">
         <DirectionCharacter presentation={characterPresentation} />
 
-        {/* aria-live para que un cambio de estado global se anuncie. */}
-        <p
-          className="operational-deck__summary"
-          data-testid="direction-summary"
-          aria-live="polite"
-        >
-          {summary}
-        </p>
+        {!selectedCoordination && (
+          /* aria-live para que un cambio de estado global se anuncie. */
+          <p
+            className="operational-deck__summary"
+            data-testid="direction-summary"
+            aria-live="polite"
+          >
+            {summary}
+          </p>
+        )}
 
         {level0 === 'error' && (
           <p
@@ -158,19 +225,54 @@ export function OperationalCardExperience() {
                   identity={resolveCoordinationVisualIdentity(
                     selectedCoordination,
                   )}
+                  productLabel={nodesByCode[selectedCoordination.code]?.label}
                   level1={level1}
+                  onProblemSelect={selectProblem}
                 />
               )}
             </AnimatePresence>
           </div>
 
-          <CoordinationCardDeck
-            layout={layout}
-            selectedCode={selectedCoordination?.code ?? null}
-            compressed={Boolean(selectedCoordination)}
-            onSelect={selectCoordination}
-            onHoverChange={hoverCoordination}
-          />
+          {selectedCoordination ? (
+            /* El carrusel ofrece las alternativas de PRIMER NIVEL: los ocho
+               mazos restantes, nunca una subordinación. Es la misma regla que
+               la mesa —una hija no aparece como par de su padre— y el carrusel
+               es otra superficie de primer nivel, así que si listara las quince
+               filas técnicas Bellas Artes reaparecería como si fuese un igual.
+               La `key` lo remonta al cambiar de nodo para que se recentre. */
+            <CoordinationCarousel
+              key={selectedCoordination.code}
+              alternatives={buildAlternatives(
+                topLevelRows,
+                selectedCoordination.code,
+              )}
+              labelsByCode={labelsByCode}
+              activeDisplayOrder={selectedCoordination.displayOrder}
+              onSelect={selectCoordination}
+              onHoverChange={hoverCoordination}
+            />
+          ) : (
+            <CoordinationTable
+              layout={layout}
+              nodesByCode={nodesByCode}
+              hoveredCode={hoveredCoordinationCode}
+              onSelect={selectCoordination}
+              onHoverChange={hoverCoordination}
+            />
+          )}
+
+          {/* Isla de inspección del problema. Una sola a la vez: el reducer
+              ignora una segunda selección mientras haya una abierta. */}
+          <AnimatePresence>
+            {selectedProblemId && (
+              <ProblemIsland
+                key={selectedProblemId}
+                level2={level2}
+                onClose={closeProblem}
+                onToggleSection={toggleSection}
+              />
+            )}
+          </AnimatePresence>
 
           {/* Registro de analista: sin problemas activos no se muestra nada.
               Con problemas, marcador textual PROVISIONAL. No es carta, no

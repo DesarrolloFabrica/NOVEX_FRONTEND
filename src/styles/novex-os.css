@@ -81,6 +81,16 @@ textarea {
     linear-gradient(145deg, #030711 0%, #040915 45%, #02050b 100%);
 }
 
+/*
+ * Sala sin carril (R2). Una sola columna: el override del grid es lo único que
+ * distingue las dos geometrías, así que no hay una segunda estructura de layout
+ * que mantener en paralelo. El carril tampoco está en el DOM —`NovexRoom` no lo
+ * renderiza—, de modo que esta regla no oculta nada: solo reparte el ancho.
+ */
+.novex-os[data-rail='none'] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .novex-os[data-scene='events'] {
   --os-scene-image: url('/assests/scenes/novex-city-events.jpg');
   --os-scene-position: 50% 51%;

@@ -22,6 +22,8 @@ const SKELETON_ROWS = 3
 export interface ActiveCoordinationCardProps {
   coordination: CoordinationOverview
   identity: CoordinationVisualIdentity
+  /** Nombre de PRODUCTO. Puede diferir del nombre técnico de la fila. */
+  productLabel?: string
   level1: OperationalCardsLevel1State
   /** Preparado para la fase de la isla; la experiencia aún no lo conecta. */
   onProblemSelect?: (problemId: string) => void
@@ -30,6 +32,7 @@ export interface ActiveCoordinationCardProps {
 export function ActiveCoordinationCard({
   coordination,
   identity,
+  productLabel,
   level1,
   onProblemSelect,
 }: ActiveCoordinationCardProps) {
@@ -61,7 +64,7 @@ export function ActiveCoordinationCard({
       data-status={coordination.status}
       data-level1={level1.status}
       style={{ '--coord-rgb': hexToRgbChannels(identity.color) } as React.CSSProperties}
-      aria-label={`${identity.name}. Estado operacional: ${statusLabel}.`}
+      aria-label={`${productLabel ?? identity.name}. Estado operacional: ${statusLabel}.`}
       // El flip: media vuelta contenida, sin rebote ni giros múltiples. Con
       // motion reducido la carta aparece ya en su geometría final.
       initial={
@@ -90,7 +93,7 @@ export function ActiveCoordinationCard({
           aria-hidden="true"
         />
         <div className="active-card__heading">
-          <h2 className="active-card__name">{identity.name}</h2>
+          <h2 className="active-card__name">{productLabel ?? identity.name}</h2>
           {summary && (
             <p className="active-card__summary" data-testid="active-card-summary">
               {summary}
@@ -134,7 +137,7 @@ export function ActiveCoordinationCard({
             // recorrerse con el teclado.
             tabIndex={0}
             role="group"
-            aria-label={`Problemas activos de ${identity.shortName}`}
+            aria-label={`Problemas activos de ${productLabel ?? identity.shortName}`}
           >
             {level1.problems.map((problem) => (
               <ProblemRow

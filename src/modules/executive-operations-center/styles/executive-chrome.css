@@ -1,0 +1,314 @@
+/*
+ * Chrome del Centro Operacional — UNA fila (R2).
+ *
+ * Hoja propia y pequeña a propósito: el objetivo de R2 es recuperar alto y
+ * ancho para la futura mesa operacional, y un diff legible en una hoja aparte
+ * es más fácil de revisar y de revertir que un bloque perdido en
+ * `executive-home.css`.
+ *
+ * El tratamiento visual de los enlaces de sección NO se define aquí: siguen
+ * siendo `.eoc-subnav__link`, con el hover, el activo y el acento verde que ya
+ * tenían en `executive-home.css`. Aquí solo se coloca la fila.
+ */
+
+.eoc-chrome {
+  display: flex;
+  align-items: center;
+  /* El hueco flexible va entre secciones y acciones, no aquí. */
+  gap: 18px;
+  min-width: 0;
+  padding: 4px 0 10px;
+  border-bottom: 1px solid var(--os-line, rgb(114 164 255 / 0.09));
+}
+
+/* ---------- Marca e identificación de pantalla ---------- */
+
+/* Sin carril, la marca vive aquí: es el único ancla de identidad de producto
+   en la pantalla. Dos líneas cortas, no tres descriptivas. */
+.eoc-chrome__brand {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding-right: 18px;
+  border-right: 1px solid var(--os-line, rgb(114 164 255 / 0.09));
+}
+
+.eoc-chrome__mark-wrap {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.eoc-chrome__mark {
+  width: 30px;
+  height: 30px;
+}
+
+.eoc-chrome__identity {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 1px;
+}
+
+.eoc-chrome__wordmark {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 0.6rem;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  line-height: 1.1;
+}
+
+/* El nombre de la pantalla. Era un `clamp` de hasta 1.55rem sobre tres líneas
+   de encabezado; aquí es una sola línea contenida. */
+.eoc-chrome__title {
+  margin: 0;
+  color: var(--os-text, #edf5ff);
+  font-size: 1.06rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+/* ---------- Secciones del Centro ---------- */
+
+/* `.eoc-subnav` traía `border-top` y padding vertical porque era una segunda
+   fila. En línea no los necesita: se neutralizan aquí, sin tocar la hoja que
+   define el aspecto de los enlaces. */
+.eoc-chrome__sections {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  border-top: 0;
+  /* Con poco ancho las secciones se recorren en horizontal antes de romper la
+     fila: partir el chrome en dos alturas anularía la ganancia de R2. */
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.eoc-chrome__sections::-webkit-scrollbar {
+  display: none;
+}
+
+.eoc-chrome__sections .eoc-subnav__link {
+  flex: 0 0 auto;
+}
+
+/* ---------- Acciones ---------- */
+
+.eoc-chrome__actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ---------- Menú compacto de plataforma ---------- */
+
+.novex-platform-menu {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.novex-platform-menu__trigger {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px;
+  border: 1px solid var(--os-line, rgb(114 164 255 / 0.09));
+  border-radius: 12px;
+  background: rgb(6 14 28 / 0.62);
+  color: var(--os-muted, #8b9cb6);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 550;
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+
+.novex-platform-menu__trigger:hover,
+.novex-platform-menu__trigger[aria-expanded='true'] {
+  border-color: rgb(114 164 255 / 0.24);
+  background: rgb(77 125 255 / 0.1);
+  color: var(--os-text, #edf5ff);
+}
+
+.novex-platform-menu__trigger:focus-visible {
+  outline: 2px solid var(--os-focus, rgb(163 255 92 / 0.72));
+  outline-offset: 2px;
+}
+
+.novex-platform-menu__glyph {
+  display: grid;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  place-items: center;
+}
+
+.novex-platform-menu__glyph svg,
+.novex-platform-menu__item-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.novex-platform-menu__chevron {
+  flex: 0 0 auto;
+  transition: transform 180ms ease;
+}
+
+.novex-platform-menu__trigger[aria-expanded='true'] .novex-platform-menu__chevron {
+  transform: rotate(180deg);
+}
+
+.novex-platform-menu__popover {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 8px);
+  right: 0;
+  display: flex;
+  width: 272px;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  border: 1px solid var(--os-line-strong, rgb(103 203 255 / 0.22));
+  border-radius: 14px;
+  background: rgb(5 11 22 / 0.97);
+  box-shadow: 0 22px 48px rgb(1 4 10 / 0.62);
+  backdrop-filter: blur(18px);
+}
+
+.novex-platform-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 9px;
+  border-radius: 10px;
+  color: var(--os-text, #edf5ff);
+  text-decoration: none;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.novex-platform-menu__item:hover {
+  background: rgb(77 125 255 / 0.12);
+}
+
+.novex-platform-menu__item:focus-visible {
+  outline: 2px solid var(--os-focus, rgb(163 255 92 / 0.72));
+  outline-offset: -2px;
+}
+
+.novex-platform-menu__item.is-active {
+  background: rgb(47 158 58 / 0.14);
+}
+
+.novex-platform-menu__item-icon {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--os-muted, #8b9cb6);
+}
+
+.novex-platform-menu__item:hover .novex-platform-menu__item-icon,
+.novex-platform-menu__item.is-active .novex-platform-menu__item-icon {
+  color: var(--os-green-bright, #a3ff5c);
+}
+
+.novex-platform-menu__item-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.novex-platform-menu__item-copy strong {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.novex-platform-menu__item-copy small {
+  color: var(--os-subtle, #5c6d86);
+  font-size: 0.66rem;
+}
+
+/* El CTA de registro solo aparece para los roles que pueden crear
+   situaciones; el propio componente devuelve null en el resto, así que este
+   separador se queda sin contenido y no debe dibujar una línea vacía. */
+.novex-platform-menu__action:not(:empty) {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--os-line, rgb(114 164 255 / 0.09));
+}
+
+/* ---------- Viewport estrecho ---------- */
+
+/*
+ * R2 es desktop-first (1440×900 y 1920×1080). Por debajo de 1100 px la fila
+ * única no cabe sin comprimir las secciones hasta hacerlas ilegibles, así que
+ * la identificación de pantalla cede primero: la marca se reduce al iso y el
+ * título se oculta a la vista pero permanece como `h1` en el DOM, que es lo
+ * que da nombre accesible a la vista. No se rediseña móvil en esta fase.
+ */
+@media (max-width: 1100px) {
+  .eoc-chrome {
+    gap: 12px;
+  }
+
+  .eoc-chrome__brand {
+    padding-right: 12px;
+  }
+
+  .eoc-chrome__identity {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 720px) {
+  .novex-platform-menu__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .novex-platform-menu__popover {
+    width: min(272px, calc(100vw - 32px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .novex-platform-menu__trigger,
+  .novex-platform-menu__chevron,
+  .novex-platform-menu__item {
+    transition-duration: 0ms;
+  }
+}

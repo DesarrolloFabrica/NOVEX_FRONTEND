@@ -27,8 +27,39 @@
   --status-critical-rgb: 244 96 104;
   --status-unknown-rgb: 132 150 176;
 
-  --card-width: 148px;
-  --card-height: 196px;
+  /*
+   * Tamaño de carta. Sube en dos saltos: R2 devolvió los 228 px del carril y
+   * R3.2 pasó de quince pares a NUEVE mazos, así que cada carta tiene mucho más
+   * sitio. El techo lo pone el ancho, no el alto: nueve cartas al 25 % de
+   * solape ocupan 7,21 anchos de carta y el área útil son 1386 px a 1440.
+   * La proporción es la del arte original (196/148) y no se toca.
+   *
+   *   148 px  baraja original      180 px  R3 (quince)      ~189 px  R3.2 (nueve)
+   */
+  --card-width: clamp(152px, 13.1vw, 252px);
+  --card-height: calc(var(--card-width) * 1.324);
+
+  /*
+   * ESCALA DE Z DE LA EXPERIENCIA (R3).
+   *
+   * Los valores dejan de estar dispersos por la hoja. Cada capa tiene su
+   * franja y las cartas de la mesa reciben su z desde `buildTableLayout`,
+   * dentro de la franja de la mesa. R3.5 profundizará la política; esto es lo
+   * mínimo para que la mesa absoluta no introduzca caos.
+   *
+   *   30-38   arco único de la mesa      (zIndex por carta, desde el layout)
+   *   60      carta bajo puntero o foco
+   *   80      área focal / carta activa
+   *   90      carrusel del modo seleccionado
+   *  100      isla de problema           (por encima de todo lo anterior)
+   *
+   * El personaje se queda por debajo de la mesa a propósito: las cartas pasan
+   * por delante de él, que es como se ve una mesa con un anfitrión detrás.
+   */
+  --z-character: 5;
+  --z-table-hover: 60;
+  --z-focus-area: 80;
+  --z-carousel: 90;
 
   display: flex;
   flex-direction: column;
@@ -76,36 +107,270 @@
   text-align: center;
 }
 
-/* ---------- Bandas de la baraja ---------- */
+/* ---------- Mesa operacional (arco único de nueve mazos) ---------- */
 
-.operational-deck__bands {
-  display: flex;
+/*
+ * Escenario de la mesa. Alto reservado por el layout, en altos de carta, para
+ * que ninguna esquina girada se recorte y para que la mesa no dependa del
+ * tamaño de sus hijos: las cartas están en absoluto y no ocupan flujo.
+ */
+.operational-table {
+  position: relative;
   flex: 0 0 auto;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
-  padding-bottom: 6px;
+  width: 100%;
+  height: calc(var(--table-stage-h) * var(--card-height));
 }
 
-.operational-deck__band {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  /* Encaje leve: muerde el hombro de la banda superior, nunca su etiqueta. */
-  margin-top: -10px;
+/*
+ * Slot de carta. Es el ÚNICO nodo que aplica transform de POSICIÓN, con los
+ * valores que le da `buildTableLayout`: traslación en unidades de carta,
+ * rotación en grados y la cesión contextual del eje Y. La elevación del nodo
+ * señalado vive en `.coordination-deck-stack` y el abanico en cada peek: nodos
+ * distintos, así que ninguna capa le disputa el transform a otra.
+ *
+ * En reposo la mesa sigue siendo estática: `--yield` vale 0 y la transición no
+ * tiene nada que animar. La geometría se entiende sin movimiento, que es lo que
+ * exige `prefers-reduced-motion`.
+ */
+.operational-table__slot {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  /* El z de cada carta lo fija el layout, pero llega como variable para que la
+     regla de foco pueda elevarlo por cascada normal. */
+  z-index: var(--z);
+  width: var(--card-width);
+  margin-left: calc(var(--card-width) / -2);
+  transform: translate(
+      calc(var(--x) * var(--card-width)),
+      calc(var(--y) * var(--card-height) + var(--yield, 0) * 1px)
+    )
+    rotate(calc(var(--rot) * 1deg));
+  transform-origin: 50% 50%;
+  /*
+   * La CESIÓN de la mesa viaja dentro de este mismo transform, sumada al eje Y.
+   * Es deliberado: el slot sigue siendo la única autoridad de posición, así que
+   * no hay dos capas disputándose el nodo. `--yield` vale 0 salvo mientras un
+   * mazo con subordinaciones está abierto.
+   */
+  transition: transform 220ms var(--os-ease, cubic-bezier(0.22, 0.72, 0.18, 1));
 }
 
-.operational-deck__band:first-child {
-  margin-top: 0;
+/* ---------- Mazo: carta principal + subordinaciones asomando ---------- */
+
+/*
+ * El mazo NO añade transform de posición: eso lo hace el slot. Aquí solo se
+ * apilan los peeks detrás de la carta, dentro de la caja de la carta.
+ */
+.coordination-deck-stack {
+  position: relative;
+  display: block;
+  width: var(--card-width);
 }
 
-.operational-deck__slot {
-  /* Mordida lateral mínima: toca el borde, nunca el nombre. */
-  margin-inline: -5px;
-  transform: translateY(calc(var(--lift) * 1px)) rotate(calc(var(--tilt) * 1deg));
-  transform-origin: 50% 120%;
-  transition: transform 200ms ease;
+/*
+ * Peek de subordinación: una CARTA que asoma por detrás, no una franja.
+ *
+ * La primera versión las desplazaba solo hacia abajo en pasos iguales, y se
+ * leía como una escalera de bandas de color. Lo que las convierte en cartas es
+ * la desalineación —cada una cae un poco a un lado y girada un poco distinto,
+ * con `buildDeckPeeks`—, porque así cada una enseña una esquina y un borde
+ * propios en lugar de un canto continuo.
+ *
+ * Sigue siendo una baraja CERRADA: pocos píxeles de desvío, sin abanico. El
+ * despliegue es cosa de R7.
+ *
+ * El desvío lateral en reposo es pequeño a propósito: se queda dentro de la
+ * banda que la vecina ya solapa, así que un canto no puede asomar sobre la
+ * carta de al lado.
+ */
+.coordination-deck-stack__peek {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--card-height);
+  /* Mismo radio y grosor de borde que la carta: es lo que hace que el canto
+     se lea como el borde de una carta y no como una barra. */
+  border: 1px solid rgb(var(--coord-rgb) / 0.5);
+  border-radius: 17px;
+  /*
+   * Reverso de carta: superficie oscura de baraja con un tinte de identidad
+   * encima, no un bloque de color.
+   *
+   * El tinte crece HACIA ABAJO porque en REPOSO lo único que asoma es el canto
+   * inferior. Con la subbaraja abierta el degradado deja de importar: el arte
+   * de la hija lo cubre por completo.
+   */
+  background:
+    linear-gradient(
+      180deg,
+      rgb(var(--coord-rgb) / 0.1) 0%,
+      rgb(var(--coord-rgb) / 0.2) 52%,
+      rgb(var(--coord-rgb) / 0.4) 100%
+    ),
+    linear-gradient(180deg, rgb(16 27 46 / 0.96), rgb(10 18 32 / 0.985));
+  box-shadow:
+    0 10px 20px rgb(2 6 16 / 0.5),
+    inset 0 1px 0 rgb(200 226 255 / 0.09);
+  transform: translate(
+      calc(var(--peek-x) * var(--card-width)),
+      calc(var(--peek-y) * var(--card-height))
+    )
+    rotate(calc(var(--peek-rot) * 1deg)) scale(var(--peek-scale));
+  /* El origen arriba y al centro hace que la escala no mueva el borde superior
+     de la hija: `--peek-open-y` lo coloca y ahí se queda. Importa porque ese
+     borde es justo la cota que no puede invadir el resumen institucional; con
+     el origen en el centro, cualquier cambio de escala la movería. */
+  transform-origin: 50% 0%;
+  /*
+   * DECISIVO para el invariante de vecinas: la subbaraja no captura eventos.
+   * Aunque al abrirse solape visualmente la banda de una coordinación vecina,
+   * esa vecina sigue recibiendo el puntero. Sin esto, un preview podría dejar
+   * un nodo principal sin clic mientras el cursor está en otro.
+   */
+  pointer-events: none;
+  /* Solo transform, opacity y filter: nada que provoque reflow. Sin rebote —
+     la curva del shell es un ease-out y la apertura no debe pasarse de largo. */
+  transition:
+    transform 220ms var(--os-ease, cubic-bezier(0.22, 0.72, 0.18, 1)),
+    opacity 220ms ease,
+    filter 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
 }
+
+/* ---------- Preview: la subbaraja se abre ---------- */
+
+/*
+ * Hover y foco abren la subbaraja, y lo hacen con la MISMA regla: nada de
+ * información reservada al ratón. Se usa `:focus-visible` y no `:focus-within`
+ * a secas para que un clic con el ratón no deje la subbaraja abierta después.
+ *
+ * Es CSS y no estado de React a propósito: la apertura no provoca render, no
+ * necesita `onMouseEnter`, no puede desincronizarse y desaparece sola al salir
+ * el puntero o el foco. La geometría abierta la calcula `buildDeckPeeks`, así
+ * que sigue siendo determinística y probada sin DOM.
+ */
+.coordination-deck-stack:hover .coordination-deck-stack__peek,
+.coordination-deck-stack:has(:focus-visible) .coordination-deck-stack__peek {
+  transform: translate(
+      calc(var(--peek-open-x) * var(--card-width)),
+      calc(var(--peek-open-y) * var(--card-height))
+    )
+    rotate(calc(var(--peek-open-rot) * 1deg)) scale(var(--peek-open-scale));
+}
+
+/* Abiertas, las hijas se leen como subordinadas: mismo lenguaje de carta pero
+   con menos presencia que el padre. El tamaño ya lo dice; esto lo refuerza sin
+   añadir un segundo mensaje. */
+/*
+ * Abiertas, las hijas se leen como subordinadas: mismo lenguaje de carta y
+ * arte propio, pero un paso por detrás del padre.
+ *
+ * El énfasis se baja lo justo. Antes quedaban tan apagadas que parecían
+ * marcadores de posición; el tamaño ya comunica la jerarquía, así que aquí solo
+ * hace falta un velo. El padre se queda al 100 % y sin tocar.
+ */
+.coordination-deck-stack:hover .coordination-deck-stack__peek,
+.coordination-deck-stack:has(:focus-visible) .coordination-deck-stack__peek {
+  border-color: rgb(var(--coord-rgb) / 0.62);
+  box-shadow:
+    0 14px 26px rgb(2 6 16 / 0.55),
+    inset 0 1px 0 rgb(200 226 255 / 0.11);
+  opacity: 0.84;
+  filter: brightness(0.86);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Misma geometría final, sin recorrido: la subbaraja aparece ya abierta. */
+  .coordination-deck-stack__peek {
+    transition-duration: 0ms;
+  }
+}
+
+/*
+ * Cara ilustrada de la hija. Oculta en reposo, revelada al abrirse.
+ *
+ * Es el cambio que convierte «cinco franjas de color» en «cinco cartas
+ * subordinadas»: con solo borde y tinte, cinco rectángulos nunca leen como
+ * cartas. Se recorta al radio de la carta y se ancla arriba, que es donde el
+ * arte lleva el rótulo y la marca de identidad.
+ */
+.coordination-deck-stack__peek-face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  object-fit: cover;
+  object-position: 50% 0%;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.coordination-deck-stack:hover .coordination-deck-stack__peek-face,
+.coordination-deck-stack:has(:focus-visible) .coordination-deck-stack__peek-face {
+  opacity: 1;
+}
+
+/* Filo superior iluminado: el canto de una carta refleja, y es el detalle que
+   separa «cinco cartas» de «cinco rectángulos». */
+.coordination-deck-stack__peek::after {
+  position: absolute;
+  top: 0;
+  right: 14%;
+  left: 14%;
+  height: 1px;
+  border-radius: 0 0 2px 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(var(--coord-rgb) / 0.75),
+    transparent
+  );
+  content: '';
+}
+
+/* La carta principal siempre por delante de sus propios peeks. */
+.coordination-deck-stack > .coordination-card {
+  position: relative;
+  z-index: 1;
+}
+
+/*
+ * ELEVACIÓN DEL NODO SEÑALADO.
+ *
+ * Vive aquí, en el mazo, y no en `.coordination-card:hover`, por una razón
+ * concreta: el shell aplica
+ * `.novex-os button:not(:disabled):not(...):hover { transform: translateY(-1px) }`
+ * con una especificidad de ~(0,8,1) que ninguna regla razonable de este módulo
+ * puede superar sin `!important`. El mazo es un `div`, ese selector no lo
+ * alcanza, y así se consigue el gesto sin tocar el shell ni afectar a las demás
+ * rutas.
+ *
+ * Un nodo con subordinaciones sube de verdad —está sacando su mazo de la mesa—;
+ * uno plano solo acusa recibo.
+ */
+.coordination-deck-stack {
+  transition: transform 220ms var(--os-ease, cubic-bezier(0.22, 0.72, 0.18, 1));
+}
+
+.coordination-deck-stack:hover,
+.coordination-deck-stack:has(:focus-visible) {
+  transform: translateY(-6px) scale(1.02);
+}
+
+.coordination-deck-stack[data-children]:not([data-children='0']):hover,
+.coordination-deck-stack[data-children]:not([data-children='0']):has(
+    :focus-visible
+  ) {
+  transform: translateY(-35px) scale(1.03);
+}
+
+/* El mazo NO se eleva sobre sus vecinas: hacerlo ponía sus peeks por delante
+   de la carta de al lado. El apilado del arco manda, y el mazo crece hacia
+   abajo, sobre espacio libre. */
 
 /* ---------- Carta ---------- */
 
@@ -114,6 +379,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* La cara ocupa toda la carta; el nombre y el estado se apoyan abajo,
+     dentro del scrim. */
+  justify-content: flex-end;
   width: var(--card-width);
   min-height: var(--card-height);
   padding: 10px 8px 12px;
@@ -213,7 +481,9 @@
   }
 }
 
-/* ---------- Isla: firma escultórica, no fondo de la carta ---------- */
+/* ---------- Presentación legacy: isla e icono ----------
+   Sigue viva para las coordinaciones sin arte propio (`coord-servicios`) y
+   como red de seguridad si una cara ilustrada no carga. */
 
 .coordination-card__island {
   position: relative;
@@ -256,12 +526,58 @@
   object-fit: cover;
 }
 
+/* La carta legacy reparte desde arriba: la isla manda y el nombre la sigue. */
+.coordination-card:not(:has(.coordination-card__face)) {
+  justify-content: flex-start;
+}
+
+/* ---------- Cara ilustrada (CoordCards) ---------- */
+
+/* Capa propia en vez de recortar el botón: el aura vive fuera de la carta
+   (`inset: -14%`) y un `overflow: hidden` en el botón la decapitaría. */
+.coordination-card__face {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  /* 1px menos que la carta: el borde queda limpio, sin halo del arte. */
+  border-radius: 16px;
+}
+
+/* El arte es 2:3 y la carta ~1:1.32, así que `cover` muestra el 88 % superior.
+   Anclado arriba, el corte cae en el pie de marca del póster —ilegible a este
+   tamaño— y nunca en el título ni en el emblema. */
+.coordination-card__face img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 0;
+}
+
+/* Degradado que apaga el borde del recorte y da suelo al nombre y al estado.
+   Arranca transparente por debajo del emblema para no ensuciarlo. */
+.coordination-card__scrim {
+  position: absolute;
+  inset: 54% 0 0;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgb(6 12 24 / 0.55) 42%,
+    rgb(6 12 24 / 0.92) 74%,
+    /* Opaco del todo abajo: si no, el pie «NOVEX» del póster se transparenta
+       justo donde el arte queda cortado. */ rgb(6 12 24 / 1) 90%
+  );
+}
+
 /* ---------- Texto ---------- */
 
 .coordination-card__name {
+  position: relative;
+  z-index: 1;
   display: block;
   width: 100%;
   margin-top: 6px;
+  text-shadow: 0 1px 3px rgb(2 6 16 / 0.9);
   overflow: hidden;
   color: var(--deck-text);
   font-size: 12px;
@@ -271,7 +587,24 @@
   white-space: nowrap;
 }
 
+/* El arte ya rotula el nombre. Se retira de la vista, no del DOM: sigue siendo
+   el nombre funcional, y es lo que queda si la imagen no llega. El estado NO
+   se oculta nunca: su píldora es independiente del arte. */
+.coordination-card__name--hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .coordination-card__status {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -279,9 +612,12 @@
   margin-top: 7px;
   margin-bottom: 6px;
   padding: 2px 8px;
-  border: 1px solid rgb(var(--status-rgb) / 0.4);
+  border: 1px solid rgb(var(--status-rgb) / 0.5);
   border-radius: 999px;
-  background: rgb(var(--status-rgb) / 0.13);
+  /* Base oscura bajo el tinte: la píldora se lee sobre cualquier arte. */
+  background:
+    linear-gradient(rgb(var(--status-rgb) / 0.18), rgb(var(--status-rgb) / 0.18)),
+    rgb(4 9 18 / 0.82);
   color: rgb(var(--status-rgb) / 0.98);
   font-size: 10px;
   font-weight: 600;
@@ -298,13 +634,18 @@
 
 /* ---------- Hover / foco: elevación, sin selección ---------- */
 
+/*
+ * Solo borde y sombra. El `transform: translateY(-8px) scale(1.03)` que había
+ * aquí NUNCA llegó a aplicarse —lo ganaba el hover global de botón del shell,
+ * con especificidad muy superior— así que se retira en lugar de dejar una
+ * declaración que miente. La elevación real la aplica `.coordination-deck-stack`.
+ */
 .coordination-card:hover,
 .coordination-card:focus-visible {
   border-color: var(--deck-line-strong);
   box-shadow:
     0 16px 30px rgb(2 6 16 / 0.6),
     inset 0 1px 0 rgb(200 230 255 / 0.12);
-  transform: translateY(-8px) scale(1.03);
 }
 
 .coordination-card:hover .coordination-card__aura,
@@ -318,9 +659,12 @@
   outline-offset: 3px;
 }
 
-.operational-deck__slot:hover,
-.operational-deck__slot:focus-within {
-  z-index: 5;
+/* El foco y el puntero elevan la carta por encima de TODAS sus vecinas, no
+   solo de las de su arco: con solape, quedar por debajo la haría ilegible
+   justo al enfocarla. Es un cambio de z, nunca de flujo. */
+.operational-table__slot:hover,
+.operational-table__slot:focus-within {
+  z-index: var(--z-table-hover);
 }
 
 /* ---------- Carga y error ---------- */
@@ -358,23 +702,15 @@
 @media (prefers-reduced-motion: reduce) {
   .coordination-card,
   .coordination-card__aura,
-  .operational-deck__slot {
+  .operational-table__slot {
     transition-duration: 0ms;
     animation: none !important;
   }
 }
 
-/* 1920×1080: la baraja respira sin recomponerse. */
-@media (min-width: 1700px) {
-  .operational-deck {
-    --card-width: 164px;
-    --card-height: 212px;
-  }
-
-  .operational-deck__slot {
-    margin-inline: -3px;
-  }
-}
+/* La mesa ya no necesita un punto de ruptura a 1700 px: el tamaño de carta es
+   un clamp sobre el ancho del viewport y la geometría se expresa en unidades
+   de carta, así que 1440 y 1920 usan el MISMO layout a distinta escala. */
 
 /* ==========================================================================
    Selección: carta activa, baraja comprimida y migas
@@ -414,6 +750,17 @@
 .operational-breadcrumb__current {
   color: var(--deck-text);
   font-weight: 600;
+}
+
+/* Lectura institucional en modo selección. Va al extremo opuesto de la fila:
+   acompaña sin competir con la coordinación activa, que es el foco. */
+.operational-breadcrumb__summary {
+  margin: 0 0 0 auto;
+  padding-right: 4px;
+  color: var(--deck-muted);
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  text-align: right;
 }
 
 /* ---------- Área focal ---------- */
@@ -569,7 +916,9 @@
 
 .active-card__problems {
   display: flex;
-  max-height: 118px;
+  /* ~2,5-3 filas antes del scroll interno: no necesitamos ver más problemas a
+     la vez, y el alto liberado vuelve al carrusel. */
+  max-height: 96px;
   flex-direction: column;
   gap: 6px;
   overflow-y: auto;
@@ -683,42 +1032,6 @@
   text-align: center;
 }
 
-/* ---------- Baraja comprimida ---------- */
-
-.operational-deck__bands[data-compressed='true'] {
-  --card-width: 104px;
-  --card-height: 136px;
-}
-
-.operational-deck__bands[data-compressed='true'] .coordination-card {
-  padding: 7px 6px 7px;
-  border-radius: 14px;
-}
-
-.operational-deck__bands[data-compressed='true'] .coordination-card__island {
-  height: 62px;
-}
-
-.operational-deck__bands[data-compressed='true'] .coordination-card__icon {
-  width: 20px;
-  height: 20px;
-}
-
-.operational-deck__bands[data-compressed='true'] .coordination-card__name {
-  margin-top: 4px;
-  font-size: 11px;
-}
-
-.operational-deck__bands[data-compressed='true'] .coordination-card__status {
-  padding: 1px 6px;
-  font-size: 9px;
-}
-
-/* La carta seleccionada no se pinta en la baraja: vive en el área focal. */
-.coordination-card[data-selected='true'] {
-  display: none;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .active-card,
   .active-card__aura,
@@ -730,11 +1043,12 @@
 
 /* ---------- Reparto vertical con una coordinación seleccionada ---------- */
 
-/* El área focal se apila sobre la baraja: la carta activa nunca queda
-   recortada por las cartas comprimidas. */
+/* El área focal se apila por encima de la mesa: la carta activa nunca queda
+   recortada por las cartas de los arcos. Valor tomado de la escala de z
+   declarada arriba, no elegido a ojo. */
 .operational-deck__focus {
   position: relative;
-  z-index: 3;
+  z-index: var(--z-focus-area);
 }
 
 /* Con selección, el personaje cede altura para que quepan carta activa y
@@ -749,4 +1063,134 @@
 
 .operational-deck:not([data-selected='']) .direction-character__status {
   font-size: 13px;
+}
+
+
+/* ==========================================================================
+   Modo seleccionado: carrusel circular de alternativas
+   ==========================================================================
+   Cinco cartas grandes en vez de catorce diminutas. Las 15 coordinaciones
+   siguen alcanzables girando el carrusel. La geometría por slot vive en
+   `carouselLayout.ts`; aquí solo el lienzo, las flechas y el tamaño. */
+
+.coordination-carousel {
+  /* Presencia recuperada respecto a la mano de 8.1 (112 px visuales), acotada
+     por el alto útil: personaje + carta activa + carrusel deben caber.
+     El alto que liberó la mudanza de la lectura institucional a la miga se
+     invierte aquí, para alcanzar el objetivo de 160-185 px a 1440. */
+  --carousel-card-width: clamp(154px, 11.9vw, 186px);
+
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding-bottom: 0;
+  /* Superposición ligera con la carta activa: el conjunto se lee como un solo
+     sistema y devuelve alto a las cartas. Muerde el margen inferior de la
+     carta activa, nunca su lista de problemas ni los controles. */
+  margin-top: 5px;
+}
+
+.coordination-carousel__track {
+  position: relative;
+  display: flex;
+  /* Ancho suficiente para que los slots ±2 quepan dentro: si la pista es más
+     estrecha, las cartas de los extremos se salen y quedan debajo de las
+     flechas, que dejan de leerse como controles. */
+  width: calc(var(--carousel-card-width) * 5.7);
+  height: calc(var(--carousel-card-width) * 1.23);
+  align-items: center;
+  justify-content: center;
+}
+
+.coordination-carousel__slot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: calc(var(--carousel-card-width) * -0.71);
+  margin-left: calc(var(--carousel-card-width) / -2);
+  transform-origin: 50% 108%;
+}
+
+/* Las cartas del carrusel recuperan presencia: la isla vuelve a mandar. */
+.coordination-carousel .coordination-card {
+  width: var(--carousel-card-width);
+  min-height: calc(var(--carousel-card-width) * 1.32);
+}
+
+.coordination-carousel .coordination-card__name {
+  font-size: 13px;
+}
+
+/* El `!important` sigue siendo necesario: el z de cada slot lo escribe Motion
+   en el estilo en línea. Se mantiene dentro de la franja del carrusel. */
+.coordination-carousel__slot:hover,
+.coordination-carousel__slot:focus-within {
+  z-index: var(--z-carousel) !important;
+}
+
+/* ---------- Flechas ---------- */
+
+.coordination-carousel__arrow {
+  /* Por encima de las cartas: los slots ±2 se desplazan más allá del ancho de
+     la pista y llegaban a taparla, dejándola inservible. El área interactiva
+     debe coincidir con lo que el usuario ve. */
+  position: relative;
+  z-index: 12;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--deck-line);
+  border-radius: 50%;
+  /* Opaca y con borde definido: entre las islas, una flecha translúcida se
+     confundía con el arte de las cartas. */
+  background: rgb(14 26 46 / 0.96);
+  box-shadow: 0 6px 16px rgb(2 6 16 / 0.5);
+  color: var(--deck-text);
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease;
+}
+
+.coordination-carousel__arrow:hover,
+.coordination-carousel__arrow:focus-visible {
+  border-color: var(--deck-line-strong);
+  color: var(--deck-text);
+}
+
+.coordination-carousel__arrow:focus-visible {
+  outline: 2px solid rgb(120 200 255 / 0.85);
+  outline-offset: 2px;
+}
+
+/* Indicador compacto, no una fila de puntos. */
+.coordination-carousel__position {
+  position: absolute;
+  right: 0;
+  bottom: -2px;
+  margin: 0;
+  color: var(--deck-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coordination-carousel__slot,
+  .coordination-carousel__arrow {
+    transition-duration: 0ms;
+    animation: none !important;
+  }
+}
+
+/* El alto para el carrusel se libera desde la carta activa, no del personaje:
+   mantiene la presencia aprobada en la fase 6 también con selección. */
+.operational-deck[data-selected]:not([data-selected='']) .direction-character__figure {
+  height: clamp(120px, 14.5vh, 178px);
 }

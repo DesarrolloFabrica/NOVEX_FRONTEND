@@ -24,6 +24,12 @@
   --dc-ring-arc: 96 320;
   --dc-glow: 0.14;
 
+  /* Franja más baja de la escala de z declarada en `operational-cards.css`: el
+     personaje es el anfitrión DETRÁS de la mesa, así que si un arco llegara a
+     invadir su espacio las cartas pasarían por delante y no al revés. */
+  position: relative;
+  z-index: var(--z-character, 5);
+
   display: flex;
   flex-direction: column;
   align-items: center;
