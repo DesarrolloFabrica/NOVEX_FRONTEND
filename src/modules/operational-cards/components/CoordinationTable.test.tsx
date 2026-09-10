@@ -105,13 +105,11 @@ function markup(
 
   return renderToStaticMarkup(
     <CoordinationTable
-      layout={buildTableLayout(topLevel, {
-        excludeCode: selectedCode,
-        sortByDisplayOrder: false,
-      })}
+      layout={buildTableLayout(topLevel, { sortByDisplayOrder: false })}
       nodesByCode={Object.fromEntries(
         product.nodes.map((node) => [node.coordination.code, node]),
       )}
+      selectedCode={selectedCode}
       onSelect={() => undefined}
       onHoverChange={() => undefined}
     />,
@@ -389,27 +387,114 @@ describe('CoordinationTable · accesibilidad e interacción', () => {
   })
 })
 
-describe('CoordinationTable · selección', () => {
-  it('el mazo activo sale de la mesa y quedan ocho', () => {
-    const html = markup(coordinations(), {
-      selectedCode: 'coord-operaciones-academicas',
-    })
-    expect(countOf(html, 'data-testid="coordination-card"')).toBe(8)
-    expect(html).toContain('data-count="8"')
-    expect(html).not.toContain('data-code="coord-operaciones-academicas"')
+describe('CoordinationTable · selección in-place', () => {
+  const PARENT = 'coord-operaciones-academicas'
+
+  /** Atributos de los slots, en orden de DOM. */
+  function slotAttributes(html: string, attribute: string): string[] {
+    const pattern = new RegExp(
+      `data-testid="coordination-table-slot"[^>]*?${attribute}="([^"]*)"`,
+      'g',
+    )
+    return [...html.matchAll(pattern)].map((match) => match[1])
+  }
+
+  it('la coordinación seleccionada NO sale de la mesa', () => {
+    const html = markup(coordinations(), { selectedCode: PARENT })
+
+    // Las nueve siguen dibujadas, la observada incluida. Antes se quedaban
+    // ocho porque la activa se marchaba a un área focal aparte; eso era una
+    // segunda escena y es justo lo que la selección in-place elimina.
+    expect(countOf(html, 'data-testid="coordination-card"')).toBe(9)
+    expect(html).toContain('data-count="9"')
+    expect(html).toContain(`data-code="${PARENT}"`)
   })
 
-  it('al salir Operación Académica se van también sus peeks', () => {
-    const html = markup(coordinations(), {
-      selectedCode: 'coord-operaciones-academicas',
-    })
-    expect(countOf(html, 'data-testid="coordination-deck-peek"')).toBe(0)
+  it('seleccionar no mueve ni una carta de sitio', () => {
+    // La comprobación que protege la memoria espacial. Las variables de
+    // posición del slot —x, y, rotación y z— tienen que ser IDÉNTICAS con y
+    // sin selección, y para cualquier seleccionada. Si alguna vez la selección
+    // recolocara la mesa, el usuario perdería el mapa en el momento en que más
+    // lo necesita: justo cuando está comparando coordinaciones.
+    const resting = markup(coordinations())
+    for (const selectedCode of [PARENT, 'coord-general', 'coord-fabrica-contenidos']) {
+      const selected = markup(coordinations(), { selectedCode })
+      for (const attribute of ['style', 'data-arc', 'data-arc-index']) {
+        expect(
+          slotAttributes(selected, attribute),
+          `${attribute} con ${selectedCode} seleccionada`,
+        ).toEqual(slotAttributes(resting, attribute))
+      }
+    }
   })
 
-  it('los ocho restantes siguen siendo botones no presionados', () => {
-    const html = markup(coordinations(), { selectedCode: 'coord-general' })
-    expect(countOf(html, '<button')).toBe(8)
+  it('tampoco cambia el orden del DOM, que es el del tabulador', () => {
+    const resting = cardAttributes(markup(coordinations()), 'data-code')
+    const selected = cardAttributes(
+      markup(coordinations(), { selectedCode: 'coord-saber-pro' }),
+      'data-code',
+    )
+    expect(selected).toEqual(resting)
+  })
+
+  it('exactamente una carta queda presionada y las otras ocho no', () => {
+    const html = markup(coordinations(), { selectedCode: PARENT })
+
+    expect(countOf(html, '<button')).toBe(9)
+    expect(countOf(html, 'aria-pressed="true"')).toBe(1)
     expect(countOf(html, 'aria-pressed="false"')).toBe(8)
+  })
+
+  it('la presionada es la seleccionada, no otra', () => {
+    const html = markup(coordinations(), { selectedCode: 'coord-b2b' })
+    const pressed = cardAttributes(html, 'aria-pressed')
+    const codes = cardAttributes(html, 'data-code')
+
+    expect(codes[pressed.indexOf('true')]).toBe('coord-b2b')
+  })
+
+  it('las ocho restantes se atenúan, no desaparecen', () => {
+    const html = markup(coordinations(), { selectedCode: PARENT })
+    const states = slotAttributes(html, 'data-state')
+
+    expect(states.filter((state) => state === 'selected')).toHaveLength(1)
+    expect(states.filter((state) => state === 'dimmed')).toHaveLength(8)
+  })
+
+  it('en estado global no hay ni observada ni atenuadas', () => {
+    const states = slotAttributes(markup(coordinations()), 'data-state')
+
+    expect(new Set(states)).toEqual(new Set(['resting']))
+    expect(markup(coordinations())).toContain('data-mode="resting"')
+  })
+
+  it('la mesa declara el modo, para que el CSS no lo adivine', () => {
+    expect(markup(coordinations(), { selectedCode: PARENT })).toContain(
+      'data-mode="selected"',
+    )
+  })
+
+  it('Operación Académica seleccionada conserva su mazo', () => {
+    // El nodo sigue siendo un mazo mientras se le observa: sus cinco
+    // subordinaciones siguen asomando detrás. Lo que R5 no hace es abrirlas —eso
+    // es R7—, pero la noción de mazo no puede perderse al seleccionarlo.
+    const html = markup(coordinations(), { selectedCode: PARENT })
+    expect(countOf(html, 'data-testid="coordination-deck-peek"')).toBe(5)
+  })
+
+  it('cambiar de coordinación solo mueve el énfasis', () => {
+    // Cambio directo: de un nodo a otro sin pasar por el estado global. Lo
+    // único que se mueve entre los dos renders es qué carta está presionada.
+    const first = markup(coordinations(), { selectedCode: PARENT })
+    const second = markup(coordinations(), { selectedCode: 'coord-b2b' })
+
+    expect(cardAttributes(second, 'data-code')).toEqual(
+      cardAttributes(first, 'data-code'),
+    )
+    expect(slotAttributes(second, 'style')).toEqual(slotAttributes(first, 'style'))
+    expect(cardAttributes(second, 'aria-pressed')).not.toEqual(
+      cardAttributes(first, 'aria-pressed'),
+    )
   })
 })
 

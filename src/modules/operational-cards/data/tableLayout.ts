@@ -220,8 +220,6 @@ export function resolveTableYield(distance: number): number {
 }
 
 export interface TableLayoutOptions {
-  /** Carta que no se pinta porque vive en el área focal. */
-  excludeCode?: string | null
   /** Solape lateral. Solo se pasa para comparar densidades. */
   overlap?: number
   /**
@@ -240,13 +238,20 @@ export function buildTableLayout(
 ): TableLayout {
   const overlap = options.overlap ?? RESTING_OVERLAP
 
-  const filtered = coordinations.filter(
-    (coordination) => coordination.code !== options.excludeCode,
-  )
+  /*
+   * La mesa dibuja SIEMPRE las nueve coordinaciones. Hubo una opción para
+   * excluir la seleccionada, que existía porque esa carta se marchaba a un área
+   * focal aparte; desde la selección in-place la carta se queda en su slot, así
+   * que no hay nada que excluir y la geometría deja de depender de la
+   * selección. Es la forma estructural de la memoria espacial: no existe una
+   * segunda mesa que pueda discrepar de la primera.
+   */
   const ordered =
     options.sortByDisplayOrder === false
-      ? [...filtered]
-      : [...filtered].sort((left, right) => left.displayOrder - right.displayOrder)
+      ? [...coordinations]
+      : [...coordinations].sort(
+          (left, right) => left.displayOrder - right.displayOrder,
+        )
 
   const orientationByCode: Record<string, CharacterOrientation> = {}
   const slots: TableSlot[] = []

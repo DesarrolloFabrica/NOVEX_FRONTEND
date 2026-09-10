@@ -379,13 +379,13 @@ test.describe('isla del problema', () => {
     await expect(page.getByTestId('island-section-toggle')).toHaveCount(5)
     await expect(page.getByTestId('island-section-panel')).toHaveCount(0)
 
-    // El contexto sigue detrás: personaje, carta activa y baraja.
+    // El contexto sigue detrás: personaje, mesa completa y panel de LEVEL 1.
     await expect(page.getByTestId('direction-character')).toBeVisible()
-    await expect(page.getByTestId('active-coordination-card')).toHaveAttribute(
+    await expect(page.getByTestId('coordination-problem-panel')).toHaveAttribute(
       'data-code',
       'coord-operaciones-academicas',
     )
-    await expect(page.getByTestId('carousel-slot')).toHaveCount(5)
+    await expect(page.getByTestId('coordination-card')).toHaveCount(9)
 
     // Presupuesto: 1 LEVEL 0 + 2 LEVEL 1 + 2 LEVEL 2.
     expect(callsTo(requested, '/operational-overview')).toHaveLength(1)
@@ -454,7 +454,7 @@ test.describe('isla del problema', () => {
     await page.keyboard.press('Escape')
 
     await expect(page.getByTestId('problem-island')).toHaveCount(0)
-    await expect(page.getByTestId('active-coordination-card')).toHaveAttribute(
+    await expect(page.getByTestId('coordination-problem-panel')).toHaveAttribute(
       'data-code',
       'coord-operaciones-academicas',
     )
@@ -603,7 +603,7 @@ test.describe('isla del problema', () => {
     await expect(page.getByTestId('island-error')).toBeVisible()
     await expect(page.getByTestId('island-close')).toBeVisible()
     // LEVEL 1 intacto detrás.
-    await expect(page.getByTestId('active-coordination-card')).toHaveAttribute(
+    await expect(page.getByTestId('coordination-problem-panel')).toHaveAttribute(
       'data-status',
       'CRITICO',
     )

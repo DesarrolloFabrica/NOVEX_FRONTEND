@@ -476,7 +476,7 @@ test.describe('mesa en reposo · 1440x900', () => {
     )
   })
 
-  test('sin regresión de selección: la mesa cede al carrusel y vuelve', async ({
+  test('sin regresión de selección: la mesa NO cede su sitio y vuelve', async ({
     page,
   }) => {
     await install(page)
@@ -484,16 +484,21 @@ test.describe('mesa en reposo · 1440x900', () => {
 
     await page.locator(`${CARD}[data-code="coord-general"]`).click()
 
-    await expect(page.getByTestId('coordination-table')).toHaveCount(0)
-    await expect(page.getByTestId('coordination-carousel')).toBeVisible()
-    await expect(page.getByTestId('carousel-slot')).toHaveCount(5)
-    await expect(page.getByTestId('active-coordination-card')).toBeVisible()
+    // La mesa no se retira: seleccionar deja de cambiar de escena. Antes aquí
+    // la mesa desaparecía y volvía; ahora se queda entera, con la observada en
+    // su slot y las otras ocho acompañando.
+    await expect(page.getByTestId('coordination-table')).toBeVisible()
+    await expect(page.locator(CARD)).toHaveCount(9)
+    /* Guardia contra la reaparición del carrusel, borrado en R5.2: ningún
+       componente emite ya este `testid`. */
+    await expect(page.getByTestId('coordination-carousel')).toHaveCount(0)
+    await expect(page.getByTestId('coordination-problem-panel')).toBeVisible()
 
     await page.getByTestId('breadcrumb-direction').click()
 
     await expect(page.getByTestId('coordination-table')).toBeVisible()
     await expect(page.locator(CARD)).toHaveCount(9)
-    await expect(page.getByTestId('coordination-carousel')).toHaveCount(0)
+    await expect(page.getByTestId('coordination-problem-panel')).toHaveCount(0)
   })
 })
 

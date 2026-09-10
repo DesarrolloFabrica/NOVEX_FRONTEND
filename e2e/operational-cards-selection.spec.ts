@@ -187,29 +187,27 @@ function level1Calls(requested: readonly string[]): string[] {
 
 
 /**
- * Selecciona una coordinación desde el carrusel como lo haría el usuario:
- * gira con la flecha hasta que la carta llega al slot frontal y la pulsa allí.
+ * Selecciona una coordinación pulsándola DONDE ESTÁ, en la mesa.
  *
- * La fase 8.2 revocó que las 14 restantes estén simultáneamente visibles, así
- * que ya no se puede clicar una coordinación por código sin traerla antes al
- * conjunto de cinco.
+ * Hasta R4.2 había que traerla antes al slot frontal de un carrusel, porque el
+ * modo seleccionado escondía las demás coordinaciones. Con la selección
+ * in-place las nueve están siempre en pantalla y en su sitio, así que el cambio
+ * de coordinación es un único clic directo. La ausencia de rodeo es parte de lo
+ * que se está comprobando: si algún día hiciera falta un paso intermedio, este
+ * helper dejaría de compilar en lugar de esconderlo.
  */
-async function selectFromCarousel(page: Page, code: string) {
-  const front = page.locator(
-    `[data-testid="carousel-slot"][data-slot="0"][data-code="${code}"]`,
+async function select(page: Page, code: string) {
+  await page.locator(`${CARD}[data-code="${code}"]`).click()
+  await expect(page.getByTestId('coordination-problem-panel')).toHaveAttribute(
+    'data-code',
+    code,
   )
-  const total = await page.getByTestId('carousel-slot').count()
-  expect(total).toBeGreaterThan(0)
-
-  for (let turn = 0; turn < 15 && (await front.count()) === 0; turn += 1) {
-    await page.getByTestId('carousel-next').click()
-  }
-
-  await expect(front).toHaveCount(1)
-  await front.locator('[data-testid="coordination-card"]').click()
 }
 
-test.describe('selección de coordinación', () => {
+const PANEL = '[data-testid="coordination-problem-panel"]'
+const SLOT = '[data-testid="coordination-table-slot"]'
+
+test.describe('selección in-place de coordinación', () => {
   test.use({ viewport: { width: 1440, height: 900 } })
 
   test('el hover orienta al personaje sin cambiar su estado', async ({
@@ -234,14 +232,49 @@ test.describe('selección de coordinación', () => {
     // Extremo derecho del arco. Operación Académica es el nodo CENTRAL de los
     // nueve, así que ya no sirve para comprobar el giro: ahí el personaje mira
     // al frente, que es justo lo que debe hacer.
-    await page
-      .locator(`${CARD}[data-code="coord-fabrica-contenidos"]`)
-      .hover()
+    await page.locator(`${CARD}[data-code="coord-fabrica-contenidos"]`).hover()
     await expect(character).toHaveAttribute('data-orientation', 'RIGHT')
     await expect(character).toHaveAttribute('data-status', 'CRITICO')
   })
 
-  test('seleccionar una coordinación la pone bajo observación', async ({
+  test('la coordinación seleccionada se queda EN SU SITIO', async ({ page }) => {
+    test.slow()
+    await installSession(page)
+    await installApi(page)
+    await openExperience(page)
+
+    // Geometría de las nueve antes de seleccionar. Se lee de la matriz del
+    // slot y no del rectángulo, que mezclaría traslación con rotación.
+    const geometry = () =>
+      page.evaluate(
+        (selector) =>
+          Array.from(document.querySelectorAll(selector)).map((slot) => {
+            const matrix = new DOMMatrix(getComputedStyle(slot).transform)
+            return [
+              slot
+                .querySelector('[data-testid="coordination-card"]')!
+                .getAttribute('data-code'),
+              Math.round(matrix.e),
+              Math.round(matrix.f),
+              Math.round(Math.atan2(matrix.b, matrix.a) * 1000),
+            ].join('/')
+          }),
+        SLOT,
+      )
+
+    const resting = await geometry()
+    expect(resting).toHaveLength(9)
+
+    await select(page, 'coord-operaciones-academicas')
+
+    // Ni una carta cambia de sitio. Es la regla congelada de la memoria
+    // espacial, y una selección es precisamente el momento en que más se
+    // necesita: quien acaba de pulsar una coordinación tiene que poder saltar a
+    // su vecina sin releer los rótulos.
+    expect(await geometry()).toEqual(resting)
+  })
+
+  test('seleccionar la pone bajo observación sin abrir otra escena', async ({
     page,
   }, testInfo) => {
     test.slow()
@@ -249,29 +282,32 @@ test.describe('selección de coordinación', () => {
     const requested = await installApi(page)
     await openExperience(page)
 
-    await page.locator(`${CARD}[data-code="coord-operaciones-academicas"]`).click()
+    await select(page, 'coord-operaciones-academicas')
 
-    const active = page.getByTestId('active-coordination-card')
-    await expect(active).toBeVisible()
-    await expect(active).toHaveAttribute('data-code', 'coord-operaciones-academicas')
-    // El estado de la carta activa es el de LEVEL 0: no se recalcula.
-    await expect(active).toHaveAttribute('data-status', 'CRITICO')
+    // La mesa sigue siendo la mesa: nueve cartas, ningún carrusel.
+    await expect(page.getByTestId('coordination-table')).toBeVisible()
+    await expect(page.getByTestId('coordination-card')).toHaveCount(9)
+    /* Estos dos `testid` ya no los produce ningún componente: R5.2 borró
+       `CoordinationCarousel`. Las aserciones se conservan como guardia contra
+       su reaparición —el modo seleccionado in-place existe precisamente para
+       no volver a tener dos escenas— y no porque quede código que las emita. */
+    await expect(page.getByTestId('coordination-carousel')).toHaveCount(0)
+    await expect(page.getByTestId('carousel-slot')).toHaveCount(0)
+    await expect(page.getByTestId('active-coordination-card')).toHaveCount(0)
+
+    // Una observada y ocho acompañando atenuadas, no ocultas.
+    await expect(page.locator(`${SLOT}[data-state="selected"]`)).toHaveCount(1)
+    await expect(page.locator(`${SLOT}[data-state="dimmed"]`)).toHaveCount(8)
+
+    const panel = page.getByTestId('coordination-problem-panel')
+    await expect(panel).toBeVisible()
+    // El estado del panel es el de LEVEL 0: no se recalcula con la lista.
+    await expect(panel).toHaveAttribute('data-status', 'CRITICO')
 
     await expect(page.getByTestId('operational-breadcrumb')).toContainText(
       'Operación Académica',
     )
     await expect(page.getByTestId('breadcrumb-direction')).toBeVisible()
-
-    // Cinco alternativas grandes en el carrusel; la baraja de reposo se retira
-    // y la coordinación activa no se duplica dentro del carrusel.
-    await expect(page.getByTestId('carousel-slot')).toHaveCount(5)
-    await expect(page.getByTestId('coordination-table')).toHaveCount(0)
-    await expect(
-      page.locator(
-        '[data-testid="carousel-slot"][data-code="coord-operaciones-academicas"]',
-      ),
-    ).toHaveCount(0)
-    await expect(page.getByTestId('carousel-position')).toContainText('/ 8')
 
     const character = page.getByTestId('direction-character')
     await expect(character).toHaveAttribute('data-interaction', 'SELECTED')
@@ -283,10 +319,7 @@ test.describe('selección de coordinación', () => {
       'Aulas sin conectividad',
     )
     await expect(
-      page
-        .getByTestId('problem-row')
-        .first()
-        .getByTestId('problem-row-severity'),
+      page.getByTestId('problem-row').first().getByTestId('problem-row-severity'),
     ).toHaveText('Crítica')
 
     // Dos peticiones LEVEL 1, con el UUID y sin estados cerrados.
@@ -302,8 +335,7 @@ test.describe('selección de coordinación', () => {
       requested.filter((entry) => entry.includes('/operational-overview')),
     ).toHaveLength(1)
 
-    // La página no necesita scroll: la miga, el personaje, la carta activa y
-    // la baraja comprimida caben en el viewport objetivo.
+    // La página no necesita scroll: miga, personaje, mesa y panel caben.
     const overflow = await page.evaluate(() => {
       const scroller = document.querySelector('.novex-os-deck__content')
       return {
@@ -326,7 +358,9 @@ test.describe('selección de coordinación', () => {
     expect(crumbBox!.y).toBeGreaterThan(0)
 
     // Aproximadamente 3 filas visibles sin desplazar la lista.
-    const listBox = await page.getByTestId('active-card-problems').boundingBox()
+    const listBox = await page
+      .getByTestId('coordination-panel-problems')
+      .boundingBox()
     const rowBox = await page.getByTestId('problem-row').first().boundingBox()
     expect(listBox).not.toBeNull()
     expect(rowBox).not.toBeNull()
@@ -335,9 +369,67 @@ test.describe('selección de coordinación', () => {
     expect(visibleRows).toBeLessThan(4)
 
     await page.screenshot({
-      path: testInfo.outputPath('selected-engineering-1440x900.png'),
+      path: testInfo.outputPath('selected-in-place-1440x900.png'),
       fullPage: false,
     })
+  })
+
+  test('el panel se ancla a la carta que lo abre', async ({ page }) => {
+    test.slow()
+    await installSession(page)
+    await installApi(page)
+    await openExperience(page)
+
+    // Se recorren las cinco posiciones señaladas como de riesgo: primer nodo,
+    // nodo central, último, el mazo y el nodo de presentación legacy.
+    for (const code of [
+      'coord-general',
+      'coord-especializaciones',
+      'coord-operaciones-academicas',
+      'coord-homologaciones',
+      'coord-fabrica-contenidos',
+    ]) {
+      await select(page, code)
+
+      const geometry = await page.evaluate(
+        ({ panelSelector, target }) => {
+          const panel = document
+            .querySelector(panelSelector)!
+            .getBoundingClientRect()
+          const card = document
+            .querySelector(
+              `[data-testid="coordination-card"][data-code="${target}"]`,
+            )!
+            .getBoundingClientRect()
+          const host = document
+            .querySelector('.novex-os-deck__content')!
+            .getBoundingClientRect()
+          return {
+            panelCentre: panel.left + panel.width / 2,
+            cardCentre: card.left + card.width / 2,
+            escapesLeft: panel.left < host.left - 1,
+            escapesRight: panel.right > host.right + 1,
+            below: panel.top >= card.bottom - 30,
+          }
+        },
+        { panelSelector: PANEL, target: code },
+      )
+
+      // Cae debajo de su carta y cerca de ella, nunca centrado por defecto.
+      expect(geometry.below, `${code}: el panel cuelga de su carta`).toBe(true)
+      expect(
+        Math.abs(geometry.panelCentre - geometry.cardCentre),
+        `${code}: el panel sigue a su carta`,
+      ).toBeLessThan(180)
+
+      // Y nunca se sale del área de contenido, ni en los extremos.
+      expect(geometry.escapesLeft, `${code}: no se sale por la izquierda`).toBe(
+        false,
+      )
+      expect(geometry.escapesRight, `${code}: no se sale por la derecha`).toBe(
+        false,
+      )
+    }
   })
 
   test('cambio directo entre coordinaciones y vuelta con caché', async ({
@@ -348,30 +440,57 @@ test.describe('selección de coordinación', () => {
     const requested = await installApi(page)
     await openExperience(page)
 
-    await page.locator(`${CARD}[data-code="coord-operaciones-academicas"]`).click()
+    await select(page, 'coord-operaciones-academicas')
     await expect(page.getByTestId('problem-row')).toHaveCount(5)
     expect(level1Calls(requested)).toHaveLength(2)
 
-    // Cambio directo, sin volver primero al estado global.
-    await selectFromCarousel(page, 'coord-especializaciones')
-    const active = page.getByTestId('active-coordination-card')
-    await expect(active).toHaveAttribute('data-code', 'coord-especializaciones')
+    // Cambio directo: un clic sobre la vecina, sin pasar por el estado global.
+    await select(page, 'coord-especializaciones')
     await expect(page.getByTestId('problem-row')).toHaveCount(1)
     await expect(page.getByTestId('operational-breadcrumb')).toContainText(
       'Especializaciones',
     )
+    // La anterior vuelve al reposo sin desmontarse: sigue en la mesa.
+    await expect(page.locator(`${SLOT}[data-state="selected"]`)).toHaveCount(1)
+    await expect(
+      page.locator(`${CARD}[data-code="coord-operaciones-academicas"]`),
+    ).toHaveAttribute('aria-pressed', 'false')
+    // Nunca se pasó por el estado global: la miga no desapareció por el camino.
+    await expect(page.getByTestId('operational-breadcrumb')).toBeVisible()
     expect(level1Calls(requested)).toHaveLength(4)
 
     await page.screenshot({
-      path: testInfo.outputPath('selected-business-1440x900.png'),
+      path: testInfo.outputPath('selected-direct-switch-1440x900.png'),
       fullPage: false,
     })
 
-    // Volver a Ingenierías no cuesta ninguna petición: estaba en caché.
-    await selectFromCarousel(page, 'coord-operaciones-academicas')
-    await expect(active).toHaveAttribute('data-code', 'coord-operaciones-academicas')
+    // Volver a una ya cargada no cuesta ninguna petición: estaba en caché.
+    await select(page, 'coord-operaciones-academicas')
     await expect(page.getByTestId('problem-row')).toHaveCount(5)
     expect(level1Calls(requested)).toHaveLength(4)
+  })
+
+  test('el cambio directo también funciona con el teclado', async ({ page }) => {
+    test.slow()
+    await installSession(page)
+    await installApi(page)
+    await openExperience(page)
+
+    await select(page, 'coord-operaciones-academicas')
+
+    await page.locator(`${CARD}[data-code="coord-b2b"]`).focus()
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('coordination-problem-panel')).toHaveAttribute(
+      'data-code',
+      'coord-b2b',
+    )
+
+    await page.locator(`${CARD}[data-code="coord-saber-pro"]`).focus()
+    await page.keyboard.press('Space')
+    await expect(page.getByTestId('coordination-problem-panel')).toHaveAttribute(
+      'data-code',
+      'coord-saber-pro',
+    )
   })
 
   test('las migas devuelven al estado global', async ({ page }) => {
@@ -380,14 +499,15 @@ test.describe('selección de coordinación', () => {
     await installApi(page)
     await openExperience(page)
 
-    await page.locator(`${CARD}[data-code="coord-especializaciones"]`).click()
-    await expect(page.getByTestId('active-coordination-card')).toBeVisible()
+    await select(page, 'coord-especializaciones')
 
     await page.getByTestId('breadcrumb-direction').click()
 
-    await expect(page.getByTestId('active-coordination-card')).toHaveCount(0)
+    await expect(page.getByTestId('coordination-problem-panel')).toHaveCount(0)
     await expect(page.getByTestId('operational-breadcrumb')).toHaveCount(0)
     await expect(page.getByTestId('coordination-card')).toHaveCount(9)
+    await expect(page.locator(`${SLOT}[data-state="resting"]`)).toHaveCount(9)
+    await expect(page.locator(`${CARD}[aria-pressed="true"]`)).toHaveCount(0)
     await expect(page.getByTestId('direction-character')).toHaveAttribute(
       'data-interaction',
       'IDLE',
@@ -402,13 +522,13 @@ test.describe('selección de coordinación', () => {
     await installApi(page)
     await openExperience(page)
 
-    await page.locator(`${CARD}[data-code="coord-general"]`).click()
+    await select(page, 'coord-general')
 
-    await expect(page.getByTestId('active-card-empty')).toHaveText(
+    await expect(page.getByTestId('coordination-panel-empty')).toHaveText(
       'Todo bajo control',
     )
     await expect(page.getByTestId('problem-row')).toHaveCount(0)
-    await expect(page.getByTestId('carousel-slot')).toHaveCount(5)
+    await expect(page.getByTestId('coordination-card')).toHaveCount(9)
 
     await page.screenshot({
       path: testInfo.outputPath('selected-stable-empty-1440x900.png'),
@@ -424,24 +544,20 @@ test.describe('selección de coordinación', () => {
     await installApi(page, { fail: true })
     await openExperience(page)
 
-    await page.locator(`${CARD}[data-code="coord-operaciones-academicas"]`).click()
+    await select(page, 'coord-operaciones-academicas')
 
-    await expect(page.getByTestId('active-card-error')).toBeVisible()
-    await expect(page.getByTestId('active-card-empty')).toHaveCount(0)
+    await expect(page.getByTestId('coordination-panel-error')).toBeVisible()
+    await expect(page.getByTestId('coordination-panel-empty')).toHaveCount(0)
     // La coordinación sigue seleccionada y con su estado de LEVEL 0.
-    await expect(page.getByTestId('active-coordination-card')).toHaveAttribute(
+    await expect(page.getByTestId('coordination-problem-panel')).toHaveAttribute(
       'data-status',
       'CRITICO',
     )
-    // Y se puede cambiar a otra.
-    await selectFromCarousel(page, 'coord-especializaciones')
-    await expect(page.getByTestId('active-coordination-card')).toHaveAttribute(
-      'data-code',
-      'coord-especializaciones',
-    )
+    // Y se puede cambiar a otra, que es lo que un error no debe bloquear.
+    await select(page, 'coord-especializaciones')
   })
 
-  test('la carta activa no está pulsada en la baraja y los problemas son botones', async ({
+  test('aria-pressed distingue a la observada, y los problemas son botones', async ({
     page,
   }) => {
     test.slow()
@@ -449,20 +565,148 @@ test.describe('selección de coordinación', () => {
     await installApi(page)
     await openExperience(page)
 
-    await page.locator(`${CARD}[data-code="coord-operaciones-academicas"]`).click()
+    await select(page, 'coord-operaciones-academicas')
 
-    await expect(page.locator(`${CARD}[aria-pressed="false"]`)).toHaveCount(5)
+    await expect(page.locator(`${CARD}[aria-pressed="true"]`)).toHaveCount(1)
+    await expect(page.locator(`${CARD}[aria-pressed="false"]`)).toHaveCount(8)
+    await expect(page.locator(`${CARD}[aria-pressed="true"]`)).toHaveAttribute(
+      'data-code',
+      'coord-operaciones-academicas',
+    )
+
     await expect(page.getByTestId('problem-row').first()).toHaveAttribute(
       'aria-label',
       /Severidad Crítica/,
     )
   })
+
+  test('las otras ocho siguen recibiendo el puntero', async ({ page }) => {
+    test.slow()
+    await installSession(page)
+    await installApi(page)
+    await openExperience(page)
+
+    await select(page, 'coord-operaciones-academicas')
+
+    // Atenuadas no es lo mismo que decorativas: el clic directo sobre una
+    // vecina es la navegación principal del modo seleccionado, así que ninguna
+    // puede quedar tapada por el panel ni por la carta elevada.
+    const unreachable = await page.evaluate((panelSelector) => {
+      const panel = document.querySelector(panelSelector)!.getBoundingClientRect()
+      return Array.from(
+        document.querySelectorAll('[data-testid="coordination-card"]'),
+      )
+        .map((card) => {
+          const rect = card.getBoundingClientRect()
+          // Se muestrea por encima del panel: donde el panel solapa a una carta
+          // es legítimo que gane él, porque es el contenido de la observada.
+          const y = Math.min(rect.top + rect.height / 2, panel.top - 8)
+          const hit = document.elementFromPoint(rect.left + rect.width / 2, y)
+          return card.contains(hit) ? null : card.getAttribute('data-code')
+        })
+        .filter(Boolean)
+    }, PANEL)
+
+    expect(unreachable).toEqual([])
+  })
+
+  test('Operación Académica seleccionada conserva su mazo, sin abrirlo', async ({
+    page,
+  }) => {
+    test.slow()
+    await installSession(page)
+    await installApi(page)
+    await openExperience(page)
+
+    await select(page, 'coord-operaciones-academicas')
+
+    // La noción de mazo se mantiene: las cinco subordinaciones siguen asomando
+    // detrás de su padre.
+    await expect(page.getByTestId('coordination-deck-peek')).toHaveCount(5)
+
+    // Pero NO se despliegan. Con LEVEL 1 abierto, una subbaraja subiendo al
+    // mismo hueco competiría con la lectura y empujaría hacia abajo justo a la
+    // carta que tiene que quedarse quieta. El despliegue interactivo es R7.
+    const rise = async () =>
+      page.evaluate(() => {
+        const stack = document.querySelector(
+          '[data-testid="coordination-deck-stack"][data-code="coord-operaciones-academicas"]',
+        )!
+        const card = stack
+          .querySelector('[data-testid="coordination-card"]')!
+          .getBoundingClientRect()
+        return Math.round(
+          Math.max(
+            ...Array.from(
+              stack.querySelectorAll('[data-testid="coordination-deck-peek"]'),
+            ).map((peek) => card.top - peek.getBoundingClientRect().top),
+          ),
+        )
+      })
+
+    const closed = await rise()
+    await page.locator(`${CARD}[data-code="coord-operaciones-academicas"]`).hover()
+    await page.waitForTimeout(500)
+
+    // Abrir la subbaraja levanta el abanico unos 44 px sobre el borde de la
+    // carta; aquí el ascenso no se mueve más de un píxel, que es el acuse de
+    // recibo del propio shell (`button:hover { translateY(-1px) }`) sobre la
+    // carta y no sobre los peeks.
+    expect(Math.abs((await rise()) - closed)).toBeLessThanOrEqual(2)
+    expect(await rise()).toBeLessThan(0)
+  })
 })
 
-test.describe('composición seleccionada 1920x1080', () => {
+test.describe('selección in-place · movimiento reducido', () => {
+  test.use({ viewport: { width: 1440, height: 900 } })
+
+  test('se llega al mismo estado final sin recorrido', async ({ page }) => {
+    test.slow()
+    await installSession(page)
+    await installApi(page)
+    // `reducedMotion` en la configuración del proyecto no alcanza a la página:
+    // `matchMedia` responde `false`. Emularlo aquí sí funciona, y comprobarlo
+    // antes evita que el test pase por no estar midiendo nada.
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await openExperience(page)
+    expect(
+      await page.evaluate(
+        () => matchMedia('(prefers-reduced-motion: reduce)').matches,
+      ),
+    ).toBe(true)
+
+    await select(page, 'coord-operaciones-academicas')
+
+    // El panel llega entero y opaco, sin desplazamiento pendiente.
+    const panel = page.getByTestId('coordination-problem-panel')
+    await expect(panel).toBeVisible()
+    const settled = await panel.evaluate((node) => {
+      const style = getComputedStyle(node)
+      return {
+        opacity: Number(style.opacity),
+        translateY: Math.round(new DOMMatrix(style.transform).f),
+      }
+    })
+    expect(settled.opacity).toBe(1)
+    expect(settled.translateY).toBe(0)
+
+    // Y la mesa no anima el cambio de énfasis.
+    const durations = await page
+      .locator('.coordination-deck-stack')
+      .evaluateAll((nodes) =>
+        nodes.map((node) =>
+          Number.parseFloat(getComputedStyle(node).transitionDuration),
+        ),
+      )
+    expect(durations.length).toBe(9)
+    expect(durations.every((value) => value < 0.01)).toBe(true)
+  })
+})
+
+test.describe('selección in-place · 1920x1080', () => {
   test.use({ viewport: { width: 1920, height: 1080 } })
 
-  test('personaje, carta activa y baraja comprimida caben', async ({
+  test('personaje, mesa completa y panel caben sin scroll', async ({
     page,
   }, testInfo) => {
     test.slow()
@@ -470,7 +714,7 @@ test.describe('composición seleccionada 1920x1080', () => {
     await installApi(page)
     await openExperience(page)
 
-    await page.locator(`${CARD}[data-code="coord-operaciones-academicas"]`).click()
+    await select(page, 'coord-operaciones-academicas')
     await expect(page.getByTestId('problem-row')).toHaveCount(5)
 
     const overflow = await page.evaluate(() => ({
@@ -485,10 +729,11 @@ test.describe('composición seleccionada 1920x1080', () => {
     expect(overflow.y).toBeLessThanOrEqual(0)
 
     await expect(page.getByTestId('direction-character')).toBeVisible()
-    await expect(page.getByTestId('carousel-slot')).toHaveCount(5)
+    await expect(page.getByTestId('coordination-card')).toHaveCount(9)
+    await expect(page.getByTestId('carousel-slot')).toHaveCount(0)
 
     await page.screenshot({
-      path: testInfo.outputPath('selected-engineering-1920x1080.png'),
+      path: testInfo.outputPath('selected-in-place-1920x1080.png'),
       fullPage: false,
     })
   })

@@ -341,7 +341,7 @@ test.describe('preview de subbaraja · 1440x900', () => {
 
     // Y de hecho se puede seleccionar una vecina con la subbaraja abierta.
     await page.locator(`${CARD}[data-code="coord-proyeccion-social"]`).click()
-    await expect(page.getByTestId('active-coordination-card')).toHaveAttribute(
+    await expect(page.getByTestId('coordination-problem-panel')).toHaveAttribute(
       'data-code',
       'coord-proyeccion-social',
     )
@@ -354,12 +354,15 @@ test.describe('preview de subbaraja · 1440x900', () => {
     await page.locator(`${CARD}[data-code="${PARENT}"]`).hover()
     await page.locator(`${CARD}[data-code="${PARENT}"]`).click()
 
-    // El preview no sustituye a la selección ni abre una navegación nueva.
-    await expect(page.getByTestId('active-coordination-card')).toHaveAttribute(
+    // El preview no sustituye a la selección ni abre una navegación nueva: el
+    // padre queda bajo observación con su panel, y la mesa sigue siendo la
+    // mesa. Nunca se selecciona una hija por haber pasado el puntero.
+    await expect(page.getByTestId('coordination-problem-panel')).toHaveAttribute(
       'data-code',
       PARENT,
     )
-    await expect(page.getByTestId('coordination-carousel')).toBeVisible()
+    await expect(page.getByTestId('coordination-table')).toBeVisible()
+    await expect(page.locator(CARD)).toHaveCount(9)
   })
 
   test('la subbaraja abierta no desborda la página', async ({ page }) => {

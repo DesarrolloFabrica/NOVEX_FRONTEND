@@ -56,6 +56,8 @@ export interface CoordinationDeckStackProps {
   artCode?: string
   /** Subordinaciones declaradas, en orden institucional. */
   subordinations: readonly CoordinationOverview[]
+  /** La coordinación bajo observación. Viaja hasta `aria-pressed`. */
+  selected?: boolean
   onSelect: (code: string) => void
   onHoverChange: (code: string | null) => void
 }
@@ -65,6 +67,7 @@ export function CoordinationDeckStack({
   label,
   artCode,
   subordinations,
+  selected = false,
   onSelect,
   onHoverChange,
 }: CoordinationDeckStackProps) {
@@ -81,6 +84,7 @@ export function CoordinationDeckStack({
       data-testid="coordination-deck-stack"
       data-code={coordination.code}
       data-children={subordinations.length}
+      data-selected={selected ? 'true' : 'false'}
     >
       {peeks.map((peek, index) => (
         <span
@@ -130,6 +134,7 @@ export function CoordinationDeckStack({
         productLabel={label}
         status={coordination.status}
         subordinationCount={subordinations.length}
+        selected={selected}
         onSelect={onSelect}
         onHoverChange={onHoverChange}
       />

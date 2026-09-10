@@ -75,17 +75,19 @@ describe('buildTableLayout · reparto en doble abanico', () => {
     expect(Object.keys(layout.orientationByCode)).toHaveLength(0)
   })
 
-  it('excluir la coordinación activa reparte las 14 restantes en 7 + 7', () => {
-    const layout = buildTableLayout(coordinations(15), {
-      excludeCode: 'coord-7',
-    })
-
-    expect(layout.slots).toHaveLength(14)
-    expect(arcOf(layout, 0)).toHaveLength(7)
-    expect(arcOf(layout, 1)).toHaveLength(7)
-    expect(layout.slots.map((slot) => slot.coordination.code)).not.toContain(
-      'coord-7',
+  it('la mesa NO depende de qué coordinación esté seleccionada', () => {
+    // Hubo una opción para excluir la carta activa, porque esa carta se iba a
+    // un área focal aparte. Con la selección in-place ya no se va: la mesa
+    // dibuja siempre las mismas coordinaciones en los mismos sitios, y la
+    // selección es presentación. Se fija aquí porque es la forma estructural
+    // de la memoria espacial: sin una segunda geometría no puede haber dos
+    // mesas que discrepen.
+    const rows = coordinations(9)
+    expect(buildTableLayout(rows, { sortByDisplayOrder: false })).toEqual(
+      buildTableLayout(rows, { sortByDisplayOrder: false }),
     )
+    expect(buildTableLayout(rows)).toHaveLength
+    expect(buildTableLayout(rows).slots).toHaveLength(9)
   })
 })
 

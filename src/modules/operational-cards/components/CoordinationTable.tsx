@@ -7,7 +7,7 @@ import {
 import type { ProductTableNode } from '@/modules/operational-cards/data/productHierarchy'
 
 /**
- * Mesa operacional en reposo: los nueve nodos de producto, en un solo arco.
+ * Mesa operacional: los nueve nodos de producto, en un solo arco.
  *
  * Cada nodo es un mazo (`CoordinationDeckStack`), tenga o no subordinaciones:
  * uno plano es sencillamente un mazo de cero hijas. Las subordinaciones NO
@@ -20,6 +20,13 @@ import type { ProductTableNode } from '@/modules/operational-cards/data/productH
  *
  * El orden del DOM es el orden de PRODUCTO aunque la geometría sea curva: el
  * tabulador recorre los nueve nodos como los enumera el organigrama.
+ *
+ * MODO SELECCIONADO. La mesa no se desmonta ni se sustituye por otra escena:
+ * es la MISMA mesa con un nodo bajo observación. La carta seleccionada no viaja
+ * a ninguna parte —se queda en su slot y se transforma ahí— y las otras ocho
+ * siguen dibujadas, reconocibles y clickeables, solo que atenuadas. Cambiar de
+ * coordinación es por tanto un clic directo sobre la vecina, sin volver al
+ * estado global por el camino.
  */
 
 export interface CoordinationTableProps {
@@ -32,6 +39,15 @@ export interface CoordinationTableProps {
    * la resuelve el CSS, sin estado.
    */
   hoveredCode?: string | null
+  /**
+   * Coordinación bajo observación, o `null` en estado global.
+   *
+   * Cambia la PRESENTACIÓN de la mesa, nunca su geometría: ni el orden, ni la
+   * x, ni la rotación, ni el reparto de slots dependen de quién esté
+   * seleccionado. La memoria espacial es regla congelada, y una selección es
+   * exactamente el momento en que más se necesita.
+   */
+  selectedCode?: string | null
   onSelect: (code: string) => void
   onHoverChange: (code: string | null) => void
 }
@@ -40,15 +56,27 @@ export function CoordinationTable({
   layout,
   nodesByCode,
   hoveredCode,
+  selectedCode,
   onSelect,
   onHoverChange,
 }: CoordinationTableProps) {
+  const selectedMode = Boolean(selectedCode)
+
   /*
    * La mesa solo cede ante un mazo que se abre. Señalar una coordinación plana
    * —B2B, Saber Pro, Servicio— no mueve nada: no hay nada que necesite sitio.
+   *
+   * Y con una coordinación seleccionada no cede NUNCA. Con LEVEL 1 abierto, el
+   * hueco sobre la mesa lo ocupa la lectura de la coordinación observada; una
+   * subbaraja subiendo a ese mismo hueco compite con ella y, además, empujaría
+   * hacia abajo la carta seleccionada, que es justo la que debe quedarse
+   * quieta. El mazo sigue viéndose cerrado —§7: la noción de mazo se mantiene—,
+   * solo que no se despliega. Se reactiva al volver al estado global.
    */
   const openIndex =
-    hoveredCode && (nodesByCode[hoveredCode]?.children.length ?? 0) > 0
+    !selectedMode &&
+    hoveredCode &&
+    (nodesByCode[hoveredCode]?.children.length ?? 0) > 0
       ? layout.slots.findIndex((slot) => slot.coordination.code === hoveredCode)
       : -1
 
@@ -58,6 +86,8 @@ export function CoordinationTable({
       data-testid="coordination-table"
       data-count={layout.slots.length}
       data-overlap={layout.overlap}
+      data-mode={selectedMode ? 'selected' : 'resting'}
+      data-selected={selectedCode ?? ''}
       style={
         {
           '--table-stage-h': layout.stageHeight,
@@ -83,6 +113,15 @@ export function CoordinationTable({
             data-testid="coordination-table-slot"
             data-arc={slot.arc}
             data-arc-index={slot.indexInArc}
+            // La presentación del slot: quién está bajo observación y quién
+            // acompaña atenuado. Ninguno de los dos toca la geometría.
+            data-state={
+              !selectedMode
+                ? 'resting'
+                : slot.coordination.code === selectedCode
+                  ? 'selected'
+                  : 'dimmed'
+            }
             // El z va como variable, no como `zIndex` en línea: un estilo en
             // línea gana siempre a la hoja, y la regla que eleva la carta
             // enfocada no podría sobrescribirlo sin recurrir a `!important`.
@@ -102,6 +141,7 @@ export function CoordinationTable({
               label={node.label}
               artCode={node.artCode}
               subordinations={node.children}
+              selected={slot.coordination.code === selectedCode}
               onSelect={onSelect}
               onHoverChange={onHoverChange}
             />

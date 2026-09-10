@@ -1,14 +1,13 @@
 import { useMemo } from 'react'
 import { AnimatePresence } from 'motion/react'
-import { ActiveCoordinationCard } from '@/modules/operational-cards/components/ActiveCoordinationCard'
+import { CoordinationProblemPanel } from '@/modules/operational-cards/components/CoordinationProblemPanel'
 import { CoordinationTable } from '@/modules/operational-cards/components/CoordinationTable'
-import { CoordinationCarousel } from '@/modules/operational-cards/components/CoordinationCarousel'
 import { DirectionCharacter } from '@/modules/operational-cards/components/DirectionCharacter'
 import { OperationalBreadcrumb } from '@/modules/operational-cards/components/OperationalBreadcrumb'
 import { ProblemIsland } from '@/modules/operational-cards/components/ProblemIsland'
 import { buildCharacterPresentation } from '@/modules/operational-cards/data/characterReaction'
 import { resolveCoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
-import { buildAlternatives } from '@/modules/operational-cards/data/carouselLayout'
+import { resolvePanelAnchor } from '@/modules/operational-cards/data/panelAnchor'
 import { buildTableLayout } from '@/modules/operational-cards/data/tableLayout'
 import { buildProductTable } from '@/modules/operational-cards/data/productHierarchy'
 import { buildDirectionSummary } from '@/modules/operational-cards/data/directionSummary'
@@ -21,10 +20,14 @@ import '@/styles/operational-island.css'
 /**
  * Orquestador de la experiencia ADMIN de estado operacional.
  *
- * Lectura en dos planos: el personaje dice cómo está la Dirección, la baraja
- * dice dónde están los focos. Al seleccionar una coordinación, esa carta pasa
- * al área focal con su cara operativa y las otras catorce se comprimen sin
- * desaparecer.
+ * Lectura en dos planos: el personaje dice cómo está la Dirección, la mesa dice
+ * dónde están los focos.
+ *
+ * UNA SOLA ESCENA. Seleccionar una coordinación no cambia de pantalla: la carta
+ * se queda en su sitio de la mesa, se destaca ahí, y su LEVEL 1 aparece en un
+ * panel anclado debajo. Las otras ocho no se van a ningún carrusel; siguen
+ * dibujadas y clickeables, lo que convierte el cambio de coordinación en un
+ * clic directo sobre la vecina.
  *
  * Toda la traducción de interacción a presentación del personaje ocurre aquí:
  * `DirectionCharacter` no conoce coordinaciones ni selección, así que el SVG
@@ -32,6 +35,17 @@ import '@/styles/operational-island.css'
  */
 
 const SKELETON_SLOTS = 8
+
+/**
+ * Ancho del panel de LEVEL 1, en anchos de carta.
+ *
+ * En unidades de carta y no en píxeles porque el panel comparte eje con la
+ * mesa: expresado así, se alinea con su carta a cualquier resolución y el
+ * recorte contra el borde del escenario se calcula en el mismo sistema que la
+ * geometría de las cartas. Dos cartas y pico es lo más ancho que cabe sin que
+ * el panel del nodo central llegue a tapar a sus dos vecinas inmediatas.
+ */
+const PANEL_WIDTH_IN_CARDS = 2.2
 
 export function OperationalCardExperience() {
   const {
@@ -82,18 +96,6 @@ export function OperationalCardExperience() {
     [productTable],
   )
 
-  /** Nombre de producto por code, para las superficies de primer nivel. */
-  const labelsByCode = useMemo(
-    () =>
-      Object.fromEntries(
-        productTable.nodes.map((node) => [
-          node.coordination.code,
-          { label: node.label, artCode: node.artCode },
-        ]),
-      ),
-    [productTable],
-  )
-
   const nodesByCode = useMemo(
     () =>
       Object.fromEntries(
@@ -102,34 +104,53 @@ export function OperationalCardExperience() {
     [productTable],
   )
 
-  // Una sola geometría para renderizar y para orientar al personaje: no pueden
-  // desincronizarse. La carta activa sale de la mesa.
-  //
-  // `sortByDisplayOrder: false` porque la mesa de producto ya llega en su
-  // orden declarado, y el `displayOrder` de la base de datos no refleja el
-  // organigrama.
+  /**
+   * Una sola geometría, para renderizar y para orientar al personaje: no pueden
+   * desincronizarse.
+   *
+   * Ya no depende de la selección. Antes se recalculaba excluyendo la carta
+   * activa, porque esa carta se iba al área focal y la mesa se recomponía con
+   * ocho; ahora la mesa tiene siempre los nueve nodos en el mismo sitio, así
+   * que el layout es el mismo esté quien esté seleccionado. Es la forma
+   * estructural de la memoria espacial: no hay una segunda geometría que pueda
+   * discrepar de la primera.
+   *
+   * `sortByDisplayOrder: false` porque la mesa de producto ya llega en su orden
+   * declarado, y el `displayOrder` de la base de datos no refleja el organigrama.
+   */
   const layout = useMemo(
-    () =>
-      buildTableLayout(topLevelRows, {
-        excludeCode: selectedCoordination?.code ?? null,
-        sortByDisplayOrder: false,
-      }),
-    [topLevelRows, selectedCoordination],
+    () => buildTableLayout(topLevelRows, { sortByDisplayOrder: false }),
+    [topLevelRows],
   )
 
-  // La orientación de la carta activa se calcula sobre la mesa COMPLETA,
-  // porque en la que excluye la activa ya no está.
-  const fullOrientation = useMemo(
+  /** Slot de la coordinación observada. Es lo que ancla el panel de LEVEL 1. */
+  const selectedSlot = useMemo(
     () =>
-      buildTableLayout(topLevelRows, { sortByDisplayOrder: false })
-        .orientationByCode,
-    [topLevelRows],
+      selectedCoordination
+        ? (layout.slots.find(
+            (slot) => slot.coordination.code === selectedCoordination.code,
+          ) ?? null)
+        : null,
+    [layout, selectedCoordination],
+  )
+
+  const panelAnchor = useMemo(
+    () =>
+      selectedSlot
+        ? resolvePanelAnchor({
+            slotX: selectedSlot.x,
+            orientation: selectedSlot.orientation,
+            stageWidth: layout.stageWidth,
+            panelWidth: PANEL_WIDTH_IN_CARDS,
+          })
+        : null,
+    [selectedSlot, layout.stageWidth],
   )
 
   const characterPresentation = buildCharacterPresentation({
     directionStatus,
     orientation: selectedCoordination
-      ? (fullOrientation[selectedCoordination.code] ?? 'NEUTRAL')
+      ? (layout.orientationByCode[selectedCoordination.code] ?? 'NEUTRAL')
       : hoveredCoordinationCode
         ? (layout.orientationByCode[hoveredCoordinationCode] ?? 'NEUTRAL')
         : 'NEUTRAL',
@@ -215,51 +236,43 @@ export function OperationalCardExperience() {
 
       {level0 === 'ready' && overview && (
         <>
-          {/* Área focal: la coordinación bajo observación. No es un modal. */}
-          <div className="operational-deck__focus">
+          {/* La MISMA mesa en los dos estados. No hay una segunda escena: lo
+              único que cambia con la selección es el énfasis de las cartas y la
+              aparición del panel de abajo. */}
+          <CoordinationTable
+            layout={layout}
+            nodesByCode={nodesByCode}
+            hoveredCode={hoveredCoordinationCode}
+            selectedCode={selectedCoordination?.code ?? null}
+            onSelect={selectCoordination}
+            onHoverChange={hoverCoordination}
+          />
+
+          {/* Carril de LEVEL 1. Reserva su alto en el flujo —el stage del
+              personaje cede, que es elástico— para que el panel no tape la mesa
+              ni añada scroll a la página. El panel de dentro está en absoluto
+              porque su x la decide la carta, no el flujo. */}
+          <div
+            className="operational-deck__panel-lane"
+            data-testid="coordination-panel-lane"
+            data-open={selectedCoordination ? 'true' : 'false'}
+          >
             <AnimatePresence mode="wait">
-              {selectedCoordination && (
-                <ActiveCoordinationCard
+              {selectedCoordination && panelAnchor && (
+                <CoordinationProblemPanel
                   key={selectedCoordination.code}
                   coordination={selectedCoordination}
                   identity={resolveCoordinationVisualIdentity(
                     selectedCoordination,
                   )}
                   productLabel={nodesByCode[selectedCoordination.code]?.label}
+                  anchor={panelAnchor}
                   level1={level1}
                   onProblemSelect={selectProblem}
                 />
               )}
             </AnimatePresence>
           </div>
-
-          {selectedCoordination ? (
-            /* El carrusel ofrece las alternativas de PRIMER NIVEL: los ocho
-               mazos restantes, nunca una subordinación. Es la misma regla que
-               la mesa —una hija no aparece como par de su padre— y el carrusel
-               es otra superficie de primer nivel, así que si listara las quince
-               filas técnicas Bellas Artes reaparecería como si fuese un igual.
-               La `key` lo remonta al cambiar de nodo para que se recentre. */
-            <CoordinationCarousel
-              key={selectedCoordination.code}
-              alternatives={buildAlternatives(
-                topLevelRows,
-                selectedCoordination.code,
-              )}
-              labelsByCode={labelsByCode}
-              activeDisplayOrder={selectedCoordination.displayOrder}
-              onSelect={selectCoordination}
-              onHoverChange={hoverCoordination}
-            />
-          ) : (
-            <CoordinationTable
-              layout={layout}
-              nodesByCode={nodesByCode}
-              hoveredCode={hoveredCoordinationCode}
-              onSelect={selectCoordination}
-              onHoverChange={hoverCoordination}
-            />
-          )}
 
           {/* Isla de inspección del problema. Una sola a la vez: el reducer
               ignora una segunda selección mientras haya una abierta. */}
