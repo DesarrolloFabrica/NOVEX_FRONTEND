@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { CoordinationCard } from '@/modules/operational-cards/components/CoordinationCard'
 import { CoordinationTable } from '@/modules/operational-cards/components/CoordinationTable'
+import { resolveCompositionMode } from '@/modules/operational-cards/data/compositionMode'
 import { buildTableLayout } from '@/modules/operational-cards/data/tableLayout'
 import {
   buildProductTable,
@@ -102,13 +103,18 @@ function markup(
   const selectedCode = options.selectedCode ?? null
   const product = buildProductTable(rows)
   const topLevel = product.nodes.map((node) => node.coordination)
+  const nodesByCode = Object.fromEntries(
+    product.nodes.map((node) => [node.coordination.code, node]),
+  )
 
   return renderToStaticMarkup(
     <CoordinationTable
       layout={buildTableLayout(topLevel, { sortByDisplayOrder: false })}
-      nodesByCode={Object.fromEntries(
-        product.nodes.map((node) => [node.coordination.code, node]),
-      )}
+      nodesByCode={nodesByCode}
+      /* El modo se resuelve con el MISMO resolver que usa la experiencia. Si el
+         helper lo eligiera a mano, la prueba podría afirmar un modo que la
+         aplicación real nunca produce. */
+      compositionMode={resolveCompositionMode({ selectedCode, nodesByCode })}
       selectedCode={selectedCode}
       onSelect={() => undefined}
       onHoverChange={() => undefined}
@@ -471,6 +477,40 @@ describe('CoordinationTable · selección in-place', () => {
   it('la mesa declara el modo, para que el CSS no lo adivine', () => {
     expect(markup(coordinations(), { selectedCode: PARENT })).toContain(
       'data-mode="selected"',
+    )
+  })
+
+  it('la mesa declara además QUÉ está compuesto, no solo que hay selección', () => {
+    // `data-mode` distingue dos situaciones; la composición distingue tres. Es
+    // la diferencia entre «hay algo seleccionado» y «lo seleccionado es un
+    // mazo», que es la que necesitan las fases de layout.
+    expect(markup(coordinations())).toContain(
+      'data-composition-mode="GLOBAL"',
+    )
+    expect(markup(coordinations(), { selectedCode: 'coord-b2b' })).toContain(
+      'data-composition-mode="SIMPLE_SELECTED"',
+    )
+    expect(markup(coordinations(), { selectedCode: PARENT })).toContain(
+      'data-composition-mode="DECK_SELECTED"',
+    )
+  })
+
+  it('la composición no altera todavía la geometría de la mesa', () => {
+    // FASE B es semántica. Un mazo observado y una coordinación simple
+    // observada siguen dibujando los nueve slots en los mismos sitios: lo
+    // único que cambia entre ambos renders es qué carta está presionada y qué
+    // dice el atributo de composición.
+    const simple = markup(coordinations(), { selectedCode: 'coord-b2b' })
+    const deck = markup(coordinations(), { selectedCode: PARENT })
+
+    expect(slotAttributes(deck, 'style')).toEqual(
+      slotAttributes(simple, 'style'),
+    )
+    expect(slotAttributes(deck, 'data-yield')).toEqual(
+      slotAttributes(simple, 'data-yield'),
+    )
+    expect(countOf(deck, 'data-testid="coordination-table-slot"')).toBe(
+      countOf(simple, 'data-testid="coordination-table-slot"'),
     )
   })
 

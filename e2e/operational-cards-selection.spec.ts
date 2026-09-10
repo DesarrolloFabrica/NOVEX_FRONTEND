@@ -237,6 +237,59 @@ test.describe('selección in-place de coordinación', () => {
     await expect(character).toHaveAttribute('data-status', 'CRITICO')
   })
 
+  test('la escena declara QUÉ está compuesto en cada momento', async ({
+    page,
+  }) => {
+    test.slow()
+    await installSession(page)
+    await installApi(page)
+    await openExperience(page)
+
+    const scene = page.getByTestId('operational-cards-experience')
+    const table = page.getByTestId('coordination-table')
+
+    // Sin selección: la mesa entera.
+    await expect(scene).toHaveAttribute('data-composition-mode', 'GLOBAL')
+    await expect(table).toHaveAttribute('data-composition-mode', 'GLOBAL')
+
+    // B2B no tiene subordinaciones de producto: composición simple.
+    await select(page, 'coord-b2b')
+    await expect(scene).toHaveAttribute(
+      'data-composition-mode',
+      'SIMPLE_SELECTED',
+    )
+    await expect(table).toHaveAttribute(
+      'data-composition-mode',
+      'SIMPLE_SELECTED',
+    )
+
+    // Operación Académica es padre de cinco: composición de mazo. Se llega por
+    // cambio DIRECTO, sin pasar por el estado global, que es el camino real.
+    await select(page, 'coord-operaciones-academicas')
+    await expect(scene).toHaveAttribute(
+      'data-composition-mode',
+      'DECK_SELECTED',
+    )
+    await expect(table).toHaveAttribute(
+      'data-composition-mode',
+      'DECK_SELECTED',
+    )
+
+    // Y el mazo no ha cambiado nada de lo que ya funcionaba: sigue habiendo
+    // nueve cartas, una sola observada y el panel abierto sobre ella.
+    await expect(page.getByTestId('coordination-card')).toHaveCount(9)
+    await expect(page.locator(`${SLOT}[data-state="selected"]`)).toHaveCount(1)
+    await expect(page.locator(PANEL)).toHaveAttribute(
+      'data-code',
+      'coord-operaciones-academicas',
+    )
+
+    // Volver a la Dirección devuelve la composición global.
+    await page.getByTestId('breadcrumb-direction').click()
+    await expect(scene).toHaveAttribute('data-composition-mode', 'GLOBAL')
+    await expect(table).toHaveAttribute('data-composition-mode', 'GLOBAL')
+  })
+
   test('la coordinación seleccionada se queda EN SU SITIO', async ({ page }) => {
     test.slow()
     await installSession(page)

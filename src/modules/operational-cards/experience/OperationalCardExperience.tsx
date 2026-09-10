@@ -6,6 +6,7 @@ import { DirectionCharacter } from '@/modules/operational-cards/components/Direc
 import { OperationalBreadcrumb } from '@/modules/operational-cards/components/OperationalBreadcrumb'
 import { ProblemIsland } from '@/modules/operational-cards/components/ProblemIsland'
 import { buildCharacterPresentation } from '@/modules/operational-cards/data/characterReaction'
+import { resolveCompositionMode } from '@/modules/operational-cards/data/compositionMode'
 import { resolveCoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
 import { resolvePanelAnchor } from '@/modules/operational-cards/data/panelAnchor'
 import { buildTableLayout } from '@/modules/operational-cards/data/tableLayout'
@@ -123,6 +124,28 @@ export function OperationalCardExperience() {
     [topLevelRows],
   )
 
+  /**
+   * QUÉ ESTÁ COMPUESTO sobre la mesa: la mesa entera, una coordinación simple
+   * observada o un mazo observado.
+   *
+   * Se DERIVA de la selección que ya existe y de la estructura de producto que
+   * ya existe; no se guarda en el reducer. Un modo persistido sería una segunda
+   * fuente de verdad capaz de contradecir a la selección, que es el fallo
+   * clásico de este tipo de estado.
+   *
+   * Aquí solo se resuelve y se publica. La geometría de cada modo llega
+   * después: hoy los tres se dibujan exactamente igual que antes de existir el
+   * modo, y lo único nuevo es que la composición tiene nombre.
+   */
+  const compositionMode = useMemo(
+    () =>
+      resolveCompositionMode({
+        selectedCode: selectedCoordinationCode,
+        nodesByCode,
+      }),
+    [selectedCoordinationCode, nodesByCode],
+  )
+
   /** Slot de la coordinación observada. Es lo que ancla el panel de LEVEL 1. */
   const selectedSlot = useMemo(
     () =>
@@ -172,6 +195,11 @@ export function OperationalCardExperience() {
       data-level0={level0}
       data-status={directionStatus}
       data-selected={selectedCoordination?.code ?? ''}
+      /* Composición vigente. Es la lectura semántica de la escena: quien
+         inspecciona el DOM —o una prueba— sabe si hay mesa, coordinación
+         simple o mazo sin tener que reconstruirlo desde clases y atributos
+         dispersos. */
+      data-composition-mode={compositionMode}
       aria-labelledby="operational-cards-title"
     >
       <h1 id="operational-cards-title" className="operational-deck__sr-title">
@@ -242,6 +270,7 @@ export function OperationalCardExperience() {
           <CoordinationTable
             layout={layout}
             nodesByCode={nodesByCode}
+            compositionMode={compositionMode}
             hoveredCode={hoveredCoordinationCode}
             selectedCode={selectedCoordination?.code ?? null}
             onSelect={selectCoordination}

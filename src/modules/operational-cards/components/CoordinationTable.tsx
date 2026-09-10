@@ -5,6 +5,7 @@ import {
   type TableLayout,
 } from '@/modules/operational-cards/data/tableLayout'
 import type { ProductTableNode } from '@/modules/operational-cards/data/productHierarchy'
+import type { OperationalCompositionMode } from '@/modules/operational-cards/data/compositionMode'
 
 /**
  * Mesa operacional: los nueve nodos de producto, en un solo arco.
@@ -34,6 +35,21 @@ export interface CoordinationTableProps {
   /** Nodos de producto, indexados por el `code` de su fila técnica. */
   nodesByCode: Readonly<Record<string, ProductTableNode>>
   /**
+   * Composición vigente, ya resuelta por la experiencia.
+   *
+   * La mesa NO la vuelve a deducir. Podría —tiene `nodesByCode` y
+   * `selectedCode` delante—, y ahí está justamente el riesgo: dos capas
+   * resolviendo el mismo modo por su cuenta acaban discrepando en cuanto una de
+   * las dos reciba un caso nuevo. Se resuelve una vez, arriba, y baja como
+   * dato.
+   *
+   * Hoy es puramente SEMÁNTICA: ninguna de las tres composiciones cambia
+   * todavía la geometría de la mesa. Lo que aporta es que el DOM diga qué está
+   * compuesto, de modo que las fases de layout tengan de dónde colgarse y las
+   * pruebas puedan vigilarlo sin leer píxeles.
+   */
+  compositionMode: OperationalCompositionMode
+  /**
    * Coordinación bajo el puntero o el foco. Solo se usa para que la mesa CEDA
    * cuando la señalada tiene subordinaciones: la apertura de la subbaraja en sí
    * la resuelve el CSS, sin estado.
@@ -55,6 +71,7 @@ export interface CoordinationTableProps {
 export function CoordinationTable({
   layout,
   nodesByCode,
+  compositionMode,
   hoveredCode,
   selectedCode,
   onSelect,
@@ -86,7 +103,21 @@ export function CoordinationTable({
       data-testid="coordination-table"
       data-count={layout.slots.length}
       data-overlap={layout.overlap}
+      /*
+       * DOS ATRIBUTOS, DOS LECTURAS, y conviene no fundirlos todavía.
+       *
+       * `data-mode` es binario y lo consume la hoja de estilos: es la
+       * condición de la que dependen las reglas que abren la subbaraja solo
+       * fuera de la selección. `data-composition-mode` es la lectura de
+       * producto de tres valores, y hoy no la consume ningún estilo.
+       *
+       * Fundirlos ahora obligaría a reescribir esas reglas de apertura en la
+       * misma fase que introduce la semántica, y cualquier error ahí se vería
+       * como un cambio visual. Se unificarán cuando el layout de cada modo
+       * exista de verdad y la geometría deje de ser común.
+       */
       data-mode={selectedMode ? 'selected' : 'resting'}
+      data-composition-mode={compositionMode}
       data-selected={selectedCode ?? ''}
       style={
         {
