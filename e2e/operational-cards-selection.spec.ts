@@ -427,14 +427,25 @@ test.describe('selección in-place de coordinación', () => {
     })
   })
 
-  test('el panel se ancla a la carta que lo abre', async ({ page }) => {
+  test('cada composición coloca su panel, y ninguna se sale del área', async ({
+    page,
+  }) => {
     test.slow()
     await installSession(page)
     await installApi(page)
     await openExperience(page)
 
-    // Se recorren las cinco posiciones señaladas como de riesgo: primer nodo,
-    // nodo central, último, el mazo y el nodo de presentación legacy.
+    /*
+     * Se recorren las cinco posiciones señaladas como de riesgo: primer nodo,
+     * nodo central, último, el mazo y el nodo de presentación legacy.
+     *
+     * Con la composición simple (FASE C) el panel de una coordinación sin
+     * subordinaciones deja de colgar de su carta y pasa al CARRIL derecho: por
+     * eso la afirmación es distinta según el modo. Lo que no cambia para
+     * ninguno de los dos es que el panel se coloca —nunca queda centrado por
+     * defecto— y que no se escapa del área de contenido, que era el riesgo
+     * original de los extremos.
+     */
     for (const code of [
       'coord-general',
       'coord-especializaciones',
@@ -443,6 +454,10 @@ test.describe('selección in-place de coordinación', () => {
       'coord-fabrica-contenidos',
     ]) {
       await select(page, code)
+
+      const mode = await page
+        .getByTestId('operational-cards-experience')
+        .getAttribute('data-composition-mode')
 
       const geometry = await page.evaluate(
         ({ panelSelector, target }) => {
@@ -454,6 +469,9 @@ test.describe('selección in-place de coordinación', () => {
               `[data-testid="coordination-card"][data-code="${target}"]`,
             )!
             .getBoundingClientRect()
+          const table = document
+            .querySelector('[data-testid="coordination-table"]')!
+            .getBoundingClientRect()
           const host = document
             .querySelector('.novex-os-deck__content')!
             .getBoundingClientRect()
@@ -463,17 +481,28 @@ test.describe('selección in-place de coordinación', () => {
             escapesLeft: panel.left < host.left - 1,
             escapesRight: panel.right > host.right + 1,
             below: panel.top >= card.bottom - 30,
+            rightOfTable: panel.left >= table.right - 1,
           }
         },
         { panelSelector: PANEL, target: code },
       )
 
-      // Cae debajo de su carta y cerca de ella, nunca centrado por defecto.
-      expect(geometry.below, `${code}: el panel cuelga de su carta`).toBe(true)
-      expect(
-        Math.abs(geometry.panelCentre - geometry.cardCentre),
-        `${code}: el panel sigue a su carta`,
-      ).toBeLessThan(180)
+      if (mode === 'DECK_SELECTED') {
+        // El mazo conserva el modelo anterior: el panel cuelga de su carta.
+        expect(geometry.below, `${code}: el panel cuelga de su carta`).toBe(true)
+        expect(
+          Math.abs(geometry.panelCentre - geometry.cardCentre),
+          `${code}: el panel sigue a su carta`,
+        ).toBeLessThan(180)
+      } else {
+        // Composición simple: carril propio a la derecha de la mesa.
+        expect(geometry.rightOfTable, `${code}: el panel vive en su carril`).toBe(
+          true,
+        )
+        expect(geometry.below, `${code}: el panel ya no cuelga de la carta`).toBe(
+          false,
+        )
+      }
 
       // Y nunca se sale del área de contenido, ni en los extremos.
       expect(geometry.escapesLeft, `${code}: no se sale por la izquierda`).toBe(

@@ -5,6 +5,7 @@ import { CoordinationTable } from '@/modules/operational-cards/components/Coordi
 import { DirectionCharacter } from '@/modules/operational-cards/components/DirectionCharacter'
 import { OperationalBreadcrumb } from '@/modules/operational-cards/components/OperationalBreadcrumb'
 import { ProblemIsland } from '@/modules/operational-cards/components/ProblemIsland'
+import { TableReturnAction } from '@/modules/operational-cards/components/TableReturnAction'
 import { buildCharacterPresentation } from '@/modules/operational-cards/data/characterReaction'
 import { resolveCompositionMode } from '@/modules/operational-cards/data/compositionMode'
 import { resolveCoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
@@ -219,68 +220,103 @@ export function OperationalCardExperience() {
         />
       )}
 
-      {/* Stage del personaje. Sin selección, la lectura institucional vive
-          junto a él; con selección se muda a la miga, que tiene espacio
-          horizontal libre, y devuelve ese alto al carrusel. En todo momento hay
-          exactamente un `direction-summary` en el DOM, así que la región
-          aria-live nunca se duplica. */}
-      <div className="operational-deck__stage">
-        <DirectionCharacter presentation={characterPresentation} />
+      {/*
+        ZONA DE COMPOSICIÓN: personaje, mesa y la acción de retorno.
 
-        {!selectedCoordination && (
-          /* aria-live para que un cambio de estado global se anuncie. */
-          <p
-            className="operational-deck__summary"
-            data-testid="direction-summary"
-            aria-live="polite"
+        Existe para que la escena pueda tener DOS COLUMNAS sin que la mesa ni el
+        personaje tengan que saberlo. En estado global es una columna vertical y
+        se comporta como se comportaba la sección entera; con una coordinación
+        simple observada, esta zona pasa a ser la columna izquierda de una
+        rejilla y el carril del panel la derecha.
+
+        Que el personaje viva DENTRO de esta zona es lo que produce su
+        reencuadre: al estrecharse la columna, se recentra sobre las cartas él
+        solo, sin transform propio y sin una segunda autoridad de posición que
+        pudiera discrepar de la mesa.
+      */}
+      <div
+        className="operational-deck__composition"
+        data-testid="operational-composition"
+      >
+        {/* Stage del personaje. Sin selección, la lectura institucional vive
+            junto a él; con selección se muda a la miga, que tiene espacio
+            horizontal libre, y devuelve ese alto al carrusel. En todo momento hay
+            exactamente un `direction-summary` en el DOM, así que la región
+            aria-live nunca se duplica. */}
+        <div className="operational-deck__stage">
+          <DirectionCharacter presentation={characterPresentation} />
+
+          {!selectedCoordination && (
+            /* aria-live para que un cambio de estado global se anuncie. */
+            <p
+              className="operational-deck__summary"
+              data-testid="direction-summary"
+              aria-live="polite"
+            >
+              {summary}
+            </p>
+          )}
+
+          {level0 === 'error' && (
+            <p
+              className="operational-deck__notice"
+              data-testid="operational-cards-error"
+              role="alert"
+            >
+              No se pudo obtener el estado operacional de la Dirección.{' '}
+              {errorMessage}
+            </p>
+          )}
+        </div>
+
+        {(level0 === 'idle' || level0 === 'loading') && (
+          <div
+            className="operational-deck__skeleton"
+            data-testid="operational-cards-loading"
+            aria-hidden="true"
           >
-            {summary}
-          </p>
+            {Array.from({ length: SKELETON_SLOTS }, (_unused, index) => (
+              <span key={index} />
+            ))}
+          </div>
         )}
 
-        {level0 === 'error' && (
-          <p
-            className="operational-deck__notice"
-            data-testid="operational-cards-error"
-            role="alert"
-          >
-            No se pudo obtener el estado operacional de la Dirección.{' '}
-            {errorMessage}
-          </p>
+        {level0 === 'ready' && overview && (
+          <>
+            {/* La MISMA mesa en los tres modos. No hay una segunda escena: con
+                una coordinación observada la mesa se comprime y se recentra en
+                su columna, pero conserva su orden, su arco y el slot de cada
+                coordinación. */}
+            <CoordinationTable
+              layout={layout}
+              nodesByCode={nodesByCode}
+              compositionMode={compositionMode}
+              hoveredCode={hoveredCoordinationCode}
+              selectedCode={selectedCoordination?.code ?? null}
+              onSelect={selectCoordination}
+              onHoverChange={hoverCoordination}
+            />
+
+            {/* Retorno narrativo de la composición simple. Un mazo abierto
+                tendrá el suyo —«Recoger mazo»—, que es otra acción sobre otra
+                composición; hasta entonces esta solo aparece donde ya está
+                definida. */}
+            {compositionMode === 'SIMPLE_SELECTED' && (
+              <TableReturnAction
+                label="Volver a la mesa"
+                onReturn={clearCoordination}
+              />
+            )}
+          </>
         )}
       </div>
 
-      {(level0 === 'idle' || level0 === 'loading') && (
-        <div
-          className="operational-deck__skeleton"
-          data-testid="operational-cards-loading"
-          aria-hidden="true"
-        >
-          {Array.from({ length: SKELETON_SLOTS }, (_unused, index) => (
-            <span key={index} />
-          ))}
-        </div>
-      )}
-
       {level0 === 'ready' && overview && (
         <>
-          {/* La MISMA mesa en los dos estados. No hay una segunda escena: lo
-              único que cambia con la selección es el énfasis de las cartas y la
-              aparición del panel de abajo. */}
-          <CoordinationTable
-            layout={layout}
-            nodesByCode={nodesByCode}
-            compositionMode={compositionMode}
-            hoveredCode={hoveredCoordinationCode}
-            selectedCode={selectedCoordination?.code ?? null}
-            onSelect={selectCoordination}
-            onHoverChange={hoverCoordination}
-          />
-
-          {/* Carril de LEVEL 1. Reserva su alto en el flujo —el stage del
-              personaje cede, que es elástico— para que el panel no tape la mesa
-              ni añada scroll a la página. El panel de dentro está en absoluto
-              porque su x la decide la carta, no el flujo. */}
+          {/* Carril del panel. En estado global no reserva nada; con una
+              coordinación simple observada es la COLUMNA DERECHA de la escena y
+              deja de colgar de la carta. En modo mazo sigue, por ahora, siendo
+              la banda inferior anclada a su carta. */}
           <div
             className="operational-deck__panel-lane"
             data-testid="coordination-panel-lane"
