@@ -253,15 +253,20 @@
   margin-left: calc(var(--card-width) / -2);
   transform: translate(
       calc(var(--x) * var(--card-width)),
-      calc(var(--y) * var(--card-height) + var(--yield, 0) * 1px)
+      calc(
+        var(--y) * var(--card-height) + var(--yield, 0) * 1px + var(--exit, 0) *
+          1px
+      )
     )
     rotate(calc(var(--rot) * 1deg));
   transform-origin: 50% 50%;
   /*
-   * La CESIÓN de la mesa viaja dentro de este mismo transform, sumada al eje Y.
-   * Es deliberado: el slot sigue siendo la única autoridad de posición, así que
-   * no hay dos capas disputándose el nodo. `--yield` vale 0 salvo mientras un
-   * mazo con subordinaciones está abierto.
+   * La CESIÓN de la mesa y la SALIDA de las cartas retiradas viajan dentro de
+   * este mismo transform, sumadas al eje Y. Es deliberado: el slot sigue siendo
+   * la única autoridad de posición, así que no hay dos capas disputándose el
+   * nodo. Las dos valen 0 salvo en su momento —`--yield` mientras un mazo con
+   * subordinaciones se abre en reposo, `--exit` mientras un mazo escogido retira
+   * a las demás— y nunca coinciden.
    */
   transition: transform 220ms var(--os-ease, cubic-bezier(0.22, 0.72, 0.18, 1));
 }
@@ -1394,7 +1399,7 @@
    escalaría los bordes y el texto a la vez que la geometría, y competiría con
    el transform de cada slot— ni un porcentaje de ancho escrito a mano. */
 
-.operational-deck[data-composition-mode='SIMPLE_SELECTED'] {
+.operational-deck:not([data-composition-mode='GLOBAL']) {
   display: grid;
   /* `minmax(0, 1fr)` y no `1fr`: sin el mínimo en cero, el contenido de la
      columna izquierda podría negarse a encogerse y empujar el carril fuera. */
@@ -1408,12 +1413,12 @@
   row-gap: 12px;
 }
 
-.operational-deck[data-composition-mode='SIMPLE_SELECTED']
+.operational-deck:not([data-composition-mode='GLOBAL'])
   > .operational-breadcrumb {
   grid-area: crumb;
 }
 
-.operational-deck[data-composition-mode='SIMPLE_SELECTED']
+.operational-deck:not([data-composition-mode='GLOBAL'])
   > .operational-deck__composition {
   grid-area: composition;
   /*
@@ -1427,7 +1432,7 @@
   container-type: inline-size;
 }
 
-.operational-deck[data-composition-mode='SIMPLE_SELECTED']
+.operational-deck:not([data-composition-mode='GLOBAL'])
   > .operational-deck__provisional {
   grid-area: foot;
 }
@@ -1452,7 +1457,7 @@
 
 /* Un poco más de aire entre el personaje y la mesa que en reposo: la mesa es
    más baja y sin ese hueco el grupo se lee apretado. */
-.operational-deck[data-composition-mode='SIMPLE_SELECTED']
+.operational-deck:not([data-composition-mode='GLOBAL'])
   > .operational-deck__composition {
   gap: 18px;
 }
@@ -1472,7 +1477,7 @@
  * Es tamaño, no papel: sigue siendo el estado de la DIRECCIÓN, con la misma
  * lógica y la misma expresión.
  */
-.operational-deck[data-composition-mode='SIMPLE_SELECTED'][data-selected]:not(
+.operational-deck:not([data-composition-mode='GLOBAL'])[data-selected]:not(
     [data-selected='']
   )
   .direction-character__figure {
@@ -1528,7 +1533,7 @@
  * arriba: un panel estirado a todo el alto sería casi todo vacío y se leería
  * como la pieza principal de la escena, que no lo es.
  */
-.operational-deck[data-composition-mode='SIMPLE_SELECTED']
+.operational-deck:not([data-composition-mode='GLOBAL'])
   .operational-deck__panel-lane {
   display: flex;
   height: auto;
@@ -1546,7 +1551,7 @@
  * desalinearlo. El pico desaparece por la misma razón —ya no apunta a nada— y
  * el alto máximo pasa a ser el del carril, con la lista desplazándose dentro.
  */
-.operational-deck[data-composition-mode='SIMPLE_SELECTED']
+.operational-deck:not([data-composition-mode='GLOBAL'])
   .coordination-panel-anchor {
   position: static;
   width: 100%;
@@ -1554,11 +1559,11 @@
   transform: none;
 }
 
-.operational-deck[data-composition-mode='SIMPLE_SELECTED'] .coordination-panel {
+.operational-deck:not([data-composition-mode='GLOBAL']) .coordination-panel {
   max-height: 100%;
 }
 
-.operational-deck[data-composition-mode='SIMPLE_SELECTED']
+.operational-deck:not([data-composition-mode='GLOBAL'])
   .coordination-panel__notch {
   display: none;
 }
@@ -1604,4 +1609,93 @@
   width: 15px;
   height: 15px;
   color: var(--deck-muted);
+}
+
+/* ==========================================================================
+   DECK_SELECTED: la mesa se retira y queda el mazo origen
+   ==========================================================================
+
+   Escoger una coordinación con subordinaciones no es observarla entre sus
+   vecinas: es quedarse con su mazo. Las otras ocho abandonan la mesa, el padre
+   deja de ocupar su hueco del arco y se planta a la izquierda de la columna
+   como ORIGEN, con su sitio despejado a la derecha —ahí se repartirá la mano—.
+
+   El padre NO se duplica ni se sustituye por otra pieza: es el mismo nodo, con
+   la misma identidad y el mismo estado, al que el layout da otra geometría. La
+   escena de dos columnas y el carril del panel son los mismos que ya usa la
+   composición simple; lo que cambia es qué hay en la columna izquierda.
+
+   Esta fase deja el mazo CERRADO: las cinco hijas siguen siendo cantos detrás
+   del padre, decorativos y sin foco. Abrir la mano es otra fase. */
+
+/*
+ * LAS OCHO QUE SE RETIRAN.
+ *
+ * Se quedan montadas —volver a la mesa las devuelve intactas, sin reconstruir
+ * nada— pero salen de la escena por completo: bajan, se desvanecen y dejan de
+ * existir para el puntero, para el tabulador y para un lector de pantalla.
+ *
+ * La bajada viaja por `--exit`, dentro del transform del propio slot, que es la
+ * única autoridad de posición de la mesa. La retirada del foco no depende de
+ * este CSS: el slot recibe `inert`, que es lo único que garantiza que una carta
+ * invisible no siga siendo una parada del tabulador. `visibility` se suma como
+ * segunda barrera y espera a que termine el desvanecido para no cortarlo.
+ */
+.operational-table[data-composition-mode='DECK_SELECTED']
+  .operational-table__slot[data-deck-role='retired'] {
+  --exit: 120;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    transform 240ms var(--os-ease, cubic-bezier(0.22, 0.72, 0.18, 1)),
+    opacity 200ms var(--os-ease, cubic-bezier(0.22, 0.72, 0.18, 1)),
+    visibility 0s 240ms;
+}
+
+/*
+ * EL MAZO ORIGEN.
+ *
+ * Se asienta un pelo DESPUÉS de que las demás empiecen a irse. El retardo es lo
+ * único que crea la secuencia —primero se despeja la mesa, luego se coloca el
+ * mazo—, y se consigue con una espera de la transición y no con un estado
+ * intermedio en React: no hace falta una segunda máquina de estados para
+ * ordenar dos movimientos.
+ *
+ * Su destino no depende del ancho de la columna: el tamaño de carta en este
+ * modo es el del viewport, no el deducido del contenedor, así que la animación
+ * llega al sitio correcto desde el primer fotograma. Es justo la trampa que se
+ * midió en la composición simple, y aquí no aplica.
+ */
+.operational-table[data-composition-mode='DECK_SELECTED']
+  .operational-table__slot[data-deck-role='origin'] {
+  transition-delay: 90ms;
+}
+
+/*
+ * El mazo se apila por delante de todo, como corresponde a la única carta que
+ * queda en la mesa.
+ */
+.operational-table[data-composition-mode='DECK_SELECTED']
+  .operational-table__slot[data-deck-role='origin'] {
+  z-index: var(--z-table-selected);
+}
+
+/*
+ * MOVIMIENTO REDUCIDO. La escena llega al mismo sitio sin recorrido: ni la
+ * bajada de las ocho ni el asentamiento del mazo tienen por qué verse. Hay que
+ * anular también los tiempos de espera, o `visibility` seguiría esperando por
+ * un desvanecido que ya no ocurre.
+ */
+@media (prefers-reduced-motion: reduce) {
+  /* Con la especificidad de las reglas del mazo, no con la del slot suelto: una
+     media query no añade peso, así que una regla genérica perdería contra ellas
+     y el movimiento seguiría ahí. */
+  .operational-table[data-composition-mode='DECK_SELECTED']
+    .operational-table__slot[data-deck-role='retired'],
+  .operational-table[data-composition-mode='DECK_SELECTED']
+    .operational-table__slot[data-deck-role='origin'] {
+    transition-duration: 0ms;
+    transition-delay: 0ms;
+  }
 }

@@ -416,14 +416,18 @@ describe('CoordinationTable · selección in-place', () => {
     expect(html).toContain(`data-code="${PARENT}"`)
   })
 
-  it('seleccionar no mueve ni una carta de sitio', () => {
+  it('observar una coordinación no mueve ni una carta de sitio', () => {
     // La comprobación que protege la memoria espacial. Las variables de
     // posición del slot —x, y, rotación y z— tienen que ser IDÉNTICAS con y
-    // sin selección, y para cualquier seleccionada. Si alguna vez la selección
-    // recolocara la mesa, el usuario perdería el mapa en el momento en que más
-    // lo necesita: justo cuando está comparando coordinaciones.
+    // sin selección. Si alguna vez observar una coordinación recolocara la
+    // mesa, el usuario perdería el mapa en el momento en que más lo necesita:
+    // justo cuando está comparando coordinaciones.
+    //
+    // La mesa de un MAZO ESCOGIDO no entra aquí y tiene su propia prueba: ahí
+    // la mesa se retira entera y el padre pasa a ser origen del mazo, que es
+    // una composición distinta y declarada, no una selección que desordena.
     const resting = markup(coordinations())
-    for (const selectedCode of [PARENT, 'coord-general', 'coord-fabrica-contenidos']) {
+    for (const selectedCode of ['coord-general', 'coord-fabrica-contenidos']) {
       const selected = markup(coordinations(), { selectedCode })
       for (const attribute of ['style', 'data-arc', 'data-arc-index']) {
         expect(
@@ -432,6 +436,39 @@ describe('CoordinationTable · selección in-place', () => {
         ).toEqual(slotAttributes(resting, attribute))
       }
     }
+  })
+
+  it('el mazo escogido reparte papeles: un origen y ocho retiradas', () => {
+    const html = markup(coordinations(), { selectedCode: PARENT })
+
+    expect(countOf(html, 'data-deck-role="origin"')).toBe(1)
+    expect(countOf(html, 'data-deck-role="retired"')).toBe(8)
+    // Las retiradas salen del tabulador y del árbol de accesibilidad en el acto.
+    // Una carta que no se ve no puede seguir siendo una parada de teclado.
+    expect(countOf(html, 'inert=""')).toBe(8)
+    // Y siguen montadas: volver a la mesa no tiene que reconstruir nada.
+    expect(countOf(html, 'data-testid="coordination-card"')).toBe(9)
+  })
+
+  it('el mazo origen recibe OTRA geometría, no una capa que lo empuje', () => {
+    // El padre cambia de sitio, y lo hace por las mismas variables que usa el
+    // arco: el slot sigue siendo la única autoridad de posición.
+    const resting = markup(coordinations())
+    const deck = markup(coordinations(), { selectedCode: PARENT })
+
+    const parentIndex = cardAttributes(resting, 'data-code').indexOf(PARENT)
+    const restingStyles = slotAttributes(resting, 'style')
+    const deckStyles = slotAttributes(deck, 'style')
+
+    // El padre se mueve...
+    expect(deckStyles[parentIndex]).not.toEqual(restingStyles[parentIndex])
+    expect(deckStyles[parentIndex]).toContain('--x:-1.8')
+    // ...y las otras ocho conservan su geometría de arco: lo que las saca de
+    // escena es `--exit`, que vive en el CSS, no una x nueva.
+    deckStyles.forEach((style, index) => {
+      if (index === parentIndex) return
+      expect(style).toEqual(restingStyles[index])
+    })
   })
 
   it('tampoco cambia el orden del DOM, que es el del tabulador', () => {
@@ -495,23 +532,23 @@ describe('CoordinationTable · selección in-place', () => {
     )
   })
 
-  it('la composición no altera todavía la geometría de la mesa', () => {
-    // FASE B es semántica. Un mazo observado y una coordinación simple
-    // observada siguen dibujando los nueve slots en los mismos sitios: lo
-    // único que cambia entre ambos renders es qué carta está presionada y qué
-    // dice el atributo de composición.
+  it('la composición simple no altera la geometría de la mesa', () => {
+    // Una coordinación simple observada sigue dibujando los nueve slots en los
+    // mismos sitios que en reposo: lo único que cambia es qué carta está
+    // presionada y qué dice el atributo de composición. La compresión de la
+    // mesa es cosa del CSS —el ancho de carta— y no toca ni una x.
+    const resting = markup(coordinations())
     const simple = markup(coordinations(), { selectedCode: 'coord-b2b' })
-    const deck = markup(coordinations(), { selectedCode: PARENT })
 
-    expect(slotAttributes(deck, 'style')).toEqual(
-      slotAttributes(simple, 'style'),
+    expect(slotAttributes(simple, 'style')).toEqual(
+      slotAttributes(resting, 'style'),
     )
-    expect(slotAttributes(deck, 'data-yield')).toEqual(
-      slotAttributes(simple, 'data-yield'),
+    expect(slotAttributes(simple, 'data-yield')).toEqual(
+      slotAttributes(resting, 'data-yield'),
     )
-    expect(countOf(deck, 'data-testid="coordination-table-slot"')).toBe(
-      countOf(simple, 'data-testid="coordination-table-slot"'),
-    )
+    // Y no reparte papeles de mazo: eso es de la otra composición.
+    expect(countOf(simple, 'data-deck-role')).toBe(0)
+    expect(countOf(simple, 'inert=""')).toBe(0)
   })
 
   it('Operación Académica seleccionada conserva su mazo', () => {
@@ -525,7 +562,7 @@ describe('CoordinationTable · selección in-place', () => {
   it('cambiar de coordinación solo mueve el énfasis', () => {
     // Cambio directo: de un nodo a otro sin pasar por el estado global. Lo
     // único que se mueve entre los dos renders es qué carta está presionada.
-    const first = markup(coordinations(), { selectedCode: PARENT })
+    const first = markup(coordinations(), { selectedCode: 'coord-saber-pro' })
     const second = markup(coordinations(), { selectedCode: 'coord-b2b' })
 
     expect(cardAttributes(second, 'data-code')).toEqual(

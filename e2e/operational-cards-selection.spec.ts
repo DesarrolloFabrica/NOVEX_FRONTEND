@@ -410,16 +410,24 @@ test.describe('selección in-place de coordinación', () => {
     expect(crumbBox).not.toBeNull()
     expect(crumbBox!.y).toBeGreaterThan(0)
 
-    // Aproximadamente 3 filas visibles sin desplazar la lista.
+    /*
+     * La lista cabe entera sin desplazarse.
+     *
+     * Antes se comprobaba lo contrario —que se vieran unas tres filas— porque
+     * el panel era una banda inferior con el alto muy tasado. Desde que vive en
+     * el carril derecho el alto deja de ser el recurso escaso, y lo que hay que
+     * vigilar es justo lo otro: que los cinco problemas de esta coordinación se
+     * lean de una vez, sin obligar a desplazar nada para descubrir que hay más.
+     */
     const listBox = await page
       .getByTestId('coordination-panel-problems')
       .boundingBox()
     const rowBox = await page.getByTestId('problem-row').first().boundingBox()
     expect(listBox).not.toBeNull()
     expect(rowBox).not.toBeNull()
+    const rows = await page.getByTestId('problem-row').count()
     const visibleRows = listBox!.height / rowBox!.height
-    expect(visibleRows).toBeGreaterThan(2.2)
-    expect(visibleRows).toBeLessThan(4)
+    expect(visibleRows).toBeGreaterThanOrEqual(rows - 0.2)
 
     await page.screenshot({
       path: testInfo.outputPath('selected-in-place-1440x900.png'),
@@ -439,12 +447,13 @@ test.describe('selección in-place de coordinación', () => {
      * Se recorren las cinco posiciones señaladas como de riesgo: primer nodo,
      * nodo central, último, el mazo y el nodo de presentación legacy.
      *
-     * Con la composición simple (FASE C) el panel de una coordinación sin
-     * subordinaciones deja de colgar de su carta y pasa al CARRIL derecho: por
-     * eso la afirmación es distinta según el modo. Lo que no cambia para
-     * ninguno de los dos es que el panel se coloca —nunca queda centrado por
-     * defecto— y que no se escapa del área de contenido, que era el riesgo
-     * original de los extremos.
+     * Las dos composiciones observadas —simple y mazo— llevan ya su panel al
+     * MISMO carril derecho, así que la afirmación vuelve a ser única para todas:
+     * el panel se coloca en su columna, nunca cuelga de la carta y nunca se
+     * escapa del área de contenido, que era el riesgo original de los extremos.
+     *
+     * Se vuelve a la Dirección entre una y otra porque desde un mazo escogido no
+     * hay vecinas sobre la mesa: se retiran al abrirlo.
      */
     for (const code of [
       'coord-general',
@@ -453,6 +462,10 @@ test.describe('selección in-place de coordinación', () => {
       'coord-homologaciones',
       'coord-fabrica-contenidos',
     ]) {
+      if (await page.getByTestId('breadcrumb-direction').count()) {
+        await page.getByTestId('breadcrumb-direction').click()
+        await expect(page.locator(PANEL)).toHaveCount(0)
+      }
       await select(page, code)
 
       const mode = await page
@@ -487,22 +500,16 @@ test.describe('selección in-place de coordinación', () => {
         { panelSelector: PANEL, target: code },
       )
 
-      if (mode === 'DECK_SELECTED') {
-        // El mazo conserva el modelo anterior: el panel cuelga de su carta.
-        expect(geometry.below, `${code}: el panel cuelga de su carta`).toBe(true)
-        expect(
-          Math.abs(geometry.panelCentre - geometry.cardCentre),
-          `${code}: el panel sigue a su carta`,
-        ).toBeLessThan(180)
-      } else {
-        // Composición simple: carril propio a la derecha de la mesa.
-        expect(geometry.rightOfTable, `${code}: el panel vive en su carril`).toBe(
-          true,
-        )
-        expect(geometry.below, `${code}: el panel ya no cuelga de la carta`).toBe(
-          false,
-        )
-      }
+      expect(
+        mode === 'SIMPLE_SELECTED' || mode === 'DECK_SELECTED',
+        `${code}: hay una composición observada`,
+      ).toBe(true)
+      expect(geometry.rightOfTable, `${code}: el panel vive en su carril`).toBe(
+        true,
+      )
+      expect(geometry.below, `${code}: el panel ya no cuelga de la carta`).toBe(
+        false,
+      )
 
       // Y nunca se sale del área de contenido, ni en los extremos.
       expect(geometry.escapesLeft, `${code}: no se sale por la izquierda`).toBe(
@@ -522,8 +529,16 @@ test.describe('selección in-place de coordinación', () => {
     const requested = await installApi(page)
     await openExperience(page)
 
-    await select(page, 'coord-operaciones-academicas')
-    await expect(page.getByTestId('problem-row')).toHaveCount(5)
+    /*
+     * El cambio directo se ejerce entre dos coordinaciones SIMPLES.
+     *
+     * Desde un MAZO escogido ya no hay vecinas sobre la mesa a las que saltar:
+     * las otras ocho se retiran al abrirlo, que es justo lo que significa
+     * quedarse con un mazo. Ese camino tiene su propia vuelta por la Dirección y
+     * se comprueba en el fichero de entrada al mazo.
+     */
+    await select(page, 'coord-general')
+    await expect(page.getByTestId('coordination-panel-empty')).toBeVisible()
     expect(level1Calls(requested)).toHaveLength(2)
 
     // Cambio directo: un clic sobre la vecina, sin pasar por el estado global.
@@ -535,7 +550,7 @@ test.describe('selección in-place de coordinación', () => {
     // La anterior vuelve al reposo sin desmontarse: sigue en la mesa.
     await expect(page.locator(`${SLOT}[data-state="selected"]`)).toHaveCount(1)
     await expect(
-      page.locator(`${CARD}[data-code="coord-operaciones-academicas"]`),
+      page.locator(`${CARD}[data-code="coord-general"]`),
     ).toHaveAttribute('aria-pressed', 'false')
     // Nunca se pasó por el estado global: la miga no desapareció por el camino.
     await expect(page.getByTestId('operational-breadcrumb')).toBeVisible()
@@ -547,8 +562,8 @@ test.describe('selección in-place de coordinación', () => {
     })
 
     // Volver a una ya cargada no cuesta ninguna petición: estaba en caché.
-    await select(page, 'coord-operaciones-academicas')
-    await expect(page.getByTestId('problem-row')).toHaveCount(5)
+    await select(page, 'coord-general')
+    await expect(page.getByTestId('coordination-panel-empty')).toBeVisible()
     expect(level1Calls(requested)).toHaveLength(4)
   })
 
@@ -558,7 +573,7 @@ test.describe('selección in-place de coordinación', () => {
     await installApi(page)
     await openExperience(page)
 
-    await select(page, 'coord-operaciones-academicas')
+    await select(page, 'coord-especializaciones')
 
     await page.locator(`${CARD}[data-code="coord-b2b"]`).focus()
     await page.keyboard.press('Enter')
@@ -626,7 +641,7 @@ test.describe('selección in-place de coordinación', () => {
     await installApi(page, { fail: true })
     await openExperience(page)
 
-    await select(page, 'coord-operaciones-academicas')
+    await select(page, 'coord-b2b')
 
     await expect(page.getByTestId('coordination-panel-error')).toBeVisible()
     await expect(page.getByTestId('coordination-panel-empty')).toHaveCount(0)
@@ -668,23 +683,34 @@ test.describe('selección in-place de coordinación', () => {
     await installApi(page)
     await openExperience(page)
 
-    await select(page, 'coord-operaciones-academicas')
+    /*
+     * Con una coordinación SIMPLE observada. Un mazo escogido es otra cosa: ahí
+     * las ocho se retiran de la escena a propósito, y comprobar que siguen
+     * recibiendo el puntero contradiría lo que esa composición significa.
+     */
+    await select(page, 'coord-especializaciones')
 
     // Atenuadas no es lo mismo que decorativas: el clic directo sobre una
     // vecina es la navegación principal del modo seleccionado, así que ninguna
     // puede quedar tapada por el panel ni por la carta elevada.
     const unreachable = await page.evaluate((panelSelector) => {
-      const panel = document.querySelector(panelSelector)!.getBoundingClientRect()
+      const panel = document.querySelector(panelSelector)!
       return Array.from(
         document.querySelectorAll('[data-testid="coordination-card"]'),
       )
         .map((card) => {
           const rect = card.getBoundingClientRect()
-          // Se muestrea por encima del panel: donde el panel solapa a una carta
-          // es legítimo que gane él, porque es el contenido de la observada.
-          const y = Math.min(rect.top + rect.height / 2, panel.top - 8)
-          const hit = document.elementFromPoint(rect.left + rect.width / 2, y)
-          return card.contains(hit) ? null : card.getAttribute('data-code')
+          const hit = document.elementFromPoint(
+            rect.left + rect.width / 2,
+            rect.top + rect.height / 2,
+          )
+          if (card.contains(hit)) return null
+          // Donde el panel tape a una carta gana él, y es legítimo: es el
+          // contenido de la coordinación observada. Desde que vive en su carril
+          // ya no se solapa con la mesa, pero la excepción se conserva porque lo
+          // que se comprueba es la alcanzabilidad, no dónde cae el panel.
+          if (hit && panel.contains(hit)) return null
+          return card.getAttribute('data-code')
         })
         .filter(Boolean)
     }, PANEL)

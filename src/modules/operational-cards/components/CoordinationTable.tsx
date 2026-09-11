@@ -6,6 +6,7 @@ import {
 } from '@/modules/operational-cards/data/tableLayout'
 import type { ProductTableNode } from '@/modules/operational-cards/data/productHierarchy'
 import type { OperationalCompositionMode } from '@/modules/operational-cards/data/compositionMode'
+import { resolveDeckOrigin } from '@/modules/operational-cards/data/deckOrigin'
 
 /**
  * Mesa operacional: los nueve nodos de producto, en un solo arco.
@@ -78,6 +79,17 @@ export function CoordinationTable({
   onHoverChange,
 }: CoordinationTableProps) {
   const selectedMode = Boolean(selectedCode)
+  const deckMode = compositionMode === 'DECK_SELECTED'
+
+  /*
+   * Geometría del mazo origen. Se resuelve una vez por render y solo cuando hay
+   * mazo: en los demás modos la mesa no la necesita para nada.
+   */
+  const deckOrigin = deckMode
+    ? resolveDeckOrigin({ stageHeight: layout.stageHeight })
+    : null
+
+  const isDeckOrigin = (code: string) => code === selectedCode
 
   /*
    * La mesa solo cede ante un mazo que se abre. Señalar una coordinación plana
@@ -137,6 +149,28 @@ export function CoordinationTable({
             ? resolveTableYield(Math.abs(index - openIndex))
             : 0
 
+        /*
+         * PAPEL EN EL MAZO. Con un mazo escogido, la mesa deja de tener nueve
+         * nodos equivalentes: uno es el origen del mazo y los otros ocho se
+         * retiran. En los demás modos no hay papeles y el atributo no existe.
+         */
+        const deckRole =
+          deckMode && isDeckOrigin(slot.coordination.code)
+            ? 'origin'
+            : deckMode
+              ? 'retired'
+              : undefined
+
+        /*
+         * El padre cambia de SITIO, no de autoridad: recibe otra geometría por
+         * las mismas variables que usa el arco. Así el modo mazo no añade una
+         * segunda capa que empuje la carta desde fuera.
+         */
+        const geometry =
+          deckRole === 'origin' && deckOrigin
+            ? { x: deckOrigin.x, y: deckOrigin.y, rotation: deckOrigin.rotation }
+            : { x: slot.x, y: slot.y, rotation: slot.rotation }
+
         return (
           <div
             key={slot.coordination.code}
@@ -144,6 +178,15 @@ export function CoordinationTable({
             data-testid="coordination-table-slot"
             data-arc={slot.arc}
             data-arc-index={slot.indexInArc}
+            data-deck-role={deckRole}
+            /*
+             * Las ocho retiradas salen del alcance del teclado y del árbol de
+             * accesibilidad en el mismo instante en que dejan de estar en
+             * escena. Se quedan montadas —volver a la mesa las devuelve sin
+             * reconstruirlas— pero una carta que no se ve no puede seguir
+             * siendo una parada del tabulador ni anunciarse a un lector.
+             */
+            inert={deckRole === 'retired' ? true : undefined}
             // La presentación del slot: quién está bajo observación y quién
             // acompaña atenuado. Ninguno de los dos toca la geometría.
             data-state={
@@ -158,9 +201,9 @@ export function CoordinationTable({
             // enfocada no podría sobrescribirlo sin recurrir a `!important`.
             style={
               {
-                '--x': slot.x,
-                '--y': slot.y,
-                '--rot': slot.rotation,
+                '--x': geometry.x,
+                '--y': geometry.y,
+                '--rot': geometry.rotation,
                 '--z': slot.zIndex,
                 '--yield': yieldPx,
               } as CSSProperties

@@ -528,46 +528,37 @@ test.describe('composición simple · 1440x900', () => {
     })
   })
 
-  test('el mazo NO hereda la composición simple', async ({ page }, testInfo) => {
+  test('el mazo no adopta la mesa comprimida ni el retorno simple', async ({
+    page,
+  }) => {
     test.slow()
     await installSession(page)
     await installApi(page)
     await openExperience(page)
 
-    await settle(page)
-    const globalArc = await arcWidth(page)
+    await select(page, 'coord-b2b')
+    const simple = await measure(page, 'SIMPLE_SELECTED coord-b2b (referencia)')
+
+    await page.getByTestId('breadcrumb-direction').click()
+    await expect(page.locator(PANEL)).toHaveCount(0)
 
     await select(page, 'coord-operaciones-academicas')
     await expect(
       page.getByTestId('operational-cards-experience'),
     ).toHaveAttribute('data-composition-mode', 'DECK_SELECTED')
-
+    await page.waitForTimeout(500)
     const deck = await measure(page, 'DECK_SELECTED coord-operaciones-academicas')
 
-    // Geometría de mazo todavía CONGELADA: la mesa no se comprime, el panel
-    // sigue colgando de su carta —debajo, no en un carril— y no aparece el
-    // retorno de la composición simple.
-    expect(deck.arcWidth).toBeCloseTo(globalArc, 0)
-    expect(deck.panel!.y).toBeGreaterThan(deck.table.y + deck.table.height - 1)
+    /*
+     * Las dos composiciones observadas comparten la escena de dos columnas y el
+     * carril del panel, y ahí acaba el parecido. Lo que el mazo NO hereda es la
+     * mesa comprimida: su carta conserva el tamaño del viewport, porque en su
+     * columna solo queda ella y no hay nueve cartas que encajar.
+     */
+    expect(deck.firstCard.width).toBeGreaterThan(simple.firstCard.width)
+    // Ni el retorno de la composición simple: el mazo tendrá el suyo.
     await expect(page.getByTestId('return-to-table')).toHaveCount(0)
-
-    // Y lo que ya funcionaba sigue funcionando: nueve cartas, una observada,
-    // sus cinco cantos detrás.
-    await expect(page.locator(CARD)).toHaveCount(9)
-    await expect(page.locator(`${SLOT}[data-state="selected"]`)).toHaveCount(1)
-    await expect(
-      page.locator(
-        '[data-testid="coordination-deck-stack"][data-code="coord-operaciones-academicas"] [data-testid="coordination-deck-peek"]',
-      ),
-    ).toHaveCount(5)
-
-    expect(deck.overflow.x).toBeLessThanOrEqual(0)
-    expect(deck.overflow.y).toBeLessThanOrEqual(0)
-
-    await page.screenshot({
-      path: testInfo.outputPath('simple-c6-deck-1440x900.png'),
-      fullPage: false,
-    })
+    // El detalle del mazo abierto vive en su propio fichero de pruebas.
   })
 })
 

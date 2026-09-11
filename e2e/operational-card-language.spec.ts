@@ -194,7 +194,7 @@ test.describe('gramática de tarjetas · 1440x900', () => {
     // silencioso en cualquier prueba que solo mirase la opacidad.
     await install(page)
     await openTable(page)
-    await select(page, PARENT)
+    await select(page, SIMPLE)
 
     const state = await veil(page, ILLUSTRATED)
     expect(state.height).toBeGreaterThan(state.cardHeight - 4)
@@ -203,7 +203,7 @@ test.describe('gramática de tarjetas · 1440x900', () => {
   test('la atenuación es un VELO, no un filtro de brillo', async ({ page }) => {
     await install(page)
     await openTable(page)
-    await select(page, PARENT)
+    await select(page, SIMPLE)
 
     const state = await veil(page, ILLUSTRATED)
     expect(state.opacity).toBeGreaterThan(0.3)
@@ -218,7 +218,7 @@ test.describe('gramática de tarjetas · 1440x900', () => {
     // igualdad se rompe.
     await install(page)
     await openTable(page)
-    await select(page, PARENT)
+    await select(page, SIMPLE)
 
     const illustrated = await veil(page, ILLUSTRATED)
     const legacy = await veil(page, LEGACY)
@@ -233,7 +233,7 @@ test.describe('gramática de tarjetas · 1440x900', () => {
     // tiene que seguir diciendo aunque esté en segundo plano.
     await install(page)
     await openTable(page)
-    await select(page, PARENT)
+    await select(page, SIMPLE)
 
     for (const code of [ILLUSTRATED, LEGACY]) {
       const state = await veil(page, code)
@@ -268,7 +268,7 @@ test.describe('gramática de tarjetas · 1440x900', () => {
 
     // Atenuada: sigue en pantalla y con el MISMO texto. El estado operacional
     // no depende del protagonismo de la carta.
-    await select(page, PARENT)
+    await select(page, SIMPLE)
     await expect(pillOf(LEGACY)).toBeVisible()
     await expect(pillOf(LEGACY)).toHaveText(resting!.trim())
   })
@@ -278,7 +278,7 @@ test.describe('gramática de tarjetas · 1440x900', () => {
   }) => {
     await install(page)
     await openTable(page)
-    await select(page, PARENT)
+    await select(page, SIMPLE)
 
     expect((await veil(page, ILLUSTRATED)).opacity).toBeGreaterThan(0.3)
 
@@ -293,7 +293,7 @@ test.describe('gramática de tarjetas · 1440x900', () => {
   test('el foco por teclado equivale al puntero', async ({ page }) => {
     await install(page)
     await openTable(page)
-    await select(page, PARENT)
+    await select(page, SIMPLE)
 
     /*
      * Se compara la elevación DESCOMPUESTA y con tolerancia, no la cadena de
@@ -354,7 +354,7 @@ test.describe('gramática de tarjetas · 1440x900', () => {
   }) => {
     await install(page)
     await openTable(page)
-    await select(page, PARENT)
+    await select(page, SIMPLE)
     await page.locator(`${CARD}[data-code="${ILLUSTRATED}"]`).hover()
     await settle(page)
 
@@ -375,7 +375,7 @@ test.describe('gramática de tarjetas · 1440x900', () => {
           restingMax: Math.max(...resting),
         }
       },
-      { slotSelector: SLOT, selected: PARENT, hovered: ILLUSTRATED },
+      { slotSelector: SLOT, selected: SIMPLE, hovered: ILLUSTRATED },
     )
 
     // La alternativa señalada sube por encima de sus vecinas —con solape del
@@ -388,7 +388,7 @@ test.describe('gramática de tarjetas · 1440x900', () => {
   test('una autoridad de transform por nodo', async ({ page }) => {
     await install(page)
     await openTable(page)
-    await select(page, PARENT)
+    await select(page, SIMPLE)
 
     const read = () =>
       page.evaluate(
@@ -423,7 +423,7 @@ test.describe('gramática de tarjetas · 1440x900', () => {
         }
         return { selected: of(selected), dimmed: of(dimmed) }
       },
-      { selected: PARENT, dimmed: ILLUSTRATED },
+      { selected: SIMPLE, dimmed: ILLUSTRATED },
       )
 
     // El realce entra con transición; se espera a que haya llegado antes de
@@ -568,7 +568,7 @@ test.describe('gramática de tarjetas · 1440x900', () => {
   test('nada de esto desborda la página', async ({ page }) => {
     await install(page)
     await openTable(page)
-    await select(page, PARENT)
+    await select(page, SIMPLE)
     await page.locator(`${CARD}[data-code="${ILLUSTRATED}"]`).hover()
 
     const overflow = await page.evaluate(() => ({
