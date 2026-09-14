@@ -23,6 +23,20 @@ import type { CoordinationOverview } from '@/modules/operational-cards/types/ope
  * es 2 (nodo principal y una capa de hijas).
  */
 
+/**
+ * Una subordinación declarada.
+ *
+ * El nombre habitual NO se declara aquí: lo trae el DTO en `shortName`
+ * —«Ingenierías», «Bellas Artes»—, y repetirlo sería crear una segunda fuente
+ * que puede quedar desfasada. `label` existe solo para las excepciones, que se
+ * escriben donde se pueden ver y no se esconden en un componente.
+ */
+export interface ProductChildDeclaration {
+  code: string
+  /** Nombre de PRODUCTO, cuando el del DTO no es el que usa la institución. */
+  label?: string
+}
+
 export interface ProductNodeDeclaration {
   /**
    * Nombre de PRODUCTO. Puede diferir del `name` técnico de la fila, y en un
@@ -31,8 +45,8 @@ export interface ProductNodeDeclaration {
   label: string
   /** Fila técnica que aporta estado y problemas a este nodo. */
   code: string
-  /** Codes de las subordinaciones declaradas, en orden institucional. */
-  children: readonly string[]
+  /** Subordinaciones declaradas, en orden institucional. */
+  children: readonly ProductChildDeclaration[]
   /**
    * Code del que este nodo toma prestado el ARTE, cuando el suyo contradice al
    * nombre de producto.
@@ -64,11 +78,28 @@ export const PRODUCT_TOP_LEVEL: readonly ProductNodeDeclaration[] = [
     label: 'Operación Académica',
     code: 'coord-operaciones-academicas',
     children: [
-      'coord-bellas-artes',
-      'coord-empresarial',
-      'coord-ingenierias',
-      'coord-transversales',
-      'coord-negocios',
+      { code: 'coord-bellas-artes' },
+      {
+        /*
+         * ÚNICA excepción de nombre entre las cinco.
+         *
+         * La base de datos la llama «Empresarial» en `shortName`, pero la
+         * coordinación es «Transformación Empresarial»: así la declaró la
+         * institución y así la rotula su propia carta ilustrada. Mostrar
+         * «Empresarial» dejaba el nombre visible del arte y el nombre accesible
+         * diciendo cosas distintas sobre la misma carta.
+         *
+         * Se corrige aquí, en la estructura de PRODUCTO, y no en el backend: el
+         * `shortName` técnico se conserva tal cual, igual que se conservó el
+         * `code` de Homologaciones bajo el nodo «Servicio». Cuando el registro
+         * se renombre, basta con retirar esta línea.
+         */
+        code: 'coord-empresarial',
+        label: 'Transformación Empresarial',
+      },
+      { code: 'coord-ingenierias' },
+      { code: 'coord-transversales' },
+      { code: 'coord-negocios' },
     ],
   },
   { label: 'Proyección Social', code: 'coord-proyeccion-social', children: [] },
@@ -120,6 +151,25 @@ export const PRODUCT_TOP_LEVEL: readonly ProductNodeDeclaration[] = [
  */
 export const LEGACY_UNMAPPED_CODES: readonly string[] = ['coord-servicios']
 
+/**
+ * Una subordinación ya resuelta: su fila técnica y el nombre con el que se la
+ * nombra en la mesa.
+ *
+ * El nombre sale del DTO salvo excepción declarada: `shortName` es como se llama
+ * la coordinación —«Ingenierías», «Bellas Artes»— mientras que `name` es el
+ * cargo de quien la coordina —«Coordinador Ingenierías»—. La única excepción
+ * hoy es `coord-empresarial`, cuyo nombre de producto se declara arriba junto a
+ * su code: las excepciones se escriben donde se ven, nunca dentro de un
+ * componente visual.
+ */
+export interface ProductTableChild {
+  /** Code técnico. Es la clave de selección, del `data-code` y de LEVEL 1. */
+  code: string
+  /** Nombre con el que se presenta en la mano. */
+  label: string
+  coordination: CoordinationOverview
+}
+
 /** Un nodo de la mesa de producto, ya resuelto contra las filas de LEVEL 0. */
 export interface ProductTableNode {
   label: string
@@ -127,8 +177,8 @@ export interface ProductTableNode {
   artCode?: string
   /** Fila técnica del nodo: de aquí salen estado, problemas e identidad. */
   coordination: CoordinationOverview
-  /** Filas técnicas de sus subordinaciones, en orden declarado. */
-  children: readonly CoordinationOverview[]
+  /** Sus subordinaciones, en orden declarado. */
+  children: readonly ProductTableChild[]
 }
 
 export interface ProductTable {
@@ -166,15 +216,20 @@ export function buildProductTable(
     }
     consumed.add(declaration.code)
 
-    const children: CoordinationOverview[] = []
-    for (const childCode of declaration.children) {
-      const child = byCode.get(childCode)
+    const children: ProductTableChild[] = []
+    for (const childDeclaration of declaration.children) {
+      const child = byCode.get(childDeclaration.code)
       if (!child) {
-        missingCodes.push(childCode)
+        missingCodes.push(childDeclaration.code)
         continue
       }
-      consumed.add(childCode)
-      children.push(child)
+      consumed.add(childDeclaration.code)
+      children.push({
+        code: child.code,
+        // El nombre del DTO, salvo que producto haya declarado otro.
+        label: childDeclaration.label ?? child.shortName,
+        coordination: child,
+      })
     }
 
     nodes.push({

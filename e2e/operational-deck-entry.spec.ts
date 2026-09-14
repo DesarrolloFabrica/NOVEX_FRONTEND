@@ -255,7 +255,9 @@ async function reachableCards(page: Page): Promise<string[]> {
         const style = getComputedStyle(card)
         if (style.visibility === 'hidden' || style.opacity === '0') return false
         // `inert` en un ancestro retira el subárbol entero del tabulador.
-        return !card.closest('[inert]')
+        if (card.closest('[inert]')) return false
+        // Las cartas de la MANO no son de la mesa: tienen su propio fichero.
+        return !card.closest('[data-testid="coordination-deck-fan-slot"]')
       })
       .map((card) => card.dataset.code ?? '')
   }, CARD)
@@ -401,7 +403,7 @@ test.describe('entrada al mazo · 1440x900', () => {
     await expect(page.locator(`${SLOT}[data-deck-role="origin"]`)).toHaveCount(1)
     await expect(page.locator(`${SLOT}[data-deck-role="retired"]`)).toHaveCount(8)
     // Las ocho siguen montadas: volver no reconstruye nada.
-    await expect(page.locator(CARD)).toHaveCount(9)
+    await expect(page.locator(SLOT)).toHaveCount(9)
     await expect(
       page.locator(`${CARD}[data-code="${PARENT}"]`),
     ).toHaveAttribute('aria-pressed', 'true')
@@ -455,7 +457,16 @@ test.describe('entrada al mazo · 1440x900', () => {
 
     // Con el mazo escogido, solo el padre. Una carta invisible que siguiera
     // recibiendo el foco dejaría al usuario de teclado en un sitio que no ve.
-    expect(await tabbableCards(page)).toEqual([PARENT])
+    // Solo el padre entre las principales, y a continuación su mano: las ocho
+    // retiradas no aparecen.
+    expect(await tabbableCards(page)).toEqual([
+      PARENT,
+      'coord-bellas-artes',
+      'coord-empresarial',
+      'coord-ingenierias',
+      'coord-transversales',
+      'coord-negocios',
+    ])
     await expect(page.locator(`${SLOT}[inert]`)).toHaveCount(8)
   })
 

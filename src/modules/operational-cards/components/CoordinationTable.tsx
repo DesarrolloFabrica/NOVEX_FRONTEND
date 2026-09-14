@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { CoordinationDeckFan } from '@/modules/operational-cards/components/CoordinationDeckFan'
 import { CoordinationDeckStack } from '@/modules/operational-cards/components/CoordinationDeckStack'
 import {
   resolveTableYield,
@@ -51,6 +52,14 @@ export interface CoordinationTableProps {
    */
   compositionMode: OperationalCompositionMode
   /**
+   * Code del nodo principal cuyo mazo está abierto, o `null`.
+   *
+   * Llega resuelto desde arriba y NO se deduce aquí, por la misma razón que el
+   * modo: con una hija observada el origen del mazo sigue siendo el padre, y
+   * eso solo lo sabe quien consultó la jerarquía.
+   */
+  deckParentCode?: string | null
+  /**
    * Coordinación bajo el puntero o el foco. Solo se usa para que la mesa CEDA
    * cuando la señalada tiene subordinaciones: la apertura de la subbaraja en sí
    * la resuelve el CSS, sin estado.
@@ -73,6 +82,7 @@ export function CoordinationTable({
   layout,
   nodesByCode,
   compositionMode,
+  deckParentCode,
   hoveredCode,
   selectedCode,
   onSelect,
@@ -89,7 +99,12 @@ export function CoordinationTable({
     ? resolveDeckOrigin({ stageHeight: layout.stageHeight })
     : null
 
-  const isDeckOrigin = (code: string) => code === selectedCode
+  /*
+   * El ORIGEN es el padre del mazo, no lo observado. Con una hija seleccionada
+   * la carta que sigue haciendo de mazo es la suya, no la hija.
+   */
+  const deckNode = deckParentCode ? nodesByCode[deckParentCode] : null
+  const isDeckOrigin = (code: string) => code === deckParentCode
 
   /*
    * La mesa solo cede ante un mazo que se abre. Señalar una coordinación plana
@@ -222,6 +237,20 @@ export function CoordinationTable({
           </div>
         )
       })}
+
+      {/* La MANO. Solo existe con un mazo abierto, y sus cartas son controles
+          reales: no son los cantos decorativos de la mesa global. */}
+      {deckMode && deckNode && (
+        <CoordinationDeckFan
+          subordinations={deckNode.children}
+          stageHeight={layout.stageHeight}
+          selectedCode={selectedCode}
+          childObserved={Boolean(
+            selectedCode && selectedCode !== deckParentCode,
+          )}
+          onSelect={onSelect}
+        />
+      )}
     </div>
   )
 }

@@ -1,3 +1,5 @@
+import { resolveDeckSelectionContext } from '@/modules/operational-cards/data/deckContext'
+
 /**
  * MODO DE COMPOSICIÓN de la experiencia operacional.
  *
@@ -7,7 +9,8 @@
  *
  *   GLOBAL           la mesa entera, sin nada bajo observación.
  *   SIMPLE_SELECTED  una coordinación observada que no es mazo.
- *   DECK_SELECTED    una coordinación observada que ES mazo de producto.
+ *   DECK_SELECTED    un mazo abierto, con el padre o una de sus hijas
+ *                    observada: las dos cosas ocurren DENTRO del mismo mazo.
  *
  * NO ES ESTADO. Es una función de la selección que ya existe
  * (`selectedCoordinationCode`) y de la jerarquía de PRODUCTO que ya existe
@@ -30,7 +33,8 @@
  */
 
 /**
- * Lo ÚNICO que el modo necesita saber de un nodo de producto: si tiene hijas.
+ * Lo ÚNICO que el modo necesita saber de un nodo de producto: quiénes son sus
+ * hijas.
  *
  * Se pide esta forma mínima, y no el `ProductTableNode` completo, porque el
  * modo no debe poder mirar el estado, los problemas ni la identidad visual de
@@ -39,7 +43,7 @@
  * experiencia pasa el mapa que ya tiene sin construir nada nuevo.
  */
 export interface CompositionModeNode {
-  readonly children: readonly unknown[]
+  readonly children: readonly { readonly code: string }[]
 }
 
 export type OperationalCompositionMode =
@@ -57,35 +61,14 @@ export interface CompositionModeInput {
   nodesByCode: Readonly<Record<string, CompositionModeNode>>
 }
 
-export function resolveCompositionMode({
-  selectedCode,
-  nodesByCode,
-}: CompositionModeInput): OperationalCompositionMode {
-  if (!selectedCode) return 'GLOBAL'
-
-  const node = nodesByCode[selectedCode]
-
+export function resolveCompositionMode(
+  input: CompositionModeInput,
+): OperationalCompositionMode {
   /*
-   * FALLBACK DECLARADO: un code seleccionado que NO es nodo principal de la
-   * mesa resuelve a `SIMPLE_SELECTED`, nunca a `GLOBAL` ni a `DECK_SELECTED`.
-   *
-   * Hay tres formas de llegar aquí: el code de una subordinación, el de una
-   * fila legacy sin carta (`coord-servicios`) y un code que el backend no
-   * trajo. En las tres hay una selección viva —hay panel, y la mesa ya se
-   * declara `data-mode="selected"`—, así que devolver `GLOBAL` sería negar algo
-   * que está ocurriendo y dejaría al layout componiendo la mesa global con un
-   * panel abierto encima. Y `DECK_SELECTED` sería peor: abriría un abanico de
-   * hijas que no sabemos que existan.
-   *
-   * `SIMPLE_SELECTED` es el modo conservador: es el que menos promete y el
-   * único que no puede animar nada que no exista.
-   *
-   * Cuando las subordinaciones sean realmente seleccionables, este caso deja de
-   * ser un fallback y pasa a ser una regla propia —una hija seleccionada
-   * compone el mazo ABIERTO de su padre—, con su propio test. Hoy no se
-   * implementa: ninguna hija es clickeable todavía.
+   * Una sola resolución. El modo es la primera respuesta de un contexto más
+   * amplio —qué mazo está abierto y si lo observado es el padre o una hija—, y
+   * calcularlo aquí por separado crearía dos lógicas capaces de discrepar el día
+   * que aparezca un caso nuevo.
    */
-  if (!node) return 'SIMPLE_SELECTED'
-
-  return node.children.length > 0 ? 'DECK_SELECTED' : 'SIMPLE_SELECTED'
+  return resolveDeckSelectionContext(input).mode
 }

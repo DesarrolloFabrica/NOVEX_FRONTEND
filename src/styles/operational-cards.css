@@ -1699,3 +1699,153 @@
     transition-delay: 0ms;
   }
 }
+
+/* ==========================================================================
+   LA MANO: las cinco subordinaciones, repartidas
+   ==========================================================================
+
+   Cartas de verdad y controles de verdad. La geometría llega en unidades de
+   carta desde `buildDeckFanLayout`, igual que el arco de la mesa, y cada slot es
+   la única autoridad de su posición: la elevación de hover y de observada vive
+   en un nodo interior, y el aura y el velo dentro de la carta.
+
+   El orden del DOM es el DECLARADO, así que el tabulador recorre padre y luego
+   las cinco en el orden del organigrama, aunque el apilado las monte de
+   izquierda a derecha. Nunca se reordena la mano: seleccionar cambia cómo se
+   presenta una carta, jamás dónde está. */
+
+.operational-deck-fan {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  /* La capa no intercepta nada; cada carta sí. */
+  pointer-events: none;
+}
+
+.operational-deck-fan__slot {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: var(--z);
+  width: var(--card-width);
+  margin-left: calc(var(--card-width) / -2);
+  transform: translate(
+      calc(var(--x) * var(--card-width)),
+      calc(var(--y) * var(--card-height))
+    )
+    rotate(calc(var(--rot) * 1deg)) scale(var(--fan-scale));
+  transform-origin: 50% 50%;
+  pointer-events: auto;
+  /*
+   * REPARTO. Cada hija sale de detrás del padre y llega a su sitio del abanico.
+   * Es una animación y no una transición porque la carta NACE con el mazo: no
+   * hay estado anterior desde el que transitar, y fabricar uno exigiría un
+   * estado efímero en React que esta escena no necesita.
+   *
+   * El escalonado es el índice de la hija, así que la mano se abre de izquierda
+   * a derecha como quien reparte. 40 ms: lo justo para que se lea el gesto sin
+   * que la última carta se haga esperar.
+   */
+  animation: deck-fan-deal 260ms var(--os-ease, cubic-bezier(0.22, 0.72, 0.18, 1))
+    both;
+  animation-delay: calc(90ms + var(--fan-index) * 40ms);
+}
+
+/*
+ * El origen del reparto es el MAZO, no un punto cualquiera: las cinco arrancan
+ * superpuestas sobre el padre, con su misma inclinación, y se abren desde ahí.
+ * La posición de partida se expresa en las mismas unidades de carta que el
+ * destino —nada se mide del contenedor—, así que el gesto no depende del ancho
+ * de la columna, que está cambiando en ese mismo instante.
+ */
+@keyframes deck-fan-deal {
+  from {
+    transform: translate(
+        calc(var(--deck-origin-x) * var(--card-width)),
+        calc(var(--deck-origin-y) * var(--card-height))
+      )
+      rotate(calc(var(--deck-origin-rot) * 1deg)) scale(var(--fan-scale));
+    opacity: 0;
+  }
+}
+
+/* ---------- Énfasis dentro de la mano ---------- */
+
+.operational-deck-fan__member {
+  transition: transform 220ms var(--os-ease, cubic-bezier(0.22, 0.72, 0.18, 1));
+}
+
+.operational-deck-fan__slot:hover,
+.operational-deck-fan__slot:focus-within {
+  z-index: var(--z-table-hover);
+}
+
+.operational-deck-fan__slot:hover .operational-deck-fan__member,
+.operational-deck-fan__slot:focus-within .operational-deck-fan__member {
+  transform: translateY(-6px) scale(1.02);
+}
+
+/*
+ * La hija observada. Mismo lenguaje que la carta observada de la mesa —elevar,
+ * crecer un punto y enderezar a medias— pero SIN moverse de su sitio en el
+ * abanico: sigue siendo la tercera de la mano.
+ */
+.operational-deck-fan__slot[data-state='selected'] {
+  z-index: var(--z-table-selected);
+}
+
+.operational-deck-fan__slot[data-state='selected']
+  .operational-deck-fan__member {
+  transform: translateY(var(--selected-lift)) scale(var(--selected-scale))
+    rotate(calc(var(--rot) * var(--selected-rot-factor) * 1deg));
+}
+
+/*
+ * Las demás ceden protagonismo con el MISMO velo que la mesa, y solo cuando hay
+ * una hija observada: mientras el padre es la lectura en curso, la mano entera
+ * se mantiene clara, porque son las opciones que se acaban de repartir y no
+ * ruido de fondo.
+ */
+.operational-deck-fan__slot[data-state='dimmed'] {
+  opacity: var(--stack-dimmed-opacity);
+}
+
+.operational-deck-fan__slot[data-state='dimmed'] .coordination-card {
+  --card-veil: var(--card-veil-dimmed);
+}
+
+.operational-deck-fan__slot[data-state='dimmed']:hover .coordination-card,
+.operational-deck-fan__slot[data-state='dimmed']:focus-within
+  .coordination-card {
+  --card-veil: 0;
+}
+
+.operational-deck-fan__slot[data-state='dimmed'] {
+  transition: opacity 220ms var(--os-ease, cubic-bezier(0.22, 0.72, 0.18, 1));
+}
+
+/*
+ * SIN DUPLICAR LA MANO. Con el mazo abierto, los cantos decorativos que asoman
+ * detrás del padre dejan de dibujarse: las cinco hijas ya están repartidas
+ * delante, y mantener ambos representaría diez veces cinco coordinaciones. En
+ * la mesa global siguen intactos, que es donde tienen sentido.
+ */
+.operational-table[data-composition-mode='DECK_SELECTED']
+  .coordination-deck-stack__peek {
+  display: none;
+}
+
+/* ---------- Movimiento reducido ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  /* La mano aparece repartida, sin recorrido ni escalonado. */
+  .operational-deck-fan__slot {
+    animation: none;
+    transition-duration: 0ms;
+    transition-delay: 0ms;
+  }
+
+  .operational-deck-fan__member {
+    transition-duration: 0ms;
+  }
+}

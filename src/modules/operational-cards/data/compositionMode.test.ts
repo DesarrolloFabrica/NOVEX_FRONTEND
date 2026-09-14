@@ -15,7 +15,7 @@ import { PRODUCT_TOP_LEVEL } from '@/modules/operational-cards/data/productHiera
 const NODES: Readonly<Record<string, CompositionModeNode>> = Object.fromEntries(
   PRODUCT_TOP_LEVEL.map((declaration) => [
     declaration.code,
-    { children: declaration.children },
+    { children: declaration.children.map((child) => ({ code: child.code })) },
   ]),
 )
 
@@ -75,18 +75,30 @@ describe('resolveCompositionMode', () => {
         selectedCode: 'coord-fabrica-contenidos',
         nodesByCode: {
           ...NODES,
-          'coord-fabrica-contenidos': { children: ['coord-futura'] },
+          'coord-fabrica-contenidos': { children: [{ code: 'coord-futura' }] },
         },
       }),
     ).toBe('DECK_SELECTED')
   })
 
-  it('un code que no es nodo principal cae en el modo conservador', () => {
-    // Las tres formas de llegar al fallback declarado. Ninguna es GLOBAL —hay
-    // una selección viva— y ninguna es DECK_SELECTED —no se puede abrir un
-    // abanico de hijas que no consta que existan—.
+  it('una hija declarada compone el mazo de su padre', () => {
+    // Dejó de ser un caso del fallback: una subordinación observada está DENTRO
+    // del mazo, y componer una mesa simple cerraría el abanico desde el que se
+    // acaba de pulsar. El parentesco y sus consecuencias se prueban en detalle
+    // junto al contexto de mazo.
+    expect(
+      resolveCompositionMode({
+        selectedCode: 'coord-ingenierias',
+        nodesByCode: NODES,
+      }),
+    ).toBe('DECK_SELECTED')
+  })
+
+  it('un code realmente desconocido cae en el modo conservador', () => {
+    // Ninguno es GLOBAL —hay una selección viva— y ninguno es DECK_SELECTED: no
+    // se abre un abanico de hijas que no consta que existan, ni se le inventa
+    // un padre a un code que la estructura no reconoce.
     for (const code of [
-      'coord-ingenierias', // subordinación: todavía no seleccionable
       'coord-servicios', // fila legacy sin carta
       'coord-inexistente', // code que LEVEL 0 no trajo
     ]) {

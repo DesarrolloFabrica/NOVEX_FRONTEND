@@ -7,7 +7,7 @@ import { OperationalBreadcrumb } from '@/modules/operational-cards/components/Op
 import { ProblemIsland } from '@/modules/operational-cards/components/ProblemIsland'
 import { TableReturnAction } from '@/modules/operational-cards/components/TableReturnAction'
 import { buildCharacterPresentation } from '@/modules/operational-cards/data/characterReaction'
-import { resolveCompositionMode } from '@/modules/operational-cards/data/compositionMode'
+import { resolveDeckSelectionContext } from '@/modules/operational-cards/data/deckContext'
 import { resolveCoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
 import { resolvePanelAnchor } from '@/modules/operational-cards/data/panelAnchor'
 import { buildTableLayout } from '@/modules/operational-cards/data/tableLayout'
@@ -107,6 +107,24 @@ export function OperationalCardExperience() {
   )
 
   /**
+   * Cómo se llama cada coordinación en la mesa, incluidas las subordinaciones.
+   *
+   * Existe porque el nombre de producto y el nombre técnico no siempre
+   * coinciden, y quien lea la miga o el panel debe ver el primero: la carta
+   * «Servicio» no puede abrir un panel que diga «Homologaciones», y la hija
+   * «Ingenierías» no debe presentarse como «Coordinador Ingenierías», que es el
+   * cargo y no la coordinación.
+   */
+  const labelByCode = useMemo(() => {
+    const labels: Record<string, string> = {}
+    for (const node of productTable.nodes) {
+      labels[node.coordination.code] = node.label
+      for (const child of node.children) labels[child.code] = child.label
+    }
+    return labels
+  }, [productTable])
+
+  /**
    * Una sola geometría, para renderizar y para orientar al personaje: no pueden
    * desincronizarse.
    *
@@ -134,20 +152,28 @@ export function OperationalCardExperience() {
    * fuente de verdad capaz de contradecir a la selección, que es el fallo
    * clásico de este tipo de estado.
    *
-   * Aquí solo se resuelve y se publica. La geometría de cada modo llega
-   * después: hoy los tres se dibujan exactamente igual que antes de existir el
-   * modo, y lo único nuevo es que la composición tiene nombre.
+   * Se resuelve de una vez con el resto del contexto —qué mazo está abierto y
+   * si lo observado es el padre o una de sus hijas—, en una sola llamada: son
+   * respuestas a la misma pregunta y calcularlas por separado las dejaría
+   * discrepar.
    */
-  const compositionMode = useMemo(
+  const selectionContext = useMemo(
     () =>
-      resolveCompositionMode({
+      resolveDeckSelectionContext({
         selectedCode: selectedCoordinationCode,
         nodesByCode,
       }),
     [selectedCoordinationCode, nodesByCode],
   )
+  const compositionMode = selectionContext.mode
 
-  /** Slot de la coordinación observada. Es lo que ancla el panel de LEVEL 1. */
+  /**
+   * Slot de la coordinación observada, si es una de las nueve de la mesa.
+   *
+   * Una hija observada no tiene slot propio —no es nodo principal— y eso ya no
+   * impide nada: el panel vive en su carril y no necesita colgar de ninguna
+   * carta.
+   */
   const selectedSlot = useMemo(
     () =>
       selectedCoordination
@@ -212,7 +238,7 @@ export function OperationalCardExperience() {
           /* La miga usa el nombre de PRODUCTO, no el técnico: si no, pulsar la
              carta «Servicio» abriría una miga que dice «Homologaciones». */
           coordinationName={
-            nodesByCode[selectedCoordination.code]?.label ??
+            labelByCode[selectedCoordination.code] ??
             selectedCoordination.name
           }
           summary={summary}
@@ -291,6 +317,7 @@ export function OperationalCardExperience() {
               layout={layout}
               nodesByCode={nodesByCode}
               compositionMode={compositionMode}
+              deckParentCode={selectionContext.deckParentCode}
               hoveredCode={hoveredCoordinationCode}
               selectedCode={selectedCoordination?.code ?? null}
               onSelect={selectCoordination}
@@ -323,14 +350,14 @@ export function OperationalCardExperience() {
             data-open={selectedCoordination ? 'true' : 'false'}
           >
             <AnimatePresence mode="wait">
-              {selectedCoordination && panelAnchor && (
+              {selectedCoordination && (
                 <CoordinationProblemPanel
                   key={selectedCoordination.code}
                   coordination={selectedCoordination}
                   identity={resolveCoordinationVisualIdentity(
                     selectedCoordination,
                   )}
-                  productLabel={nodesByCode[selectedCoordination.code]?.label}
+                  productLabel={labelByCode[selectedCoordination.code]}
                   anchor={panelAnchor}
                   level1={level1}
                   onProblemSelect={selectProblem}

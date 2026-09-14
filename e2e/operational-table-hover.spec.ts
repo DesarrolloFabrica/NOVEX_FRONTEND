@@ -137,7 +137,6 @@ test.describe('preview de subbaraja · 1440x900', () => {
     await openTable(page)
 
     await expect(page.locator(CARD)).toHaveCount(9)
-    await expect(page.locator(PEEK)).toHaveCount(5)
     // Baraja cerrada: los cantos asoman unas decenas de píxeles POR DEBAJO del
     // padre, no un abanico. Se mide contra el pie y no con `reach`, que desde
     // R4.2 vigila el ascenso: el reposo sigue creciendo hacia abajo y ese es
@@ -362,7 +361,14 @@ test.describe('preview de subbaraja · 1440x900', () => {
       PARENT,
     )
     await expect(page.getByTestId('coordination-table')).toBeVisible()
-    await expect(page.locator(CARD)).toHaveCount(9)
+    await expect(
+      page.locator('[data-testid="coordination-table-slot"]'),
+    ).toHaveCount(9)
+    // Y el mazo se abre: sus cinco subordinaciones pasan a estar repartidas
+    // como cartas reales, que es lo que significa escoger un mazo.
+    await expect(
+      page.locator('[data-testid="coordination-deck-fan-slot"]'),
+    ).toHaveCount(5)
   })
 
   test('la subbaraja abierta no desborda la página', async ({ page }) => {

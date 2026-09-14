@@ -220,6 +220,12 @@ test.describe('gramática de tarjetas · 1440x900', () => {
     await openTable(page)
     await select(page, SIMPLE)
 
+    // Se sondea hasta que el velo ha llegado: su valor CONVERGE, y lo que se
+    // afirma es que las dos cartas acaban en el mismo sitio, no cuánto tardan.
+    await expect
+      .poll(async () => (await veil(page, ILLUSTRATED)).opacity)
+      .toBeGreaterThan(0.3)
+
     const illustrated = await veil(page, ILLUSTRATED)
     const legacy = await veil(page, LEGACY)
 
@@ -535,34 +541,33 @@ test.describe('gramática de tarjetas · 1440x900', () => {
     expect(label).not.toContain('subordinaci')
   })
 
-  test('la observada con mazo conserva sus cantos sin abrirlos', async ({
+  test('el mazo abierto cambia sus cantos por la mano real', async ({
     page,
   }) => {
     await install(page)
     await openTable(page)
-    await select(page, PARENT)
 
+    // En reposo el mazo se lee como mazo: cinco cantos decorativos detrás.
     const peeks = page.locator(
       `${STACK}[data-code="${PARENT}"] [data-testid="coordination-deck-peek"]`,
     )
     await expect(peeks).toHaveCount(5)
 
-    // Visibles —es un mazo y tiene que leerse como tal— pero por DEBAJO del
-    // borde alto de su carta: la subbaraja no se despliega en modo observado.
-    const spread = await page.evaluate((parent) => {
-      const stack = document.querySelector(
-        `[data-testid="coordination-deck-stack"][data-code="${parent}"]`,
-      )!
-      const card = stack
-        .querySelector('[data-testid="coordination-card"]')!
-        .getBoundingClientRect()
-      const tops = Array.from(
-        stack.querySelectorAll('[data-testid="coordination-deck-peek"]'),
-      ).map((peek) => peek.getBoundingClientRect().top)
-      return Math.max(...tops.map((top) => card.top - top))
-    }, PARENT)
+    await select(page, PARENT)
 
-    expect(spread).toBeLessThan(0)
+    /*
+     * Abierto, esos cantos dejan de dibujarse y en su lugar están las cinco
+     * cartas de verdad. Mantener ambos representaría diez veces cinco
+     * coordinaciones, que es justo la duplicación que no debe existir.
+     */
+    await expect(
+      page.locator(
+        `${STACK}[data-code="${PARENT}"] [data-testid="coordination-deck-peek"]:visible`,
+      ),
+    ).toHaveCount(0)
+    await expect(
+      page.locator('[data-testid="coordination-deck-fan-slot"]'),
+    ).toHaveCount(5)
   })
 
   test('nada de esto desborda la página', async ({ page }) => {
@@ -600,7 +605,10 @@ test.describe('gramática de tarjetas · movimiento reducido', () => {
       ),
     ).toBe(true)
 
-    await page.locator(`${CARD}[data-code="${PARENT}"]`).click()
+    // Con una coordinación SIMPLE observada: lo que se mide es el velo de las
+    // NO observadas, y con un mazo abierto las otras ocho se retiran de la
+    // escena en lugar de atenuarse.
+    await page.locator(`${CARD}[data-code="${SIMPLE}"]`).click()
     await page.mouse.move(4, 4)
     await page.evaluate(
       () =>

@@ -275,9 +275,15 @@ test.describe('selección in-place de coordinación', () => {
       'DECK_SELECTED',
     )
 
-    // Y el mazo no ha cambiado nada de lo que ya funcionaba: sigue habiendo
-    // nueve cartas, una sola observada y el panel abierto sobre ella.
-    await expect(page.getByTestId('coordination-card')).toHaveCount(9)
+    // Y el mazo no ha cambiado nada de lo que ya funcionaba: sus nueve slots
+    // siguen dibujados, con una sola carta observada y su panel abierto.
+    await expect(
+      page.locator('[data-testid="coordination-table-slot"]'),
+    ).toHaveCount(9)
+    // Y sus cinco subordinaciones, repartidas como cartas reales.
+    await expect(
+      page.locator('[data-testid="coordination-deck-fan-slot"]'),
+    ).toHaveCount(5)
     await expect(page.locator(`${SLOT}[data-state="selected"]`)).toHaveCount(1)
     await expect(page.locator(PANEL)).toHaveAttribute(
       'data-code',
@@ -338,8 +344,14 @@ test.describe('selección in-place de coordinación', () => {
     await select(page, 'coord-operaciones-academicas')
 
     // La mesa sigue siendo la mesa: nueve cartas, ningún carrusel.
-    await expect(page.getByTestId('coordination-table')).toBeVisible()
-    await expect(page.getByTestId('coordination-card')).toHaveCount(9)
+    // La mesa sigue siendo la mesa: sus nueve slots, ningún carrusel, y el
+    // mazo escogido reparte además sus cinco subordinaciones.
+    await expect(
+      page.locator('[data-testid="coordination-table-slot"]'),
+    ).toHaveCount(9)
+    await expect(
+      page.locator('[data-testid="coordination-deck-fan-slot"]'),
+    ).toHaveCount(5)
     /* Estos dos `testid` ya no los produce ningún componente: R5.2 borró
        `CoordinationCarousel`. Las aserciones se conservan como guardia contra
        su reaparición —el modo seleccionado in-place existe precisamente para
@@ -665,7 +677,10 @@ test.describe('selección in-place de coordinación', () => {
     await select(page, 'coord-operaciones-academicas')
 
     await expect(page.locator(`${CARD}[aria-pressed="true"]`)).toHaveCount(1)
-    await expect(page.locator(`${CARD}[aria-pressed="false"]`)).toHaveCount(8)
+    // Trece sin presionar: las otras ocho principales y las cinco de la mano
+    // que el mazo acaba de repartir. Solo una carta está bajo observación en
+    // toda la escena, y es el padre.
+    await expect(page.locator(`${CARD}[aria-pressed="false"]`)).toHaveCount(13)
     await expect(page.locator(`${CARD}[aria-pressed="true"]`)).toHaveAttribute(
       'data-code',
       'coord-operaciones-academicas',
@@ -718,50 +733,34 @@ test.describe('selección in-place de coordinación', () => {
     expect(unreachable).toEqual([])
   })
 
-  test('Operación Académica seleccionada conserva su mazo, sin abrirlo', async ({
-    page,
-  }) => {
+  test('escoger Operación Académica reparte su mazo', async ({ page }) => {
     test.slow()
     await installSession(page)
     await installApi(page)
     await openExperience(page)
 
-    await select(page, 'coord-operaciones-academicas')
-
-    // La noción de mazo se mantiene: las cinco subordinaciones siguen asomando
-    // detrás de su padre.
+    // En reposo es un mazo cerrado: cinco cantos decorativos detrás del padre.
     await expect(page.getByTestId('coordination-deck-peek')).toHaveCount(5)
 
-    // Pero NO se despliegan. Con LEVEL 1 abierto, una subbaraja subiendo al
-    // mismo hueco competiría con la lectura y empujaría hacia abajo justo a la
-    // carta que tiene que quedarse quieta. El despliegue interactivo es R7.
-    const rise = async () =>
-      page.evaluate(() => {
-        const stack = document.querySelector(
-          '[data-testid="coordination-deck-stack"][data-code="coord-operaciones-academicas"]',
-        )!
-        const card = stack
-          .querySelector('[data-testid="coordination-card"]')!
-          .getBoundingClientRect()
-        return Math.round(
-          Math.max(
-            ...Array.from(
-              stack.querySelectorAll('[data-testid="coordination-deck-peek"]'),
-            ).map((peek) => card.top - peek.getBoundingClientRect().top),
-          ),
-        )
-      })
+    await select(page, 'coord-operaciones-academicas')
 
-    const closed = await rise()
-    await page.locator(`${CARD}[data-code="coord-operaciones-academicas"]`).hover()
-    await page.waitForTimeout(500)
+    /*
+     * Escogerlo lo abre: los cantos dejan de verse y en su sitio aparecen las
+     * cinco subordinaciones como cartas reales e interactivas. Hasta la fase
+     * anterior el mazo se quedaba cerrado, que era el estado intermedio
+     * mientras la mano no existía.
+     */
+    await expect(
+      page.locator('[data-testid="coordination-deck-fan-slot"]'),
+    ).toHaveCount(5)
+    await expect(page.locator('[data-testid="coordination-deck-peek"]:visible')).toHaveCount(
+      0,
+    )
 
-    // Abrir la subbaraja levanta el abanico unos 44 px sobre el borde de la
-    // carta; aquí el ascenso no se mueve más de un píxel, que es el acuse de
-    // recibo del propio shell (`button:hover { translateY(-1px) }`) sobre la
-    // carta y no sobre los peeks.
-    expect(Math.abs((await rise()) - closed)).toBeLessThanOrEqual(2)
-    expect(await rise()).toBeLessThan(0)
+    // El padre sigue siendo lo observado: la mano son opciones, no lecturas.
+    await expect(
+      page.locator(`${CARD}[data-code="coord-operaciones-academicas"]`),
+    ).toHaveAttribute('aria-pressed', 'true')
   })
 })
 
@@ -837,7 +836,13 @@ test.describe('selección in-place · 1920x1080', () => {
     expect(overflow.y).toBeLessThanOrEqual(0)
 
     await expect(page.getByTestId('direction-character')).toBeVisible()
-    await expect(page.getByTestId('coordination-card')).toHaveCount(9)
+    // Con el mazo escogido: sus nueve slots más las cinco repartidas.
+    await expect(
+      page.locator('[data-testid="coordination-table-slot"]'),
+    ).toHaveCount(9)
+    await expect(
+      page.locator('[data-testid="coordination-deck-fan-slot"]'),
+    ).toHaveCount(5)
     await expect(page.getByTestId('carousel-slot')).toHaveCount(0)
 
     await page.screenshot({

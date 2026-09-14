@@ -8,6 +8,7 @@ import {
   resolveCoordinationVisualIdentity,
   withArtOf,
 } from '@/modules/operational-cards/data/coordinationVisualIdentity'
+import type { ProductTableChild } from '@/modules/operational-cards/data/productHierarchy'
 import type { CoordinationOverview } from '@/modules/operational-cards/types/operational-overview.contract'
 
 /**
@@ -55,7 +56,7 @@ export interface CoordinationDeckStackProps {
   /** Code del que tomar el arte, si el propio contradice al nombre. */
   artCode?: string
   /** Subordinaciones declaradas, en orden institucional. */
-  subordinations: readonly CoordinationOverview[]
+  subordinations: readonly ProductTableChild[]
   /** La coordinación bajo observación. Viaja hasta `aria-pressed`. */
   selected?: boolean
   onSelect: (code: string) => void
@@ -108,7 +109,9 @@ export function CoordinationDeckStack({
               '--peek-open-scale': peek.preview.scale,
               zIndex: peek.zIndex,
               '--coord-rgb': hexToRgbChannels(
-                resolveCoordinationVisualIdentity(subordinations[index]).color,
+                resolveCoordinationVisualIdentity(
+                  subordinations[index].coordination,
+                ).color,
               ),
             } as CSSProperties
           }

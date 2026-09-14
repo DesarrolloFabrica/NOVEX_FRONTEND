@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { CoordinationCard } from '@/modules/operational-cards/components/CoordinationCard'
 import { CoordinationTable } from '@/modules/operational-cards/components/CoordinationTable'
-import { resolveCompositionMode } from '@/modules/operational-cards/data/compositionMode'
+import { resolveDeckSelectionContext } from '@/modules/operational-cards/data/deckContext'
 import { buildTableLayout } from '@/modules/operational-cards/data/tableLayout'
 import {
   buildProductTable,
@@ -106,15 +106,17 @@ function markup(
   const nodesByCode = Object.fromEntries(
     product.nodes.map((node) => [node.coordination.code, node]),
   )
+  const context = resolveDeckSelectionContext({ selectedCode, nodesByCode })
 
   return renderToStaticMarkup(
     <CoordinationTable
       layout={buildTableLayout(topLevel, { sortByDisplayOrder: false })}
       nodesByCode={nodesByCode}
-      /* El modo se resuelve con el MISMO resolver que usa la experiencia. Si el
-         helper lo eligiera a mano, la prueba podría afirmar un modo que la
-         aplicación real nunca produce. */
-      compositionMode={resolveCompositionMode({ selectedCode, nodesByCode })}
+      /* El contexto se resuelve con el MISMO resolutor que usa la experiencia.
+         Si el helper eligiera el modo a mano, la prueba podría afirmar una
+         composición que la aplicación real nunca produce. */
+      compositionMode={context.mode}
+      deckParentCode={context.deckParentCode}
       selectedCode={selectedCode}
       onSelect={() => undefined}
       onHoverChange={() => undefined}
@@ -230,6 +232,23 @@ describe('CoordinationTable · mazo de Operación Académica', () => {
     expect(markup(coordinations())).toContain(
       'Operación Académica. Estado operacional: Crítico. 5 subordinaciones.',
     )
+  })
+
+  it('la hija con nombre de producto propio se presenta con ÉL', () => {
+    /*
+     * La base de datos la llama «Empresarial»; la institución, «Transformación
+     * Empresarial», que es además lo que rotula su carta. El nombre de
+     * producto se declara junto a su code en la estructura, así que la carta y
+     * su nombre accesible dicen lo mismo.
+     */
+    const html = markup(coordinations(), { selectedCode: 'coord-operaciones-academicas' })
+
+    expect(html).toContain('aria-label="Transformación Empresarial. Estado')
+    expect(html).not.toContain('aria-label="Empresarial. Estado')
+
+    // Y no se renombra nada más: el resto de la mano conserva el nombre del
+    // DTO, que es el correcto para ellas.
+    expect(html).toContain('aria-label="Ingenierías. Estado')
   })
 
   it('un mazo plano no anuncia subordinaciones', () => {
@@ -408,12 +427,16 @@ describe('CoordinationTable · selección in-place', () => {
   it('la coordinación seleccionada NO sale de la mesa', () => {
     const html = markup(coordinations(), { selectedCode: PARENT })
 
-    // Las nueve siguen dibujadas, la observada incluida. Antes se quedaban
-    // ocho porque la activa se marchaba a un área focal aparte; eso era una
-    // segunda escena y es justo lo que la selección in-place elimina.
-    expect(countOf(html, 'data-testid="coordination-card"')).toBe(9)
+    // Los nueve slots siguen dibujados, el observado incluido. Antes se
+    // quedaban ocho porque la activa se marchaba a un área focal aparte; eso
+    // era una segunda escena y es justo lo que la selección in-place elimina.
+    expect(countOf(html, 'data-testid="coordination-table-slot"')).toBe(9)
     expect(html).toContain('data-count="9"')
     expect(html).toContain(`data-code="${PARENT}"`)
+    // Y con el mazo abierto la escena suma las cinco hijas repartidas: nueve
+    // slots de mesa más cinco de mano.
+    expect(countOf(html, 'data-testid="coordination-deck-fan-slot"')).toBe(5)
+    expect(countOf(html, 'data-testid="coordination-card"')).toBe(14)
   })
 
   it('observar una coordinación no mueve ni una carta de sitio', () => {
@@ -447,7 +470,7 @@ describe('CoordinationTable · selección in-place', () => {
     // Una carta que no se ve no puede seguir siendo una parada de teclado.
     expect(countOf(html, 'inert=""')).toBe(8)
     // Y siguen montadas: volver a la mesa no tiene que reconstruir nada.
-    expect(countOf(html, 'data-testid="coordination-card"')).toBe(9)
+    expect(countOf(html, 'data-testid="coordination-table-slot"')).toBe(9)
   })
 
   it('el mazo origen recibe OTRA geometría, no una capa que lo empuje', () => {
@@ -480,12 +503,18 @@ describe('CoordinationTable · selección in-place', () => {
     expect(selected).toEqual(resting)
   })
 
-  it('exactamente una carta queda presionada y las otras ocho no', () => {
-    const html = markup(coordinations(), { selectedCode: PARENT })
+  it('exactamente una carta queda presionada, esté abierto el mazo o no', () => {
+    const simple = markup(coordinations(), { selectedCode: 'coord-b2b' })
+    expect(countOf(simple, '<button')).toBe(9)
+    expect(countOf(simple, 'aria-pressed="true"')).toBe(1)
+    expect(countOf(simple, 'aria-pressed="false"')).toBe(8)
 
-    expect(countOf(html, '<button')).toBe(9)
-    expect(countOf(html, 'aria-pressed="true"')).toBe(1)
-    expect(countOf(html, 'aria-pressed="false"')).toBe(8)
+    // Con el mazo abierto hay catorce controles —nueve de mesa y cinco de
+    // mano— y sigue habiendo exactamente uno presionado.
+    const deck = markup(coordinations(), { selectedCode: PARENT })
+    expect(countOf(deck, '<button')).toBe(14)
+    expect(countOf(deck, 'aria-pressed="true"')).toBe(1)
+    expect(countOf(deck, 'aria-pressed="false"')).toBe(13)
   })
 
   it('la presionada es la seleccionada, no otra', () => {

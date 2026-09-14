@@ -385,7 +385,14 @@ test.describe('isla del problema', () => {
       'data-code',
       'coord-operaciones-academicas',
     )
-    await expect(page.getByTestId('coordination-card')).toHaveCount(9)
+    // La escena de detrás sigue entera: los nueve slots de la mesa y, como el
+    // problema se abrió desde un mazo, sus cinco subordinaciones repartidas.
+    await expect(
+      page.locator('[data-testid="coordination-table-slot"]'),
+    ).toHaveCount(9)
+    await expect(
+      page.locator('[data-testid="coordination-deck-fan-slot"]'),
+    ).toHaveCount(5)
 
     // Presupuesto: 1 LEVEL 0 + 2 LEVEL 1 + 2 LEVEL 2.
     expect(callsTo(requested, '/operational-overview')).toHaveLength(1)

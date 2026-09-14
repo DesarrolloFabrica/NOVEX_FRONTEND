@@ -36,8 +36,18 @@ export interface CoordinationProblemPanelProps {
   identity: CoordinationVisualIdentity
   /** Nombre de PRODUCTO. Puede diferir del nombre técnico de la fila. */
   productLabel?: string
-  /** Dónde cae el panel respecto a la carta que lo abre. */
-  anchor: PanelAnchor
+  /**
+   * Dónde caía el panel respecto a la carta que lo abre.
+   *
+   * OPCIONAL, y hoy solo decorativo. Desde que el panel vive en su carril, su
+   * sitio lo decide la rejilla de la escena y no la carta; el anclaje se sigue
+   * calculando para las composiciones que tienen slot en la mesa, pero una
+   * coordinación observada puede no tenerlo —una subordinación no es nodo
+   * principal— y eso ya no puede impedir que su panel exista. Antes sí: la
+   * ausencia de anclaje dejaba a la hija con su LEVEL 1 cargado y sin panel
+   * donde leerlo.
+   */
+  anchor?: PanelAnchor | null
   level1: OperationalCardsLevel1State
   onProblemSelect?: (problemId: string) => void
 }
@@ -84,8 +94,8 @@ export function CoordinationProblemPanel({
       data-testid="coordination-panel-anchor"
       style={
         {
-          '--panel-x': anchor.x,
-          '--panel-notch': anchor.notch,
+          '--panel-x': anchor?.x ?? 0,
+          '--panel-notch': anchor?.notch ?? 0.5,
         } as CSSProperties
       }
     >
@@ -95,8 +105,8 @@ export function CoordinationProblemPanel({
         data-code={coordination.code}
         data-status={coordination.status}
         data-level1={level1.status}
-        data-side={anchor.side}
-        data-clamped={anchor.clamped ? 'true' : 'false'}
+        data-side={anchor?.side ?? 'NEUTRAL'}
+        data-clamped={anchor?.clamped ? 'true' : 'false'}
         style={
           { '--coord-rgb': hexToRgbChannels(identity.color) } as CSSProperties
         }

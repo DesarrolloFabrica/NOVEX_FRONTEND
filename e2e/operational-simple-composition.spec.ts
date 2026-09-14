@@ -503,6 +503,11 @@ test.describe('composición simple · 1440x900', () => {
 
     await action.click()
 
+    // El puntero se retira antes de medir: al recuperar la mesa su ancho, la
+    // carta que quede bajo el cursor se eleva y ensancha su caja, y lo que
+    // aquí se compara es la geometría restaurada, no un hover.
+    await page.mouse.move(4, 4)
+
     await expect(
       page.getByTestId('operational-cards-experience'),
     ).toHaveAttribute('data-composition-mode', 'GLOBAL')
