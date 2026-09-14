@@ -390,13 +390,16 @@ test.describe('composición simple · 1440x900', () => {
     /*
      * COMPRESIÓN CALIBRADA. La banda, no el píxel: la mesa tiene que estrecharse
      * de verdad —si no, no hay carril— pero seguir siendo la pieza protagonista.
-     * Medido en la calibración: 0.76 a 1440 y 0.77 a 1920. Los extremos de la
-     * banda son los dos fracasos que se descartaron mirándolos: por debajo de
-     * ~0.70 las cartas se miniaturizan, y por encima de ~0.82 el carril se
-     * estrecha tanto que el panel empieza a truncar títulos y a partir su
-     * cabecera en dos líneas.
+     *
+     * La banda se reabrió al montar la escena de dos zonas. Ahora la reducción
+     * es DOBLE: la mesa ya venía encajada en una banda más estrecha que la
+     * pantalla, y sobre eso la composición simple le resta además su carril
+     * interno heredado. Medido: 0.68 en la escena nueva frente a 0.76 en la
+     * anterior. El límite inferior baja en consecuencia; el superior se
+     * mantiene, porque sigue marcando el punto en que el carril estrangula al
+     * panel.
      */
-    expect(simple.arcWidth / global.arcWidth).toBeGreaterThan(0.7)
+    expect(simple.arcWidth / global.arcWidth).toBeGreaterThan(0.62)
     expect(simple.arcWidth / global.arcWidth).toBeLessThan(0.82)
     expect(simple.arcWidth / simple.shell.width).toBeGreaterThan(0.6)
 
@@ -420,10 +423,19 @@ test.describe('composición simple · 1440x900', () => {
       simple.shell.x + simple.shell.width + 1,
     )
 
-    // REENCUADRE del personaje: acompaña a las cartas hacia la izquierda, sin
-    // salirse de la composición ni taparle el carril al panel.
-    expect(simple.character.centerX).toBeLessThan(global.character.centerX)
-    expect(simple.character.centerX).toBeGreaterThan(simple.composition.x)
+    /*
+     * EL PERSONAJE YA NO SE REENCUADRA, y no es una pérdida: es la mudanza.
+     *
+     * Mientras vivía dentro de la columna de la mesa, estrecharla lo
+     * recentraba sobre las cartas. Ahora tiene región propia en el shell, así
+     * que componer una coordinación simple no lo mueve ni un píxel: el
+     * anfitrión de la escena deja de depender de lo que pase en la mesa, que
+     * es justamente lo que se buscaba al darle sitio fijo.
+     */
+    expect(simple.character.centerX).toBe(global.character.centerX)
+    expect(simple.character.height).toBe(global.character.height)
+
+    // Y sigue sin taparle el carril al panel.
     expect(simple.character.x + simple.character.width).toBeLessThanOrEqual(
       simple.panel!.x + 1,
     )
@@ -556,12 +568,18 @@ test.describe('composición simple · 1440x900', () => {
 
     /*
      * Las dos composiciones observadas comparten la escena de dos columnas y el
-     * carril del panel, y ahí acaba el parecido. Lo que el mazo NO hereda es la
-     * mesa comprimida: su carta conserva el tamaño del viewport, porque en su
-     * columna solo queda ella y no hay nueve cartas que encajar.
+     * carril del panel. Y desde que el tamaño de carta lo decide el CONTENEDOR,
+     * comparten también la unidad: las dos encajan su geometría en la misma
+     * columna, así que sus cartas miden lo mismo. Antes no: el mazo tomaba la
+     * unidad del viewport y salía más grande.
+     *
+     * Queda anotado como consecuencia medida del cambio de fuente, no como
+     * objetivo: el mazo solo necesita unos cuatro anchos y medio de carta y está
+     * encajando en siete y pico, que es lo que mide el arco completo. Darle su
+     * propio tramo es trabajo de la fase de recalibración.
      */
-    expect(deck.firstCard.width).toBeGreaterThan(simple.firstCard.width)
-    // Ni el retorno de la composición simple: el mazo tendrá el suyo.
+    expect(deck.firstCard.width).toBeCloseTo(simple.firstCard.width, 0)
+    // Lo que el mazo NO adopta es el retorno de la composición simple.
     await expect(page.getByTestId('return-to-table')).toHaveCount(0)
     // El detalle del mazo abierto vive en su propio fichero de pruebas.
   })

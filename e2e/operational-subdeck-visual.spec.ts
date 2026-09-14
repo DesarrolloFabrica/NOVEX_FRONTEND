@@ -99,6 +99,26 @@ async function openTable(page: Page) {
     { timeout: 60_000 },
   )
   await expect(page.getByTestId('coordination-table')).toBeVisible()
+  /*
+   * Y a que el ARTE esté cargado antes de medir nada. Las cotas de esta suite
+   * son diferencias entre una lectura en reposo y otra con el puntero encima:
+   * si la primera se toma con la escena aún asentándose, la resta mide el
+   * asentamiento y no el gesto. Con la mesa dentro de una banda del shell eso
+   * dejó de ser teórico —medido: 88 px de «elevación» donde el gesto son 35—.
+   */
+  await page.waitForFunction(
+    () => {
+      const faces = Array.from(
+        document.querySelectorAll('.coordination-card__face img'),
+      ) as HTMLImageElement[]
+      return (
+        faces.length > 0 &&
+        faces.every((face) => face.complete && face.naturalWidth > 0)
+      )
+    },
+    undefined,
+    { timeout: 60_000 },
+  )
 }
 
 /**
@@ -110,6 +130,14 @@ async function openTable(page: Page) {
  * mide contra el borde ALTO porque es la cota que la subbaraja no puede cruzar
  * sin tapar la lectura institucional.
  */
+/** Alto real de una carta. La geometría de la mesa se expresa en esta unidad. */
+async function cardHeight(page: Page): Promise<number> {
+  return page.evaluate(() => {
+    const card = document.querySelector('[data-testid="coordination-card"]')
+    return card ? card.getBoundingClientRect().height : 1
+  })
+}
+
 async function reach(page: Page): Promise<number> {
   return page.evaluate((selector) => {
     const stack = document.querySelector(selector)
@@ -280,7 +308,12 @@ test.describe('subbaraja abierta · 1440x900', () => {
     await card.hover()
     // Se espera a que la subbaraja esté abierta, no a un reloj: es la señal de
     // que el hover está realmente aplicado.
-    await expect.poll(async () => (await reach(page)) > 35).toBe(true)
+    // El ascenso se mide como FRACCIÓN del alto de carta, no en píxeles: la
+    // apertura está definida en altos de carta y el tamaño de carta lo decide
+    // ahora la banda que la aloja, no el viewport.
+    await expect
+      .poll(async () => (await reach(page)) / (await cardHeight(page)))
+      .toBeGreaterThan(0.12)
 
     const open = await card.evaluate((node) => {
       const rect = node.getBoundingClientRect()

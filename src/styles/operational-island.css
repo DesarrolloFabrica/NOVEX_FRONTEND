@@ -41,8 +41,17 @@
   z-index: 1;
   display: flex;
   width: clamp(420px, 46vw, 620px);
-  /* Nace en tamaño medio y crece con las secciones, nunca a pantalla completa. */
-  max-height: min(56vh, 430px);
+  /*
+   * Nace en tamaño medio y crece con las secciones, nunca a pantalla
+   * completa. El `100%` es la tercera cota y la que manda desde que la escena
+   * es un shell de bandas: el `vh` medía la pantalla, pero la isla vive en la
+   * banda de la baraja, que es más baja. Medido a 1440x900: 56vh pedía 504 px
+   * en una banda que ofrece 351, y la isla desplegada se recortaba por abajo
+   * sin que nada lo revelara. Con la cota del contenedor, crece hasta donde
+   * hay sitio y el resto se desplaza por dentro, que es lo que esta isla hace
+   * desde el principio.
+   */
+  max-height: min(56vh, 430px, 100%);
   flex-direction: column;
   gap: 10px;
   padding: 14px 16px 15px;
@@ -375,6 +384,6 @@
 
 @media (min-width: 1700px) {
   .problem-island {
-    max-height: min(58vh, 520px);
+    max-height: min(58vh, 520px, 100%);
   }
 }

@@ -1,0 +1,278 @@
+/*
+ * SHELL del Centro Operacional: dos zonas y un control inferior.
+ *
+ * Solo reparto de espacio y superficies discretas. El refinamiento visual de
+ * cada región llega con su contenido, no antes: pintar ahora un sistema visual
+ * para placeholders sería trabajo a tirar.
+ */
+
+.operational-shell {
+  display: grid;
+  /*
+   * DOS ZONAS con significados distintos: a la izquierda se opera, a la derecha
+   * se lee el estado. El carril cruza las dos filas de la izquierda —no es una
+   * cuarta tarjeta de la fila superior— y el control inferior pasa por debajo de
+   * ambas.
+   */
+  grid-template-columns: minmax(0, 1fr) var(--shell-kpi-w);
+  grid-template-rows: minmax(0, 1fr) var(--shell-bottom-h);
+  grid-template-areas:
+    'main kpi'
+    'bottom bottom';
+  height: 100%;
+  min-height: 0;
+  gap: var(--shell-gap);
+
+  /*
+   * Reparto base, medido en la prueba espacial y sujeto a calibración cuando
+   * cada región tenga su contenido real. Están juntos para poder moverlos sin
+   * tocar la rejilla.
+   */
+  --shell-kpi-w: 24%;
+  /*
+   * La banda superior dejó de ser un presupuesto: el personaje ya vive en
+   * ella, y su alto sale de MEDIRLO, no de estimarlo.
+   *
+   * La figura es un SVG que ocupa el ancho de su columna —158 px en la de
+   * 0.18fr— y conserva su proporción, así que su alto natural es 150 px. Por
+   * debajo de ahí la banda la recorta: medido, 224 px de banda la dejaban en
+   * 106 y 256 px en 138. A 268 px la figura llega a su tamaño natural, el
+   * rótulo de estado y la frase institucional caben enteros, y nada se
+   * derrama sobre la baraja —con los 200 px del presupuesto inicial, la frase
+   * caía 47 px dentro de la mesa—. Subir más solo dejaría aire muerto: la
+   * figura no puede crecer sin una columna más ancha.
+   *
+   * No le cuesta nada a las cartas: su tamaño sale del ANCHO de la banda
+   * inferior, que no cambia, y ahí sobraba alto (mesa de 250 px en 511).
+   */
+  --shell-top-h: 268px;
+  --shell-bottom-h: 48px;
+  --shell-gap: 10px;
+
+  --shell-line: rgb(150 196 255 / 0.28);
+  --shell-surface: rgb(14 24 42 / 0.55);
+}
+
+/* ---------- Zona operativa ---------- */
+
+.operational-shell__main {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  grid-area: main;
+  grid-template-rows: var(--shell-top-h) minmax(0, 1fr);
+  gap: var(--shell-gap);
+}
+
+/*
+ * Tres lecturas de anchos distintos. El detalle de un problema es el que más
+ * pide —título largo, severidad, SLA y secciones— y el personaje el que menos,
+ * porque es una figura.
+ */
+.operational-shell__top {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 0.18fr)
+    minmax(0, 0.34fr)
+    minmax(0, 0.48fr);
+  min-height: 0;
+  gap: var(--shell-gap);
+  /*
+   * Fila acotada. Sin esto la fila implícita se dimensiona por contenido y la
+   * región más alta empuja a las tres fuera de la banda, hacia la baraja:
+   * medido, la región del personaje se estiraba a 268 px dentro de una banda
+   * de 200 y su frase caía sobre las cartas.
+   */
+  grid-template-rows: minmax(0, 1fr);
+}
+
+/*
+ * LA BANDA DE LA BARAJA, y la referencia de la que sale el tamaño de carta.
+ *
+ * `min-height: 0` para que ceda de verdad ante la fila superior en lugar de
+ * empujarla, y `overflow: hidden` porque la experiencia todavía mete aquí
+ * piezas que no le corresponden —su miga y su carril de panel—: mientras se
+ * mudan, lo que sobre se recorta contra esta banda en vez de desplazar la
+ * pantalla y sacar de vista las lecturas permanentes de arriba. Es contención,
+ * no maquillaje: la geometría de las cartas se resuelve para caber.
+ */
+.operational-shell__stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  /*
+   * `clip` y no `hidden`: son el mismo recorte, pero `hidden` deja un
+   * contenedor DESPLAZABLE. Medido: al cerrar la isla del problema, el
+   * navegador devolvía el foco a la carta y desplazaba esta banda 16 px para
+   * traerla a la vista; como no hay barra que lo revele ni nada que lo
+   * devuelva, la mesa se quedaba 16 px más arriba para siempre. `clip` no
+   * crea contenedor de desplazamiento, así que ese ajuste no puede ocurrir.
+   */
+  overflow: clip;
+}
+
+/* ---------- Región del personaje ---------- */
+
+/*
+ * El personaje deja de medirse en vh y pasa a medirse EN SU REGIÓN.
+ *
+ * Su alto se expresaba en `clamp(..., 20vh, ...)` porque no tenía contenedor
+ * con alto definido: compartía columna con la mesa y solo el viewport podía
+ * darle una referencia. Aquí sí lo tiene —la banda superior del shell—, así
+ * que toma el aire que le queda a la región y se acabaron los altos por
+ * composición: no hay ningún estado en el que tenga que ceder alto a la
+ * baraja, porque ya no comparten espacio.
+ */
+.operational-shell__region--character {
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 8px 10px;
+}
+
+.operational-shell__region--character .direction-character {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+/* El SVG conserva su proporción por `preserveAspectRatio`, así que darle el
+   alto libre no lo deforma: lo escala. */
+.operational-shell__region--character .direction-character__figure {
+  min-height: 0;
+  height: auto;
+  flex: 1 1 auto;
+}
+
+/* Frase institucional: acompaña al personaje, no es un KPI ni una tarjeta. */
+.operational-shell__summary {
+  margin: 0;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* ---------- Carril ejecutivo ---------- */
+
+.operational-shell__kpi {
+  min-width: 0;
+  grid-area: kpi;
+}
+
+.operational-shell__kpi-list {
+  display: grid;
+  min-height: 0;
+  flex: 1 1 auto;
+  grid-auto-rows: 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.operational-shell__kpi-slot {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid rgb(126 168 224 / 0.16);
+  border-radius: 10px;
+  background: rgb(20 32 52 / 0.45);
+}
+
+.operational-shell__kpi-label {
+  color: var(--os-muted, #8b9cb6);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.operational-shell__kpi-value {
+  color: var(--os-text, #edf5ff);
+  font-size: 20px;
+  font-weight: 650;
+}
+
+/* ---------- Regiones ---------- */
+
+.operational-shell__region {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--shell-line);
+  border-radius: 14px;
+  background: var(--shell-surface);
+  /* Una región contiene lo suyo: lo que no quepa se recorta contra su borde
+     en lugar de dibujarse encima de la banda vecina. `clip` por el mismo
+     motivo que la banda de la baraja: recorta sin volverse desplazable. */
+  overflow: clip;
+}
+
+.operational-shell__region-title {
+  margin: 0;
+  color: var(--os-text, #edf5ff);
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.operational-shell__region-hint {
+  margin: 0;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 12px;
+}
+
+/* ---------- Control inferior ---------- */
+
+.operational-shell__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(150 196 255 / 0.18);
+  border-radius: 14px;
+  background: rgb(14 24 42 / 0.4);
+  grid-area: bottom;
+}
+
+.operational-shell__bottom-label {
+  color: var(--os-muted, #8b9cb6);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ---------- Alto definido para la home ---------- */
+
+/*
+ * La envoltura de sección del Centro tiene alto AUTOMÁTICO, así que un
+ * `height: 100%` dentro de ella resuelve a `auto` y la escena se dimensiona por
+ * su contenido: así es como la mesa acababa dejando un hueco muerto debajo.
+ *
+ * Un shell de bandas necesita un alto que repartir, de modo que la home —y solo
+ * la home— lo declara. La variante va en una clase propia, no en la envoltura
+ * compartida: Panorama, Inteligencia IA y Auditoría siguen con su alto
+ * automático y su scroll de siempre.
+ */
+.eoc-embedded--shell {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.eoc-deck .novex-os-deck__content:has(> .eoc-embedded--shell) {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  /* Sin scroll de ruta: la escena se reparte, no se desplaza. Si algo no cabe
+     tiene que verse en la medición, no esconderse detrás de un scroll que
+     además sacaría de vista las lecturas permanentes. */
+  overflow: hidden;
+}
+
+.eoc-embedded--shell > .operational-shell {
+  flex: 1 1 auto;
+  min-height: 0;
+}

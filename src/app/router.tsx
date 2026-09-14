@@ -22,7 +22,7 @@ import {
   PanoramaPage,
   ReportesPage,
 } from '@/modules/executive-operations-center'
-import { OperationalCardExperience } from '@/modules/operational-cards'
+import { OperationalShellV2 } from '@/modules/operational-cards/experience/OperationalShellV2'
 
 function RedirectPreservingSearch({ to }: { to: string }) {
   const location = useLocation()
@@ -70,7 +70,7 @@ export const router = createBrowserRouter([
               // Fase 4: la home del Centro Operacional es la nueva experiencia
               // ADMIN de estado operacional. Las secciones hijas siguen
               // intactas, igual que /red-impacto.
-              { index: true, element: <OperationalCardExperience /> },
+              { index: true, element: <OperationalShellV2 /> },
               { path: 'panorama', element: <PanoramaPage /> },
               { path: 'inteligencia', element: <InteligenciaPage /> },
               { path: 'reportes', element: <ReportesPage /> },

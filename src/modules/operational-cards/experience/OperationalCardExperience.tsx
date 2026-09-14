@@ -2,38 +2,30 @@ import { useMemo } from 'react'
 import { AnimatePresence } from 'motion/react'
 import { CoordinationProblemPanel } from '@/modules/operational-cards/components/CoordinationProblemPanel'
 import { CoordinationTable } from '@/modules/operational-cards/components/CoordinationTable'
-import { DirectionCharacter } from '@/modules/operational-cards/components/DirectionCharacter'
 import { OperationalBreadcrumb } from '@/modules/operational-cards/components/OperationalBreadcrumb'
 import { ProblemIsland } from '@/modules/operational-cards/components/ProblemIsland'
 import { TableReturnAction } from '@/modules/operational-cards/components/TableReturnAction'
-import { buildCharacterPresentation } from '@/modules/operational-cards/data/characterReaction'
 import { resolveDeckSelectionContext } from '@/modules/operational-cards/data/deckContext'
 import { resolveCoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
 import { resolvePanelAnchor } from '@/modules/operational-cards/data/panelAnchor'
 import { buildTableLayout } from '@/modules/operational-cards/data/tableLayout'
 import { buildProductTable } from '@/modules/operational-cards/data/productHierarchy'
-import { buildDirectionSummary } from '@/modules/operational-cards/data/directionSummary'
-import { useOperationalOverview } from '@/modules/operational-cards/hooks/useOperationalOverview'
+import type { OperationalCardsController } from '@/modules/operational-cards/hooks/useOperationalOverview'
 import type { OperationalIntegrityStatus } from '@/modules/operational-cards/types/operational-status.types'
 import '@/styles/operational-cards.css'
-import '@/styles/operational-character.css'
 import '@/styles/operational-island.css'
 
 /**
  * Orquestador de la experiencia ADMIN de estado operacional.
  *
- * Lectura en dos planos: el personaje dice cómo está la Dirección, la mesa dice
- * dónde están los focos.
+ * Dice DÓNDE están los focos. Quién es la Dirección y cómo está lo dice el
+ * personaje, que vive en su región del shell y no aquí dentro.
  *
  * UNA SOLA ESCENA. Seleccionar una coordinación no cambia de pantalla: la carta
  * se queda en su sitio de la mesa, se destaca ahí, y su LEVEL 1 aparece en un
  * panel anclado debajo. Las otras ocho no se van a ningún carrusel; siguen
  * dibujadas y clickeables, lo que convierte el cambio de coordinación en un
  * clic directo sobre la vecina.
- *
- * Toda la traducción de interacción a presentación del personaje ocurre aquí:
- * `DirectionCharacter` no conoce coordinaciones ni selección, así que el SVG
- * provisional puede sustituirse por el arte final sin tocar esta lógica.
  */
 
 const SKELETON_SLOTS = 8
@@ -49,7 +41,21 @@ const SKELETON_SLOTS = 8
  */
 const PANEL_WIDTH_IN_CARDS = 2.2
 
-export function OperationalCardExperience() {
+export interface OperationalCardExperienceProps {
+  /**
+   * Estado de la escena, creado UNA sola vez por quien compone la pantalla.
+   *
+   * La experiencia dejó de llamar al hook cuando el personaje se mudó a su
+   * región del shell: si cada uno llamara al suyo habría dos reducers, dos
+   * peticiones de LEVEL 0 y dos verdades sobre qué está seleccionado. Se crea
+   * arriba, donde viven las dos piezas, y baja como dato.
+   */
+  controller: OperationalCardsController
+}
+
+export function OperationalCardExperience({
+  controller,
+}: OperationalCardExperienceProps) {
   const {
     level0,
     overview,
@@ -65,7 +71,7 @@ export function OperationalCardExperience() {
     selectProblem,
     closeProblem,
     toggleSection,
-  } = useOperationalOverview()
+  } = controller
 
   // Un fallo de red, HTTP, parseo o contrato se comunica como DESCONOCIDO.
   // Nunca como ESTABLE, y nunca fabricando cartas ni totales en cero.
@@ -197,24 +203,6 @@ export function OperationalCardExperience() {
     [selectedSlot, layout.stageWidth],
   )
 
-  const characterPresentation = buildCharacterPresentation({
-    directionStatus,
-    orientation: selectedCoordination
-      ? (layout.orientationByCode[selectedCoordination.code] ?? 'NEUTRAL')
-      : hoveredCoordinationCode
-        ? (layout.orientationByCode[hoveredCoordinationCode] ?? 'NEUTRAL')
-        : 'NEUTRAL',
-    hovering: Boolean(hoveredCoordinationCode),
-    selecting: Boolean(selectedCoordination),
-  })
-
-  const summary =
-    level0 === 'ready' && overview
-      ? buildDirectionSummary(overview.totals)
-      : level0 === 'error'
-        ? 'Estado no disponible'
-        : 'Consultando el estado de las coordinaciones'
-
   return (
     <section
       className="operational-deck"
@@ -241,7 +229,6 @@ export function OperationalCardExperience() {
             labelByCode[selectedCoordination.code] ??
             selectedCoordination.name
           }
-          summary={summary}
           onBackToDirection={clearCoordination}
         />
       )}
@@ -255,34 +242,21 @@ export function OperationalCardExperience() {
         simple observada, esta zona pasa a ser la columna izquierda de una
         rejilla y el carril del panel la derecha.
 
-        Que el personaje viva DENTRO de esta zona es lo que produce su
-        reencuadre: al estrecharse la columna, se recentra sobre las cartas él
-        solo, sin transform propio y sin una segunda autoridad de posición que
-        pudiera discrepar de la mesa.
+        El personaje ya no vive aquí: tiene su propia región en el shell, y por
+        eso esta zona dejó de repartir alto entre la figura y la mesa. Lo que
+        queda suyo es el reparto horizontal de la composición.
       */}
       <div
         className="operational-deck__composition"
         data-testid="operational-composition"
       >
-        {/* Stage del personaje. Sin selección, la lectura institucional vive
-            junto a él; con selección se muda a la miga, que tiene espacio
-            horizontal libre, y devuelve ese alto al carrusel. En todo momento hay
-            exactamente un `direction-summary` en el DOM, así que la región
-            aria-live nunca se duplica. */}
         <div className="operational-deck__stage">
-          <DirectionCharacter presentation={characterPresentation} />
-
-          {!selectedCoordination && (
-            /* aria-live para que un cambio de estado global se anuncie. */
-            <p
-              className="operational-deck__summary"
-              data-testid="direction-summary"
-              aria-live="polite"
-            >
-              {summary}
-            </p>
-          )}
-
+          {/*
+            El personaje y la lectura institucional ya NO viven aquí: se mudaron
+            a su región del shell, que es donde el wireframe los coloca. Lo que
+            queda en esta banda es la mesa y el aviso de que LEVEL 0 falló, que
+            habla precisamente de las cartas que no se pudieron dibujar.
+          */}
           {level0 === 'error' && (
             <p
               className="operational-deck__notice"

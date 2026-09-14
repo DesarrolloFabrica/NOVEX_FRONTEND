@@ -108,6 +108,14 @@ async function openTable(page: Page) {
  * mide contra el borde ALTO porque es la cota que la subbaraja no puede cruzar
  * sin tapar la lectura institucional.
  */
+/** Alto real de una carta. La geometría de la mesa se expresa en esta unidad. */
+async function cardHeight(page: Page): Promise<number> {
+  return page.evaluate(() => {
+    const card = document.querySelector('[data-testid="coordination-card"]')
+    return card ? card.getBoundingClientRect().height : 1
+  })
+}
+
 async function reach(page: Page, code = PARENT): Promise<number> {
   return page.evaluate((parentCode) => {
     const stack = document.querySelector(
@@ -375,7 +383,9 @@ test.describe('preview de subbaraja · 1440x900', () => {
     await install(page)
     await openTable(page)
     await page.locator(`${CARD}[data-code="${PARENT}"]`).hover()
-    await expect.poll(async () => (await reach(page)) > 30).toBe(true)
+    await expect
+      .poll(async () => (await reach(page)) / (await cardHeight(page)))
+      .toBeGreaterThan(0.12)
 
     const overflow = await page.evaluate(() => ({
       x:

@@ -28,15 +28,31 @@
   --status-unknown-rgb: 132 150 176;
 
   /*
-   * Tamaño de carta. Sube en dos saltos: R2 devolvió los 228 px del carril y
-   * R3.2 pasó de quince pares a NUEVE mazos, así que cada carta tiene mucho más
-   * sitio. El techo lo pone el ancho, no el alto: nueve cartas al 25 % de
-   * solape ocupan 7,21 anchos de carta y el área útil son 1386 px a 1440.
-   * La proporción es la del arte original (196/148) y no se toca.
+   * TECHO del tamaño de carta, no su valor.
+   *
+   * Durante mucho tiempo esto FUE el tamaño, deducido del viewport: nueve
+   * cartas al 25 % de solape ocupan 7,3 anchos de carta y a 1440 la pantalla
+   * entera daba 1386 px, así que el viewport era una aproximación razonable del
+   * sitio disponible. Dejó de serlo en cuanto la mesa pasó a vivir en una banda
+   * dentro de una escena con carril lateral: medido, el arco se salía 160 px por
+   * cada lado a 1440 y la carta del mazo quedaba cortada por el borde.
+   *
+   * Ahora el tamaño lo decide el CONTENEDOR (ver `.operational-table`) y esto
+   * solo pone el límite superior, para que en pantallas muy anchas la mesa no
+   * crezca más allá de lo que el arte aguanta.
    *
    *   148 px  baraja original      180 px  R3 (quince)      ~189 px  R3.2 (nueve)
    */
-  --card-width: clamp(152px, 13.1vw, 252px);
+  --card-width-max: clamp(152px, 13.1vw, 252px);
+
+  /*
+   * Fracción de la banda que ocupa el ARCO. No es un margen estético: es la
+   * holgura que absorbe la sangría de las cartas giradas de los extremos, que
+   * sobresalen de su caja, y el crecimiento de la carta observada.
+   */
+  --card-fill: 0.98;
+
+  --card-width: var(--card-width-max);
   /* La proporción del arte original (196/148), como token: la composición
      comprimida vuelve a necesitarla para rehacer el alto a partir de un ancho
      distinto, y repetir el número en dos sitios es la forma de que un día
@@ -139,10 +155,6 @@
    * techo de 400 px es donde el panel deja de ser acompañamiento y empieza a
    * competir con la mesa.
    *
-   * `--simple-table-fill` es la fracción de la columna izquierda que ocupa el
-   * ARCO. No es un margen estético: es la holgura que absorbe la sangría de las
-   * cartas giradas de los extremos, que sobresalen de su caja.
-   *
    * La COMPRESIÓN no se declara. Es la consecuencia de estos tres valores: la
    * mesa toma el ancho que le queda y el tamaño de carta se deduce de él, así
    * que no hay un porcentaje escrito a mano que pueda contradecir a la rejilla
@@ -150,7 +162,6 @@
    */
   --simple-panel-w: clamp(288px, 21vw, 400px);
   --simple-gap: clamp(16px, 2vw, 32px);
-  --simple-table-fill: 0.98;
 
   display: flex;
   flex-direction: column;
@@ -171,6 +182,18 @@
  * carril a la derecha: se recentran dentro de su columna.
  */
 .operational-deck__composition {
+  /*
+   * CONTENEDOR DE REFERENCIA de la mesa, en todos los modos.
+   *
+   * Es lo que permite que el tamaño de carta se deduzca del ancho REAL
+   * disponible en lugar del viewport, de modo que la mesa quepa en su sitio por
+   * construcción, esté ese sitio donde esté: la pantalla entera, una columna con
+   * carril al lado o una banda dentro de una escena con más lecturas.
+   *
+   * La responsabilidad vive aquí y no en cada carta: una carta no tiene que
+   * saber cuánto sitio hay, solo cuánto mide su unidad.
+   */
+  container-type: inline-size;
   display: flex;
   min-height: 0;
   flex: 1 1 auto;
@@ -225,6 +248,23 @@
  * tamaño de sus hijos: las cartas están en absoluto y no ocupan flujo.
  */
 .operational-table {
+  /*
+   * EL TAMAÑO DE CARTA SALE DE AQUÍ, y de un único sitio para los tres modos.
+   *
+   * El layout publica en el estilo en línea de la mesa cuánto mide el arco en
+   * anchos de carta. Dividir el ancho de la banda por esa cifra da la unidad con
+   * la que el arco cabe exactamente; el `min` con el techo evita que en
+   * pantallas muy anchas la mesa crezca más de lo que el arte aguanta.
+   *
+   * El alto se rehace aquí mismo porque `--card-height` se sustituye donde se
+   * declara: redefinir solo el ancho dejaría el alto de la declaración anterior
+   * y rompería la proporción del arte.
+   */
+  --card-width: min(
+    var(--card-width-max),
+    calc(100cqw * var(--card-fill) / var(--table-stage-w))
+  );
+  --card-height: calc(var(--card-width) * var(--card-aspect));
   position: relative;
   flex: 0 0 auto;
   width: 100%;
@@ -1421,15 +1461,6 @@
 .operational-deck:not([data-composition-mode='GLOBAL'])
   > .operational-deck__composition {
   grid-area: composition;
-  /*
-   * Contenedor de consulta. Es lo que permite que el ancho de carta se deduzca
-   * del ancho REAL de esta columna, que es lo que la rejilla decida después de
-   * restar el carril y el hueco.
-   *
-   * Se declara solo en este modo: en reposo la envoltura no debe introducir
-   * contención de ningún tipo.
-   */
-  container-type: inline-size;
 }
 
 .operational-deck:not([data-composition-mode='GLOBAL'])
@@ -1482,26 +1513,6 @@
   )
   .direction-character__figure {
   height: clamp(146px, 20vh, 250px);
-}
-
-/*
- * LA COMPRESIÓN.
- *
- * `--table-stage-w` es el ancho del arco en anchos de carta, y lo publica el
- * propio layout en el estilo en línea de la mesa. Dividir el ancho de la
- * columna por él da el ancho de carta que hace que el arco quepa exactamente:
- * la mesa llena su columna a cualquier resolución sin recorte y sin holgura
- * inútil.
- *
- * El alto se rehace aquí mismo porque `--card-height` se sustituye donde se
- * declara: si solo se redefiniera el ancho, las cartas conservarían el alto de
- * la mesa global y la proporción del arte se rompería.
- */
-.operational-deck[data-composition-mode='SIMPLE_SELECTED'] .operational-table {
-  --card-width: calc(
-    100cqw * var(--simple-table-fill) / var(--table-stage-w)
-  );
-  --card-height: calc(var(--card-width) * var(--card-aspect));
 }
 
 /*

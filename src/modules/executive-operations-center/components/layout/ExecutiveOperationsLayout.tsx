@@ -59,7 +59,15 @@ export function ExecutiveOperationsLayout() {
                 />
               }
             >
-              <div className="eoc-embedded">
+              {/*
+                La home reparte su alto entre bandas, así que necesita un alto
+                DEFINIDO; las otras tres secciones conservan el alto automático y
+                su scroll de siempre. Por eso la variante es una clase de la
+                home y no un cambio en la envoltura compartida.
+              */}
+              <div
+                className={`eoc-embedded ${isHome ? 'eoc-embedded--shell' : ''}`.trim()}
+              >
                 <Outlet />
               </div>
             </ScreenDeck>
