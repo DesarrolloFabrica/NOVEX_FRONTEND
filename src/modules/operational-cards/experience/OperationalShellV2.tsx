@@ -1,6 +1,7 @@
 import { useMemo, type ReactNode } from 'react'
 import { CoordinationProblemList } from '@/modules/operational-cards/components/CoordinationProblemList'
 import { DirectionCharacter } from '@/modules/operational-cards/components/DirectionCharacter'
+import { ProblemDetail } from '@/modules/operational-cards/components/ProblemDetail'
 import { buildCharacterPresentation } from '@/modules/operational-cards/data/characterReaction'
 import { buildDirectionSummary } from '@/modules/operational-cards/data/directionSummary'
 import { resolveCoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
@@ -225,15 +226,37 @@ export function OperationalShellV2() {
                 )}
                 productLabel={labelByCode[selectedCoordination.code]}
                 level1={controller.level1}
+                selectedProblemId={controller.selectedProblemId}
                 onProblemSelect={controller.selectProblem}
               />
             )}
           </ShellRegion>
+          {/*
+            DETALLE DEL PROBLEMA. Región permanente, no una capa que se abre.
+
+            Antes esto era una isla flotante con velo, `role="dialog"` y botón
+            de cerrar: para leer un problema había que tapar la escena, y para
+            volver a operar había que cerrarlo. Ahora el detalle está siempre en
+            el mismo sitio y lo que cambia es de qué problema habla. No se
+            cierra: se mira otro, o se cambia de coordinación.
+
+            Come del MISMO `selectedProblemId` que la fila pulsada: no hay una
+            segunda selección de problema, ni una segunda petición de LEVEL 2.
+          */}
           <ShellRegion
             region="problem-detail"
             title="Detalle del problema"
-            hint="Seleccione un problema"
-          />
+            hint={controller.selectedProblemId ? undefined : 'Seleccione un problema'}
+            className="operational-shell__region--problem-detail"
+            showTitle={!controller.selectedProblemId}
+          >
+            {controller.selectedProblemId && (
+              <ProblemDetail
+                level2={controller.level2}
+                onToggleSection={controller.toggleSection}
+              />
+            )}
+          </ShellRegion>
         </div>
 
         {/*

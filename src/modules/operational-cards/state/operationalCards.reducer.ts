@@ -225,10 +225,12 @@ export function operationalCardsReducer(
       }
 
     case 'SELECT_PROBLEM': {
-      // Una sola isla: mientras haya un problema abierto, otra fila no puede
-      // abrir un segundo detalle encima. Es decisión de producto, no un
-      // límite técnico, así que se aplica aquí y no en la vista.
-      if (state.selectedProblemId !== null) return state
+      // Cambio DIRECTO de problema. Mientras el detalle era una isla flotante,
+      // una segunda fila no podía abrir otra encima y la selección se
+      // ignoraba; ahora el detalle es una región permanente y elegir otro
+      // problema es, simplemente, mirar otro problema. Volver a pulsar el que
+      // ya se está mirando no recarga nada.
+      if (state.selectedProblemId === action.problemId) return state
 
       const cached = state.detailByProblem[action.problemId]
       return {

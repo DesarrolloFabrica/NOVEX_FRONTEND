@@ -1,10 +1,10 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { ProblemIsland } from '@/modules/operational-cards/components/ProblemIsland'
+import { ProblemDetail } from '@/modules/operational-cards/components/ProblemDetail'
 import { initialProblemSectionsState } from '@/modules/operational-cards/types/problem-detail.types'
 import type { OperationalCardsLevel2State } from '@/modules/operational-cards/types/operational-cards.state'
 import type {
-  ProblemDetail,
+  ProblemDetail as ProblemDetailData,
   ProblemSectionId,
 } from '@/modules/operational-cards/types/problem-detail.types'
 
@@ -14,7 +14,7 @@ import type {
  * de acciones mutables; no verifica CSS ni animación.
  */
 
-const DETAIL: ProblemDetail = {
+const DETAIL: ProblemDetailData = {
   id: 'p1',
   title: 'Aulas sin conectividad',
   severity: 'CRITICAL',
@@ -60,11 +60,7 @@ function level2(
 
 function markup(state: OperationalCardsLevel2State = level2()): string {
   return renderToStaticMarkup(
-    <ProblemIsland
-      level2={state}
-      onClose={() => undefined}
-      onToggleSection={() => undefined}
-    />,
+    <ProblemDetail level2={state} onToggleSection={() => undefined} />,
   )
 }
 
@@ -80,7 +76,7 @@ const SECTIONS: ProblemSectionId[] = [
   'timeline',
 ]
 
-describe('ProblemIsland · estructura', () => {
+describe('ProblemDetail · estructura', () => {
   it('muestra título, severidad, estado y SLA como texto', () => {
     const html = markup()
     expect(html).toContain('Aulas sin conectividad')
@@ -102,34 +98,34 @@ describe('ProblemIsland · estructura', () => {
     )
     expect(order.every((index) => index >= 0)).toBe(true)
     expect(order).toEqual([...order].sort((left, right) => left - right))
-    expect(countOf(html, 'data-testid="island-section-toggle"')).toBe(5)
+    expect(countOf(html, 'data-testid="detail-section-toggle"')).toBe(5)
   })
 
   it('todas las secciones nacen cerradas', () => {
     const html = markup()
     expect(countOf(html, 'aria-expanded="false"')).toBe(5)
     expect(html).not.toContain('aria-expanded="true"')
-    expect(html).not.toContain('data-testid="island-section-panel"')
+    expect(html).not.toContain('data-testid="detail-section-panel"')
   })
 
   it('la coordinación aparece como contexto secundario', () => {
     const html = markup()
-    expect(html).toContain('problem-island__context')
+    expect(html).toContain('problem-detail__context')
     expect(html).toContain('Coordinador Ingenierías')
   })
 })
 
-describe('ProblemIsland · secciones desplegadas', () => {
+describe('ProblemDetail · secciones desplegadas', () => {
   it('Impacto muestra áreas afectadas y propagación, sin pedir nada', () => {
     const html = markup(level2({ expanded: ['impact'] }))
-    expect(html).toContain('data-testid="island-impact-areas"')
+    expect(html).toContain('data-testid="detail-impact-areas"')
     expect(html).toContain('coord-transversales')
     expect(html).toContain('Propagación hasta 2 nivel')
   })
 
   it('Inteligencia IA muestra el análisis ya cargado', () => {
     const html = markup(level2({ expanded: ['ai'] }))
-    expect(html).toContain('data-testid="island-ai"')
+    expect(html).toContain('data-testid="detail-ai"')
     expect(html).toContain('Riesgo concentrado en la sede norte')
     expect(html).toContain('Falla del enlace principal.')
   })
@@ -141,7 +137,7 @@ describe('ProblemIsland · secciones desplegadas', () => {
         expanded: ['ai', 'impact'],
       }),
     )
-    expect(html).toContain('data-testid="island-ai-absent"')
+    expect(html).toContain('data-testid="detail-ai-absent"')
     expect(html).toContain('Sin evaluación de impacto registrada.')
   })
 
@@ -155,10 +151,10 @@ describe('ProblemIsland · secciones desplegadas', () => {
         },
       }),
     )
-    expect(html).toContain('data-testid="island-section-loading"')
+    expect(html).toContain('data-testid="detail-section-loading"')
   })
 
-  it('el error de una sección no reemplaza la isla', () => {
+  it('el error de una sección no reemplaza la región', () => {
     const html = markup(
       level2({
         expanded: ['evidences'],
@@ -168,39 +164,60 @@ describe('ProblemIsland · secciones desplegadas', () => {
         },
       }),
     )
-    expect(html).toContain('data-testid="island-section-error"')
+    expect(html).toContain('data-testid="detail-section-error"')
     // La isla sigue mostrando su cabecera y su resumen.
     expect(html).toContain('Aulas sin conectividad')
-    expect(html).toContain('data-testid="island-summary"')
-    expect(html).not.toContain('data-testid="island-error"')
+    expect(html).toContain('data-testid="detail-summary"')
+    expect(html).not.toContain('data-testid="detail-error"')
   })
 })
 
-describe('ProblemIsland · carga y error', () => {
+describe('ProblemDetail · carga y error', () => {
   it('en carga muestra esqueleto y ya el título disponible', () => {
     const html = markup(level2({ status: 'loading', detail: null }))
-    expect(html).toContain('data-testid="island-loading"')
+    expect(html).toContain('data-testid="detail-loading"')
     expect(html).toContain('Detalle del problema')
   })
 
-  it('en error la isla sigue abierta con su aviso y su botón cerrar', () => {
+  it('en error la región mantiene su aviso, sin botón de cerrar', () => {
     const html = markup(
       level2({ status: 'error', detail: null, errorMessage: 'sin red' }),
     )
-    expect(html).toContain('data-testid="island-error"')
-    expect(html).toContain('data-testid="island-close"')
-    expect(html).not.toContain('data-testid="island-summary"')
+    expect(html).toContain('data-testid="detail-error"')
+    expect(html).not.toContain('data-testid="detail-summary"')
   })
 })
 
-describe('ProblemIsland · accesibilidad', () => {
-  it('es un diálogo con nombre accesible', () => {
+describe('ProblemDetail · accesibilidad', () => {
+  it('NO es un diálogo: es una región permanente', () => {
+    // El contrato invertido de F3. Mientras el detalle era una capa flotante
+    // tenía sentido que fuera `dialog` con `aria-modal`, porque tapaba la
+    // escena y atrapaba la atención. Una región que siempre está ahí no puede
+    // anunciarse como modal: sería mentirle a un lector de pantalla.
     const html = markup()
-    expect(html).toContain('role="dialog"')
-    expect(html).toContain('aria-modal="true"')
-    expect(html).toContain('aria-labelledby="problem-island-title"')
-    expect(html).toContain('id="problem-island-title"')
-    expect(html).toContain('<h2')
+
+    expect(html).not.toContain('role="dialog"')
+    expect(html).not.toContain('aria-modal')
+    expect(html).not.toContain('__veil')
+    expect(html).not.toContain('__layer')
+  })
+
+  it('no ofrece cerrar: no hay nada que cerrar', () => {
+    // Se cambia de problema eligiendo otro, o de coordinación. Un botón de
+    // cerrar dejaría la región vacía sin que el usuario haya avanzado a nada.
+    const html = markup()
+
+    expect(html).not.toContain('detail-close')
+    expect(html).not.toContain('Cerrar el detalle del problema')
+  })
+
+  it('tiene nombre accesible propio', () => {
+    const html = markup()
+
+    expect(html).toContain('aria-labelledby="problem-detail-title"')
+    expect(html).toContain('id="problem-detail-title"')
+    // h3 y no h2: el encabezado de la región lo pone el shell.
+    expect(html).toContain('<h3')
   })
 
   it('cada sección enlaza su botón con su panel', () => {
@@ -209,16 +226,9 @@ describe('ProblemIsland · accesibilidad', () => {
     expect(html).toContain('id="problem-section-panel-impact"')
     expect(html).toContain('aria-labelledby="problem-section-toggle-impact"')
   })
-
-  it('ofrece cerrar por botón y por velo, ambos etiquetados', () => {
-    const html = markup()
-    expect(html).toContain('data-testid="island-close"')
-    expect(html).toContain('data-testid="problem-island-veil"')
-    expect(countOf(html, 'aria-label="Cerrar el detalle del problema"')).toBe(2)
-  })
 })
 
-describe('ProblemIsland · solo lectura', () => {
+describe('ProblemDetail · solo lectura', () => {
   it('no renderiza ninguna acción mutable', () => {
     const html = markup(
       level2({ expanded: ['impact', 'ai', 'recommendations', 'evidences', 'timeline'] }),
@@ -242,9 +252,10 @@ describe('ProblemIsland · solo lectura', () => {
     }
   })
 
-  it('los únicos botones son cerrar, el velo y los cinco desplegables', () => {
+  it('los únicos botones son los cinco desplegables', () => {
+    // Cinco, no siete: el botón de cerrar y el velo se fueron con la isla.
     const html = markup()
-    expect(countOf(html, '<button')).toBe(7)
+    expect(countOf(html, '<button')).toBe(5)
   })
 
   it('no contiene formularios ni campos de entrada', () => {

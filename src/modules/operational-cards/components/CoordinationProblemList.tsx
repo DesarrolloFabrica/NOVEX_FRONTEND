@@ -45,6 +45,8 @@ export interface CoordinationProblemListProps {
   /** Nombre de PRODUCTO. Puede diferir del nombre técnico de la fila. */
   productLabel?: string
   level1: OperationalCardsLevel1State
+  /** Qué problema alimenta ahora mismo la región de detalle. */
+  selectedProblemId?: string | null
   onProblemSelect?: (problemId: string) => void
 }
 
@@ -53,6 +55,7 @@ export function CoordinationProblemList({
   identity,
   productLabel,
   level1,
+  selectedProblemId,
   onProblemSelect,
 }: CoordinationProblemListProps) {
   const statusLabel = OPERATIONAL_STATUS_LABEL[coordination.status]
@@ -155,6 +158,7 @@ export function CoordinationProblemList({
               <ProblemRow
                 key={problem.id}
                 problem={problem}
+                selected={problem.id === selectedProblemId}
                 onSelect={onProblemSelect}
               />
             ))}

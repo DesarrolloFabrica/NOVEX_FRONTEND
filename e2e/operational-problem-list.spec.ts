@@ -503,7 +503,7 @@ test.describe('lista persistente de problemas · 1440x900', () => {
     })
   })
 
-  test('G+H · el problema abre su isla y cerrarla devuelve a la misma lista', async ({
+  test('G+H · el problema abre su detalle y la lista sigue en su sitio', async ({
     page,
   }, testInfo) => {
     test.slow()
@@ -517,15 +517,22 @@ test.describe('lista persistente de problemas · 1440x900', () => {
     const fanBefore = await page.locator(FAN_SLOT_SEL).count()
 
     await page.locator(PROBLEM_ROW).first().click()
-    await expect(page.getByTestId('problem-island')).toBeVisible()
+
+    /*
+     * El detalle aparece en SU región, no encima de la escena. Esta prueba
+     * nació cuando el problema abría una isla flotante y comprobaba que
+     * cerrarla devolvía a la misma lista; ahora no hay nada que cerrar, así que
+     * lo que se afirma es que la lista y la mano no se enteran de que alguien
+     * está leyendo un problema.
+     */
+    await expect(page.getByTestId('problem-detail')).toBeVisible()
+    await expect(page.getByTestId('problem-island')).toHaveCount(0)
 
     await page.screenshot({
-      path: testInfo.outputPath('f2-6-island-from-child-1440x900.png'),
+      path: testInfo.outputPath('f2-6-detail-from-child-1440x900.png'),
       fullPage: false,
     })
 
-    await page.getByTestId('island-close').click()
-    await expect(page.getByTestId('problem-island')).toHaveCount(0)
     await settle(page)
 
     // Mismo contexto: misma hija observada, misma lista y misma mano.

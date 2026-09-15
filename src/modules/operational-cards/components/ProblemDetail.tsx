@@ -1,13 +1,18 @@
-import { ProblemIslandSection } from '@/modules/operational-cards/components/ProblemIslandSection'
-import { ProblemIslandShell } from '@/modules/operational-cards/components/ProblemIslandShell'
+import { ProblemDetailSection } from '@/modules/operational-cards/components/ProblemDetailSection'
 import type { OperationalCardsLevel2State } from '@/modules/operational-cards/types/operational-cards.state'
 import type {
   ProblemSectionId,
   ProblemSectionState,
 } from '@/modules/operational-cards/types/problem-detail.types'
+import '@/styles/operational-problem-detail.css'
 
 /**
- * Isla flotante de inspección de un problema (LEVEL 2).
+ * Detalle de un problema (LEVEL 2), en la región permanente del shell.
+ *
+ * Es el CONTENIDO de la antigua isla flotante, que dejó de ser una capa sobre
+ * la escena para pasar a ser una de sus tres lecturas permanentes. La lectura
+ * no cambió; cambió dónde vive. Por eso no hay velo, ni `role="dialog"`, ni
+ * botón de cerrar: no se cierra nada, se mira otro problema.
  *
  * Solo lectura, sin excepción: no hay editar, cambiar estado, cerrar
  * situación, reanalizar, simular impacto, ni tocar recomendaciones o
@@ -41,7 +46,7 @@ const SLA_LABEL = {
   closed: 'SLA cerrado',
 } as const
 
-const HEADING_ID = 'problem-island-title'
+const HEADING_ID = 'problem-detail-title'
 
 function sectionHint<T>(section: ProblemSectionState<T>): string | null {
   if (section.status === 'loading') return 'Cargando…'
@@ -62,7 +67,7 @@ function SectionState<T>({
 }) {
   if (section.status === 'loading' || section.status === 'idle') {
     return (
-      <p className="island-section__note" data-testid="island-section-loading">
+      <p className="detail-section__note" data-testid="detail-section-loading">
         Cargando…
       </p>
     )
@@ -72,8 +77,8 @@ function SectionState<T>({
   if (section.status === 'error') {
     return (
       <p
-        className="island-section__note island-section__note--error"
-        data-testid="island-section-error"
+        className="detail-section__note detail-section__note--error"
+        data-testid="detail-section-error"
         role="alert"
       >
         No pudimos cargar esta sección.
@@ -83,7 +88,7 @@ function SectionState<T>({
 
   if (section.items.length === 0) {
     return (
-      <p className="island-section__note" data-testid="island-section-empty">
+      <p className="detail-section__note" data-testid="detail-section-empty">
         {emptyLabel}
       </p>
     )
@@ -92,77 +97,68 @@ function SectionState<T>({
   return <>{children(section.items)}</>
 }
 
-export interface ProblemIslandProps {
+export interface ProblemDetailProps {
   level2: OperationalCardsLevel2State
-  onClose: () => void
   onToggleSection: (section: ProblemSectionId) => void
 }
 
-export function ProblemIsland({
-  level2,
-  onClose,
-  onToggleSection,
-}: ProblemIslandProps) {
+export function ProblemDetail({ level2, onToggleSection }: ProblemDetailProps) {
   const { detail, sections, expanded, status } = level2
   const isExpanded = (section: ProblemSectionId) => expanded.includes(section)
 
   return (
-    <ProblemIslandShell labelledBy={HEADING_ID} onClose={onClose}>
-      <header className="problem-island__header">
-        <div className="problem-island__heading">
-          <h2 id={HEADING_ID} className="problem-island__title">
+    <section
+      className="problem-detail"
+      data-testid="problem-detail"
+      data-level2={status}
+      data-problem={level2.problemId ?? ''}
+      aria-labelledby={HEADING_ID}
+    >
+      <header className="problem-detail__header">
+        <div className="problem-detail__heading">
+          <h3 id={HEADING_ID} className="problem-detail__title">
             {detail?.title ?? 'Detalle del problema'}
-          </h2>
+          </h3>
 
           {detail && (
-            <p className="problem-island__badges">
+            <p className="problem-detail__badges">
               <span
-                className="problem-island__badge problem-island__badge--severity"
+                className="problem-detail__badge problem-detail__badge--severity"
                 data-severity={detail.severity}
-                data-testid="island-severity"
+                data-testid="detail-severity"
               >
                 {SEVERITY_LABEL[detail.severity]}
               </span>
               <span
-                className="problem-island__badge"
-                data-testid="island-status"
+                className="problem-detail__badge"
+                data-testid="detail-status"
               >
                 {STATUS_LABEL[detail.status] ?? detail.status}
               </span>
               {detail.slaHealth && (
                 <span
-                  className="problem-island__badge"
+                  className="problem-detail__badge"
                   data-sla={detail.slaHealth}
-                  data-testid="island-sla"
+                  data-testid="detail-sla"
                 >
                   {SLA_LABEL[detail.slaHealth]}
                 </span>
               )}
               {/* Contexto secundario: la coordinación ya se ve detrás. */}
               {detail.coordinationName && (
-                <span className="problem-island__context">
+                <span className="problem-detail__context">
                   {detail.coordinationName}
                 </span>
               )}
             </p>
           )}
         </div>
-
-        <button
-          type="button"
-          className="problem-island__close"
-          data-testid="island-close"
-          aria-label="Cerrar el detalle del problema"
-          onClick={onClose}
-        >
-          ✕
-        </button>
       </header>
 
       {(status === 'loading' || status === 'idle') && (
         <div
-          className="problem-island__skeleton"
-          data-testid="island-loading"
+          className="problem-detail__skeleton"
+          data-testid="detail-loading"
           aria-hidden="true"
         >
           <span />
@@ -173,8 +169,8 @@ export function ProblemIsland({
 
       {status === 'error' && (
         <p
-          className="problem-island__notice"
-          data-testid="island-error"
+          className="problem-detail__notice"
+          data-testid="detail-error"
           role="alert"
         >
           No pudimos cargar el detalle del problema.
@@ -183,12 +179,12 @@ export function ProblemIsland({
 
       {status === 'ready' && detail && (
         <>
-          <p className="problem-island__summary" data-testid="island-summary">
+          <p className="problem-detail__summary" data-testid="detail-summary">
             {detail.summary}
           </p>
 
-          <div className="problem-island__sections">
-            <ProblemIslandSection
+          <div className="problem-detail__sections">
+            <ProblemDetailSection
               id="impact"
               title="Impacto"
               hint={detail.impact ? String(detail.impact.areas.length) : null}
@@ -197,73 +193,73 @@ export function ProblemIsland({
             >
               {detail.impact ? (
                 <>
-                  <p className="island-section__text">{detail.impact.summary}</p>
-                  <ul className="island-list" data-testid="island-impact-areas">
+                  <p className="detail-section__text">{detail.impact.summary}</p>
+                  <ul className="detail-list" data-testid="detail-impact-areas">
                     {detail.impact.areas.map((area) => (
                       <li key={area.coordinationCode}>
-                        <span className="island-list__label">
+                        <span className="detail-list__label">
                           {area.coordinationCode}
                         </span>
                         <span
-                          className="island-list__tag"
+                          className="detail-list__tag"
                           data-severity={area.impactLevel}
                         >
                           {SEVERITY_LABEL[area.impactLevel]}
                         </span>
-                        <span className="island-list__text">
+                        <span className="detail-list__text">
                           {area.description}
                         </span>
                       </li>
                     ))}
                   </ul>
                   {detail.impact.propagationDepth > 0 && (
-                    <p className="island-section__note">
+                    <p className="detail-section__note">
                       Propagación hasta {detail.impact.propagationDepth} nivel
                       {detail.impact.propagationDepth === 1 ? '' : 'es'}.
                     </p>
                   )}
                 </>
               ) : (
-                <p className="island-section__note">
+                <p className="detail-section__note">
                   Sin evaluación de impacto registrada.
                 </p>
               )}
-            </ProblemIslandSection>
+            </ProblemDetailSection>
 
-            <ProblemIslandSection
+            <ProblemDetailSection
               id="ai"
               title="Inteligencia IA"
               expanded={isExpanded('ai')}
               onToggle={onToggleSection}
             >
               {detail.intelligence ? (
-                <div data-testid="island-ai">
-                  <p className="island-section__text">
+                <div data-testid="detail-ai">
+                  <p className="detail-section__text">
                     {detail.intelligence.headline}
                   </p>
                   {detail.intelligence.keyPoints.length > 0 && (
-                    <ul className="island-list">
+                    <ul className="detail-list">
                       {detail.intelligence.keyPoints.map((point) => (
                         <li key={point}>
-                          <span className="island-list__text">{point}</span>
+                          <span className="detail-list__text">{point}</span>
                         </li>
                       ))}
                     </ul>
                   )}
                   {detail.intelligence.rootCause && (
-                    <p className="island-section__text">
+                    <p className="detail-section__text">
                       {detail.intelligence.rootCause}
                     </p>
                   )}
                   {detail.intelligence.risks.length > 0 && (
-                    <ul className="island-list">
+                    <ul className="detail-list">
                       {detail.intelligence.risks.map((risk) => (
                         <li key={risk.title}>
-                          <span className="island-list__label">
+                          <span className="detail-list__label">
                             {risk.title}
                           </span>
                           <span
-                            className="island-list__tag"
+                            className="detail-list__tag"
                             data-severity={risk.severity}
                           >
                             {risk.severity}
@@ -274,13 +270,13 @@ export function ProblemIsland({
                   )}
                 </div>
               ) : (
-                <p className="island-section__note" data-testid="island-ai-absent">
+                <p className="detail-section__note" data-testid="detail-ai-absent">
                   Esta situación no tiene análisis de IA.
                 </p>
               )}
-            </ProblemIslandSection>
+            </ProblemDetailSection>
 
-            <ProblemIslandSection
+            <ProblemDetailSection
               id="recommendations"
               title="Recomendaciones"
               hint={sectionHint(sections.recommendations)}
@@ -292,11 +288,11 @@ export function ProblemIsland({
                 emptyLabel="Sin recomendaciones registradas."
               >
                 {(items) => (
-                  <ul className="island-list" data-testid="island-recommendations">
+                  <ul className="detail-list" data-testid="detail-recommendations">
                     {items.map((item) => (
                       <li key={item.id}>
-                        <span className="island-list__label">{item.title}</span>
-                        <span className="island-list__text">
+                        <span className="detail-list__label">{item.title}</span>
+                        <span className="detail-list__text">
                           {item.description}
                         </span>
                       </li>
@@ -304,9 +300,9 @@ export function ProblemIsland({
                   </ul>
                 )}
               </SectionState>
-            </ProblemIslandSection>
+            </ProblemDetailSection>
 
-            <ProblemIslandSection
+            <ProblemDetailSection
               id="evidences"
               title="Evidencias"
               hint={sectionHint(sections.evidences)}
@@ -318,14 +314,14 @@ export function ProblemIsland({
                 emptyLabel="Sin evidencias registradas."
               >
                 {(items) => (
-                  <ul className="island-list" data-testid="island-evidences">
+                  <ul className="detail-list" data-testid="detail-evidences">
                     {items.map((item) => (
                       <li key={item.id}>
-                        <span className="island-list__label">
+                        <span className="detail-list__label">
                           {item.title || item.fileName || item.id}
                         </span>
-                        <span className="island-list__tag">{item.type}</span>
-                        <span className="island-list__text">
+                        <span className="detail-list__tag">{item.type}</span>
+                        <span className="detail-list__text">
                           {item.createdAt}
                         </span>
                       </li>
@@ -333,9 +329,9 @@ export function ProblemIsland({
                   </ul>
                 )}
               </SectionState>
-            </ProblemIslandSection>
+            </ProblemDetailSection>
 
-            <ProblemIslandSection
+            <ProblemDetailSection
               id="timeline"
               title="Timeline"
               hint={sectionHint(sections.timeline)}
@@ -347,14 +343,14 @@ export function ProblemIsland({
                 emptyLabel="Sin actividad registrada."
               >
                 {(items) => (
-                  <ol className="island-list" data-testid="island-timeline">
+                  <ol className="detail-list" data-testid="detail-timeline">
                     {items.map((item) => (
                       <li key={item.id}>
-                        <span className="island-list__label">
+                        <span className="detail-list__label">
                           {item.eventType}
                         </span>
-                        <span className="island-list__text">{item.title}</span>
-                        <span className="island-list__text">
+                        <span className="detail-list__text">{item.title}</span>
+                        <span className="detail-list__text">
                           {item.createdAt}
                         </span>
                       </li>
@@ -362,10 +358,10 @@ export function ProblemIsland({
                   </ol>
                 )}
               </SectionState>
-            </ProblemIslandSection>
+            </ProblemDetailSection>
           </div>
         </>
       )}
-    </ProblemIslandShell>
+    </section>
   )
 }

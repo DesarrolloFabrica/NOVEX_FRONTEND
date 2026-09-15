@@ -1172,6 +1172,24 @@
   text-transform: uppercase;
 }
 
+/*
+ * LA FILA QUE ALIMENTA EL DETALLE.
+ *
+ * Discreta a propósito: no compite con la severidad, que es la señal que
+ * ordena la lectura. Y no se distingue solo por color —lleva también el borde
+ * y el fondo del estado activo—, porque el color por sí solo no es una señal
+ * accesible; el anuncio real lo da `aria-current` en el propio botón.
+ */
+.problem-row[data-selected='true'] {
+  border-color: var(--deck-line-strong);
+  background: rgb(26 42 68 / 0.92);
+}
+
+.problem-row[data-selected='true'] .problem-row__title {
+  color: var(--deck-text);
+  font-weight: 600;
+}
+
 .problem-row[data-severity='CRITICAL'] {
   --severity-rgb: var(--status-critical-rgb);
 }

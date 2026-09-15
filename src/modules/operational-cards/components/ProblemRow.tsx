@@ -25,10 +25,20 @@ const STATUS_LABEL = {
 
 export interface ProblemRowProps {
   problem: CoordinationProblem
+  /**
+   * Si esta fila es la que alimenta la región de detalle.
+   *
+   * `aria-current` y no `aria-pressed`: la fila no conmuta un ajuste, señala
+   * cuál de los elementos de la lista se está mirando ahora mismo, que es
+   * exactamente lo que `aria-current` significa. Nació con el detalle
+   * persistente: mientras el detalle era una isla que tapaba la escena, no
+   * hacía falta marcar su origen porque no se veían a la vez.
+   */
+  selected?: boolean
   onSelect?: (problemId: string) => void
 }
 
-export function ProblemRow({ problem, onSelect }: ProblemRowProps) {
+export function ProblemRow({ problem, selected, onSelect }: ProblemRowProps) {
   const severityLabel = SEVERITY_LABEL[problem.severity]
 
   return (
@@ -39,6 +49,8 @@ export function ProblemRow({ problem, onSelect }: ProblemRowProps) {
       data-problem-id={problem.id}
       data-severity={problem.severity}
       data-status={problem.status}
+      data-selected={selected ? 'true' : 'false'}
+      aria-current={selected ? 'true' : undefined}
       aria-label={`${problem.title}. Severidad ${severityLabel}. ${
         STATUS_LABEL[problem.status]
       }.`}

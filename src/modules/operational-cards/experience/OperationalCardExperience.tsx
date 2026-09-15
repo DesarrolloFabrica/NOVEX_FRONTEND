@@ -1,8 +1,6 @@
 import { useMemo } from 'react'
-import { AnimatePresence } from 'motion/react'
 import { CoordinationTable } from '@/modules/operational-cards/components/CoordinationTable'
 import { OperationalBreadcrumb } from '@/modules/operational-cards/components/OperationalBreadcrumb'
-import { ProblemIsland } from '@/modules/operational-cards/components/ProblemIsland'
 import { TableReturnAction } from '@/modules/operational-cards/components/TableReturnAction'
 import { resolveDeckSelectionContext } from '@/modules/operational-cards/data/deckContext'
 import { buildTableLayout } from '@/modules/operational-cards/data/tableLayout'
@@ -10,7 +8,6 @@ import { buildProductTable } from '@/modules/operational-cards/data/productHiera
 import type { OperationalCardsController } from '@/modules/operational-cards/hooks/useOperationalOverview'
 import type { OperationalIntegrityStatus } from '@/modules/operational-cards/types/operational-status.types'
 import '@/styles/operational-cards.css'
-import '@/styles/operational-island.css'
 
 /**
  * Orquestador de la experiencia ADMIN de estado operacional.
@@ -48,13 +45,9 @@ export function OperationalCardExperience({
     errorMessage,
     selectedCoordinationCode,
     hoveredCoordinationCode,
-    selectedProblemId,
-    level2,
     selectCoordination,
     clearCoordination,
     hoverCoordination,
-    closeProblem,
-    toggleSection,
   } = controller
 
   // Un fallo de red, HTTP, parseo o contrato se comunica como DESCONOCIDO.
@@ -283,18 +276,11 @@ export function OperationalCardExperience({
             Lo que queda en la escena de cartas es la mesa.
           */}
 
-          {/* Isla de inspección del problema. Una sola a la vez: el reducer
-              ignora una segunda selección mientras haya una abierta. */}
-          <AnimatePresence>
-            {selectedProblemId && (
-              <ProblemIsland
-                key={selectedProblemId}
-                level2={level2}
-                onClose={closeProblem}
-                onToggleSection={toggleSection}
-              />
-            )}
-          </AnimatePresence>
+          {/*
+            Aquí se montaba la ISLA del problema, una capa con velo sobre la
+            escena. El detalle se lee ahora en su región permanente del shell,
+            así que pulsar una fila ya no tapa la mesa: la deja donde está.
+          */}
 
           {/* Registro de analista: sin problemas activos no se muestra nada.
               Con problemas, marcador textual PROVISIONAL. No es carta, no

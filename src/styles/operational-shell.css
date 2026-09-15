@@ -172,6 +172,22 @@
   flex: 1 1 auto;
 }
 
+/* ---------- Región del detalle ---------- */
+
+/*
+ * Mismo trato que la lista: el detalle llena su región y se desplaza por
+ * dentro. La banda superior sigue en 268 px con cinco secciones abiertas,
+ * porque lo que cede es la lista de secciones y no la altura de la fila.
+ */
+.operational-shell__region--problem-detail {
+  padding: 10px 12px;
+}
+
+.operational-shell__region--problem-detail .problem-detail {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
 /* ---------- Carril ejecutivo ---------- */
 
 .operational-shell__kpi {

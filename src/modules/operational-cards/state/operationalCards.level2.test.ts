@@ -115,17 +115,36 @@ describe('LEVEL 2 · selección del problema', () => {
     expect(state.level1.problems).toHaveLength(2)
   })
 
-  it('solo una isla: otro problema no abre mientras hay una', () => {
+  it('elegir otro problema cambia el detalle sin cerrar nada', () => {
+    // Contrato invertido en F3. Mientras el detalle era una isla flotante, una
+    // segunda fila no podía abrir otra encima y la acción se ignoraba. Con el
+    // detalle en su región permanente, pulsar otra fila es mirar otro
+    // problema: la selección cambia y LEVEL 2 vuelve a empezar para el nuevo.
     const open = opened()
     const second = operationalCardsReducer(open, {
       type: 'SELECT_PROBLEM',
       problemId: 'p2',
     })
-    expect(second).toBe(open)
-    expect(second.selectedProblemId).toBe('p1')
+
+    expect(second.selectedProblemId).toBe('p2')
+    expect(second.level2.problemId).toBe('p2')
+    expect(second.level2.status).toBe('idle')
+    expect(second.level2.detail).toBeNull()
+    // La coordinación no se toca: cambiar de problema no retrocede nivel.
+    expect(second.selectedCoordinationCode).toBe('coord-ingenierias')
   })
 
-  it('cerrar la isla mantiene la coordinación seleccionada', () => {
+  it('volver a pulsar el problema que ya se mira no reinicia su carga', () => {
+    const open = opened()
+    const again = operationalCardsReducer(open, {
+      type: 'SELECT_PROBLEM',
+      problemId: 'p1',
+    })
+
+    expect(again).toBe(open)
+  })
+
+  it('CLOSE_PROBLEM mantiene la coordinación seleccionada', () => {
     const state = from(opened(), { type: 'CLOSE_PROBLEM' })
     expect(state.selectedProblemId).toBeNull()
     expect(state.level2.detail).toBeNull()

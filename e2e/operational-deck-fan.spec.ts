@@ -597,7 +597,7 @@ test.describe('mano del mazo · 1440x900', () => {
     )
   })
 
-  test('E11 · abrir y cerrar la isla desde una hija devuelve a la misma hija', async ({
+  test('E11 · leer un problema de la hija no mueve la mano', async ({
     page,
   }) => {
     test.slow()
@@ -609,16 +609,18 @@ test.describe('mano del mazo · 1440x900', () => {
 
     const before = await fanBoxes(page)
 
-    // El problema se abre desde el panel de la hija, por la ruta de siempre.
+    /*
+     * El problema se abre desde la lista de la hija. Antes esto levantaba una
+     * isla sobre la escena y la prueba comprobaba que cerrarla devolvía la mano
+     * a su sitio; ahora el detalle aparece en su región del shell y la mesa no
+     * se toca, así que lo que se afirma es más fuerte: la mano no se mueve en
+     * ningún momento, porque nunca hubo nada que cerrar.
+     */
     await page.getByTestId('problem-row').first().click()
-    await expect(page.getByTestId('problem-island')).toBeVisible()
-
-    await page.getByTestId('island-close').click()
-    await expect(page.getByTestId('problem-island')).toHaveCount(0)
+    await expect(page.getByTestId('problem-detail')).toBeVisible()
     await settle(page)
 
-    // Se vuelve exactamente a donde se estaba: misma hija observada, mismo
-    // mazo abierto y la mano sin moverse.
+    // Misma hija observada, mismo mazo abierto y la mano sin moverse.
     await expect(page.locator(PANEL)).toHaveAttribute(
       'data-code',
       'coord-ingenierias',
