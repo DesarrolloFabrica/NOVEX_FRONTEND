@@ -198,13 +198,13 @@ function level1Calls(requested: readonly string[]): string[] {
  */
 async function select(page: Page, code: string) {
   await page.locator(`${CARD}[data-code="${code}"]`).click()
-  await expect(page.getByTestId('coordination-problem-panel')).toHaveAttribute(
+  await expect(page.getByTestId('coordination-problem-list')).toHaveAttribute(
     'data-code',
     code,
   )
 }
 
-const PANEL = '[data-testid="coordination-problem-panel"]'
+const PANEL = '[data-testid="coordination-problem-list"]'
 const SLOT = '[data-testid="coordination-table-slot"]'
 
 test.describe('selección in-place de coordinación', () => {
@@ -364,7 +364,7 @@ test.describe('selección in-place de coordinación', () => {
     await expect(page.locator(`${SLOT}[data-state="selected"]`)).toHaveCount(1)
     await expect(page.locator(`${SLOT}[data-state="dimmed"]`)).toHaveCount(8)
 
-    const panel = page.getByTestId('coordination-problem-panel')
+    const panel = page.getByTestId('coordination-problem-list')
     await expect(panel).toBeVisible()
     // El estado del panel es el de LEVEL 0: no se recalcula con la lista.
     await expect(panel).toHaveAttribute('data-status', 'CRITICO')
@@ -447,7 +447,7 @@ test.describe('selección in-place de coordinación', () => {
     })
   })
 
-  test('cada composición coloca su panel, y ninguna se sale del área', async ({
+  test('cada composición lee sus problemas arriba, y nada se sale del área', async ({
     page,
   }) => {
     test.slow()
@@ -459,10 +459,11 @@ test.describe('selección in-place de coordinación', () => {
      * Se recorren las cinco posiciones señaladas como de riesgo: primer nodo,
      * nodo central, último, el mazo y el nodo de presentación legacy.
      *
-     * Las dos composiciones observadas —simple y mazo— llevan ya su panel al
-     * MISMO carril derecho, así que la afirmación vuelve a ser única para todas:
-     * el panel se coloca en su columna, nunca cuelga de la carta y nunca se
-     * escapa del área de contenido, que era el riesgo original de los extremos.
+     * Las dos composiciones observadas —simple y mazo— llevan su lectura de
+     * LEVEL 1 a la MISMA región permanente, así que la afirmación es única para
+     * todas: la lista se sitúa por encima de la banda de la baraja, nunca cuelga
+     * de la carta y nunca se escapa del área de contenido, que era el riesgo
+     * original de los extremos.
      *
      * Se vuelve a la Dirección entre una y otra porque desde un mazo escogido no
      * hay vecinas sobre la mesa: se retiran al abrirlo.
@@ -494,9 +495,6 @@ test.describe('selección in-place de coordinación', () => {
               `[data-testid="coordination-card"][data-code="${target}"]`,
             )!
             .getBoundingClientRect()
-          const table = document
-            .querySelector('[data-testid="coordination-table"]')!
-            .getBoundingClientRect()
           const host = document
             .querySelector('.novex-os-deck__content')!
             .getBoundingClientRect()
@@ -506,7 +504,11 @@ test.describe('selección in-place de coordinación', () => {
             escapesLeft: panel.left < host.left - 1,
             escapesRight: panel.right > host.right + 1,
             below: panel.top >= card.bottom - 30,
-            rightOfTable: panel.left >= table.right - 1,
+            aboveStage:
+              panel.bottom <=
+              document
+                .querySelector('[data-testid="shell-stage"]')!
+                .getBoundingClientRect().top + 1,
           }
         },
         { panelSelector: PANEL, target: code },
@@ -516,10 +518,11 @@ test.describe('selección in-place de coordinación', () => {
         mode === 'SIMPLE_SELECTED' || mode === 'DECK_SELECTED',
         `${code}: hay una composición observada`,
       ).toBe(true)
-      expect(geometry.rightOfTable, `${code}: el panel vive en su carril`).toBe(
-        true,
-      )
-      expect(geometry.below, `${code}: el panel ya no cuelga de la carta`).toBe(
+      expect(
+        geometry.aboveStage,
+        `${code}: la lista vive en su región, sobre la baraja`,
+      ).toBe(true)
+      expect(geometry.below, `${code}: la lista ya no cuelga de la carta`).toBe(
         false,
       )
 
@@ -589,14 +592,14 @@ test.describe('selección in-place de coordinación', () => {
 
     await page.locator(`${CARD}[data-code="coord-b2b"]`).focus()
     await page.keyboard.press('Enter')
-    await expect(page.getByTestId('coordination-problem-panel')).toHaveAttribute(
+    await expect(page.getByTestId('coordination-problem-list')).toHaveAttribute(
       'data-code',
       'coord-b2b',
     )
 
     await page.locator(`${CARD}[data-code="coord-saber-pro"]`).focus()
     await page.keyboard.press('Space')
-    await expect(page.getByTestId('coordination-problem-panel')).toHaveAttribute(
+    await expect(page.getByTestId('coordination-problem-list')).toHaveAttribute(
       'data-code',
       'coord-saber-pro',
     )
@@ -612,7 +615,7 @@ test.describe('selección in-place de coordinación', () => {
 
     await page.getByTestId('breadcrumb-direction').click()
 
-    await expect(page.getByTestId('coordination-problem-panel')).toHaveCount(0)
+    await expect(page.getByTestId('coordination-problem-list')).toHaveCount(0)
     await expect(page.getByTestId('operational-breadcrumb')).toHaveCount(0)
     await expect(page.getByTestId('coordination-card')).toHaveCount(9)
     await expect(page.locator(`${SLOT}[data-state="resting"]`)).toHaveCount(9)
@@ -658,7 +661,7 @@ test.describe('selección in-place de coordinación', () => {
     await expect(page.getByTestId('coordination-panel-error')).toBeVisible()
     await expect(page.getByTestId('coordination-panel-empty')).toHaveCount(0)
     // La coordinación sigue seleccionada y con su estado de LEVEL 0.
-    await expect(page.getByTestId('coordination-problem-panel')).toHaveAttribute(
+    await expect(page.getByTestId('coordination-problem-list')).toHaveAttribute(
       'data-status',
       'CRITICO',
     )
@@ -785,7 +788,7 @@ test.describe('selección in-place · movimiento reducido', () => {
     await select(page, 'coord-operaciones-academicas')
 
     // El panel llega entero y opaco, sin desplazamiento pendiente.
-    const panel = page.getByTestId('coordination-problem-panel')
+    const panel = page.getByTestId('coordination-problem-list')
     await expect(panel).toBeVisible()
     const settled = await panel.evaluate((node) => {
       const style = getComputedStyle(node)

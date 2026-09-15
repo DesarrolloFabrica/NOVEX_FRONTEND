@@ -1,8 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { CoordinationProblemPanel } from '@/modules/operational-cards/components/CoordinationProblemPanel'
+import { CoordinationProblemList } from '@/modules/operational-cards/components/CoordinationProblemList'
 import { resolveCoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
-import { resolvePanelAnchor } from '@/modules/operational-cards/data/panelAnchor'
 import type { CoordinationOverview } from '@/modules/operational-cards/types/operational-overview.contract'
 import type {
   CoordinationProblem,
@@ -10,13 +9,17 @@ import type {
 } from '@/modules/operational-cards/types/operational-cards.state'
 
 /**
- * Panel de LEVEL 1 anclado a la carta.
+ * Lista de LEVEL 1 de la coordinación observada.
  *
- * Hereda el contrato de lectura de `ActiveCoordinationCard`, a la que
+ * Hereda el contrato de lectura de `CoordinationProblemPanel`, a la que
  * sustituye: nombre de producto, estado en TEXTO, resumen coherente con la
- * lista, y los cuatro estados de carga sin que ninguno se disfrace de otro. Lo
- * que añade es el anclaje, que es lo que lo convierte en «el panel de ESTA
- * carta» y no en un panel genérico.
+ * lista, y los cuatro estados de carga sin que ninguno se disfrace de otro.
+ *
+ * Lo que NO hereda es el anclaje a la carta. El panel publicaba `--panel-x`,
+ * `--panel-notch`, `data-side` y `data-clamped` porque colgaba de un slot de la
+ * mesa; la lista vive en una región fija del shell y no cuelga de nada, así que
+ * esas pruebas no se han trasladado: comprobarían una geometría que ya no
+ * existe.
  */
 
 const COORDINATION: CoordinationOverview = {
@@ -31,13 +34,6 @@ const COORDINATION: CoordinationOverview = {
   criticalCount: 2,
   affectedCoordinationCount: 1,
 }
-
-const ANCHOR = resolvePanelAnchor({
-  slotX: 1.5,
-  orientation: 'RIGHT',
-  stageWidth: 7.215,
-  panelWidth: 2.2,
-})
 
 function problem(
   id: string,
@@ -54,14 +50,13 @@ function problem(
 
 function markup(
   level1: OperationalCardsLevel1State,
-  options: { productLabel?: string; anchor?: typeof ANCHOR } = {},
+  options: { productLabel?: string } = {},
 ): string {
   return renderToStaticMarkup(
-    <CoordinationProblemPanel
+    <CoordinationProblemList
       coordination={COORDINATION}
       identity={resolveCoordinationVisualIdentity(COORDINATION)}
       productLabel={options.productLabel ?? 'Servicio'}
-      anchor={options.anchor ?? ANCHOR}
       level1={level1}
       onProblemSelect={() => undefined}
     />,
@@ -84,11 +79,11 @@ function countOf(html: string, needle: string): number {
   return html.split(needle).length - 1
 }
 
-describe('CoordinationProblemPanel · identidad de la coordinación', () => {
+describe('CoordinationProblemList · identidad de la coordinación', () => {
   it('titula con el nombre de PRODUCTO, no con el técnico', () => {
     // El nodo se llama «Servicio» y se apoya en la fila `coord-homologaciones`.
-    // Abrir «Servicio» y leer «Homologaciones» se interpreta como un error de
-    // datos, así que el catálogo manda sobre el nombre de la fila.
+    // Leer «Homologaciones» en la región se interpreta como un error de datos,
+    // así que el catálogo manda sobre el nombre de la fila.
     const html = markup(level1('ready', [problem('p1', 'CRITICAL')]))
 
     expect(html).toContain('Servicio')
@@ -96,14 +91,14 @@ describe('CoordinationProblemPanel · identidad de la coordinación', () => {
   })
 
   it('el nombre es un encabezado de verdad, y nombra a la región', () => {
-    // Sin encabezado, un lector de pantalla no puede saltar al panel ni saber
+    // Sin encabezado, un lector de pantalla no puede saltar a la lista ni saber
     // de qué coordinación está hablando.
     const html = markup(level1('ready', [problem('p1', 'HIGH')]))
 
-    expect(html).toContain('<h2')
-    expect(html).toContain(`id="coordination-panel-title-${COORDINATION.code}"`)
+    expect(html).toContain('<h3')
+    expect(html).toContain(`id="coordination-list-title-${COORDINATION.code}"`)
     expect(html).toContain(
-      `aria-labelledby="coordination-panel-title-${COORDINATION.code}"`,
+      `aria-labelledby="coordination-list-title-${COORDINATION.code}"`,
     )
   })
 
@@ -118,50 +113,20 @@ describe('CoordinationProblemPanel · identidad de la coordinación', () => {
   it('declara a qué coordinación pertenece', () => {
     expect(markup(level1('ready'))).toContain(`data-code="${COORDINATION.code}"`)
   })
-})
 
-describe('CoordinationProblemPanel · anclaje a la carta', () => {
-  it('publica la geometría del ancla como variables, no como píxeles', () => {
-    // En anchos de carta, igual que la mesa: así el panel se alinea con su
-    // carta a cualquier resolución sin medir nada en el DOM.
-    const html = markup(level1('ready'))
+  it('no arrastra la geometría del panel anclado', () => {
+    // La lista no cuelga de ninguna carta: si volvieran a aparecer estas
+    // variables, alguien habría reintroducido el carril por la puerta de atrás.
+    const html = markup(level1('ready', [problem('p1', 'CRITICAL')]))
 
-    expect(html).toContain('--panel-x:1.5')
-    expect(html).toContain('--panel-notch:0.5')
-  })
-
-  it('el posicionador y el panel son nodos DISTINTOS', () => {
-    // Uno coloca y el otro anima. Con los dos transforms en el mismo nodo,
-    // Motion escribe el suyo en línea y borra la posición: el panel aparecía
-    // centrado bajo el personaje para las nueve coordinaciones.
-    const html = markup(level1('ready'))
-
-    expect(html).toContain('data-testid="coordination-panel-anchor"')
-    expect(html).toContain('data-testid="coordination-problem-panel"')
-    expect(html.indexOf('coordination-panel-anchor')).toBeLessThan(
-      html.indexOf('coordination-problem-panel'),
-    )
-  })
-
-  it('expone el lado y si hubo recorte, para que el CSS no lo recalcule', () => {
-    const html = markup(level1('ready'))
-    expect(html).toContain('data-side="RIGHT"')
-    expect(html).toContain('data-clamped="false"')
-
-    const extreme = markup(level1('ready'), {
-      anchor: resolvePanelAnchor({
-        slotX: -3,
-        orientation: 'LEFT',
-        stageWidth: 7.215,
-        panelWidth: 2.2,
-      }),
-    })
-    expect(extreme).toContain('data-side="LEFT"')
-    expect(extreme).toContain('data-clamped="true"')
+    expect(html).not.toContain('--panel-x')
+    expect(html).not.toContain('--panel-notch')
+    expect(html).not.toContain('coordination-panel-anchor')
+    expect(html).not.toContain('coordination-panel__notch')
   })
 })
 
-describe('CoordinationProblemPanel · los cuatro estados de LEVEL 1', () => {
+describe('CoordinationProblemList · los cuatro estados de LEVEL 1', () => {
   it('mientras carga muestra esqueleto y nada más', () => {
     const html = markup(level1('loading'))
 
@@ -227,7 +192,7 @@ describe('CoordinationProblemPanel · los cuatro estados de LEVEL 1', () => {
   })
 })
 
-describe('CoordinationProblemPanel · el resumen no contradice a la lista', () => {
+describe('CoordinationProblemList · el resumen no contradice a la lista', () => {
   it('con la lista cargada cuenta lo que se está viendo', () => {
     const html = markup(
       level1('ready', [problem('p1', 'CRITICAL'), problem('p2', 'MEDIUM')]),

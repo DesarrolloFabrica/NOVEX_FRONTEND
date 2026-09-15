@@ -124,44 +124,27 @@
   --card-veil-color: 7 13 26;
   --card-veil-dimmed: 0.55;
   --stack-dimmed-opacity: 0.88;
-  --z-panel: 80;
+  --z-return: 80;
 
   /*
-   * Panel de LEVEL 1. El ancho va en anchos de carta —el mismo sistema que la
-   * mesa— y debe coincidir con `PANEL_WIDTH_IN_CARDS` de la experiencia, que es
-   * quien calcula el recorte contra el borde del escenario.
-   *
-   * El alto es el recurso escaso: sale del hueco que el stage del personaje
-   * puede ceder sin que la mesa se mueva ni aparezca scroll de página.
+   * Aquí se declaraban el ancho y el alto del panel de LEVEL 1. El ancho iba
+   * en anchos de carta porque el panel se alineaba con su carta, y el alto
+   * salía del hueco que el stage podía cederle. La lectura de problemas vive
+   * ahora en su región del shell: ni se alinea con una carta ni le quita alto
+   * a nadie, así que las dos cotas se fueron con el carril.
    */
-  --panel-w: 2.2;
-  --panel-height: clamp(150px, 22vh, 226px);
 
   /*
-   * COMPOSICIÓN SIMPLE (FASE C). Los tres parámetros de la escena de dos
-   * columnas, juntos y en un solo sitio para poder calibrarla sin reescribir la
-   * rejilla.
+   * LA COMPOSICIÓN SIMPLE YA NO TIENE CARRIL.
    *
-   * `--simple-panel-w` es el ancho del CARRIL, no del panel: el panel lo llena.
-   * El 21 % del viewport es el valor CALIBRADO mirando capturas a 1440 y 1920, y
-   * los dos límites son fracasos observados, no números redondos:
-   *
-   *   24 vw (345 px)  la mesa baja al 73 % y las cartas pierden protagonismo
-   *   21 vw (302 px)  ELEGIDO: mesa al 76 %, cabecera del panel en una línea
-   *   18 vw (259 px)  el panel trunca dos de tres títulos y parte su cabecera
-   *
-   * El suelo de 288 px es ese mismo límite en píxeles, para que una ventana
-   * estrecha no meta el carril en la zona donde el panel deja de leerse; el
-   * techo de 400 px es donde el panel deja de ser acompañamiento y empieza a
-   * competir con la mesa.
-   *
-   * La COMPRESIÓN no se declara. Es la consecuencia de estos tres valores: la
-   * mesa toma el ancho que le queda y el tamaño de carta se deduce de él, así
-   * que no hay un porcentaje escrito a mano que pueda contradecir a la rejilla
-   * ni un punto de ruptura donde las cartas se salgan del carril.
+   * Aquí vivían `--simple-panel-w` y `--simple-gap`, los dos parámetros de
+   * una escena de dos columnas: mesa a la izquierda, panel de LEVEL 1 a la
+   * derecha. La lectura de problemas se mudó a su región permanente del
+   * shell, así que no hay segunda columna que dimensionar y la mesa recupera
+   * el ancho entero de su banda. La compresión calibrada en la fase C
+   * desaparece por donde vino: no se sustituye por otro número, se queda sin
+   * causa.
    */
-  --simple-panel-w: clamp(288px, 21vw, 400px);
-  --simple-gap: clamp(16px, 2vw, 32px);
 
   display: flex;
   flex-direction: column;
@@ -990,56 +973,22 @@
   text-align: right;
 }
 
-/* ---------- Panel de LEVEL 1, anclado a la carta ---------- */
+/* ---------- Lectura de LEVEL 1: superficie de la lista de problemas ---------- */
 
 /*
- * Carril del panel. Reserva alto en el FLUJO, y el panel de dentro va en
- * absoluto.
+ * Superficie propia, borde fino, sin sombra de modal: no oscurece nada y no
+ * atrapa el foco. Las nueve coordinaciones siguen visibles y clickeables.
  *
- * Es la pieza que hace posible la selección in-place sin scroll nuevo: el
- * carril empuja hacia arriba al stage del personaje, que es el único elemento
- * elástico de la columna, en lugar de crecer la página. La mesa no se mueve.
+ * Estas reglas las estrenó el panel anclado a la carta y las hereda intactas
+ * la lista de su región, que es la misma lectura en otro sitio. Lo que se
+ * retiró es solo la geometría de aquel anclaje —posicionador, pico y alto de
+ * carril—, no su lenguaje visual: esta fase MUEVE la lectura, no la rediseña.
  */
-.operational-deck__panel-lane {
-  position: relative;
-  z-index: var(--z-panel);
-  flex: 0 0 auto;
-  height: 0;
-  transition: height 200ms var(--os-ease, cubic-bezier(0.22, 0.72, 0.18, 1));
-}
-
-.operational-deck__panel-lane[data-open='true'] {
-  height: var(--panel-height);
-}
-
-/*
- * El panel. Superficie propia, borde fino y un pico hacia su carta: no es un
- * modal, no oscurece nada y no atrapa el foco.
- *
- * La X sale de `resolvePanelAnchor` en anchos de carta, el mismo sistema que
- * usa la mesa, así que el panel se alinea con su carta a cualquier resolución.
- */
-/*
- * Nodo POSICIONADOR. Su único trabajo es colocar el panel bajo su carta, y por
- * eso el transform de posición vive aquí y no en el panel: dentro, Motion
- * escribe su propio transform en línea para la entrada, y un estilo en línea
- * gana siempre a la hoja. Separando los dos nodos, ninguna de las dos capas le
- * disputa el transform a la otra —la misma regla que gobierna la mesa—.
- */
-.coordination-panel-anchor {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: calc(var(--panel-w) * var(--card-width));
-  margin-left: calc(var(--panel-w) * var(--card-width) / -2);
-  transform: translateX(calc(var(--panel-x) * var(--card-width)));
-}
-
 .coordination-panel {
   position: relative;
   display: flex;
   width: 100%;
-  max-height: var(--panel-height);
+  max-height: 100%;
   flex-direction: column;
   gap: 7px;
   padding: 11px 13px 12px;
@@ -1053,23 +1002,21 @@
 }
 
 /*
- * Pico hacia la carta. Sigue a la CARTA y no al centro del panel: cuando el
- * borde del escenario recorta el panel —primer y último nodo—, el cuerpo se
- * mueve y el pico se queda apuntando al sitio del que salió.
+ * EN LA REGIÓN. La lista llena la banda que le da el shell y se desplaza por
+ * dentro cuando no cabe: la región no crece, no empuja la baraja y no genera
+ * scroll de ruta. El borde y el fondo los pone la región, así que aquí se
+ * retiran para no dibujar una tarjeta dentro de otra.
  */
-.coordination-panel__notch {
-  position: absolute;
-  top: -7px;
-  left: calc(var(--panel-notch) * 100%);
-  width: 14px;
-  height: 14px;
-  border-top: 1px solid var(--deck-line-strong);
-  border-left: 1px solid var(--deck-line-strong);
-  margin-left: -7px;
-  background: rgb(20 32 52 / 0.94);
-  border-start-start-radius: 4px;
-  transform: rotate(45deg);
+.coordination-panel--region {
+  min-height: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
 }
+
 
 /* Línea de identidad en el borde alto: la misma señal cromática que lleva la
    carta, para que panel y carta se lean como una sola cosa. */
@@ -1280,7 +1227,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .coordination-panel,
-  .operational-deck__panel-lane,
   .problem-row {
     transition-duration: 0ms;
     animation: none !important;
@@ -1418,80 +1364,24 @@
 }
 
 /* ==========================================================================
-   SIMPLE_SELECTED: mesa comprimida a la izquierda + carril del panel
+   SIMPLE_SELECTED: la misma mesa, con un nodo bajo observación
    ==========================================================================
 
-   Una coordinación sin subordinaciones bajo observación. La escena pasa de una
-   columna a DOS: la composición —personaje, mesa y retorno— a la izquierda, y
-   el panel de LEVEL 1 en un carril estable a la derecha.
+   Una coordinación sin subordinaciones bajo observación. La escena NO se
+   parte en dos columnas: lo hizo mientras el panel de LEVEL 1 vivía en un
+   carril a la derecha de la mesa, y esa lectura se mudó a su región del
+   shell. Lo que queda aquí es la mesa entera, con el mismo ancho que en
+   reposo.
 
-   Lo que NO cambia, y es la mitad del asunto: las nueve cartas siguen en la
-   mesa, en su orden, en su arco y cada una en su slot. La mesa se comprime y se
-   recentra ENTERA; ninguna carta se mueve respecto a sus vecinas, así que quien
-   pulsó B2B sigue sabiendo dónde está Saber Pro. Tampoco hay carta focal, ni
-   copia, ni segunda escena.
+   Las nueve cartas siguen en la mesa, en su orden, en su arco y cada una en
+   su slot. Ninguna carta se mueve respecto a sus vecinas, así que quien pulsó
+   B2B sigue sabiendo dónde está Saber Pro. Tampoco hay carta focal, ni copia,
+   ni segunda escena: lo único que cambia es CÓMO se presentan. */
 
-   La compresión se consigue con UNA sola variable —el ancho de carta—, deducida
-   del ancho de la columna. Toda la geometría del arco está expresada en anchos
-   y altos de carta, así que reducir esa unidad comprime la mesa completa sin
-   tocar el layout: las mismas x, las mismas rotaciones, el mismo reparto. Es
-   también la razón de que no haya un `transform: scale()` sobre la mesa —que
-   escalaría los bordes y el texto a la vez que la geometría, y competiría con
-   el transform de cada slot— ni un porcentaje de ancho escrito a mano. */
 
-.operational-deck:not([data-composition-mode='GLOBAL']) {
-  display: grid;
-  /* `minmax(0, 1fr)` y no `1fr`: sin el mínimo en cero, el contenido de la
-     columna izquierda podría negarse a encogerse y empujar el carril fuera. */
-  grid-template-columns: minmax(0, 1fr) var(--simple-panel-w);
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  grid-template-areas:
-    'crumb crumb'
-    'composition lane'
-    'foot foot';
-  column-gap: var(--simple-gap);
-  row-gap: 12px;
-}
 
-.operational-deck:not([data-composition-mode='GLOBAL'])
-  > .operational-breadcrumb {
-  grid-area: crumb;
-}
 
-.operational-deck:not([data-composition-mode='GLOBAL'])
-  > .operational-deck__composition {
-  grid-area: composition;
-}
 
-.operational-deck:not([data-composition-mode='GLOBAL'])
-  > .operational-deck__provisional {
-  grid-area: foot;
-}
-
-/* ---------- Reparto VERTICAL de la composición simple ---------- */
-
-/*
- * Aquí no se reparte alto sobrante, porque no hay: la escena se dimensiona por
- * su CONTENIDO. La envoltura que la hospeda —compartida con las otras tres
- * secciones del Centro— tiene alto automático, así que el `height: 100%` de la
- * mesa resuelve a `auto` y el hueco que queda por debajo está FUERA de la
- * escena. Existe igual en la mesa global, y cerrarlo es asunto del shell, no de
- * esta composición.
- *
- * Lo que sí depende de esta composición es que la escena simple no sea
- * NOTABLEMENTE más baja que la global, que era la sensación de escenario
- * abandonado: al comprimirse, la mesa perdía 90 px de alto y el personaje otros
- * 52, y ese acortamiento se sumaba al hueco preexistente. Se corrige devolviendo
- * contenido —el personaje recupera su tamaño de reposo y la mesa recupera parte
- * de su escala al estrecharse el carril—, no distribuyendo vacío.
- */
-
-/* Un poco más de aire entre el personaje y la mesa que en reposo: la mesa es
-   más baja y sin ese hueco el grupo se lee apretado. */
-.operational-deck:not([data-composition-mode='GLOBAL'])
-  > .operational-deck__composition {
-  gap: 18px;
-}
 
 /*
  * El personaje recupera su presencia de reposo.
@@ -1538,47 +1428,6 @@
   transition-duration: 0ms;
 }
 
-/*
- * EL CARRIL. Deja de reservar alto en el flujo —eso era propio de una banda
- * inferior— y pasa a ser una columna de la rejilla, con el panel apoyado
- * arriba: un panel estirado a todo el alto sería casi todo vacío y se leería
- * como la pieza principal de la escena, que no lo es.
- */
-.operational-deck:not([data-composition-mode='GLOBAL'])
-  .operational-deck__panel-lane {
-  display: flex;
-  height: auto;
-  min-height: 0;
-  align-items: flex-start;
-  grid-area: lane;
-}
-
-/*
- * El panel deja de colgar de su carta.
- *
- * `panelAnchor` sigue calculándose y sigue gobernando el modo mazo, que aún
- * cuelga su panel de la carta; aquí simplemente no se aplica: el carril ya dice
- * dónde va el panel, y una x en anchos de carta encima de eso solo podría
- * desalinearlo. El pico desaparece por la misma razón —ya no apunta a nada— y
- * el alto máximo pasa a ser el del carril, con la lista desplazándose dentro.
- */
-.operational-deck:not([data-composition-mode='GLOBAL'])
-  .coordination-panel-anchor {
-  position: static;
-  width: 100%;
-  margin-left: 0;
-  transform: none;
-}
-
-.operational-deck:not([data-composition-mode='GLOBAL']) .coordination-panel {
-  max-height: 100%;
-}
-
-.operational-deck:not([data-composition-mode='GLOBAL'])
-  .coordination-panel__notch {
-  display: none;
-}
-
 /* ---------- Retorno narrativo de la composición ---------- */
 
 /*
@@ -1587,6 +1436,19 @@
  * leyendo.
  */
 .operational-deck__return {
+  /*
+   * POR ENCIMA DE LAS CARTAS, y no es decoración.
+   *
+   * La acción vive bajo la mesa en el flujo, pero las cartas se pintan fuera
+   * de su caja —el arco desborda el alto declarado de la mesa— y acababan
+   * tapándola desde que la composición simple recuperó el ancho entero. Medido:
+   * el puntero que soltaba el botón caía sobre una carta, el mazo se elevaba al
+   * hover, se escapaba del puntero, volvía a bajar y entraba de nuevo bajo él;
+   * la escena se quedaba oscilando y nunca asentaba. Con la acción delante, el
+   * puntero que la pulsa no alcanza ninguna carta.
+   */
+  position: relative;
+  z-index: var(--z-return);
   display: flex;
   flex: 0 0 auto;
   justify-content: center;

@@ -381,7 +381,7 @@ test.describe('isla del problema', () => {
 
     // El contexto sigue detrás: personaje, mesa completa y panel de LEVEL 1.
     await expect(page.getByTestId('direction-character')).toBeVisible()
-    await expect(page.getByTestId('coordination-problem-panel')).toHaveAttribute(
+    await expect(page.getByTestId('coordination-problem-list')).toHaveAttribute(
       'data-code',
       'coord-operaciones-academicas',
     )
@@ -461,7 +461,7 @@ test.describe('isla del problema', () => {
     await page.keyboard.press('Escape')
 
     await expect(page.getByTestId('problem-island')).toHaveCount(0)
-    await expect(page.getByTestId('coordination-problem-panel')).toHaveAttribute(
+    await expect(page.getByTestId('coordination-problem-list')).toHaveAttribute(
       'data-code',
       'coord-operaciones-academicas',
     )
@@ -610,7 +610,7 @@ test.describe('isla del problema', () => {
     await expect(page.getByTestId('island-error')).toBeVisible()
     await expect(page.getByTestId('island-close')).toBeVisible()
     // LEVEL 1 intacto detrás.
-    await expect(page.getByTestId('coordination-problem-panel')).toHaveAttribute(
+    await expect(page.getByTestId('coordination-problem-list')).toHaveAttribute(
       'data-status',
       'CRITICO',
     )

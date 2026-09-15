@@ -348,7 +348,7 @@ test.describe('preview de subbaraja · 1440x900', () => {
 
     // Y de hecho se puede seleccionar una vecina con la subbaraja abierta.
     await page.locator(`${CARD}[data-code="coord-proyeccion-social"]`).click()
-    await expect(page.getByTestId('coordination-problem-panel')).toHaveAttribute(
+    await expect(page.getByTestId('coordination-problem-list')).toHaveAttribute(
       'data-code',
       'coord-proyeccion-social',
     )
@@ -364,7 +364,7 @@ test.describe('preview de subbaraja · 1440x900', () => {
     // El preview no sustituye a la selección ni abre una navegación nueva: el
     // padre queda bajo observación con su panel, y la mesa sigue siendo la
     // mesa. Nunca se selecciona una hija por haber pasado el puntero.
-    await expect(page.getByTestId('coordination-problem-panel')).toHaveAttribute(
+    await expect(page.getByTestId('coordination-problem-list')).toHaveAttribute(
       'data-code',
       PARENT,
     )

@@ -1,13 +1,10 @@
 import { useMemo } from 'react'
 import { AnimatePresence } from 'motion/react'
-import { CoordinationProblemPanel } from '@/modules/operational-cards/components/CoordinationProblemPanel'
 import { CoordinationTable } from '@/modules/operational-cards/components/CoordinationTable'
 import { OperationalBreadcrumb } from '@/modules/operational-cards/components/OperationalBreadcrumb'
 import { ProblemIsland } from '@/modules/operational-cards/components/ProblemIsland'
 import { TableReturnAction } from '@/modules/operational-cards/components/TableReturnAction'
 import { resolveDeckSelectionContext } from '@/modules/operational-cards/data/deckContext'
-import { resolveCoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
-import { resolvePanelAnchor } from '@/modules/operational-cards/data/panelAnchor'
 import { buildTableLayout } from '@/modules/operational-cards/data/tableLayout'
 import { buildProductTable } from '@/modules/operational-cards/data/productHierarchy'
 import type { OperationalCardsController } from '@/modules/operational-cards/hooks/useOperationalOverview'
@@ -22,24 +19,13 @@ import '@/styles/operational-island.css'
  * personaje, que vive en su región del shell y no aquí dentro.
  *
  * UNA SOLA ESCENA. Seleccionar una coordinación no cambia de pantalla: la carta
- * se queda en su sitio de la mesa, se destaca ahí, y su LEVEL 1 aparece en un
- * panel anclado debajo. Las otras ocho no se van a ningún carrusel; siguen
- * dibujadas y clickeables, lo que convierte el cambio de coordinación en un
- * clic directo sobre la vecina.
+ * se queda en su sitio de la mesa y se destaca ahí; su LEVEL 1 se lee en la
+ * región permanente de problemas, arriba. Las otras ocho no se van a ningún
+ * carrusel; siguen dibujadas y clickeables, lo que convierte el cambio de
+ * coordinación en un clic directo sobre la vecina.
  */
 
 const SKELETON_SLOTS = 8
-
-/**
- * Ancho del panel de LEVEL 1, en anchos de carta.
- *
- * En unidades de carta y no en píxeles porque el panel comparte eje con la
- * mesa: expresado así, se alinea con su carta a cualquier resolución y el
- * recorte contra el borde del escenario se calcula en el mismo sistema que la
- * geometría de las cartas. Dos cartas y pico es lo más ancho que cabe sin que
- * el panel del nodo central llegue a tapar a sus dos vecinas inmediatas.
- */
-const PANEL_WIDTH_IN_CARDS = 2.2
 
 export interface OperationalCardExperienceProps {
   /**
@@ -62,13 +48,11 @@ export function OperationalCardExperience({
     errorMessage,
     selectedCoordinationCode,
     hoveredCoordinationCode,
-    level1,
     selectedProblemId,
     level2,
     selectCoordination,
     clearCoordination,
     hoverCoordination,
-    selectProblem,
     closeProblem,
     toggleSection,
   } = controller
@@ -173,35 +157,12 @@ export function OperationalCardExperience({
   )
   const compositionMode = selectionContext.mode
 
-  /**
-   * Slot de la coordinación observada, si es una de las nueve de la mesa.
-   *
-   * Una hija observada no tiene slot propio —no es nodo principal— y eso ya no
-   * impide nada: el panel vive en su carril y no necesita colgar de ninguna
-   * carta.
+  /*
+   * Aquí se resolvía el ANCLAJE del panel a su carta. Con la lectura de
+   * problemas en su región del shell, el panel dejó de existir y con él la
+   * pregunta: ninguna pieza de esta escena cuelga ya de la x de un slot.
+   * `resolvePanelAnchor` sigue en el repositorio, sin consumidores.
    */
-  const selectedSlot = useMemo(
-    () =>
-      selectedCoordination
-        ? (layout.slots.find(
-            (slot) => slot.coordination.code === selectedCoordination.code,
-          ) ?? null)
-        : null,
-    [layout, selectedCoordination],
-  )
-
-  const panelAnchor = useMemo(
-    () =>
-      selectedSlot
-        ? resolvePanelAnchor({
-            slotX: selectedSlot.x,
-            orientation: selectedSlot.orientation,
-            stageWidth: layout.stageWidth,
-            panelWidth: PANEL_WIDTH_IN_CARDS,
-          })
-        : null,
-    [selectedSlot, layout.stageWidth],
-  )
 
   return (
     <section
@@ -314,31 +275,13 @@ export function OperationalCardExperience({
 
       {level0 === 'ready' && overview && (
         <>
-          {/* Carril del panel. En estado global no reserva nada; con una
-              coordinación simple observada es la COLUMNA DERECHA de la escena y
-              deja de colgar de la carta. En modo mazo sigue, por ahora, siendo
-              la banda inferior anclada a su carta. */}
-          <div
-            className="operational-deck__panel-lane"
-            data-testid="coordination-panel-lane"
-            data-open={selectedCoordination ? 'true' : 'false'}
-          >
-            <AnimatePresence mode="wait">
-              {selectedCoordination && (
-                <CoordinationProblemPanel
-                  key={selectedCoordination.code}
-                  coordination={selectedCoordination}
-                  identity={resolveCoordinationVisualIdentity(
-                    selectedCoordination,
-                  )}
-                  productLabel={labelByCode[selectedCoordination.code]}
-                  anchor={panelAnchor}
-                  level1={level1}
-                  onProblemSelect={selectProblem}
-                />
-              )}
-            </AnimatePresence>
-          </div>
+          {/*
+            Aquí vivía el CARRIL DEL PANEL. La lectura de problemas se mudó a su
+            región permanente del shell, así que la mesa dejó de reservar una
+            columna para ella: en composición simple ya no hay segunda columna
+            que restar, y en modo mazo no hay banda inferior anclada a la carta.
+            Lo que queda en la escena de cartas es la mesa.
+          */}
 
           {/* Isla de inspección del problema. Una sola a la vez: el reducer
               ignora una segunda selección mientras haya una abierta. */}

@@ -492,13 +492,13 @@ test.describe('mesa en reposo · 1440x900', () => {
     /* Guardia contra la reaparición del carrusel, borrado en R5.2: ningún
        componente emite ya este `testid`. */
     await expect(page.getByTestId('coordination-carousel')).toHaveCount(0)
-    await expect(page.getByTestId('coordination-problem-panel')).toBeVisible()
+    await expect(page.getByTestId('coordination-problem-list')).toBeVisible()
 
     await page.getByTestId('breadcrumb-direction').click()
 
     await expect(page.getByTestId('coordination-table')).toBeVisible()
     await expect(page.locator(CARD)).toHaveCount(9)
-    await expect(page.getByTestId('coordination-problem-panel')).toHaveCount(0)
+    await expect(page.getByTestId('coordination-problem-list')).toHaveCount(0)
   })
 })
 

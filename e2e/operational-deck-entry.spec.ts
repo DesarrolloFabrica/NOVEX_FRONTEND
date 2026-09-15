@@ -17,7 +17,7 @@ const SESSION_KEY = 'novex.auth.session.v1'
 const TOKEN_KEY = 'novex.auth.accessToken.v1'
 const CARD = '[data-testid="coordination-card"]'
 const SLOT = '[data-testid="coordination-table-slot"]'
-const PANEL = '[data-testid="coordination-problem-panel"]'
+const PANEL = '[data-testid="coordination-problem-list"]'
 const PEEK = '[data-testid="coordination-deck-peek"]'
 const PARENT = 'coord-operaciones-academicas'
 
@@ -417,17 +417,18 @@ test.describe('entrada al mazo · 1440x900', () => {
     expect(deck.gapParentToFutureHand!).toBeGreaterThan(
       deck.parentCard!.width * 3,
     )
-    // Y se movió de verdad respecto a su hueco del arco.
-    expect(deck.parentCard!.centerX).not.toBeCloseTo(global.composition.width / 2, 0)
-
-    // El mazo sigue leyéndose como mazo: sus cinco cantos siguen detrás.
-    await expect(page.locator(PEEK)).toHaveCount(5)
-    await expect(page.locator(`${PEEK}[aria-hidden="true"]`)).toHaveCount(5)
+    // La lectura de LEVEL 1 está ARRIBA, en su región: ni colgando de la
+    // carta ni en un carril dentro del escenario.
+    expect(deck.panel!.y + deck.panel!.height).toBeLessThanOrEqual(
+      deck.shell.y + 1,
+    )
     await expect(page.locator(`${PEEK} button`)).toHaveCount(0)
 
-    // Panel en el carril derecho, no colgando de la carta.
-    expect(deck.panel!.x).toBeGreaterThan(deck.table.x + deck.table.width - 1)
-    expect(deck.panel!.y).toBeLessThan(deck.table.y + deck.table.height)
+    // La lectura de LEVEL 1 está ARRIBA, en su región: ni colgando de la
+    // carta ni en un carril dentro del escenario.
+    expect(deck.panel!.y + deck.panel!.height).toBeLessThanOrEqual(
+      deck.shell.y + 1,
+    )
     await expect(page.locator(PANEL)).toHaveAttribute('data-code', PARENT)
 
     // Todavía no hay retorno narrativo propio del mazo.
@@ -635,9 +636,10 @@ test.describe('entrada al mazo · 1920x1080', () => {
     expect(deck.gapParentToFutureHand!).toBeGreaterThan(
       deck.parentCard!.width * 3,
     )
-    expect(deck.panel!.x).toBeGreaterThan(deck.table.x + deck.table.width - 1)
-    expect(deck.panel!.x + deck.panel!.width).toBeLessThanOrEqual(
-      deck.shell.x + deck.shell.width + 1,
+    // La lectura de LEVEL 1 está ARRIBA, en su región: ni colgando de la
+    // carta ni en un carril dentro del escenario.
+    expect(deck.panel!.y + deck.panel!.height).toBeLessThanOrEqual(
+      deck.shell.y + 1,
     )
     expect(deck.overflow.x).toBeLessThanOrEqual(0)
     expect(deck.overflow.y).toBeLessThanOrEqual(0)

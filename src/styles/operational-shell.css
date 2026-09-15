@@ -153,6 +153,25 @@
   text-wrap: balance;
 }
 
+/* ---------- Región de problemas ---------- */
+
+/*
+ * La lista toma el alto de la región y se desplaza por dentro.
+ *
+ * La banda superior no crece: es la condición que impide que una coordinación
+ * con treinta problemas empuje la baraja fuera de la pantalla o abra un scroll
+ * de ruta. Lo que cede es el contenido de la lista, que ya nació con scroll
+ * propio cuando vivía en el carril.
+ */
+.operational-shell__region--problem-list {
+  padding: 10px 12px;
+}
+
+.operational-shell__region--problem-list .coordination-panel {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
 /* ---------- Carril ejecutivo ---------- */
 
 .operational-shell__kpi {

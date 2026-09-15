@@ -19,7 +19,7 @@ const TOKEN_KEY = 'novex.auth.accessToken.v1'
 const CARD = '[data-testid="coordination-card"]'
 const SLOT = '[data-testid="coordination-table-slot"]'
 const FAN_SLOT = '[data-testid="coordination-deck-fan-slot"]'
-const PANEL = '[data-testid="coordination-problem-panel"]'
+const PANEL = '[data-testid="coordination-problem-list"]'
 const PARENT = 'coord-operaciones-academicas'
 
 const PERMISSIONS = [
@@ -520,6 +520,20 @@ test.describe('shell del Centro · 1440x900', () => {
     await select(page, 'coord-b2b')
     await page.getByTestId('return-to-table').click()
     await expect(page.locator(PANEL)).toHaveCount(0)
+
+    /*
+     * El puntero se retira de la mesa antes de medir, y no para evitar un
+     * fallo: para medir la GEOMETRÍA EN REPOSO, que es de lo que habla este
+     * test. Al desaparecer la acción de retorno, el puntero que la pulsó queda
+     * sobre el arco, y ahí la carta señalada se eleva —es lo que debe hacer—,
+     * de modo que lo medido sería una mesa con un mazo levantado.
+     *
+     * Deja además fuera un peligro conocido y ajeno a esta fase: si el puntero
+     * cae en la franja baja de una carta con subordinaciones, la elevación la
+     * saca de debajo del cursor, la carta vuelve a bajar y el ciclo se repite.
+     * Está reportado; no se enmascara aquí, se aparta.
+     */
+    await page.mouse.move(5, 5)
 
     const after = await measure(page, 'GLOBAL restaurado')
 

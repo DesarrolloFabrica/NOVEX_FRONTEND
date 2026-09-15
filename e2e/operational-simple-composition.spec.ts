@@ -2,12 +2,17 @@ import { expect, test, type Page } from 'playwright/test'
 import { operationalOverviewFixture } from './operational-overview.fixture'
 
 /**
- * COMPOSICIÓN SIMPLE: mesa comprimida a la izquierda y carril del panel.
+ * COMPOSICIÓN SIMPLE: la mesa entera, con un nodo bajo observación.
  *
  * Vive en su propio fichero porque comprueba la GEOMETRÍA DE LA ESCENA, no la
- * selección: qué ocupa cada columna, cuánto se comprime la mesa, dónde acaba el
- * panel y qué se restaura al volver. La selección en sí —peticiones, caché,
- * aria-pressed, panel por coordinación— ya tiene su fichero y no se repite aquí.
+ * selección: qué ocupa el escenario, cuánto mide el arco y qué se restaura al
+ * volver. La selección en sí —peticiones, caché, aria-pressed, lista por
+ * coordinación— ya tiene su fichero y no se repite aquí.
+ *
+ * Hasta F2 este fichero medía una COMPRESIÓN: la mesa cedía ancho a un carril
+ * donde vivía el panel de LEVEL 1. Ese carril desapareció al mudarse la lectura
+ * de problemas a su región del shell, así que lo que se afirma ahora es lo
+ * contrario: que observar una coordinación NO mueve la mesa.
  *
  * Todas las cotas se miden en el navegador. La hoja de estilos deduce el tamaño
  * de carta del ancho real de la columna, así que un cálculo sobre el CSS no
@@ -18,7 +23,7 @@ const SESSION_KEY = 'novex.auth.session.v1'
 const TOKEN_KEY = 'novex.auth.accessToken.v1'
 const CARD = '[data-testid="coordination-card"]'
 const SLOT = '[data-testid="coordination-table-slot"]'
-const PANEL = '[data-testid="coordination-problem-panel"]'
+const PANEL = '[data-testid="coordination-problem-list"]'
 
 const PERMISSIONS = [
   'SITUATIONS_VIEW',
@@ -362,7 +367,7 @@ test.describe('composición simple · 1440x900', () => {
     })
   })
 
-  test('B2B compone mesa comprimida a la izquierda y panel a la derecha', async ({
+  test('B2B usa la mesa entera y lee sus problemas en la región', async ({
     page,
   }, testInfo) => {
     test.slow()
@@ -388,40 +393,41 @@ test.describe('composición simple · 1440x900', () => {
     const simple = await measure(page, 'SIMPLE_SELECTED coord-b2b')
 
     /*
-     * COMPRESIÓN CALIBRADA. La banda, no el píxel: la mesa tiene que estrecharse
-     * de verdad —si no, no hay carril— pero seguir siendo la pieza protagonista.
+     * LA MESA YA NO SE COMPRIME, y esa es la consecuencia visible de la fase.
      *
-     * La banda se reabrió al montar la escena de dos zonas. Ahora la reducción
-     * es DOBLE: la mesa ya venía encajada en una banda más estrecha que la
-     * pantalla, y sobre eso la composición simple le resta además su carril
-     * interno heredado. Medido: 0.68 en la escena nueva frente a 0.76 en la
-     * anterior. El límite inferior baja en consecuencia; el superior se
-     * mantiene, porque sigue marcando el punto en que el carril estrangula al
-     * panel.
+     * La compresión existía para abrir un carril a la derecha donde cabía el
+     * panel de LEVEL 1. Esa lectura vive ahora en la región de problemas, así
+     * que no hay segunda columna que financiar: observar una coordinación deja
+     * la mesa exactamente donde estaba, con el mismo arco y el mismo tamaño de
+     * carta que en reposo. Es igualdad, no una banda de tolerancia: el ancho
+     * de carta sale del ancho del contenedor, y el contenedor no cambia.
      */
-    expect(simple.arcWidth / global.arcWidth).toBeGreaterThan(0.62)
-    expect(simple.arcWidth / global.arcWidth).toBeLessThan(0.82)
-    expect(simple.arcWidth / simple.shell.width).toBeGreaterThan(0.6)
+    expect(simple.arcWidth).toBeCloseTo(global.arcWidth, 1)
+    expect(simple.firstCard.width).toBeCloseTo(global.firstCard.width, 1)
+    expect(simple.arcWidth / simple.shell.width).toBeGreaterThan(0.9)
 
     /*
-     * BALANCE VERTICAL. La escena comprimida no puede quedarse notablemente más
-     * baja que la mesa global: esa diferencia era lo que se leía como escenario
-     * abandonado debajo de las cartas. Medido: 596 frente a 609 px a 1440.
+     * BALANCE VERTICAL. La escena observada no puede quedarse notablemente más
+     * baja que la global: esa diferencia era lo que se leía como escenario
+     * abandonado debajo de las cartas.
      */
     expect(simple.shell.height / global.shell.height).toBeGreaterThan(0.92)
 
-    // CARRIL: el panel está a la DERECHA de la mesa, no debajo.
+    /*
+     * NO HAY CARRIL INTERNO. La lectura de problemas está ARRIBA, en su
+     * región: por encima de la banda de la baraja, no a un lado de la mesa.
+     * Si alguna vez volviera a caer dentro del escenario, esta cota lo dice.
+     */
     expect(simple.panel).not.toBeNull()
-    expect(simple.panel!.x).toBeGreaterThan(simple.table.x + simple.table.width - 1)
-    expect(simple.gapTableToPanel!).toBeGreaterThan(0)
-    // Su banda vertical solapa la de la mesa: es una columna, no una tira
-    // inferior.
-    expect(simple.panel!.y).toBeLessThan(simple.table.y + simple.table.height)
-
-    // El panel entra completo en la escena.
-    expect(simple.panel!.x + simple.panel!.width).toBeLessThanOrEqual(
-      simple.shell.x + simple.shell.width + 1,
+    expect(simple.panel!.y + simple.panel!.height).toBeLessThanOrEqual(
+      simple.shell.y + 1,
     )
+    await expect(page.getByTestId("coordination-panel-lane")).toHaveCount(0)
+    await expect(
+      page.locator(
+        '[data-testid="operational-cards-experience"] [data-testid="coordination-problem-list"]',
+      ),
+    ).toHaveCount(0)
 
     /*
      * EL PERSONAJE YA NO SE REENCUADRA, y no es una pérdida: es la mudanza.
@@ -435,10 +441,6 @@ test.describe('composición simple · 1440x900', () => {
     expect(simple.character.centerX).toBe(global.character.centerX)
     expect(simple.character.height).toBe(global.character.height)
 
-    // Y sigue sin taparle el carril al panel.
-    expect(simple.character.x + simple.character.width).toBeLessThanOrEqual(
-      simple.panel!.x + 1,
-    )
 
     expect(simple.overflow.x).toBeLessThanOrEqual(0)
     expect(simple.overflow.y).toBeLessThanOrEqual(0)
@@ -603,11 +605,11 @@ test.describe('composición simple · 1920x1080', () => {
     await select(page, 'coord-b2b')
     const simple = await measure(page, 'SIMPLE_SELECTED coord-b2b 1920')
 
-    expect(simple.arcWidth).toBeLessThan(globalArc)
-    expect(simple.panel!.x).toBeGreaterThan(simple.table.x + simple.table.width - 1)
-    expect(simple.gapTableToPanel!).toBeGreaterThan(0)
-    expect(simple.panel!.x + simple.panel!.width).toBeLessThanOrEqual(
-      simple.shell.x + simple.shell.width + 1,
+    // El mismo arco que en reposo: a 1920 tampoco hay carril que financiar.
+    expect(simple.arcWidth).toBeCloseTo(globalArc, 1)
+    // Y la lectura de problemas sigue por encima de la banda de la baraja.
+    expect(simple.panel!.y + simple.panel!.height).toBeLessThanOrEqual(
+      simple.shell.y + 1,
     )
     expect(simple.overflow.x).toBeLessThanOrEqual(0)
     expect(simple.overflow.y).toBeLessThanOrEqual(0)
@@ -652,7 +654,9 @@ test.describe('composición simple · movimiento reducido', () => {
     expect(durations.every((value) => value < 0.01)).toBe(true)
 
     const simple = await measure(page, 'SIMPLE_SELECTED reduced-motion')
-    expect(simple.panel!.x).toBeGreaterThan(simple.table.x + simple.table.width - 1)
+    expect(simple.panel!.y + simple.panel!.height).toBeLessThanOrEqual(
+      simple.shell.y + 1,
+    )
     expect(simple.overflow.x).toBeLessThanOrEqual(0)
     expect(simple.overflow.y).toBeLessThanOrEqual(0)
   })

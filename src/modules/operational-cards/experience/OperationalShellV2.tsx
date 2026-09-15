@@ -1,7 +1,9 @@
 import { useMemo, type ReactNode } from 'react'
+import { CoordinationProblemList } from '@/modules/operational-cards/components/CoordinationProblemList'
 import { DirectionCharacter } from '@/modules/operational-cards/components/DirectionCharacter'
 import { buildCharacterPresentation } from '@/modules/operational-cards/data/characterReaction'
 import { buildDirectionSummary } from '@/modules/operational-cards/data/directionSummary'
+import { resolveCoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
 import { buildProductTable } from '@/modules/operational-cards/data/productHierarchy'
 import { buildTableLayout } from '@/modules/operational-cards/data/tableLayout'
 import { OperationalCardExperience } from '@/modules/operational-cards/experience/OperationalCardExperience'
@@ -102,21 +104,47 @@ export function OperationalShellV2() {
     level0 === 'ready' && overview ? overview.directionStatus : 'DESCONOCIDO'
 
   /**
-   * Hacia dónde mira el personaje: lo decide la POSICIÓN REAL de la carta
-   * observada dentro de su banda, no su nombre ni un mapa fijo.
+   * Proyección de producto que necesitan las regiones permanentes: hacia dónde
+   * mira el personaje y cómo se llama cada coordinación en la mesa.
    *
-   * El mapa sale de la misma geometría que dibuja la mesa: la misma proyección
-   * de producto, la misma función de layout y las mismas opciones. Son
-   * funciones puras sobre la misma lista de coordinaciones, de modo que el giro
-   * no puede discrepar de lo que se ve; si un día la mesa cambia de orden, el
-   * personaje gira con ella sin tocar nada de aquí.
+   * Sale de la misma geometría que dibuja la mesa: la misma proyección de
+   * producto, la misma función de layout y las mismas opciones. Son funciones
+   * puras sobre la misma lista de coordinaciones, de modo que ni el giro ni el
+   * rótulo pueden discrepar de lo que se ve; si un día la mesa cambia de orden,
+   * el personaje gira con ella sin tocar nada de aquí.
+   *
+   * El nombre de PRODUCTO importa tanto como el giro: la carta «Servicio» no
+   * puede encabezar una lista que diga «Homologaciones», y la hija «Ingenierías»
+   * no debe presentarse como «Coordinador Ingenierías», que es el cargo.
    */
-  const orientationByCode = useMemo(() => {
+  const { orientationByCode, labelByCode } = useMemo(() => {
     const productTable = buildProductTable(overview?.coordinations ?? [])
     const topLevelRows = productTable.nodes.map((node) => node.coordination)
-    return buildTableLayout(topLevelRows, { sortByDisplayOrder: false })
-      .orientationByCode
+    const labels: Record<string, string> = {}
+    for (const node of productTable.nodes) {
+      labels[node.coordination.code] = node.label
+      for (const child of node.children) labels[child.code] = child.label
+    }
+    return {
+      orientationByCode: buildTableLayout(topLevelRows, {
+        sortByDisplayOrder: false,
+      }).orientationByCode,
+      labelByCode: labels,
+    }
   }, [overview])
+
+  /**
+   * La coordinación observada, sea uno de los nueve nodos de la mesa o una de
+   * las cinco subordinaciones: la región de problemas habla de la que esté
+   * seleccionada, sin preguntarse a qué nivel pertenece.
+   */
+  const selectedCoordination = useMemo(
+    () =>
+      overview?.coordinations.find(
+        (coordination) => coordination.code === selectedCoordinationCode,
+      ) ?? null,
+    [overview, selectedCoordinationCode],
+  )
 
   /**
    * La carta observada manda sobre la que está bajo el cursor: con una
@@ -168,11 +196,39 @@ export function OperationalShellV2() {
               {summary}
             </p>
           </ShellRegion>
+          {/*
+            PROBLEMAS DEL ÁREA. Región permanente: existe con y sin selección, y
+            lo que cambia es lo que dice. La lista ya no aparece bajo una carta
+            ni ocupa un carril dentro de la mesa; vive aquí, en el mismo sitio
+            de la pantalla en los tres modos de composición.
+
+            El estado de LEVEL 1 llega del MISMO controlador que usa la mesa. No
+            hay una segunda petición por haber cambiado la lista de lugar: quien
+            pide los problemas de una coordinación al observarla, y quien los
+            tiene cacheados al volver a ella, sigue siendo el reducer de la
+            escena.
+          */}
           <ShellRegion
             region="problem-list"
             title="Problemas del área"
-            hint="Seleccione una coordinación"
-          />
+            hint={
+              selectedCoordination ? undefined : 'Seleccione una coordinación'
+            }
+            className="operational-shell__region--problem-list"
+            showTitle={!selectedCoordination}
+          >
+            {selectedCoordination && (
+              <CoordinationProblemList
+                coordination={selectedCoordination}
+                identity={resolveCoordinationVisualIdentity(
+                  selectedCoordination,
+                )}
+                productLabel={labelByCode[selectedCoordination.code]}
+                level1={controller.level1}
+                onProblemSelect={controller.selectProblem}
+              />
+            )}
+          </ShellRegion>
           <ShellRegion
             region="problem-detail"
             title="Detalle del problema"

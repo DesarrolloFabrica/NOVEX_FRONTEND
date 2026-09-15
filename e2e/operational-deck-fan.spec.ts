@@ -15,7 +15,7 @@ const TOKEN_KEY = 'novex.auth.accessToken.v1'
 const CARD = '[data-testid="coordination-card"]'
 const SLOT = '[data-testid="coordination-table-slot"]'
 const FAN_SLOT = '[data-testid="coordination-deck-fan-slot"]'
-const PANEL = '[data-testid="coordination-problem-panel"]'
+const PANEL = '[data-testid="coordination-problem-list"]'
 const PEEK = '[data-testid="coordination-deck-peek"]'
 const PARENT = 'coord-operaciones-academicas'
 
@@ -676,8 +676,9 @@ test.describe('mano del mazo · 1920x1080', () => {
       fullPage: false,
     })
 
-    // La mano entera cabe en su columna y no se mete en el carril del panel.
-    expect(deck.fan.right).toBeLessThan(deck.panel.x)
+    // La mano entera cabe en su banda. Ya no hay carril que invadir: la
+    // lectura de problemas se fue arriba y el escenario es solo la mesa.
+    expect(deck.fan.right).toBeLessThan(deck.composition.x + deck.composition.width)
     expect(deck.fan.left).toBeGreaterThan(
       deck.parentCard.x + deck.parentCard.width - 1,
     )
