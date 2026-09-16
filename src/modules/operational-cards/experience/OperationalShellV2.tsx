@@ -1,9 +1,11 @@
 import { useMemo, type ReactNode } from 'react'
 import { CoordinationProblemList } from '@/modules/operational-cards/components/CoordinationProblemList'
 import { DirectionCharacter } from '@/modules/operational-cards/components/DirectionCharacter'
+import { OperationalKpiRail } from '@/modules/operational-cards/components/OperationalKpiRail'
 import { ProblemDetail } from '@/modules/operational-cards/components/ProblemDetail'
 import { buildCharacterPresentation } from '@/modules/operational-cards/data/characterReaction'
 import { buildDirectionSummary } from '@/modules/operational-cards/data/directionSummary'
+import { resolveOperationalKpis } from '@/modules/operational-cards/data/operationalKpis'
 import { resolveCoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
 import { buildProductTable } from '@/modules/operational-cards/data/productHierarchy'
 import { buildTableLayout } from '@/modules/operational-cards/data/tableLayout'
@@ -29,11 +31,11 @@ import '@/styles/operational-shell.css'
  * el estado, en un carril que acompaña a toda la escena en lugar de competir
  * con las otras lecturas desde una cuarta tarjeta.
  *
- * EL PERSONAJE YA VIVE AQUÍ. Es la primera región que deja de ser un hueco: el
- * anfitrión de la escena tiene sitio propio y permanente en vez de compartir
- * columna con la baraja y cederle alto cada vez que se observaba una
- * coordinación. La lista de problemas, el detalle y los indicadores siguen
- * siendo placeholders y llegan en sus fases.
+ * LAS CUATRO REGIONES TIENEN YA SU CONTENIDO REAL: el personaje con el estado
+ * de la Dirección, la lista de problemas del área observada, el detalle del
+ * problema que se esté mirando y el carril de indicadores. Ninguna es un hueco
+ * y ninguna abre una capa encima de las demás: la escena entera se lee de una
+ * vez. Lo que queda por llegar es el menú inferior.
  *
  * QUIÉN CREA EL ESTADO. El shell llama al hook UNA vez y baja el controlador a
  * la experiencia. El personaje y la mesa leen la misma selección, el mismo
@@ -81,16 +83,6 @@ function ShellRegion({
       )}
       {children}
     </section>
-  )
-}
-
-/** Hueco de un indicador. Sin dato: la fuente real llega en su fase. */
-function KpiPlaceholder({ index }: { index: number }) {
-  return (
-    <div className="operational-shell__kpi-slot" data-testid="shell-kpi-slot">
-      <span className="operational-shell__kpi-label">Indicador {index}</span>
-      <span className="operational-shell__kpi-value">—</span>
-    </div>
   )
 }
 
@@ -162,6 +154,21 @@ export function OperationalShellV2() {
           : null) ?? 'NEUTRAL',
     hovering: Boolean(hoveredCoordinationCode),
     selecting: Boolean(selectedCoordinationCode),
+  })
+
+  /**
+   * Indicadores de lo observado. Se derivan de datos ya cargados —LEVEL 0
+   * siempre, LEVEL 1 cuando la lista de arriba ya lo pidió—, así que el
+   * carril no puede provocar una petición por existir.
+   */
+  const kpis = resolveOperationalKpis({
+    level0,
+    overview,
+    selectedCoordination,
+    productLabel: selectedCoordination
+      ? labelByCode[selectedCoordination.code]
+      : undefined,
+    level1: controller.level1,
   })
 
   const summary =
@@ -268,18 +275,23 @@ export function OperationalShellV2() {
         </div>
       </div>
 
-      {/* CARRIL EJECUTIVO */}
+      {/*
+        CARRIL EJECUTIVO. Responde a lo observado: sin selección habla de la
+        Dirección entera; con una coordinación —o una de sus subordinaciones—
+        habla de ella. Nunca de las dos cosas a la vez, y nunca de la anterior.
+
+        Todas sus cifras salen de datos YA cargados: LEVEL 0 para la Dirección,
+        y para una coordinación su fila de LEVEL 0 más los problemas que la
+        lista de arriba ya pidió. El carril no añade una sola petición.
+      */}
       <ShellRegion
         region="kpi"
         title="Indicadores"
-        hint="Dirección · coordinación observada"
         className="operational-shell__kpi"
+        showTitle={false}
       >
-        <div className="operational-shell__kpi-list">
-          {[1, 2, 3, 4].map((index) => (
-            <KpiPlaceholder key={index} index={index} />
-          ))}
-        </div>
+        <h2 className="operational-shell__region-title">Indicadores</h2>
+        <OperationalKpiRail kpis={kpis} />
       </ShellRegion>
 
       {/* Control del menú inferior. Solo la región: el menú llega en su fase. */}

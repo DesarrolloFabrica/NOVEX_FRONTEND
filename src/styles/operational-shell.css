@@ -195,37 +195,180 @@
   grid-area: kpi;
 }
 
-.operational-shell__kpi-list {
-  display: grid;
+/*
+ * EL CARRIL, CON CIFRAS REALES.
+ *
+ * Sustituye a los cuatro huecos gigantes del wireframe, que ocupaban 175 px
+ * cada uno para enseñar un guion. La columna mide 333 px a 1440 y 448 a 1920, y
+ * ahora los reparte en tres lecturas: contexto, estado y cifras. Las cifras van
+ * en dos columnas porque son números cortos: en una sola quedaba media columna
+ * vacía, que era justamente el problema.
+ */
+.operational-kpi {
+  /* Franja cromática del estado, con los mismos valores que la baraja. */
+  --kpi-rgb: 132 150 176;
+
+  display: flex;
   min-height: 0;
   flex: 1 1 auto;
-  grid-auto-rows: 1fr;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.operational-shell__kpi-slot {
-  display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 2px;
-  padding: 8px 10px;
-  border: 1px solid rgb(126 168 224 / 0.16);
-  border-radius: 10px;
-  background: rgb(20 32 52 / 0.45);
+  gap: 10px;
+  overflow-y: auto;
+  margin-top: 6px;
+  padding-right: 3px;
+  scrollbar-gutter: stable;
 }
 
-.operational-shell__kpi-label {
+.operational-kpi[data-status='ESTABLE'] {
+  --kpi-rgb: 122 196 138;
+}
+
+.operational-kpi[data-status='ALERTA'] {
+  --kpi-rgb: 240 176 84;
+}
+
+.operational-kpi[data-status='CRITICO'] {
+  --kpi-rgb: 244 96 104;
+}
+
+/* De quién habla el carril. Cambia con la selección, y por eso va primero. */
+.operational-kpi__context {
+  margin: 0;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+/*
+ * ESTADO OPERACIONAL. Siempre con etiqueta de texto: el punto de color
+ * acompaña, nunca informa solo.
+ */
+.operational-kpi__status {
+  display: grid;
+  align-items: center;
+  gap: 2px 8px;
+  grid-template-columns: auto 1fr;
+  padding: 10px 12px;
+  border: 1px solid rgb(var(--kpi-rgb) / 0.35);
+  border-radius: 12px;
+  background: rgb(var(--kpi-rgb) / 0.08);
+}
+
+.operational-kpi__status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgb(var(--kpi-rgb) / 0.95);
+  grid-row: span 2;
+}
+
+.operational-kpi__status-label {
   color: var(--os-muted, #8b9cb6);
   font-size: 11px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
-.operational-shell__kpi-value {
-  color: var(--os-text, #edf5ff);
-  font-size: 20px;
+.operational-kpi__status-value {
+  color: rgb(var(--kpi-rgb) / 0.98);
+  font-size: 17px;
   font-weight: 650;
+}
+
+.operational-kpi__grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+}
+
+.operational-kpi__card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 11px;
+  border: 1px solid rgb(126 168 224 / 0.16);
+  border-radius: 10px;
+  background: rgb(20 32 52 / 0.45);
+}
+
+.operational-kpi__label {
+  color: var(--os-muted, #8b9cb6);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+.operational-kpi__value {
+  margin: 0;
+  color: var(--os-text, #edf5ff);
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.1;
+}
+
+.operational-kpi__hint {
+  margin: 0;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 10.5px;
+}
+
+/* Reparto por severidad: filas compactas, con texto y número. */
+.operational-kpi__severity {
+  padding: 9px 11px;
+  border: 1px solid rgb(126 168 224 / 0.16);
+  border-radius: 10px;
+  background: rgb(20 32 52 / 0.45);
+}
+
+.operational-kpi__severity-title {
+  margin: 0 0 6px;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.operational-kpi__severity-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+
+.operational-kpi__severity-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.operational-kpi__severity-label {
+  color: var(--os-text, #edf5ff);
+  font-size: 12.5px;
+}
+
+.operational-kpi__severity-row[data-severity='CRITICAL']
+  .operational-kpi__severity-label {
+  color: rgb(244 96 104 / 0.95);
+}
+
+.operational-kpi__severity-row[data-severity='HIGH']
+  .operational-kpi__severity-label {
+  color: rgb(240 176 84 / 0.95);
+}
+
+.operational-kpi__severity-value {
+  margin: 0;
+  color: var(--os-text, #edf5ff);
+  font-size: 13px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.operational-kpi__note {
+  margin: 0;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 11.5px;
 }
 
 /* ---------- Regiones ---------- */
