@@ -1,3 +1,13 @@
+import { useEffect, useMemo, useState } from 'react'
+import {
+  Alignment,
+  Fit,
+  Layout,
+  useRive,
+  useViewModelInstanceEnum,
+} from '@rive-app/react-webgl2'
+import type { CharacterMood } from '@/modules/operational-cards/data/characterMood'
+import { DEFAULT_CHARACTER_MOOD } from '@/modules/operational-cards/data/characterMood'
 import type { CharacterPresentation } from '@/modules/operational-cards/types/character.types'
 import { OPERATIONAL_STATUS_LABEL } from '@/modules/operational-cards/data/operationalStatusLabel'
 
@@ -5,27 +15,131 @@ import { OPERATIONAL_STATUS_LABEL } from '@/modules/operational-cards/data/opera
  * Personaje de la Dirección de Operaciones: un reactor guardián, no una
  * mascota ni un asistente conversacional.
  *
- * Recibe únicamente `CharacterPresentation` (status / orientation /
- * interaction). No conoce el DTO del overview, ni coordinaciones, ni
- * problemas: la traducción de datos a presentación ocurre fuera.
+ * EL ARTE VIVE EN RIVE. El dibujo lo resuelve una State Machine dentro del
+ * `.riv`; React no anima boca, ojos, pupilas ni cabeza. Lo que React conserva
+ * es el CONTRATO EXTERIOR —`data-status`, `data-orientation`,
+ * `data-interaction`, el nombre accesible y la lectura textual—, que es lo que
+ * leen la escena y las pruebas.
  *
- * El render es SVG inline + CSS, sin dependencias nuevas. Toda la reacción
- * visual cuelga de los atributos `data-status`, `data-orientation` y
- * `data-interaction` del contenedor, así que sustituir este SVG por un sprite,
- * un SVG final, Rive o Lottie no obliga a cambiar el contrato ni el lugar
- * donde se decide el estado.
+ * DOS LECTURAS, DOS FUENTES. El componente recibe dos cosas independientes y no
+ * hay que confundirlas:
  *
- * Los estados no se distinguen solo por color: cambian la postura del núcleo,
- * la forma de los sensores, el anillo técnico y la posición de los soportes.
+ *   `presentation` → estado INSTITUCIONAL de la Dirección. Gobierna los
+ *                    atributos del contenedor y el rótulo de texto.
+ *   `mood`         → expresión de la coordinación OBSERVADA. Gobierna la cara
+ *                    dentro de Rive.
+ *
+ * Son deliberadamente distintas: el carril sigue hablando de la Dirección
+ * entera mientras la cara acompaña a lo que el usuario está mirando. Por eso
+ * `data-status` NO alimenta el mood, y el mood no toca `data-status`.
+ *
+ * Lo que este componente todavía NO hace: reacciones momentáneas
+ * (`approve`/`disapprove`), parpadeo dirigido desde React y seguimiento de
+ * mirada (`lookX`/`lookY`). Llegan en sus fases.
  */
 
-export interface DirectionCharacterProps {
-  presentation: CharacterPresentation
+/**
+ * Contrato del arte exportado. Los tres nombres se verificaron contra
+ * `novex-character-v1.riv`: cambiarlos aquí sin reexportar deja el canvas en
+ * blanco, porque Rive no encuentra el artboard o la máquina.
+ */
+const RIVE_SRC = '/rive/novex-character-v1.riv'
+const RIVE_ARTBOARD = 'character_main'
+const RIVE_STATE_MACHINE = 'CharacterSM'
+
+/** Ruta de la propiedad dentro de `CharacterVM`. */
+const MOOD_PATH = 'mood'
+
+/**
+ * El canvas y su runtime. Vive en su propio componente porque SOLO puede
+ * montarse en cliente: `useRive` necesita un `<canvas>` y un contexto WebGL2,
+ * y las pruebas de este módulo renderizan con `react-dom/server`.
+ *
+ * `Layout` se construye aquí dentro, no en el módulo, por la misma razón: los
+ * valores `Fit`/`Alignment`/`Layout` llegan del paquete CJS del runtime y en la
+ * ruta de servidor pueden no resolverse. Al no evaluarse nunca fuera del
+ * cliente, el import deja de ser un riesgo para el render de servidor.
+ */
+function CharacterFigure({ mood }: { mood: CharacterMood }) {
+  const layout = useMemo(
+    () => new Layout({ fit: Fit.Contain, alignment: Alignment.BottomCenter }),
+    [],
+  )
+
+  const { rive, RiveComponent } = useRive({
+    src: RIVE_SRC,
+    artboard: RIVE_ARTBOARD,
+    // Singular: `stateMachines` en plural está deprecado en el runtime 4.x.
+    stateMachine: RIVE_STATE_MACHINE,
+    autoplay: true,
+    // Enlaza el View Model por defecto del artboard. La instancia que crea aquí
+    // es la que se escribe abajo: no se crea una segunda.
+    autoBind: true,
+    layout,
+  })
+
+  /**
+   * La instancia que `autoBind` ya dejó enlazada. Se lee de la propia instancia
+   * de Rive en lugar de pedir otra con `useViewModelInstance`, que crearía o
+   * re-enlazaría una distinta de la que la State Machine está observando.
+   *
+   * Mientras el `.riv` carga esto es `null`, y el hook lo tolera: devuelve
+   * `value` nulo y no escribe nada.
+   */
+  const { value: riveMood, setValue: setRiveMood } = useViewModelInstanceEnum(
+    MOOD_PATH,
+    rive?.viewModelInstance ?? null,
+  )
+
+  /**
+   * Una escritura SOLO cuando el valor cambia de verdad.
+   *
+   * La comparación se hace contra lo que el View Model dice tener, no contra un
+   * ref propio: si el mood resuelto ya coincide con el del artboard —seleccionar
+   * otra coordinación igual de estable, por ejemplo— no se escribe, y la State
+   * Machine no recibe una transición que reiniciaría su bucle.
+   */
+  useEffect(() => {
+    if (!rive) return
+    if (riveMood === mood) return
+    setRiveMood(mood)
+  }, [rive, riveMood, mood, setRiveMood])
+
+  /*
+   * `className` aterriza en el DIV contenedor que crea el runtime, y el resto
+   * de props en el `<canvas>` de dentro. Por eso la clase de geometría sigue
+   * describiendo la misma caja que medían las pruebas, y el `aria-hidden` cae
+   * donde debe: el canvas es decorativo, igual que lo era el SVG.
+   */
+  return <RiveComponent className="direction-character__figure" aria-hidden="true" />
 }
 
-export function DirectionCharacter({ presentation }: DirectionCharacterProps) {
+export interface DirectionCharacterProps {
+  /** Estado institucional: atributos del contenedor y lectura textual. */
+  presentation: CharacterPresentation
+  /**
+   * Expresión de la coordinación observada. Se resuelve fuera, en
+   * `data/characterMood`, y llega ya traducida al vocabulario del `.riv`.
+   */
+  mood?: CharacterMood
+}
+
+export function DirectionCharacter({
+  presentation,
+  mood = DEFAULT_CHARACTER_MOOD,
+}: DirectionCharacterProps) {
   const { status, orientation, interaction } = presentation
   const statusLabel = OPERATIONAL_STATUS_LABEL[status]
+
+  /*
+   * Guard de cliente. En servidor se dibuja la caja de la figura pero no el
+   * runtime, así que el contenedor y su lectura textual siguen renderizando
+   * sin `window`, sin `canvas` y sin WebGL.
+   */
+  const [clientReady, setClientReady] = useState(false)
+  useEffect(() => {
+    setClientReady(true)
+  }, [])
 
   return (
     <div
@@ -34,75 +148,18 @@ export function DirectionCharacter({ presentation }: DirectionCharacterProps) {
       data-status={status}
       data-orientation={orientation}
       data-interaction={interaction}
+      /* Lectura semántica del mood: deja verificable desde el DOM lo que se
+         escribió en el View Model, sin tener que inspeccionar el canvas. */
+      data-mood={mood}
       role="img"
       aria-label={`Dirección de Operaciones. Estado: ${statusLabel}.`}
     >
-      <svg
-        className="direction-character__figure"
-        viewBox="0 0 200 190"
-        preserveAspectRatio="xMidYMax meet"
-        aria-hidden="true"
-        focusable="false"
-      >
-        {/* Halo de energía: el único elemento puramente cromático. */}
-        <ellipse className="dc-glow" cx="100" cy="104" rx="74" ry="70" />
-
-        {/* Anillo técnico exterior: gira lento y cambia de trazo por estado. */}
-        <g className="dc-ring">
-          <circle className="dc-ring__track" cx="100" cy="104" r="66" />
-          <circle className="dc-ring__arc" cx="100" cy="104" r="66" />
-        </g>
-
-        {/* Soportes laterales: su ángulo y separación cambian con el estado. */}
-        <g className="dc-braces">
-          <path className="dc-brace dc-brace--left" d="M44 118 L30 104 L44 90" />
-          <path
-            className="dc-brace dc-brace--right"
-            d="M156 118 L170 104 L156 90"
-          />
-        </g>
-
-        {/* Núcleo: se inclina hacia la baraja según la tensión del estado. */}
-        <g className="dc-core">
-          <path
-            className="dc-core__shell"
-            d="M100 46 L146 70 L146 122 L100 148 L54 122 L54 70 Z"
-          />
-          <path className="dc-core__visor" d="M66 84 L134 84 L134 116 L66 116 Z" />
-
-          {/* Sensores: relleno suave, ranura atenta o anillo hueco. */}
-          <g className="dc-eyes">
-            <ellipse className="dc-eye dc-eye--soft" cx="84" cy="100" rx="9" ry="8" />
-            <ellipse
-              className="dc-eye dc-eye--soft"
-              cx="116"
-              cy="100"
-              rx="9"
-              ry="8"
-            />
-            <rect className="dc-eye dc-eye--slit" x="74" y="96" width="20" height="7" rx="3.5" />
-            <rect
-              className="dc-eye dc-eye--slit"
-              x="106"
-              y="96"
-              width="20"
-              height="7"
-              rx="3.5"
-            />
-            <circle className="dc-eye dc-eye--hollow" cx="84" cy="100" r="8" />
-            <circle className="dc-eye dc-eye--hollow" cx="116" cy="100" r="8" />
-          </g>
-
-          {/* Marca de núcleo: late solo en crítico. */}
-          <circle className="dc-core__mark" cx="100" cy="134" r="5" />
-        </g>
-
-        {/* Base: pedestal mínimo que ancla la figura sobre la baraja. */}
-        <g className="dc-base">
-          <path className="dc-base__plate" d="M62 168 L138 168 L124 178 L76 178 Z" />
-          <path className="dc-base__stem" d="M94 148 L106 148 L106 168 L94 168 Z" />
-        </g>
-      </svg>
+      {clientReady ? (
+        <CharacterFigure mood={mood} />
+      ) : (
+        /* Reserva de espacio: mantiene la caja mientras el runtime no está. */
+        <div className="direction-character__figure" aria-hidden="true" />
+      )}
 
       {/* Apoyo textual accesible: discreto, no una pastilla como las cartas. */}
       <p className="direction-character__readout">

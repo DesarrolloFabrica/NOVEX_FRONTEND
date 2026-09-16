@@ -90,15 +90,14 @@ describe('DirectionCharacter · expresión por estado', () => {
   })
 
   it('la diferencia entre estados no depende solo del color', () => {
-    // Las tres formas de sensor y las piezas de postura existen en el marcado;
-    // el estado activo decide cuál se ve, no un simple cambio de tono.
+    // La postura y la expresión las resuelve ahora la State Machine dentro del
+    // .riv, así que ya no hay formas de sensor que contar en el marcado. Lo que
+    // este componente sigue garantizando —y es lo que la regla pedía— es que el
+    // estado NUNCA viaja solo como color: llega como atributo semántico y como
+    // lectura textual, las dos cosas legibles sin ver el dibujo.
     const html = markup({ status: 'CRITICO' })
-    expect(countOf(html, 'dc-eye--soft')).toBe(2)
-    expect(countOf(html, 'dc-eye--slit')).toBe(2)
-    expect(countOf(html, 'dc-eye--hollow')).toBe(2)
-    expect(html).toContain('dc-core')
-    expect(html).toContain('dc-brace')
-    expect(html).toContain('dc-ring__arc')
+    expect(html).toContain('data-status="CRITICO"')
+    expect(html).toContain('>Crítico<')
   })
 
   it('la expresión sobrevive sin animación: vive en atributos, no en frames', () => {
@@ -118,7 +117,7 @@ describe('DirectionCharacter · accesibilidad y unicidad', () => {
     expect(markup()).toContain('role="img"')
   })
 
-  it('el SVG es decorativo: la lectura la da el texto', () => {
+  it('la figura es decorativa: la lectura la da el texto', () => {
     const html = markup()
     expect(html).toContain('aria-hidden="true"')
     expect(html).toContain('data-testid="direction-character-status"')
@@ -127,6 +126,8 @@ describe('DirectionCharacter · accesibilidad y unicidad', () => {
   it('renderiza exactamente un personaje', () => {
     const html = markup()
     expect(countOf(html, 'data-testid="direction-character"')).toBe(1)
-    expect(countOf(html, '<svg')).toBe(1)
+    // Una sola figura, y nunca dos: en servidor es la caja de reserva y en
+    // cliente el contenedor del canvas de Rive, pero siempre exactamente una.
+    expect(countOf(html, 'direction-character__figure')).toBe(1)
   })
 })

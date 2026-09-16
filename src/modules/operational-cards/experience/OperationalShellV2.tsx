@@ -3,6 +3,7 @@ import { CoordinationProblemList } from '@/modules/operational-cards/components/
 import { DirectionCharacter } from '@/modules/operational-cards/components/DirectionCharacter'
 import { OperationalKpiRail } from '@/modules/operational-cards/components/OperationalKpiRail'
 import { ProblemDetail } from '@/modules/operational-cards/components/ProblemDetail'
+import { resolveCharacterMood } from '@/modules/operational-cards/data/characterMood'
 import { buildCharacterPresentation } from '@/modules/operational-cards/data/characterReaction'
 import { buildDirectionSummary } from '@/modules/operational-cards/data/directionSummary'
 import { resolveOperationalKpis } from '@/modules/operational-cards/data/operationalKpis'
@@ -157,6 +158,16 @@ export function OperationalShellV2() {
   })
 
   /**
+   * LA CARA ACOMPAÑA A LO OBSERVADO, no al estado institucional.
+   *
+   * Sale de la MISMA `selectedCoordination` que alimenta la lista de problemas
+   * y el carril, así que las tres lecturas no pueden discrepar sobre de quién
+   * están hablando. El estado de la Dirección sigue gobernando los atributos
+   * del personaje y su rótulo; lo que cambia aquí es solo su expresión.
+   */
+  const characterMood = resolveCharacterMood({ selectedCoordination })
+
+  /**
    * Indicadores de lo observado. Se derivan de datos ya cargados —LEVEL 0
    * siempre, LEVEL 1 cuando la lista de arriba ya lo pidió—, así que el
    * carril no puede provocar una petición por existir.
@@ -195,7 +206,10 @@ export function OperationalShellV2() {
             className="operational-shell__region--character"
             showTitle={false}
           >
-            <DirectionCharacter presentation={characterPresentation} />
+            <DirectionCharacter
+              presentation={characterPresentation}
+              mood={characterMood}
+            />
             <p
               className="operational-shell__summary"
               data-testid="direction-summary"
