@@ -70,6 +70,26 @@ export interface SituationResponse {
   createdAt: string
   updatedAt: string
   relatedCoordinations?: RelatedCoordinationResponse[]
+  /**
+   * Resolución con aprendizaje, o `null`. Es null en los problemas activos y
+   * también en los cerrados antes de que existiera el aprendizaje: la ausencia
+   * es legítima y no se rellena con texto inventado.
+   */
+  resolution?: SituationResolutionSummary | null
+  /**
+   * Si el USUARIO DE ESTA PETICIÓN puede solucionar el problema. Lo calcula el
+   * backend con la misma política que autoriza la escritura. Es una PISTA para
+   * la interfaz: la autorización definitiva vuelve a aplicarse en el servidor.
+   */
+  canResolve?: boolean
+}
+
+export interface SituationResolutionSummary {
+  learning: string
+  resolvedByUserId: string
+  resolvedByUserName: string
+  resolvedAt: string | null
+  recordedAt: string
 }
 
 export type EvidenceType =

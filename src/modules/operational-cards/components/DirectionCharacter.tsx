@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Alignment,
   Fit,
   Layout,
   useRive,
   useViewModelInstanceEnum,
+  useViewModelInstanceTrigger,
 } from '@rive-app/react-webgl2'
 import type { CharacterMood } from '@/modules/operational-cards/data/characterMood'
 import { DEFAULT_CHARACTER_MOOD } from '@/modules/operational-cards/data/characterMood'
@@ -33,9 +34,12 @@ import { OPERATIONAL_STATUS_LABEL } from '@/modules/operational-cards/data/opera
  * entera mientras la cara acompaña a lo que el usuario está mirando. Por eso
  * `data-status` NO alimenta el mood, y el mood no toca `data-status`.
  *
- * Lo que este componente todavía NO hace: reacciones momentáneas
- * (`approve`/`disapprove`), parpadeo dirigido desde React y seguimiento de
- * mirada (`lookX`/`lookY`). Llegan en sus fases.
+ * TRES ENTRADAS, no dos: además de `presentation` y `mood`, el componente
+ * acepta una REACCIÓN puntual (`reactionId`) que se dispara una sola vez.
+ *
+ * Lo que este componente todavía NO hace: parpadeo dirigido desde React
+ * (`blink`) y seguimiento de mirada (`lookX`/`lookY`). Ambos existen en el
+ * `.riv` y están verificados, pero nadie ha definido qué deben expresar.
  */
 
 /**
@@ -47,8 +51,41 @@ const RIVE_SRC = '/rive/novex-character-v1.riv'
 const RIVE_ARTBOARD = 'character_main'
 const RIVE_STATE_MACHINE = 'CharacterSM'
 
-/** Ruta de la propiedad dentro de `CharacterVM`. */
+/**
+ * Rutas de propiedad dentro de `CharacterVM`, VERIFICADAS en runtime contra
+ * `novex-character-v1.riv` con el mismo runtime que usa la app:
+ *
+ *   mood        enum   ['unknown','sad_2','sad_1','happy_2','happy_1','neutral']
+ *   approve     trigger
+ *   disapprove  trigger
+ *   blink       trigger
+ *   lookX/lookY number
+ *
+ * La máquina `CharacterSM` NO declara inputs: todo va por data binding. Por eso
+ * aquí no hay `useStateMachineInput` y nunca debe haberlo.
+ */
 const MOOD_PATH = 'mood'
+
+/**
+ * REACCIONES MOMENTÁNEAS. Los dos triggers se verificaron OBSERVANDO el arte,
+ * no deduciendo su significado del nombre:
+ *
+ *   approve     la boca se abre en una sonrisa amplia  -> ALIVIO
+ *   disapprove  ojos apretados, cejas quebradas, boca
+ *               curvada hacia abajo                    -> MALESTAR
+ *
+ * Ambos son independientes de `mood`: se comprobó en runtime que dispararlos no
+ * altera su valor, porque viven en otra capa del artboard. El personaje vuelve
+ * por sí solo a la expresión del estado vigente y React NO tiene que
+ * restaurarla ni forzarla a neutral. Dos disparos seguidos tampoco dejan el
+ * View Model en un estado inconsistente.
+ */
+const REACTION_PATHS = {
+  approve: 'approve',
+  disapprove: 'disapprove',
+} as const
+
+export type CharacterReactionTrigger = keyof typeof REACTION_PATHS
 
 /**
  * El canvas y su runtime. Vive en su propio componente porque SOLO puede
@@ -60,7 +97,23 @@ const MOOD_PATH = 'mood'
  * ruta de servidor pueden no resolverse. Al no evaluarse nunca fuera del
  * cliente, el import deja de ser un riesgo para el render de servidor.
  */
-function CharacterFigure({ mood }: { mood: CharacterMood }) {
+function CharacterFigure({
+  mood,
+  reactionId,
+  reactionTrigger,
+  onReactionPlayed,
+}: {
+  mood: CharacterMood
+  /**
+   * Identificador de la reacción pendiente, o null. Cambiar de identificador es
+   * lo que dispara: así un remontaje o un refresco con el MISMO identificador no
+   * la repiten.
+   */
+  reactionId: number | null
+  /** Qué reacción representar. La decide el estado, no este componente. */
+  reactionTrigger: CharacterReactionTrigger
+  onReactionPlayed: (id: number) => void
+}) {
   const layout = useMemo(
     () => new Layout({ fit: Fit.Contain, alignment: Alignment.BottomCenter }),
     [],
@@ -105,6 +158,51 @@ function CharacterFigure({ mood }: { mood: CharacterMood }) {
     setRiveMood(mood)
   }, [rive, riveMood, mood, setRiveMood])
 
+  /**
+   * REACCIÓN PUNTUAL A UNA OPERACIÓN CONFIRMADA.
+   *
+   * El componente no decide QUÉ significa cada operación: recibe el trigger ya
+   * elegido por el estado, que es donde vive el significado funcional
+   * —malestar al aparecer un problema, alivio al resolverlo—. Aquí solo se
+   * traduce a la propiedad del `.riv`.
+   *
+   * Se dispara SOLO cuando llega un identificador nuevo, y ese identificador
+   * solo aparece después de que el servidor confirme la operación: nunca al
+   * pulsar el botón ni al iniciar la petición. En cuanto se dispara se avisa al
+   * estado, que lo consume, de modo que ni un refresco de datos, ni un rerender
+   * ni un remontaje del canvas puedan repetir un evento ya representado.
+   *
+   * Los dos hooks se piden SIEMPRE, en el mismo orden: son hooks de React y no
+   * pueden quedar condicionados a qué reacción toque.
+   */
+  const { trigger: fireApprove } = useViewModelInstanceTrigger(
+    REACTION_PATHS.approve,
+    rive?.viewModelInstance ?? null,
+  )
+  const { trigger: fireDisapprove } = useViewModelInstanceTrigger(
+    REACTION_PATHS.disapprove,
+    rive?.viewModelInstance ?? null,
+  )
+
+  const playedRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (!rive || reactionId === null) return
+    if (playedRef.current === reactionId) return
+
+    playedRef.current = reactionId
+    if (reactionTrigger === 'disapprove') fireDisapprove()
+    else fireApprove()
+    onReactionPlayed(reactionId)
+  }, [
+    rive,
+    reactionId,
+    reactionTrigger,
+    fireApprove,
+    fireDisapprove,
+    onReactionPlayed,
+  ])
+
   /*
    * `className` aterriza en el DIV contenedor que crea el runtime, y el resto
    * de props en el `<canvas>` de dentro. Por eso la clase de geometría sigue
@@ -114,6 +212,9 @@ function CharacterFigure({ mood }: { mood: CharacterMood }) {
   return <RiveComponent className="direction-character__figure" aria-hidden="true" />
 }
 
+/** Sin consumidor de la reacción, disparar no rompe nada. */
+const noop = () => {}
+
 export interface DirectionCharacterProps {
   /** Estado institucional: atributos del contenedor y lectura textual. */
   presentation: CharacterPresentation
@@ -122,11 +223,23 @@ export interface DirectionCharacterProps {
    * `data/characterMood`, y llega ya traducida al vocabulario del `.riv`.
    */
   mood?: CharacterMood
+  /**
+   * Reacción momentánea pendiente. `null` significa que no hay ninguna; un
+   * número nuevo dispara una vez y solo una.
+   */
+  reactionId?: number | null
+  /** Qué reacción representar cuando llegue un identificador nuevo. */
+  reactionTrigger?: CharacterReactionTrigger
+  /** El personaje avisa de que ya la representó. */
+  onReactionPlayed?: (id: number) => void
 }
 
 export function DirectionCharacter({
   presentation,
   mood = DEFAULT_CHARACTER_MOOD,
+  reactionId = null,
+  reactionTrigger = 'approve',
+  onReactionPlayed,
 }: DirectionCharacterProps) {
   const { status, orientation, interaction } = presentation
   const statusLabel = OPERATIONAL_STATUS_LABEL[status]
@@ -151,11 +264,19 @@ export function DirectionCharacter({
       /* Lectura semántica del mood: deja verificable desde el DOM lo que se
          escribió en el View Model, sin tener que inspeccionar el canvas. */
       data-mood={mood}
+      /* Lectura verificable de la reacción en curso, sin inspeccionar el canvas. */
+      data-reaction={reactionId === null ? undefined : String(reactionId)}
+      data-reaction-trigger={reactionId === null ? undefined : reactionTrigger}
       role="img"
       aria-label={`Dirección de Operaciones. Estado: ${statusLabel}.`}
     >
       {clientReady ? (
-        <CharacterFigure mood={mood} />
+        <CharacterFigure
+          mood={mood}
+          reactionId={reactionId}
+          reactionTrigger={reactionTrigger}
+          onReactionPlayed={onReactionPlayed ?? noop}
+        />
       ) : (
         /* Reserva de espacio: mantiene la caja mientras el runtime no está. */
         <div className="direction-character__figure" aria-hidden="true" />

@@ -1,4 +1,5 @@
 import { fetchSituations } from '@/modules/api/situations.api'
+import type { SituationsListScope } from '@/modules/api/situations.api'
 import type { SituationResponse } from '@/modules/situations/types/situation.types'
 import { sortProblemsByPriority } from '@/modules/operational-cards/data/problemPriority'
 import type {
@@ -52,9 +53,22 @@ function toProblem(situation: SituationResponse): CoordinationProblem | null {
  * reducer, que descarta cualquier respuesta cuyo `code` ya no sea el
  * seleccionado, así que una respuesta tardía no puede pisar la selección.
  */
+/**
+ * Resultado de LEVEL 1: los problemas y CON QUÉ ALCANCE se leyeron.
+ *
+ * El alcance lo decide el servidor y llega en la respuesta. La interfaz no lo
+ * deduce del rol: una lista vacía significa cosas distintas —«no hay
+ * problemas» o «no hay ninguno que usted pueda ver»— y el mensaje depende de
+ * esa diferencia, que no debe calcularse dos veces en dos sitios.
+ */
+export interface CoordinationProblemsResult {
+  problems: CoordinationProblem[]
+  scope: SituationsListScope
+}
+
 export async function fetchCoordinationProblems(
   coordinationUuid: string,
-): Promise<CoordinationProblem[]> {
+): Promise<CoordinationProblemsResult> {
   const pages = await Promise.all(
     ACTIVE_STATUSES.map((status) =>
       fetchSituations({
@@ -70,7 +84,19 @@ export async function fetchCoordinationProblems(
     .map(toProblem)
     .filter((problem): problem is CoordinationProblem => problem !== null)
 
-  return sortProblemsByPriority(problems)
+  /*
+   * Las dos peticiones (OPEN e IN_PROGRESS) comparten actor y coordinación, así
+   * que el alcance es el mismo en ambas. Basta con que UNA lo declare
+   * restringido para que la lista lo sea; un servidor antiguo que no lo envíe
+   * se trata como completo, que es el comportamiento anterior.
+   */
+  const scope: SituationsListScope = pages.some(
+    (page) => page.scope === 'own-only',
+  )
+    ? 'own-only'
+    : 'complete'
+
+  return { problems: sortProblemsByPriority(problems), scope }
 }
 
 /**

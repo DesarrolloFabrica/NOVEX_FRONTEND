@@ -2,6 +2,7 @@ export {
   EXECUTIVE_OPERATIONS_HOME,
   EXECUTIVE_OPERATIONS_ROUTES,
   EXECUTIVE_ROLES,
+  OPERATIONAL_SHELL_ROLES,
 } from '@/modules/executive-operations-center/constants/routes'
 
 export {

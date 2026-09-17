@@ -10,9 +10,15 @@ describe('roleExperience', () => {
     expect(getRoleLandingPath({ roleCode: 'ANALISTA' })).toBe('/red-impacto')
     expect(getRoleLandingPath({ roleCode: 'DIRECTOR' })).toBe('/red-impacto')
     expect(getRoleLandingPath({ roleCode: 'ADMIN' })).toBe('/red-impacto')
+    // VERDAD NUEVA: el coordinador aterriza en el Centro Operacional, que es
+    // donde reporta y donde resuelve. Antes llegaba a la red de impacto con su
+    // coordinación preseleccionada, y a esta pantalla solo se entraba a mano.
     expect(
       getRoleLandingPath({ roleCode: 'COORDINADOR', selectedAreaId: 'B2B' }),
-    ).toBe('/red-impacto?coordination=B2B')
+    ).toBe('/centro-operacional')
+    expect(getRoleLandingPath({ roleCode: 'COORDINADOR' })).toBe(
+      '/centro-operacional',
+    )
   })
 
   it('solo permite que el administrador previsualice otro rol', () => {

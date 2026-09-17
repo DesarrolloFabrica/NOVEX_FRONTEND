@@ -27,10 +27,15 @@ export function getRoleLandingPath(
     return EXECUTIVE_ROLE_LANDING_PATH
   }
 
-  const coordination = user?.selectedAreaId?.trim()
-  return coordination
-    ? `/red-impacto?coordination=${encodeURIComponent(coordination)}`
-    : '/red-impacto'
+  /*
+   * EL COORDINADOR ATERRIZA EN EL CENTRO OPERACIONAL.
+   *
+   * Es el único rol que puede SOLUCIONAR un problema, y esa acción vive
+   * exclusivamente en esta pantalla. Mientras su landing fue `/red-impacto`,
+   * llegar aquí exigía escribir la URL a mano: el acceso existía, pero no el
+   * recorrido. La red de impacto sigue disponible desde el menú de plataforma.
+   */
+  return EXECUTIVE_OPERATIONS_HOME
 }
 
 export function getEffectiveDashboardRole(

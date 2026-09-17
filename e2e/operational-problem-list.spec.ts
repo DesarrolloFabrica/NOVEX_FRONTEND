@@ -170,7 +170,7 @@ async function settle(page: Page) {
 
 const LIST = '[data-testid="coordination-problem-list"]'
 const STAGE = '[data-testid="shell-stage"]'
-const REGION = '[data-testid="shell-region-problem-list"]'
+const REGION = '[data-testid="shell-region-coordination-problems"]'
 const PROBLEM_ROW = '[data-testid="problem-row"]'
 const FAN_SLOT_SEL = '[data-testid="coordination-deck-fan-slot"]'
 const DECK_PARENT = 'coord-operaciones-academicas'
@@ -344,7 +344,7 @@ test.describe('lista persistente de problemas · 1440x900', () => {
     await installApi(page)
     await openShell(page)
 
-    const region = page.getByTestId('shell-region-problem-list')
+    const region = page.getByTestId('shell-region-coordination-problems')
     await expect(region).toBeVisible()
     await expect(region).toContainText('Seleccione una coordinación')
     await expect(page.locator(LIST)).toHaveCount(0)
@@ -390,7 +390,7 @@ test.describe('lista persistente de problemas · 1440x900', () => {
     await expect(page.locator(`${PROBLEM_ROW}`).first()).toHaveRole('button')
     // El rótulo de la región se retira cuando la lista ya se presenta sola.
     await expect(
-      page.getByTestId('shell-region-problem-list'),
+      page.getByTestId('shell-region-coordination-problems'),
     ).not.toContainText('Seleccione una coordinación')
 
     const simple = await measure(page, 'SIMPLE_SELECTED coord-b2b')
@@ -422,7 +422,7 @@ test.describe('lista persistente de problemas · 1440x900', () => {
       'coord-saber-pro',
     )
     await expect(
-      page.getByTestId('shell-region-problem-list'),
+      page.getByTestId('shell-region-coordination-problems'),
     ).not.toContainText('Seleccione una coordinación')
     await expect(page.locator(LIST)).toHaveCount(1)
     await settle(page)
@@ -448,7 +448,7 @@ test.describe('lista persistente de problemas · 1440x900', () => {
     await page.getByTestId('return-to-table').click()
 
     await expect(page.locator(LIST)).toHaveCount(0)
-    await expect(page.getByTestId('shell-region-problem-list')).toContainText(
+    await expect(page.getByTestId('shell-region-coordination-problems')).toContainText(
       'Seleccione una coordinación',
     )
     await expect(page.locator(CARD)).toHaveCount(9)

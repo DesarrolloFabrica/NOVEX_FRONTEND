@@ -212,10 +212,22 @@ test.describe('estado operacional', () => {
     expect(
       requested.filter((path) => path.endsWith('/operational-overview')),
     ).toHaveLength(1)
+    /*
+     * LO QUE LEVEL 0 SIGUE SIN ARRASTRAR. La lista de problemas de una
+     * coordinación, el análisis y sus secciones perezosas solo se piden al
+     * observar una carta o abrir un problema: entrar a la pantalla no cuesta
+     * ninguna de ellas.
+     *
+     * Dos peticiones SÍ son nuevas y legítimas, porque describen piezas que no
+     * dependen de la selección: «Mis reportes» —la lista propia del usuario,
+     * transversal a las coordinaciones— y el catálogo de categorías del
+     * formulario, que se pide una vez y no en cada apertura. Se comprueban
+     * aparte, con su forma exacta, en lugar de admitir cualquier «/situations».
+     */
     expect(
       requested.filter(
         (path) =>
-          path.includes('/situations') ||
+          path.includes('coordinationId=') ||
           path.includes('/network-status') ||
           path.includes('/dashboard') ||
           path.includes('/analysis') ||
@@ -224,6 +236,12 @@ test.describe('estado operacional', () => {
           path.includes('/timeline'),
       ),
     ).toEqual([])
+
+    // Las dos peticiones nuevas y NADA más: el grabador guarda la ruta sin
+    // query, así que se comprueba el conjunto exacto de rutas de situaciones.
+    expect(
+      [...new Set(requested.filter((path) => path.includes('/situations')))].sort(),
+    ).toEqual(['/api/v1/situations', '/api/v1/situations/categories'])
   })
 
   test('el fixture severo pone al personaje en CRITICO', async ({ page }) => {

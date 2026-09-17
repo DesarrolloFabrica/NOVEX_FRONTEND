@@ -69,6 +69,10 @@ const DETAIL: ProblemDetail = {
   coordinationName: 'Coordinador Ingenierías',
   createdAt: '2026-08-01T10:00:00.000Z',
   impact: null,
+  coordinationCode: 'coord-b2b',
+  createdByUserName: 'Autor de prueba',
+  canResolve: false,
+  resolution: null,
   intelligence: null,
 }
 
@@ -93,6 +97,8 @@ function withCoordination(): OperationalCardsState {
       type: 'LOAD_PROBLEMS_SUCCESS',
       code: 'coord-ingenierias',
       problems: [problem('p1'), problem('p2')],
+      scope: 'complete',
+      generation: 0,
     },
   )
 }
@@ -104,7 +110,7 @@ const readyDetail = () =>
   from(
     opened(),
     { type: 'LOAD_DETAIL', problemId: 'p1' },
-    { type: 'LOAD_DETAIL_SUCCESS', problemId: 'p1', detail: DETAIL },
+    { type: 'LOAD_DETAIL_SUCCESS', problemId: 'p1', detail: DETAIL, generation: 0 },
   )
 
 describe('LEVEL 2 · selección del problema', () => {
@@ -204,7 +210,7 @@ describe('LEVEL 2 · detalle', () => {
       opened(),
       { type: 'LOAD_DETAIL', problemId: 'p1' },
       { type: 'CLOSE_PROBLEM' },
-      { type: 'LOAD_DETAIL_SUCCESS', problemId: 'p1', detail: DETAIL },
+      { type: 'LOAD_DETAIL_SUCCESS', problemId: 'p1', detail: DETAIL, generation: 0 },
     )
     expect(state.selectedProblemId).toBeNull()
     expect(state.level2.detail).toBeNull()

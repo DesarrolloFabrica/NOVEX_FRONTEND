@@ -35,6 +35,10 @@ const DETAIL: ProblemDetailData = {
     ],
     propagationDepth: 2,
   },
+  coordinationCode: 'coord-b2b',
+  createdByUserName: 'Autor de prueba',
+  canResolve: false,
+  resolution: null,
   intelligence: {
     headline: 'Riesgo concentrado en la sede norte',
     summary: 'La indisponibilidad afecta la continuidad docente.',

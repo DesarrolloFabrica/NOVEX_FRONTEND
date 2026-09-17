@@ -66,12 +66,14 @@ function markup(
 function level1(
   status: OperationalCardsLevel1State['status'],
   problems: CoordinationProblem[] = [],
+  scope: OperationalCardsLevel1State['scope'] = 'complete',
 ): OperationalCardsLevel1State {
   return {
     status,
     coordinationCode: COORDINATION.code,
     problems,
     errorMessage: status === 'error' ? 'boom' : null,
+    scope,
   }
 }
 
@@ -145,7 +147,9 @@ describe('CoordinationProblemList · los cuatro estados de LEVEL 1', () => {
   it('sin problemas dice que no los hay', () => {
     const html = markup(level1('ready', []))
 
-    expect(html).toContain('Todo bajo control')
+    // VERDAD NUEVA: con lectura COMPLETA, cero resultados sí significa que el
+    // área no tiene problemas activos, y se dice sin ambigüedad.
+    expect(html).toContain('Sin problemas activos')
     expect(html).toContain('data-testid="coordination-panel-empty"')
   })
 
@@ -157,7 +161,7 @@ describe('CoordinationProblemList · los cuatro estados de LEVEL 1', () => {
 
     expect(html).toContain('No pudimos cargar los problemas de esta coordinación.')
     expect(html).toContain('role="alert"')
-    expect(html).not.toContain('Todo bajo control')
+    expect(html).not.toContain('Sin problemas activos')
     expect(html).not.toContain('data-testid="coordination-panel-empty"')
   })
 

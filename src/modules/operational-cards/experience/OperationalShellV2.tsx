@@ -1,53 +1,56 @@
-import { useMemo, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { CoordinationProblemList } from '@/modules/operational-cards/components/CoordinationProblemList'
 import { DirectionCharacter } from '@/modules/operational-cards/components/DirectionCharacter'
-import { OperationalKpiRail } from '@/modules/operational-cards/components/OperationalKpiRail'
-import { ProblemDetail } from '@/modules/operational-cards/components/ProblemDetail'
+import { MyReportsPanel } from '@/modules/operational-cards/components/MyReportsPanel'
+import { OperationalActionPanel } from '@/modules/operational-cards/components/OperationalActionPanel'
 import { resolveCharacterMood } from '@/modules/operational-cards/data/characterMood'
 import { buildCharacterPresentation } from '@/modules/operational-cards/data/characterReaction'
 import { buildDirectionSummary } from '@/modules/operational-cards/data/directionSummary'
-import { resolveOperationalKpis } from '@/modules/operational-cards/data/operationalKpis'
 import { resolveCoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
 import { buildProductTable } from '@/modules/operational-cards/data/productHierarchy'
 import { buildTableLayout } from '@/modules/operational-cards/data/tableLayout'
 import { OperationalCardExperience } from '@/modules/operational-cards/experience/OperationalCardExperience'
 import { useOperationalOverview } from '@/modules/operational-cards/hooks/useOperationalOverview'
+import {
+  emptyReportDraft,
+  reportDraftKey,
+} from '@/modules/operational-cards/state/operationalCards.reducer'
+import { nowAsLocalInput } from '@/modules/operational-cards/services/report-submission.service'
+import { fetchIncidentCategories } from '@/modules/api/situations.api'
+import { getErrorMessage } from '@/shared/utils/error'
+import type { IncidentCategorySummary } from '@/modules/situations/types/situation.types'
+import { OPERATIONAL_STATUS_LABEL } from '@/modules/operational-cards/data/operationalStatusLabel'
 import type { OperationalIntegrityStatus } from '@/modules/operational-cards/types/operational-status.types'
+import type { CoordinationId } from '@/modules/impact-network/data/coordination-islands.config'
 import '@/styles/operational-character.css'
 import '@/styles/operational-shell.css'
 
 /**
- * SHELL del Centro Operacional: dos zonas y un control inferior.
+ * SHELL del Centro Operacional. Cinco regiones y un control inferior.
  *
- *   ┌──────────────────────────────────────┬──────────┐
- *   │ personaje │ problemas │ detalle      │          │
- *   ├──────────────────────────────────────┤   KPIs   │
- *   │               BARAJA                 │          │
- *   └──────────────────────────────────────┴──────────┘
- *                    [ menú ]
+ *   ┌──────────┬──────────────┬──────────────┬─────────────┐
+ *   │personaje │ MIS REPORTES │ PROBLEMAS DE │  REPORTAR / │
+ *   ├──────────┴──────────────┤ LA COORDIN.  │   DETALLE   │
+ *   │        BARAJA           │              │  + ACCIONES │
+ *   └─────────────────────────┴──────────────┴─────────────┘
+ *                     [ menú ]
  *
- * La pantalla deja de ser «la mesa» para pasar a ser una escena con dos
- * lecturas permanentes: a la IZQUIERDA se opera —se elige carta, se leen los
- * problemas del área y el detalle del que se esté mirando—, y a la DERECHA vive
- * el estado, en un carril que acompaña a toda la escena en lugar de competir
- * con las otras lecturas desde una cuarta tarjeta.
+ * QUÉ CAMBIÓ RESPECTO A LA FASE ANTERIOR. Las tres listas se reordenaron y el
+ * carril de indicadores desapareció:
  *
- * LAS CUATRO REGIONES TIENEN YA SU CONTENIDO REAL: el personaje con el estado
- * de la Dirección, la lista de problemas del área observada, el detalle del
- * problema que se esté mirando y el carril de indicadores. Ninguna es un hueco
- * y ninguna abre una capa encima de las demás: la escena entera se lee de una
- * vez. Lo que queda por llegar es el menú inferior.
+ *   IZQUIERDA  «Mis reportes»: lo que ESTE usuario ha reportado, en cualquier
+ *              coordinación. Es la única lista que NO depende de la carta.
+ *   CENTRO     Los problemas de la coordinación seleccionada, con el mismo
+ *              componente y el mismo orden por criticidad de antes.
+ *   DERECHA    Ya no muestra indicadores: es donde se OPERA. Formulario de
+ *              reporte o detalle del problema con sus acciones.
  *
- * QUIÉN CREA EL ESTADO. El shell llama al hook UNA vez y baja el controlador a
- * la experiencia. El personaje y la mesa leen la misma selección, el mismo
- * hover y el mismo LEVEL 0 porque son literalmente el mismo objeto: dos
- * llamadas al hook habrían dado dos reducers, dos peticiones y dos verdades.
+ * LOS INDICADORES NO SE RECONSTRUYEN EN OTRA REGIÓN. Lo que alimentaban —el
+ * estado de cada área— sigue vivo donde importa: el aura de las cartas y la
+ * expresión del personaje, que leen el mismo `overview` de LEVEL 0.
  *
- * La banda de la baraja es además la que DEFINE el tamaño de carta. Hasta aquí
- * la unidad salía del viewport, y con una columna más estrecha que la pantalla
- * eso dejaba el arco saliéndose por los dos lados —medido en la prueba espacial:
- * 160 px por cada lado a 1440—. Ahora la unidad se deduce del ancho real de la
- * banda, así que la mesa cabe por construcción y no por coincidencia.
+ * UNA SOLA SELECCIÓN. Las dos listas abren el MISMO detalle porque comparten
+ * `selectedProblemId`. No hay dos versiones del problema seleccionado.
  */
 
 /** Una región del shell. Contenedor real de layout con marcador dentro. */
@@ -63,11 +66,6 @@ function ShellRegion({
   title: string
   hint?: string
   className?: string
-  /**
-   * Una región con contenido real no necesita rótulo: la pieza ya se explica
-   * sola. El nombre sigue existiendo como `aria-label`, así que la región no
-   * deja de ser navegable por landmarks aunque no se dibuje encabezado.
-   */
   showTitle?: boolean
   children?: ReactNode
 }) {
@@ -93,24 +91,33 @@ export function OperationalShellV2() {
     controller
 
   // Un fallo de red, HTTP, parseo o contrato se comunica como DESCONOCIDO.
-  // Nunca como ESTABLE, y nunca fabricando totales en cero.
   const directionStatus: OperationalIntegrityStatus =
     level0 === 'ready' && overview ? overview.directionStatus : 'DESCONOCIDO'
 
   /**
-   * Proyección de producto que necesitan las regiones permanentes: hacia dónde
-   * mira el personaje y cómo se llama cada coordinación en la mesa.
-   *
-   * Sale de la misma geometría que dibuja la mesa: la misma proyección de
-   * producto, la misma función de layout y las mismas opciones. Son funciones
-   * puras sobre la misma lista de coordinaciones, de modo que ni el giro ni el
-   * rótulo pueden discrepar de lo que se ve; si un día la mesa cambia de orden,
-   * el personaje gira con ella sin tocar nada de aquí.
-   *
-   * El nombre de PRODUCTO importa tanto como el giro: la carta «Servicio» no
-   * puede encabezar una lista que diga «Homologaciones», y la hija «Ingenierías»
-   * no debe presentarse como «Coordinador Ingenierías», que es el cargo.
+   * Catálogo de categorías de incidente. Es un dato del formulario, así que se
+   * pide UNA vez al montar y no cada vez que se abre el panel.
    */
+  const [categories, setCategories] = useState<IncidentCategorySummary[]>([])
+  const [categoriesError, setCategoriesError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let active = true
+    void fetchIncidentCategories()
+      .then((items) => {
+        if (!active) return
+        setCategories(items.filter((item) => item.isSelectable !== false))
+      })
+      .catch((error: unknown) => {
+        if (!active) return
+        setCategoriesError(getErrorMessage(error))
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  /** Proyección de producto: giro del personaje y nombre de cada coordinación. */
   const { orientationByCode, labelByCode } = useMemo(() => {
     const productTable = buildProductTable(overview?.coordinations ?? [])
     const topLevelRows = productTable.nodes.map((node) => node.coordination)
@@ -127,11 +134,6 @@ export function OperationalShellV2() {
     }
   }, [overview])
 
-  /**
-   * La coordinación observada, sea uno de los nueve nodos de la mesa o una de
-   * las cinco subordinaciones: la región de problemas habla de la que esté
-   * seleccionada, sin preguntarse a qué nivel pertenece.
-   */
   const selectedCoordination = useMemo(
     () =>
       overview?.coordinations.find(
@@ -140,11 +142,6 @@ export function OperationalShellV2() {
     [overview, selectedCoordinationCode],
   )
 
-  /**
-   * La carta observada manda sobre la que está bajo el cursor: con una
-   * coordinación seleccionada el personaje la mira, aunque el puntero pase por
-   * encima de otra.
-   */
   const characterPresentation = buildCharacterPresentation({
     directionStatus,
     orientation:
@@ -157,30 +154,24 @@ export function OperationalShellV2() {
     selecting: Boolean(selectedCoordinationCode),
   })
 
-  /**
-   * LA CARA ACOMPAÑA A LO OBSERVADO, no al estado institucional.
-   *
-   * Sale de la MISMA `selectedCoordination` que alimenta la lista de problemas
-   * y el carril, así que las tres lecturas no pueden discrepar sobre de quién
-   * están hablando. El estado de la Dirección sigue gobernando los atributos
-   * del personaje y su rótulo; lo que cambia aquí es solo su expresión.
-   */
+  /** La cara acompaña a lo observado; el rótulo sigue siendo institucional. */
   const characterMood = resolveCharacterMood({ selectedCoordination })
 
   /**
-   * Indicadores de lo observado. Se derivan de datos ya cargados —LEVEL 0
-   * siempre, LEVEL 1 cuando la lista de arriba ya lo pidió—, así que el
-   * carril no puede provocar una petición por existir.
+   * REACCIÓN PUNTUAL. Solo se representa si el hecho pertenece a la coordinación
+   * que el usuario está observando: un reporte registrado en otra área no debe
+   * leerse como si hubiera ocurrido en la seleccionada. Si no coincide, la
+   * reacción se consume igualmente para que no quede pendiente.
    */
-  const kpis = resolveOperationalKpis({
-    level0,
-    overview,
-    selectedCoordination,
-    productLabel: selectedCoordination
-      ? labelByCode[selectedCoordination.code]
-      : undefined,
-    level1: controller.level1,
-  })
+  const pending = controller.pendingCharacterReaction
+  const reaccionVisible =
+    pending !== null && pending.coordinationCode === selectedCoordinationCode
+
+  useEffect(() => {
+    if (pending && !reaccionVisible) {
+      controller.consumeCharacterReaction(pending.id)
+    }
+  }, [pending, reaccionVisible, controller])
 
   const summary =
     level0 === 'ready' && overview
@@ -189,17 +180,36 @@ export function OperationalShellV2() {
         ? 'Estado no disponible'
         : 'Consultando el estado de las coordinaciones'
 
+  // ---------- Panel derecho ----------
+
+  const draftKey = reportDraftKey(selectedCoordinationCode)
+  const draft =
+    controller.reportDrafts[draftKey] ?? emptyReportDraft(nowAsLocalInput())
+
+  const learningDraft = controller.selectedProblemId
+    ? (controller.learningDrafts[controller.selectedProblemId] ?? '')
+    : ''
+
+  /**
+   * ALCANCE DE LECTURA, según lo declara el SERVIDOR.
+   *
+   * Antes se deducía del rol y de comparar coordinaciones, lo que era una
+   * segunda copia de la política y podía discrepar de ella. Ahora lo dice la
+   * propia respuesta: la lista llega marcada `own-only` cuando solo contiene
+   * los reportes del usuario en esa área.
+   */
+  const alcanceLimitado =
+    selectedCoordination !== null && controller.level1.scope === 'own-only'
+
   return (
-    <div className="operational-shell" data-testid="operational-shell">
-      {/* ZONA OPERATIVA */}
+    <div
+      className="operational-shell"
+      data-testid="operational-shell"
+      data-tour="operational-shell"
+    >
       <div className="operational-shell__main" data-testid="shell-main">
         <div className="operational-shell__top" data-testid="shell-top">
-          {/*
-            El personaje ocupa su región entera, sin rótulo que lo presente: ya
-            dice quién es y cómo está. Debajo, la frase institucional, que es la
-            ÚNICA región `aria-live` de la escena: cuando también vivía en la
-            miga, un lector de pantalla anunciaba la misma frase dos veces.
-          */}
+          {/* ---------- PERSONAJE: misma posición ---------- */}
           <ShellRegion
             region="character"
             title="Estado de la Dirección de Operaciones"
@@ -209,6 +219,10 @@ export function OperationalShellV2() {
             <DirectionCharacter
               presentation={characterPresentation}
               mood={characterMood}
+              reactionId={reaccionVisible ? pending.id : null}
+              /* El significado lo decide el estado; aquí solo se pasa. */
+              reactionTrigger={pending?.trigger ?? 'approve'}
+              onReactionPlayed={controller.consumeCharacterReaction}
             />
             <p
               className="operational-shell__summary"
@@ -217,98 +231,176 @@ export function OperationalShellV2() {
             >
               {summary}
             </p>
-          </ShellRegion>
-          {/*
-            PROBLEMAS DEL ÁREA. Región permanente: existe con y sin selección, y
-            lo que cambia es lo que dice. La lista ya no aparece bajo una carta
-            ni ocupa un carril dentro de la mesa; vive aquí, en el mismo sitio
-            de la pantalla en los tres modos de composición.
+            {/*
+              QUÉ ESTÁ MIRANDO EL PERSONAJE.
 
-            El estado de LEVEL 1 llega del MISMO controlador que usa la mesa. No
-            hay una segunda petición por haber cambiado la lista de lugar: quien
-            pide los problemas de una coordinación al observarla, y quien los
-            tiene cacheados al volver a ella, sigue siendo el reducer de la
-            escena.
-          */}
+              Su cara sigue a la coordinación observada mientras el rótulo de
+              arriba sigue al estado institucional. Son dos fuentes distintas y
+              a la vez correctas, pero sin decirlo la escena parecía
+              contradecirse: cara triste bajo un rótulo que decía «Estable».
+              Esta línea nombra la fuente de la expresión y solo aparece cuando
+              hay algo observado; sin selección la única lectura es la de la
+              Dirección y no hay ambigüedad que resolver.
+            */}
+            {selectedCoordination && (
+              <p
+                className="operational-shell__observing"
+                data-testid="character-observing"
+                data-status={selectedCoordination.status}
+              >
+                <span className="operational-shell__observing-label">
+                  Observando
+                </span>
+                <span className="operational-shell__observing-name">
+                  {labelByCode[selectedCoordination.code] ??
+                    selectedCoordination.shortName}
+                </span>
+                <span className="operational-shell__observing-status">
+                  {OPERATIONAL_STATUS_LABEL[selectedCoordination.status]}
+                </span>
+              </p>
+            )}
+          </ShellRegion>
+
+          {/* ---------- MIS REPORTES ---------- */}
           <ShellRegion
-            region="problem-list"
-            title="Problemas del área"
+            region="my-reports"
+            title="Mis reportes"
+            className="operational-shell__region--my-reports"
+            showTitle={false}
+          >
+            <MyReportsPanel
+              myReports={controller.myReports}
+              selectedProblemId={controller.selectedProblemId}
+              onSelect={(problemId, coordinationCode) =>
+                controller.openMyReport(
+                  problemId,
+                  coordinationCode as CoordinationId | null,
+                )
+              }
+              onReportProblem={controller.openReportForm}
+              onLoadMore={controller.loadMoreMyReports}
+            />
+          </ShellRegion>
+
+          {/* ---------- PROBLEMAS DE LA COORDINACIÓN ---------- */}
+          <ShellRegion
+            region="coordination-problems"
+            title="Problemas de la coordinación"
             hint={
               selectedCoordination ? undefined : 'Seleccione una coordinación'
             }
-            className="operational-shell__region--problem-list"
+            className="operational-shell__region--coordination-problems"
             showTitle={!selectedCoordination}
           >
             {selectedCoordination && (
-              <CoordinationProblemList
-                coordination={selectedCoordination}
-                identity={resolveCoordinationVisualIdentity(
-                  selectedCoordination,
+              <>
+                {alcanceLimitado && (
+                  <p
+                    className="operational-shell__scope-note"
+                    data-testid="coordination-scope-note"
+                    role="status"
+                  >
+                    Solo se muestran los problemas que usted reportó en esta
+                    coordinación. No es la lista completa del área.
+                  </p>
                 )}
-                productLabel={labelByCode[selectedCoordination.code]}
-                level1={controller.level1}
-                selectedProblemId={controller.selectedProblemId}
-                onProblemSelect={controller.selectProblem}
-              />
-            )}
-          </ShellRegion>
-          {/*
-            DETALLE DEL PROBLEMA. Región permanente, no una capa que se abre.
-
-            Antes esto era una isla flotante con velo, `role="dialog"` y botón
-            de cerrar: para leer un problema había que tapar la escena, y para
-            volver a operar había que cerrarlo. Ahora el detalle está siempre en
-            el mismo sitio y lo que cambia es de qué problema habla. No se
-            cierra: se mira otro, o se cambia de coordinación.
-
-            Come del MISMO `selectedProblemId` que la fila pulsada: no hay una
-            segunda selección de problema, ni una segunda petición de LEVEL 2.
-          */}
-          <ShellRegion
-            region="problem-detail"
-            title="Detalle del problema"
-            hint={controller.selectedProblemId ? undefined : 'Seleccione un problema'}
-            className="operational-shell__region--problem-detail"
-            showTitle={!controller.selectedProblemId}
-          >
-            {controller.selectedProblemId && (
-              <ProblemDetail
-                level2={controller.level2}
-                onToggleSection={controller.toggleSection}
-              />
+                <CoordinationProblemList
+                  coordination={selectedCoordination}
+                  identity={resolveCoordinationVisualIdentity(
+                    selectedCoordination,
+                  )}
+                  productLabel={labelByCode[selectedCoordination.code]}
+                  level1={controller.level1}
+                  selectedProblemId={controller.selectedProblemId}
+                  onProblemSelect={controller.selectProblem}
+                  onRetry={controller.retryCoordinationProblems}
+                />
+              </>
             )}
           </ShellRegion>
         </div>
 
-        {/*
-          La baraja, con toda su lógica intacta. Esta banda es su contenedor de
-          referencia: de su ancho sale el tamaño de carta.
-        */}
-        <div className="operational-shell__stage" data-testid="shell-stage">
+        {/* La baraja, con toda su lógica y su geometría intactas. */}
+        <div
+          className="operational-shell__stage"
+          data-testid="shell-stage"
+          data-tour="operational-deck"
+        >
           <OperationalCardExperience controller={controller} />
         </div>
       </div>
 
-      {/*
-        CARRIL EJECUTIVO. Responde a lo observado: sin selección habla de la
-        Dirección entera; con una coordinación —o una de sus subordinaciones—
-        habla de ella. Nunca de las dos cosas a la vez, y nunca de la anterior.
-
-        Todas sus cifras salen de datos YA cargados: LEVEL 0 para la Dirección,
-        y para una coordinación su fila de LEVEL 0 más los problemas que la
-        lista de arriba ya pidió. El carril no añade una sola petición.
-      */}
+      {/* ---------- PANEL DERECHO: reportar o resolver ---------- */}
       <ShellRegion
-        region="kpi"
-        title="Indicadores"
-        className="operational-shell__kpi"
+        region="action"
+        title="Reportar o resolver"
+        className="operational-shell__action"
         showTitle={false}
       >
-        <h2 className="operational-shell__region-title">Indicadores</h2>
-        <OperationalKpiRail kpis={kpis} />
+        <OperationalActionPanel
+          mode={controller.panelMode}
+          hasCoordination={selectedCoordination !== null}
+          level2={controller.level2}
+          submission={controller.submission}
+          learningDraft={learningDraft}
+          onToggleSection={controller.toggleSection}
+          onLearningChange={(value) => {
+            if (!controller.selectedProblemId) return
+            controller.setLearningDraft(controller.selectedProblemId, value)
+          }}
+          onResolve={() => {
+            if (!controller.selectedProblemId) return
+            void controller.submitResolution(
+              controller.selectedProblemId,
+              learningDraft,
+            )
+          }}
+          onReportAnother={controller.openReportForm}
+          onRetryDetail={() => {
+            // Reintenta el MISMO problema: se cierra y se vuelve a seleccionar,
+            // que es lo que devuelve LEVEL 2 a `idle` y relanza la petición.
+            const id = controller.selectedProblemId
+            if (!id) return
+            controller.closeProblem()
+            controller.selectProblem(id)
+          }}
+          reportForm={{
+            coordinationLabel: selectedCoordination
+              ? (labelByCode[selectedCoordination.code] ??
+                selectedCoordination.shortName)
+              : null,
+            categories,
+            categoriesError,
+            draft,
+            submission: controller.submission,
+            maxOccurredAt: nowAsLocalInput(),
+            /*
+             * Se envía el borrador COMPLETO, no solo el campo tocado.
+             *
+             * El reducer, al no encontrar todavía un borrador para esta
+             * coordinación, partía de `emptyReportDraft('')` y la primera
+             * pulsación borraba la fecha que el formulario ya mostraba. El
+             * campo quedaba vacío, la validación nativa impedía enviar y no
+             * aparecía ningún mensaje: el botón simplemente no hacía nada.
+             * `draft` de aquí arriba ya lleva la fecha por defecto, así que
+             * fusionarlo entero conserva lo que el usuario ve.
+             */
+            onDraftChange: (patch) =>
+              controller.setReportDraft(draftKey, { ...draft, ...patch }),
+            onSubmit: () => {
+              void controller.submitReport({
+                draftKey,
+                coordinationCode: selectedCoordinationCode,
+                // El UUID sale de la fila de LEVEL 0 que ya está cargada.
+                coordinationId: selectedCoordination?.id ?? null,
+                draft,
+              })
+            },
+          }}
+        />
       </ShellRegion>
 
-      {/* Control del menú inferior. Solo la región: el menú llega en su fase. */}
       <div className="operational-shell__bottom" data-testid="shell-bottom">
         <span className="operational-shell__bottom-label">Menú</span>
       </div>

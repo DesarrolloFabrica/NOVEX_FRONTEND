@@ -79,7 +79,7 @@ function fallbackSummary(description: string): string {
   return `${(lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`
 }
 
-function toDetail(
+export function toProblemDetail(
   situation: SituationResponse,
   analysis: SituationAIAnalysisResponse | null,
 ): ProblemDetail {
@@ -99,6 +99,22 @@ function toDetail(
     createdAt: situation.createdAt,
     impact: analysis ? toImpact(analysis) : null,
     intelligence,
+    coordinationCode: situation.coordinationCode ?? null,
+    createdByUserName: situation.createdByUserName ?? null,
+    /*
+     * `canResolve` lo decide el BACKEND con la misma política que autoriza la
+     * escritura. Se copia tal cual y nunca se deduce del rol en el navegador:
+     * dos criterios distintos acabarían discrepando, y el que manda es el del
+     * servidor, que además vuelve a comprobarlo al recibir la resolución.
+     */
+    canResolve: situation.canResolve === true,
+    resolution: situation.resolution
+      ? {
+          learning: situation.resolution.learning,
+          resolvedByUserName: situation.resolution.resolvedByUserName,
+          resolvedAt: situation.resolution.resolvedAt,
+        }
+      : null,
   }
 }
 
@@ -110,7 +126,7 @@ export async function fetchProblemDetail(
     loadAnalysis(problemId),
   ])
 
-  return toDetail(situation, analysis)
+  return toProblemDetail(situation, analysis)
 }
 
 /** Secciones perezosas. Una petición por sección, y solo al desplegarla. */

@@ -10,7 +10,10 @@ export default defineConfig({
   outputDir: 'test-results/playwright',
   reporter: [['list']],
   use: {
-    baseURL: 'http://127.0.0.1:4173',
+    // Permite apuntar a un servidor de desarrollo ya levantado en otro puerto.
+    // Sin esto, `reuseExistingServer` reutiliza lo que haya en 4173 aunque sea
+    // una build de `vite preview` anterior a los cambios que se están probando.
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:4173',
     browserName: 'chromium',
     colorScheme: 'dark',
     reducedMotion: 'reduce',

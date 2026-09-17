@@ -17,6 +17,7 @@ import { RequireSituationCreationRoute } from '@/shared/components/RequireSituat
 import { AdminConsolePage } from '@/pages/AdminConsolePage'
 import {
   EXECUTIVE_ROLES,
+  OPERATIONAL_SHELL_ROLES,
   ExecutiveOperationsLayout,
   InteligenciaPage,
   PanoramaPage,
@@ -60,20 +61,48 @@ export const router = createBrowserRouter([
             ),
           },
           {
+            /*
+             * DOS NIVELES DE GUARDA, a propósito.
+             *
+             * El LAYOUT admite a todos los roles operativos —incluido el
+             * COORDINADOR, que es el único que puede solucionar— porque su home
+             * es la experiencia operacional. Cada SECCIÓN EJECUTIVA hija
+             * conserva su propia guarda con `EXECUTIVE_ROLES`, de modo que
+             * habilitar esta pantalla no abre panorama, inteligencia ni
+             * reportes. Ampliar la constante compartida lo habría hecho.
+             */
             path: '/centro-operacional',
             element: (
-              <RequireRoleRoute role={EXECUTIVE_ROLES}>
+              <RequireRoleRoute role={OPERATIONAL_SHELL_ROLES}>
                 <ExecutiveOperationsLayout />
               </RequireRoleRoute>
             ),
             children: [
-              // Fase 4: la home del Centro Operacional es la nueva experiencia
-              // ADMIN de estado operacional. Las secciones hijas siguen
-              // intactas, igual que /red-impacto.
               { index: true, element: <OperationalShellV2 /> },
-              { path: 'panorama', element: <PanoramaPage /> },
-              { path: 'inteligencia', element: <InteligenciaPage /> },
-              { path: 'reportes', element: <ReportesPage /> },
+              {
+                path: 'panorama',
+                element: (
+                  <RequireRoleRoute role={EXECUTIVE_ROLES}>
+                    <PanoramaPage />
+                  </RequireRoleRoute>
+                ),
+              },
+              {
+                path: 'inteligencia',
+                element: (
+                  <RequireRoleRoute role={EXECUTIVE_ROLES}>
+                    <InteligenciaPage />
+                  </RequireRoleRoute>
+                ),
+              },
+              {
+                path: 'reportes',
+                element: (
+                  <RequireRoleRoute role={EXECUTIVE_ROLES}>
+                    <ReportesPage />
+                  </RequireRoleRoute>
+                ),
+              },
             ],
           },
           {

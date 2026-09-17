@@ -181,8 +181,18 @@ async function openExperience(page: Page) {
   )
 }
 
+/**
+ * Peticiones de LEVEL 1: los problemas de UNA coordinación.
+ *
+ * El filtro exige `coordinationId` porque `/situations` dejó de tener un solo
+ * consumidor: «Mis reportes» lo llama con `mine=true` y el formulario pide
+ * `/situations/categories`. Contar todo lo que contuviera «/situations» medía
+ * otra cosa desde la fase 2, y lo que estas pruebas vigilan sigue siendo lo
+ * mismo: que observar una coordinación cueste DOS peticiones y volver a ella,
+ * ninguna.
+ */
 function level1Calls(requested: readonly string[]): string[] {
-  return requested.filter((entry) => entry.includes('/situations'))
+  return requested.filter((entry) => entry.includes('coordinationId='))
 }
 
 

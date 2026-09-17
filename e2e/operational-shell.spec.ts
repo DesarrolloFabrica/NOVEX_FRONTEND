@@ -231,7 +231,7 @@ async function measure(page: Page, label: string) {
 
   const shell = await boxOf(page, '[data-testid="operational-shell"]')
   const main = await boxOf(page, '[data-testid="shell-main"]')
-  const kpi = await boxOf(page, '[data-testid="shell-region-kpi"]')
+  const kpi = await boxOf(page, '[data-testid="shell-region-action"]')
   const top = await boxOf(page, '[data-testid="shell-top"]')
   const stage = await boxOf(page, '[data-testid="shell-stage"]')
   const bottom = await boxOf(page, '[data-testid="shell-bottom"]')
@@ -359,7 +359,18 @@ test.describe('shell del Centro · 1440x900', () => {
     await openShell(page)
 
     // Las regiones existen como superficies reales.
-    for (const region of ['character', 'problem-list', 'problem-detail', 'kpi']) {
+    /*
+     * Regiones de la fase 2: el detalle dejó de tener región propia —vive en el
+     * panel derecho— y el carril de indicadores desapareció. Lo que se sigue
+     * comprobando es que las CUATRO regiones de la escena existan y sean
+     * visibles, que es lo que esta prueba protegía.
+     */
+    for (const region of [
+      'character',
+      'my-reports',
+      'coordination-problems',
+      'action',
+    ]) {
       await expect(page.getByTestId(`shell-region-${region}`)).toBeVisible()
     }
     await expect(page.getByTestId('shell-main')).toBeVisible()

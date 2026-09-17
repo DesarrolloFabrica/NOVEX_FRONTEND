@@ -14,10 +14,10 @@
    * cuarta tarjeta de la fila superior— y el control inferior pasa por debajo de
    * ambas.
    */
-  grid-template-columns: minmax(0, 1fr) var(--shell-kpi-w);
+  grid-template-columns: minmax(0, 1fr) var(--shell-action-w);
   grid-template-rows: minmax(0, 1fr) var(--shell-bottom-h);
   grid-template-areas:
-    'main kpi'
+    'main action'
     'bottom bottom';
   height: 100%;
   min-height: 0;
@@ -28,7 +28,14 @@
    * cada región tenga su contenido real. Están juntos para poder moverlos sin
    * tocar la rejilla.
    */
-  --shell-kpi-w: 24%;
+  /*
+   * El panel derecho deja de mostrar cifras y pasa a contener formularios y el
+   * detalle completo con sus acciones, así que necesita más ancho que el carril
+   * al que sustituye: un campo de texto y un botón no caben con la holgura de
+   * una columna de números. 24% daban 333 px a 1440; 30% dan 424 px, que es
+   * donde el formulario deja de apretarse. La zona operativa conserva el resto.
+   */
+  --shell-action-w: 30%;
   /*
    * La banda superior dejó de ser un presupuesto: el personaje ya vive en
    * ella, y su alto sale de MEDIRLO, no de estimarlo.
@@ -65,16 +72,17 @@
 }
 
 /*
- * Tres lecturas de anchos distintos. El detalle de un problema es el que más
- * pide —título largo, severidad, SLA y secciones— y el personaje el que menos,
- * porque es una figura.
+ * Tres lecturas de anchos distintos. El personaje es el que menos pide, porque
+ * es una figura; las dos listas se reparten el resto casi a partes iguales:
+ * «Mis reportes» necesita algo menos porque sus filas son más compactas, y la
+ * lista de la coordinación algo más porque muestra la cabecera del área.
  */
 .operational-shell__top {
   display: grid;
   grid-template-columns:
-    minmax(0, 0.18fr)
-    minmax(0, 0.34fr)
-    minmax(0, 0.48fr);
+    minmax(0, 0.2fr)
+    minmax(0, 0.38fr)
+    minmax(0, 0.42fr);
   min-height: 0;
   gap: var(--shell-gap);
   /*
@@ -100,6 +108,22 @@
   position: relative;
   min-width: 0;
   min-height: 0;
+  /*
+   * AIRE INFERIOR PARA EL MAZO.
+   *
+   * La carta de Servicio se dibuja como PILA: sus cartas asomadas se escalonan
+   * hacia abajo, así que la caja del mazo termina por debajo de la última carta
+   * visible. Medido en navegador, ese exceso llegaba a 27,8 px a 1440 y la
+   * banda —que recorta con `clip`— se comía el borde inferior de la pila. El
+   * recorte NO lo introdujo el panel derecho: a 24 % ya eran 22,5 px; ensanchar
+   * la columna solo lo agravó, porque la banda más estrecha comprime el arco.
+   *
+   * Reservar el aire aquí lo resuelve en su origen y sin tocar la geometría de
+   * las cartas: el mazo se recompone dentro de una caja de contenido algo más
+   * baja y deja de asomar. El personaje no se mueve —vive en la banda superior,
+   * que no cambia— y la mesa sigue siendo utilizable.
+   */
+  padding-bottom: 32px;
   /*
    * `clip` y no `hidden`: son el mismo recorte, pero `hidden` deja un
    * contenedor DESPLAZABLE. Medido: al cerrar la isla del problema, el
@@ -143,6 +167,66 @@
   flex: 1 1 auto;
 }
 
+/*
+ * QUÉ OBSERVA EL PERSONAJE.
+ *
+ * Una línea compacta, DEBAJO y visualmente subordinada al bloque institucional:
+ * el rótulo «Dirección de Operaciones» conserva su peso y su tamaño, y esta
+ * añade la otra lectura sin competir con él. Así se distingue de un vistazo que
+ * una cosa habla de la Dirección y la otra del área observada.
+ *
+ * Cabe en la banda de 268 px porque sustituye aire, no contenido: son 14 px de
+ * alto en una región que ya reservaba holgura bajo la frase institucional.
+ */
+.operational-shell__observing {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin: 2px 0 0;
+  font-size: 10.5px;
+  line-height: 1.25;
+}
+
+.operational-shell__observing-label {
+  color: var(--os-muted, #8b9cb6);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.operational-shell__observing-name {
+  color: #cfe0f6;
+  font-weight: 600;
+}
+
+/* El estado del área lleva su color, pero nunca sin su texto. */
+.operational-shell__observing-status {
+  border-radius: 999px;
+  padding: 0 6px;
+  font-weight: 600;
+}
+
+.operational-shell__observing[data-status='ESTABLE'] .operational-shell__observing-status {
+  background: rgb(122 196 138 / 0.16);
+  color: #7ac48a;
+}
+
+.operational-shell__observing[data-status='ALERTA'] .operational-shell__observing-status {
+  background: rgb(240 176 84 / 0.16);
+  color: #f0b054;
+}
+
+.operational-shell__observing[data-status='CRITICO'] .operational-shell__observing-status {
+  background: rgb(244 96 104 / 0.16);
+  color: #f46068;
+}
+
+.operational-shell__observing[data-status='DESCONOCIDO'] .operational-shell__observing-status {
+  background: rgb(132 150 176 / 0.16);
+  color: #a9bcd6;
+}
+
 /* Frase institucional: acompaña al personaje, no es un KPI ni una tarjeta. */
 .operational-shell__summary {
   margin: 0;
@@ -163,213 +247,477 @@
  * de ruta. Lo que cede es el contenido de la lista, que ya nació con scroll
  * propio cuando vivía en el carril.
  */
-.operational-shell__region--problem-list {
+.operational-shell__region--my-reports,
+.operational-shell__region--coordination-problems {
   padding: 10px 12px;
 }
 
-.operational-shell__region--problem-list .coordination-panel {
+.operational-shell__region--coordination-problems .coordination-panel {
   min-height: 0;
   flex: 1 1 auto;
 }
-
-/* ---------- Región del detalle ---------- */
 
 /*
- * Mismo trato que la lista: el detalle llena su región y se desplaza por
- * dentro. La banda superior sigue en 268 px con cinco secciones abiertas,
- * porque lo que cede es la lista de secciones y no la altura de la fila.
+ * ALCANCE DE LECTURA declarado. Una lista parcial nunca debe leerse como la
+ * lista completa del área, así que el aviso va ANTES de la lista y no como una
+ * nota al pie que se pierda al desplazar.
  */
-.operational-shell__region--problem-detail {
-  padding: 10px 12px;
+/* Reintento de la lista: acompaña al aviso de error, dentro de la región. */
+.coordination-panel__retry {
+  margin-top: 6px;
+  border: 1px solid rgb(150 196 255 / 0.3);
+  border-radius: 6px;
+  padding: 4px 10px;
+  background: rgb(20 34 58 / 0.7);
+  color: #cfe0f6;
+  cursor: pointer;
+  font-size: 11px;
 }
 
-.operational-shell__region--problem-detail .problem-detail {
-  min-height: 0;
-  flex: 1 1 auto;
+.operational-shell__scope-note {
+  margin: 0 0 8px;
+  padding: 6px 8px;
+  border: 1px solid rgb(240 176 84 / 0.35);
+  border-radius: 6px;
+  background: rgb(240 176 84 / 0.08);
+  color: #f0b054;
+  font-size: 11px;
+  line-height: 1.35;
 }
 
-/* ---------- Carril ejecutivo ---------- */
+/* ---------- Panel derecho: reportar o resolver ---------- */
 
-.operational-shell__kpi {
+/*
+ * Sustituye al carril de indicadores y hereda su caja: cruza las dos filas de
+ * la zona operativa, de modo que el formulario y el detalle disponen de toda la
+ * altura de la escena y no solo de la banda superior.
+ */
+.operational-shell__action {
   min-width: 0;
-  grid-area: kpi;
+  grid-area: action;
+  padding: 10px 12px;
 }
 
 /*
- * EL CARRIL, CON CIFRAS REALES.
+ * PANEL DERECHO. Columna única y desplazable por dentro.
  *
- * Sustituye a los cuatro huecos gigantes del wireframe, que ocupaban 175 px
- * cada uno para enseñar un guion. La columna mide 333 px a 1440 y 448 a 1920, y
- * ahora los reparte en tres lecturas: contexto, estado y cifras. Las cifras van
- * en dos columnas porque son números cortos: en una sola quedaba media columna
- * vacía, que era justamente el problema.
+ * Hereda del carril lo que seguía siendo correcto —overflow-y auto con
+ * scrollbar-gutter estable, para que aparecer o desaparecer la barra no
+ * recoloque el contenido— y cambia lo demás: aquí ya no hay cifras cortas en
+ * dos columnas, sino un formulario y un detalle que necesitan el ancho entero.
  */
-.operational-kpi {
-  /* Franja cromática del estado, con los mismos valores que la baraja. */
-  --kpi-rgb: 132 150 176;
-
+.action-panel {
   display: flex;
   min-height: 0;
   flex: 1 1 auto;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   overflow-y: auto;
-  margin-top: 6px;
-  padding-right: 3px;
+  padding-right: 4px;
   scrollbar-gutter: stable;
 }
 
-.operational-kpi[data-status='ESTABLE'] {
-  --kpi-rgb: 122 196 138;
-}
-
-.operational-kpi[data-status='ALERTA'] {
-  --kpi-rgb: 240 176 84;
-}
-
-.operational-kpi[data-status='CRITICO'] {
-  --kpi-rgb: 244 96 104;
-}
-
-/* De quién habla el carril. Cambia con la selección, y por eso va primero. */
-.operational-kpi__context {
-  margin: 0;
+.action-panel__idle {
+  margin: auto 0;
   color: var(--os-muted, #8b9cb6);
-  font-size: 12px;
-  letter-spacing: 0.04em;
+  text-align: center;
 }
 
-/*
- * ESTADO OPERACIONAL. Siempre con etiqueta de texto: el punto de color
- * acompaña, nunca informa solo.
- */
-.operational-kpi__status {
-  display: grid;
-  align-items: center;
-  gap: 2px 8px;
-  grid-template-columns: auto 1fr;
-  padding: 10px 12px;
-  border: 1px solid rgb(var(--kpi-rgb) / 0.35);
-  border-radius: 12px;
-  background: rgb(var(--kpi-rgb) / 0.08);
-}
-
-.operational-kpi__status-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: rgb(var(--kpi-rgb) / 0.95);
-  grid-row: span 2;
-}
-
-.operational-kpi__status-label {
-  color: var(--os-muted, #8b9cb6);
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.operational-kpi__status-value {
-  color: rgb(var(--kpi-rgb) / 0.98);
-  font-size: 17px;
-  font-weight: 650;
-}
-
-.operational-kpi__grid {
-  display: grid;
-  gap: 8px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin: 0;
-}
-
-.operational-kpi__card {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 9px 11px;
-  border: 1px solid rgb(126 168 224 / 0.16);
-  border-radius: 10px;
-  background: rgb(20 32 52 / 0.45);
-}
-
-.operational-kpi__label {
-  color: var(--os-muted, #8b9cb6);
-  font-size: 11px;
-  letter-spacing: 0.02em;
-}
-
-.operational-kpi__value {
-  margin: 0;
-  color: var(--os-text, #edf5ff);
-  font-size: 22px;
-  font-weight: 650;
-  line-height: 1.1;
-}
-
-.operational-kpi__hint {
-  margin: 0;
-  color: var(--os-muted, #8b9cb6);
-  font-size: 10.5px;
-}
-
-/* Reparto por severidad: filas compactas, con texto y número. */
-.operational-kpi__severity {
-  padding: 9px 11px;
-  border: 1px solid rgb(126 168 224 / 0.16);
-  border-radius: 10px;
-  background: rgb(20 32 52 / 0.45);
-}
-
-.operational-kpi__severity-title {
+.action-panel__idle-heading {
   margin: 0 0 6px;
-  color: var(--os-muted, #8b9cb6);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  color: #cfe0f6;
+  font-size: 13px;
+  font-weight: 600;
 }
 
-.operational-kpi__severity-list {
-  display: grid;
-  gap: 4px;
+.action-panel__idle-text {
   margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  text-wrap: balance;
 }
 
-.operational-kpi__severity-row {
+.action-panel__retry {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-panel__retry button,
+.action-panel__secondary,
+.problem-actions__secondary {
+  border: 1px solid rgb(150 196 255 / 0.3);
+  border-radius: 6px;
+  padding: 6px 12px;
+  background: rgb(20 34 58 / 0.7);
+  color: #cfe0f6;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/* ---------- Mis reportes ---------- */
+
+.my-reports {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.my-reports__header {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
 }
 
-.operational-kpi__severity-label {
-  color: var(--os-text, #edf5ff);
-  font-size: 12.5px;
-}
-
-.operational-kpi__severity-row[data-severity='CRITICAL']
-  .operational-kpi__severity-label {
-  color: rgb(244 96 104 / 0.95);
-}
-
-.operational-kpi__severity-row[data-severity='HIGH']
-  .operational-kpi__severity-label {
-  color: rgb(240 176 84 / 0.95);
-}
-
-.operational-kpi__severity-value {
+.my-reports__heading {
   margin: 0;
-  color: var(--os-text, #edf5ff);
-  font-size: 13px;
-  font-weight: 650;
+  color: #cfe0f6;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.my-reports__count {
+  color: var(--os-muted, #8b9cb6);
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
 
-.operational-kpi__note {
+/* Siempre visible, también con la lista vacía: es la entrada al flujo. */
+.my-reports__cta {
+  border: 1px solid rgb(122 196 138 / 0.45);
+  border-radius: 6px;
+  padding: 7px 10px;
+  background: rgb(122 196 138 / 0.12);
+  color: #a9e3b8;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.my-reports__cta:hover {
+  background: rgb(122 196 138 / 0.2);
+}
+
+.my-reports__list {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  scrollbar-gutter: stable;
+}
+
+.my-reports__row {
+  display: grid;
+  width: 100%;
+  align-items: center;
+  gap: 2px 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: rgb(20 34 58 / 0.5);
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.my-reports__row:hover {
+  border-color: rgb(150 196 255 / 0.3);
+}
+
+.my-reports__row[aria-current='true'] {
+  border-color: rgb(150 196 255 / 0.65);
+  background: rgb(30 52 88 / 0.85);
+}
+
+.my-reports__title {
+  grid-column: 1;
+  grid-row: 1;
+  overflow: hidden;
+  color: #dce9fb;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.my-reports__meta {
+  display: flex;
+  min-width: 0;
+  gap: 6px;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 10px;
+  grid-column: 1;
+  grid-row: 2;
+}
+
+/* El área no debe empujar el estado a otra línea: se recorta. */
+.my-reports__coordination {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.my-reports__status {
+  flex: 0 0 auto;
+}
+
+/* La severidad lleva SIEMPRE su etiqueta: el color solo acompaña. */
+/*
+ * La pastilla se ancla a la SEGUNDA columna y a las dos filas. Sin fijar la
+ * columna, la colocación automática la metía delante del título, que es lo
+ * primero que debe leerse.
+ */
+.my-reports__severity {
+  border-radius: 999px;
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+
+.my-reports__severity[data-severity='CRITICAL'] {
+  background: rgb(244 96 104 / 0.18);
+  color: #f46068;
+}
+
+.my-reports__severity[data-severity='HIGH'] {
+  background: rgb(240 176 84 / 0.18);
+  color: #f0b054;
+}
+
+.my-reports__severity[data-severity='MEDIUM'] {
+  background: rgb(132 150 176 / 0.18);
+  color: #a9bcd6;
+}
+
+.my-reports__severity[data-severity='LOW'] {
+  background: rgb(122 196 138 / 0.15);
+  color: #7ac48a;
+}
+
+.my-reports__note {
   margin: 0;
   color: var(--os-muted, #8b9cb6);
-  font-size: 11.5px;
+  font-size: 11px;
 }
+
+.my-reports__note--error {
+  color: #f46068;
+}
+
+.my-reports__more {
+  border: 1px solid rgb(150 196 255 / 0.25);
+  border-radius: 6px;
+  padding: 5px 8px;
+  background: transparent;
+  color: #a9bcd6;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+/* ---------- Formulario de reporte ---------- */
+
+.report-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.report-form__heading {
+  margin: 0;
+  color: #cfe0f6;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.report-form__destination {
+  margin: 4px 0 0;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 11px;
+}
+
+.report-form__destination strong {
+  color: #9ad0ff;
+}
+
+.report-form__destination--missing {
+  color: #f0b054;
+}
+
+.report-form__field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.report-form__field label,
+.report-form__severity legend {
+  color: #a9bcd6;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.report-form__field input,
+.report-form__field select,
+.report-form__field textarea,
+.problem-actions__form textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgb(150 196 255 / 0.28);
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: rgb(12 22 40 / 0.8);
+  color: #dce9fb;
+  font: inherit;
+  font-size: 12px;
+}
+
+.report-form__field textarea,
+.problem-actions__form textarea {
+  resize: vertical;
+}
+
+.report-form__field input:focus-visible,
+.report-form__field select:focus-visible,
+.report-form__field textarea:focus-visible,
+.problem-actions__form textarea:focus-visible {
+  outline: 2px solid #9ad0ff;
+  outline-offset: 1px;
+}
+
+.report-form__severity {
+  min-width: 0;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.report-form__severity-options {
+  display: grid;
+  gap: 4px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 4px;
+}
+
+.report-form__severity-option {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 5px;
+  flex-wrap: wrap;
+  border: 1px solid rgb(150 196 255 / 0.22);
+  border-radius: 6px;
+  padding: 5px 7px;
+  cursor: pointer;
+}
+
+.report-form__severity-option[data-selected='true'] {
+  border-color: rgb(150 196 255 / 0.65);
+  background: rgb(30 52 88 / 0.7);
+}
+
+.report-form__severity-label {
+  color: #dce9fb;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.report-form__severity-hint {
+  width: 100%;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 10px;
+}
+
+.report-form__note,
+.problem-actions__note {
+  margin: 0;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.report-form__note--error,
+.problem-actions__note--error,
+.report-form__hint--error {
+  color: #f46068;
+}
+
+.report-form__submit,
+.problem-actions__submit {
+  border: 1px solid rgb(122 196 138 / 0.5);
+  border-radius: 6px;
+  padding: 8px 12px;
+  background: rgb(122 196 138 / 0.16);
+  color: #b6e8c4;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.report-form__submit:disabled,
+.problem-actions__submit:disabled {
+  border-color: rgb(150 196 255 / 0.2);
+  background: rgb(20 34 58 / 0.6);
+  color: #6c7d95;
+  cursor: not-allowed;
+}
+
+/* ---------- Acciones sobre el problema ---------- */
+
+.problem-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid rgb(150 196 255 / 0.2);
+  padding-top: 10px;
+}
+
+.problem-actions__heading {
+  margin: 0;
+  color: #b6e8c4;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.problem-actions__form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.problem-actions__label {
+  color: #a9bcd6;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.problem-actions__learning {
+  margin: 0;
+  color: #dce9fb;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.problem-actions__byline {
+  margin: 0;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 10px;
+}
+
 
 /* ---------- Regiones ---------- */
 

@@ -48,6 +48,8 @@ export interface CoordinationProblemListProps {
   /** Qué problema alimenta ahora mismo la región de detalle. */
   selectedProblemId?: string | null
   onProblemSelect?: (problemId: string) => void
+  /** Reintenta LEVEL 1 para esta misma coordinación. */
+  onRetry?: () => void
 }
 
 export function CoordinationProblemList({
@@ -57,20 +59,29 @@ export function CoordinationProblemList({
   level1,
   selectedProblemId,
   onProblemSelect,
+  onRetry,
 }: CoordinationProblemListProps) {
   const statusLabel = OPERATIONAL_STATUS_LABEL[coordination.status]
   const name = productLabel ?? identity.name
 
+  /*
+   * LA CABECERA HABLA DEL ÁREA, NO DE LO QUE ESTE USUARIO ALCANZA A VER.
+   *
+   * Con lectura completa manda LEVEL 1, que describe la lista que se tiene
+   * delante. Con lectura PARCIAL manda LEVEL 0 —el resumen autorizado—, porque
+   * presentar «1 problema activo» cuando el área tiene doce y solo uno es tuyo
+   * sería convertir un recuento restringido en el total del área.
+   */
+  const lecturaCompleta = level1.status === 'ready' && level1.scope === 'complete'
+
   const summary = buildCoordinationSummary({
-    activeProblemsCount:
-      level1.status === 'ready'
-        ? level1.problems.length
-        : coordination.activeProblemsCount,
-    criticalCount:
-      level1.status === 'ready'
-        ? level1.problems.filter((problem) => problem.severity === 'CRITICAL')
-            .length
-        : coordination.criticalCount,
+    activeProblemsCount: lecturaCompleta
+      ? level1.problems.length
+      : coordination.activeProblemsCount,
+    criticalCount: lecturaCompleta
+      ? level1.problems.filter((problem) => problem.severity === 'CRITICAL')
+          .length
+      : coordination.criticalCount,
     affectedCoordinationCount: coordination.affectedCoordinationCount,
   })
 
@@ -80,9 +91,11 @@ export function CoordinationProblemList({
     <section
       className="coordination-panel coordination-panel--region"
       data-testid="coordination-problem-list"
+      data-tour="coordination-problems"
       data-code={coordination.code}
       data-status={coordination.status}
       data-level1={level1.status}
+      data-scope={level1.scope}
       style={
         { '--coord-rgb': hexToRgbChannels(identity.color) } as CSSProperties
       }
@@ -125,24 +138,58 @@ export function CoordinationProblemList({
         </div>
       ) : null}
 
+      {/*
+        ERROR DE CARGA. Lleva su propio reintento: no saber si hay problemas no
+        es lo mismo que saber que no los hay, y el usuario debe poder
+        distinguirlo y volver a intentarlo sin recargar la pantalla.
+      */}
       {level1.status === 'error' && (
-        <p
+        <div
           className="coordination-panel__notice"
           data-testid="coordination-panel-error"
           role="alert"
         >
-          No pudimos cargar los problemas de esta coordinación.
-        </p>
+          <p>No pudimos cargar los problemas de esta coordinación.</p>
+          {onRetry && (
+            <button
+              type="button"
+              className="coordination-panel__retry"
+              data-testid="coordination-panel-retry"
+              onClick={onRetry}
+            >
+              Reintentar
+            </button>
+          )}
+        </div>
       )}
 
       {level1.status === 'ready' &&
         (level1.problems.length === 0 ? (
-          <p
-            className="coordination-panel__empty"
-            data-testid="coordination-panel-empty"
-          >
-            Todo bajo control
-          </p>
+          /*
+           * VACÍO, PERO ¿VACÍO DE QUÉ?
+           *
+           * Con lectura COMPLETA, cero resultados significa que el área no tiene
+           * problemas activos. Con lectura PARCIAL solo significa que no hay
+           * ninguno que este usuario pueda ver, y decir «todo bajo control» sería
+           * afirmar algo que nadie ha comprobado: el estado del área lo da el
+           * resumen autorizado, y puede ser CRÍTICO mientras esta lista está
+           * vacía. El alcance lo declara el servidor; aquí solo se obedece.
+           */
+          level1.scope === 'own-only' ? (
+            <p
+              className="coordination-panel__empty"
+              data-testid="coordination-panel-empty-restricted"
+            >
+              No hay problemas activos visibles para tu usuario
+            </p>
+          ) : (
+            <p
+              className="coordination-panel__empty"
+              data-testid="coordination-panel-empty"
+            >
+              Sin problemas activos
+            </p>
+          )
         ) : (
           <div
             className="coordination-panel__problems"

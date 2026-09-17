@@ -197,19 +197,26 @@ async function installRoleExperience(page: Page, roleCode: RoleCode) {
   await installImpactNetworkApiMocks(page)
 }
 
-test('el coordinador aterriza en su coordinación sin mostrar Dirección', async ({
-  page,
-}) => {
+test('el coordinador aterriza en el Centro Operacional', async ({ page }) => {
+  /*
+   * VERDAD NUEVA (fase 2.1). Antes aterrizaba en la red de impacto con su
+   * coordinación preseleccionada. Ahora llega al Centro Operacional, que es
+   * donde reporta y donde resuelve —la única pantalla con esa acción— y a la
+   * que hasta ahora solo se entraba escribiendo la URL.
+   *
+   * Se conserva lo que esta prueba protegía: que el coordinador entre a SU
+   * puesto de trabajo y no a una lectura de Dirección que no le corresponde.
+   */
   await installRoleExperience(page, 'COORDINADOR')
   await page.goto('/')
 
-  await expect(page).toHaveURL(/\/red-impacto\?coordination=coord-ingenierias$/)
-  await expect(
-    page.locator('.operational-context-panel[data-level="coordination"]'),
-  ).toBeVisible()
-  await expect(
-    page.locator('.organizational-scene__island--selected'),
-  ).toHaveAttribute('data-coordination-id', 'coord-ingenierias')
+  await expect(page).toHaveURL(/\/centro-operacional$/)
+  await expect(page.getByTestId('operational-shell')).toBeVisible()
+
+  // Su puesto, no una consola ejecutiva: «Mis reportes» y la acción de
+  // reportar están presentes desde el primer momento.
+  await expect(page.getByTestId('my-reports')).toBeVisible()
+  await expect(page.getByTestId('report-problem-button')).toBeVisible()
 })
 
 test('el analista aterriza primero en Red de impacto', async ({

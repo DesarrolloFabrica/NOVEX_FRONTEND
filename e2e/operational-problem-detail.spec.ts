@@ -362,10 +362,18 @@ function callsTo(requested: readonly string[], fragment: string): string[] {
 }
 
 /** Peticiones de detalle inicial: la situación concreta y su análisis. */
+/**
+ * Peticiones de LEVEL 2: el detalle de UN problema y su análisis.
+ *
+ * Se excluye `/situations/categories`, que desde la fase 2 pide el formulario
+ * del panel derecho una sola vez al montar y no tiene nada que ver con abrir un
+ * problema. El presupuesto que esta prueba vigila —dos peticiones al abrir,
+ * cero al volver— es el mismo.
+ */
 function detailCalls(requested: readonly string[]): string[] {
   return requested.filter(
-    (entry) =>
-      /\/situations\/[^/?]+(\?|$)/.test(entry) || entry.endsWith('/analysis'),
+    (path) =>
+      path.includes('/situations/') && !path.includes('/situations/categories'),
   )
 }
 
@@ -381,8 +389,8 @@ async function measureDetail(page: Page, label: string) {
     return box
   }
 
-  const region = (await boxOf('[data-testid="shell-region-problem-detail"]'))!
-  const listRegion = (await boxOf('[data-testid="shell-region-problem-list"]'))!
+  const region = (await boxOf('[data-testid="shell-region-action"]'))!
+  const listRegion = (await boxOf('[data-testid="shell-region-coordination-problems"]'))!
   const stage = (await boxOf('[data-testid="shell-stage"]'))!
   const top = (await boxOf('[data-testid="shell-top"]'))!
   const detail = await boxOf('[data-testid="problem-detail"]')
@@ -487,7 +495,7 @@ test.describe('detalle persistente del problema · 1440x900', () => {
     // Y vive en su región del shell, no flotando sobre la escena.
     await expect(
       page.locator(
-        '[data-testid="shell-region-problem-detail"] [data-testid="problem-detail"]',
+        '[data-testid="shell-region-action"] [data-testid="problem-detail"]',
       ),
     ).toHaveCount(1)
 
@@ -708,7 +716,7 @@ test.describe('detalle persistente del problema · 1440x900', () => {
     await expect(page.getByTestId('detail-error')).toBeVisible()
     await expect(
       page.locator(
-        '[data-testid="shell-region-problem-detail"] [data-testid="detail-error"]',
+        '[data-testid="shell-region-action"] [data-testid="detail-error"]',
       ),
     ).toHaveCount(1)
     await expect(page.locator('[role="dialog"]')).toHaveCount(0)
@@ -782,14 +790,21 @@ test.describe('detalle persistente del problema · 1440x900', () => {
       page.getByTestId('operational-cards-experience'),
     ).toHaveAttribute('data-level0', 'ready', { timeout: 60_000 })
 
-    const detailRegion = page.getByTestId('shell-region-problem-detail')
+    const detailRegion = page.getByTestId('shell-region-action')
 
-    // A · GLOBAL: las dos regiones invitan, ninguna afirma.
+    /*
+     * A · GLOBAL: las dos regiones invitan, ninguna afirma.
+     *
+     * El panel derecho dejó de ser la región «Detalle del problema» y pasó a
+     * ser el sitio donde se OPERA, así que en reposo invita a las dos cosas que
+     * se pueden hacer. Lo que esta prueba protege sigue igual: sin selección no
+     * hay detalle, solo un marcador.
+     */
     await expect(detailRegion).toBeVisible()
-    await expect(detailRegion).toContainText('Detalle del problema')
-    await expect(detailRegion).toContainText('Seleccione un problema')
+    await expect(detailRegion).toContainText('Reportar o consultar')
+    await expect(detailRegion).toContainText('Seleccione una coordinación')
     await expect(page.getByTestId('problem-detail')).toHaveCount(0)
-    await expect(page.getByTestId('shell-region-problem-list')).toContainText(
+    await expect(page.getByTestId('shell-region-coordination-problems')).toContainText(
       'Seleccione una coordinación',
     )
     // El marcador no puede parecer un control.
@@ -805,7 +820,7 @@ test.describe('detalle persistente del problema · 1440x900', () => {
     // B · con coordinación observada, el detalle sigue esperando.
     await page.locator(`${CARD}[data-code="coord-b2b"]`).click()
     await expect(page.getByTestId('problem-row')).toHaveCount(4)
-    await expect(detailRegion).toContainText('Seleccione un problema')
+    await expect(detailRegion).toContainText('Elija un problema de la lista')
     await expect(page.getByTestId('problem-detail')).toHaveCount(0)
 
     await page.screenshot({
@@ -843,12 +858,12 @@ test.describe('detalle persistente del problema · 1440x900', () => {
 
     await page.getByTestId('problem-row').first().click()
 
-    // Ni un fotograma de «Seleccione un problema» con la carga ya lanzada: la
+    // Ni un fotograma de «Elija un problema de la lista» con la carga ya lanzada: la
     // región pasa directamente a decir que está trayendo el detalle.
     await expect(page.getByTestId('detail-loading')).toBeVisible()
     await expect(
-      page.getByTestId('shell-region-problem-detail'),
-    ).not.toContainText('Seleccione un problema')
+      page.getByTestId('shell-region-action'),
+    ).not.toContainText('Elija un problema de la lista')
     await expect(page.getByTestId('problem-detail')).toHaveAttribute(
       'data-level2',
       'loading',
@@ -890,9 +905,11 @@ test.describe('detalle persistente del problema · 1440x900', () => {
 
     // El detalle de la coordinación anterior NO puede sobrevivir al cambio.
     await expect(page.getByTestId('problem-detail')).toHaveCount(0)
+    // Con coordinación seleccionada, el panel invita a elegir un problema de
+    // ESA lista o a reportar uno nuevo en ella.
     await expect(
-      page.getByTestId('shell-region-problem-detail'),
-    ).toContainText('Seleccione un problema')
+      page.getByTestId('shell-region-action'),
+    ).toContainText('Elija un problema de la lista')
 
     await page.screenshot({
       path: testInfo.outputPath('f3-5-coordination-switch-1440x900.png'),
@@ -911,10 +928,11 @@ test.describe('detalle persistente del problema · 1440x900', () => {
     await page.getByTestId('breadcrumb-direction').click()
 
     await expect(page.getByTestId('problem-detail')).toHaveCount(0)
+    // Sin coordinación, el panel vuelve a invitar a elegir una carta.
     await expect(
-      page.getByTestId('shell-region-problem-detail'),
-    ).toContainText('Seleccione un problema')
-    await expect(page.getByTestId('shell-region-problem-list')).toContainText(
+      page.getByTestId('shell-region-action'),
+    ).toContainText('Seleccione una coordinación')
+    await expect(page.getByTestId('shell-region-coordination-problems')).toContainText(
       'Seleccione una coordinación',
     )
     await expect(page.locator(`${CARD}`)).toHaveCount(9)

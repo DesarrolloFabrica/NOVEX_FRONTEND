@@ -115,7 +115,7 @@ describe('fetchCoordinationProblems · resultado', () => {
       ),
     )
 
-    const problems = await fetchCoordinationProblems(COORDINATION_UUID)
+    const { problems } = await fetchCoordinationProblems(COORDINATION_UUID)
 
     expect(problems.map((item) => item.id)).toEqual(['critica', 'alta', 'baja'])
   })
@@ -133,7 +133,7 @@ describe('fetchCoordinationProblems · resultado', () => {
       ),
     )
 
-    const problems = await fetchCoordinationProblems(COORDINATION_UUID)
+    const { problems } = await fetchCoordinationProblems(COORDINATION_UUID)
 
     expect(problems.map((item) => item.id)).toEqual(['activa'])
   })
@@ -156,7 +156,10 @@ describe('fetchCoordinationProblems · resultado', () => {
       ),
     )
 
-    const [problem] = await fetchCoordinationProblems(COORDINATION_UUID)
+    const { problems: soloUno } = await fetchCoordinationProblems(
+      COORDINATION_UUID,
+    )
+    const [problem] = soloUno
 
     expect(Object.keys(problem).sort()).toEqual([
       'affectedCoordinationCount',
@@ -172,8 +175,10 @@ describe('fetchCoordinationProblems · resultado', () => {
 
   it('una coordinación sin problemas activos devuelve lista vacía', async () => {
     fetchSituations.mockResolvedValue(page([]))
+    // El resultado pasó a llevar el ALCANCE junto a la lista: una lista vacía
+    // significa cosas distintas según con qué permiso se leyó.
     await expect(fetchCoordinationProblems(COORDINATION_UUID)).resolves.toEqual(
-      [],
+      { problems: [], scope: 'complete' },
     )
   })
 })

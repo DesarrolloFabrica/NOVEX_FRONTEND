@@ -66,6 +66,23 @@ export interface ProblemDetail {
   /** Null cuando la situación no tiene análisis IA (ocurre en ~20 %). */
   impact: ProblemImpact | null
   intelligence: ProblemIntelligence | null
+  /** Coordinación RESPONSABLE. `null` es «Sin coordinación», no un hueco. */
+  coordinationCode: string | null
+  /** Autor del reporte, distinto de quien lo resuelve. */
+  createdByUserName: string | null
+  /**
+   * Decisión del BACKEND sobre si este usuario puede resolver ESTE problema.
+   * La interfaz solo la obedece; no la recalcula ni la deduce del rol.
+   */
+  canResolve: boolean
+  /** Aprendizaje y datos de resolución, si existen. */
+  resolution: ProblemResolution | null
+}
+
+export interface ProblemResolution {
+  learning: string
+  resolvedByUserName: string
+  resolvedAt: string | null
 }
 
 /** Estado de una sección que necesita su propia petición. */

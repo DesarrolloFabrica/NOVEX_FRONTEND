@@ -8,7 +8,9 @@ import {
   NOVEX_BETA_HINT,
   NOVEX_BETA_LABEL,
 } from '@/shared/constants/platformStatus'
-import { EOC_SUB_NAV_ITEMS } from '@/modules/executive-operations-center/constants/navigation'
+import { visibleSubNavItems } from '@/modules/executive-operations-center/constants/navigation'
+import { useAuth } from '@/modules/auth/hooks/useAuth'
+import { normalizeRoleCode } from '@/modules/auth/utils/roleExperience'
 import { EXECUTIVE_OPERATIONS_HOME } from '@/modules/executive-operations-center/constants/routes'
 import '@/modules/executive-operations-center/styles/executive-chrome.css'
 
@@ -46,6 +48,14 @@ export function ExecutiveOperationsChrome({
   help,
   helpTitle,
 }: ExecutiveOperationsChromeProps) {
+  /*
+   * Solo las secciones que este rol puede abrir de verdad. El coordinador ve
+   * «Inicio» y nada más: las otras tres tienen guarda de `EXECUTIVE_ROLES` y lo
+   * habrían devuelto a su landing en cuanto pulsara.
+   */
+  const { user } = useAuth()
+  const secciones = visibleSubNavItems(normalizeRoleCode(user?.roleCode))
+
   return (
     <header className="eoc-chrome" data-testid="eoc-chrome">
       <div className="eoc-chrome__brand">
@@ -73,7 +83,7 @@ export function ExecutiveOperationsChrome({
         className="eoc-subnav eoc-chrome__sections"
         aria-label="Secciones del centro operacional"
       >
-        {EOC_SUB_NAV_ITEMS.map((item) => (
+        {secciones.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}

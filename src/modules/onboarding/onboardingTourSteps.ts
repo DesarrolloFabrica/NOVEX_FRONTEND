@@ -1,4 +1,5 @@
 import type { NovexRoleCode } from '@/modules/auth/utils/roleExperience'
+import { EXECUTIVE_OPERATIONS_HOME } from '@/modules/auth/utils/roleExperience'
 
 export interface OnboardingTourStep {
   id: string
@@ -232,6 +233,100 @@ const EXECUTIVE_FLOW: OnboardingTourStep[] = [
   },
 ]
 
+/**
+ * RECORRIDO DEL COORDINADOR sobre la experiencia ACTUAL.
+ *
+ * El flujo anterior (`OPERATIONAL_FLOW`) paseaba por `/red-impacto`, el
+ * asistente de captura de `/situaciones/nueva` y la cola de `/gestion`. Esas
+ * pantallas siguen existiendo, pero ya no son donde el coordinador trabaja: su
+ * jornada ocurre entera en el Centro Operacional, y es el único rol que puede
+ * SOLUCIONAR un problema.
+ *
+ * Por eso el recorrido no navega: los seis pasos ocurren en la MISMA ruta y
+ * señalan las regiones reales. Ninguno exige crear ni cerrar un problema de
+ * verdad —`advanceOnTarget` queda fuera a propósito—, para que conocer la
+ * pantalla no obligue a ensuciar la operación con un caso de prueba.
+ */
+const OPERATIONAL_SHELL_FLOW: OnboardingTourStep[] = [
+  {
+    id: 'shell-intro',
+    route: EXECUTIVE_OPERATIONS_HOME,
+    target: '[data-tour="operational-shell"]',
+    placement: 'center',
+    highlightTarget: false,
+    eyebrow: 'Centro operacional',
+    title: 'Su jornada ocurre en esta pantalla',
+    description:
+      'Aquí ve el estado de las coordinaciones, reporta problemas y resuelve los de su área, sin cambiar de vista.',
+    expectation: 'Todo lo que necesita está a la vista, sin capas encima.',
+  },
+  {
+    id: 'shell-deck',
+    route: EXECUTIVE_OPERATIONS_HOME,
+    target: '[data-tour="operational-deck"]',
+    eyebrow: 'Coordinaciones',
+    title: 'Cada carta es una coordinación',
+    description:
+      'Su color y su etiqueta indican el estado operacional. Pulse una para observarla; su posición no cambia nunca.',
+    expectation: 'Seleccionar una carta actualiza la lista del centro.',
+  },
+  {
+    id: 'shell-coordination-problems',
+    route: EXECUTIVE_OPERATIONS_HOME,
+    target: '[data-tour="coordination-problems"]',
+    eyebrow: 'Problemas del área',
+    title: 'Lo que ocurre en la coordinación observada',
+    description:
+      'La lista se ordena por criticidad. Si solo tiene acceso a parte de los problemas, la pantalla se lo advierte.',
+    expectation: 'Al elegir un problema se abre su detalle a la derecha.',
+  },
+  {
+    id: 'shell-my-reports',
+    route: EXECUTIVE_OPERATIONS_HOME,
+    target: '[data-tour="my-reports"]',
+    eyebrow: 'Mis reportes',
+    title: 'Lo que usted ha reportado, esté donde esté',
+    description:
+      'Esta lista no depende de la carta seleccionada: reúne sus reportes de cualquier coordinación, activos y solucionados.',
+    expectation: 'Abrir uno lleva la pantalla a su coordinación responsable.',
+  },
+  {
+    id: 'shell-report',
+    route: EXECUTIVE_OPERATIONS_HOME,
+    target: '[data-tour="report-problem"]',
+    eyebrow: 'Reportar',
+    title: 'Registre un problema en cualquier coordinación',
+    description:
+      'El formulario aparece a la derecha y muestra siempre a qué área quedará atribuido. Usted elige la severidad.',
+    expectation: 'Se registra en la coordinación que tenga seleccionada.',
+  },
+  {
+    id: 'shell-resolve',
+    route: EXECUTIVE_OPERATIONS_HOME,
+    target: '[data-tour="action-panel"]',
+    placement: 'left',
+    eyebrow: 'Resolver',
+    title: 'Cierre los problemas de su área con un aprendizaje',
+    description:
+      'En el detalle de un problema de la coordinación que usted coordina aparecen el campo de aprendizaje y el botón «Problema solucionado».',
+    expectation:
+      'Solo el coordinador responsable puede resolver; en los demás casos el detalle se consulta.',
+  },
+  {
+    id: 'shell-complete',
+    route: EXECUTIVE_OPERATIONS_HOME,
+    target: '[data-tour="operational-shell"]',
+    placement: 'center',
+    highlightTarget: false,
+    eyebrow: 'Recorrido completado',
+    title: 'Ya puede operar el Centro Operacional',
+    description:
+      'Observar coordinaciones, consultar problemas, reportar y resolver con aprendizaje.',
+    expectation:
+      'Puede volver a ver este tutorial desde el menú de usuario cuando lo necesite.',
+  },
+]
+
 const ADMIN_FLOW: OnboardingTourStep[] = []
 
 export function getOnboardingSteps(role: NovexRoleCode): OnboardingTourStep[] {
@@ -240,5 +335,13 @@ export function getOnboardingSteps(role: NovexRoleCode): OnboardingTourStep[] {
   if (role === 'DIRECTOR') return [SHARED_INTRO, ...EXECUTIVE_FLOW]
   if (role === 'ANALISTA')
     return [SHARED_INTRO, ...EXECUTIVE_FLOW.slice(0, 2), ...OPERATIONAL_FLOW]
-  return [{ ...SHARED_INTRO, route: '/red-impacto' }, ...OPERATIONAL_FLOW]
+  /*
+   * COORDINADOR. Recorre el Centro Operacional, que es su landing y su puesto
+   * de trabajo. El intro comparte esa ruta para que el recorrido no empiece
+   * moviéndolo a una pantalla que ya no usa.
+   */
+  return [
+    { ...SHARED_INTRO, route: EXECUTIVE_OPERATIONS_HOME },
+    ...OPERATIONAL_SHELL_FLOW,
+  ]
 }

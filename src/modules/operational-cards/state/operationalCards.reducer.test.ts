@@ -75,6 +75,8 @@ describe('operationalCardsReducer · LEVEL 0', () => {
         coordinationCode: null,
         problems: [],
         errorMessage: null,
+        // Sin lista todavía no hay restricción que declarar.
+        scope: 'complete',
       },
       problemsByCoordination: {},
       selectedProblemId: null,
@@ -91,6 +93,29 @@ describe('operationalCardsReducer · LEVEL 0', () => {
         expanded: [],
       },
       detailByProblem: {},
+      // Ramas de la fase 2. El arranque las declara VACÍAS a propósito: ni
+      // «Mis reportes» ni el panel derecho inventan contenido antes de pedirlo.
+      myReports: {
+        status: 'idle',
+        items: [],
+        total: 0,
+        page: 0,
+        loadingMore: false,
+        errorMessage: null,
+      },
+      // El panel abre en reposo: seleccionar una carta NO abre el formulario.
+      panelMode: 'idle',
+      reportDrafts: {},
+      learningDrafts: {},
+      submission: {
+        kind: null,
+        status: 'idle',
+        targetKey: null,
+        errorMessage: null,
+        confirmedButStale: false,
+      },
+      dataGeneration: 0,
+      pendingCharacterReaction: null,
     })
   })
 
@@ -137,6 +162,7 @@ describe('operationalCardsReducer · selección', () => {
       coordinationCode: 'coord-ingenierias',
       problems: [],
       errorMessage: null,
+      scope: 'complete',
     })
   })
 
@@ -204,6 +230,8 @@ describe('operationalCardsReducer · LEVEL 1', () => {
         type: 'LOAD_PROBLEMS_SUCCESS',
         code: 'coord-ingenierias',
         problems: [problem('a'), problem('b')],
+        scope: 'complete',
+        generation: 0,
       },
     )
     expect(state.level1.status).toBe('ready')
@@ -238,13 +266,24 @@ describe('operationalCardsReducer · LEVEL 1', () => {
         type: 'LOAD_PROBLEMS_SUCCESS',
         code: 'coord-ingenierias',
         problems: [problem('vieja')],
+        scope: 'complete',
+        generation: 0,
       },
     )
     expect(state.selectedCoordinationCode).toBe('coord-negocios')
     expect(state.level1.coordinationCode).toBe('coord-negocios')
     expect(state.level1.problems).toEqual([])
-    // El trabajo no se tira: queda en caché para cuando se vuelva.
-    expect(state.problemsByCoordination['coord-ingenierias']).toHaveLength(1)
+    /*
+     * El trabajo no se tira: queda en caché para cuando se vuelva. La entrada
+     * guarda ahora la lista Y el alcance con el que se leyó, para que volver a
+     * la carta recupere también su mensaje.
+     */
+    expect(
+      state.problemsByCoordination['coord-ingenierias']?.problems,
+    ).toHaveLength(1)
+    expect(state.problemsByCoordination['coord-ingenierias']?.scope).toBe(
+      'complete',
+    )
   })
 
   it('descarta un error tardío de la coordinación anterior', () => {
@@ -271,6 +310,8 @@ describe('operationalCardsReducer · LEVEL 1', () => {
         type: 'LOAD_PROBLEMS_SUCCESS',
         code: 'coord-ingenierias',
         problems: [problem('a')],
+        scope: 'complete',
+        generation: 0,
       },
       { type: 'SELECT_COORDINATION', code: 'coord-negocios' },
       { type: 'SELECT_COORDINATION', code: 'coord-ingenierias' },
@@ -285,7 +326,13 @@ describe('operationalCardsReducer · LEVEL 1', () => {
       READY,
       { type: 'SELECT_COORDINATION', code: 'coord-general' },
       { type: 'LOAD_PROBLEMS', code: 'coord-general' },
-      { type: 'LOAD_PROBLEMS_SUCCESS', code: 'coord-general', problems: [] },
+      {
+        type: 'LOAD_PROBLEMS_SUCCESS',
+        code: 'coord-general',
+        problems: [],
+        scope: 'complete',
+        generation: 0,
+      },
     )
     expect(state.level1.status).toBe('ready')
     expect(state.level1.problems).toEqual([])
