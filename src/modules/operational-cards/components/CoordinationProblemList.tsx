@@ -6,6 +6,7 @@ import type { CoordinationVisualIdentity } from '@/modules/operational-cards/dat
 import { OPERATIONAL_STATUS_LABEL } from '@/modules/operational-cards/data/operationalStatusLabel'
 import type { CoordinationOverview } from '@/modules/operational-cards/types/operational-overview.contract'
 import type { OperationalCardsLevel1State } from '@/modules/operational-cards/types/operational-cards.state'
+import { resolveTicketTheme } from '@/modules/operational-cards/experience/ticketThemes'
 // La superficie de la lista vive en la hoja de la baraja, que es donde la
 // estrenó el panel: se importa aquí para no depender de que otro componente
 // la haya cargado antes.
@@ -88,15 +89,14 @@ export function CoordinationProblemList({
   const headingId = `coordination-list-title-${coordination.code}`
 
   /*
-   * PILOTO VISUAL · ticket de Fábrica.
-   * Solo cuando esta lista es la de `coord-fabrica-contenidos` (y el shell ya
-   * marcó el tema). Reordena la jerarquía tipográfica del encabezado sin
-   * tocar la lógica de LEVEL 1 ni los mensajes de vacío / alcance.
+   * Tipografía ticket (fases 2–4): Fábrica y Saber Pro comparten jerarquía
+   * «Problemas de la coordinación» + contexto de producto. Sin tema → título
+   * con el nombre del área. No altera LEVEL 1 ni vacíos.
    */
-  const ticketPilotFabrica = coordination.code === 'coord-fabrica-contenidos'
-  const titleText = ticketPilotFabrica
-    ? (productLabel ?? 'Fábrica de Contenidos')
-    : name
+  const ticketThemeId = resolveTicketTheme(coordination.code)
+  const ticketPilot = Boolean(ticketThemeId)
+  const titleText = ticketPilot ? 'Problemas de la coordinación' : name
+  const contextLabel = ticketPilot ? (productLabel ?? name) : null
 
   const bodyContent = (
     <>
@@ -206,21 +206,19 @@ export function CoordinationProblemList({
   const headerBlock = (
     <header className="coordination-panel__header">
       <div className="coordination-panel__heading">
-        {ticketPilotFabrica ? (
-          <p className="coordination-panel__eyebrow">
-            Problemas de la coordinación
-          </p>
-        ) : null}
         <h3
           id={headingId}
           className={
-            ticketPilotFabrica
+            ticketPilot
               ? 'coordination-panel__name coordination-panel__name--circus'
               : 'coordination-panel__name'
           }
         >
           {titleText}
         </h3>
+        {ticketPilot && contextLabel ? (
+          <p className="coordination-panel__eyebrow">{contextLabel}</p>
+        ) : null}
         {summary && (
           <p
             className="coordination-panel__summary"
@@ -247,7 +245,7 @@ export function CoordinationProblemList({
       className={[
         'coordination-panel',
         'coordination-panel--region',
-        ticketPilotFabrica ? 'coordination-panel--ticket-pilot-fabrica' : '',
+        ticketPilot ? 'coordination-panel--ticket-pilot' : '',
       ]
         .filter(Boolean)
         .join(' ')}
@@ -257,17 +255,17 @@ export function CoordinationProblemList({
       data-status={coordination.status}
       data-level1={level1.status}
       data-scope={level1.scope}
-      data-ticket-pilot={ticketPilotFabrica ? 'fabrica' : undefined}
+      data-ticket-pilot={ticketThemeId}
       style={
         { '--coord-rgb': hexToRgbChannels(identity.color) } as CSSProperties
       }
       aria-labelledby={headingId}
     >
-      {ticketPilotFabrica ? (
+      {ticketPilot ? (
         <>
           {/*
-            Talón del ticket: título entre adornos + indicador de integridad.
-            El cuerpo empieza debajo de la perforación (CSS del piloto).
+            Cabecera compacta del papel enmarcado (no es el talón perforado
+            del piloto anterior). El cuerpo con scroll empieza debajo.
           */}
           <div className="coordination-panel__stub">{headerBlock}</div>
           <div className="coordination-panel__body">{bodyContent}</div>
