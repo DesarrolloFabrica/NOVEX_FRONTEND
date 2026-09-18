@@ -40,22 +40,19 @@ export interface CoordinationCardProps {
    * Nombre de PRODUCTO, cuando difiere del nombre técnico de la fila.
    *
    * Existe por el caso Servicio: el nodo de producto se llama «Servicio» y se
-   * apoya en `coord-homologaciones`, cuyo arte lleva «HOMOLOGACIONES» rotulado.
-   * Si se dejara la presentación ilustrada normal —que oculta el nombre a la
-   * vista porque el arte ya lo rotula—, el usuario leería solo el rótulo del
-   * PNG y el nombre de producto no aparecería en ninguna parte. Cuando hay
-   * etiqueta de producto distinta, el nombre funcional se muestra: el catálogo
-   * manda sobre el arte, y el arte es presentación.
+   * apoya en `coord-homologaciones`. El `aria-label` y el texto del DOM usan
+   * esta etiqueta; la cara ilustrada (`servicio.png` vía `artCode`) ya rotula
+   * «SERVICIO», así que el nombre funcional se oculta a la vista como en el
+   * resto de cartas ilustradas.
    */
   productLabel?: string
   /**
    * Code con el que se resuelve la CARA ilustrada, si difiere del propio.
    *
    * Por defecto es `identity.code`. El nodo de producto «Servicio» lo usa para
-   * NO pintar `Homologaciones.png`: apunta a un code sin cara ilustrada, con lo
-   * que la carta cae sola a la presentación legacy —isla, icono y nombre
-   * visible—, que es justo lo que se quiere. El `code` técnico no cambia:
-   * sigue siendo el de la selección, el `data-code` y el estado.
+   * pintar `servicio.png` (`coord-servicios`) en lugar de `Homologaciones.png`.
+   * El `code` técnico no cambia: sigue siendo el de la selección, el
+   * `data-code` y el estado.
    */
   artCode?: string
   /** Subordinaciones declaradas. Solo alimenta el nombre accesible. */
@@ -145,8 +142,7 @@ export function CoordinationCard({
 
       {/* El arte ya lleva el nombre rotulado, así que repetirlo debajo duplica.
           Se oculta a la vista, no al DOM: sigue siendo el nombre funcional y el
-          que queda si el arte no carga. Sin arte, se muestra — y ese es el
-          camino por el que el nodo «Servicio» recupera su nombre visible. */}
+          que queda si el arte no carga. Sin arte, se muestra. */}
       <span
         className={
           illustrated

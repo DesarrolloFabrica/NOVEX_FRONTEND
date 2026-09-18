@@ -201,8 +201,8 @@ async function arcWidth(page: Page): Promise<number> {
  * geometría no depende de ello —el hueco de la cara lo fija el CSS—, pero la
  * evidencia visual sí, y una captura sin arte no permite juzgar la composición.
  *
- * `Servicio` no tiene cara propia y usa la presentación legacy, así que no
- * aparece en esta lista: se espera a las que existen, no a un número fijo.
+ * `Servicio` ya tiene cara propia (`servicio.png`); se espera a todas las
+ * caras presentes en el DOM, no a un número fijo.
  */
 async function waitForCardArt(page: Page) {
   await page.waitForFunction(

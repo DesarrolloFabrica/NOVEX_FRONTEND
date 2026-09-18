@@ -300,25 +300,24 @@ describe('CoordinationTable · Servicio', () => {
     expect(html).not.toContain('/CoordCards/Homologaciones.png')
   })
 
-  it('usa presentación LEGACY con la identidad de Servicios', () => {
+  it('pinta la cara propia de Servicio', () => {
     const html = markup(coordinations())
-    expect(html).toContain('/islas/CoordServicios.webp')
-    expect(html).toContain('/iconos/display/IconoServicios.jpg')
-    // Ocho cartas ilustradas; Servicio es la única en legacy.
-    expect(countOf(html, 'coordination-card__face')).toBe(8)
-    expect(countOf(html, 'coordination-card__island')).toBe(1)
+    expect(html).toContain('/CoordCards/servicio.png')
+    // Nueve nodos principales, todos ilustrados.
+    expect(countOf(html, 'coordination-card__face')).toBe(9)
+    expect(countOf(html, 'coordination-card__island')).toBe(0)
   })
 
-  it('y por eso su nombre queda visible, sin flags ni excepciones', () => {
-    // La presentación legacy ya muestra el nombre: no hace falta forzar nada.
+  it('y por eso su nombre queda oculto a la vista, como el resto', () => {
     const html = markup(coordinations())
-    expect(countOf(html, 'class="coordination-card__name"')).toBe(1)
-    expect(countOf(html, 'coordination-card__name--hidden')).toBe(8)
+    expect(countOf(html, 'class="coordination-card__name"')).toBe(0)
+    expect(countOf(html, 'coordination-card__name--hidden')).toBe(9)
   })
 
   it('el arte prestado NO cambia el code técnico', () => {
-    // Lo que se toma prestado es color, icono e isla. El `code` sigue siendo el
-    // de la fila que aporta estado y problemas, porque es la clave de selección.
+    // Lo que se toma prestado es color, icono, isla y cara. El `code` sigue
+    // siendo el de la fila que aporta estado y problemas, porque es la clave
+    // de selección.
     const html = markup(coordinations())
     expect(html).toContain('data-code="coord-homologaciones"')
     expect(cardAttributes(html, 'data-code')).not.toContain('coord-servicios')
@@ -630,27 +629,19 @@ describe('CoordinationCard · identidad visual compartida', () => {
     )
   }
 
-  it('Servicios NO pinta el arte de Homologaciones', () => {
+  it('Servicios pinta su cara propia, no la de Homologaciones', () => {
     const servicios = cardOf('coord-servicios', 'ESTABLE')
 
+    expect(servicios).toContain('/CoordCards/servicio.png')
+    expect(servicios).toContain('coordination-card__face')
     expect(servicios).not.toContain('/CoordCards/Homologaciones.png')
-    expect(servicios).not.toContain('/CoordCards/')
-    expect(servicios).not.toContain('coordination-card__face')
+    expect(servicios).not.toContain('coordination-card__island')
   })
 
-  it('Servicios cae a la presentación legacy, con arte SUYO', () => {
+  it('con cara propia, el nombre de Servicios queda oculto a la vista', () => {
     const servicios = cardOf('coord-servicios', 'ESTABLE')
 
-    expect(servicios).toContain('/islas/CoordServicios.webp')
-    expect(servicios).toContain('/iconos/display/IconoServicios.jpg')
-    expect(servicios).toContain('coordination-card__island')
-  })
-
-  it('sin arte, el nombre de Servicios se ve: no queda carta anónima', () => {
-    const servicios = cardOf('coord-servicios', 'ESTABLE')
-
-    expect(servicios).toContain('class="coordination-card__name"')
-    expect(servicios).not.toContain('coordination-card__name--hidden')
+    expect(servicios).toContain('coordination-card__name--hidden')
     expect(servicios).toContain('>Servicios<')
     // El rótulo «Homologaciones» del PNG no llega al DOM de Servicios.
     expect(servicios).not.toContain('>Homologaciones<')

@@ -256,17 +256,19 @@ test.describe('mesa en reposo · 1440x900', () => {
     }
   })
 
-  test('Servicio no muestra el arte de Homologaciones', async ({ page }) => {
+  test('Servicio pinta su cara propia, no la de Homologaciones', async ({
+    page,
+  }) => {
     await install(page)
     await openTable(page)
 
     const servicio = page.locator(
       `${CARD}[data-code="coord-homologaciones"]`,
     )
-    await expect(servicio.locator('.coordination-card__face')).toHaveCount(0)
     await expect(
-      servicio.locator('.coordination-card__island img'),
-    ).toHaveAttribute('src', '/islas/CoordServicios.webp')
+      servicio.locator('.coordination-card__face img'),
+    ).toHaveAttribute('src', '/CoordCards/servicio.png')
+    await expect(servicio.locator('.coordination-card__island')).toHaveCount(0)
     await expect(servicio.locator('.coordination-card__name')).toHaveText(
       'Servicio',
     )

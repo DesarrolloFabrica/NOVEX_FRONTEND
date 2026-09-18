@@ -33,8 +33,8 @@ const PILL = '[data-testid="coordination-card-status"]'
 const PARENT = 'coord-operaciones-academicas'
 /** Sin subordinaciones, ilustrada y CLARA. */
 const ILLUSTRATED = 'coord-fabrica-contenidos'
-/** Sin subordinaciones, presentación legacy y OSCURA. Es el caso límite. */
-const LEGACY = 'coord-homologaciones'
+/** Sin subordinaciones, ilustrada y OSCURA (Servicio vía artCode). Caso límite. */
+const DARK = 'coord-homologaciones'
 const SIMPLE = 'coord-saber-pro'
 
 const PERMISSIONS = [
@@ -179,7 +179,7 @@ test.describe('gramática de tarjetas · 1440x900', () => {
     await install(page)
     await openTable(page)
 
-    for (const code of [ILLUSTRATED, LEGACY, PARENT]) {
+    for (const code of [ILLUSTRATED, DARK, PARENT]) {
       const state = await veil(page, code)
       expect(state.opacity, `${code} sin velo en reposo`).toBe(0)
     }
@@ -208,7 +208,7 @@ test.describe('gramática de tarjetas · 1440x900', () => {
     const state = await veil(page, ILLUSTRATED)
     expect(state.opacity).toBeGreaterThan(0.3)
     // `brightness()` es multiplicativo y castiga a cada carta en proporción a
-    // lo clara que sea. Si vuelve a aparecer, la presentación legacy se hunde.
+    // lo clara que sea. Si vuelve a aparecer, la carta oscura se hunde.
     expect(state.stackFilter).toBe('none')
   })
 
@@ -227,10 +227,10 @@ test.describe('gramática de tarjetas · 1440x900', () => {
       .toBeGreaterThan(0.3)
 
     const illustrated = await veil(page, ILLUSTRATED)
-    const legacy = await veil(page, LEGACY)
+    const dark = await veil(page, DARK)
 
-    expect(legacy.opacity).toBe(illustrated.opacity)
-    expect(legacy.zIndex).toBe(illustrated.zIndex)
+    expect(dark.opacity).toBe(illustrated.opacity)
+    expect(dark.zIndex).toBe(illustrated.zIndex)
   })
 
   test('el velo queda por DEBAJO del nombre y del estado', async ({ page }) => {
@@ -241,7 +241,7 @@ test.describe('gramática de tarjetas · 1440x900', () => {
     await openTable(page)
     await select(page, SIMPLE)
 
-    for (const code of [ILLUSTRATED, LEGACY]) {
+    for (const code of [ILLUSTRATED, DARK]) {
       const state = await veil(page, code)
       expect(Number(state.zIndex), `${code}: velo`).toBeLessThan(
         Number(state.pillZIndex),
@@ -259,24 +259,24 @@ test.describe('gramática de tarjetas · 1440x900', () => {
       page.locator(`${CARD}[data-code="${code}"] ${PILL}`)
 
     // Reposo.
-    await expect(pillOf(LEGACY)).toBeVisible()
-    const resting = await pillOf(LEGACY).textContent()
+    await expect(pillOf(DARK)).toBeVisible()
+    const resting = await pillOf(DARK).textContent()
     expect(resting?.trim()).toBeTruthy()
 
     // Hover.
-    await page.locator(`${CARD}[data-code="${LEGACY}"]`).hover()
-    await expect(pillOf(LEGACY)).toBeVisible()
+    await page.locator(`${CARD}[data-code="${DARK}"]`).hover()
+    await expect(pillOf(DARK)).toBeVisible()
 
     // Seleccionada.
-    await select(page, LEGACY)
-    await expect(pillOf(LEGACY)).toBeVisible()
-    await expect(pillOf(LEGACY)).toHaveText(resting!.trim())
+    await select(page, DARK)
+    await expect(pillOf(DARK)).toBeVisible()
+    await expect(pillOf(DARK)).toHaveText(resting!.trim())
 
     // Atenuada: sigue en pantalla y con el MISMO texto. El estado operacional
     // no depende del protagonismo de la carta.
     await select(page, SIMPLE)
-    await expect(pillOf(LEGACY)).toBeVisible()
-    await expect(pillOf(LEGACY)).toHaveText(resting!.trim())
+    await expect(pillOf(DARK)).toBeVisible()
+    await expect(pillOf(DARK)).toHaveText(resting!.trim())
   })
 
   test('señalar una carta atenuada le devuelve su presencia entera', async ({
@@ -341,7 +341,7 @@ test.describe('gramática de tarjetas · 1440x900', () => {
      * y se pulsa Tab: eso cambia la modalidad a teclado y avanza al siguiente
      * nodo, que en orden de DOM es el que interesa.
      */
-    await page.locator(`${CARD}[data-code="${LEGACY}"]`).focus()
+    await page.locator(`${CARD}[data-code="${DARK}"]`).focus()
     await page.keyboard.press('Tab')
     await expect(page.locator(`${CARD}[data-code="${ILLUSTRATED}"]`)).toBeFocused()
     await expect

@@ -411,7 +411,7 @@ for (const viewport of VIEWPORTS) {
 
         // Quién es la coordinación tiene que leerse en la carta. En las
         // ilustradas lo dice el arte, que ocupa la carta entera y ya rotula el
-        // nombre; en la legacy lo dice el texto, y ahí sigue exigiéndose ancho.
+        // nombre; si alguna cayera a legacy lo diría el texto.
         if (box.illustrated) {
           expect(box.faceWidth).toBeGreaterThan(120)
         } else {
@@ -420,8 +420,7 @@ for (const viewport of VIEWPORTS) {
       }
 
       // Los nueve nodos de producto tienen cara ilustrada: ni una carta muda.
-      // Ocho ilustradas; Servicio va en legacy hasta que tenga arte propio.
-      expect(boxes.filter((box) => box.illustrated)).toHaveLength(8)
+      expect(boxes.filter((box) => box.illustrated)).toHaveLength(9)
 
       // El personaje tiene presencia real y no invade la baraja.
       const characterBox = await page
@@ -527,8 +526,7 @@ test.describe('cara ilustrada de las cartas', () => {
     ).toBeVisible()
 
     // Los nueve nodos principales tienen cara ilustrada propia.
-    // Ocho de los nueve nodos; Servicio usa presentación legacy.
-    await expect(page.locator('.coordination-card__face')).toHaveCount(8)
+    await expect(page.locator('.coordination-card__face')).toHaveCount(9)
   })
 
   test('Servicio se lee como Servicio, y la fila legacy no se pinta', async ({
@@ -553,17 +551,19 @@ test.describe('cara ilustrada de las cartas', () => {
       /^Servicio\. Estado operacional:/,
     )
 
-    // NO pinta el arte de Homologaciones: una carta rotulada «Servicio» que
-    // muestre un PNG con «HOMOLOGACIONES» se lee como un error de identidad.
-    await expect(servicio.locator('.coordination-card__face')).toHaveCount(0)
+    // Pinta `servicio.png`, no Homologaciones: el rótulo del arte coincide
+    // con el nombre de producto.
     await expect(
-      servicio.locator('.coordination-card__island img'),
-    ).toHaveAttribute('src', '/islas/CoordServicios.webp')
+      servicio.locator('.coordination-card__face img'),
+    ).toHaveAttribute('src', '/CoordCards/servicio.png')
+    await expect(servicio.locator('.coordination-card__island')).toHaveCount(0)
 
-    // Y en presentación legacy su nombre se ve sin necesidad de excepciones.
+    // Nombre de producto en el DOM, oculto a la vista como en el resto.
     const name = servicio.locator('.coordination-card__name')
-    await expect(name).toBeVisible()
     await expect(name).toHaveText('Servicio')
+    const nameBox = await name.boundingBox()
+    expect(nameBox!.width).toBeLessThanOrEqual(2)
+    expect(nameBox!.height).toBeLessThanOrEqual(2)
   })
 
   test('si el arte no carga, la carta cae a la legacy de SU coordinación', async ({

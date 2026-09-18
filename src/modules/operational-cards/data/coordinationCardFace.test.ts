@@ -28,28 +28,29 @@ const ILLUSTRATED_CODES = [
   'coord-operaciones-academicas',
   'coord-proyeccion-social',
   'coord-saber-pro',
+  'coord-servicios',
   'coord-transversales',
 ] as const
 
 describe('coordinationCardFace · cobertura', () => {
-  it('14 coordinaciones tienen cara ilustrada', () => {
-    expect(ILLUSTRATED_CODES).toHaveLength(14)
+  it('15 coordinaciones tienen cara ilustrada', () => {
+    expect(ILLUSTRATED_CODES).toHaveLength(15)
     for (const code of ILLUSTRATED_CODES) {
       expect(resolveCoordinationCardFace(code)).not.toBeNull()
     }
   })
 
-  it('declara exactamente esos 14 codes, ni uno más', () => {
+  it('declara exactamente esos 15 codes, ni uno más', () => {
     expect([...getCoordinationCardFaceCodes()].sort()).toEqual(
       [...ILLUSTRATED_CODES].sort(),
     )
   })
 
-  it('las 14 caras son distintas: ninguna se reutiliza', () => {
+  it('las 15 caras son distintas: ninguna se reutiliza', () => {
     const faces = ILLUSTRATED_CODES.map((code) =>
       resolveCoordinationCardFace(code),
     )
-    expect(new Set(faces).size).toBe(14)
+    expect(new Set(faces).size).toBe(15)
   })
 
   it('todas las rutas apuntan a /CoordCards', () => {
@@ -66,10 +67,12 @@ describe('coordinationCardFace · cobertura', () => {
   })
 })
 
-describe('coordinationCardFace · excepción de Servicios', () => {
-  it('coord-servicios no tiene cara ilustrada', () => {
-    expect(resolveCoordinationCardFace('coord-servicios')).toBeNull()
-    expect(getCoordinationsWithoutFace()).toContain('coord-servicios')
+describe('coordinationCardFace · Servicio', () => {
+  it('coord-servicios tiene cara propia', () => {
+    expect(resolveCoordinationCardFace('coord-servicios')).toBe(
+      '/CoordCards/servicio.png',
+    )
+    expect(getCoordinationsWithoutFace()).not.toContain('coord-servicios')
   })
 
   it('coord-servicios NO usa el arte de Homologaciones', () => {
@@ -84,17 +87,8 @@ describe('coordinationCardFace · excepción de Servicios', () => {
     )
   })
 
-  it('la excepción está aislada: es la única coordinación sin cara', () => {
-    expect(getCoordinationsWithoutFace()).toHaveLength(1)
-    expect(
-      getCoordinationCardFaceCodes().length +
-        getCoordinationsWithoutFace().length,
-    ).toBe(15)
-  })
-
-  it('ninguna cara ilustrada se asigna a un code sin arte', () => {
-    for (const code of getCoordinationsWithoutFace()) {
-      expect(getCoordinationCardFaceCodes()).not.toContain(code)
-    }
+  it('ninguna coordinación queda sin cara', () => {
+    expect(getCoordinationsWithoutFace()).toHaveLength(0)
+    expect(getCoordinationCardFaceCodes()).toHaveLength(15)
   })
 })

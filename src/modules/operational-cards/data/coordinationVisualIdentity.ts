@@ -49,8 +49,8 @@ export function resolveCoordinationVisualIdentity(
  * apoya en la fila técnica `coord-homologaciones`, cuyo arte ilustrado lleva
  * «HOMOLOGACIONES» rotulado. Mostrar esa cara bajo la etiqueta «Servicio» se
  * lee como un error de identidad, así que el nodo toma prestados los assets de
- * `coord-servicios` —que existen, no se usan y sí corresponden al concepto—
- * hasta que exista arte propio.
+ * `coord-servicios` —cara `servicio.png`, color, icono e isla— que sí
+ * corresponden al concepto.
  *
  * Lo que NO cambia es el `code`: sigue siendo el técnico, porque es la clave de
  * selección, del `data-code`, de la petición de LEVEL 1 y del estado. Aquí solo

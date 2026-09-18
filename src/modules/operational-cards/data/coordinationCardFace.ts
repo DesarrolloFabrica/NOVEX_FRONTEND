@@ -16,22 +16,15 @@
 const FACE_ROOT = '/CoordCards'
 
 /**
- * EXCEPCIÓN, aislada por code y deliberadamente explícita.
+ * Codes que, por decisión documentada, se presentan sin arte ilustrado.
  *
- * `coord-servicios` no tiene cara propia. Se intentó que compartiera la de
- * `coord-homologaciones`, y la revisión visual lo rechazó: la carta mostraba
- * «HOMOLOGACIONES» en el arte y «Servicios» en el nombre funcional, lo que se
- * lee como un error de identidad y no como una agrupación. Con las dos cartas
- * en la misma banda de la baraja en reposo, además, aparecían dos flamencos
- * idénticos a tres posiciones de distancia.
- *
- * Mientras no exista arte propio, esta coordinación cae a la presentación
- * legacy —isla, icono y nombre visible—, que sigue siendo suya y no de otra.
- * No se fabrica un PNG sustituto ni se toca el backend.
+ * Vacío: las quince coordinaciones tienen cara propia. Se conserva el array
+ * (y su getter) para que un code futuro sin arte se declare aquí de forma
+ * explícita, nunca por omisión en la tabla de abajo.
  */
-const COORDINATIONS_WITHOUT_FACE: readonly string[] = ['coord-servicios']
+const COORDINATIONS_WITHOUT_FACE: readonly string[] = []
 
-/** 14 caras ilustradas; la coordinación 15 está en `COORDINATIONS_WITHOUT_FACE`. */
+/** 15 caras ilustradas; ninguna coordinación queda en `COORDINATIONS_WITHOUT_FACE`. */
 const COORDINATION_CARD_FACE: Readonly<Record<string, string>> = {
   'coord-general': 'coordinacionGeneral.png',
   'coord-b2b': 'b2b.png',
@@ -46,6 +39,7 @@ const COORDINATION_CARD_FACE: Readonly<Record<string, string>> = {
   'coord-operaciones-academicas': 'operacionAcademica.png',
   'coord-proyeccion-social': 'ProyeccionSocial.png',
   'coord-saber-pro': 'SaberPro.png',
+  'coord-servicios': 'servicio.png',
   'coord-transversales': 'Transversales.png',
 }
 

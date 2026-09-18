@@ -124,11 +124,9 @@ export const PRODUCT_TOP_LEVEL: readonly ProductNodeDeclaration[] = [
     /*
      * El arte de `coord-homologaciones` rotula «HOMOLOGACIONES» dentro del PNG,
      * y una carta que se llama «Servicio» mostrando ese rótulo se lee como un
-     * error de identidad. Hasta que exista una CoordCard propia de Servicio,
-     * este nodo usa los assets de `coord-servicios`, que existen, no los usa
-     * nadie y sí corresponden al concepto. Como ese code no tiene cara
-     * ilustrada, la carta cae sola a la presentación legacy —isla, icono y
-     * nombre visible—, que es exactamente lo que se quiere aquí.
+     * error de identidad. Este nodo toma el arte de `coord-servicios`
+     * (`servicio.png`), que sí rotula «SERVICIO» y corresponde al concepto.
+     * El `code` técnico sigue siendo Homologaciones: aporta estado y problemas.
      */
     artCode: 'coord-servicios',
   },

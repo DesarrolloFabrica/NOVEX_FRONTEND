@@ -467,7 +467,7 @@ test.describe('selección in-place de coordinación', () => {
 
     /*
      * Se recorren las cinco posiciones señaladas como de riesgo: primer nodo,
-     * nodo central, último, el mazo y el nodo de presentación legacy.
+     * nodo central, último, el mazo y el nodo Servicio (oscuro).
      *
      * Las dos composiciones observadas —simple y mazo— llevan su lectura de
      * LEVEL 1 a la MISMA región permanente, así que la afirmación es única para
