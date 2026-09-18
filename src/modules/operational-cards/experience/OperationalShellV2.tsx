@@ -24,6 +24,185 @@ import type { OperationalIntegrityStatus } from '@/modules/operational-cards/typ
 import type { CoordinationId } from '@/modules/impact-network/data/coordination-islands.config'
 import '@/styles/operational-character.css'
 import '@/styles/operational-shell.css'
+import '@/styles/operational-shell-ticket-fabrica.css'
+import '@/styles/operational-shell-ticket-fabrica-pilot.css'
+
+/**
+ * Código de catálogo de Fábrica de Contenidos (`productHierarchy` /
+ * `coordination-islands`). Solo esta selección activa la prueba visual de
+ * tickets; no se inventa otro controlador ni otra rama de estado.
+ */
+const FABRICA_CONTENIDOS_CODE = 'coord-fabrica-contenidos' as const
+
+/**
+ * Adornos de la prueba visual de Fábrica: marca de agua (foca) + ondas/burbujas
+ * CSS. Son presentacionales y quedan detrás del contenido real.
+ */
+function TicketFabricaDecor() {
+  return (
+    <>
+      <span className="ticket-fabrica-watermark" aria-hidden="true" />
+      <span
+        className="ticket-fabrica-ornament ticket-fabrica-ornament--wave"
+        aria-hidden="true"
+      />
+      <span
+        className="ticket-fabrica-ornament ticket-fabrica-ornament--bubbles"
+        aria-hidden="true"
+      />
+    </>
+  )
+}
+
+/**
+ * PILOTO · capas del ticket en «Problemas de la coordinación».
+ * Separadas del contenido: ignoran puntero y quedan ocultas a AT.
+ * Rutas canónicas bajo /assets/tickets/ (ver CSS del piloto).
+ */
+function TicketFabricaProblemsPilot() {
+  /*
+   * Silueta + banda impresa (equiv. banda roja de la referencia, en turquesa).
+   * - #ticketPilotEdge: máscara CSS de la región (papel + muescas semicirculares).
+   * - #ticketSil: path base; la banda se obtiene restando un inset interior.
+   * - Desgaste: ticket-ink-wear.svg (patrón estable) sobre banda y adornos.
+   * PNG originales intactos; la máscara solo oculta tinta, no baja opacidad.
+   */
+  const cut = '/assets/tickets/fabrica/cut'
+  const header = `${cut}/ornament-header.png`
+  /*
+   * Contorno en viewBox 400×268. Muescas = arcos A (semicírculos ~ r=10)
+   * centrados en y≈108 (alineados a --ticket-pilot-perf-y).
+   */
+  const sil =
+    'M 5 4 C 70 1.5 140 5 200 3 C 270 1 330 4.5 388 6 C 395 7 398 14 398.5 28 L 399 98 A 10 10 0 0 1 399 118 L 398.5 240 C 398 252 390 262 376 264 C 300 267 220 263 140 265 C 70 266.5 30 263 12 258 C 5 255 3.5 248 3.5 238 L 3 120 A 10 10 0 0 1 3 100 L 3.5 26 C 4 12 4.5 5.5 5 4 Z'
+
+  return (
+    <div className="ticket-pilot-fabrica" aria-hidden="true">
+      <svg
+        className="ticket-pilot-fabrica__mask-svg"
+        width="0"
+        height="0"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <defs>
+          {/* Máscara de región: objectBoundingBox para escalar con el panel. */}
+          <mask
+            id="ticketPilotEdge"
+            maskUnits="objectBoundingBox"
+            maskContentUnits="objectBoundingBox"
+          >
+            <rect width="1" height="1" fill="#000000" />
+            <path
+              fill="#ffffff"
+              d="M 0.012 0.015
+                 C 0.18 0.006 0.35 0.018 0.50 0.011
+                 C 0.68 0.004 0.82 0.016 0.97 0.022
+                 C 0.988 0.026 0.996 0.05 0.997 0.10
+                 L 0.998 0.360
+                 C 0.998 0.360 0.955 0.360 0.955 0.403
+                 C 0.955 0.445 0.998 0.445 0.998 0.445
+                 L 0.997 0.90
+                 C 0.995 0.94 0.97 0.98 0.94 0.985
+                 C 0.75 0.995 0.55 0.98 0.35 0.988
+                 C 0.18 0.995 0.08 0.98 0.03 0.96
+                 C 0.012 0.95 0.008 0.92 0.008 0.89
+                 L 0.007 0.445
+                 C 0.007 0.445 0.050 0.445 0.050 0.403
+                 C 0.050 0.360 0.007 0.360 0.007 0.360
+                 L 0.008 0.10
+                 C 0.009 0.05 0.01 0.02 0.012 0.015
+                 Z"
+            />
+          </mask>
+        </defs>
+      </svg>
+
+      <div className="ticket-pilot-fabrica__paper" />
+
+      {/*
+        Banda impresa ancha (sustituye el marco fino).
+        Sigue la silueta y las muescas; filetes interiores + máscara de desgaste.
+      */}
+      <svg
+        className="ticket-pilot-fabrica__band"
+        viewBox="0 0 400 268"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <defs>
+          <path id="ticketSil" d={sil} />
+        </defs>
+        {/*
+          Banda ancha = stroke sobre la silueta (sigue esquinas y muescas).
+          Escala 0.978 ≈ fringe de papel fuera; strokeWidth ~16 → ~8–10 px
+          en panel ~400 de ancho. Los filetes van más adentro.
+        */}
+        <use
+          href="#ticketSil"
+          className="ticket-pilot-fabrica__band-stroke"
+          fill="none"
+          stroke="#0c5f68"
+          strokeWidth="16"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          transform="translate(200 134) scale(0.978) translate(-200 -134)"
+        />
+        <use
+          href="#ticketSil"
+          className="ticket-pilot-fabrica__band-fillet"
+          fill="none"
+          stroke="#0a5560"
+          strokeWidth="1.4"
+          strokeLinejoin="round"
+          transform="translate(200 134) scale(0.938) translate(-200 -134)"
+        />
+        <use
+          href="#ticketSil"
+          className="ticket-pilot-fabrica__band-fillet"
+          fill="none"
+          stroke="#0a5560"
+          strokeWidth="0.9"
+          strokeLinejoin="round"
+          transform="translate(200 134) scale(0.928) translate(-200 -134)"
+        />
+      </svg>
+
+      <div className="ticket-pilot-fabrica__watermark" />
+
+      {/* Adornos: misma máscara de desgaste; PNG sin modificar. */}
+      <div className="ticket-pilot-fabrica__ornaments">
+        <img
+          className="ticket-pilot-fabrica__ornament ticket-pilot-fabrica__ornament--header-left"
+          src={header}
+          alt=""
+          draggable={false}
+        />
+        <img
+          className="ticket-pilot-fabrica__ornament ticket-pilot-fabrica__ornament--header-right"
+          src={header}
+          alt=""
+          draggable={false}
+        />
+        <img
+          className="ticket-pilot-fabrica__ornament ticket-pilot-fabrica__ornament--bottom-left"
+          src={`${cut}/ornament-bottom-left.png`}
+          alt=""
+          draggable={false}
+        />
+        <img
+          className="ticket-pilot-fabrica__ornament ticket-pilot-fabrica__ornament--bottom-right"
+          src={`${cut}/ornament-bottom-right.png`}
+          alt=""
+          draggable={false}
+        />
+      </div>
+
+      <div className="ticket-pilot-fabrica__perforation" />
+    </div>
+  )
+}
 
 /**
  * SHELL del Centro Operacional. Cinco regiones y un control inferior.
@@ -190,23 +369,44 @@ export function OperationalShellV2() {
     ? (controller.learningDrafts[controller.selectedProblemId] ?? '')
     : ''
 
-  /**
-   * ALCANCE DE LECTURA, según lo declara el SERVIDOR.
-   *
-   * Antes se deducía del rol y de comparar coordinaciones, lo que era una
-   * segunda copia de la política y podía discrepar de ella. Ahora lo dice la
-   * propia respuesta: la lista llega marcada `own-only` cuando solo contiene
-   * los reportes del usuario en esa área.
+  /*
+   * PRUEBA VISUAL · tickets solo para Fábrica. Usa la selección existente;
+   * sin selección u otra carta el atributo no se emite y el look oscuro
+   * permanece. La baraja no consulta este valor.
    */
-  const alcanceLimitado =
-    selectedCoordination !== null && controller.level1.scope === 'own-only'
+  const ticketTheme =
+    selectedCoordinationCode === FABRICA_CONTENIDOS_CODE ? 'fabrica' : undefined
+  const fabricaTicket = ticketTheme === 'fabrica'
 
   return (
     <div
       className="operational-shell"
       data-testid="operational-shell"
       data-tour="operational-shell"
+      data-ticket-theme={ticketTheme}
     >
+      {/*
+        ESCENARIO CIRCENSE (fase 1).
+
+        Capa decorativa detrás de regiones y baraja. No participa del grid, no
+        captura puntero y no aporta scroll: solo pinta el arte del teatro para
+        que el suelo de madera ancle la mesa y los telones den profundidad a
+        los paneles. La geometría del shell y las interacciones no cambian.
+      */}
+      <div
+        className="operational-shell__scene"
+        data-testid="shell-circus-scene"
+        aria-hidden="true"
+      >
+        <img
+          className="operational-shell__scene-image"
+          src="/assets/scenes/circus-stage-background.png"
+          alt=""
+          decoding="async"
+          draggable={false}
+        />
+      </div>
+
       <div className="operational-shell__main" data-testid="shell-main">
         <div className="operational-shell__top" data-testid="shell-top">
           {/* ---------- PERSONAJE: misma posición ---------- */}
@@ -216,6 +416,7 @@ export function OperationalShellV2() {
             className="operational-shell__region--character"
             showTitle={false}
           >
+            {fabricaTicket ? <TicketFabricaDecor /> : null}
             <DirectionCharacter
               presentation={characterPresentation}
               mood={characterMood}
@@ -269,6 +470,7 @@ export function OperationalShellV2() {
             className="operational-shell__region--my-reports"
             showTitle={false}
           >
+            {fabricaTicket ? <TicketFabricaDecor /> : null}
             <MyReportsPanel
               myReports={controller.myReports}
               selectedProblemId={controller.selectedProblemId}
@@ -290,21 +492,14 @@ export function OperationalShellV2() {
             hint={
               selectedCoordination ? undefined : 'Seleccione una coordinación'
             }
-            className="operational-shell__region--coordination-problems"
+            className={`operational-shell__region--coordination-problems${
+              fabricaTicket ? ' operational-shell__region--ticket-pilot-fabrica' : ''
+            }`}
             showTitle={!selectedCoordination}
           >
+            {fabricaTicket ? <TicketFabricaProblemsPilot /> : null}
             {selectedCoordination && (
               <>
-                {alcanceLimitado && (
-                  <p
-                    className="operational-shell__scope-note"
-                    data-testid="coordination-scope-note"
-                    role="status"
-                  >
-                    Solo se muestran los problemas que usted reportó en esta
-                    coordinación. No es la lista completa del área.
-                  </p>
-                )}
                 <CoordinationProblemList
                   coordination={selectedCoordination}
                   identity={resolveCoordinationVisualIdentity(
@@ -338,6 +533,7 @@ export function OperationalShellV2() {
         className="operational-shell__action"
         showTitle={false}
       >
+        {fabricaTicket ? <TicketFabricaDecor /> : null}
         <OperationalActionPanel
           mode={controller.panelMode}
           hasCoordination={selectedCoordination !== null}

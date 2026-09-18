@@ -87,44 +87,33 @@ export function CoordinationProblemList({
 
   const headingId = `coordination-list-title-${coordination.code}`
 
-  return (
-    <section
-      className="coordination-panel coordination-panel--region"
-      data-testid="coordination-problem-list"
-      data-tour="coordination-problems"
-      data-code={coordination.code}
-      data-status={coordination.status}
-      data-level1={level1.status}
-      data-scope={level1.scope}
-      style={
-        { '--coord-rgb': hexToRgbChannels(identity.color) } as CSSProperties
-      }
-      aria-labelledby={headingId}
-    >
-      <header className="coordination-panel__header">
-        <div className="coordination-panel__heading">
-          <h3 id={headingId} className="coordination-panel__name">
-            {name}
-          </h3>
-          {summary && (
-            <p
-              className="coordination-panel__summary"
-              data-testid="coordination-panel-summary"
-            >
-              {summary}
-            </p>
-          )}
-        </div>
+  /*
+   * PILOTO VISUAL · ticket de Fábrica.
+   * Solo cuando esta lista es la de `coord-fabrica-contenidos` (y el shell ya
+   * marcó el tema). Reordena la jerarquía tipográfica del encabezado sin
+   * tocar la lógica de LEVEL 1 ni los mensajes de vacío / alcance.
+   */
+  const ticketPilotFabrica = coordination.code === 'coord-fabrica-contenidos'
+  const titleText = ticketPilotFabrica
+    ? (productLabel ?? 'Fábrica de Contenidos')
+    : name
 
-        {/* El estado nunca se comunica solo con color: siempre hay texto. */}
-        <span
-          className="coordination-panel__status"
-          data-testid="coordination-panel-status"
+  const bodyContent = (
+    <>
+      {/*
+        Aviso de lectura parcial: va DESPUÉS del encabezado del ticket
+        para no competir con el título. Mismo testid que en el shell.
+      */}
+      {level1.status === 'ready' && level1.scope === 'own-only' ? (
+        <p
+          className="coordination-panel__scope-note"
+          data-testid="coordination-scope-note"
+          role="status"
         >
-          <span className="coordination-panel__status-dot" aria-hidden="true" />
-          {statusLabel}
-        </span>
-      </header>
+          Solo se muestran los problemas que usted reportó en esta
+          coordinación. No es la lista completa del área.
+        </p>
+      ) : null}
 
       {level1.status === 'loading' || level1.status === 'idle' ? (
         <div
@@ -211,6 +200,84 @@ export function CoordinationProblemList({
             ))}
           </div>
         ))}
+    </>
+  )
+
+  const headerBlock = (
+    <header className="coordination-panel__header">
+      <div className="coordination-panel__heading">
+        {ticketPilotFabrica ? (
+          <p className="coordination-panel__eyebrow">
+            Problemas de la coordinación
+          </p>
+        ) : null}
+        <h3
+          id={headingId}
+          className={
+            ticketPilotFabrica
+              ? 'coordination-panel__name coordination-panel__name--circus'
+              : 'coordination-panel__name'
+          }
+        >
+          {titleText}
+        </h3>
+        {summary && (
+          <p
+            className="coordination-panel__summary"
+            data-testid="coordination-panel-summary"
+          >
+            {summary}
+          </p>
+        )}
+      </div>
+
+      {/* El estado nunca se comunica solo con color: siempre hay texto. */}
+      <span
+        className="coordination-panel__status"
+        data-testid="coordination-panel-status"
+      >
+        <span className="coordination-panel__status-dot" aria-hidden="true" />
+        {statusLabel}
+      </span>
+    </header>
+  )
+
+  return (
+    <section
+      className={[
+        'coordination-panel',
+        'coordination-panel--region',
+        ticketPilotFabrica ? 'coordination-panel--ticket-pilot-fabrica' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      data-testid="coordination-problem-list"
+      data-surface="coordination-problems"
+      data-code={coordination.code}
+      data-status={coordination.status}
+      data-level1={level1.status}
+      data-scope={level1.scope}
+      data-ticket-pilot={ticketPilotFabrica ? 'fabrica' : undefined}
+      style={
+        { '--coord-rgb': hexToRgbChannels(identity.color) } as CSSProperties
+      }
+      aria-labelledby={headingId}
+    >
+      {ticketPilotFabrica ? (
+        <>
+          {/*
+            Talón del ticket: título entre adornos + indicador de integridad.
+            El cuerpo empieza debajo de la perforación (CSS del piloto).
+          */}
+          <div className="coordination-panel__stub">{headerBlock}</div>
+          <div className="coordination-panel__body">{bodyContent}</div>
+        </>
+      ) : (
+        <>
+          {headerBlock}
+          {bodyContent}
+        </>
+      )}
     </section>
   )
 }

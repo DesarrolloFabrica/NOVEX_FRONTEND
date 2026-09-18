@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 268" fill="none" aria-hidden="true">
+  <!--
+    Capa decorativa de desgaste del margen (no es una foto de ticket completa).
+    Solo marcas en la franja perimetral: fibras, motas ocres y abrasiones de
+    esquina. El centro queda vacío para no tapar contenido. En CSS se usa
+    con mask de anillo (~1012 px) y tamaños en px fijos donde aplica.
+  -->
+  <!-- Esquinas más gastadas (ocre suave) -->
+  <ellipse cx="18" cy="16" rx="28" ry="22" fill="#8a6a3a" opacity="0.22" />
+  <ellipse cx="382" cy="14" rx="26" ry="20" fill="#7a5c32" opacity="0.2" />
+  <ellipse cx="16" cy="252" rx="30" ry="22" fill="#8a6a3a" opacity="0.2" />
+  <ellipse cx="384" cy="254" rx="28" ry="20" fill="#7a5c32" opacity="0.18" />
+
+  <!-- Motas / fibras a lo largo de los bordes (posiciones fijas en viewBox) -->
+  <g fill="#5c4428" opacity="0.35">
+    <circle cx="48" cy="5" r="0.7" />
+    <circle cx="92" cy="4" r="0.5" />
+    <circle cx="140" cy="6" r="0.6" />
+    <circle cx="188" cy="3.5" r="0.5" />
+    <circle cx="236" cy="5.5" r="0.7" />
+    <circle cx="284" cy="4" r="0.5" />
+    <circle cx="332" cy="6" r="0.6" />
+    <circle cx="60" cy="263" r="0.6" />
+    <circle cx="120" cy="264.5" r="0.5" />
+    <circle cx="200" cy="262" r="0.7" />
+    <circle cx="270" cy="264" r="0.5" />
+    <circle cx="340" cy="263" r="0.6" />
+    <circle cx="4" cy="48" r="0.5" />
+    <circle cx="5" cy="90" r="0.6" />
+    <circle cx="3.5" cy="160" r="0.5" />
+    <circle cx="5" cy="210" r="0.6" />
+    <circle cx="396" cy="52" r="0.5" />
+    <circle cx="395" cy="150" r="0.6" />
+    <circle cx="396.5" cy="200" r="0.5" />
+  </g>
+
+  <!-- Fibras / micro-grietas (trazos cortos) -->
+  <g stroke="#6b5234" stroke-width="0.55" stroke-linecap="round" opacity="0.28">
+    <path d="M22 7 L30 5.5" />
+    <path d="M70 5 L79 6.2" />
+    <path d="M160 4.5 L171 3.8" />
+    <path d="M250 5.5 L262 4.2" />
+    <path d="M310 5 L321 6" />
+    <path d="M40 262 L52 263.5" />
+    <path d="M150 264 L162 262.8" />
+    <path d="M300 263 L312 264.2" />
+    <path d="M6 40 L5 52" />
+    <path d="M5 170 L6.5 182" />
+    <path d="M395 70 L396 82" />
+    <path d="M395.5 190 L394 202" />
+  </g>
+
+  <!-- Mellas / abrasiones poco profundas en el borde (más claras = papel) -->
+  <g fill="#f3e6c8" opacity="0.55">
+    <ellipse cx="110" cy="2.5" rx="4" ry="1.6" />
+    <ellipse cx="210" cy="2.2" rx="3.2" ry="1.4" />
+    <ellipse cx="300" cy="3" rx="3.8" ry="1.5" />
+    <ellipse cx="175" cy="265.5" rx="4.2" ry="1.5" />
+    <ellipse cx="1.8" cy="175" rx="1.5" ry="3.5" />
+    <ellipse cx="398" cy="175" rx="1.5" ry="3.2" />
+  </g>
+</svg>

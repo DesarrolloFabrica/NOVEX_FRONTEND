@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1" preserveAspectRatio="none">
+  <!-- Copia de referencia de la máscara inline (#ticketPilotEdge). El runtime usa el <mask> del componente. -->
+  <mask id="ticketPilotEdge" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox">
+    <rect width="1" height="1" fill="#000000" />
+    <path
+      fill="#ffffff"
+      d="M 0.006 0.004 C 0.12 0.001 0.25 0.008 0.38 0.003 C 0.52 0.000 0.65 0.007 0.78 0.002 C 0.88 0.000 0.95 0.005 0.988 0.014 C 0.997 0.022 0.999 0.05 0.999 0.09 L 1.000 0.355 C 1.000 0.372 0.975 0.388 0.958 0.403 C 0.975 0.418 1.000 0.434 1.000 0.450 L 0.999 0.905 C 0.998 0.945 0.975 0.982 0.945 0.992 C 0.82 1.000 0.68 0.990 0.55 0.995 C 0.40 1.000 0.25 0.988 0.12 0.994 C 0.06 0.997 0.02 0.982 0.008 0.960 C 0.002 0.945 0.001 0.915 0.001 0.885 L 0.000 0.450 C 0.000 0.434 0.025 0.418 0.042 0.403 C 0.025 0.388 0.000 0.372 0.000 0.355 L 0.001 0.09 C 0.001 0.045 0.003 0.012 0.006 0.004 Z"
+    />
+  </mask>
+</svg>
