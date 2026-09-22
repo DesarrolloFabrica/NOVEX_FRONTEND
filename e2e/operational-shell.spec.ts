@@ -306,7 +306,7 @@ async function measureCharacter(page: Page, label: string) {
 
   const region = await boxOf(page, '[data-testid="shell-region-character"]')
   const figure = await boxOf(page, '.direction-character__figure')
-  const summary = await boxOf(page, '[data-testid="direction-summary"]')
+  const status = await boxOf(page, '[data-testid="direction-character-status"]')
   const stage = await boxOf(page, '[data-testid="shell-stage"]')
 
   const measurement = {
@@ -323,10 +323,10 @@ async function measureCharacter(page: Page, label: string) {
       width: round(figure.width),
       height: round(figure.height),
     },
-    summary: {
-      top: round(summary.y),
-      bottom: round(summary.y + summary.height),
-      height: round(summary.height),
+    status: {
+      top: round(status.y),
+      bottom: round(status.y + status.height),
+      height: round(status.height),
     },
     stageTop: round(stage.y),
     orientation: await page
@@ -467,9 +467,9 @@ test.describe('shell del Centro · 1440x900', () => {
     await installApi(page)
     await openShell(page)
 
-    // Una sola instancia visible, y una sola región aria-live.
+    // Una sola instancia visible: personaje + estado, sin frase institucional.
     await expect(page.getByTestId('direction-character')).toHaveCount(1)
-    await expect(page.getByTestId('direction-summary')).toHaveCount(1)
+    await expect(page.getByTestId('direction-character-status')).toHaveCount(1)
     await expect(
       page.locator(
         '[data-testid="shell-region-character"] [data-testid="direction-character"]',
@@ -477,7 +477,7 @@ test.describe('shell del Centro · 1440x900', () => {
     ).toHaveCount(1)
     await expect(
       page.locator(
-        '[data-testid="shell-region-character"] [data-testid="direction-summary"]',
+        '[data-testid="shell-region-character"] [data-testid="direction-character-status"]',
       ),
     ).toHaveCount(1)
 
@@ -507,7 +507,7 @@ test.describe('shell del Centro · 1440x900', () => {
       expect(state.figure.bottom).toBeLessThanOrEqual(state.region.bottom + 1)
       // Y no baja a la banda de la baraja en ningún estado.
       expect(state.figure.bottom).toBeLessThanOrEqual(state.stageTop)
-      expect(state.summary.bottom).toBeLessThanOrEqual(state.stageTop)
+      expect(state.status.bottom).toBeLessThanOrEqual(state.stageTop)
     }
 
     /*

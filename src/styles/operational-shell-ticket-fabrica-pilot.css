@@ -67,6 +67,92 @@
   --ticket-teal-soft: rgb(92 94 44 / 0.16);
 }
 
+/* Identidad Especializaciones: granate de carta, no el canónico #FF626A ni CRÍTICO. */
+.operational-shell[data-ticket-theme='especializaciones'] {
+  --ticket-accent: #7b110d;
+  --ticket-accent-deep: #3a0c0a;
+  --ticket-pilot-teal: var(--ticket-accent);
+  --ticket-pilot-teal-deep: var(--ticket-accent-deep);
+  --ticket-pilot-seal: url('/assets/tickets/especializaciones/cut/watermark-falcon.png');
+  --ticket-teal: var(--ticket-accent);
+  --ticket-teal-deep: var(--ticket-accent-deep);
+  --ticket-teal-soft: rgb(123 17 13 / 0.14);
+}
+
+/* Identidad Desarrollo Profesional: púrpura marco/CTA, no el canónico #B267FF. */
+.operational-shell[data-ticket-theme='desarrollo-profesional'] {
+  --ticket-accent: #5c2e58;
+  --ticket-accent-deep: #3a1c35;
+  --ticket-pilot-teal: var(--ticket-accent);
+  --ticket-pilot-teal-deep: var(--ticket-accent-deep);
+  --ticket-pilot-seal: url('/assets/tickets/desarrollo-profesional/cut/watermark-butterfly.png');
+  --ticket-teal: var(--ticket-accent);
+  --ticket-teal-deep: var(--ticket-accent-deep);
+  --ticket-teal-soft: rgb(92 46 88 / 0.16);
+}
+
+/* Identidad B2B: caoba de carta, no el canónico #FF5F66 ni el logo #AA0919. */
+.operational-shell[data-ticket-theme='b2b'] {
+  --ticket-accent: #551c19;
+  --ticket-accent-deep: #2e0c0b;
+  --ticket-pilot-teal: var(--ticket-accent);
+  --ticket-pilot-teal-deep: var(--ticket-accent-deep);
+  --ticket-pilot-seal: url('/assets/tickets/b2b/cut/watermark-woodpecker.png');
+  --ticket-teal: var(--ticket-accent);
+  --ticket-teal-deep: var(--ticket-accent-deep);
+  --ticket-teal-soft: rgb(85 28 25 / 0.16);
+}
+
+/* Identidad General: ocre marco/CTA, no el logo #EC9B07 ni ALERTA ni #28C8F4. */
+.operational-shell[data-ticket-theme='general'] {
+  --ticket-accent: #7a5708;
+  --ticket-accent-deep: #3c2a05;
+  --ticket-pilot-teal: var(--ticket-accent);
+  --ticket-pilot-teal-deep: var(--ticket-accent-deep);
+  --ticket-pilot-seal: url('/assets/tickets/general/cut/watermark-giraffe.png');
+  --ticket-teal: var(--ticket-accent);
+  --ticket-teal-deep: var(--ticket-accent-deep);
+  --ticket-teal-soft: rgb(122 87 8 / 0.14);
+}
+
+/* Identidad Proyección Social: bosque marco/CTA, no logo #006633 ni ESTABLE. */
+.operational-shell[data-ticket-theme='proyeccion-social'] {
+  --ticket-accent: #17492f;
+  --ticket-accent-deep: #0a2e1c;
+  --ticket-pilot-teal: var(--ticket-accent);
+  --ticket-pilot-teal-deep: var(--ticket-accent-deep);
+  --ticket-pilot-seal: url('/assets/tickets/proyeccion-social/cut/watermark-hummingbird.png');
+  --ticket-teal: var(--ticket-accent);
+  --ticket-teal-deep: var(--ticket-accent-deep);
+  --ticket-teal-soft: rgb(23 73 47 / 0.14);
+}
+
+.operational-shell[data-ticket-theme='servicio'] {
+  --ticket-accent: #681030;
+  --ticket-accent-deep: #3a0a22;
+  --ticket-soft-fill: rgb(104 16 48 / 0.14);
+  --ticket-action-text: #f7f4ea;
+  --ticket-pilot-teal: var(--ticket-accent);
+  --ticket-pilot-teal-deep: var(--ticket-accent-deep);
+  --ticket-pilot-seal: url('/assets/tickets/servicio/cut/watermark-flamingo.png');
+  --ticket-teal: var(--ticket-accent);
+  --ticket-teal-deep: var(--ticket-accent-deep);
+  --ticket-teal-soft: var(--ticket-soft-fill);
+}
+
+.operational-shell[data-ticket-theme='operacion-academica'] {
+  --ticket-accent: #1a2946;
+  --ticket-accent-deep: #0f1a2e;
+  --ticket-soft-fill: rgb(26 41 70 / 0.14);
+  --ticket-action-text: #f7f4ea;
+  --ticket-pilot-teal: var(--ticket-accent);
+  --ticket-pilot-teal-deep: var(--ticket-accent-deep);
+  --ticket-pilot-seal: url('/assets/tickets/operacion-academica/cut/watermark-wolf.png');
+  --ticket-teal: var(--ticket-accent);
+  --ticket-teal-deep: var(--ticket-accent-deep);
+  --ticket-teal-soft: var(--ticket-soft-fill);
+}
+
 /* ---------- Region con marco v2 ---------- */
 
 .operational-shell[data-ticket-theme]
@@ -550,11 +636,11 @@
 
 .operational-shell[data-ticket-theme]
   .operational-shell__region--character.operational-shell__region--ticket-panel {
-  /* Espacio para marco + Rive + lecturas sin recorte. */
+  /* Espacio para marco + Rive + estado sin recorte. */
   padding: calc(var(--ticket-pilot-content-inset) + 2px)
     var(--ticket-pilot-content-inset)
     calc(var(--ticket-pilot-content-inset) + 6px);
-  gap: 4px;
+  gap: 6px;
 }
 
 .operational-shell[data-ticket-theme]
@@ -566,73 +652,17 @@
 
 .operational-shell[data-ticket-theme]
   .operational-shell__region--ticket-panel
-  .direction-character__eyebrow {
-  color: var(--ticket-pilot-ink);
-  font-family: var(--ticket-pilot-serif);
-  font-size: clamp(13px, 2.2cqi + 10px, 16px);
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-transform: none;
-}
-
-.operational-shell[data-ticket-theme]
-  .operational-shell__region--ticket-panel
   .direction-character__status {
   border: 1px solid rgb(var(--status-rgb, 132 150 176) / 0.45);
   border-radius: 999px;
   background: rgb(255 250 238 / 0.92);
   color: rgb(var(--status-rgb, 132 150 176) / 0.98);
   font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 650;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  padding: 2px 8px;
-}
-
-.operational-shell[data-ticket-theme]
-  .operational-shell__region--ticket-panel
-  .operational-shell__summary {
-  color: var(--ticket-pilot-ink-soft);
-  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
-  font-size: 11px;
-  line-height: 1.35;
-  text-align: center;
-}
-
-.operational-shell[data-ticket-theme]
-  .operational-shell__region--ticket-panel
-  .operational-shell__observing {
-  border: 1px solid rgb(12 95 104 / 0.28);
-  border-radius: 8px;
-  background: rgb(255 250 238 / 0.75);
-  color: var(--ticket-pilot-ink);
-  padding: 4px 8px;
-}
-
-.operational-shell[data-ticket-theme]
-  .operational-shell__region--ticket-panel
-  .operational-shell__observing-label {
-  color: var(--ticket-pilot-ink-soft);
-}
-
-.operational-shell[data-ticket-theme]
-  .operational-shell__region--ticket-panel
-  .operational-shell__observing-name {
-  color: var(--ticket-pilot-ink);
-  font-weight: 600;
-}
-
-.operational-shell[data-ticket-theme]
-  .operational-shell__region--ticket-panel
-  .operational-shell__observing-status {
-  border: 1px solid rgb(12 95 104 / 0.4);
-  border-radius: 999px;
-  background: rgb(26 154 166 / 0.12);
-  color: var(--ticket-pilot-teal-deep);
-  font-size: 9.5px;
-  font-weight: 650;
-  padding: 1px 7px;
+  padding: 3px 10px;
 }
 
 /* ---------- Mis reportes ---------- */
@@ -1179,4 +1209,808 @@
   opacity: 0.055;
   right: 4%;
   bottom: 4%;
+}
+/* ---------- Especializaciones: escala por dibujo visible ----------
+ * Fill aproximados: books~66%, chart~71%, globe~84%, mortarboard~68%/85%W, falcon~80%.
+ * PNG ya en tinta #7B110D: sin filter de recolor.
+ */
+.operational-shell[data-ticket-theme='especializaciones'] .ticket-panel__ornament {
+  opacity: 0.95;
+  filter: none;
+}
+
+/* Character: birrete 22-28 px visibles; falcon WM 48-52 px. */
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--character
+  .ticket-panel__ornament {
+  height: clamp(28px, 12cqi, 38px);
+  width: auto;
+  max-width: 48%;
+  opacity: 0.96;
+}
+
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--character
+  .ticket-panel__watermark {
+  width: clamp(48px, 30%, 52px);
+  opacity: 0.04;
+  right: 6%;
+  bottom: 5%;
+}
+
+/* Reports: books BL 44-52 visibles (~CSS 68-78); ribbon BR 38-46 (~CSS 46-56). */
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--reports
+  .ticket-panel__ornament--bl {
+  height: clamp(68px, 15cqi, 78px);
+  width: auto;
+  max-width: 46%;
+}
+
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--reports
+  .ticket-panel__ornament--br {
+  height: clamp(46px, 12cqi, 56px);
+  width: auto;
+  max-width: 38%;
+}
+
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--reports
+  .ticket-panel__watermark,
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--problems
+  .ticket-panel__watermark {
+  width: clamp(52px, 18%, 78px);
+  opacity: 0.038;
+  right: 5%;
+  bottom: 5%;
+}
+
+/* Problems: chart BL 42-50; globe BR 42-50. */
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--problems
+  .ticket-panel__ornament--bl {
+  height: clamp(60px, 14cqi, 72px);
+  width: auto;
+  max-width: 42%;
+}
+
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--problems
+  .ticket-panel__ornament--br {
+  height: clamp(50px, 13cqi, 60px);
+  width: auto;
+  max-width: 40%;
+}
+
+/* Action: mortarboard TR 150-180 ancho visible; books BL 65-75; chart BR 48-56. */
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--action
+  .ticket-panel__ornament--tr {
+  width: clamp(176px, 50%, 210px);
+  height: auto;
+  max-height: 88px;
+  top: 8px;
+  right: 10px;
+}
+
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--action
+  .ticket-panel__ornament--bl {
+  height: clamp(96px, 15cqi, 112px);
+  width: auto;
+  max-width: 48%;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--action
+  .ticket-panel__ornament--br {
+  height: clamp(68px, 12cqi, 80px);
+  width: auto;
+  max-width: 36%;
+  bottom: 8px;
+  right: 10px;
+}
+
+/* Falcon action: 140-155 visibles (caja ~175-194, fillH~80%), opacity 0.05-0.06. */
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--action
+  .ticket-panel__watermark {
+  width: clamp(175px, 38%, 194px);
+  height: auto;
+  aspect-ratio: 1;
+  opacity: 0.055;
+  right: 4%;
+  bottom: 4%;
+}
+
+/* ---------- Desarrollo Profesional: escala por dibujo visible ----------
+ * Fill aprox: butterfly H~95%/W~70%, climber~76%, sun-rays~86%,
+ * stepped-arrow~67%, corner-star~72%. PNG ya en tinta #5C2E58: sin filter.
+ */
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel__ornament {
+  opacity: 0.95;
+  filter: none;
+}
+
+/* Character: corner-star 18-26 visibles; butterfly WM 48-52. */
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel--character
+  .ticket-panel__ornament {
+  height: clamp(25px, 10cqi, 36px);
+  width: auto;
+  max-width: 42%;
+  opacity: 0.96;
+}
+
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel--character
+  .ticket-panel__watermark {
+  /* Landscape 3:2: width≈76-82 → alto caja ≈51-55 → visible ≈48-52 (fillH~0.95). */
+  width: clamp(76px, 32%, 82px);
+  height: auto;
+  aspect-ratio: 3 / 2;
+  opacity: 0.04;
+  right: 5%;
+  bottom: 5%;
+}
+
+/* Reports: climber BL 44-52; sun-rays BR 38-46; butterfly 54-66. */
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel--reports
+  .ticket-panel__ornament--bl {
+  height: clamp(58px, 14cqi, 68px);
+  width: auto;
+  max-width: 44%;
+}
+
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel--reports
+  .ticket-panel__ornament--br {
+  height: clamp(44px, 12cqi, 54px);
+  width: auto;
+  max-width: 38%;
+}
+
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel--reports
+  .ticket-panel__watermark,
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel--problems
+  .ticket-panel__watermark {
+  /* width 85-104 → alto caja 57-69 → visible ≈54-66. */
+  width: clamp(85px, 22%, 104px);
+  height: auto;
+  aspect-ratio: 3 / 2;
+  opacity: 0.04;
+  right: 5%;
+  bottom: 5%;
+}
+
+/* Problems: stepped-arrow BL 44-52; corner-star BR 22-30. */
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel--problems
+  .ticket-panel__ornament--bl {
+  height: clamp(66px, 14cqi, 78px);
+  width: auto;
+  max-width: 44%;
+}
+
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel--problems
+  .ticket-panel__ornament--br {
+  height: clamp(31px, 10cqi, 42px);
+  width: auto;
+  max-width: 32%;
+}
+
+/* Action: sun-rays TR contenido (~70-90 visibles); climber BL 65-75; butterfly 150-170. */
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel--action
+  .ticket-panel__ornament--tr {
+  width: clamp(82px, 22%, 104px);
+  height: auto;
+  max-height: 104px;
+  top: 10px;
+  right: 12px;
+}
+
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel--action
+  .ticket-panel__ornament--bl {
+  height: clamp(86px, 14cqi, 99px);
+  width: auto;
+  max-width: 46%;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel--action
+  .ticket-panel__watermark {
+  /* Alto caja 158-179 → visible 150-170 (fillH~0.95); width = h * 1.5. */
+  width: clamp(237px, 42%, 268px);
+  height: auto;
+  aspect-ratio: 3 / 2;
+  opacity: 0.055;
+  right: 3%;
+  bottom: 3%;
+}
+
+/* ---------- B2B: escala por dibujo visible ----------
+ * Fill aprox: woodpecker~80%, star H~67%, globe~74%,
+ * quotes canvas ancho fillH~33%, speech H~51%, rule-dot H~55%/W~52%.
+ * PNG de adornos en caoba: sin filter. Watermark conserva su tinta de archivo.
+ */
+.operational-shell[data-ticket-theme='b2b'] .ticket-panel__ornament {
+  opacity: 0.95;
+  filter: none;
+}
+
+/* Character: star 18-26 visibles; woodpecker 48-52 (caja / 0.80). */
+.operational-shell[data-ticket-theme='b2b']
+  .ticket-panel--character
+  .ticket-panel__ornament {
+  height: clamp(27px, 10cqi, 39px);
+  width: auto;
+  max-width: 42%;
+  opacity: 0.96;
+}
+
+.operational-shell[data-ticket-theme='b2b']
+  .ticket-panel--character
+  .ticket-panel__watermark {
+  width: clamp(60px, 26%, 65px);
+  height: auto;
+  aspect-ratio: 1;
+  opacity: 0.04;
+  right: 6%;
+  bottom: 5%;
+}
+
+/* Reports: quotes BL 28-40 visibles; globe BR 38-52; WM 54-70. */
+.operational-shell[data-ticket-theme='b2b']
+  .ticket-panel--reports
+  .ticket-panel__ornament--bl {
+  /* Canvas 3:1, fillH~0.33 → alto de caja ~85-121 para 28-40 visibles. */
+  height: clamp(85px, 22cqi, 110px);
+  width: auto;
+  max-width: 46%;
+}
+
+.operational-shell[data-ticket-theme='b2b']
+  .ticket-panel--reports
+  .ticket-panel__ornament--br {
+  height: clamp(51px, 13cqi, 70px);
+  width: auto;
+  max-width: 40%;
+}
+
+.operational-shell[data-ticket-theme='b2b']
+  .ticket-panel--reports
+  .ticket-panel__watermark,
+.operational-shell[data-ticket-theme='b2b']
+  .ticket-panel--problems
+  .ticket-panel__watermark {
+  width: clamp(68px, 20%, 88px);
+  height: auto;
+  aspect-ratio: 1;
+  opacity: 0.04;
+  right: 5%;
+  bottom: 5%;
+}
+
+/* Problems: speech BL 36-48; star BR 22-28. */
+.operational-shell[data-ticket-theme='b2b']
+  .ticket-panel--problems
+  .ticket-panel__ornament--bl {
+  height: clamp(71px, 16cqi, 94px);
+  width: auto;
+  max-width: 48%;
+}
+
+.operational-shell[data-ticket-theme='b2b']
+  .ticket-panel--problems
+  .ticket-panel__ornament--br {
+  height: clamp(33px, 10cqi, 42px);
+  width: auto;
+  max-width: 32%;
+}
+
+/* Action: globe BL 65-80; rule TR ancho visible 140-170; WM 150-170. */
+.operational-shell[data-ticket-theme='b2b']
+  .ticket-panel--action
+  .ticket-panel__ornament--bl {
+  height: clamp(88px, 14cqi, 108px);
+  width: auto;
+  max-width: 36%;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='b2b']
+  .ticket-panel--action
+  .ticket-panel__ornament--tr {
+  /* Comillas (rule-dot): adorno de esquina, no encabezado. */
+  width: clamp(72px, 16%, 92px);
+  height: auto;
+  max-height: 64px;
+  top: 10px;
+  right: 12px;
+}
+
+.operational-shell[data-ticket-theme='b2b']
+  .ticket-panel--action
+  .ticket-panel__watermark {
+  width: clamp(188px, 34%, 213px);
+  height: auto;
+  aspect-ratio: 1;
+  opacity: 0.055;
+  right: 3%;
+  bottom: 3%;
+}
+
+/* ---------- General: escala por dibujo visible ----------
+ * Fill aprox: giraffe H~90%/W~88%, team~60%, target~61%,
+ * org~66%, route~60%, star~77%. PNG en #EC9B07: sin filter.
+ */
+.operational-shell[data-ticket-theme='general'] .ticket-panel__ornament {
+  opacity: 0.95;
+  filter: none;
+}
+
+/* Character: star 18-26; giraffe caja 60-68 → visible ~54-61 (fillH~0.90). */
+.operational-shell[data-ticket-theme='general']
+  .ticket-panel--character
+  .ticket-panel__ornament {
+  height: clamp(23px, 10cqi, 34px);
+  width: auto;
+  max-width: 42%;
+  opacity: 0.96;
+}
+
+.operational-shell[data-ticket-theme='general']
+  .ticket-panel--character
+  .ticket-panel__watermark {
+  width: clamp(60px, 28%, 68px);
+  height: auto;
+  aspect-ratio: 1352 / 1638;
+  opacity: 0.04;
+  right: 6%;
+  bottom: 5%;
+}
+
+/* Reports: team BL 42-54; target BR 40-52; WM 54-70. */
+.operational-shell[data-ticket-theme='general']
+  .ticket-panel--reports
+  .ticket-panel__ornament--bl {
+  height: clamp(70px, 15cqi, 90px);
+  width: auto;
+  max-width: 44%;
+}
+
+.operational-shell[data-ticket-theme='general']
+  .ticket-panel--reports
+  .ticket-panel__ornament--br {
+  height: clamp(66px, 14cqi, 85px);
+  width: auto;
+  max-width: 40%;
+}
+
+.operational-shell[data-ticket-theme='general']
+  .ticket-panel--reports
+  .ticket-panel__watermark,
+.operational-shell[data-ticket-theme='general']
+  .ticket-panel--problems
+  .ticket-panel__watermark {
+  width: clamp(60px, 20%, 78px);
+  height: auto;
+  aspect-ratio: 1352 / 1638;
+  opacity: 0.04;
+  right: 5%;
+  bottom: 5%;
+}
+
+/* Problems: org BL 42-54; route BR 45-60. */
+.operational-shell[data-ticket-theme='general']
+  .ticket-panel--problems
+  .ticket-panel__ornament--bl {
+  height: clamp(64px, 14cqi, 82px);
+  width: auto;
+  max-width: 44%;
+}
+
+.operational-shell[data-ticket-theme='general']
+  .ticket-panel--problems
+  .ticket-panel__ornament--br {
+  height: clamp(75px, 15cqi, 100px);
+  width: auto;
+  max-width: 42%;
+}
+
+/* Action: route BL 65-80; star TR 30-42; giraffe 150-170 (caja ~190-225). */
+.operational-shell[data-ticket-theme='general']
+  .ticket-panel--action
+  .ticket-panel__ornament--bl {
+  height: clamp(108px, 16cqi, 133px);
+  width: auto;
+  max-width: 40%;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='general']
+  .ticket-panel--action
+  .ticket-panel__ornament--tr {
+  height: clamp(39px, 10cqi, 55px);
+  width: auto;
+  max-width: 28%;
+  top: 10px;
+  right: 12px;
+}
+
+.operational-shell[data-ticket-theme='general']
+  .ticket-panel--action
+  .ticket-panel__watermark {
+  width: clamp(157px, 30%, 186px);
+  height: auto;
+  aspect-ratio: 1352 / 1638;
+  opacity: 0.055;
+  right: 3%;
+  bottom: 3%;
+}
+
+/* ---------- Proyección Social: escala por dibujo visible ----------
+ * Fill aprox: hummingbird~86%, star~76%, leaf-vine W~92%/H~69%,
+ * heart~62%, people-leaf~70%, social-globe~74%. PNG #006633: sin filter.
+ */
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel__ornament {
+  opacity: 0.95;
+  filter: none;
+}
+
+/* Character: star 18-26; hummingbird caja 60-64 → visible ~52 (fillH~0.86). */
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel--character
+  .ticket-panel__ornament {
+  height: clamp(24px, 10cqi, 34px);
+  width: auto;
+  max-width: 42%;
+  opacity: 0.96;
+}
+
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel--character
+  .ticket-panel__watermark {
+  width: clamp(60px, 28%, 64px);
+  height: auto;
+  aspect-ratio: 1130 / 1039;
+  opacity: 0.04;
+  right: 6%;
+  bottom: 5%;
+}
+
+/* Reports: leaf BL ancho 90-130; heart BR 32-44; WM 54-70. */
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel--reports
+  .ticket-panel__ornament--bl {
+  width: clamp(98px, 28%, 141px);
+  height: auto;
+  max-height: 72px;
+  max-width: 48%;
+}
+
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel--reports
+  .ticket-panel__ornament--br {
+  height: clamp(52px, 12cqi, 71px);
+  width: auto;
+  max-width: 36%;
+}
+
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel--reports
+  .ticket-panel__watermark,
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel--problems
+  .ticket-panel__watermark {
+  width: clamp(63px, 20%, 81px);
+  height: auto;
+  aspect-ratio: 1130 / 1039;
+  opacity: 0.04;
+  right: 5%;
+  bottom: 5%;
+}
+
+/* Problems: people-leaf BL 42-54; social-globe BR 40-54. */
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel--problems
+  .ticket-panel__ornament--bl {
+  height: clamp(60px, 14cqi, 77px);
+  width: auto;
+  max-width: 44%;
+}
+
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel--problems
+  .ticket-panel__ornament--br {
+  height: clamp(54px, 13cqi, 73px);
+  width: auto;
+  max-width: 40%;
+}
+
+/* Action: people BL 65-80; star TR 30-42; hummingbird 140-170 (ancho ~180-195). */
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel--action
+  .ticket-panel__ornament--bl {
+  height: clamp(93px, 15cqi, 114px);
+  width: auto;
+  max-width: 42%;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel--action
+  .ticket-panel__ornament--tr {
+  height: clamp(39px, 10cqi, 55px);
+  width: auto;
+  max-width: 28%;
+  top: 10px;
+  right: 12px;
+}
+
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel--action
+  .ticket-panel__watermark {
+  width: clamp(180px, 34%, 195px);
+  height: auto;
+  aspect-ratio: 1130 / 1039;
+  object-fit: contain;
+  opacity: 0.055;
+  right: 3%;
+  bottom: 3%;
+}
+
+/* ---------- Servicio: escala por dibujo visible ----------
+ * Fill aprox: flamingo H~90%/W~86%, star~78%, open-hand H~58%,
+ * pin~64%, care-heart~80%, handshake~78%. PNG #C11B76: sin filter.
+ * Flamenco con pico a la izquierda (sin scaleX).
+ */
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel__ornament {
+  opacity: 0.95;
+  filter: none;
+}
+
+/* Character: star 18-26; flamingo caja ~53-58 → visible ~48-52 (fillH~0.90). */
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel--character
+  .ticket-panel__ornament {
+  height: clamp(23px, 10cqi, 33px);
+  width: auto;
+  max-width: 42%;
+  opacity: 0.96;
+}
+
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel--character
+  .ticket-panel__watermark {
+  height: clamp(53px, 24%, 58px);
+  width: auto;
+  aspect-ratio: 692 / 1006;
+  object-fit: contain;
+  opacity: 0.04;
+  right: 6%;
+  bottom: 5%;
+}
+
+/* Reports: open-hand BL 36-48; pin BR 32-44; WM 54-70. */
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel--reports
+  .ticket-panel__ornament--bl {
+  height: clamp(62px, 14cqi, 83px);
+  width: auto;
+  max-width: 46%;
+  max-height: 88px;
+}
+
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel--reports
+  .ticket-panel__ornament--br {
+  height: clamp(50px, 12cqi, 69px);
+  width: auto;
+  max-width: 36%;
+}
+
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel--reports
+  .ticket-panel__watermark,
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel--problems
+  .ticket-panel__watermark {
+  height: clamp(60px, 18%, 78px);
+  width: auto;
+  aspect-ratio: 692 / 1006;
+  object-fit: contain;
+  opacity: 0.04;
+  right: 5%;
+  bottom: 5%;
+}
+
+/* Problems: care-heart BL 42-54; handshake BR 40-52. */
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel--problems
+  .ticket-panel__ornament--bl {
+  height: clamp(53px, 14cqi, 68px);
+  width: auto;
+  max-width: 44%;
+}
+
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel--problems
+  .ticket-panel__ornament--br {
+  height: clamp(51px, 13cqi, 67px);
+  width: auto;
+  max-width: 42%;
+}
+
+/* Action: handshake BL 65-80; star TR 30-42; flamingo 140-170 (≤175 @1920). */
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel--action
+  .ticket-panel__ornament--bl {
+  height: clamp(83px, 15cqi, 103px);
+  width: auto;
+  max-width: 42%;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel--action
+  .ticket-panel__ornament--tr {
+  height: clamp(38px, 10cqi, 54px);
+  width: auto;
+  max-width: 28%;
+  top: 10px;
+  right: 12px;
+}
+
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel--action
+  .ticket-panel__watermark {
+  width: clamp(107px, 20%, 130px);
+  height: auto;
+  aspect-ratio: 692 / 1006;
+  object-fit: contain;
+  opacity: 0.055;
+  right: 3%;
+  bottom: 3%;
+}
+
+/* ---------- Operación Académica: núcleo de cinco escuelas ----------
+ * Fill aprox: wolf H~90%/W~87%, hub~85%, chain W~93%/H~42%,
+ * fan~76%/79%, rosette~79%/75%. PNG #283063: sin filter. Sin scaleX.
+ */
+.operational-shell[data-ticket-theme='operacion-academica']
+  .ticket-panel__ornament {
+  opacity: 0.95;
+  filter: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Character: fan BL ancho visible 32-44; wolf BR caja ~53-58 → ~48-52. */
+.operational-shell[data-ticket-theme='operacion-academica']
+  .ticket-panel--character
+  .ticket-panel__ornament {
+  width: clamp(42px, 18%, 58px);
+  height: auto;
+  max-width: 48%;
+  opacity: 0.96;
+}
+
+.operational-shell[data-ticket-theme='operacion-academica']
+  .ticket-panel--character
+  .ticket-panel__watermark {
+  height: clamp(53px, 24%, 58px);
+  width: auto;
+  aspect-ratio: 794 / 1066;
+  object-fit: contain;
+  opacity: 0.04;
+  right: 6%;
+  bottom: 5%;
+  left: auto;
+}
+
+/* Reports: hub BL ancho visible 80-105; wolf 54-70. */
+.operational-shell[data-ticket-theme='operacion-academica']
+  .ticket-panel--reports
+  .ticket-panel__ornament--bl {
+  width: clamp(94px, 28%, 124px);
+  height: auto;
+  max-width: 48%;
+  max-height: 92px;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='operacion-academica']
+  .ticket-panel--reports
+  .ticket-panel__watermark,
+.operational-shell[data-ticket-theme='operacion-academica']
+  .ticket-panel--problems
+  .ticket-panel__watermark {
+  height: clamp(60px, 18%, 78px);
+  width: auto;
+  aspect-ratio: 794 / 1066;
+  object-fit: contain;
+  opacity: 0.04;
+  right: 5%;
+  bottom: 5%;
+  left: auto;
+}
+
+/* Problems: chain inferior centrada~izq 150-210; rosette BR 38-50. */
+.operational-shell[data-ticket-theme='operacion-academica']
+  .ticket-panel--problems
+  .ticket-panel__ornament--bl {
+  width: clamp(161px, 52%, 226px);
+  height: auto;
+  max-width: 72%;
+  left: 42%;
+  right: auto;
+  bottom: 6px;
+  transform: translateX(-50%);
+}
+
+.operational-shell[data-ticket-theme='operacion-academica']
+  .ticket-panel--problems
+  .ticket-panel__ornament--br {
+  height: clamp(51px, 12cqi, 67px);
+  width: auto;
+  max-width: 28%;
+  bottom: 6px;
+  right: 6px;
+}
+
+/* Action: hub TR 110-130 visibles; rosette BR 50-70; wolf BL 140-170 (≤175). */
+.operational-shell[data-ticket-theme='operacion-academica']
+  .ticket-panel--action
+  .ticket-panel__ornament--tr {
+  width: clamp(129px, 22%, 153px);
+  height: auto;
+  max-width: 34%;
+  top: 10px;
+  right: 10px;
+  opacity: 0.95;
+}
+
+.operational-shell[data-ticket-theme='operacion-academica']
+  .ticket-panel--action
+  .ticket-panel__ornament--br {
+  height: clamp(67px, 12cqi, 93px);
+  width: auto;
+  max-width: 26%;
+  bottom: 10px;
+  right: 10px;
+  opacity: 0.95;
+}
+
+.operational-shell[data-ticket-theme='operacion-academica']
+  .ticket-panel--action
+  .ticket-panel__watermark {
+  width: clamp(116px, 18%, 141px);
+  height: auto;
+  aspect-ratio: 794 / 1066;
+  object-fit: contain;
+  opacity: 0.055;
+  left: 3%;
+  right: auto;
+  bottom: 3%;
 }

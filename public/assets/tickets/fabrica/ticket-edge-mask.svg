@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1" preserveAspectRatio="none">
-  <!-- Copia de referencia de la máscara inline (#ticketPilotEdge). El runtime usa el <mask> del componente. -->
+  <!-- Copia de referencia de la mï¿½scara inline (#ticketPilotEdge). El runtime usa el <mask> del componente. -->
   <mask id="ticketPilotEdge" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox">
     <rect width="1" height="1" fill="#000000" />
     <path

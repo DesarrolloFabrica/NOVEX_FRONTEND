@@ -4,11 +4,9 @@ import type { OperationalIntegrityStatus } from '@/modules/operational-cards/typ
 /**
  * Traducción del estado operacional al `mood` del personaje de Rive.
  *
- * QUÉ EXPRESA EL PERSONAJE. Su cara responde a la coordinación OBSERVADA, no al
- * estado institucional de la Dirección. Son dos lecturas distintas y deliberadamente
- * separadas: el carril y el rótulo siguen hablando de la Dirección entera, mientras
- * la expresión acompaña a lo que el usuario está mirando en ese momento. Por eso
- * este mapeo NO parte de `directionStatus` ni del atributo `data-status`.
+ * QUÉ EXPRESA EL PERSONAJE. Su cara responde a la coordinación OBSERVADA. Con
+ * selección, el rótulo bajo el personaje lee el mismo estado; sin ella, el
+ * rótulo vuelve al estado institucional mientras la cara queda en reposo.
  *
  * Vive fuera del renderer, como `characterReaction`: el componente recibe un mood
  * ya resuelto y no sabe de coordinaciones. Así el mapeo se prueba sin navegador,

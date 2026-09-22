@@ -22,20 +22,12 @@ import { OPERATIONAL_STATUS_LABEL } from '@/modules/operational-cards/data/opera
  * `data-interaction`, el nombre accesible y la lectura textual—, que es lo que
  * leen la escena y las pruebas.
  *
- * DOS LECTURAS, DOS FUENTES. El componente recibe dos cosas independientes y no
- * hay que confundirlas:
+ * UNA LECTURA VISIBLE. Bajo el personaje solo aparece el estado: el de la
+ * coordinación seleccionada cuando hay una, o el institucional en reposo.
+ * `presentation.status` gobierna el rótulo y `data-status`; `mood` gobierna la
+ * cara en Rive y, con selección, refleja la misma coordinación.
  *
- *   `presentation` → estado INSTITUCIONAL de la Dirección. Gobierna los
- *                    atributos del contenedor y el rótulo de texto.
- *   `mood`         → expresión de la coordinación OBSERVADA. Gobierna la cara
- *                    dentro de Rive.
- *
- * Son deliberadamente distintas: el carril sigue hablando de la Dirección
- * entera mientras la cara acompaña a lo que el usuario está mirando. Por eso
- * `data-status` NO alimenta el mood, y el mood no toca `data-status`.
- *
- * TRES ENTRADAS, no dos: además de `presentation` y `mood`, el componente
- * acepta una REACCIÓN puntual (`reactionId`) que se dispara una sola vez.
+ * Además acepta una REACCIÓN puntual (`reactionId`) que se dispara una sola vez.
  *
  * Lo que este componente todavía NO hace: parpadeo dirigido desde React
  * (`blink`) y seguimiento de mirada (`lookX`/`lookY`). Ambos existen en el
@@ -216,7 +208,7 @@ function CharacterFigure({
 const noop = () => {}
 
 export interface DirectionCharacterProps {
-  /** Estado institucional: atributos del contenedor y lectura textual. */
+  /** Estado visible: atributos del contenedor y lectura textual bajo la figura. */
   presentation: CharacterPresentation
   /**
    * Expresión de la coordinación observada. Se resuelve fuera, en
@@ -268,7 +260,7 @@ export function DirectionCharacter({
       data-reaction={reactionId === null ? undefined : String(reactionId)}
       data-reaction-trigger={reactionId === null ? undefined : reactionTrigger}
       role="img"
-      aria-label={`Dirección de Operaciones. Estado: ${statusLabel}.`}
+      aria-label={`Estado: ${statusLabel}.`}
     >
       {clientReady ? (
         <CharacterFigure
@@ -282,11 +274,8 @@ export function DirectionCharacter({
         <div className="direction-character__figure" aria-hidden="true" />
       )}
 
-      {/* Apoyo textual accesible: discreto, no una pastilla como las cartas. */}
+      {/* Única lectura bajo el personaje: el estado (selección o Dirección). */}
       <p className="direction-character__readout">
-        <span className="direction-character__eyebrow">
-          Dirección de Operaciones
-        </span>
         <span
           className="direction-character__status"
           data-testid="direction-character-status"

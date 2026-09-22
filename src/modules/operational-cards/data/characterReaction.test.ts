@@ -101,7 +101,7 @@ describe('buildCharacterPresentation', () => {
     })
   })
 
-  it('el status es SIEMPRE el de la Dirección, en cualquier interacción', () => {
+  it('sin selección el status es el de la Dirección', () => {
     for (const directionStatus of [
       'ESTABLE',
       'ALERTA',
@@ -111,12 +111,11 @@ describe('buildCharacterPresentation', () => {
       for (const [hovering, selecting] of [
         [false, false],
         [true, false],
-        [false, true],
-        [true, true],
       ]) {
         expect(
           buildCharacterPresentation({
             directionStatus,
+            selectedStatus: 'ESTABLE',
             orientation: 'LEFT',
             hovering,
             selecting,
@@ -126,11 +125,34 @@ describe('buildCharacterPresentation', () => {
     }
   })
 
+  it('con selección el status es el de la coordinación observada', () => {
+    expect(
+      buildCharacterPresentation({
+        directionStatus: 'CRITICO',
+        selectedStatus: 'ESTABLE',
+        orientation: 'LEFT',
+        hovering: false,
+        selecting: true,
+      }).status,
+    ).toBe('ESTABLE')
+
+    expect(
+      buildCharacterPresentation({
+        directionStatus: 'ESTABLE',
+        selectedStatus: 'CRITICO',
+        orientation: 'RIGHT',
+        hovering: true,
+        selecting: true,
+      }).status,
+    ).toBe('CRITICO')
+  })
+
   it('el hover sobre una coordinación crítica no cambia el estado del personaje', () => {
-    // Dirección ESTABLE + hover en una carta CRITICO: el personaje sigue
-    // representando a la Dirección, no a la coordinación.
+    // Dirección ESTABLE + hover en una carta CRITICO: sin selección el
+    // personaje sigue representando a la Dirección.
     const presentation = buildCharacterPresentation({
       directionStatus: 'ESTABLE',
+      selectedStatus: 'CRITICO',
       orientation: 'RIGHT',
       hovering: true,
       selecting: false,

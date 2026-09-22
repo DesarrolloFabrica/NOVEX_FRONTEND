@@ -5,7 +5,6 @@ import { MyReportsPanel } from '@/modules/operational-cards/components/MyReports
 import { OperationalActionPanel } from '@/modules/operational-cards/components/OperationalActionPanel'
 import { resolveCharacterMood } from '@/modules/operational-cards/data/characterMood'
 import { buildCharacterPresentation } from '@/modules/operational-cards/data/characterReaction'
-import { buildDirectionSummary } from '@/modules/operational-cards/data/directionSummary'
 import { resolveCoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
 import { buildProductTable } from '@/modules/operational-cards/data/productHierarchy'
 import { buildTableLayout } from '@/modules/operational-cards/data/tableLayout'
@@ -27,7 +26,6 @@ import { nowAsLocalInput } from '@/modules/operational-cards/services/report-sub
 import { fetchIncidentCategories } from '@/modules/api/situations.api'
 import { getErrorMessage } from '@/shared/utils/error'
 import type { IncidentCategorySummary } from '@/modules/situations/types/situation.types'
-import { OPERATIONAL_STATUS_LABEL } from '@/modules/operational-cards/data/operationalStatusLabel'
 import type { OperationalIntegrityStatus } from '@/modules/operational-cards/types/operational-status.types'
 import type { CoordinationId } from '@/modules/impact-network/data/coordination-islands.config'
 import '@/styles/operational-character.css'
@@ -163,6 +161,7 @@ export function OperationalShellV2() {
 
   const characterPresentation = buildCharacterPresentation({
     directionStatus,
+    selectedStatus: selectedCoordination?.status ?? null,
     orientation:
       (selectedCoordinationCode
         ? orientationByCode[selectedCoordinationCode]
@@ -173,7 +172,7 @@ export function OperationalShellV2() {
     selecting: Boolean(selectedCoordinationCode),
   })
 
-  /** La cara acompaña a lo observado; el rótulo sigue siendo institucional. */
+  /** La cara acompaña a lo observado; con selección, el rótulo también. */
   const characterMood = resolveCharacterMood({ selectedCoordination })
 
   /**
@@ -191,13 +190,6 @@ export function OperationalShellV2() {
       controller.consumeCharacterReaction(pending.id)
     }
   }, [pending, reaccionVisible, controller])
-
-  const summary =
-    level0 === 'ready' && overview
-      ? buildDirectionSummary(overview.totals)
-      : level0 === 'error'
-        ? 'Estado no disponible'
-        : 'Consultando el estado de las coordinaciones'
 
   // ---------- Panel derecho ----------
 
@@ -253,7 +245,7 @@ export function OperationalShellV2() {
           {/* ---------- PERSONAJE: misma posición ---------- */}
           <ShellRegion
             region="character"
-            title="Estado de la Dirección de Operaciones"
+            title="Estado del personaje"
             className={`operational-shell__region--character${
               ticketRegionClass
             }`}
@@ -269,42 +261,6 @@ export function OperationalShellV2() {
               reactionTrigger={pending?.trigger ?? 'approve'}
               onReactionPlayed={controller.consumeCharacterReaction}
             />
-            <p
-              className="operational-shell__summary"
-              data-testid="direction-summary"
-              aria-live="polite"
-            >
-              {summary}
-            </p>
-            {/*
-              QUÉ ESTÁ MIRANDO EL PERSONAJE.
-
-              Su cara sigue a la coordinación observada mientras el rótulo de
-              arriba sigue al estado institucional. Son dos fuentes distintas y
-              a la vez correctas, pero sin decirlo la escena parecía
-              contradecirse: cara triste bajo un rótulo que decía «Estable».
-              Esta línea nombra la fuente de la expresión y solo aparece cuando
-              hay algo observado; sin selección la única lectura es la de la
-              Dirección y no hay ambigüedad que resolver.
-            */}
-            {selectedCoordination && (
-              <p
-                className="operational-shell__observing"
-                data-testid="character-observing"
-                data-status={selectedCoordination.status}
-              >
-                <span className="operational-shell__observing-label">
-                  Observando
-                </span>
-                <span className="operational-shell__observing-name">
-                  {labelByCode[selectedCoordination.code] ??
-                    selectedCoordination.shortName}
-                </span>
-                <span className="operational-shell__observing-status">
-                  {OPERATIONAL_STATUS_LABEL[selectedCoordination.status]}
-                </span>
-              </p>
-            )}
           </ShellRegion>
 
           {/* ---------- MIS REPORTES ---------- */}

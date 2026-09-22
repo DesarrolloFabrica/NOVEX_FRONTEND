@@ -174,11 +174,6 @@ test.describe('estado operacional', () => {
       'Alerta',
     )
 
-    // Frase institucional determinística, sin KPIs ni conteo técnico.
-    await expect(page.getByTestId('direction-summary')).toHaveText(
-      '1 coordinación crítica · 1 en alerta',
-    )
-
     await expect(page.getByTestId('coordination-card')).toHaveCount(9)
     await expect(page.getByTestId('coordination-table')).toHaveAttribute(
       'data-count',
@@ -257,9 +252,6 @@ test.describe('estado operacional', () => {
     await expect(page.getByTestId('direction-character-status')).toHaveText(
       'Crítico',
     )
-    await expect(page.getByTestId('direction-summary')).toHaveText(
-      '7 coordinaciones críticas · 1 en alerta',
-    )
     await expect(page.getByTestId('coordination-card')).toHaveCount(9)
   })
 
@@ -281,9 +273,6 @@ test.describe('estado operacional', () => {
     )
     await expect(page.getByTestId('coordination-card')).toHaveCount(0)
     await expect(page.getByTestId('coordination-table')).toHaveCount(0)
-    await expect(page.getByTestId('direction-summary')).toHaveText(
-      'Estado no disponible',
-    )
   })
 
   test('un contrato inutilizable no pinta datos inventados', async ({ page }) => {

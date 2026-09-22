@@ -472,23 +472,23 @@ test.describe('mesa que cede · 1440x900', () => {
       ).map((peek) => peek.getBoundingClientRect())
       const top = Math.min(...fan.map((rect) => rect.top))
       const figure = box('.direction-character__figure')
-      const summary = box('[data-testid="direction-summary"]')
+      const status = box('[data-testid="direction-character-status"]')
       const header = box('[data-testid="eoc-chrome"]')
       const table = box('[data-testid="coordination-table"]')
       return {
         top,
         figureBottom: figure?.bottom ?? null,
-        summaryBottom: summary?.bottom ?? null,
+        statusBottom: status?.bottom ?? null,
         headerBottom: header?.bottom ?? null,
         tableTop: table?.top ?? null,
       }
     }, PARENT)
 
-    // Nada de esto es opcional: encima de la mesa vive la lectura
-    // institucional de la Dirección, y taparla convertiría un gesto de
-    // exploración en una pérdida de información.
-    expect(clearance.summaryBottom).not.toBeNull()
-    expect(clearance.top).toBeGreaterThan(clearance.summaryBottom!)
+    // Nada de esto es opcional: encima de la mesa vive el personaje y su
+    // estado, y taparlos convertiría un gesto de exploración en una pérdida
+    // de información.
+    expect(clearance.statusBottom).not.toBeNull()
+    expect(clearance.top).toBeGreaterThan(clearance.statusBottom!)
     expect(clearance.top).toBeGreaterThan(clearance.figureBottom!)
     expect(clearance.top).toBeGreaterThan(clearance.headerBottom!)
 
@@ -587,10 +587,10 @@ test.describe('mesa que cede · 1920x1080', () => {
           stack.querySelectorAll('[data-testid="coordination-deck-peek"]'),
         ).map((peek) => peek.getBoundingClientRect().top),
       )
-      const summary = document
-        .querySelector('[data-testid="direction-summary"]')!
+      const status = document
+        .querySelector('[data-testid="direction-character-status"]')!
         .getBoundingClientRect()
-      return top - summary.bottom
+      return top - status.bottom
     }, PARENT)
     expect(clearance).toBeGreaterThan(0)
   })

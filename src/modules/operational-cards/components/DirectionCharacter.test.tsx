@@ -112,7 +112,7 @@ describe('DirectionCharacter · expresión por estado', () => {
 describe('DirectionCharacter · accesibilidad y unicidad', () => {
   it('se anuncia como imagen con estado en el nombre accesible', () => {
     expect(markup({ status: 'CRITICO' })).toContain(
-      'aria-label="Dirección de Operaciones. Estado: Crítico."',
+      'aria-label="Estado: Crítico."',
     )
     expect(markup()).toContain('role="img"')
   })

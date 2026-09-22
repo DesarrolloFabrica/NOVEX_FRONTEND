@@ -85,22 +85,24 @@ describe('mesa -> personaje · orientación', () => {
     }
   })
 
-  it('el personaje sigue mostrando el estado de la DIRECCIÓN, no el de la carta', () => {
-    // La coordinación va en ESTABLE y la Dirección en CRÍTICO: el personaje
-    // debe leer CRÍTICO. La geometría solo aporta el lado.
+  it('con selección el personaje muestra el estado de la coordinación, no el de la Dirección', () => {
+    // La coordinación va en ESTABLE y la Dirección en CRÍTICO: al seleccionar,
+    // el rótulo acompaña a la carta. La geometría solo aporta el lado.
     const { orientationByCode } = buildTableLayout(coordinations(15))
     const html = renderToStaticMarkup(
       <DirectionCharacter
         presentation={buildCharacterPresentation({
           directionStatus: 'CRITICO',
+          selectedStatus: 'ESTABLE',
           orientation: orientationByCode['coord-1'] ?? 'NEUTRAL',
-          hovering: true,
-          selecting: false,
+          hovering: false,
+          selecting: true,
         })}
       />,
     )
 
-    expect(html).toContain('data-status="CRITICO"')
+    expect(html).toContain('data-status="ESTABLE"')
     expect(html).toContain('data-orientation="LEFT"')
+    expect(html).toContain('>Estable<')
   })
 })

@@ -2,10 +2,10 @@
   <!--
     Capa decorativa de desgaste del margen (no es una foto de ticket completa).
     Solo marcas en la franja perimetral: fibras, motas ocres y abrasiones de
-    esquina. El centro queda vacío para no tapar contenido. En CSS se usa
-    con mask de anillo (~1012 px) y tamaños en px fijos donde aplica.
+    esquina. El centro queda vacï¿½o para no tapar contenido. En CSS se usa
+    con mask de anillo (~1012 px) y tamaï¿½os en px fijos donde aplica.
   -->
-  <!-- Esquinas más gastadas (ocre suave) -->
+  <!-- Esquinas mï¿½s gastadas (ocre suave) -->
   <ellipse cx="18" cy="16" rx="28" ry="22" fill="#8a6a3a" opacity="0.22" />
   <ellipse cx="382" cy="14" rx="26" ry="20" fill="#7a5c32" opacity="0.2" />
   <ellipse cx="16" cy="252" rx="30" ry="22" fill="#8a6a3a" opacity="0.2" />
@@ -50,7 +50,7 @@
     <path d="M395.5 190 L394 202" />
   </g>
 
-  <!-- Mellas / abrasiones poco profundas en el borde (más claras = papel) -->
+  <!-- Mellas / abrasiones poco profundas en el borde (mï¿½s claras = papel) -->
   <g fill="#f3e6c8" opacity="0.55">
     <ellipse cx="110" cy="2.5" rx="4" ry="1.6" />
     <ellipse cx="210" cy="2.2" rx="3.2" ry="1.4" />

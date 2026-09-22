@@ -13,9 +13,9 @@ import type { OperationalIntegrityStatus } from '@/modules/operational-cards/typ
  * provisional puede sustituirse por el arte definitivo (Illustrator → Rive)
  * sin tocar la lógica de selección.
  *
- * Invariante de producto: el personaje representa a la DIRECCIÓN. Su `status`
- * es siempre el estado institucional, nunca el de la coordinación bajo el
- * cursor o seleccionada.
+ * El `status` que se lee bajo el personaje acompaña a lo OBSERVADO: con una
+ * coordinación seleccionada es el de esa área; sin selección (reposo o hover)
+ * vuelve al estado institucional de la Dirección.
  */
 
 /** Fracción del ancho de banda alrededor del centro que se considera frontal. */
@@ -39,8 +39,13 @@ export function deriveCharacterOrientation(
 }
 
 export interface CharacterReactionInput {
-  /** Estado institucional. Única fuente del `status` del personaje. */
+  /** Estado institucional. Fuente del `status` sin selección activa. */
   directionStatus: OperationalIntegrityStatus
+  /**
+   * Estado de la coordinación seleccionada. Solo se usa con `selecting`; el
+   * hover no lo sustituye —mirar una carta no cambia el rótulo.
+   */
+  selectedStatus?: OperationalIntegrityStatus | null
   /** Orientación derivada de la carta activa o, si no hay, de la del hover. */
   orientation: CharacterOrientation
   hovering: boolean
@@ -57,8 +62,10 @@ export function buildCharacterPresentation(
       : 'IDLE'
 
   return {
-    // Nunca el status de la coordinación: el personaje es la Dirección.
-    status: input.directionStatus,
+    status:
+      interaction === 'SELECTED' && input.selectedStatus
+        ? input.selectedStatus
+        : input.directionStatus,
     orientation: interaction === 'IDLE' ? 'NEUTRAL' : input.orientation,
     interaction,
   }

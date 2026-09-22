@@ -53,10 +53,10 @@
    * 0.18fr— y conserva su proporción, así que su alto natural es 150 px. Por
    * debajo de ahí la banda la recorta: medido, 224 px de banda la dejaban en
    * 106 y 256 px en 138. A 268 px la figura llega a su tamaño natural, el
-   * rótulo de estado y la frase institucional caben enteros, y nada se
-   * derrama sobre la baraja —con los 200 px del presupuesto inicial, la frase
-   * caía 47 px dentro de la mesa—. Subir más solo dejaría aire muerto: la
-   * figura no puede crecer sin una columna más ancha.
+   * rótulo de estado cabe entero, y nada se derrama sobre la baraja —con los
+   * 200 px del presupuesto inicial, la lectura caía 47 px dentro de la mesa—.
+   * Subir más solo dejaría aire muerto: la figura no puede crecer sin una
+   * columna más ancha.
    *
    * No le cuesta nada a las cartas: su tamaño sale del ANCHO de la banda
    * inferior, que no cambia, y ahí sobraba alto (mesa de 250 px en 511).
@@ -198,8 +198,8 @@
 .operational-shell__region--character {
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
-  padding: 8px 10px;
+  gap: 4px;
+  padding: 6px 8px 10px;
 }
 
 .operational-shell__region--character .direction-character {
@@ -213,76 +213,6 @@
   min-height: 0;
   height: auto;
   flex: 1 1 auto;
-}
-
-/*
- * QUÉ OBSERVA EL PERSONAJE.
- *
- * Una línea compacta, DEBAJO y visualmente subordinada al bloque institucional:
- * el rótulo «Dirección de Operaciones» conserva su peso y su tamaño, y esta
- * añade la otra lectura sin competir con él. Así se distingue de un vistazo que
- * una cosa habla de la Dirección y la otra del área observada.
- *
- * Cabe en la banda de 268 px porque sustituye aire, no contenido: son 14 px de
- * alto en una región que ya reservaba holgura bajo la frase institucional.
- */
-.operational-shell__observing {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 5px;
-  flex-wrap: wrap;
-  margin: 2px 0 0;
-  font-size: 10.5px;
-  line-height: 1.25;
-}
-
-.operational-shell__observing-label {
-  color: var(--os-muted, #8b9cb6);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.operational-shell__observing-name {
-  color: #cfe0f6;
-  font-weight: 600;
-}
-
-/* El estado del área lleva su color, pero nunca sin su texto. */
-.operational-shell__observing-status {
-  border-radius: 999px;
-  padding: 0 6px;
-  font-weight: 600;
-}
-
-.operational-shell__observing[data-status='ESTABLE'] .operational-shell__observing-status {
-  background: rgb(122 196 138 / 0.16);
-  color: #7ac48a;
-}
-
-.operational-shell__observing[data-status='ALERTA'] .operational-shell__observing-status {
-  background: rgb(240 176 84 / 0.16);
-  color: #f0b054;
-}
-
-.operational-shell__observing[data-status='CRITICO'] .operational-shell__observing-status {
-  background: rgb(244 96 104 / 0.16);
-  color: #f46068;
-}
-
-.operational-shell__observing[data-status='DESCONOCIDO'] .operational-shell__observing-status {
-  background: rgb(132 150 176 / 0.16);
-  color: #a9bcd6;
-}
-
-/* Frase institucional: acompaña al personaje, no es un KPI ni una tarjeta. */
-.operational-shell__summary {
-  margin: 0;
-  color: var(--os-muted, #8b9cb6);
-  font-size: 12px;
-  letter-spacing: 0.01em;
-  text-align: center;
-  text-wrap: balance;
 }
 
 /* ---------- Región de problemas ---------- */
