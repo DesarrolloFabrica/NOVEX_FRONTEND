@@ -5,6 +5,7 @@ import { App } from '@/app/App'
 import '@/index.css'
 import '@/styles/novex-os.css'
 import '@/styles/login.css'
+import '@/styles/login-stage.css'
 import '@/styles/platform-backgrounds.css'
 import '@/styles/operational-experience.css'
 
