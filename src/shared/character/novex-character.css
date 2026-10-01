@@ -1,0 +1,36 @@
+/* Personaje NOVEX compartido: geometría mínima del canvas y del área clickeable. */
+
+.novex-character {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  container-type: size;
+}
+
+/* Caja del artboard dentro del canvas: misma regla que Fit.Contain + BottomCenter. */
+.novex-character__hit {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: min(100cqw, 100cqh * var(--novex-artboard-aspect));
+  height: min(100cqh, 100cqw / var(--novex-artboard-aspect));
+  translate: -50% 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* El clip-path recorta el outline: el foco se muestra como contorno de luz en la figura. */
+.novex-character__hit:focus-visible {
+  outline: none;
+}
+
+.novex-character:has(.novex-character__hit:focus-visible) canvas {
+  filter:
+    drop-shadow(0 0 1px rgb(255 236 200 / 0.95))
+    drop-shadow(0 0 6px rgb(243 207 134 / 0.75));
+}

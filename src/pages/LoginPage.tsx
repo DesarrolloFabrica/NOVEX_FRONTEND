@@ -11,6 +11,11 @@ import {
   NOVEX_BETA_HINT,
   NOVEX_BETA_LABEL,
 } from '@/shared/constants/platformStatus'
+import { LoginStageSpotlight } from '@/pages/LoginStageSpotlight'
+import { LoginTicketFrame } from '@/pages/LoginTicketFrame'
+import type { NovexCharacterHandle } from '@/shared/character/NovexCharacterFigure'
+import { POST_LOGIN_REACTION, reactionHoldMs } from '@/shared/transition/postLoginTransition'
+import { usePostLoginTransitionCue } from '@/shared/transition/postLoginTransitionCue'
 
 /** Solo en local: VITE_ENABLE_EMAIL_LOGIN=true. En deploy no se define → solo Google. */
 const emailLoginEnabled = import.meta.env.VITE_ENABLE_EMAIL_LOGIN === 'true'
@@ -30,18 +35,29 @@ export function LoginPage() {
   const [email, setEmail] = useState('')
   const [googleError, setGoogleError] = useState<string | null>(null)
   const loginAttemptedRef = useRef(false)
+  const characterRef = useRef<NovexCharacterHandle>(null)
+  const celebratedRef = useRef(false)
+  const transitionCue = usePostLoginTransitionCue()
 
   useEffect(() => {
     if (loading) return
     if (!isAuthenticated) return
 
     if (loginAttemptedRef.current) {
+      // Inicio de la transición teatral: el personaje celebra y el host global
+      // (PostLoginCurtainTransition) espera su reacción antes de cerrar cortinas.
+      // Si el personaje aún no estaba listo, no hay reacción que esperar.
+      if (!celebratedRef.current) {
+        celebratedRef.current = true
+        const accepted = characterRef.current?.playReaction(POST_LOGIN_REACTION) ?? false
+        transitionCue.holdForReaction(reactionHoldMs(accepted))
+      }
       beginBootSplash()
       return
     }
 
     navigate(getRoleLandingPath(user), { replace: true })
-  }, [beginBootSplash, isAuthenticated, loading, navigate, user])
+  }, [beginBootSplash, isAuthenticated, loading, navigate, transitionCue, user])
 
   const handleEmailSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -92,12 +108,13 @@ export function LoginPage() {
           <p className="novex-login-stage__tagline">Inteligencia para decidir</p>
         </header>
 
-        {/* Zona del personaje: aquí entran el aro de luces y el Rive en la siguiente fase. */}
-        <div className="novex-login-stage__character-slot" aria-hidden="true">
-          <div className="novex-login-stage__character-placeholder" />
+        {/* Zona del personaje: marquesina de luces + personaje Rive. */}
+        <div className="novex-login-stage__character-slot">
+          <LoginStageSpotlight characterRef={characterRef} />
         </div>
 
         <section className="novex-login-stage__panel" aria-labelledby="access-title">
+          <LoginTicketFrame />
           <header className="novex-login-stage__panel-header">
             <h2 id="access-title">Accede a <strong>Novex</strong></h2>
             <p className="novex-login-stage__panel-lead">
@@ -198,6 +215,7 @@ export function LoginPage() {
           </footer>
         </section>
       </div>
+
     </main>
   )
 }
