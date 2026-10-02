@@ -1,5 +1,8 @@
 export type SituationSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
 
+/** Tipo de registro. Independiente de la categoría de incidente. */
+export type SituationReportKind = 'INTERNAL' | 'INTER_COORDINATION'
+
 export interface CoordinationSummary {
   id: string
   code: string
@@ -25,10 +28,17 @@ export interface IncidentCategorySummary {
 export interface CreateSituationPayload {
   title: string
   description: string
+  reportKind?: SituationReportKind
+  /** Coordinación RESPONSABLE. */
   coordinationId?: string
-  categoryId: string
+  /** Coordinación AFECTADA (obligatoria en INTER). */
+  affectedCoordinationId?: string
+  /** Obligatoria en INTERNAL; omitida en INTER. */
+  categoryId?: string
   severity: SituationSeverity
   occurredAt: string
+  affectedProcess?: string
+  pendingDelivery?: string
   relatedCoordinationIds?: string[]
 }
 
@@ -45,17 +55,23 @@ export interface SituationResponse {
   id: string
   title: string
   description: string
+  reportKind?: SituationReportKind
   coordinationId: string | null
   coordinationCode: string | null
   coordinationName: string | null
+  affectedCoordinationId?: string | null
+  affectedCoordinationCode?: string | null
+  affectedCoordinationName?: string | null
+  affectedProcess?: string | null
+  pendingDelivery?: string | null
   createdByUserId: string
   createdByUserName: string
   assignedUserId?: string | null
   assignedUserName?: string | null
-  categoryId: string
-  categoryCode: string
-  categoryName: string
-  categoryIcon?: string
+  categoryId: string | null
+  categoryCode: string | null
+  categoryName: string | null
+  categoryIcon?: string | null
   severity: SituationSeverity
   status: string
   lastStatusComment?: string | null
@@ -82,6 +98,16 @@ export interface SituationResponse {
    * la interfaz: la autorización definitiva vuelve a aplicarse en el servidor.
    */
   canResolve?: boolean
+  /**
+   * Si puede avanzar OPEN → IN_PROGRESS. Independiente de `canUpdate` y
+   * `canResolve`. Pista de UI; el servidor vuelve a autorizar al escribir.
+   */
+  canAdvanceToInProgress?: boolean
+  /**
+   * Si puede aplicar otras actualizaciones vía PATCH (autoría / ownership).
+   * No sustituye a `canAdvanceToInProgress` para «En atención».
+   */
+  canUpdate?: boolean
 }
 
 export interface SituationResolutionSummary {

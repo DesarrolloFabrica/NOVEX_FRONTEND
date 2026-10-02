@@ -36,11 +36,13 @@ interface OperationalContextPanelProps {
   executiveMode?: boolean
   canUpdateSituation?: boolean
   isUpdatingSituation?: boolean
+  isResolvingSituation?: boolean
   isExportingPdf?: boolean
   exportPdfError?: string | null
   onSelectSituation: (eventId: string) => void
   onCreateSituation?: () => void
   onUpdateSituationStatus?: (input: UpdateSituationStatusInput) => Promise<void>
+  onResolveSituation?: (learning: string) => Promise<void>
   onOpenAnalysis?: () => void
   onDownloadPdf?: () => void
   onOpenSituationDetail?: () => void
@@ -164,11 +166,13 @@ function OperationalContextPanelView({
   executiveMode = false,
   canUpdateSituation = false,
   isUpdatingSituation = false,
+  isResolvingSituation = false,
   isExportingPdf = false,
   exportPdfError = null,
   onSelectSituation,
   onCreateSituation,
   onUpdateSituationStatus,
+  onResolveSituation,
   onOpenAnalysis,
   onDownloadPdf,
   onOpenSituationDetail,
@@ -258,16 +262,19 @@ function OperationalContextPanelView({
         <div className="island-focus-dossier__content operational-context-panel__dossier-content">
           {focusedSituation &&
           onUpdateSituationStatus &&
+          onResolveSituation &&
           onOpenAnalysis &&
           onDownloadPdf ? (
             <ImpactSituationCommand
               situation={focusedSituation}
               canUpdate={canUpdateSituation}
               isUpdating={isUpdatingSituation}
+              isResolving={isResolvingSituation}
               isExportingPdf={isExportingPdf}
               exportError={exportPdfError}
               executiveMode={executiveMode}
               onUpdateStatus={onUpdateSituationStatus}
+              onResolve={onResolveSituation}
               onOpenAnalysis={onOpenAnalysis}
               onDownloadPdf={onDownloadPdf}
             />

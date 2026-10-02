@@ -65,6 +65,22 @@ export function OperationalStatusPanel({
       <div className="novex-ops-state__body novex-ops-state__body--timeline">
         <SituationLifecycleTimeline status={situation.status} />
       </div>
+
+      {situation.status === 'CLOSED' && situation.resolution ? (
+        <div
+          className="novex-ops-state__learning"
+          data-testid="gestion-resolution-learning"
+        >
+          <small>Aprendizaje registrado</small>
+          <p>{situation.resolution.learning}</p>
+          <span>
+            {situation.resolution.resolvedByUserName}
+            {situation.resolution.resolvedAt
+              ? ` · ${formatManagementDate(situation.resolution.resolvedAt)}`
+              : ''}
+          </span>
+        </div>
+      ) : null}
     </section>
   )
 }

@@ -27,10 +27,11 @@ function toMyReport(situation: SituationResponse): MyReport {
     title: situation.title,
     severity: situation.severity,
     status: situation.status,
-    // Se conserva el null tal cual: es «Sin coordinación», no un dato ausente
-    // que haya que rellenar con la coordinación del usuario.
     coordinationCode: situation.coordinationCode ?? null,
     coordinationName: situation.coordinationName ?? null,
+    affectedCoordinationCode: situation.affectedCoordinationCode ?? null,
+    affectedCoordinationName: situation.affectedCoordinationName ?? null,
+    reportKind: situation.reportKind ?? 'INTERNAL',
     createdAt: situation.createdAt,
     canResolve: situation.canResolve === true,
   }

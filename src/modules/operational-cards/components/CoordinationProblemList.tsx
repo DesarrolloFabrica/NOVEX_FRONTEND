@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { hexToRgbChannels } from '@/modules/impact-network/data/coordination-islands.config'
 import { ProblemRow } from '@/modules/operational-cards/components/ProblemRow'
 import { buildCoordinationSummary } from '@/modules/operational-cards/services/coordination-problems.service'
@@ -51,6 +51,10 @@ export interface CoordinationProblemListProps {
   onProblemSelect?: (problemId: string) => void
   /** Reintenta LEVEL 1 para esta misma coordinación. */
   onRetry?: () => void
+  /** Nombres de presentación por code, para la línea de origen de cada fila. */
+  labelByCode?: Readonly<Record<string, string>>
+  /** Colores de overview por code (talón de identidad). */
+  colorByCode?: Readonly<Record<string, string>>
 }
 
 export function CoordinationProblemList({
@@ -61,9 +65,12 @@ export function CoordinationProblemList({
   selectedProblemId,
   onProblemSelect,
   onRetry,
+  labelByCode,
+  colorByCode,
 }: CoordinationProblemListProps) {
   const statusLabel = OPERATIONAL_STATUS_LABEL[coordination.status]
   const name = productLabel ?? identity.name
+  const [expanded, setExpanded] = useState(false)
 
   /*
    * LA CABECERA HABLA DEL ÁREA, NO DE LO QUE ESTE USUARIO ALCANZA A VER.
@@ -194,8 +201,11 @@ export function CoordinationProblemList({
               <ProblemRow
                 key={problem.id}
                 problem={problem}
+                selectedCoordinationCode={coordination.code}
                 selected={problem.id === selectedProblemId}
                 onSelect={onProblemSelect}
+                labelByCode={labelByCode}
+                colorByCode={colorByCode}
               />
             ))}
           </div>
@@ -256,6 +266,7 @@ export function CoordinationProblemList({
       data-level1={level1.status}
       data-scope={level1.scope}
       data-ticket-pilot={ticketThemeId}
+      data-expanded={expanded ? 'true' : undefined}
       style={
         { '--coord-rgb': hexToRgbChannels(identity.color) } as CSSProperties
       }
@@ -263,10 +274,6 @@ export function CoordinationProblemList({
     >
       {ticketPilot ? (
         <>
-          {/*
-            Cabecera compacta del papel enmarcado (no es el talón perforado
-            del piloto anterior). El cuerpo con scroll empieza debajo.
-          */}
           <div className="coordination-panel__stub">{headerBlock}</div>
           <div className="coordination-panel__body">{bodyContent}</div>
         </>
@@ -276,6 +283,15 @@ export function CoordinationProblemList({
           {bodyContent}
         </>
       )}
+      <button
+        type="button"
+        className="panel-expand-toggle"
+        data-testid="coordination-problems-expand"
+        aria-expanded={expanded}
+        onClick={() => setExpanded((value) => !value)}
+      >
+        {expanded ? 'Contraer' : 'Expandir'}
+      </button>
     </section>
   )
 }

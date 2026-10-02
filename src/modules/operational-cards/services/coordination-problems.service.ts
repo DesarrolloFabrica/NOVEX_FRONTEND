@@ -41,6 +41,9 @@ function toProblem(situation: SituationResponse): CoordinationProblem | null {
     createdAt: situation.createdAt,
     slaHealth: situation.slaHealth,
     affectedCoordinationCount: situation.relatedCoordinations?.length,
+    reportKind: situation.reportKind ?? 'INTERNAL',
+    coordinationCode: situation.coordinationCode ?? null,
+    affectedCoordinationCode: situation.affectedCoordinationCode ?? null,
   }
 }
 

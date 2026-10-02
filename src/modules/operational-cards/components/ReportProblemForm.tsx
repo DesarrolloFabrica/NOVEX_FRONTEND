@@ -1,25 +1,19 @@
-import { useId, type FormEvent } from 'react'
+import { useEffect, useId, type FormEvent } from 'react'
 import type { IncidentCategorySummary } from '@/modules/situations/types/situation.types'
 import type {
   OperationalSubmissionState,
   ReportDraft,
+  ReportFormKind,
 } from '@/modules/operational-cards/types/operational-cards.state'
 import type { SituationSeverity } from '@/modules/situations/types/situation.types'
+import { ResponsibleCoordinationPicker } from '@/modules/operational-cards/components/ResponsibleCoordinationPicker'
 
 /**
  * FORMULARIO DE REPORTE, en el panel derecho.
  *
- * DESTINO. El problema se registra en la coordinación SELECCIONADA en las
- * cartas, cuyo nombre se muestra sin ambigüedad: quien reporta debe saber a qué
- * área queda atribuido. Sin selección no se envía nada y el panel lo dice.
- *
- * SEVERIDAD VISIBLE. Arranca en MEDIUM y es editable. Antes viajaba fija y
- * oculta en el servicio de captura, de modo que el usuario registraba una
- * gravedad que no había elegido.
- *
- * BORRADOR. El texto vive en el estado de la experiencia, bajo la clave de su
- * coordinación, así que cambiar de carta o consultar un problema no lo pierde
- * ni lo traslada a otra área.
+ *   INTERNAL  Destino = carta seleccionada; categorías del catálogo.
+ *   INTER     Afectada fija (carta); selector de responsable externa;
+ *             proceso afectado y entrega pendiente.
  */
 
 const SEVERITY_OPTIONS: ReadonlyArray<{
@@ -33,28 +27,51 @@ const SEVERITY_OPTIONS: ReadonlyArray<{
   { value: 'CRITICAL', label: 'Crítica', hint: 'Detiene el servicio' },
 ]
 
+export interface ResponsibleOption {
+  id: string
+  label: string
+  /** Code para logo en el selector INTER. */
+  code?: string
+}
+
 export interface ReportProblemFormProps {
-  /** Nombre de PRODUCTO de la coordinación destino, o null sin selección. */
-  coordinationLabel: string | null
+  reportKind: ReportFormKind
+  /** Nombre de PRODUCTO de la carta (afectada / destino INTERNAL por defecto). */
+  affectedLabel: string | null
   categories: readonly IncidentCategorySummary[]
   categoriesError: string | null
+  /** Opciones de responsable (INTER), sin incluir la carta seleccionada. */
+  responsibleOptions: readonly ResponsibleOption[]
+  /**
+   * Selector de destino INTERNAL (vista COORDINADOR).
+   * Si está presente, el formulario permite reportar un problema interno en
+   * otra área sin cambiar la carta. Distinto de «coordinación responsable».
+   */
+  destinationOptions?: readonly ResponsibleOption[] | null
+  /** UUID de la coordinación propia (opción por defecto del destino). */
+  ownCoordinationId?: string | null
   draft: ReportDraft
   submission: OperationalSubmissionState
-  /** Máximo local, espejo del contrato del backend. */
   onDraftChange: (patch: Partial<ReportDraft>) => void
   onSubmit: () => void
-  /** Momento actual en formato `datetime-local`, para el tope del campo. */
+  /** Vuelve al panel idle sin enviar. */
+  onCancel?: () => void
   maxOccurredAt: string
 }
 
 export function ReportProblemForm({
-  coordinationLabel,
+  reportKind,
+  affectedLabel,
   categories,
   categoriesError,
+  responsibleOptions,
+  destinationOptions = null,
+  ownCoordinationId = null,
   draft,
   submission,
   onDraftChange,
   onSubmit,
+  onCancel,
   maxOccurredAt,
 }: ReportProblemFormProps) {
   const idPrefijo = useId()
@@ -64,13 +81,54 @@ export function ReportProblemForm({
       ? submission.errorMessage
       : null
 
-  const sinDestino = coordinationLabel === null
+  const sinDestino = affectedLabel === null
+  const esInter = reportKind === 'INTER_COORDINATION'
+  const tieneSelectorDestino =
+    !esInter && Boolean(destinationOptions && destinationOptions.length > 0)
+
+  const destinoEfectivo =
+    draft.internalDestinationCoordinationId.trim() ||
+    ownCoordinationId ||
+    ''
+
+  const destinoLabel =
+    destinationOptions?.find((option) => option.id === destinoEfectivo)?.label ??
+    affectedLabel
+
+  const pickerOptions = responsibleOptions.map((option) => ({
+    id: option.id,
+    label: option.label,
+    code: option.code ?? '',
+  }))
+
+  /*
+   * Si la carta/afectada cambia, las opciones se recalculan y la responsable
+   * elegida puede quedar inválida (p. ej. era la nueva afectada). Se limpia
+   * para pedir otra sin tocar el resto del borrador.
+   */
+  const responsibleOptionIds = responsibleOptions
+    .map((option) => option.id)
+    .join('|')
+  useEffect(() => {
+    if (!esInter || !draft.responsibleCoordinationId) return
+    const stillValid = responsibleOptions.some(
+      (option) => option.id === draft.responsibleCoordinationId,
+    )
+    if (!stillValid) {
+      onDraftChange({ responsibleCoordinationId: '' })
+    }
+  }, [
+    esInter,
+    draft.responsibleCoordinationId,
+    responsibleOptionIds,
+    responsibleOptions,
+    onDraftChange,
+  ])
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
-    // Doble cinturón contra el envío duplicado: el botón está deshabilitado y
-    // aquí se vuelve a comprobar por si el submit llega por teclado.
     if (enviando || sinDestino) return
+    if (esInter && !draft.responsibleCoordinationId) return
     onSubmit()
   }
 
@@ -78,14 +136,29 @@ export function ReportProblemForm({
     <form
       className="report-form"
       data-testid="report-form"
+      data-report-kind={reportKind}
       data-sending={enviando ? 'true' : undefined}
       onSubmit={handleSubmit}
     >
       <header className="report-form__header">
-        <h2 className="report-form__heading">Reportar problema</h2>
-        {/*
-          DESTINO SIEMPRE A LA VISTA. No se deduce: se declara.
-        */}
+        <div className="report-form__header-row">
+          <h2 className="report-form__heading">
+            {esInter
+              ? 'Dependencia de otra coordinación'
+              : 'Problema interno'}
+          </h2>
+          {onCancel ? (
+            <button
+              type="button"
+              className="report-form__back"
+              data-testid="report-form-back"
+              onClick={onCancel}
+              disabled={enviando}
+            >
+              Volver
+            </button>
+          ) : null}
+        </div>
         {sinDestino ? (
           <p
             className="report-form__destination report-form__destination--missing"
@@ -94,15 +167,78 @@ export function ReportProblemForm({
           >
             Seleccione una coordinación en las cartas para poder reportar.
           </p>
+        ) : tieneSelectorDestino ? (
+          <p
+            className="report-form__destination"
+            data-testid="report-form-destination"
+          >
+            Destino del registro:{' '}
+            <strong>{destinoLabel ?? affectedLabel}</strong>
+          </p>
         ) : (
           <p
             className="report-form__destination"
             data-testid="report-form-destination"
           >
-            Se registrará en <strong>{coordinationLabel}</strong>
+            {esInter ? (
+              <>
+                Coordinación afectada:{' '}
+                <strong>{affectedLabel}</strong>
+              </>
+            ) : (
+              <>
+                Se registrará en <strong>{affectedLabel}</strong>
+              </>
+            )}
           </p>
         )}
       </header>
+
+      {tieneSelectorDestino ? (
+        <div className="report-form__field">
+          <label htmlFor={`${idPrefijo}-destination`}>
+            Coordinación destino del problema interno
+          </label>
+          <select
+            id={`${idPrefijo}-destination`}
+            data-testid="report-internal-destination"
+            value={destinoEfectivo}
+            disabled={enviando}
+            onChange={(e) =>
+              onDraftChange({
+                internalDestinationCoordinationId:
+                  e.target.value === ownCoordinationId ? '' : e.target.value,
+              })
+            }
+          >
+            {destinationOptions!.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.id === ownCoordinationId
+                  ? `${option.label} (mi coordinación)`
+                  : option.label}
+              </option>
+            ))}
+          </select>
+          <p className="report-form__hint">
+            Por defecto es su área. Elija otra solo si registra un problema
+            interno hacia esa coordinación, sin abrir su lista ni su estado.
+          </p>
+        </div>
+      ) : null}
+
+      {esInter && (
+        <div className="report-form__field">
+          <ResponsibleCoordinationPicker
+            options={pickerOptions}
+            value={draft.responsibleCoordinationId}
+            affectedLabel={affectedLabel ?? ''}
+            disabled={enviando || responsibleOptions.length === 0}
+            onChange={(coordinationId) =>
+              onDraftChange({ responsibleCoordinationId: coordinationId })
+            }
+          />
+        </div>
+      )}
 
       <div className="report-form__field">
         <label htmlFor={`${idPrefijo}-title`}>Título</label>
@@ -132,36 +268,71 @@ export function ReportProblemForm({
         />
       </div>
 
-      <div className="report-form__field">
-        <label htmlFor={`${idPrefijo}-category`}>Categoría</label>
-        <select
-          id={`${idPrefijo}-category`}
-          data-testid="report-category"
-          required
-          value={draft.categoryId}
-          disabled={enviando || categories.length === 0}
-          onChange={(e) => onDraftChange({ categoryId: e.target.value })}
-        >
-          <option value="">Seleccione…</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
-        {categoriesError && (
-          <p className="report-form__hint report-form__hint--error">
-            {categoriesError}
-          </p>
-        )}
-      </div>
+      {esInter ? (
+        <>
+          <div className="report-form__field">
+            <label htmlFor={`${idPrefijo}-process`}>
+              Proceso afectado que se retrasa o bloquea
+            </label>
+            <textarea
+              id={`${idPrefijo}-process`}
+              data-testid="report-affected-process"
+              rows={2}
+              maxLength={2000}
+              required
+              value={draft.affectedProcess}
+              disabled={enviando}
+              onChange={(e) =>
+                onDraftChange({ affectedProcess: e.target.value })
+              }
+            />
+          </div>
+          <div className="report-form__field">
+            <label htmlFor={`${idPrefijo}-pending`}>
+              Entrega o acción pendiente de la coordinación responsable
+            </label>
+            <textarea
+              id={`${idPrefijo}-pending`}
+              data-testid="report-pending-delivery"
+              rows={2}
+              maxLength={2000}
+              required
+              value={draft.pendingDelivery}
+              disabled={enviando}
+              onChange={(e) =>
+                onDraftChange({ pendingDelivery: e.target.value })
+              }
+            />
+          </div>
+        </>
+      ) : (
+        <div className="report-form__field">
+          <label htmlFor={`${idPrefijo}-category`}>Categoría</label>
+          <select
+            id={`${idPrefijo}-category`}
+            data-testid="report-category"
+            required
+            value={draft.categoryId}
+            disabled={enviando || categories.length === 0}
+            onChange={(e) => onDraftChange({ categoryId: e.target.value })}
+          >
+            <option value="">Seleccione…</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+          {categoriesError && (
+            <p className="report-form__hint report-form__hint--error">
+              {categoriesError}
+            </p>
+          )}
+        </div>
+      )}
 
       <fieldset className="report-form__field report-form__severity">
         <legend>Severidad</legend>
-        {/*
-          Visible y editable, con MEDIUM de partida. El texto acompaña siempre
-          al color: la severidad nunca se comunica solo con el color.
-        */}
         <div className="report-form__severity-options">
           {SEVERITY_OPTIONS.map((option) => (
             <label
@@ -193,7 +364,6 @@ export function ReportProblemForm({
           data-testid="report-occurred-at"
           type="datetime-local"
           required
-          /* El backend rechaza fechas futuras; el campo lo impide antes. */
           max={maxOccurredAt}
           value={draft.occurredAt}
           disabled={enviando}
@@ -201,10 +371,6 @@ export function ReportProblemForm({
         />
       </div>
 
-      {/*
-        ESTADO DE ENVÍO. El alta ejecuta además el análisis con IA, así que
-        puede tardar; decirlo evita que parezca colgado y que se pulse dos veces.
-      */}
       {enviando && (
         <p className="report-form__note" data-testid="report-sending" role="status">
           Registrando el problema y generando su análisis…
@@ -225,7 +391,11 @@ export function ReportProblemForm({
         type="submit"
         className="report-form__submit"
         data-testid="report-submit"
-        disabled={enviando || sinDestino}
+        disabled={
+          enviando ||
+          sinDestino ||
+          (esInter && !draft.responsibleCoordinationId)
+        }
       >
         {enviando ? 'Registrando…' : 'Registrar problema'}
       </button>

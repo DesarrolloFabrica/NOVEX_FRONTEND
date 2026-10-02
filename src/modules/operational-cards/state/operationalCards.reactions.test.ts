@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   initialOperationalCardsState,
-  operationalCardsReducer,
+  operationalCardsReducer, reportDraftKey,
   type OperationalCardsAction,
 } from '@/modules/operational-cards/state/operationalCards.reducer'
 import type { OperationalCardsState } from '@/modules/operational-cards/types/operational-cards.state'
@@ -60,6 +60,8 @@ const DETALLE_CERRADO = {
   impact: null,
   intelligence: null,
   canResolve: false,
+  canAdvanceToInProgress: false,
+  canUpdate: false,
   resolution: {
     learning: 'Lo aprendido',
     resolvedByUserName: 'Coordinadora',
@@ -83,11 +85,12 @@ describe('reacción al REPORTE confirmado', () => {
   const tras = reduce(
     LISTO,
     { type: 'SELECT_COORDINATION', code: 'coord-b2b' },
-    { type: 'SUBMIT_REPORT', targetKey: 'coord-b2b' },
+    { type: 'SUBMIT_REPORT', targetKey: reportDraftKey('coord-b2b') },
     {
       type: 'SUBMIT_REPORT_SUCCESS',
-      targetKey: 'coord-b2b',
+      targetKey: reportDraftKey('coord-b2b'),
       coordinationCode: 'coord-b2b',
+      invalidateCoordinationCodes: ['coord-b2b'],
       problemId: 'p-nuevo',
     },
   )
@@ -104,7 +107,7 @@ describe('reacción al REPORTE confirmado', () => {
     const enviando = reduce(
       LISTO,
       { type: 'SELECT_COORDINATION', code: 'coord-b2b' },
-      { type: 'SUBMIT_REPORT', targetKey: 'coord-b2b' },
+      { type: 'SUBMIT_REPORT', targetKey: reportDraftKey('coord-b2b') },
     )
     expect(enviando.pendingCharacterReaction).toBeNull()
   })
@@ -113,7 +116,7 @@ describe('reacción al REPORTE confirmado', () => {
     const fallo = reduce(
       LISTO,
       { type: 'SELECT_COORDINATION', code: 'coord-b2b' },
-      { type: 'SUBMIT_REPORT', targetKey: 'coord-b2b' },
+      { type: 'SUBMIT_REPORT', targetKey: reportDraftKey('coord-b2b') },
       { type: 'SUBMIT_REPORT_ERROR', message: 'La IA no respondió' },
     )
     expect(fallo.pendingCharacterReaction).toBeNull()
@@ -237,11 +240,12 @@ describe('idempotencia del evento', () => {
     const conReaccion = reduce(
       LISTO,
       { type: 'SELECT_COORDINATION', code: 'coord-b2b' },
-      { type: 'SUBMIT_REPORT', targetKey: 'coord-b2b' },
+      { type: 'SUBMIT_REPORT', targetKey: reportDraftKey('coord-b2b') },
       {
         type: 'SUBMIT_REPORT_SUCCESS',
-        targetKey: 'coord-b2b',
+        targetKey: reportDraftKey('coord-b2b'),
         coordinationCode: 'coord-b2b',
+        invalidateCoordinationCodes: ['coord-b2b'],
         problemId: 'p-nuevo',
       },
     )
@@ -265,11 +269,12 @@ describe('idempotencia del evento', () => {
     const primera = reduce(
       LISTO,
       { type: 'SELECT_COORDINATION', code: 'coord-b2b' },
-      { type: 'SUBMIT_REPORT', targetKey: 'coord-b2b' },
+      { type: 'SUBMIT_REPORT', targetKey: reportDraftKey('coord-b2b') },
       {
         type: 'SUBMIT_REPORT_SUCCESS',
-        targetKey: 'coord-b2b',
+        targetKey: reportDraftKey('coord-b2b'),
         coordinationCode: 'coord-b2b',
+        invalidateCoordinationCodes: ['coord-b2b'],
         problemId: 'p1',
       },
     )
@@ -280,11 +285,12 @@ describe('idempotencia del evento', () => {
       id: idUno,
     })
     const segunda = [
-      { type: 'SUBMIT_REPORT', targetKey: 'coord-b2b' },
+      { type: 'SUBMIT_REPORT', targetKey: reportDraftKey('coord-b2b') },
       {
         type: 'SUBMIT_REPORT_SUCCESS',
-        targetKey: 'coord-b2b',
+        targetKey: reportDraftKey('coord-b2b'),
         coordinationCode: 'coord-b2b',
+        invalidateCoordinationCodes: ['coord-b2b'],
         problemId: 'p2',
       },
     ].reduce(

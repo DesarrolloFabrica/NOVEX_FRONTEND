@@ -70,17 +70,19 @@ export function isIncidentCategoryIcon(
 }
 
 export function resolveIncidentCategoryIcon(
-  code: string,
-  name = '',
+  code: string | null | undefined,
+  name: string | null | undefined = '',
   icon?: string | null,
 ): IncidentCategoryIcon {
   if (isIncidentCategoryIcon(icon)) return icon
 
-  const normalizedCode = code.trim().toUpperCase()
+  const safeCode = typeof code === 'string' ? code : ''
+  const safeName = typeof name === 'string' ? name : ''
+  const normalizedCode = safeCode.trim().toUpperCase()
   const byCode = ICON_BY_CODE[normalizedCode]
   if (byCode) return byCode
 
-  const token = `${code} ${name}`.toLowerCase()
+  const token = `${safeCode} ${safeName}`.toLowerCase()
   if (/internet|wifi|redes|conect/.test(token)) return 'internet'
   if (/zoho/.test(token)) return 'zoho'
   if (/iceberg/.test(token)) return 'iceberg'

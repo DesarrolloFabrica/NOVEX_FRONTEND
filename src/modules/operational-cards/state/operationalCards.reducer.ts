@@ -2,11 +2,17 @@ import type { CoordinationId } from '@/modules/impact-network/data/coordination-
 import type { OperationalOverview } from '@/modules/operational-cards/types/operational-overview.contract'
 import {
   UNASSIGNED_DRAFT_KEY,
+  type ActiveSituationStatus,
   type CoordinationProblem,
   type OperationalCardsState,
   type ReportDraft,
 } from '@/modules/operational-cards/types/operational-cards.state'
 import type { MyReportsPage } from '@/modules/operational-cards/types/my-reports.types'
+import type {
+  ProblemHistoryPage,
+  ProblemHistoryPeriod,
+} from '@/modules/operational-cards/types/problem-history.types'
+import { defaultHistoryPeriod } from '@/modules/operational-cards/data/problemHistoryPeriod'
 import type { SituationsListScope } from '@/modules/api/situations.api'
 import {
   initialProblemSectionsState,
@@ -86,18 +92,41 @@ export type OperationalCardsAction =
       generation: number
     }
   | { type: 'LOAD_MY_REPORTS_ERROR'; message: string }
+  // ---- Historial de cerrados ----
+  | { type: 'OPEN_HISTORY' }
+  | { type: 'CLOSE_HISTORY' }
+  | { type: 'SET_HISTORY_PERIOD'; period: ProblemHistoryPeriod }
+  | {
+      type: 'LOAD_HISTORY'
+      page: number
+      coordinationId: string | null
+      period: ProblemHistoryPeriod
+    }
+  | {
+      type: 'LOAD_HISTORY_SUCCESS'
+      page: ProblemHistoryPage
+      coordinationId: string | null
+      period: ProblemHistoryPeriod
+      generation: number
+    }
+  | { type: 'LOAD_HISTORY_ERROR'; message: string }
   // ---- Panel derecho ----
-  | { type: 'OPEN_REPORT_FORM' }
+  | { type: 'OPEN_REPORT_FORM'; kind: 'INTERNAL' | 'INTER_COORDINATION' }
+  | { type: 'CLOSE_REPORT_FORM' }
   | {
       /**
        * Abrir un problema DESDE «Mis reportes»: sincroniza la carta y abre el
        * detalle EN UNA SOLA acción. Es imprescindible que sea atómica; hacerlo
        * con SELECT_COORDINATION + SELECT_PROBLEM borraría el problema por el
        * camino, porque seleccionar coordinación limpia la selección de problema.
+       *
+       * `keepSelection` (vista COORDINADOR): abre el detalle SIN cambiar la
+       * carta propia ni el LEVEL 1 de su área.
        */
       type: 'OPEN_MY_REPORT'
       problemId: string
       coordinationCode: CoordinationId | null
+      keepSelection?: boolean
     }
   // ---- Borradores ----
   | { type: 'SET_REPORT_DRAFT'; key: string; draft: Partial<ReportDraft> }
@@ -107,7 +136,10 @@ export type OperationalCardsAction =
   | {
       type: 'SUBMIT_REPORT_SUCCESS'
       targetKey: string
+      /** Coordinación observada al enviar (reacción / invalidación local). */
       coordinationCode: CoordinationId | null
+      /** Codes cuyas listas LEVEL 1 hay que invalidar (responsable + afectada). */
+      invalidateCoordinationCodes: readonly (CoordinationId | null)[]
       problemId: string
     }
   | { type: 'SUBMIT_REPORT_ERROR'; message: string }
@@ -123,6 +155,13 @@ export type OperationalCardsAction =
       problemId: string
       message: string
     }
+  | { type: 'SUBMIT_STATUS_ADVANCE'; problemId: string }
+  | {
+      type: 'SUBMIT_STATUS_ADVANCE_SUCCESS'
+      problemId: string
+      detail: ProblemDetail
+    }
+  | { type: 'SUBMIT_STATUS_ADVANCE_ERROR'; message: string }
   | { type: 'CONSUME_CHARACTER_REACTION'; id: number }
 
 export const initialOperationalCardsState: OperationalCardsState = {
@@ -158,7 +197,20 @@ export const initialOperationalCardsState: OperationalCardsState = {
     loadingMore: false,
     errorMessage: null,
   },
+  history: {
+    status: 'idle',
+    items: [],
+    total: 0,
+    page: 0,
+    loadingMore: false,
+    errorMessage: null,
+    period: defaultHistoryPeriod(),
+    coordinationId: null,
+    scope: 'complete',
+  },
   panelMode: 'idle',
+  reportFormKind: null,
+  detailReturnMode: 'idle',
   reportDrafts: {},
   learningDrafts: {},
   submission: {
@@ -180,13 +232,14 @@ export function emptyReportDraft(occurredAt: string): ReportDraft {
     categoryId: '',
     severity: 'MEDIUM',
     occurredAt,
+    responsibleCoordinationId: '',
+    internalDestinationCoordinationId: '',
+    affectedProcess: '',
+    pendingDelivery: '',
   }
 }
 
-/** Clave de borrador de una coordinación, o la de «sin coordinación». */
-export function reportDraftKey(code: CoordinationId | null): string {
-  return code ?? UNASSIGNED_DRAFT_KEY
-}
+export { reportDraftKey } from '@/modules/operational-cards/data/situationViewpoint'
 
 /**
  * Un fallo NUNCA deja datos sintéticos: en LEVEL 0 se vacía el overview y el
@@ -248,6 +301,8 @@ export function operationalCardsReducer(
         selectedProblemId: null,
         level2: initialOperationalCardsState.level2,
         panelMode: 'idle',
+        reportFormKind: null,
+        detailReturnMode: 'idle',
         level1: cached
           ? {
               status: 'ready',
@@ -281,6 +336,8 @@ export function operationalCardsReducer(
         selectedProblemId: null,
         level2: initialOperationalCardsState.level2,
         panelMode: 'idle',
+        reportFormKind: null,
+        detailReturnMode: 'idle',
       }
 
     case 'LOAD_PROBLEMS':
@@ -372,10 +429,20 @@ export function operationalCardsReducer(
       // ya se está mirando no recarga nada.
       // Volver a pulsar el problema que ya se mira no recarga, pero sí
       // devuelve el panel al detalle si estaba en el formulario.
+      const returnMode =
+        state.panelMode === 'history' || state.detailReturnMode === 'history'
+          ? 'history'
+          : 'idle'
+
       if (state.selectedProblemId === action.problemId) {
         return state.panelMode === 'detail'
           ? state
-          : { ...state, panelMode: 'detail' }
+          : {
+              ...state,
+              panelMode: 'detail',
+              reportFormKind: null,
+              detailReturnMode: returnMode,
+            }
       }
 
       const cached = state.detailByProblem[action.problemId]
@@ -383,6 +450,8 @@ export function operationalCardsReducer(
         ...state,
         selectedProblemId: action.problemId,
         panelMode: 'detail',
+        reportFormKind: null,
+        detailReturnMode: returnMode,
         level2: cached
           ? {
               status: 'ready',
@@ -403,14 +472,18 @@ export function operationalCardsReducer(
       }
     }
 
-    case 'CLOSE_PROBLEM':
+    case 'CLOSE_PROBLEM': {
       // La coordinación sigue seleccionada: cerrar el detalle no retrocede nivel.
+      // Si el expediente vino del historial, se restaura esa vista (periodo intacto).
+      const backToHistory = state.detailReturnMode === 'history'
       return {
         ...state,
         selectedProblemId: null,
         level2: initialOperationalCardsState.level2,
-        panelMode: 'idle',
+        panelMode: backToHistory ? 'history' : 'idle',
+        detailReturnMode: 'idle',
       }
+    }
 
     case 'LOAD_DETAIL':
       if (state.selectedProblemId !== action.problemId) return state
@@ -592,6 +665,95 @@ export function operationalCardsReducer(
         },
       }
 
+    case 'OPEN_HISTORY':
+      return {
+        ...state,
+        panelMode: 'history',
+        reportFormKind: null,
+        selectedProblemId: null,
+        level2: initialOperationalCardsState.level2,
+        detailReturnMode: 'idle',
+        history: {
+          ...state.history,
+          // Fuerza recarga con la coordinación actual al entrar desde idle.
+          status: 'idle',
+          items: [],
+          total: 0,
+          page: 0,
+          loadingMore: false,
+          errorMessage: null,
+        },
+      }
+
+    case 'CLOSE_HISTORY':
+      return {
+        ...state,
+        panelMode: 'idle',
+        detailReturnMode: 'idle',
+      }
+
+    case 'SET_HISTORY_PERIOD':
+      return {
+        ...state,
+        history: {
+          ...state.history,
+          period: action.period,
+          status: 'idle',
+          items: [],
+          total: 0,
+          page: 0,
+          loadingMore: false,
+          errorMessage: null,
+        },
+      }
+
+    case 'LOAD_HISTORY':
+      return {
+        ...state,
+        history: {
+          ...state.history,
+          status: action.page <= 1 ? 'loading' : state.history.status,
+          loadingMore: action.page > 1,
+          errorMessage: null,
+          period: action.period,
+          coordinationId: action.coordinationId,
+        },
+      }
+
+    case 'LOAD_HISTORY_SUCCESS': {
+      if (action.generation !== state.dataGeneration) return state
+      if (state.panelMode !== 'history' && state.detailReturnMode !== 'history') {
+        // Llegó fuera de contexto: no pisa idle/report.
+        if (state.panelMode !== 'detail') return state
+      }
+      const { items, total, page, scope } = action.page
+      return {
+        ...state,
+        history: {
+          status: 'ready',
+          items: page <= 1 ? items : [...state.history.items, ...items],
+          total,
+          page,
+          loadingMore: false,
+          errorMessage: null,
+          period: action.period,
+          coordinationId: action.coordinationId,
+          scope,
+        },
+      }
+    }
+
+    case 'LOAD_HISTORY_ERROR':
+      return {
+        ...state,
+        history: {
+          ...state.history,
+          status: state.history.items.length > 0 ? 'ready' : 'error',
+          loadingMore: false,
+          errorMessage: action.message,
+        },
+      }
+
     // ================= PANEL DERECHO =================
 
     case 'OPEN_REPORT_FORM':
@@ -599,14 +761,29 @@ export function operationalCardsReducer(
        * Salir del detalle hacia el formulario. La SELECCIÓN DE PROBLEMA se
        * limpia a propósito: si se conservara, la lista central seguiría
        * marcando una fila como activa mientras el panel habla de otra cosa.
-       * La coordinación, en cambio, se conserva: es el destino del reporte.
+       * La coordinación, en cambio, se conserva: es el contexto del reporte.
        */
       return {
         ...state,
         panelMode: 'report',
+        reportFormKind: action.kind,
         selectedProblemId: null,
         level2: initialOperationalCardsState.level2,
+        detailReturnMode: 'idle',
         // Un error de envío anterior no debe recibir al usuario en el formulario.
+        submission:
+          state.submission.status === 'error'
+            ? initialOperationalCardsState.submission
+            : state.submission,
+      }
+
+    case 'CLOSE_REPORT_FORM':
+      // Vuelve a idle sin tocar la coordinación ni los borradores.
+      return {
+        ...state,
+        panelMode: 'idle',
+        reportFormKind: null,
+        detailReturnMode: 'idle',
         submission:
           state.submission.status === 'error'
             ? initialOperationalCardsState.submission
@@ -626,10 +803,15 @@ export function operationalCardsReducer(
        * apuntar a una coordinación que ya no está en el catálogo. En ambos
        * casos se abre el detalle SIN tocar la selección de cartas: no se
        * inventa una carta ni se atribuye el reporte a otra área.
+       *
+       * Con `keepSelection` (COORDINADOR) nunca se cambia la carta ni LEVEL 1:
+       * el detalle puede ser de otra área sin desplazar el personaje.
        */
       const code = action.coordinationCode
       const cambiaCoordinacion =
-        code !== null && code !== state.selectedCoordinationCode
+        !action.keepSelection &&
+        code !== null &&
+        code !== state.selectedCoordinationCode
 
       const cachedProblems = cambiaCoordinacion
         ? state.problemsByCoordination[code]
@@ -663,6 +845,8 @@ export function operationalCardsReducer(
         // El problema SOBREVIVE a la sincronización de coordinación.
         selectedProblemId: action.problemId,
         panelMode: 'detail',
+        reportFormKind: null,
+        detailReturnMode: 'idle',
         level2: cachedDetail
           ? {
               status: 'ready',
@@ -729,10 +913,9 @@ export function operationalCardsReducer(
        * REGISTRO CONFIRMADO POR EL SERVIDOR. Solo aquí se da por buena la
        * operación, nunca antes de la respuesta.
        *
-       * Se invalida la coordinación DE DESTINO, que es la capturada al enviar y
-       * no necesariamente la que el usuario mira ahora. El borrador de esa
-       * coordinación se descarta porque ya se convirtió en un problema real; el
-       * de cualquier otra sigue intacto.
+       * Se invalidan las coordinaciones de DESTINO (responsable y, en INTER,
+       * también la afectada), capturadas al enviar. El borrador de esa clave
+       * se descarta; el de cualquier otra sigue intacto.
        */
       const generation = state.dataGeneration + 1
       const code = action.coordinationCode
@@ -740,16 +923,22 @@ export function operationalCardsReducer(
       const { [action.targetKey]: _consumido, ...draftsRestantes } =
         state.reportDrafts
 
-      const problemsByCoordination = code
-        ? Object.fromEntries(
-            Object.entries(state.problemsByCoordination).filter(
-              ([key]) => key !== code,
-            ),
-          )
-        : state.problemsByCoordination
+      const invalidate = new Set(
+        action.invalidateCoordinationCodes.filter(
+          (item): item is CoordinationId => Boolean(item),
+        ),
+      )
 
-      // Si el usuario sigue en la coordinación de destino, su lista se recarga.
-      const recargaLista = code !== null && state.selectedCoordinationCode === code
+      const problemsByCoordination = Object.fromEntries(
+        Object.entries(state.problemsByCoordination).filter(
+          ([key]) => !invalidate.has(key as CoordinationId),
+        ),
+      )
+
+      // Si el usuario sigue en una de las coordinaciones invalidadas, recarga.
+      const recargaLista =
+        state.selectedCoordinationCode !== null &&
+        invalidate.has(state.selectedCoordinationCode)
 
       return {
         ...state,
@@ -758,7 +947,7 @@ export function operationalCardsReducer(
         level1: recargaLista
           ? {
               status: 'idle',
-              coordinationCode: code,
+              coordinationCode: state.selectedCoordinationCode,
               problems: [],
               errorMessage: null,
               scope: state.level1.scope,
@@ -775,6 +964,7 @@ export function operationalCardsReducer(
          */
         selectedProblemId: recargaLista ? action.problemId : state.selectedProblemId,
         panelMode: recargaLista ? 'detail' : state.panelMode,
+        reportFormKind: recargaLista ? null : state.reportFormKind,
         level2: recargaLista
           ? {
               status: 'idle',
@@ -977,6 +1167,116 @@ export function operationalCardsReducer(
         ...state,
         submission: {
           kind: 'resolution',
+          status: 'error',
+          targetKey: state.submission.targetKey,
+          errorMessage: action.message,
+          confirmedButStale: false,
+        },
+      }
+
+    case 'SUBMIT_STATUS_ADVANCE':
+      if (state.submission.status === 'sending') return state
+      return {
+        ...state,
+        submission: {
+          kind: 'status-advance',
+          status: 'sending',
+          targetKey: action.problemId,
+          errorMessage: null,
+          confirmedButStale: false,
+        },
+      }
+
+    case 'SUBMIT_STATUS_ADVANCE_SUCCESS': {
+      /*
+       * OPEN → IN_PROGRESS. El problema SIGUE activo: se actualiza el estado en
+       * detalle, listas y Mis reportes sin sacarlo ni pedir reacción del
+       * personaje (no es un cierre). La integridad agregada no cambia.
+       */
+      const nextStatus = action.detail.status
+      const activeStatus: ActiveSituationStatus | null =
+        nextStatus === 'OPEN' || nextStatus === 'IN_PROGRESS'
+          ? nextStatus
+          : null
+
+      const patchProblem = (
+        problem: CoordinationProblem,
+      ): CoordinationProblem =>
+        problem.id === action.problemId && activeStatus
+          ? { ...problem, status: activeStatus }
+          : problem
+
+      const problemsByCoordination = Object.fromEntries(
+        Object.entries(state.problemsByCoordination).map(([code, cached]) => [
+          code,
+          {
+            ...cached,
+            problems: cached.problems.map(patchProblem),
+          },
+        ]),
+      )
+
+      const previousSections =
+        state.detailByProblem[action.problemId]?.sections ??
+        state.level2.sections
+      const sections = {
+        ...previousSections,
+        // El timeline gana un evento de cambio de estado: se vuelve a pedir.
+        timeline: {
+          status: 'idle' as const,
+          items: [],
+          errorMessage: null,
+        },
+      }
+
+      const detalleActualizado = {
+        detail: action.detail,
+        sections,
+      }
+
+      return {
+        ...state,
+        problemsByCoordination,
+        level1: {
+          ...state.level1,
+          problems: state.level1.problems.map(patchProblem),
+        },
+        detailByProblem: {
+          ...state.detailByProblem,
+          [action.problemId]: detalleActualizado,
+        },
+        level2:
+          state.selectedProblemId === action.problemId
+            ? {
+                ...state.level2,
+                status: 'ready',
+                detail: action.detail,
+                sections,
+                errorMessage: null,
+              }
+            : state.level2,
+        myReports: {
+          ...state.myReports,
+          items: state.myReports.items.map((item) =>
+            item.id === action.problemId
+              ? {
+                  ...item,
+                  status: action.detail.status,
+                  canResolve: action.detail.canResolve,
+                }
+              : item,
+          ),
+        },
+        submission: initialOperationalCardsState.submission,
+        pendingCharacterReaction: null,
+      }
+    }
+
+    case 'SUBMIT_STATUS_ADVANCE_ERROR':
+      return {
+        ...state,
+        submission: {
+          kind: 'status-advance',
           status: 'error',
           targetKey: state.submission.targetKey,
           errorMessage: action.message,

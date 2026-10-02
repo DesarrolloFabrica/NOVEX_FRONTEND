@@ -26,12 +26,17 @@ const PERMISSIONS = [
   'REPORTS_VIEW',
 ]
 
+/*
+ * Creación solo para ANALISTA/COORDINADOR en producto. ADMIN puede llevar
+ * SITUATIONS_CREATE en el seed del API, pero esta experiencia no le muestra
+ * botones de registro; el fixture usa ANALISTA para ejercitar los CTAs.
+ */
 const session = {
-  id: 'e2e-admin',
-  name: 'Administrador E2E',
+  id: 'e2e-analyst',
+  name: 'Analista E2E',
   role: 'supervisor',
-  roleCode: 'ADMIN',
-  roleName: 'Administrador',
+  roleCode: 'ANALISTA',
+  roleName: 'Analista',
   permissions: PERMISSIONS,
   onboardingStep: 100,
   onboardingCompleted: true,
@@ -48,10 +53,10 @@ function base64Url(value: string): string {
 function accessToken(): string {
   return `${base64Url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))}.${base64Url(
     JSON.stringify({
-      sub: 'e2e-admin',
-      email: 'admin@novex.test',
-      roleId: 'role-admin',
-      roleCode: 'ADMIN',
+      sub: 'e2e-analyst',
+      email: 'analyst@novex.test',
+      roleId: 'role-analyst',
+      roleCode: 'ANALISTA',
       coordinationId: null,
       permissions: PERMISSIONS,
       status: 'ACTIVE',
@@ -70,8 +75,8 @@ const MIS_REPORTES = [
     coordinationId: 'uuid-negocios',
     coordinationCode: 'coord-negocios',
     coordinationName: 'Negocios',
-    createdByUserId: 'e2e-admin',
-    createdByUserName: 'Administrador E2E',
+    createdByUserId: 'e2e-analyst',
+    createdByUserName: 'Analista E2E',
     categoryId: 'cat',
     categoryCode: 'TECH',
     categoryName: 'Técnica',
@@ -91,8 +96,8 @@ const MIS_REPORTES = [
     coordinationId: null,
     coordinationCode: null,
     coordinationName: null,
-    createdByUserId: 'e2e-admin',
-    createdByUserName: 'Administrador E2E',
+    createdByUserId: 'e2e-analyst',
+    createdByUserName: 'Analista E2E',
     categoryId: 'cat',
     categoryCode: 'TECH',
     categoryName: 'Técnica',
@@ -206,7 +211,7 @@ test.describe('panel derecho · modos', () => {
   }) => {
     await page.locator(CARD).first().click({ force: true })
     await settle(page)
-    await page.getByTestId('report-problem-button').click()
+    await page.getByTestId('report-internal-button').first().click()
     await settle(page)
 
     await expect(page.locator(PANEL)).toHaveAttribute('data-mode', 'report')
@@ -215,16 +220,54 @@ test.describe('panel derecho · modos', () => {
     await expect(page.getByTestId('report-severity-MEDIUM')).toBeChecked()
   })
 
-  test('sin coordinación el formulario lo dice y no deja enviar', async ({
+  test('sin coordinación los CTAs están deshabilitados', async ({ page }) => {
+    await expect(page.getByTestId('report-internal-button').first()).toBeDisabled()
+    await expect(page.getByTestId('report-dependency-button').first()).toBeDisabled()
+    await expect(page.getByTestId('report-cta-need-card').first()).toBeVisible()
+  })
+
+  test('Volver desde el formulario restaura idle con ambos CTAs', async ({
     page,
   }) => {
-    await page.getByTestId('report-problem-button').click()
+    await page.locator(CARD).first().click({ force: true })
+    await settle(page)
+    await page.getByTestId('report-dependency-button').click()
+    await settle(page)
+    await expect(page.locator(PANEL)).toHaveAttribute('data-mode', 'report')
+
+    await page.getByTestId('report-form-back').click()
     await settle(page)
 
-    await expect(page.getByTestId('report-form-no-destination')).toBeVisible()
-    await expect(page.getByTestId('report-submit')).toBeDisabled()
+    await expect(page.locator(PANEL)).toHaveAttribute('data-mode', 'idle')
+    await expect(page.getByTestId('report-internal-button')).toBeVisible()
+    await expect(page.getByTestId('report-dependency-button')).toBeVisible()
+  })
+
+  test('en idle el título queda arriba y los CTAs compactos debajo', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.locator(CARD).first().click({ force: true })
+    await settle(page)
+
+    const heading = await page
+      .locator('.action-panel__idle-heading')
+      .boundingBox()
+    const cta = await page.getByTestId('report-cta-group').boundingBox()
+    expect(heading).toBeTruthy()
+    expect(cta).toBeTruthy()
+    if (cta && heading) {
+      expect(heading.y).toBeLessThan(cta.y)
+      expect(cta.width).toBeLessThanOrEqual(220)
+    }
+
+    await expect(page.getByTestId('history-open-button')).toBeVisible()
+    await expect(
+      page.getByTestId('my-reports').getByTestId('history-open-button'),
+    ).toHaveCount(0)
   })
 })
+
 
 test.describe('«Mis reportes»', () => {
   test.beforeEach(async ({ page }) => {
@@ -251,10 +294,17 @@ test.describe('«Mis reportes»', () => {
     await expect(fila).toContainText('Sin coordinación')
   })
 
-  test('el botón de reportar existe también con la lista cargada', async ({
+  test('los CTAs de creación viven en el panel de acción, no en Mis reportes', async ({
     page,
   }) => {
-    await expect(page.getByTestId('report-problem-button')).toBeVisible()
+    const myReports = page.getByTestId('my-reports')
+    await expect(myReports.getByTestId('report-internal-button')).toHaveCount(0)
+    await expect(myReports.getByTestId('report-dependency-button')).toHaveCount(0)
+
+    const panel = page.getByTestId('action-panel')
+    await expect(panel).toHaveAttribute('data-mode', 'idle')
+    await expect(panel.getByTestId('report-internal-button')).toBeVisible()
+    await expect(panel.getByTestId('report-dependency-button')).toBeVisible()
   })
 })
 
@@ -311,7 +361,7 @@ for (const viewport of [
       expect(round(stageSeleccionada.y)).toBe(round(stageAntes.y))
       expect(round(stageSeleccionada.height)).toBe(round(stageAntes.height))
 
-      await page.getByTestId('report-problem-button').click()
+      await page.getByTestId('report-internal-button').first().click()
       await settle(page)
       await esperarEscenaEstable(page, '[data-testid="shell-stage"]')
 

@@ -45,7 +45,6 @@ import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { useOnboarding } from '@/modules/onboarding/OnboardingContext'
 import {
   canCreateCoordinationSituations,
-  canUpdateSituationStatus,
 } from '@/modules/auth/utils/permissions'
 import {
   normalizeRoleCode,
@@ -57,6 +56,7 @@ import { ScreenDeck } from '@/modules/monitoring/components/ScreenDeck'
 import type { UpdateSituationStatusInput } from '@/modules/monitoring/utils/situation-lifecycle'
 import { MainScreen, NovexFrame, NovexRoom } from '@/modules/room'
 import { updateSituationStatus } from '@/modules/services/situationManagementData.service'
+import { resolveSituationWithLearning } from '@/modules/services/situationManagementData.service'
 import type { Coordination } from '@/modules/impact-network/types/operational-network.types'
 import type {
   SituationImpactContextResponse,
@@ -241,6 +241,7 @@ export function ImpactNetworkExperience() {
     Record<string, boolean>
   >({})
   const [isUpdatingSituation, setIsUpdatingSituation] = useState(false)
+  const [isResolvingSituation, setIsResolvingSituation] = useState(false)
   const [isExportingPdf, setIsExportingPdf] = useState(false)
   const [exportPdfError, setExportPdfError] = useState<string | null>(null)
   const [showAnalysisModal, setShowAnalysisModal] = useState(false)
@@ -949,6 +950,37 @@ export function ImpactNetworkExperience() {
     [focusedSituation],
   )
 
+  const handleResolveSituation = useCallback(
+    async (learning: string) => {
+      if (!focusedSituation) return
+      setIsResolvingSituation(true)
+      try {
+        const updated = await resolveSituationWithLearning(
+          focusedSituation.id,
+          learning,
+        )
+        setSituations((current) =>
+          current.map((item) => (item.id === updated.id ? updated : item)),
+        )
+        setEvents((current) =>
+          current.map((event) =>
+            event.id === updated.id
+              ? mapSituationToImpactOperationalEvent(
+                  updated,
+                  event.interpretation,
+                )
+              : event,
+          ),
+        )
+        const bootstrap = await loadImpactNetworkBootstrap()
+        setNetworkSnapshot(bootstrap.networkStatus)
+      } finally {
+        setIsResolvingSituation(false)
+      }
+    },
+    [focusedSituation],
+  )
+
   const loading = topologyLoading || situationsLoading
   const networkError = topologyError ?? situationsError
   const environment = getEnvironment(loading, networkError, networkStatus)
@@ -1389,11 +1421,11 @@ export function ImpactNetworkExperience() {
                       affectedNames={propagation?.affectedNames ?? []}
                       reducedMotion={Boolean(reduceMotion)}
                       executiveMode={executiveOperationalView}
-                      canUpdateSituation={canUpdateSituationStatus(
-                        user,
-                        focusedSituation,
-                      )}
+                      canUpdateSituation={
+                        focusedSituation?.canAdvanceToInProgress === true
+                      }
                       isUpdatingSituation={isUpdatingSituation}
+                      isResolvingSituation={isResolvingSituation}
                       isExportingPdf={isExportingPdf}
                       exportPdfError={exportPdfError}
                       onSelectSituation={selectSituation}
@@ -1403,6 +1435,7 @@ export function ImpactNetworkExperience() {
                           : undefined
                       }
                       onUpdateSituationStatus={handleUpdateSituationStatus}
+                      onResolveSituation={handleResolveSituation}
                       onOpenAnalysis={() => setShowAnalysisModal(true)}
                       onDownloadPdf={() => {
                         void handleDownloadPdf()

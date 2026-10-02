@@ -45,7 +45,12 @@ export function UpdateSituationStatusModal({
 }: UpdateSituationStatusModalProps) {
   const titleId = useId()
   const closeRef = useRef<HTMLButtonElement>(null)
-  const nextStatus = getNextOperationalStatus(currentStatus)
+  const rawNext = getNextOperationalStatus(currentStatus)
+  /*
+   * CLOSED ya no se avanza por este modal: el backend exige
+   * POST /situations/:id/resolution. Solo OPEN → IN_PROGRESS.
+   */
+  const nextStatus = rawNext === 'CLOSED' ? null : rawNext
   const [selectedStatus, setSelectedStatus] =
     useState<SituationOperationalStatus | null>(nextStatus)
   const [comment, setComment] = useState('')
@@ -106,7 +111,9 @@ export function UpdateSituationStatusModal({
             </button>
           </header>
           <p className="novex-ops-modal__hint">
-            Esta situación está cerrada y no admite nuevas modificaciones.
+            {rawNext === 'CLOSED'
+              ? 'Para cerrar el problema use «Resolver problema» e registre el aprendizaje. El PATCH genérico ya no admite el cierre.'
+              : 'Esta situación está cerrada y no admite nuevas modificaciones.'}
           </p>
         </div>
       </div>,
@@ -178,10 +185,10 @@ export function UpdateSituationStatusModal({
           </div>
         ) : null}
 
-        {nextStatus === 'CLOSED' ? (
-          <p className="novex-ops-modal__hint novex-ops-modal__hint--warning">
-            Al cerrar, la situación sale de la Red de impacto y de la cola de
-            gestión. Seguirá disponible en Situaciones registradas.
+        {nextStatus === 'IN_PROGRESS' ? (
+          <p className="novex-ops-modal__hint">
+            Pasará a «En atención». El cierre con aprendizaje es una acción
+            aparte.
           </p>
         ) : null}
 

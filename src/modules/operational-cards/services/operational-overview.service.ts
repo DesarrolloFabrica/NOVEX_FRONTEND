@@ -124,6 +124,12 @@ function parseCoordination(
       'affectedCoordinationCount',
       path,
     ),
+    incomingDependencyCount:
+      typeof value.incomingDependencyCount === 'number' &&
+      Number.isInteger(value.incomingDependencyCount) &&
+      value.incomingDependencyCount >= 0
+        ? value.incomingDependencyCount
+        : 0,
   }
 }
 

@@ -1,7 +1,10 @@
 import type { SituationEvidenceItem } from '@/modules/api/evidences.api'
 import type { SituationRecommendation } from '@/modules/api/recommendations.api'
 import type { SituationTimelineEntry } from '@/modules/api/timeline.api'
-import type { SituationSeverity } from '@/modules/situations/types/situation.types'
+import type {
+  SituationReportKind,
+  SituationSeverity,
+} from '@/modules/situations/types/situation.types'
 import type { LoadState } from '@/modules/operational-cards/types/operational-cards.state'
 
 /**
@@ -60,14 +63,18 @@ export interface ProblemDetail {
   dueAt: string | null
   /** Resumen real: del análisis si existe, o de la descripción si no. */
   summary: string
-  /** Contexto secundario; la coordinación ya se ve detrás. */
-  coordinationName: string | null
   createdAt: string
   /** Null cuando la situación no tiene análisis IA (ocurre en ~20 %). */
   impact: ProblemImpact | null
   intelligence: ProblemIntelligence | null
   /** Coordinación RESPONSABLE. `null` es «Sin coordinación», no un hueco. */
   coordinationCode: string | null
+  coordinationName: string | null
+  affectedCoordinationCode: string | null
+  affectedCoordinationName: string | null
+  reportKind: SituationReportKind
+  affectedProcess: string | null
+  pendingDelivery: string | null
   /** Autor del reporte, distinto de quien lo resuelve. */
   createdByUserName: string | null
   /**
@@ -75,6 +82,16 @@ export interface ProblemDetail {
    * La interfaz solo la obedece; no la recalcula ni la deduce del rol.
    */
   canResolve: boolean
+  /**
+   * Decisión del BACKEND sobre OPEN → IN_PROGRESS. Independiente de
+   * `canUpdate` (otras ediciones) y de `canResolve`.
+   */
+  canAdvanceToInProgress: boolean
+  /**
+   * Otras actualizaciones vía PATCH (autoría / ownership). No autoriza por
+   * sí sola el botón «En atención».
+   */
+  canUpdate: boolean
   /** Aprendizaje y datos de resolución, si existen. */
   resolution: ProblemResolution | null
 }

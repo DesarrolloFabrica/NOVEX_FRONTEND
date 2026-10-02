@@ -1,67 +1,76 @@
 import type { CoordinationProblem } from '@/modules/operational-cards/types/operational-cards.state'
+import { ProblemDossierCard } from '@/modules/operational-cards/components/ProblemDossierCard'
+import {
+  buildProblemRowAccessibleName,
+  resolveProblemMark,
+} from '@/modules/operational-cards/data/coordinationMark'
+import {
+  DOSSIER_ACTIVE_STATUS_LABEL,
+  DOSSIER_SEVERITY_LABEL,
+} from '@/modules/operational-cards/data/problemDossier'
 
 /**
- * Fila de problema en la carta activa.
+ * Ficha de problema de una coordinación consultada.
  *
- * Muestra SOLO título y severidad. El estado (`OPEN` / `IN_PROGRESS`) viaja en
- * `data-status` para diagnóstico y lectores de pantalla, no como una segunda
- * insignia que compita con la severidad.
- *
- * Es un `button` preparado para la fase de la isla flotante: `onSelect` existe
- * pero la experiencia todavía no lo conecta, así que el clic no abre nada.
+ * Presentación dossier compartida: logo + tipo/origen, severidad y estado por
+ * separado, y aviso SLA solo si la lista ya trae `slaHealth` en riesgo/vencido.
  */
-
-const SEVERITY_LABEL = {
-  CRITICAL: 'Crítica',
-  HIGH: 'Alta',
-  MEDIUM: 'Media',
-  LOW: 'Baja',
-} as const
-
-const STATUS_LABEL = {
-  OPEN: 'Registrada',
-  IN_PROGRESS: 'En atención',
-} as const
 
 export interface ProblemRowProps {
   problem: CoordinationProblem
-  /**
-   * Si esta fila es la que alimenta la región de detalle.
-   *
-   * `aria-current` y no `aria-pressed`: la fila no conmuta un ajuste, señala
-   * cuál de los elementos de la lista se está mirando ahora mismo, que es
-   * exactamente lo que `aria-current` significa. Nació con el detalle
-   * persistente: mientras el detalle era una isla que tapaba la escena, no
-   * hacía falta marcar su origen porque no se veían a la vez.
-   */
+  /** Coordinación consultada: punto de vista para elegir «la otra». */
+  selectedCoordinationCode?: string | null
   selected?: boolean
   onSelect?: (problemId: string) => void
+  /** Nombres de presentación por code. */
+  labelByCode?: Readonly<Record<string, string>>
+  /** Colores de overview por code (talón de identidad). */
+  colorByCode?: Readonly<Record<string, string>>
 }
 
-export function ProblemRow({ problem, selected, onSelect }: ProblemRowProps) {
-  const severityLabel = SEVERITY_LABEL[problem.severity]
+export function ProblemRow({
+  problem,
+  selectedCoordinationCode = null,
+  selected,
+  onSelect,
+  labelByCode,
+  colorByCode,
+}: ProblemRowProps) {
+  const severityLabel = DOSSIER_SEVERITY_LABEL[problem.severity]
+  const statusLabel = DOSSIER_ACTIVE_STATUS_LABEL[problem.status]
+  const mark = resolveProblemMark({
+    reportKind: problem.reportKind,
+    coordinationCode: problem.coordinationCode,
+    affectedCoordinationCode: problem.affectedCoordinationCode,
+    viewpointCode: selectedCoordinationCode,
+    labelByCode,
+  })
 
   return (
-    <button
-      type="button"
-      className="problem-row"
-      data-testid="problem-row"
-      data-problem-id={problem.id}
-      data-severity={problem.severity}
-      data-status={problem.status}
-      data-selected={selected ? 'true' : 'false'}
-      aria-current={selected ? 'true' : undefined}
-      aria-label={`${problem.title}. Severidad ${severityLabel}. ${
-        STATUS_LABEL[problem.status]
-      }.`}
+    <ProblemDossierCard
+      id={problem.id}
+      title={problem.title}
+      severity={problem.severity}
+      status={problem.status}
+      reportKind={problem.reportKind}
+      mark={mark}
+      severityLabel={severityLabel}
+      statusLabel={statusLabel}
+      accessibleName={buildProblemRowAccessibleName({
+        title: problem.title,
+        mark,
+        severityLabel,
+        statusLabel,
+      })}
+      selected={Boolean(selected)}
+      slaHealth={problem.slaHealth ?? null}
+      colorByCode={colorByCode}
+      surfaceClassName="problem-row"
+      testId="problem-row"
+      originTestId="problem-row-origin"
+      severityTestId="problem-row-severity"
+      statusTestId="problem-row-status"
       onClick={onSelect ? () => onSelect(problem.id) : undefined}
-    >
-      <span className="problem-row__title" title={problem.title}>
-        {problem.title}
-      </span>
-      <span className="problem-row__severity" data-testid="problem-row-severity">
-        {severityLabel}
-      </span>
-    </button>
+    />
   )
 }

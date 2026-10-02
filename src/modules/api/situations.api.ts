@@ -21,6 +21,10 @@ export interface SituationsListQuery {
   categoryId?: string
   occurredFrom?: string
   occurredTo?: string
+  /** Inicio inclusivo del intervalo de cierre (`closedAt`). */
+  closedFrom?: string
+  /** Fin inclusivo del intervalo de cierre (`closedAt`). */
+  closedTo?: string
   page?: number
   limit?: number
 }
@@ -58,6 +62,8 @@ export async function fetchSituations(
   if (query.categoryId) params.set('categoryId', query.categoryId)
   if (query.occurredFrom) params.set('occurredFrom', query.occurredFrom)
   if (query.occurredTo) params.set('occurredTo', query.occurredTo)
+  if (query.closedFrom) params.set('closedFrom', query.closedFrom)
+  if (query.closedTo) params.set('closedTo', query.closedTo)
   if (query.page) params.set('page', String(query.page))
   if (query.limit) params.set('limit', String(query.limit))
 
@@ -67,7 +73,8 @@ export async function fetchSituations(
 
 export interface CreateSituationWithAnalysisResponse {
   situation: SituationResponse
-  analysis: ExecuteAIAnalysisResponse
+  /** Nulo mientras el análisis en el registro esté desactivado en backend. */
+  analysis: ExecuteAIAnalysisResponse | null
 }
 
 export async function createSituationWithAnalysis(
@@ -118,8 +125,8 @@ export interface SituationResolutionResponse {
  *
  * Deliberadamente NO se usa `updateSituation` (el PATCH genérico): el backend
  * dejó de admitir `CLOSED` por esa vía, porque autoriza por autoría o por área
- * y eso es más amplio que la regla de resolución. Tampoco se encadenan
- * transiciones intermedias: no existe un paso por «En atención».
+ * y eso es más amplio que la regla de resolución. El paso intermedio
+ * «En atención» (OPEN → IN_PROGRESS) SÍ usa el PATCH; este helper solo cierra.
  *
  * El cuerpo lleva SOLO el aprendizaje. La coordinación responsable no se envía:
  * el servidor autoriza contra la que tiene persistida.

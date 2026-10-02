@@ -2,69 +2,127 @@ import { ProblemDetail } from '@/modules/operational-cards/components/ProblemDet
 import { ProblemActions } from '@/modules/operational-cards/components/ProblemActions'
 import { ReportProblemForm } from '@/modules/operational-cards/components/ReportProblemForm'
 import type { ReportProblemFormProps } from '@/modules/operational-cards/components/ReportProblemForm'
+import { ProblemHistoryPanel } from '@/modules/operational-cards/components/ProblemHistoryPanel'
 import type { ProblemSectionId } from '@/modules/operational-cards/types/problem-detail.types'
 import type {
   OperationalCardsLevel2State,
   OperationalPanelMode,
   OperationalSubmissionState,
+  ReportFormKind,
 } from '@/modules/operational-cards/types/operational-cards.state'
+import type { ProblemHistoryState } from '@/modules/operational-cards/types/problem-history.types'
+import type { ProblemHistoryPeriod } from '@/modules/operational-cards/types/problem-history.types'
 
 /**
- * PANEL DERECHO: dos flujos y un reposo.
+ * PANEL DERECHO:
  *
- *   idle    Indicación breve de qué se puede hacer. NO es un tercer formulario.
- *   report  Formulario de reporte para la coordinación seleccionada.
- *   detail  Detalle completo del problema, con sus acciones debajo.
- *
- * El modo llega decidido desde el estado y NO se deduce de la selección: pulsar
- * una carta no abre el formulario, eso lo hace «Reportar problema».
- *
- * REUTILIZA `ProblemDetail` tal cual, con su carga por secciones y sus
- * servicios. No se duplica su lógica: lo que se añade son las ACCIONES, en un
- * componente aparte que vive debajo.
- *
- * Mientras un detalle carga o falla, el panel CONSERVA el modo detalle y muestra
- * su estado. Nunca cambia solo al formulario, que borraría el contexto de lo que
- * el usuario estaba intentando abrir.
+ *   idle     Título + accesos compactos (crear / historial) en zona segura.
+ *   report   Formulario del tipo elegido.
+ *   history  Lista CLOSED con filtro de closedAt.
+ *   detail   Expediente; sin accesos de creación ni historial.
  */
 
 export interface OperationalActionPanelProps {
   mode: OperationalPanelMode
-  /** Hay una coordinación seleccionada en las cartas. */
+  reportFormKind: ReportFormKind | null
   hasCoordination: boolean
+  selectedCoordinationCode: string | null
   level2: OperationalCardsLevel2State
   submission: OperationalSubmissionState
   learningDraft: string
+  history: ProblemHistoryState
   onToggleSection: (section: ProblemSectionId) => void
   onLearningChange: (value: string) => void
   onResolve: () => void
-  onReportAnother: () => void
+  onAdvanceToInProgress: () => void
+  onReportInternal: () => void
+  onReportDependency: () => void
+  onCancelReport: () => void
+  onCloseDetail: () => void
   onRetryDetail: () => void
+  onOpenHistory: () => void
+  onCloseHistory: () => void
+  onHistoryPeriodChange: (period: ProblemHistoryPeriod) => void
+  onSelectHistoryProblem: (problemId: string) => void
+  onLoadMoreHistory: () => void
+  onRetryHistory: () => void
   reportForm: ReportProblemFormProps
+  canCreate?: boolean
+  /** Quien puede consultar situaciones ve el acceso al historial. */
+  canViewHistory?: boolean
+  idleHint?: string | null
+  labelByCode?: Readonly<Record<string, string>>
+  colorByCode?: Readonly<Record<string, string>>
 }
 
 export function OperationalActionPanel({
   mode,
+  reportFormKind,
   hasCoordination,
+  selectedCoordinationCode,
   level2,
   submission,
   learningDraft,
+  history,
   onToggleSection,
   onLearningChange,
   onResolve,
-  onReportAnother,
+  onAdvanceToInProgress,
+  onReportInternal,
+  onReportDependency,
+  onCancelReport,
+  onCloseDetail,
   onRetryDetail,
+  onOpenHistory,
+  onCloseHistory,
+  onHistoryPeriodChange,
+  onSelectHistoryProblem,
+  onLoadMoreHistory,
+  onRetryHistory,
   reportForm,
+  canCreate = false,
+  canViewHistory = false,
+  idleHint = null,
+  labelByCode,
+  colorByCode,
 }: OperationalActionPanelProps) {
-  if (mode === 'report') {
+  if (mode === 'report' && reportFormKind) {
     return (
       <div
         className="action-panel"
         data-testid="action-panel"
-        data-tour="action-panel"
+        data-surface="action-panel"
         data-mode="report"
+        data-report-kind={reportFormKind}
       >
-        <ReportProblemForm {...reportForm} />
+        <ReportProblemForm
+          {...reportForm}
+          reportKind={reportFormKind}
+          onCancel={onCancelReport}
+        />
+      </div>
+    )
+  }
+
+  if (mode === 'history') {
+    return (
+      <div
+        className="action-panel"
+        data-testid="action-panel"
+        data-surface="action-panel"
+        data-mode="history"
+      >
+        <ProblemHistoryPanel
+          history={history}
+          selectedProblemId={level2.problemId}
+          labelByCode={labelByCode}
+          colorByCode={colorByCode}
+          onPeriodChange={onHistoryPeriodChange}
+          onSelect={onSelectHistoryProblem}
+          onLoadMore={onLoadMoreHistory}
+          onRetry={onRetryHistory}
+          onBack={onCloseHistory}
+        />
       </div>
     )
   }
@@ -74,16 +132,25 @@ export function OperationalActionPanel({
       <div
         className="action-panel"
         data-testid="action-panel"
-        data-tour="action-panel"
+        data-surface="action-panel"
         data-mode="detail"
       >
-        {/* El detalle, con su propia carga y sus secciones perezosas. */}
-        <ProblemDetail level2={level2} onToggleSection={onToggleSection} />
+        <div className="action-panel__detail-nav">
+          <button
+            type="button"
+            className="action-panel__detail-back"
+            data-testid="detail-back"
+            onClick={onCloseDetail}
+          >
+            Volver
+          </button>
+        </div>
+        <ProblemDetail
+          level2={level2}
+          selectedCoordinationCode={selectedCoordinationCode}
+          onToggleSection={onToggleSection}
+        />
 
-        {/*
-          Un fallo al cargar el detalle NO devuelve al formulario: se conserva
-          el contexto y se ofrece reintentar el mismo problema.
-        */}
         {level2.status === 'error' && (
           <div className="action-panel__retry">
             <button
@@ -93,18 +160,9 @@ export function OperationalActionPanel({
             >
               Reintentar
             </button>
-            <button
-              type="button"
-              className="action-panel__secondary"
-              data-testid="report-another-button"
-              onClick={onReportAnother}
-            >
-              Reportar otro problema
-            </button>
           </div>
         )}
 
-        {/* Las acciones solo existen con el detalle ya cargado. */}
         {level2.status === 'ready' && level2.detail && (
           <ProblemActions
             detail={level2.detail}
@@ -112,28 +170,114 @@ export function OperationalActionPanel({
             submission={submission}
             onLearningChange={onLearningChange}
             onResolve={onResolve}
-            onReportAnother={onReportAnother}
+            onAdvanceToInProgress={onAdvanceToInProgress}
           />
         )}
       </div>
     )
   }
 
-  // ---------- REPOSO ----------
+  const defaultHint = canCreate
+    ? hasCoordination
+      ? 'También puede seleccionar un problema de las listas para consultar su detalle.'
+      : 'Seleccione una coordinación en las cartas para registrar, o elija un reporte propio para consultar su detalle.'
+    : hasCoordination
+      ? 'Seleccione un problema de las listas para consultar su detalle.'
+      : 'Seleccione una coordinación en las cartas para ver sus problemas, o un reporte propio para abrir su detalle.'
+
+  const consultOnly = canViewHistory && !canCreate
+
   return (
     <div
       className="action-panel"
       data-testid="action-panel"
-      data-tour="action-panel"
+      data-surface="action-panel"
       data-mode="idle"
+      data-can-create={canCreate ? 'true' : 'false'}
+      data-can-view-history={canViewHistory ? 'true' : 'false'}
+      data-consult-only={consultOnly ? 'true' : 'false'}
     >
-      <div className="action-panel__idle" data-testid="action-panel-idle">
+      <div
+        className={
+          consultOnly
+            ? 'action-panel__idle action-panel__idle--consult'
+            : 'action-panel__idle'
+        }
+        data-testid="action-panel-idle"
+      >
         <h2 className="action-panel__idle-heading">Reportar o consultar</h2>
-        <p className="action-panel__idle-text">
-          {hasCoordination
-            ? 'Elija un problema de la lista para ver su detalle, o pulse «Reportar problema» para registrar uno nuevo en esta coordinación.'
-            : 'Seleccione una coordinación en las cartas para ver sus problemas, o pulse «Reportar problema» para registrar uno nuevo.'}
-        </p>
+
+        {consultOnly ? (
+          <>
+            <p className="action-panel__idle-text" data-testid="consult-idle-copy">
+              {idleHint ??
+                'Consulte problemas ya cerrados por período (semana, mes o ciclo) y revise el aprendizaje registrado.'}
+            </p>
+            <div className="action-panel__cta-safe" data-testid="report-cta-group">
+              <button
+                type="button"
+                className="action-panel__cta action-panel__cta--history action-panel__cta--consult"
+                data-testid="history-open-button"
+                data-surface="history-open"
+                onClick={onOpenHistory}
+              >
+                Historial de problemas
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="action-panel__cta-safe" data-testid="report-cta-group">
+              {canCreate ? (
+                <>
+                  <button
+                    type="button"
+                    className="action-panel__cta"
+                    data-testid="report-internal-button"
+                    data-surface="report-internal"
+                    onClick={onReportInternal}
+                    disabled={!hasCoordination}
+                  >
+                    Problema interno
+                  </button>
+                  <button
+                    type="button"
+                    className="action-panel__cta action-panel__cta--secondary"
+                    data-testid="report-dependency-button"
+                    data-surface="report-dependency"
+                    onClick={onReportDependency}
+                    disabled={!hasCoordination}
+                  >
+                    Dependencia de otra coordinación
+                  </button>
+                </>
+              ) : null}
+
+              {canViewHistory ? (
+                <button
+                  type="button"
+                  className="action-panel__cta action-panel__cta--history"
+                  data-testid="history-open-button"
+                  data-surface="history-open"
+                  onClick={onOpenHistory}
+                >
+                  Historial de problemas
+                </button>
+              ) : null}
+
+              {canCreate && !hasCoordination ? (
+                <p
+                  className="action-panel__cta-note"
+                  data-testid="report-cta-need-card"
+                >
+                  Seleccione una coordinación en las cartas para reportar.
+                </p>
+              ) : null}
+            </div>
+
+            <p className="action-panel__idle-text">{idleHint ?? defaultHint}</p>
+          </>
+        )}
       </div>
     </div>
   )

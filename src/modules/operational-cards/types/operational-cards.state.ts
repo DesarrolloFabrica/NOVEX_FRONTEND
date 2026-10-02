@@ -1,5 +1,8 @@
 import type { CoordinationId } from '@/modules/impact-network/data/coordination-islands.config'
-import type { SituationSeverity } from '@/modules/situations/types/situation.types'
+import type {
+  SituationReportKind,
+  SituationSeverity,
+} from '@/modules/situations/types/situation.types'
 import type { OperationalOverview } from '@/modules/operational-cards/types/operational-overview.contract'
 import type {
   ProblemDetail,
@@ -7,6 +10,7 @@ import type {
   ProblemSectionsState,
 } from '@/modules/operational-cards/types/problem-detail.types'
 import type { MyReport } from '@/modules/operational-cards/types/my-reports.types'
+import type { ProblemHistoryState } from '@/modules/operational-cards/types/problem-history.types'
 import type { SituationsListScope } from '@/modules/api/situations.api'
 
 /** Estado de carga, independiente por nivel: un fallo en LEVEL 1 no borra la baraja. */
@@ -31,6 +35,9 @@ export interface CoordinationProblem {
   createdAt: string
   slaHealth?: 'on_track' | 'at_risk' | 'overdue' | 'closed'
   affectedCoordinationCount?: number
+  reportKind?: SituationReportKind
+  coordinationCode?: string | null
+  affectedCoordinationCode?: string | null
 }
 
 /**
@@ -66,17 +73,20 @@ export interface OperationalCardsLevel1State {
 }
 
 /**
- * MODO DEL PANEL DERECHO. Son dos flujos y un reposo, no tres formularios:
+ * MODO DEL PANEL DERECHO:
  *
- *   idle    Nada iniciado todavía: una indicación breve de qué se puede hacer.
- *   report  Formulario de reporte para la coordinación seleccionada.
- *   detail  Detalle completo del problema elegido, con sus acciones.
- *
- * El modo es EXPLÍCITO y no se deduce de la selección, porque seleccionar una
- * carta NO debe abrir el formulario: eso lo decide el usuario pulsando
- * «Reportar problema».
+ *   idle     Accesos (crear / historial) + indicación breve.
+ *   report   Formulario de reporte.
+ *   history  Lista de cerrados con filtro de periodo.
+ *   detail   Expediente del problema (sin accesos de creación/historial).
  */
-export type OperationalPanelMode = 'idle' | 'report' | 'detail'
+export type OperationalPanelMode = 'idle' | 'report' | 'history' | 'detail'
+
+/** A dónde vuelve «Volver» desde el detalle. */
+export type DetailReturnMode = 'idle' | 'history'
+
+/** Qué formulario de reporte está abierto en el panel derecho. */
+export type ReportFormKind = SituationReportKind
 
 /** Rama de «Mis reportes». Independiente de la carta seleccionada. */
 export interface MyReportsState {
@@ -98,6 +108,16 @@ export interface ReportDraft {
   severity: SituationSeverity
   /** `datetime-local`, en hora local del usuario. */
   occurredAt: string
+  /** UUID de la coordinación responsable (INTER) o vacío (INTERNAL usa la carta). */
+  responsibleCoordinationId: string
+  /**
+   * Destino explícito de un INTERNAL (vista COORDINADOR).
+   * Vacío = la coordinación propia / carta seleccionada.
+   * Distinto de `responsibleCoordinationId` (solo INTER).
+   */
+  internalDestinationCoordinationId: string
+  affectedProcess: string
+  pendingDelivery: string
 }
 
 /**
@@ -109,7 +129,7 @@ export interface ReportDraft {
  * respuesta actualice ese destino aunque el usuario ya esté mirando otro.
  */
 export interface OperationalSubmissionState {
-  kind: 'report' | 'resolution' | null
+  kind: 'report' | 'resolution' | 'status-advance' | null
   status: 'idle' | 'sending' | 'error'
   targetKey: string | null
   errorMessage: string | null
@@ -141,13 +161,19 @@ export interface OperationalCardsState {
   /** Lista propia del usuario, transversal a las coordinaciones. */
   myReports: MyReportsState
 
+  /** Historial de cerrados del panel (filtro por closedAt en servidor). */
+  history: ProblemHistoryState
+
   /** Qué muestra el panel derecho. */
   panelMode: OperationalPanelMode
+  /** Kind del formulario cuando `panelMode === 'report'`. */
+  reportFormKind: ReportFormKind | null
+  /** Destino de «Volver» desde el detalle. */
+  detailReturnMode: DetailReturnMode
 
   /**
-   * Borradores de reporte POR COORDINACIÓN (clave: `code`, o
-   * `UNASSIGNED_DRAFT_KEY` sin selección). Cambiar de carta no pierde el texto
-   * escrito ni lo traslada a otra área.
+   * Borradores de reporte POR (coordinación, kind). Cambiar de carta o de modo
+   * no pierde el texto ni lo mezcla con el otro formulario.
    */
   reportDrafts: Readonly<Record<string, ReportDraft>>
 

@@ -101,13 +101,18 @@ export function toProblemDetail(
     intelligence,
     coordinationCode: situation.coordinationCode ?? null,
     createdByUserName: situation.createdByUserName ?? null,
+    affectedCoordinationCode: situation.affectedCoordinationCode ?? null,
+    affectedCoordinationName: situation.affectedCoordinationName ?? null,
+    reportKind: situation.reportKind ?? 'INTERNAL',
+    affectedProcess: situation.affectedProcess ?? null,
+    pendingDelivery: situation.pendingDelivery ?? null,
     /*
-     * `canResolve` lo decide el BACKEND con la misma política que autoriza la
-     * escritura. Se copia tal cual y nunca se deduce del rol en el navegador:
-     * dos criterios distintos acabarían discrepando, y el que manda es el del
-     * servidor, que además vuelve a comprobarlo al recibir la resolución.
+     * Capacidades de escritura: las decide el BACKEND. Se copian tal cual.
+     * El botón «En atención» usa `canAdvanceToInProgress`, no `canUpdate`.
      */
     canResolve: situation.canResolve === true,
+    canAdvanceToInProgress: situation.canAdvanceToInProgress === true,
+    canUpdate: situation.canUpdate === true,
     resolution: situation.resolution
       ? {
           learning: situation.resolution.learning,

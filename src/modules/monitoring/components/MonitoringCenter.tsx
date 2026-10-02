@@ -40,6 +40,7 @@ interface MonitoringCenterProps {
   updateError: string | null
   canUpdate: boolean
   isUpdating: boolean
+  isResolving: boolean
   environment: EnvironmentStatus
   onSelectSituation: (situationId: string) => void
   onSearchChange: (search: string) => void
@@ -50,6 +51,7 @@ interface MonitoringCenterProps {
   onPageSizeChange: (pageSize: number) => void
   onSummaryFilter: (filter: SituationQueueStatusFilter | 'CRITICAL') => void
   onUpdateSituationStatus: (input: UpdateSituationStatusInput) => Promise<void>
+  onResolveSituation: (learning: string) => Promise<void>
   onLogout: () => void
 }
 
@@ -118,6 +120,7 @@ export function MonitoringCenter({
   updateError: _updateError,
   canUpdate,
   isUpdating,
+  isResolving,
   environment,
   onSelectSituation,
   onSearchChange,
@@ -128,6 +131,7 @@ export function MonitoringCenter({
   onPageSizeChange,
   onSummaryFilter,
   onUpdateSituationStatus,
+  onResolveSituation,
   onLogout,
 }: MonitoringCenterProps) {
   const [showAnalysis, setShowAnalysis] = useState(false)
@@ -185,7 +189,9 @@ export function MonitoringCenter({
                   situation={dossier.situation}
                   canUpdate={canUpdate}
                   isUpdating={isUpdating}
+                  isResolving={isResolving}
                   onUpdate={onUpdateSituationStatus}
+                  onResolve={onResolveSituation}
                 />
               ) : null}
 

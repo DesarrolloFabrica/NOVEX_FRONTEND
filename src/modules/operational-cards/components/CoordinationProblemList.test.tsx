@@ -175,8 +175,9 @@ describe('CoordinationProblemList · los cuatro estados de LEVEL 1', () => {
     )
 
     expect(countOf(html, 'data-testid="problem-row"')).toBe(3)
-    // Botones de verdad: es lo que abre la isla con Enter o con Espacio.
-    expect(countOf(html, '<button')).toBe(3)
+    // Tres filas + el toggle Expandir/Contraer del panel.
+    expect(countOf(html, '<button')).toBe(4)
+    expect(html).toContain('data-testid="coordination-problems-expand"')
     expect(html).not.toContain('data-testid="coordination-panel-empty"')
   })
 

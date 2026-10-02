@@ -1,86 +1,97 @@
+import { useState } from 'react'
 import type { MyReport } from '@/modules/operational-cards/types/my-reports.types'
 import type { MyReportsState } from '@/modules/operational-cards/types/operational-cards.state'
+import { ProblemDossierCard } from '@/modules/operational-cards/components/ProblemDossierCard'
+import {
+  buildProblemRowAccessibleName,
+  resolveProblemMark,
+} from '@/modules/operational-cards/data/coordinationMark'
+import {
+  DOSSIER_HISTORY_STATUS_LABEL,
+  DOSSIER_SEVERITY_LABEL,
+  isDossierClosedStatus,
+} from '@/modules/operational-cards/data/problemDossier'
 
 /**
  * «MIS REPORTES»: lo que ESTE usuario ha reportado, en cualquier coordinación.
  *
- * Es la única lista de la escena que NO depende de la carta seleccionada:
- * cambiar de coordinación no la recarga ni la filtra. Por eso vive en su propia
- * rama de estado y su contexto sobrevive a la navegación por cartas.
- *
- * Presentacional puro: recibe la rama ya cargada y emite selección. Quién es el
- * autor lo decide el backend con el usuario autenticado; aquí no hay ningún
- * identificador de autor que enviar ni con el que filtrar.
+ * Solo consulta y apertura de detalle. Los accesos de CREACIÓN viven en el
+ * panel «Reportar o consultar» (idle), no aquí.
  */
-
-const SEVERITY_LABEL = {
-  CRITICAL: 'Crítica',
-  HIGH: 'Alta',
-  MEDIUM: 'Media',
-  LOW: 'Baja',
-} as const
-
-/** Incluye los estados cerrados: esta lista es el historial, no la bandeja. */
-const STATUS_LABEL: Record<string, string> = {
-  OPEN: 'Registrada',
-  IN_PROGRESS: 'En atención',
-  RESOLVED: 'En atención',
-  CLOSED: 'Solucionada',
-}
 
 export interface MyReportsPanelProps {
   myReports: MyReportsState
   selectedProblemId: string | null
   onSelect: (problemId: string, coordinationCode: string | null) => void
-  onReportProblem: () => void
   onLoadMore: () => void
+  /** Nombres de presentación por code, para la línea de origen. */
+  labelByCode?: Readonly<Record<string, string>>
+  /** Colores de overview por code (talón de identidad). */
+  colorByCode?: Readonly<Record<string, string>>
 }
 
 function MyReportRow({
   report,
   selected,
   onSelect,
+  labelByCode,
+  colorByCode,
 }: {
   report: MyReport
   selected: boolean
   onSelect: MyReportsPanelProps['onSelect']
+  labelByCode?: MyReportsPanelProps['labelByCode']
+  colorByCode?: MyReportsPanelProps['colorByCode']
 }) {
-  /*
-   * «Sin coordinación» es un estado LEGÍTIMO del dominio: los reportes
-   * históricos de analista nacieron sin área responsable. Se rotula como tal y
-   * no se les atribuye ninguna coordinación.
-   */
-  const coordinacion = report.coordinationName ?? 'Sin coordinación'
+  const mark = resolveProblemMark({
+    reportKind: report.reportKind,
+    coordinationCode: report.coordinationCode,
+    affectedCoordinationCode: report.affectedCoordinationCode,
+    viewpointCode: null,
+    labelByCode,
+    coordinationName: report.coordinationName,
+    affectedCoordinationName: report.affectedCoordinationName,
+  })
+  const statusLabel =
+    DOSSIER_HISTORY_STATUS_LABEL[report.status] ?? report.status
+  const severityLabel = DOSSIER_SEVERITY_LABEL[report.severity]
+  const closed = isDossierClosedStatus(report.status)
 
   return (
     <li>
-      <button
-        type="button"
-        className="my-reports__row"
-        data-testid="my-report-row"
-        data-problem-id={report.id}
-        data-severity={report.severity}
-        data-status={report.status}
-        data-unassigned={report.coordinationCode === null ? 'true' : undefined}
-        /* `aria-current`: señala cuál se está mirando, no conmuta un ajuste. */
-        aria-current={selected ? 'true' : undefined}
-        aria-label={`${report.title}. ${coordinacion}. ${
-          STATUS_LABEL[report.status] ?? report.status
-        }. Severidad ${SEVERITY_LABEL[report.severity]}.`}
-        onClick={() => onSelect(report.id, report.coordinationCode)}
-      >
-        <span className="my-reports__title">{report.title}</span>
-        <span className="my-reports__meta">
-          <span className="my-reports__coordination">{coordinacion}</span>
-          <span className="my-reports__status">
-            {STATUS_LABEL[report.status] ?? report.status}
-          </span>
-        </span>
-        {/* Misma representación de severidad que las demás listas. */}
-        <span className="my-reports__severity" data-severity={report.severity}>
-          {SEVERITY_LABEL[report.severity]}
-        </span>
-      </button>
+      <ProblemDossierCard
+        id={report.id}
+        title={report.title}
+        severity={report.severity}
+        status={report.status}
+        reportKind={report.reportKind}
+        mark={mark}
+        severityLabel={severityLabel}
+        statusLabel={statusLabel}
+        accessibleName={buildProblemRowAccessibleName({
+          title: report.title,
+          mark,
+          severityLabel,
+          statusLabel,
+        })}
+        selected={selected}
+        closed={closed}
+        colorByCode={colorByCode}
+        surfaceClassName="my-reports__row"
+        testId="my-report-row"
+        originTestId="my-report-origin"
+        severityTestId="my-report-severity"
+        statusTestId="my-report-status"
+        unassigned={report.coordinationCode === null}
+        onClick={() =>
+          onSelect(
+            report.id,
+            report.reportKind === 'INTER_COORDINATION'
+              ? (report.affectedCoordinationCode ?? report.coordinationCode)
+              : report.coordinationCode,
+          )
+        }
+      />
     </li>
   )
 }
@@ -89,18 +100,21 @@ export function MyReportsPanel({
   myReports,
   selectedProblemId,
   onSelect,
-  onReportProblem,
   onLoadMore,
+  labelByCode,
+  colorByCode,
 }: MyReportsPanelProps) {
   const { status, items, total, loadingMore, errorMessage } = myReports
   const quedanMas = items.length < total
+  const [expanded, setExpanded] = useState(false)
 
   return (
     <div
       className="my-reports"
       data-testid="my-reports"
-      data-tour="my-reports"
+      data-surface="my-reports"
       data-status={status}
+      data-expanded={expanded ? 'true' : undefined}
     >
       <header className="my-reports__header">
         <h2 className="my-reports__heading">Mis reportes</h2>
@@ -110,20 +124,6 @@ export function MyReportsPanel({
           </span>
         )}
       </header>
-
-      {/*
-        El botón de reportar vive AQUÍ y está siempre visible, también con la
-        lista vacía: es la entrada al flujo, no una acción sobre la lista.
-      */}
-      <button
-        type="button"
-        className="my-reports__cta"
-        data-testid="report-problem-button"
-        data-tour="report-problem"
-        onClick={onReportProblem}
-      >
-        Reportar problema
-      </button>
 
       {status === 'loading' && (
         <p className="my-reports__note" data-testid="my-reports-loading">
@@ -155,6 +155,8 @@ export function MyReportsPanel({
               report={report}
               selected={report.id === selectedProblemId}
               onSelect={onSelect}
+              labelByCode={labelByCode}
+              colorByCode={colorByCode}
             />
           ))}
         </ul>
@@ -182,6 +184,18 @@ export function MyReportsPanel({
         >
           {errorMessage}
         </p>
+      )}
+
+      {items.length > 0 && (
+        <button
+          type="button"
+          className="panel-expand-toggle"
+          data-testid="my-reports-expand"
+          aria-expanded={expanded}
+          onClick={() => setExpanded((value) => !value)}
+        >
+          {expanded ? 'Contraer' : 'Expandir'}
+        </button>
       )}
     </div>
   )

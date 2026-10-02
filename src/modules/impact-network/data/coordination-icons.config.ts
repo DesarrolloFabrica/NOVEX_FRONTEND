@@ -31,6 +31,21 @@ export function getCoordinationIconAsset(
   return COORDINATION_ICON_BY_ID[coordinationId] ?? DEFAULT_COORDINATION_ICON
 }
 
+/**
+ * Icono PROPIO de un code, o `null` si no tiene uno declarado.
+ *
+ * A diferencia de `getCoordinationIconAsset`, no cae al icono de Coordinación
+ * General: en una fila que atribuye un problema a un área, mostrar el logo de
+ * General para un code desconocido sería afirmar algo falso. Quien la usa
+ * decide qué pintar en su lugar.
+ */
+export function findCoordinationIconAsset(
+  coordinationId: CoordinationId | null | undefined,
+): string | null {
+  if (!coordinationId) return null
+  return COORDINATION_ICON_BY_ID[coordinationId] ?? null
+}
+
 export function getCanonicalCoordinationIconAssets(): readonly string[] {
   return [...new Set(Object.values(COORDINATION_ICON_BY_ID))]
 }

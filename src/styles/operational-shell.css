@@ -228,6 +228,46 @@
 .operational-shell__region--my-reports,
 .operational-shell__region--coordination-problems {
   padding: 10px 12px;
+  position: relative;
+  z-index: 1;
+}
+
+/*
+ * Expansión hacia la baraja: la región crece hacia abajo y tapa las cartas.
+ * Los padres aflojan el clip solo mientras hay un panel expandido.
+ */
+.operational-shell:has([data-expanded='true']) {
+  overflow: visible;
+}
+
+.operational-shell__main:has([data-expanded='true']) {
+  overflow: visible;
+  z-index: 4;
+}
+
+.operational-shell__top:has([data-expanded='true']) {
+  overflow: visible;
+  z-index: 5;
+}
+
+.operational-shell__region--my-reports:has([data-expanded='true']),
+.operational-shell__region--coordination-problems:has([data-expanded='true']) {
+  z-index: 40;
+  height: calc(var(--shell-top-h) + min(42vh, 360px));
+  max-height: none;
+  overflow: visible;
+  align-self: start;
+}
+
+.operational-shell__region--my-reports:has([data-expanded='true']).operational-shell__region--ticket-panel,
+.operational-shell__region--coordination-problems:has([data-expanded='true']).operational-shell__region--ticket-panel {
+  overflow: visible;
+}
+
+.my-reports[data-expanded='true'],
+.coordination-panel[data-expanded='true'] {
+  min-height: 100%;
+  height: 100%;
 }
 
 .operational-shell__region--coordination-problems .coordination-panel {
@@ -309,24 +349,138 @@
   scrollbar-gutter: stable;
 }
 
+/* En detalle: el expediente y las acciones son bloques distintos en el scroll. */
+.action-panel[data-mode='detail'] {
+  gap: 16px;
+  padding-bottom: 8px;
+}
+
+.action-panel__detail-nav {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 4px;
+}
+
+.action-panel__detail-back {
+  flex: 0 0 auto;
+  border: 1px solid rgb(150 196 255 / 0.3);
+  border-radius: 6px;
+  padding: 4px 10px;
+  background: rgb(20 34 58 / 0.7);
+  color: #cfe0f6;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+}
+
 .action-panel__idle {
-  margin: auto 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(96px, 44%);
+  align-content: start;
+  gap: 10px 0;
+  margin: 0;
+  padding: 6px 6px 8px;
   color: var(--os-muted, #8b9cb6);
-  text-align: center;
+  text-align: left;
+}
+
+.action-panel__idle > * {
+  grid-column: 1;
+  max-width: 100%;
 }
 
 .action-panel__idle-heading {
-  margin: 0 0 6px;
+  margin: 0;
   color: #cfe0f6;
   font-size: 13px;
   font-weight: 600;
+  text-align: left;
+  line-height: 1.3;
 }
 
 .action-panel__idle-text {
   margin: 0;
   font-size: 12px;
   line-height: 1.45;
+  text-align: left;
   text-wrap: balance;
+}
+
+.action-panel__cta-safe {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  margin: 0;
+  width: 100%;
+  max-width: 200px;
+}
+
+.action-panel__cta-pair {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+}
+
+.action-panel__cta {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgb(122 196 138 / 0.45);
+  border-radius: 7px;
+  padding: 6px 10px;
+  background: rgb(122 196 138 / 0.16);
+  color: #a9e3b8;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
+  white-space: normal;
+}
+
+.action-panel__cta--secondary {
+  border-color: rgb(122 196 138 / 0.55);
+  background: transparent;
+  color: #a9e3b8;
+}
+
+.action-panel__cta--history {
+  border-color: rgb(150 196 255 / 0.4);
+  background: rgb(150 196 255 / 0.1);
+  color: #cfe0f6;
+}
+
+.action-panel__cta:hover:not(:disabled) {
+  background: rgb(122 196 138 / 0.28);
+}
+
+.action-panel__cta--secondary:hover:not(:disabled) {
+  background: rgb(122 196 138 / 0.12);
+}
+
+.action-panel__cta--history:hover:not(:disabled) {
+  background: rgb(150 196 255 / 0.2);
+}
+
+.action-panel__cta:focus-visible {
+  outline: 2px solid rgb(150 196 255 / 0.65);
+  outline-offset: 2px;
+}
+
+.action-panel__cta:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.action-panel__cta-note {
+  margin: 0;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 11px;
+  line-height: 1.35;
+  text-align: left;
 }
 
 .action-panel__retry {
@@ -379,20 +533,508 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Siempre visible, también con la lista vacía: es la entrada al flujo. */
+/* Estilos residuales: los CTAs de creación ya no viven en Mis reportes. */
+.my-reports__cta-group {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 6px;
+}
+
 .my-reports__cta {
+  flex: 1 1 0;
+  min-width: 0;
   border: 1px solid rgb(122 196 138 / 0.45);
   border-radius: 6px;
-  padding: 7px 10px;
+  padding: 7px 8px;
   background: rgb(122 196 138 / 0.12);
   color: #a9e3b8;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.my-reports__cta--secondary {
+  border-color: rgb(122 196 138 / 0.55);
+  background: transparent;
+  color: #a9e3b8;
+}
+
+.my-reports__cta:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.my-reports__cta:hover:not(:disabled) {
+  background: rgb(122 196 138 / 0.2);
+}
+
+.my-reports__cta--secondary:hover:not(:disabled) {
+  background: rgb(122 196 138 / 0.1);
+}
+
+.my-reports__cta-group .my-reports__note {
+  flex: 1 1 100%;
+}
+
+/* Toggle expandir / contraer al pie de Mis reportes y Problemas. */
+.panel-expand-toggle {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 60%;
+  max-width: 60%;
+  margin-top: auto;
+  border: 1px solid rgb(150 196 255 / 0.35);
+  border-radius: 6px;
+  padding: 5px 8px;
+  background: rgb(20 34 58 / 0.55);
+  color: #cfe0f6;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.panel-expand-toggle:hover {
+  background: rgb(30 52 88 / 0.85);
+  border-color: rgb(150 196 255 / 0.55);
+}
+
+.action-panel__cta-pair,
+.problem-actions__cta-pair {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 0;
+}
+
+/* ---------- Historial de cerrados ---------- */
+
+.problem-history {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: clamp(40px, 16%, 72px);
+}
+
+.problem-history__header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.problem-history__heading {
+  margin: 0;
+  color: #cfe0f6;
+  font-size: 13px;
   font-weight: 600;
 }
 
-.my-reports__cta:hover {
-  background: rgb(122 196 138 / 0.2);
+.problem-history__back {
+  flex: 0 0 auto;
+  border: 1px solid rgb(150 196 255 / 0.3);
+  border-radius: 6px;
+  padding: 4px 10px;
+  background: rgb(20 34 58 / 0.7);
+  color: #cfe0f6;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.problem-history__period,
+.problem-history__summary {
+  margin: 0;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.problem-history__summary {
+  font-weight: 600;
+  color: #cfe0f6;
+}
+
+.history-period-picker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: min(100%, 280px);
+}
+
+.history-period-picker__label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b5b45;
+}
+
+.history-period-picker__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  border: 1px solid rgb(42 33 24 / 0.28);
+  border-radius: 7px;
+  padding: 7px 10px;
+  background: rgb(255 250 240 / 0.92);
+  color: #2a2118;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.history-period-picker__trigger:focus-visible {
+  outline: 2px solid rgb(122 90 48 / 0.55);
+  outline-offset: 2px;
+}
+
+.history-period-picker__value {
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.history-period-picker__chevron {
+  flex: 0 0 auto;
+  opacity: 0.75;
+}
+
+.history-period-picker__panel {
+  position: absolute;
+  z-index: 8;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  min-width: min(100%, 280px);
+  max-height: min(52vh, 340px);
+  overflow: auto;
+  border: 1px solid rgb(42 33 24 / 0.28);
+  border-radius: 8px;
+  padding: 8px;
+  background: rgb(255 248 236 / 0.98);
+  box-shadow: 0 12px 28px rgb(42 33 24 / 0.18);
+}
+
+.history-period-picker__year-row,
+.history-period-picker__month-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.history-period-picker__year,
+.history-period-picker__month-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2a2118;
+  text-align: center;
+}
+
+.history-period-picker__nav {
+  border: 1px solid rgb(42 33 24 / 0.28);
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  background: rgb(255 250 240 / 0.9);
+  color: #2a2118;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.history-period-picker__nav:focus-visible,
+.history-period-picker__tab:focus-visible,
+.history-period-picker__option:focus-visible {
+  outline: 2px solid rgb(122 90 48 / 0.55);
+  outline-offset: 1px;
+}
+
+.history-period-picker__tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.history-period-picker__tab {
+  border: 1px solid rgb(42 33 24 / 0.22);
+  border-radius: 6px;
+  padding: 5px 4px;
+  background: transparent;
+  color: #6b5b45;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.history-period-picker__tab[data-active='true'] {
+  background: rgb(196 160 96 / 0.22);
+  color: #2a2118;
+  border-color: rgb(122 90 48 / 0.45);
+}
+
+.history-period-picker__options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history-period-picker__options--grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.history-period-picker__option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: rgb(255 250 240 / 0.7);
+  color: #2a2118;
+  cursor: pointer;
+  text-align: left;
+}
+
+.history-period-picker__option[data-selected='true'] {
+  border-color: rgb(122 90 48 / 0.45);
+  background: rgb(196 160 96 / 0.2);
+}
+
+.history-period-picker__option-title {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.history-period-picker__option-range {
+  font-size: 10px;
+  color: #6b5b45;
+}
+
+.problem-history__more,
+.problem-history__error button {
+  border: 1px solid rgb(150 196 255 / 0.3);
+  border-radius: 6px;
+  padding: 5px 10px;
+  background: rgb(20 34 58 / 0.7);
+  color: #cfe0f6;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.problem-history__note,
+.problem-history__error p,
+.problem-history__empty-title,
+.problem-history__empty-hint {
+  margin: 0;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.problem-history__empty {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0 8px;
+  padding: 12px 10px;
+  max-width: min(100%, 280px);
+  border: 1px dashed rgb(150 196 255 / 0.22);
+  border-radius: 8px;
+}
+
+.problem-history__empty-title {
+  color: #cfe0f6;
+  font-weight: 600;
+}
+
+.problem-history__error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.action-panel__idle--consult {
+  gap: 12px;
+}
+
+.action-panel__cta--consult {
+  max-width: 220px;
+}
+
+.problem-history__list {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.problem-history__list > li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.problem-history__meta,
+.problem-history__learning {
+  margin: 0;
+  padding: 0 2px;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.problem-history__learning {
+  font-style: italic;
+}
+
+
+/*
+ * MARCA LATERAL de las filas de problema: logo de la coordinación representada
+ * en una ficha circular clara, legible sobre la superficie oscura y sobre el
+ * papel del ticket. Decorativa: el origen también va en texto visible.
+ *
+ * EL TAMAÑO LO DECIDE EL ANCHO DE LA LISTA, NO EL DE LA VENTANA. La misma
+ * ventana da listas muy distintas —a 1024 px la de la mesa mide ≈ 220 px y la
+ * de COORDINADOR ≈ 450 px—, así que cada lista es un contenedor
+ * (`problem-rows`) y la marca escala por pasos según su ancho real:
+ *
+ *   lista < 280 px        30 px, separación 8 px   (mesa a 1024–1100)
+ *   280 – 299 px          34 px, separación 10 px  («Mis reportes» de mesa a 1280)
+ *   300 – 419 px          36 px, separación 10 px  (1440, en las tres superficies)
+ *   ≥ 420 px              40 px, separación 12 px  (1920; COORDINADOR a 1024)
+ *
+ * Cada paso deja al título al menos ≈ 80 px de columna, que con dos líneas
+ * sigue leyéndose; la severidad y el estado viven en su propia columna y no
+ * compiten con la marca.
+ */
+.my-reports__list,
+.coordination-panel__problems,
+.coordinator-problems__groups {
+  container: problem-rows / inline-size;
+}
+
+.problem-row,
+.my-reports__row {
+  --row-mark-size: 30px;
+  --row-mark-gap: 8px;
+}
+
+@container problem-rows (min-width: 280px) {
+  .problem-row,
+  .my-reports__row {
+    --row-mark-size: 34px;
+    --row-mark-gap: 10px;
+  }
+}
+
+@container problem-rows (min-width: 300px) {
+  .problem-row,
+  .my-reports__row {
+    --row-mark-size: 36px;
+  }
+}
+
+@container problem-rows (min-width: 420px) {
+  .problem-row,
+  .my-reports__row {
+    --row-mark-size: 40px;
+    --row-mark-gap: 12px;
+  }
+}
+
+.problem-row__mark,
+.my-reports__mark {
+  display: block;
+  box-sizing: border-box;
+  width: var(--row-mark-size);
+  height: var(--row-mark-size);
+  align-self: center;
+  overflow: hidden;
+  border: 1px solid rgb(150 196 255 / 0.35);
+  border-radius: 50%;
+  background: #fbf8f1;
+}
+
+/*
+ * LOS LOGOS TRAEN MARGEN PROPIO. Medido sobre los 15 archivos de 512 px, el
+ * dibujo ocupa entre el 51 % y el 91 % del lienzo (transparente en los PNG,
+ * blanco en los JPG). Por eso la imagen llena la ficha sin padding y se amplía
+ * un 8 %: con eso el emblema gana tamaño visible y los que caben en el círculo
+ * (radio ≤ 0,46 del lado, la mayoría) siguen enteros. Los pocos que ya
+ * rebasaban el círculo (Fábrica, Proyección Social, Desarrollo Profesional)
+ * solo pierden algo más de sus esquinas, que ya se recortaban.
+ */
+.problem-row__mark img,
+.my-reports__mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scale(1.08);
+}
+
+/*
+ * Sin coordinación resoluble: nunca el logo de otra. Mismo diámetro que las
+ * fichas con logo y un trazo algo más grueso con un velo suave, para que no se
+ * lea como una marca más pequeña ni como un hueco.
+ */
+.problem-row__mark[data-mark='neutral'],
+.my-reports__mark[data-mark='neutral'] {
+  border: 1.5px dashed rgb(150 196 255 / 0.55);
+  background: rgb(150 196 255 / 0.08);
+}
+
+.operational-shell__region--ticket-panel .problem-row__mark,
+.operational-shell__region--ticket-panel .my-reports__mark,
+.coordination-panel--ticket-pilot .problem-row__mark {
+  border-color: rgb(42 33 24 / 0.28);
+}
+
+.operational-shell__region--ticket-panel .problem-row__mark[data-mark='neutral'],
+.operational-shell__region--ticket-panel .my-reports__mark[data-mark='neutral'],
+.coordination-panel--ticket-pilot .problem-row__mark[data-mark='neutral'] {
+  border-color: rgb(42 33 24 / 0.45);
+  background: rgb(42 33 24 / 0.05);
+}
+
+.problem-detail__kind {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--os-muted, #8b9cb6);
+  margin-bottom: 2px;
 }
 
 .my-reports__list {
@@ -408,12 +1050,23 @@
   scrollbar-gutter: stable;
 }
 
+/*
+ * MARCA LATERAL + CUERPO DE DOS LÍNEAS, igual que la fila de problemas:
+ *
+ *   [marca] [título…………………………] [severidad]
+ *   [marca] [tipo · responsable…] [estado]
+ *
+ * Todo con columna y fila EXPLÍCITAS: sin ellas la colocación automática
+ * mandaba piezas a una tercera fila o delante del título.
+ */
 .my-reports__row {
   display: grid;
   width: 100%;
+  min-width: 0;
   align-items: center;
-  gap: 2px 8px;
-  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px var(--row-mark-gap, 8px);
+  grid-template-columns: var(--row-mark-size, 24px) minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
   border: 1px solid transparent;
   border-radius: 6px;
   padding: 6px 8px;
@@ -432,52 +1085,67 @@
   background: rgb(30 52 88 / 0.85);
 }
 
-.my-reports__title {
+.my-reports__mark {
   grid-column: 1;
+  grid-row: 1 / span 2;
+}
+
+/* Hasta dos líneas: un título largo usa el ancho disponible. */
+.my-reports__title {
+  display: -webkit-box;
+  min-width: 0;
+  grid-column: 2;
   grid-row: 1;
   overflow: hidden;
   color: #dce9fb;
   font-size: 12px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
-.my-reports__meta {
-  display: flex;
+/*
+ * Tipo y coordinación responsable: visible, hasta dos líneas antes de recortar
+ * para que «Coordinación responsable» se lea también en la columna de 1024 px.
+ */
+.my-reports__origin {
+  display: -webkit-box;
   min-width: 0;
-  gap: 6px;
+  grid-column: 2;
+  grid-row: 2;
+  overflow: hidden;
   color: var(--os-muted, #8b9cb6);
   font-size: 10px;
-  grid-column: 1;
-  grid-row: 2;
-}
-
-/* El área no debe empujar el estado a otra línea: se recorta. */
-.my-reports__coordination {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.3;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .my-reports__status {
-  flex: 0 0 auto;
+  grid-column: 3;
+  grid-row: 2;
+  justify-self: end;
+  align-self: start;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 10px;
+  line-height: 1.3;
+  white-space: nowrap;
 }
 
 /* La severidad lleva SIEMPRE su etiqueta: el color solo acompaña. */
-/*
- * La pastilla se ancla a la SEGUNDA columna y a las dos filas. Sin fijar la
- * columna, la colocación automática la metía delante del título, que es lo
- * primero que debe leerse.
- */
 .my-reports__severity {
   border-radius: 999px;
   padding: 1px 7px;
   font-size: 10px;
   font-weight: 600;
   white-space: nowrap;
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  align-self: center;
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+  align-self: end;
 }
 
 .my-reports__severity[data-severity='CRITICAL'] {
@@ -533,6 +1201,30 @@
   color: #cfe0f6;
   font-size: 13px;
   font-weight: 600;
+}
+
+.report-form__header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.report-form__back {
+  flex: 0 0 auto;
+  border: 1px solid rgb(150 196 255 / 0.3);
+  border-radius: 6px;
+  padding: 4px 10px;
+  background: rgb(20 34 58 / 0.7);
+  color: #cfe0f6;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.report-form__back:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .report-form__destination {
@@ -634,6 +1326,224 @@
   font-size: 10px;
 }
 
+.report-form__hint {
+  margin: 0;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 10px;
+}
+
+/* ---------- Selector visual de coordinación responsable (INTER) ---------- */
+
+.responsible-picker {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.responsible-picker__label {
+  color: #a9bcd6;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.responsible-picker__trigger,
+.responsible-picker__change,
+.responsible-picker__dismiss {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgb(150 196 255 / 0.28);
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: rgb(12 22 40 / 0.8);
+  color: #dce9fb;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.responsible-picker__dismiss {
+  width: auto;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.responsible-picker__panel-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.responsible-picker__trigger:hover:not(:disabled),
+.responsible-picker__change:hover:not(:disabled) {
+  border-color: rgb(150 196 255 / 0.55);
+}
+
+.responsible-picker__trigger:focus-visible,
+.responsible-picker__change:focus-visible,
+.responsible-picker__search:focus-visible,
+.responsible-picker__option:focus-visible {
+  outline: 2px solid #9ad0ff;
+  outline-offset: 1px;
+}
+
+.responsible-picker__trigger:disabled,
+.responsible-picker__change:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.responsible-picker[data-invalid='true'] .responsible-picker__trigger {
+  border-color: #f0b054;
+  box-shadow: inset 0 0 0 1px rgb(240 176 84 / 0.45);
+}
+
+.responsible-picker__error {
+  margin: 0;
+  color: #f0b054;
+  font-size: 11px;
+}
+
+.responsible-picker__summary {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid rgb(150 196 255 / 0.35);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: rgb(18 32 56 / 0.85);
+}
+
+.responsible-picker__summary-main {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.responsible-picker__summary-text {
+  margin: 0;
+  min-width: 0;
+  color: #dce9fb;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.responsible-picker__mark {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: rgb(255 255 255 / 0.08);
+}
+
+.responsible-picker__mark[data-mark='neutral'] {
+  background:
+    linear-gradient(135deg, rgb(150 196 255 / 0.35), rgb(150 196 255 / 0.08));
+}
+
+.responsible-picker__mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.responsible-picker__panel {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid rgb(150 196 255 / 0.28);
+  border-radius: 8px;
+  padding: 8px;
+  background: rgb(10 18 34 / 0.92);
+}
+
+.responsible-picker__search-label {
+  color: #a9bcd6;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.responsible-picker__search {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgb(150 196 255 / 0.28);
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: rgb(12 22 40 / 0.8);
+  color: #dce9fb;
+  font: inherit;
+  font-size: 12px;
+}
+
+.responsible-picker__list {
+  display: flex;
+  max-height: 180px;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 0;
+  list-style: none;
+  overscroll-behavior: contain;
+}
+
+.responsible-picker__option {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: transparent;
+  color: #dce9fb;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.responsible-picker__option:hover,
+.responsible-picker__option[data-active='true'] {
+  border-color: rgb(150 196 255 / 0.35);
+  background: rgb(30 52 88 / 0.7);
+}
+
+.responsible-picker__option[aria-selected='true'] {
+  border-color: rgb(150 196 255 / 0.65);
+  background: rgb(36 64 108 / 0.85);
+}
+
+.responsible-picker__option-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.responsible-picker__empty {
+  margin: 0;
+  padding: 10px 8px;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
 .report-form__note,
 .problem-actions__note {
   margin: 0;
@@ -672,10 +1582,15 @@
 
 .problem-actions {
   display: flex;
+  flex: 0 0 auto;
   flex-direction: column;
   gap: 10px;
+  margin-top: 4px;
   border-top: 1px solid rgb(150 196 255 / 0.2);
-  padding-top: 10px;
+  padding-top: 14px;
+  /* Flujo normal del scroll del panel: no fijar ni tapar acordeones. */
+  position: relative;
+  z-index: 0;
 }
 
 .problem-actions__heading {
@@ -685,10 +1600,105 @@
   font-weight: 600;
 }
 
+.problem-actions__block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.problem-actions__block--resolution {
+  padding-top: 8px;
+  border-top: 1px dashed rgb(150 196 255 / 0.28);
+}
+
+.problem-actions__block-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 10px;
+}
+
+.problem-actions__block-title {
+  margin: 0;
+  color: #cfe0f6;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.problem-actions__block-hint {
+  margin: 0;
+  color: #8b9cb6;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.problem-actions__field-help {
+  margin: 0;
+  color: #8b9cb6;
+  font-size: 10.5px;
+  line-height: 1.4;
+}
+
+.problem-actions__status {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgb(150 196 255 / 0.28);
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: rgb(18 36 64 / 0.45);
+  color: #dce9fb;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.problem-actions__status[data-status='OPEN'] {
+  border-color: rgb(132 150 176 / 0.45);
+  color: #c5d0e0;
+}
+
+.problem-actions__status[data-status='IN_PROGRESS'],
+.problem-actions__status[data-status='RESOLVED'] {
+  border-color: rgb(240 176 84 / 0.45);
+  color: #f0d2a0;
+}
+
 .problem-actions__form {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.problem-actions__advance {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.problem-actions__advance-button {
+  align-self: flex-start;
+  border: 1px solid rgb(150 196 255 / 0.35);
+  border-radius: 8px;
+  background: rgb(18 36 64 / 0.55);
+  color: #dce9fb;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 11px;
+  cursor: pointer;
+}
+
+.problem-actions__advance-button:hover,
+.problem-actions__advance-button:focus-visible {
+  border-color: rgb(180 214 255 / 0.55);
+  outline: 2px solid rgb(150 196 255 / 0.45);
+  outline-offset: 2px;
+}
+
+.problem-actions__advance-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .problem-actions__label {
@@ -708,6 +1718,10 @@
   margin: 0;
   color: var(--os-muted, #8b9cb6);
   font-size: 10px;
+}
+
+.problem-actions__note--readonly {
+  margin: 0;
 }
 
 
@@ -809,4 +1823,246 @@
 .eoc-embedded--shell > .operational-shell {
   flex: 1 1 auto;
   min-height: 0;
+}
+
+/* ---------- Composici�n COORDINADOR (4 columnas, sin baraja) ---------- */
+
+.operational-shell--coordinator {
+  --shell-action-w: minmax(0, 1fr);
+  /*
+   * Columna del personaje ≈ la de ANALISTA/ADMIN (0.2fr del main ≈ 158–210 px).
+   * Las tres columnas de contenido se reparten el resto a partes iguales.
+   */
+  grid-template-columns:
+    minmax(158px, 210px)
+    minmax(0, 1fr)
+    minmax(0, 1fr)
+    minmax(0, 1fr);
+  grid-template-areas:
+    'rail reports problems action'
+    'bottom bottom bottom bottom';
+  gap: var(--shell-gap);
+  /* Mismos tokens de carta que `.operational-deck` (baraja de otros roles). */
+  --card-width-max: clamp(152px, 13.1vw, 252px);
+  --card-width: var(--card-width-max);
+  --card-aspect: 1.324;
+  --card-height: calc(var(--card-width) * var(--card-aspect));
+  --deck-text: var(--os-text, #edf5ff);
+  --deck-muted: var(--os-muted, #8b9cb6);
+  --deck-line: rgb(126 168 224 / 0.16);
+  --deck-line-strong: rgb(150 196 255 / 0.34);
+  --deck-surface: linear-gradient(
+    180deg,
+    rgb(20 32 52 / 0.92) 0%,
+    rgb(10 18 34 / 0.94) 100%
+  );
+  --status-stable-rgb: 122 196 138;
+  --status-alert-rgb: 240 176 84;
+  --status-critical-rgb: 244 96 104;
+  --status-unknown-rgb: 132 150 176;
+}
+
+.operational-shell--coordinator .operational-shell__rail-stack {
+  grid-area: rail;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  /* Misma banda superior que ANALISTA/ADMIN para el personaje. */
+  grid-template-rows: var(--shell-top-h) minmax(0, 1fr);
+  gap: var(--shell-gap);
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.operational-shell--coordinator .operational-shell__region--coordinator-character {
+  /* Misma caja que `.operational-shell__region--character` en otros roles. */
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 6px 8px 10px;
+  overflow: clip;
+}
+
+.operational-shell--coordinator .operational-shell__region--coordinator-character .direction-character {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.operational-shell--coordinator .operational-shell__region--coordinator-character .direction-character__figure {
+  min-height: 0;
+  height: auto;
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+.operational-shell--coordinator .operational-shell__own-card {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 4px 0 0;
+  border: none;
+  background: transparent;
+  overflow: visible;
+}
+
+.operational-shell--coordinator .operational-shell__own-card .coordination-card {
+  /* Mismo tamaño que en la baraja: tokens --card-width / --card-height. */
+  width: var(--card-width);
+  min-height: var(--card-height);
+  max-height: none;
+  aspect-ratio: unset;
+  pointer-events: none;
+}
+
+.operational-shell--coordinator .operational-shell__region--my-reports {
+  grid-area: reports;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.operational-shell--coordinator .operational-shell__region--coordination-problems {
+  grid-area: problems;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.operational-shell--coordinator .operational-shell__action {
+  grid-area: action;
+  min-height: 0;
+}
+
+.operational-shell--coordinator .operational-shell__bottom {
+  grid-area: bottom;
+}
+
+.operational-shell__assignment-error {
+  position: relative;
+  z-index: 1;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 24px;
+  padding: 28px 32px;
+  border: 1px solid rgb(240 120 100 / 0.45);
+  border-radius: 10px;
+  background: rgb(28 16 18 / 0.82);
+  color: #f6d7d0;
+  text-align: center;
+}
+
+.operational-shell__assignment-error h1 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 650;
+}
+
+.operational-shell__assignment-error p {
+  margin: 0;
+  max-width: 42rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: #e8c4bc;
+}
+
+.coordinator-problems__groups {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  padding-right: 2px;
+  scrollbar-gutter: stable;
+}
+
+.coordinator-problems__group-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 6px;
+  color: #d7e6f8;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.coordinator-problems__group-count {
+  color: #9bb4d0;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.coordinator-problems__group-empty {
+  margin: 0;
+  padding: 8px 6px;
+  color: #9bb4d0;
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+
+.coordination-panel--ticket-pilot .coordinator-problems__group-title {
+  color: var(--ticket-pilot-ink, #2a2118);
+}
+
+.coordination-panel--ticket-pilot .coordinator-problems__group-count,
+.coordination-panel--ticket-pilot .coordinator-problems__group-empty {
+  color: var(--ticket-pilot-ink-soft, #5c4a38);
+}
+
+.coordination-panel--ticket-pilot .problem-row__origin,
+.coordination-panel--ticket-pilot .problem-row__status {
+  color: var(--ticket-pilot-ink-soft, #5c4a38);
+}
+
+.coordinator-problems__group-list {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+}
+
+/* Estado bajo la severidad, en la columna fija de la derecha. */
+.problem-row__status {
+  grid-column: 3;
+  grid-row: 2;
+  justify-self: end;
+  align-self: start;
+  color: #9bb4d0;
+  font-size: 10px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+@media (max-width: 1280px) {
+  .operational-shell--coordinator {
+    grid-template-columns:
+      minmax(152px, 190px)
+      minmax(0, 1fr)
+      minmax(0, 1fr)
+      minmax(0, 0.95fr);
+    --shell-gap: 8px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .operational-shell--coordinator {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 0.9fr) minmax(0, 1.1fr) var(--shell-bottom-h);
+    grid-template-areas:
+      'rail reports'
+      'problems action'
+      'bottom bottom';
+  }
 }

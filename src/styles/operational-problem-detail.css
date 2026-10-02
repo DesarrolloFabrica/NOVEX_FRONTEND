@@ -12,20 +12,22 @@
  */
 
 /*
- * EL DETALLE LLENA SU REGIÓN Y SE DESPLAZA POR DENTRO.
+ * EL DETALLE CRECE CON SU CONTENIDO y cede el scroll al panel derecho.
  *
- * La banda superior no crece: es la condición que impide que un problema con
- * cinco secciones abiertas empuje la baraja fuera de la pantalla. La cabecera
- * y los distintivos se quedan fijos arriba; lo que cede es la lista de
- * secciones, que es donde está el contenido largo.
+ * Antes usaba `height: 100%`, lo que empujaba las acciones al fondo del ticket
+ * y dejaba un hueco vacío entre los acordeones y «Pasar a En atención». Con
+ * `flex: 0 1 auto` el detalle y las acciones quedan seguidos; el
+ * `.action-panel` sigue siendo el contenedor que se desplaza.
  */
 .problem-detail {
   display: flex;
   min-height: 0;
-  height: 100%;
+  flex: 0 1 auto;
   flex-direction: column;
   gap: 8px;
   color: var(--deck-text, #edf5ff);
+  /* Reserva aire antes de «Seguimiento del problema» al expandir acordeones. */
+  padding-bottom: 4px;
 }
 
 
@@ -90,6 +92,19 @@
   --badge-rgb: var(--status-alert-rgb, 240 176 84);
 }
 
+.problem-detail__badge--status[data-status='OPEN'] {
+  --badge-rgb: 132 150 176;
+}
+
+.problem-detail__badge--status[data-status='IN_PROGRESS'],
+.problem-detail__badge--status[data-status='RESOLVED'] {
+  --badge-rgb: var(--status-alert-rgb, 240 176 84);
+}
+
+.problem-detail__badge--status[data-status='CLOSED'] {
+  --badge-rgb: var(--status-stable-rgb, 122 196 138);
+}
+
 .problem-detail__badge[data-sla='overdue'] {
   --badge-rgb: var(--status-critical-rgb, 244 96 104);
 }
@@ -122,12 +137,10 @@
 .problem-detail__sections {
   display: flex;
   min-height: 0;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   flex-direction: column;
-  gap: 4px;
-  overflow-y: auto;
-  padding-right: 3px;
-  scrollbar-gutter: stable;
+  gap: 6px;
+  padding-bottom: 2px;
 }
 
 .detail-section {

@@ -1,0 +1,473 @@
+/**
+ * Fichas dossier / talón de ticket para listas de problemas.
+ * Tokens semánticos de severidad y estado; no usan el color de coordinación.
+ */
+
+button.problem-dossier.problem-row,
+button.problem-dossier.my-reports__row {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: 28px minmax(0, 1fr);
+  grid-template-rows: none;
+  align-items: stretch;
+  column-gap: 0;
+  row-gap: 0;
+  padding: 0;
+}
+
+.problem-dossier {
+  /* Tokens semánticos (sobre superficie oscura por defecto). */
+  --dossier-paper: rgb(20 34 58 / 0.48);
+  --dossier-paper-hover: rgb(28 44 72 / 0.68);
+  --dossier-paper-selected: rgb(32 52 84 / 0.88);
+  --dossier-ink: #dce9fb;
+  --dossier-ink-soft: #9bb4d0;
+  --dossier-edge: rgb(150 196 255 / 0.28);
+  --dossier-edge-strong: rgb(150 196 255 / 0.48);
+  --dossier-stub: rgb(14 24 42 / 0.82);
+  --dossier-folio: #8b9cb6;
+
+  --sev-critical-ink: #ffb4b8;
+  --sev-critical-fill: rgb(244 96 104 / 0.18);
+  --sev-critical-edge: rgb(244 96 104 / 0.45);
+  --sev-high-ink: #ffc98a;
+  --sev-high-fill: rgb(240 176 84 / 0.16);
+  --sev-high-edge: rgb(240 176 84 / 0.4);
+  --sev-medium-ink: #c5d2e4;
+  --sev-medium-fill: rgb(150 170 196 / 0.14);
+  --sev-medium-edge: rgb(150 170 196 / 0.35);
+  --sev-low-ink: #b7c6d8;
+  --sev-low-fill: rgb(140 160 185 / 0.1);
+  --sev-low-edge: rgb(140 160 185 / 0.28);
+
+  --st-open-ink: #b7c6d8;
+  --st-open-fill: rgb(140 160 185 / 0.1);
+  --st-open-edge: rgb(140 160 185 / 0.3);
+  --st-progress-ink: #9ad0ff;
+  --st-progress-fill: rgb(80 160 220 / 0.16);
+  --st-progress-edge: rgb(80 160 220 / 0.4);
+  --st-closed-ink: #8b9cb6;
+  --st-closed-fill: rgb(120 140 165 / 0.1);
+  --st-closed-edge: rgb(120 140 165 / 0.28);
+
+  --sla-risk-ink: #ffc98a;
+  --sla-risk-fill: rgb(240 176 84 / 0.14);
+  --sla-overdue-ink: #ffb4b8;
+  --sla-overdue-fill: rgb(244 96 104 / 0.16);
+
+  --row-mark-size: 24px;
+  --row-mark-gap: 6px;
+  /* Guiones del perímetro: punto medio entre sutil y muy marcado. */
+  --dossier-dash: 7px;
+  --dossier-dash-gap: 5px;
+  --dossier-dash-thickness: 1.5px;
+  --dossier-dash-ink: var(--dossier-edge);
+
+  display: grid;
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: stretch;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: var(--dossier-dash-thickness) solid transparent;
+  border-radius: 6px;
+  background: var(--dossier-paper);
+  color: var(--dossier-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: none;
+  transition:
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.problem-dossier::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      to right,
+      var(--dossier-dash-ink) 0 var(--dossier-dash),
+      transparent var(--dossier-dash)
+        calc(var(--dossier-dash) + var(--dossier-dash-gap))
+    )
+      top / 100% var(--dossier-dash-thickness) no-repeat,
+    repeating-linear-gradient(
+      to right,
+      var(--dossier-dash-ink) 0 var(--dossier-dash),
+      transparent var(--dossier-dash)
+        calc(var(--dossier-dash) + var(--dossier-dash-gap))
+    )
+      bottom / 100% var(--dossier-dash-thickness) no-repeat,
+    repeating-linear-gradient(
+      to bottom,
+      var(--dossier-dash-ink) 0 var(--dossier-dash),
+      transparent var(--dossier-dash)
+        calc(var(--dossier-dash) + var(--dossier-dash-gap))
+    )
+      left / var(--dossier-dash-thickness) 100% no-repeat,
+    repeating-linear-gradient(
+      to bottom,
+      var(--dossier-dash-ink) 0 var(--dossier-dash),
+      transparent var(--dossier-dash)
+        calc(var(--dossier-dash) + var(--dossier-dash-gap))
+    )
+      right / var(--dossier-dash-thickness) 100% no-repeat;
+}
+
+/* Gana a --row-mark-size de .problem-row / .my-reports__row en operational-shell. */
+.problem-dossier.problem-row,
+.problem-dossier.my-reports__row {
+  --row-mark-size: 24px;
+  --row-mark-gap: 6px;
+}
+
+@container problem-rows (min-width: 280px) {
+  .problem-dossier,
+  .problem-dossier.problem-row,
+  .problem-dossier.my-reports__row {
+    --row-mark-size: 26px;
+    --row-mark-gap: 7px;
+  }
+}
+
+@container problem-rows (min-width: 300px) {
+  .problem-dossier,
+  .problem-dossier.problem-row,
+  .problem-dossier.my-reports__row {
+    --row-mark-size: 28px;
+  }
+}
+
+@container problem-rows (min-width: 420px) {
+  .problem-dossier,
+  .problem-dossier.problem-row,
+  .problem-dossier.my-reports__row {
+    --row-mark-size: 30px;
+    --row-mark-gap: 8px;
+    grid-template-columns: 30px minmax(0, 1fr);
+  }
+}
+
+.problem-dossier:hover,
+.problem-dossier:focus-visible {
+  --dossier-dash-ink: var(--dossier-edge-strong);
+  background: var(--dossier-paper-hover);
+}
+
+.problem-dossier:focus-visible {
+  outline: 2px solid rgb(120 200 255 / 0.85);
+  outline-offset: 2px;
+}
+
+.problem-dossier[data-selected='true'],
+.problem-dossier[aria-current='true'] {
+  --dossier-dash-ink: var(--dossier-edge-strong);
+  background: var(--dossier-paper-selected);
+  box-shadow: inset 3px 0 0 rgb(154 208 255 / 0.85);
+}
+
+.problem-dossier[data-selected='true'] .problem-dossier__title,
+.problem-dossier[aria-current='true'] .problem-dossier__title {
+  font-weight: 700;
+}
+
+/* Historial cerrado: baja intensidad, severidad no actúa como emergencia. */
+.problem-dossier[data-closed='true'] {
+  opacity: 0.78;
+}
+
+.problem-dossier[data-closed='true'] .problem-dossier__severity {
+  filter: saturate(0.55);
+}
+
+.problem-dossier__stub {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 5px 2px 4px;
+  background: var(--dossier-stub-bg, var(--dossier-stub));
+  color: var(--dossier-stub-ink, var(--dossier-folio));
+  border-right: 1px dashed rgb(150 196 255 / 0.28);
+}
+
+.problem-dossier[data-stub-colored='true'] .problem-dossier__stub {
+  /* Suaviza el bloque de color sin tocar la tinta del folio. */
+  background: color-mix(
+    in srgb,
+    var(--dossier-stub-bg) 78%,
+    transparent
+  );
+  border-right-color: rgb(26 20 16 / 0.22);
+}
+
+.problem-dossier__type-mark {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border: 1.5px solid currentColor;
+  opacity: 0.9;
+}
+
+.problem-dossier__type-mark[data-dossier-type='internal'] {
+  border-radius: 2px;
+  background: currentColor;
+}
+
+.problem-dossier__type-mark[data-dossier-type='dependency'] {
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: 4px 0 0 -1.5px currentColor;
+}
+
+.problem-dossier__folio {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  color: inherit;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.problem-dossier__perforation {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: color-mix(in srgb, currentColor 35%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 55%, transparent);
+}
+
+.problem-dossier__body {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  column-gap: 8px;
+  row-gap: 3px;
+  align-items: start;
+  padding: 5px 7px 5px 6px;
+}
+
+.problem-dossier__headline {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.problem-dossier__type {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgb(150 196 255 / 0.35);
+  border-radius: 3px;
+  padding: 0 5px;
+  color: var(--dossier-ink-soft);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.problem-dossier__type[data-dossier-type='dependency'] {
+  border-style: dashed;
+}
+
+.problem-dossier__title {
+  display: -webkit-box;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--dossier-ink);
+  font-size: 12.5px;
+  font-weight: 650;
+  line-height: 1.22;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.problem-dossier__context {
+  grid-column: 1;
+  grid-row: 2;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--row-mark-gap, 6px);
+}
+
+.problem-dossier__mark {
+  flex: 0 0 auto;
+  align-self: center;
+  grid-column: auto;
+  grid-row: auto;
+}
+
+.problem-dossier__origin {
+  display: -webkit-box;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--dossier-ink-soft);
+  font-size: 10.5px;
+  line-height: 1.22;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.problem-dossier__meta {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  display: flex;
+  min-width: 0;
+  max-width: 7.5rem;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  margin-top: 0;
+  align-self: stretch;
+}
+
+/* Paneles estrechos: meta vuelve debajo para no aplastar el título. */
+@container problem-rows (max-width: 279px) {
+  .problem-dossier__body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+  }
+
+  .problem-dossier__headline,
+  .problem-dossier__context,
+  .problem-dossier__meta {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .problem-dossier__meta {
+    max-width: none;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    align-self: auto;
+  }
+}
+
+.problem-dossier__severity,
+.problem-dossier__status,
+.problem-dossier__sla {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  max-width: 100%;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.problem-dossier__severity[data-severity='CRITICAL'] {
+  border-color: var(--sev-critical-edge);
+  background: var(--sev-critical-fill);
+  color: var(--sev-critical-ink);
+}
+
+.problem-dossier__severity[data-severity='HIGH'] {
+  border-color: var(--sev-high-edge);
+  background: var(--sev-high-fill);
+  color: var(--sev-high-ink);
+}
+
+.problem-dossier__severity[data-severity='MEDIUM'] {
+  border-color: var(--sev-medium-edge);
+  background: var(--sev-medium-fill);
+  color: var(--sev-medium-ink);
+}
+
+.problem-dossier__severity[data-severity='LOW'] {
+  border-color: var(--sev-low-edge);
+  background: var(--sev-low-fill);
+  color: var(--sev-low-ink);
+}
+
+.problem-dossier__status[data-status='OPEN'] {
+  border-color: var(--st-open-edge);
+  background: var(--st-open-fill);
+  color: var(--st-open-ink);
+}
+
+.problem-dossier__status[data-status='IN_PROGRESS'],
+.problem-dossier__status[data-status='RESOLVED'] {
+  border-color: var(--st-progress-edge);
+  background: var(--st-progress-fill);
+  color: var(--st-progress-ink);
+}
+
+.problem-dossier__status[data-status='CLOSED'] {
+  border-color: var(--st-closed-edge);
+  background: var(--st-closed-fill);
+  color: var(--st-closed-ink);
+}
+
+.problem-dossier__sla[data-sla='at_risk'] {
+  border-color: rgb(240 176 84 / 0.4);
+  background: var(--sla-risk-fill);
+  color: var(--sla-risk-ink);
+}
+
+.problem-dossier__sla[data-sla='overdue'] {
+  border-color: rgb(244 96 104 / 0.45);
+  background: var(--sla-overdue-fill);
+  color: var(--sla-overdue-ink);
+}
+
+.problem-dossier__sla-icon {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.08);
+}
+
+/* Listas: separación entre fichas (no solo filete continuo). */
+.my-reports__list,
+.coordinator-problems__group-list,
+.coordination-panel__problems {
+  gap: 5px;
+}
+
+.coordinator-problems__group-list,
+.coordination-panel__problems {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .problem-dossier {
+    transition-duration: 0ms;
+  }
+}

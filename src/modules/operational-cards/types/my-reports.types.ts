@@ -1,4 +1,4 @@
-import type { SituationSeverity } from '@/modules/situations/types/situation.types'
+import type { SituationReportKind, SituationSeverity } from '@/modules/situations/types/situation.types'
 
 /**
  * «MIS REPORTES»: los problemas que registró el usuario autenticado, en
@@ -26,6 +26,9 @@ export interface MyReport {
    */
   coordinationCode: string | null
   coordinationName: string | null
+  affectedCoordinationCode: string | null
+  affectedCoordinationName: string | null
+  reportKind: SituationReportKind
   createdAt: string
   /** `true` solo si el backend confirma que ESTE usuario puede resolverlo. */
   canResolve: boolean

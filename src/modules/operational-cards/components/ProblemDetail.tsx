@@ -1,4 +1,5 @@
 import { ProblemDetailSection } from '@/modules/operational-cards/components/ProblemDetailSection'
+import { resolveSituationViewpointLabel } from '@/modules/operational-cards/data/situationViewpoint'
 import type { OperationalCardsLevel2State } from '@/modules/operational-cards/types/operational-cards.state'
 import type {
   ProblemSectionId,
@@ -33,10 +34,10 @@ const SEVERITY_LABEL = {
 } as const
 
 const STATUS_LABEL: Record<string, string> = {
-  OPEN: 'Registrada',
+  OPEN: 'Abierto',
   IN_PROGRESS: 'En atención',
   RESOLVED: 'En atención',
-  CLOSED: 'Cerrada',
+  CLOSED: 'Cerrado',
 }
 
 const SLA_LABEL = {
@@ -99,12 +100,25 @@ function SectionState<T>({
 
 export interface ProblemDetailProps {
   level2: OperationalCardsLevel2State
+  selectedCoordinationCode?: string | null
   onToggleSection: (section: ProblemSectionId) => void
 }
 
-export function ProblemDetail({ level2, onToggleSection }: ProblemDetailProps) {
+export function ProblemDetail({
+  level2,
+  selectedCoordinationCode = null,
+  onToggleSection,
+}: ProblemDetailProps) {
   const { detail, sections, expanded, status } = level2
   const isExpanded = (section: ProblemSectionId) => expanded.includes(section)
+  const kindLabel = detail
+    ? resolveSituationViewpointLabel({
+        reportKind: detail.reportKind,
+        selectedCoordinationCode,
+        responsibleCode: detail.coordinationCode,
+        affectedCode: detail.affectedCoordinationCode,
+      })
+    : null
 
   return (
     <section
@@ -112,10 +126,19 @@ export function ProblemDetail({ level2, onToggleSection }: ProblemDetailProps) {
       data-testid="problem-detail"
       data-level2={status}
       data-problem={level2.problemId ?? ''}
+      data-report-kind={detail?.reportKind ?? undefined}
       aria-labelledby={HEADING_ID}
     >
       <header className="problem-detail__header">
         <div className="problem-detail__heading">
+          {kindLabel && (
+            <p
+              className="problem-detail__kind"
+              data-testid="detail-report-kind"
+            >
+              {kindLabel}
+            </p>
+          )}
           <h3 id={HEADING_ID} className="problem-detail__title">
             {detail?.title ?? 'Detalle del problema'}
           </h3>
@@ -130,7 +153,8 @@ export function ProblemDetail({ level2, onToggleSection }: ProblemDetailProps) {
                 {SEVERITY_LABEL[detail.severity]}
               </span>
               <span
-                className="problem-detail__badge"
+                className="problem-detail__badge problem-detail__badge--status"
+                data-status={detail.status}
                 data-testid="detail-status"
               >
                 {STATUS_LABEL[detail.status] ?? detail.status}
@@ -144,14 +168,41 @@ export function ProblemDetail({ level2, onToggleSection }: ProblemDetailProps) {
                   {SLA_LABEL[detail.slaHealth]}
                 </span>
               )}
-              {/* Contexto secundario: la coordinación ya se ve detrás. */}
-              {detail.coordinationName && (
-                <span className="problem-detail__context">
-                  {detail.coordinationName}
+              {detail.reportKind === 'INTER_COORDINATION' ? (
+                <span
+                  className="problem-detail__context"
+                  data-testid="detail-coordinations"
+                >
+                  Afectada: {detail.affectedCoordinationName ?? '—'} ·
+                  Responsable: {detail.coordinationName ?? '—'}
                 </span>
+              ) : (
+                detail.coordinationName && (
+                  <span className="problem-detail__context">
+                    {detail.coordinationName}
+                  </span>
+                )
               )}
             </p>
           )}
+          {detail?.reportKind === 'INTER_COORDINATION' &&
+            (detail.affectedProcess || detail.pendingDelivery) && (
+              <div
+                className="problem-detail__inter-fields"
+                data-testid="detail-inter-fields"
+              >
+                {detail.affectedProcess && (
+                  <p>
+                    <strong>Proceso afectado:</strong> {detail.affectedProcess}
+                  </p>
+                )}
+                {detail.pendingDelivery && (
+                  <p>
+                    <strong>Entrega pendiente:</strong> {detail.pendingDelivery}
+                  </p>
+                )}
+              </div>
+            )}
         </div>
       </header>
 

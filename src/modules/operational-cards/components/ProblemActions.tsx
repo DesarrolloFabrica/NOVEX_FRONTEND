@@ -1,25 +1,26 @@
 import { useId, type FormEvent } from 'react'
 import type { ProblemDetail } from '@/modules/operational-cards/types/problem-detail.types'
 import type { OperationalSubmissionState } from '@/modules/operational-cards/types/operational-cards.state'
+import { DOSSIER_HISTORY_STATUS_LABEL } from '@/modules/operational-cards/data/problemDossier'
+import { resolveResolutionCopy } from '@/modules/situations/data/resolutionCopy'
 
 /**
- * ACCIONES sobre el problema abierto, bajo su detalle y en el mismo panel.
+ * ACCIONES sobre el problema, bajo su detalle y en el mismo panel.
  *
- * QUIÉN PUEDE SOLUCIONAR lo decide el BACKEND con `canResolve`, que viaja en la
- * respuesta del detalle. Aquí no se recalcula a partir del rol ni de la
- * coordinación: dos criterios acabarían discrepando, y el que manda es el del
- * servidor, que además vuelve a comprobarlo al recibir la resolución. Ocultar el
- * formulario es una comodidad de la interfaz, nunca la autorización.
+ * Dos bloques de presentación (misma lógica de permisos que antes):
+ *   Seguimiento   Estado actual + «Pasar a En atención» si OPEN y
+ *                 canAdvanceToInProgress.
+ *   Cierre        Aprendizaje obligatorio si canResolve (OPEN o IN_PROGRESS).
  *
- * Tres situaciones, en este orden:
- *   RESUELTO    Ya tiene resolución: se muestra el aprendizaje y quién lo cerró.
- *               Un histórico sin aprendizaje se declara como tal, sin inventarlo.
- *   PUEDE       `canResolve` true: campo de aprendizaje y botón de solución.
- *   NO PUEDE    Se explica brevemente de quién es la acción, y se mantiene
- *               disponible la salida para reportar otro problema.
+ * El endpoint de cierre solo acepta `learning`. No hay campo «solución» aparte.
+ * Las vías de CREACIÓN de reportes viven en el modo idle del panel, no aquí.
  */
 
 const CERRADO = new Set(['CLOSED'])
+
+function statusLabel(status: string): string {
+  return DOSSIER_HISTORY_STATUS_LABEL[status] ?? status
+}
 
 export interface ProblemActionsProps {
   detail: ProblemDetail
@@ -27,7 +28,8 @@ export interface ProblemActionsProps {
   submission: OperationalSubmissionState
   onLearningChange: (value: string) => void
   onResolve: () => void
-  onReportAnother: () => void
+  /** OPEN → IN_PROGRESS. Solo se llama si la UI ya filtró permiso y estado. */
+  onAdvanceToInProgress: () => void
 }
 
 export function ProblemActions({
@@ -36,26 +38,44 @@ export function ProblemActions({
   submission,
   onLearningChange,
   onResolve,
-  onReportAnother,
+  onAdvanceToInProgress,
 }: ProblemActionsProps) {
   const idPrefijo = useId()
-  const enviando =
+  const copy = resolveResolutionCopy(detail.reportKind)
+  const enviandoResolucion =
     submission.status === 'sending' &&
     submission.kind === 'resolution' &&
     submission.targetKey === detail.id
-  const errorEnvio =
+  const errorResolucion =
     submission.status === 'error' &&
     submission.kind === 'resolution' &&
     submission.targetKey === detail.id
       ? submission.errorMessage
       : null
 
+  const enviandoAvance =
+    submission.status === 'sending' &&
+    submission.kind === 'status-advance' &&
+    submission.targetKey === detail.id
+  const errorAvance =
+    submission.status === 'error' &&
+    submission.kind === 'status-advance' &&
+    submission.targetKey === detail.id
+      ? submission.errorMessage
+      : null
+
+  const ocupado = enviandoResolucion || enviandoAvance
   const yaCerrado = CERRADO.has(detail.status)
+  const puedeAvanzar =
+    !yaCerrado &&
+    detail.status === 'OPEN' &&
+    detail.canAdvanceToInProgress === true
+  const muestraSeguimiento = !yaCerrado
   const sinTexto = learningDraft.trim().length === 0
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
-    if (enviando || sinTexto) return
+    if (ocupado || sinTexto) return
     onResolve()
   }
 
@@ -63,17 +83,26 @@ export function ProblemActions({
     <section
       className="problem-actions"
       data-testid="problem-actions"
-      data-tour="problem-actions"
+      data-surface="problem-actions"
       data-can-resolve={detail.canResolve ? 'true' : 'false'}
-      data-resolved={yaCerrado ? 'true' : 'false'}
+      data-can-advance={detail.canAdvanceToInProgress ? 'true' : 'false'}
+      data-can-update={detail.canUpdate ? 'true' : 'false'}
+      data-resolved={yaCerrado ? 'true' : undefined}
+      data-report-kind={detail.reportKind ?? 'INTERNAL'}
+      data-status={detail.status}
       aria-label="Acciones sobre el problema"
     >
-      {/* ---------- YA SOLUCIONADO ---------- */}
       {yaCerrado && (
         <div className="problem-actions__resolved" data-testid="problem-resolved">
-          <h3 className="problem-actions__heading">Problema solucionado</h3>
+          <h3 className="problem-actions__heading">Problema cerrado</h3>
           {detail.resolution ? (
             <>
+              <p
+                className="problem-actions__label"
+                data-testid="problem-resolution-label"
+              >
+                {copy.resolvedLabel}
+              </p>
               <p
                 className="problem-actions__learning"
                 data-testid="problem-learning"
@@ -94,10 +123,6 @@ export function ProblemActions({
               </p>
             </>
           ) : (
-            /*
-             * Cerrado ANTES de que existiera el aprendizaje. Se dice tal cual:
-             * no se inventa texto ni se atribuye una explicación a nadie.
-             */
             <p
               className="problem-actions__note"
               data-testid="problem-without-learning"
@@ -108,84 +133,139 @@ export function ProblemActions({
         </div>
       )}
 
-      {/* ---------- PUEDE SOLUCIONARLO ---------- */}
-      {!yaCerrado && detail.canResolve && (
-        <form
-          className="problem-actions__form"
-          data-testid="resolve-form"
-          onSubmit={handleSubmit}
+      {muestraSeguimiento && (
+        <div
+          className="problem-actions__block problem-actions__block--tracking"
+          data-testid="status-advance-block"
+          data-surface="problem-tracking"
         >
-          <label
-            className="problem-actions__label"
-            htmlFor={`${idPrefijo}-learning`}
-          >
-            ¿Qué aprendiste de este problema?
-          </label>
-          <textarea
-            id={`${idPrefijo}-learning`}
-            data-testid="resolve-learning"
-            rows={4}
-            maxLength={4000}
-            required
-            value={learningDraft}
-            disabled={enviando}
-            onChange={(e) => onLearningChange(e.target.value)}
-          />
-
-          {enviando && (
-            <p
-              className="problem-actions__note"
-              data-testid="resolve-sending"
-              role="status"
+          <div className="problem-actions__block-head">
+            <h3 className="problem-actions__block-title">
+              Seguimiento del problema
+            </h3>
+            <span
+              className="problem-actions__status"
+              data-testid="actions-status"
+              data-status={detail.status}
             >
-              Registrando la solución…
-            </p>
-          )}
+              {statusLabel(detail.status)}
+            </span>
+          </div>
 
-          {errorEnvio && (
-            <p
-              className="problem-actions__note problem-actions__note--error"
-              data-testid="resolve-error"
-              role="alert"
-            >
-              {errorEnvio}
-            </p>
-          )}
+          {puedeAvanzar && (
+            <div className="problem-actions__advance">
+              {enviandoAvance && (
+                <p
+                  className="problem-actions__note"
+                  data-testid="status-advance-sending"
+                  role="status"
+                >
+                  Actualizando el estado…
+                </p>
+              )}
 
-          <button
-            type="submit"
-            className="problem-actions__submit"
-            data-testid="resolve-submit"
-            disabled={enviando || sinTexto}
-          >
-            {enviando ? 'Registrando…' : 'Problema solucionado'}
-          </button>
-        </form>
+              {errorAvance && (
+                <p
+                  className="problem-actions__note problem-actions__note--error"
+                  data-testid="status-advance-error"
+                  role="alert"
+                >
+                  {errorAvance}
+                </p>
+              )}
+
+              <button
+                type="button"
+                className="problem-actions__advance-button"
+                data-testid="status-advance-button"
+                aria-label="Pasar a En atención"
+                disabled={ocupado}
+                onClick={() => {
+                  if (ocupado) return
+                  onAdvanceToInProgress()
+                }}
+              >
+                {enviandoAvance ? 'Actualizando…' : 'Pasar a En atención'}
+              </button>
+            </div>
+          )}
+        </div>
       )}
 
-      {/* ---------- NO PUEDE, PERO SÍ CONSULTAR ---------- */}
+      {!yaCerrado && detail.canResolve && (
+        <div
+          className="problem-actions__block problem-actions__block--resolution"
+          data-surface="problem-resolution"
+        >
+          <h3 className="problem-actions__block-title">{copy.blockTitle}</h3>
+          <p className="problem-actions__block-hint">{copy.blockHint}</p>
+          <form
+            className="problem-actions__form"
+            data-testid="resolve-form"
+            data-report-kind={detail.reportKind ?? 'INTERNAL'}
+            onSubmit={handleSubmit}
+          >
+            <label
+              className="problem-actions__label"
+              htmlFor={`${idPrefijo}-learning`}
+            >
+              {copy.fieldLabel}
+            </label>
+            <p className="problem-actions__field-help">{copy.fieldHelp}</p>
+            <textarea
+              id={`${idPrefijo}-learning`}
+              data-testid="resolve-learning"
+              rows={3}
+              maxLength={4000}
+              required
+              value={learningDraft}
+              disabled={ocupado}
+              placeholder={copy.placeholder}
+              onChange={(e) => onLearningChange(e.target.value)}
+            />
+
+            {enviandoResolucion && (
+              <p
+                className="problem-actions__note"
+                data-testid="resolve-sending"
+                role="status"
+              >
+                {copy.submittingLabel}
+              </p>
+            )}
+
+            {errorResolucion && (
+              <p
+                className="problem-actions__note problem-actions__note--error"
+                data-testid="resolve-error"
+                role="alert"
+              >
+                {errorResolucion}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              className="problem-actions__submit"
+              data-testid="resolve-submit"
+              disabled={ocupado || sinTexto}
+            >
+              {enviandoResolucion ? copy.submittingLabel : copy.submitLabel}
+            </button>
+          </form>
+        </div>
+      )}
+
       {!yaCerrado && !detail.canResolve && (
         <p
-          className="problem-actions__note"
+          className="problem-actions__note problem-actions__note--readonly"
           data-testid="resolve-not-allowed"
         >
-          La solución de este problema corresponde al coordinador de la
-          coordinación responsable.
+          El cierre corresponde al coordinador de la coordinación responsable.
+          Un analista solo puede cerrar cuando Coordinación General es la
+          responsable del problema.
         </p>
       )}
-
-      {/*
-        SALIDA SIEMPRE DISPONIBLE. Desde el detalle se puede volver al
-        formulario sin tener que pasar por otra carta.
-      */}
-      <button
-        type="button"
-        className="problem-actions__secondary"
-        data-testid="report-another-button"
-        onClick={onReportAnother}
-      >
-        Reportar otro problema
-      </button>
     </section>
   )
 }

@@ -70,6 +70,8 @@ const DETAIL = {
   impact: null,
   intelligence: null,
   canResolve: true,
+  canAdvanceToInProgress: true,
+  canUpdate: true,
   resolution: null,
 } as ProblemDetail
 
@@ -77,6 +79,8 @@ const DETAIL_RESUELTO = {
   ...DETAIL,
   status: 'CLOSED',
   canResolve: false,
+  canAdvanceToInProgress: false,
+  canUpdate: false,
   resolution: {
     learning: 'Faltó un plan de reversión',
     resolvedByUserName: 'Coordinadora',
@@ -107,12 +111,79 @@ describe('panel derecho · modos', () => {
       READY,
       { type: 'SELECT_COORDINATION', code: 'coord-b2b' },
       { type: 'SELECT_PROBLEM', problemId: 'p1' },
-      { type: 'OPEN_REPORT_FORM' },
+      { type: 'OPEN_REPORT_FORM', kind: 'INTERNAL' },
     )
     expect(state.panelMode).toBe('report')
     // Sin esto, la lista central seguiría marcando una fila como activa
     // mientras el panel habla de otra cosa.
     expect(state.selectedProblemId).toBeNull()
+  })
+
+  it('cerrar el formulario vuelve a idle y conserva la coordinación', () => {
+    const state = reduce(
+      READY,
+      { type: 'SELECT_COORDINATION', code: 'coord-b2b' },
+      { type: 'OPEN_REPORT_FORM', kind: 'INTER_COORDINATION' },
+      { type: 'CLOSE_REPORT_FORM' },
+    )
+    expect(state.panelMode).toBe('idle')
+    expect(state.reportFormKind).toBeNull()
+    expect(state.selectedCoordinationCode).toBe('coord-b2b')
+  })
+
+  it('historial abre, conserva periodo al volver del detalle y regresa a idle', () => {
+    const opened = reduce(
+      READY,
+      { type: 'SELECT_COORDINATION', code: 'coord-b2b' },
+      { type: 'OPEN_HISTORY' },
+    )
+    expect(opened.panelMode).toBe('history')
+    expect(opened.history.status).toBe('idle')
+
+    const withPage = operationalCardsReducer(opened, {
+      type: 'LOAD_HISTORY_SUCCESS',
+      page: {
+        items: [
+          {
+            id: 'closed-1',
+            title: 'Cerrado',
+            severity: 'LOW',
+            status: 'CLOSED',
+            reportKind: 'INTERNAL',
+            coordinationCode: 'coord-b2b',
+            coordinationName: 'B2B',
+            affectedCoordinationCode: null,
+            affectedCoordinationName: null,
+            closedAt: '2026-09-20T12:00:00.000Z',
+            resolvedByUserName: 'Ana',
+            learningPreview: 'Aprendizaje',
+          },
+        ],
+        total: 1,
+        page: 1,
+        limit: 20,
+        scope: 'complete',
+      },
+      coordinationId: 'uuid-b2b',
+      period: opened.history.period,
+      generation: opened.dataGeneration,
+    })
+    expect(withPage.history.items).toHaveLength(1)
+
+    const detail = operationalCardsReducer(withPage, {
+      type: 'SELECT_PROBLEM',
+      problemId: 'closed-1',
+    })
+    expect(detail.panelMode).toBe('detail')
+    expect(detail.detailReturnMode).toBe('history')
+
+    const back = operationalCardsReducer(detail, { type: 'CLOSE_PROBLEM' })
+    expect(back.panelMode).toBe('history')
+    expect(back.history.items).toHaveLength(1)
+    expect(back.history.period).toEqual(opened.history.period)
+
+    const idle = operationalCardsReducer(back, { type: 'CLOSE_HISTORY' })
+    expect(idle.panelMode).toBe('idle')
   })
 
   it('seleccionar un problema abre el modo detalle', () => {
@@ -160,6 +231,29 @@ describe('coherencia entre las dos listas', () => {
     expect(state.level1.status).toBe('idle')
   })
 
+  it('keepSelection abre el detalle sin desplazar la carta propia (COORDINADOR)', () => {
+    const state = reduce(
+      READY,
+      { type: 'SELECT_COORDINATION', code: 'coord-b2b' },
+      {
+        type: 'LOAD_PROBLEMS_SUCCESS',
+        code: 'coord-b2b',
+        problems: [],
+        scope: 'complete',
+      },
+      {
+        type: 'OPEN_MY_REPORT',
+        problemId: 'p-ajeno',
+        coordinationCode: 'coord-negocios',
+        keepSelection: true,
+      },
+    )
+    expect(state.selectedCoordinationCode).toBe('coord-b2b')
+    expect(state.level1.coordinationCode).toBe('coord-b2b')
+    expect(state.selectedProblemId).toBe('p-ajeno')
+    expect(state.panelMode).toBe('detail')
+  })
+
   it('un reporte SIN coordinación abre el detalle sin inventar una carta', () => {
     const state = reduce(
       READY,
@@ -205,8 +299,8 @@ describe('borradores', () => {
         draft: { title: 'Fallo en Negocios' },
       },
     )
-    expect(state.reportDrafts['coord-b2b'].title).toBe('Fallo en B2B')
-    expect(state.reportDrafts['coord-negocios'].title).toBe('Fallo en Negocios')
+    expect(state.reportDrafts[reportDraftKey('coord-b2b')].title).toBe('Fallo en B2B')
+    expect(state.reportDrafts[reportDraftKey('coord-negocios')].title).toBe('Fallo en Negocios')
   })
 
   it('consultar un problema no pierde el borrador escrito', () => {
@@ -215,13 +309,13 @@ describe('borradores', () => {
       { type: 'SELECT_COORDINATION', code: 'coord-b2b' },
       {
         type: 'SET_REPORT_DRAFT',
-        key: 'coord-b2b',
+        key: reportDraftKey('coord-b2b'),
         draft: { description: 'Texto sin guardar' },
       },
       { type: 'SELECT_PROBLEM', problemId: 'p1' },
-      { type: 'OPEN_REPORT_FORM' },
+      { type: 'OPEN_REPORT_FORM', kind: 'INTERNAL' },
     )
-    expect(state.reportDrafts['coord-b2b'].description).toBe('Texto sin guardar')
+    expect(state.reportDrafts[reportDraftKey('coord-b2b')].description).toBe('Texto sin guardar')
   })
 
   it('el aprendizaje se guarda por problema', () => {
@@ -243,38 +337,40 @@ describe('escrituras', () => {
   const enviando = reduce(
     READY,
     { type: 'SELECT_COORDINATION', code: 'coord-b2b' },
-    { type: 'SUBMIT_REPORT', targetKey: 'coord-b2b' },
+    { type: 'SUBMIT_REPORT', targetKey: reportDraftKey('coord-b2b') },
   )
 
   it('no admite un segundo envío mientras hay uno vivo', () => {
     const segundo = operationalCardsReducer(enviando, {
       type: 'SUBMIT_REPORT',
-      targetKey: 'coord-negocios',
+      targetKey: reportDraftKey('coord-negocios'),
     })
     // El estado no cambia: la segunda pulsación no arranca nada.
     expect(segundo).toBe(enviando)
-    expect(segundo.submission.targetKey).toBe('coord-b2b')
+    expect(segundo.submission.targetKey).toBe(reportDraftKey('coord-b2b'))
   })
 
   it('un fallo conserva el texto escrito', () => {
+    const draftKey = reportDraftKey('coord-b2b')
     const conTexto = operationalCardsReducer(enviando, {
       type: 'SET_REPORT_DRAFT',
-      key: 'coord-b2b',
+      key: draftKey,
       draft: { title: 'No se perdió' },
     })
     const fallo = operationalCardsReducer(conTexto, {
       type: 'SUBMIT_REPORT_ERROR',
       message: 'La red falló',
     })
-    expect(fallo.reportDrafts['coord-b2b'].title).toBe('No se perdió')
+    expect(fallo.reportDrafts[draftKey].title).toBe('No se perdió')
     expect(fallo.submission.status).toBe('error')
   })
 
   it('un reporte confirmado invalida su coordinación y sube la generación', () => {
     const ok = operationalCardsReducer(enviando, {
       type: 'SUBMIT_REPORT_SUCCESS',
-      targetKey: 'coord-b2b',
+      targetKey: reportDraftKey('coord-b2b'),
       coordinationCode: 'coord-b2b',
+      invalidateCoordinationCodes: ['coord-b2b'],
       problemId: 'p-nuevo',
     })
     expect(ok.dataGeneration).toBe(1)
@@ -298,12 +394,12 @@ describe('escrituras', () => {
       code: 'coord-negocios',
     })
     const conFormularioAbierto = operationalCardsReducer(cambiado, {
-      type: 'OPEN_REPORT_FORM',
-    })
+      type: 'OPEN_REPORT_FORM', kind: 'INTERNAL',    })
     const ok = operationalCardsReducer(conFormularioAbierto, {
       type: 'SUBMIT_REPORT_SUCCESS',
-      targetKey: 'coord-b2b',
+      targetKey: reportDraftKey('coord-b2b'),
       coordinationCode: 'coord-b2b',
+      invalidateCoordinationCodes: ['coord-b2b'],
       problemId: 'p-nuevo',
     })
 
@@ -319,8 +415,9 @@ describe('escrituras', () => {
   it('descarta una respuesta anterior a la escritura', () => {
     const ok = operationalCardsReducer(enviando, {
       type: 'SUBMIT_REPORT_SUCCESS',
-      targetKey: 'coord-b2b',
+      targetKey: reportDraftKey('coord-b2b'),
       coordinationCode: 'coord-b2b',
+      invalidateCoordinationCodes: ['coord-b2b'],
       problemId: 'p-nuevo',
     })
     // Lista pedida ANTES de crear: reintroduciría la lista sin el problema nuevo.
@@ -381,16 +478,178 @@ describe('escrituras', () => {
   })
 })
 
+describe('Pasar a En atención (OPEN → IN_PROGRESS)', () => {
+  const DETAIL_EN_ATENCION = {
+    ...DETAIL,
+    status: 'IN_PROGRESS',
+    canAdvanceToInProgress: true,
+  canUpdate: true,
+    canResolve: true,
+  } as ProblemDetail
+
+  it('actualiza detalle y listas sin sacar el problema ni reaccionar', () => {
+    const base = reduce(
+      READY,
+      { type: 'SELECT_COORDINATION', code: 'coord-b2b' },
+      {
+        type: 'LOAD_PROBLEMS_SUCCESS',
+        code: 'coord-b2b',
+        generation: 0,
+        scope: 'complete',
+        problems: [
+          {
+            id: 'p1',
+            title: 'Problema',
+            severity: 'HIGH',
+            status: 'OPEN',
+            createdAt: '2026-09-01T10:00:00.000Z',
+            reportKind: 'INTERNAL',
+            coordinationCode: 'coord-b2b',
+          },
+        ],
+      },
+      { type: 'SELECT_PROBLEM', problemId: 'p1' },
+      {
+        type: 'LOAD_DETAIL_SUCCESS',
+        problemId: 'p1',
+        detail: DETAIL,
+        generation: 0,
+      },
+      {
+        type: 'LOAD_MY_REPORTS_SUCCESS',
+        generation: 0,
+        page: {
+          items: [
+            {
+              id: 'p1',
+              title: 'Problema',
+              severity: 'HIGH',
+              status: 'OPEN',
+              coordinationCode: 'coord-b2b',
+              coordinationName: 'B2B',
+              createdAt: '2026-09-01T10:00:00.000Z',
+              canResolve: true,
+            },
+          ],
+          total: 1,
+          page: 1,
+          limit: 20,
+        },
+      },
+      { type: 'SUBMIT_STATUS_ADVANCE', problemId: 'p1' },
+    )
+
+    expect(base.submission.status).toBe('sending')
+    expect(base.level2.detail?.status).toBe('OPEN')
+
+    const ok = operationalCardsReducer(base, {
+      type: 'SUBMIT_STATUS_ADVANCE_SUCCESS',
+      problemId: 'p1',
+      detail: DETAIL_EN_ATENCION,
+    })
+
+    expect(ok.level2.detail?.status).toBe('IN_PROGRESS')
+    expect(ok.level1.problems).toHaveLength(1)
+    expect(ok.level1.problems[0].status).toBe('IN_PROGRESS')
+    expect(ok.myReports.items[0].status).toBe('IN_PROGRESS')
+    expect(ok.pendingCharacterReaction).toBeNull()
+    expect(ok.dataGeneration).toBe(0)
+    expect(ok.submission.status).toBe('idle')
+  })
+
+  it('un fallo de API no cambia el estado visual', () => {
+    const base = reduce(
+      READY,
+      { type: 'SELECT_COORDINATION', code: 'coord-b2b' },
+      { type: 'SELECT_PROBLEM', problemId: 'p1' },
+      {
+        type: 'LOAD_DETAIL_SUCCESS',
+        problemId: 'p1',
+        detail: DETAIL,
+        generation: 0,
+      },
+      { type: 'SUBMIT_STATUS_ADVANCE', problemId: 'p1' },
+    )
+    const fallo = operationalCardsReducer(base, {
+      type: 'SUBMIT_STATUS_ADVANCE_ERROR',
+      message: 'Sin permiso',
+    })
+    expect(fallo.level2.detail?.status).toBe('OPEN')
+    expect(fallo.submission.status).toBe('error')
+    expect(fallo.submission.kind).toBe('status-advance')
+    expect(fallo.submission.errorMessage).toBe('Sin permiso')
+    expect(fallo.pendingCharacterReaction).toBeNull()
+  })
+
+  it('actualiza una dependencia INTER en caché sin eliminarla', () => {
+    const interOpen = {
+      ...DETAIL,
+      reportKind: 'INTER_COORDINATION',
+      coordinationCode: 'coord-b2b',
+      affectedCoordinationCode: 'coord-negocios',
+      affectedCoordinationName: 'Negocios',
+    } as ProblemDetail
+    const interAdvanced = {
+      ...interOpen,
+      status: 'IN_PROGRESS',
+    } as ProblemDetail
+
+    const base = reduce(
+      READY,
+      { type: 'SELECT_COORDINATION', code: 'coord-negocios' },
+      {
+        type: 'LOAD_PROBLEMS_SUCCESS',
+        code: 'coord-negocios',
+        generation: 0,
+        scope: 'complete',
+        problems: [
+          {
+            id: 'p1',
+            title: 'Dependencia',
+            severity: 'HIGH',
+            status: 'OPEN',
+            createdAt: '2026-09-01T10:00:00.000Z',
+            reportKind: 'INTER_COORDINATION',
+            coordinationCode: 'coord-b2b',
+            affectedCoordinationCode: 'coord-negocios',
+          },
+        ],
+      },
+      { type: 'SELECT_PROBLEM', problemId: 'p1' },
+      {
+        type: 'LOAD_DETAIL_SUCCESS',
+        problemId: 'p1',
+        detail: interOpen,
+        generation: 0,
+      },
+      { type: 'SUBMIT_STATUS_ADVANCE', problemId: 'p1' },
+    )
+
+    const ok = operationalCardsReducer(base, {
+      type: 'SUBMIT_STATUS_ADVANCE_SUCCESS',
+      problemId: 'p1',
+      detail: interAdvanced,
+    })
+
+    expect(ok.level1.problems).toHaveLength(1)
+    expect(ok.level1.problems[0].status).toBe('IN_PROGRESS')
+    expect(ok.level1.problems[0].reportKind).toBe('INTER_COORDINATION')
+    expect(ok.level2.detail?.affectedCoordinationCode).toBe('coord-negocios')
+    expect(ok.level2.detail?.coordinationCode).toBe('coord-b2b')
+  })
+})
+
 describe('reacción del personaje', () => {
   it('se consume una sola vez', () => {
     const conReaccion = reduce(
       READY,
       { type: 'SELECT_COORDINATION', code: 'coord-b2b' },
-      { type: 'SUBMIT_REPORT', targetKey: 'coord-b2b' },
+      { type: 'SUBMIT_REPORT', targetKey: reportDraftKey('coord-b2b') },
       {
         type: 'SUBMIT_REPORT_SUCCESS',
-        targetKey: 'coord-b2b',
+        targetKey: reportDraftKey('coord-b2b'),
         coordinationCode: 'coord-b2b',
+        invalidateCoordinationCodes: ['coord-b2b'],
         problemId: 'p-nuevo',
       },
     )

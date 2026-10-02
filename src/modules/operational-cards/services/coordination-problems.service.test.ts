@@ -162,9 +162,12 @@ describe('fetchCoordinationProblems · resultado', () => {
     const [problem] = soloUno
 
     expect(Object.keys(problem).sort()).toEqual([
+      'affectedCoordinationCode',
       'affectedCoordinationCount',
+      'coordinationCode',
       'createdAt',
       'id',
+      'reportKind',
       'severity',
       'slaHealth',
       'status',

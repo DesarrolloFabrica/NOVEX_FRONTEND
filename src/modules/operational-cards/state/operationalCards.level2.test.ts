@@ -72,6 +72,8 @@ const DETAIL: ProblemDetail = {
   coordinationCode: 'coord-b2b',
   createdByUserName: 'Autor de prueba',
   canResolve: false,
+  canAdvanceToInProgress: false,
+  canUpdate: false,
   resolution: null,
   intelligence: null,
 }

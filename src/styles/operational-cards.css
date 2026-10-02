@@ -1122,12 +1122,29 @@
   outline: 2px solid rgb(120 200 255 / 0.7);
   outline-offset: 2px;
 }
+/*
+ * MARCA LATERAL + CUERPO DE DOS LÍNEAS.
+ *
+ *   [marca] [título…………………] [severidad]
+ *   [marca] [tipo · origen……] [estado]
+ *
+ * La columna central es la única elástica: el título y el origen ceden ancho
+ * (recorte con elipsis) y la severidad y el estado nunca salen de la fila.
+ * `width: 100%` porque un <button> con ancho automático se ajusta a su
+ * contenido: dentro de un <li> (grupos de COORDINADOR) la fila medía lo que su
+ * título y desbordaba la lista, escondiendo severidad y estado.
+ */
 .problem-row {
-  display: flex;
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: var(--row-mark-size, 24px) minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
   align-items: center;
-  gap: 10px;
+  column-gap: var(--row-mark-gap, 8px);
+  row-gap: 2px;
   flex: 0 0 auto;
-  padding: 9px 11px;
+  padding: 7px 9px;
   border: 1px solid var(--deck-line);
   border-radius: 11px;
   background: rgb(12 22 40 / 0.72);
@@ -1149,18 +1166,48 @@
   outline-offset: 2px;
 }
 
+.problem-row__mark {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+
+/* Hasta dos líneas: un título largo usa el ancho que dejó la etiqueta. */
 .problem-row__title {
+  display: -webkit-box;
   min-width: 0;
-  flex: 1 1 auto;
+  grid-column: 2;
+  grid-row: 1;
   overflow: hidden;
   font-size: 12.5px;
-  line-height: 1.35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+/* Tipo y coordinación: hasta dos líneas antes de recortar, para que el rol
+   («debemos resolver», «nos afecta») no se pierda en las columnas estrechas. */
+.problem-row__origin {
+  display: -webkit-box;
+  min-width: 0;
+  grid-column: 2;
+  grid-row: 2;
+  overflow: hidden;
+  color: var(--deck-muted, #8b9cb6);
+  font-size: 10px;
+  line-height: 1.3;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .problem-row__severity {
-  flex: 0 0 auto;
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+  align-self: end;
+  white-space: nowrap;
   padding: 2px 8px;
   border: 1px solid rgb(var(--severity-rgb) / 0.4);
   border-radius: 999px;

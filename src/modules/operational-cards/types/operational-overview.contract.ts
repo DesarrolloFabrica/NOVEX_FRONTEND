@@ -38,6 +38,8 @@ export interface CoordinationOverview {
   activeProblemsCount: number
   criticalCount: number
   affectedCoordinationCount: number
+  /** Dependencias INTER donde esta área es la afectada. No suma a activos propios. */
+  incomingDependencyCount?: number
 }
 
 /**

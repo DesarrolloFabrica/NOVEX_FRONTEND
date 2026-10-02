@@ -502,7 +502,7 @@ test.describe('detalle persistente del problema · 1440x900', () => {
     // Cabecera: título, severidad, estado y SLA.
     await expect(detail).toContainText('Aulas sin conectividad')
     await expect(page.getByTestId('detail-severity')).toHaveText('Crítica')
-    await expect(page.getByTestId('detail-status')).toHaveText('Registrada')
+    await expect(page.getByTestId('detail-status')).toHaveText('Abierto')
     await expect(page.getByTestId('detail-sla')).toHaveText('SLA vencido')
     await expect(page.getByTestId('detail-summary')).toContainText(
       'continuidad docente',
@@ -549,6 +549,73 @@ test.describe('detalle persistente del problema · 1440x900', () => {
 
     await page.screenshot({
       path: testInfo.outputPath('problem-detail-closed-sections-1440x900.png'),
+      fullPage: false,
+    })
+  })
+
+  test('detalle muestra solo expediente/acciones; sin CTAs de creación', async ({
+    page,
+  }, testInfo) => {
+    test.slow()
+    await installSession(page)
+    await installApi(page)
+    await openProblem(page)
+
+    const panel = page.getByTestId('action-panel')
+    await expect(panel).toHaveAttribute('data-mode', 'detail')
+    await expect(page.getByTestId('problem-detail')).toBeVisible()
+    await expect(page.getByTestId('problem-actions')).toBeVisible()
+    await expect(page.getByTestId('status-advance-block')).toBeVisible()
+
+    // Las vías de creación NO viven dentro del expediente.
+    await expect(panel.getByTestId('report-internal-button')).toHaveCount(0)
+    await expect(panel.getByTestId('report-dependency-button')).toHaveCount(0)
+    // Ni en Mis reportes (solo consulta).
+    await expect(
+      page.getByTestId('my-reports').getByTestId('report-internal-button'),
+    ).toHaveCount(0)
+
+    // Timeline abierto: no debe solaparse con «Seguimiento del problema».
+    const timelineToggle = page
+      .locator('[data-section="timeline"] [data-testid="detail-section-toggle"]')
+      .first()
+    await timelineToggle.click()
+    await expect(
+      page.locator('[data-section="timeline"][data-expanded="true"]'),
+    ).toBeVisible()
+
+    const timelineBox = await page
+      .locator('[data-section="timeline"]')
+      .first()
+      .boundingBox()
+    const trackingBox = await page
+      .getByTestId('status-advance-block')
+      .boundingBox()
+    expect(timelineBox).toBeTruthy()
+    expect(trackingBox).toBeTruthy()
+    if (timelineBox && trackingBox) {
+      expect(trackingBox.y).toBeGreaterThan(timelineBox.y + timelineBox.height)
+    }
+
+    await page.screenshot({
+      path: testInfo.outputPath('problem-detail-no-create-ctas-1440x900.png'),
+      fullPage: false,
+    })
+
+    /*
+     * ADMIN consulta: al volver a idle no aparecen botones de registro aunque
+     * algún seed de backend conceda SITUATIONS_CREATE. La creación se ejercita
+     * con ANALISTA/COORDINADOR en otros specs.
+     */
+    await page.getByTestId('breadcrumb-direction').click()
+    await expect(panel).toHaveAttribute('data-mode', 'idle')
+    await expect(page.getByTestId('problem-detail')).toHaveCount(0)
+    await expect(panel).toHaveAttribute('data-can-create', 'false')
+    await expect(panel.getByTestId('report-internal-button')).toHaveCount(0)
+    await expect(panel.getByTestId('report-dependency-button')).toHaveCount(0)
+
+    await page.screenshot({
+      path: testInfo.outputPath('action-panel-idle-admin-no-create-1440x900.png'),
       fullPage: false,
     })
   })

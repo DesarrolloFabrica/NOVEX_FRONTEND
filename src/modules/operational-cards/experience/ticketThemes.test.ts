@@ -208,15 +208,11 @@ describe('resolveTicketTheme', () => {
     expect(theme.ornaments.action.map((o) => o.corner)).toEqual(['bl', 'tr'])
   })
 
-  it('activa Operación Académica solo para el padre, no las cinco escuelas', () => {
+  it('activa Operación Académica solo para el padre; escuelas hijas resuelven su propio tema', () => {
     expect(resolveTicketTheme('coord-operaciones-academicas')).toBe(
       'operacion-academica',
     )
-    expect(resolveTicketTheme('coord-bellas-artes')).toBeUndefined()
-    expect(resolveTicketTheme('coord-empresarial')).toBeUndefined()
-    expect(resolveTicketTheme('coord-ingenierias')).toBeUndefined()
-    expect(resolveTicketTheme('coord-transversales')).toBeUndefined()
-    expect(resolveTicketTheme('coord-negocios')).toBeUndefined()
+    expect(resolveTicketTheme('coord-negocios')).toBe('negocios')
     const theme = getTicketTheme('operacion-academica')
     expect(theme.accent).toBe('#1A2946')
     expect(theme.accentDeep).toBe('#0F1A2E')
@@ -243,6 +239,206 @@ describe('resolveTicketTheme', () => {
     expect(theme.ornaments.action.map((o) => o.corner)).toEqual(['tr', 'br'])
   })
 
+  it('activa Bellas Artes solo para coord-bellas-artes, sin heredar al padre', () => {
+    expect(resolveTicketTheme('coord-bellas-artes')).toBe('bellas-artes')
+    expect(resolveTicketTheme('coord-operaciones-academicas')).toBe(
+      'operacion-academica',
+    )
+    expect(resolveTicketTheme('coord-negocios')).toBe('negocios')
+    const theme = getTicketTheme('bellas-artes')
+    expect(theme.accent).toBe('#4A2868')
+    expect(theme.accentDeep).toBe('#2A1740')
+    expect(theme.watermark).toBe(
+      '/assets/tickets/bellas-artes/cut/watermark-horse.png',
+    )
+    expect(theme.ornaments.character).toEqual([
+      {
+        src: '/assets/tickets/bellas-artes/cut/ornament-corner-star.png',
+        corner: 'bl',
+      },
+    ])
+    expect(theme.ornaments.reports.map((o) => o.src)).toEqual([
+      '/assets/tickets/bellas-artes/cut/ornament-pointe-shoes.png',
+      '/assets/tickets/bellas-artes/cut/ornament-music-notes.png',
+    ])
+    expect(theme.ornaments.problems.map((o) => o.src)).toEqual([
+      '/assets/tickets/bellas-artes/cut/ornament-ballerina.png',
+      '/assets/tickets/bellas-artes/cut/ornament-corner-star.png',
+    ])
+    expect(theme.ornaments.action.map((o) => o.src)).toEqual([
+      '/assets/tickets/bellas-artes/cut/ornament-ballerina.png',
+      '/assets/tickets/bellas-artes/cut/ornament-corner-star.png',
+    ])
+    expect(theme.ornaments.action.map((o) => o.corner)).toEqual(['tr', 'br'])
+  })
+
+  it('activa Transformación Empresarial solo para coord-empresarial', () => {
+    expect(resolveTicketTheme('coord-empresarial')).toBe(
+      'transformacion-empresarial',
+    )
+    expect(resolveTicketTheme('coord-operaciones-academicas')).toBe(
+      'operacion-academica',
+    )
+    expect(resolveTicketTheme('coord-bellas-artes')).toBe('bellas-artes')
+    expect(resolveTicketTheme('coord-negocios')).toBe('negocios')
+    const theme = getTicketTheme('transformacion-empresarial')
+    expect(theme.accent).toBe('#3A1858')
+    expect(theme.accentDeep).toBe('#1A0830')
+    expect(theme.watermark).toBe(
+      '/assets/tickets/transformacion-empresarial/cut/watermark-orca.png',
+    )
+    expect(theme.ornaments.character).toEqual([
+      {
+        src: '/assets/tickets/transformacion-empresarial/cut/ornament-corner-star.png',
+        corner: 'bl',
+      },
+    ])
+    expect(theme.ornaments.reports.map((o) => o.src)).toEqual([
+      '/assets/tickets/transformacion-empresarial/cut/ornament-cycle-refresh.png',
+      '/assets/tickets/transformacion-empresarial/cut/ornament-process-gear.png',
+    ])
+    expect(theme.ornaments.problems.map((o) => o.src)).toEqual([
+      '/assets/tickets/transformacion-empresarial/cut/ornament-split-arrow.png',
+      '/assets/tickets/transformacion-empresarial/cut/ornament-corner-star.png',
+    ])
+    expect(theme.ornaments.action.map((o) => o.src)).toEqual([
+      '/assets/tickets/transformacion-empresarial/cut/ornament-cycle-refresh.png',
+      '/assets/tickets/transformacion-empresarial/cut/ornament-process-gear.png',
+    ])
+    expect(theme.ornaments.action.map((o) => o.corner)).toEqual(['bl', 'tr'])
+  })
+
+  it('resuelve el tema de Ingenierías', () => {
+    // El código técnico de la carta hija debe activar su tema ticket.
+    expect(resolveTicketTheme('coord-ingenierias')).toBe('ingenierias')
+  })
+
+  it('activa Ingenierías solo para coord-ingenierias, sin heredar al padre', () => {
+    expect(resolveTicketTheme('coord-ingenierias')).toBe('ingenierias')
+    expect(resolveTicketTheme('coord-operaciones-academicas')).toBe(
+      'operacion-academica',
+    )
+    expect(resolveTicketTheme('coord-bellas-artes')).toBe('bellas-artes')
+    expect(resolveTicketTheme('coord-empresarial')).toBe(
+      'transformacion-empresarial',
+    )
+    expect(resolveTicketTheme('coord-negocios')).toBe('negocios')
+    const theme = getTicketTheme('ingenierias')
+    expect(theme.accent).toBe('#5A2E10')
+    expect(theme.accentDeep).toBe('#3D1C08')
+    expect(theme.watermark).toBe(
+      '/assets/tickets/ingenierias/cut/watermark-beaver.png',
+    )
+    expect(theme.ornaments.character).toEqual([
+      {
+        src: '/assets/tickets/ingenierias/cut/ornament-corner-star.png',
+        corner: 'bl',
+      },
+    ])
+    expect(theme.ornaments.reports.map((o) => o.src)).toEqual([
+      '/assets/tickets/ingenierias/cut/ornament-hex-bolt.png',
+      '/assets/tickets/ingenierias/cut/ornament-drafting-compass.png',
+    ])
+    expect(theme.ornaments.problems.map((o) => o.src)).toEqual([
+      '/assets/tickets/ingenierias/cut/ornament-set-square.png',
+      '/assets/tickets/ingenierias/cut/ornament-corner-star.png',
+    ])
+    expect(theme.ornaments.action.map((o) => o.src)).toEqual([
+      '/assets/tickets/ingenierias/cut/ornament-set-square.png',
+      '/assets/tickets/ingenierias/cut/ornament-drafting-compass.png',
+    ])
+    expect(theme.ornaments.action.map((o) => o.corner)).toEqual(['br', 'tr'])
+  })
+
+  it('resuelve el tema de Transversales', () => {
+    expect(resolveTicketTheme('coord-transversales')).toBe('transversales')
+  })
+
+  it('activa Transversales solo para coord-transversales, sin heredar al padre', () => {
+    expect(resolveTicketTheme('coord-transversales')).toBe('transversales')
+    expect(resolveTicketTheme('coord-operaciones-academicas')).toBe(
+      'operacion-academica',
+    )
+    expect(resolveTicketTheme('coord-ingenierias')).toBe('ingenierias')
+    expect(resolveTicketTheme('coord-bellas-artes')).toBe('bellas-artes')
+    expect(resolveTicketTheme('coord-empresarial')).toBe(
+      'transformacion-empresarial',
+    )
+    expect(resolveTicketTheme('coord-negocios')).toBe('negocios')
+    const theme = getTicketTheme('transversales')
+    expect(theme.accent).toBe('#6B3A0C')
+    expect(theme.accentDeep).toBe('#3F2208')
+    expect(theme.watermark).toBe(
+      '/assets/tickets/transversales/cut/watermark-bee.png',
+    )
+    expect(theme.ornaments.character).toEqual([
+      {
+        src: '/assets/tickets/transversales/cut/ornament-corner-star.png',
+        corner: 'bl',
+      },
+    ])
+    expect(theme.ornaments.reports.map((o) => o.src)).toEqual([
+      '/assets/tickets/transversales/cut/ornament-span-bridge.png',
+      '/assets/tickets/transversales/cut/ornament-flow-nodes.png',
+    ])
+    expect(theme.ornaments.problems.map((o) => o.src)).toEqual([
+      '/assets/tickets/transversales/cut/ornament-flow-nodes.png',
+      '/assets/tickets/transversales/cut/ornament-corner-star.png',
+    ])
+    expect(theme.ornaments.action.map((o) => o.src)).toEqual([
+      '/assets/tickets/transversales/cut/ornament-span-bridge.png',
+      '/assets/tickets/transversales/cut/ornament-synergy-link.png',
+    ])
+    expect(theme.ornaments.action.map((o) => o.corner)).toEqual(['br', 'tr'])
+  })
+
+  it('resuelve el tema de Negocios', () => {
+    expect(resolveTicketTheme('coord-negocios')).toBe('negocios')
+  })
+
+  it('activa Negocios solo para coord-negocios, sin heredar al padre', () => {
+    expect(resolveTicketTheme('coord-negocios')).toBe('negocios')
+    expect(resolveTicketTheme('coord-operaciones-academicas')).toBe(
+      'operacion-academica',
+    )
+    expect(resolveTicketTheme('coord-transversales')).toBe('transversales')
+    expect(resolveTicketTheme('coord-ingenierias')).toBe('ingenierias')
+    expect(resolveTicketTheme('coord-bellas-artes')).toBe('bellas-artes')
+    expect(resolveTicketTheme('coord-empresarial')).toBe(
+      'transformacion-empresarial',
+    )
+    const theme = getTicketTheme('negocios')
+    expect(theme.accent).toBe('#6B2410')
+    expect(theme.accentDeep).toBe('#2E1008')
+    expect(theme.watermark).toBe(
+      '/assets/tickets/negocios/cut/watermark-fox.png',
+    )
+    expect(theme.ornaments.character).toEqual([
+      {
+        src: '/assets/tickets/negocios/cut/ornament-corner-star.png',
+        corner: 'bl',
+      },
+    ])
+    expect(theme.ornaments.reports.map((o) => o.src)).toEqual([
+      '/assets/tickets/negocios/cut/ornament-strategy-knight.png',
+      '/assets/tickets/negocios/cut/ornament-business-briefcase.png',
+    ])
+    expect(theme.ornaments.problems.map((o) => o.src)).toEqual([
+      '/assets/tickets/negocios/cut/ornament-opportunity-key.png',
+      '/assets/tickets/negocios/cut/ornament-business-briefcase.png',
+    ])
+    expect(theme.ornaments.action.map((o) => o.src)).toEqual([
+      '/assets/tickets/negocios/cut/ornament-corner-star.png',
+      '/assets/tickets/negocios/cut/ornament-strategy-knight.png',
+      '/assets/tickets/negocios/cut/ornament-business-briefcase.png',
+    ])
+    expect(theme.ornaments.action.map((o) => o.corner)).toEqual([
+      'tr',
+      'tr',
+      'br',
+    ])
+  })
+
   it('no asigna tema a coordinaciones sin registro', () => {
     expect(resolveTicketTheme('coord-servicios')).toBeUndefined()
     expect(resolveTicketTheme('coord-inexistente')).toBeUndefined()
@@ -254,17 +450,22 @@ describe('resolveTicketTheme', () => {
     expect(resolveTicketTheme('')).toBeUndefined()
   })
 
-  it('expone los nueve temas registrados sin alterar los anteriores', () => {
+  it('expone los catorce temas registrados sin alterar los anteriores', () => {
     expect(Object.keys(TICKET_THEMES).sort()).toEqual([
       'b2b',
+      'bellas-artes',
       'desarrollo-profesional',
       'especializaciones',
       'fabrica',
       'general',
+      'ingenierias',
+      'negocios',
       'operacion-academica',
       'proyeccion-social',
       'saber-pro',
       'servicio',
+      'transformacion-empresarial',
+      'transversales',
     ])
     expect(TICKET_THEMES.fabrica.accent).toBe('#1a9aa6')
     expect(TICKET_THEMES['saber-pro'].accent).toBe('#5C5E2C')
@@ -275,5 +476,16 @@ describe('resolveTicketTheme', () => {
     expect(TICKET_THEMES['proyeccion-social'].accent).toBe('#17492F')
     expect(TICKET_THEMES.servicio.accent).toBe('#681030')
     expect(TICKET_THEMES['operacion-academica'].accent).toBe('#1A2946')
+    expect(TICKET_THEMES['bellas-artes'].accent).toBe('#4A2868')
+    expect(TICKET_THEMES['transformacion-empresarial'].accent).toBe('#3A1858')
+    expect(TICKET_THEMES['transformacion-empresarial'].accentDeep).toBe(
+      '#1A0830',
+    )
+    expect(TICKET_THEMES.ingenierias.accent).toBe('#5A2E10')
+    expect(TICKET_THEMES.ingenierias.accentDeep).toBe('#3D1C08')
+    expect(TICKET_THEMES.transversales.accent).toBe('#6B3A0C')
+    expect(TICKET_THEMES.transversales.accentDeep).toBe('#3F2208')
+    expect(TICKET_THEMES.negocios.accent).toBe('#6B2410')
+    expect(TICKET_THEMES.negocios.accentDeep).toBe('#2E1008')
   })
 })

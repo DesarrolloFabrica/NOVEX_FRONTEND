@@ -38,6 +38,8 @@ const DETAIL: ProblemDetailData = {
   coordinationCode: 'coord-b2b',
   createdByUserName: 'Autor de prueba',
   canResolve: false,
+  canAdvanceToInProgress: false,
+  canUpdate: false,
   resolution: null,
   intelligence: {
     headline: 'Riesgo concentrado en la sede norte',
@@ -85,7 +87,7 @@ describe('ProblemDetail · estructura', () => {
     const html = markup()
     expect(html).toContain('Aulas sin conectividad')
     expect(html).toContain('>Crítica<')
-    expect(html).toContain('>Registrada<')
+    expect(html).toContain('>Abierto<')
     expect(html).toContain('SLA vencido')
   })
 

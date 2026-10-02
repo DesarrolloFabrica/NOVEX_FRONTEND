@@ -3,7 +3,6 @@
 
 import { useMemo } from 'react'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
-import { canUpdateSituationStatus } from '@/modules/auth/utils/permissions'
 import { useSituationManagement } from '@/modules/monitoring/hooks/useSituationManagement'
 import { MonitoringCenter } from '@/modules/monitoring/components/MonitoringCenter'
 import { MainScreen, NovexFrame, NovexRoom } from '@/modules/room'
@@ -33,9 +32,11 @@ export function MonitoringPage() {
     loadingList,
     loadingDossier,
     updatingStatus,
+    resolvingSituation,
     listError,
     dossierError,
     updateError,
+    resolveError,
     selectSituation,
     setQueueSearch,
     setQueueStatus,
@@ -45,10 +46,11 @@ export function MonitoringPage() {
     setQueuePageSize,
     applySummaryFilter,
     updateStatus,
+    resolveSituation,
   } = useSituationManagement()
 
   const environment = useMemo(() => resolveEnvironment(summary), [summary])
-  const canUpdate = canUpdateSituationStatus(user, dossier?.situation)
+  const canUpdate = dossier?.situation.canAdvanceToInProgress === true
 
   return (
     <NovexRoom environment={environment} scene="commitments">
@@ -68,9 +70,10 @@ export function MonitoringPage() {
             dossierLoading={loadingDossier}
             listError={listError}
             dossierError={dossierError}
-            updateError={updateError}
+            updateError={updateError ?? resolveError}
             canUpdate={canUpdate}
             isUpdating={updatingStatus}
+            isResolving={resolvingSituation}
             environment={environment}
             onSelectSituation={selectSituation}
             onSearchChange={setQueueSearch}
@@ -81,6 +84,7 @@ export function MonitoringPage() {
             onPageSizeChange={setQueuePageSize}
             onSummaryFilter={applySummaryFilter}
             onUpdateSituationStatus={updateStatus}
+            onResolveSituation={resolveSituation}
             onLogout={() => void logout()}
           />
         </MainScreen>

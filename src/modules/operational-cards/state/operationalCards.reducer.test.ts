@@ -105,6 +105,7 @@ describe('operationalCardsReducer · LEVEL 0', () => {
       },
       // El panel abre en reposo: seleccionar una carta NO abre el formulario.
       panelMode: 'idle',
+      reportFormKind: null,
       reportDrafts: {},
       learningDrafts: {},
       submission: {

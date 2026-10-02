@@ -16,6 +16,11 @@ export type TicketThemeId =
   | 'proyeccion-social'
   | 'servicio'
   | 'operacion-academica'
+  | 'bellas-artes'
+  | 'transformacion-empresarial'
+  | 'ingenierias'
+  | 'transversales'
+  | 'negocios'
 
 export type TicketPanelVariant =
   | 'character'
@@ -51,6 +56,12 @@ const GENERAL_CUT = '/assets/tickets/general/cut'
 const PROYECCION_SOCIAL_CUT = '/assets/tickets/proyeccion-social/cut'
 const SERVICIO_CUT = '/assets/tickets/servicio/cut'
 const OPERACION_ACADEMICA_CUT = '/assets/tickets/operacion-academica/cut'
+const BELLAS_ARTES_CUT = '/assets/tickets/bellas-artes/cut'
+const TRANSFORMACION_EMPRESARIAL_CUT =
+  '/assets/tickets/transformacion-empresarial/cut'
+const INGENIERIAS_CUT = '/assets/tickets/ingenierias/cut'
+const TRANSVERSALES_CUT = '/assets/tickets/transversales/cut'
+const NEGOCIOS_CUT = '/assets/tickets/negocios/cut'
 
 /**
  * Identidades registradas. Ampliar aquí —no duplicar componente ni hoja CSS—
@@ -362,6 +373,266 @@ export const TICKET_THEMES: Readonly<Record<TicketThemeId, TicketThemeDefinition
         ],
       },
     },
+    'bellas-artes': {
+      id: 'bellas-artes',
+      /*
+       * Marco/CTA violeta frío (#4A2868), no la tinta PNG #623A80, ni el
+       * canónico #6F7CFF, ni el plum cálido de DP (#5C2E58 / #3A1C35).
+       * Activador: coord-bellas-artes. No hereda ni altera Operación Académica.
+       */
+      accent: '#4A2868',
+      accentDeep: '#2A1740',
+      watermark: `${BELLAS_ARTES_CUT}/watermark-horse.png`,
+      ornaments: {
+        character: [
+          {
+            src: `${BELLAS_ARTES_CUT}/ornament-corner-star.png`,
+            corner: 'bl',
+          },
+        ],
+        reports: [
+          {
+            src: `${BELLAS_ARTES_CUT}/ornament-pointe-shoes.png`,
+            corner: 'bl',
+          },
+          {
+            src: `${BELLAS_ARTES_CUT}/ornament-music-notes.png`,
+            corner: 'br',
+          },
+        ],
+        problems: [
+          {
+            src: `${BELLAS_ARTES_CUT}/ornament-ballerina.png`,
+            corner: 'bl',
+          },
+          {
+            src: `${BELLAS_ARTES_CUT}/ornament-corner-star.png`,
+            corner: 'br',
+          },
+        ],
+        /* Action: bailarina TR, estrella BR; caballo watermark BL (hocico al centro). */
+        action: [
+          {
+            src: `${BELLAS_ARTES_CUT}/ornament-ballerina.png`,
+            corner: 'tr',
+          },
+          {
+            src: `${BELLAS_ARTES_CUT}/ornament-corner-star.png`,
+            corner: 'br',
+          },
+        ],
+      },
+    },
+    'transformacion-empresarial': {
+      id: 'transformacion-empresarial',
+      /*
+       * Marco/CTA violeta orca oscurecido (#3A1858), no la tinta PNG #540077,
+       * ni el canónico #A95CFF, ni BA (#4A2868) ni DP (#5C2E58).
+       * Activador: coord-empresarial (label producto «Transformación Empresarial»).
+       * No hereda ni altera Operación Académica ni Bellas Artes.
+       */
+      accent: '#3A1858',
+      accentDeep: '#1A0830',
+      watermark: `${TRANSFORMACION_EMPRESARIAL_CUT}/watermark-orca.png`,
+      ornaments: {
+        character: [
+          {
+            src: `${TRANSFORMACION_EMPRESARIAL_CUT}/ornament-corner-star.png`,
+            corner: 'bl',
+          },
+        ],
+        reports: [
+          {
+            src: `${TRANSFORMACION_EMPRESARIAL_CUT}/ornament-cycle-refresh.png`,
+            corner: 'bl',
+          },
+          {
+            src: `${TRANSFORMACION_EMPRESARIAL_CUT}/ornament-process-gear.png`,
+            corner: 'br',
+          },
+        ],
+        problems: [
+          {
+            src: `${TRANSFORMACION_EMPRESARIAL_CUT}/ornament-split-arrow.png`,
+            corner: 'bl',
+          },
+          {
+            src: `${TRANSFORMACION_EMPRESARIAL_CUT}/ornament-corner-star.png`,
+            corner: 'br',
+          },
+        ],
+        /* Action: ciclo BL, engranaje TR; orca watermark BR (mirando derecha). */
+        action: [
+          {
+            src: `${TRANSFORMACION_EMPRESARIAL_CUT}/ornament-cycle-refresh.png`,
+            corner: 'bl',
+          },
+          {
+            src: `${TRANSFORMACION_EMPRESARIAL_CUT}/ornament-process-gear.png`,
+            corner: 'tr',
+          },
+        ],
+      },
+    },
+    ingenierias: {
+      id: 'ingenierias',
+      /*
+       * Marco/CTA cobre oscuro (#5A2E10), no la tinta PNG #BC4C00,
+       * ni el canónico #FF8A2A (cerca de HIGH/ALERTA), ni General (#7A5708).
+       * Activador: coord-ingenierias (hija de Operación Académica).
+       * Sin engranaje (reserva TE). Castor Action BL mirando al centro.
+       */
+      accent: '#5A2E10',
+      accentDeep: '#3D1C08',
+      watermark: `${INGENIERIAS_CUT}/watermark-beaver.png`,
+      ornaments: {
+        character: [
+          {
+            src: `${INGENIERIAS_CUT}/ornament-corner-star.png`,
+            corner: 'bl',
+          },
+        ],
+        reports: [
+          {
+            src: `${INGENIERIAS_CUT}/ornament-hex-bolt.png`,
+            corner: 'bl',
+          },
+          {
+            src: `${INGENIERIAS_CUT}/ornament-drafting-compass.png`,
+            corner: 'br',
+          },
+        ],
+        problems: [
+          {
+            src: `${INGENIERIAS_CUT}/ornament-set-square.png`,
+            corner: 'bl',
+          },
+          {
+            src: `${INGENIERIAS_CUT}/ornament-corner-star.png`,
+            corner: 'br',
+          },
+        ],
+        /* Action: escuadra BR, compás TR; castor watermark BL (mira derecha). */
+        action: [
+          {
+            src: `${INGENIERIAS_CUT}/ornament-set-square.png`,
+            corner: 'br',
+          },
+          {
+            src: `${INGENIERIAS_CUT}/ornament-drafting-compass.png`,
+            corner: 'tr',
+          },
+        ],
+      },
+    },
+    transversales: {
+      id: 'transversales',
+      /*
+       * Marco/CTA ocre oscuro (#6B3A0C), no la tinta PNG #C08020,
+       * ni el canónico #FF9A28, ni el ámbar del icono #F8B133 (cerca ALERTA),
+       * ni Ingenierías (#5A2E10) ni General (#7A5708).
+       * Activador: coord-transversales (hija de Operación Académica).
+       * Abeja Action BL mirando al centro (sin scaleX).
+       */
+      accent: '#6B3A0C',
+      accentDeep: '#3F2208',
+      watermark: `${TRANSVERSALES_CUT}/watermark-bee.png`,
+      ornaments: {
+        character: [
+          {
+            src: `${TRANSVERSALES_CUT}/ornament-corner-star.png`,
+            corner: 'bl',
+          },
+        ],
+        reports: [
+          {
+            src: `${TRANSVERSALES_CUT}/ornament-span-bridge.png`,
+            corner: 'bl',
+          },
+          {
+            src: `${TRANSVERSALES_CUT}/ornament-flow-nodes.png`,
+            corner: 'br',
+          },
+        ],
+        problems: [
+          {
+            src: `${TRANSVERSALES_CUT}/ornament-flow-nodes.png`,
+            corner: 'bl',
+          },
+          {
+            src: `${TRANSVERSALES_CUT}/ornament-corner-star.png`,
+            corner: 'br',
+          },
+        ],
+        /* Action: puente BR, synergy TR; abeja watermark BL (mira derecha). */
+        action: [
+          {
+            src: `${TRANSVERSALES_CUT}/ornament-span-bridge.png`,
+            corner: 'br',
+          },
+          {
+            src: `${TRANSVERSALES_CUT}/ornament-synergy-link.png`,
+            corner: 'tr',
+          },
+        ],
+      },
+    },
+    negocios: {
+      id: 'negocios',
+      /*
+       * Marco/CTA marrón cobrizo (#6B2410), no la tinta PNG #BD533B,
+       * ni el canónico #FF7B20 (carta/aura; cerca de HIGH/CRÍTICO).
+       * Activador: coord-negocios → negocios (hija de Operación Académica).
+       * Motivos: caballo/portafolio/llave/zorro/estrella — sin gráficas.
+       * Zorro Action BL mirando al centro (sin scaleX).
+       */
+      accent: '#6B2410',
+      accentDeep: '#2E1008',
+      watermark: `${NEGOCIOS_CUT}/watermark-fox.png`,
+      ornaments: {
+        character: [
+          {
+            src: `${NEGOCIOS_CUT}/ornament-corner-star.png`,
+            corner: 'bl',
+          },
+        ],
+        reports: [
+          {
+            src: `${NEGOCIOS_CUT}/ornament-strategy-knight.png`,
+            corner: 'bl',
+          },
+          {
+            src: `${NEGOCIOS_CUT}/ornament-business-briefcase.png`,
+            corner: 'br',
+          },
+        ],
+        problems: [
+          {
+            src: `${NEGOCIOS_CUT}/ornament-opportunity-key.png`,
+            corner: 'bl',
+          },
+          {
+            src: `${NEGOCIOS_CUT}/ornament-business-briefcase.png`,
+            corner: 'br',
+          },
+        ],
+        /* Action: estrella + caballo TR (caballo debajo), portafolio BR. */
+        action: [
+          {
+            src: `${NEGOCIOS_CUT}/ornament-corner-star.png`,
+            corner: 'tr',
+          },
+          {
+            src: `${NEGOCIOS_CUT}/ornament-strategy-knight.png`,
+            corner: 'tr',
+          },
+          {
+            src: `${NEGOCIOS_CUT}/ornament-business-briefcase.png`,
+            corner: 'br',
+          },
+        ],
+      },
+    },
   }
 
 /** Codes de catálogo → tema ticket. Sin entrada = sin tema. */
@@ -375,6 +646,12 @@ const TICKET_THEME_BY_CODE: Readonly<Record<string, TicketThemeId>> = {
   'coord-proyeccion-social': 'proyeccion-social',
   'coord-homologaciones': 'servicio',
   'coord-operaciones-academicas': 'operacion-academica',
+  'coord-bellas-artes': 'bellas-artes',
+  'coord-empresarial': 'transformacion-empresarial',
+  'coord-ingenierias': 'ingenierias',
+  'coord-transversales': 'transversales',
+  /* coord-negocios → negocios (no hereda del padre OA). */
+  'coord-negocios': 'negocios',
 }
 
 /**
