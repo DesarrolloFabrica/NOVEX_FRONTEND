@@ -3,8 +3,8 @@ import type { OperationalIntegrityStatus } from '@/modules/operational-cards/typ
 /**
  * Contrato proyectado de LEVEL 0: `GET /operational-overview`.
  *
- * Todavía no se consume. Es la forma mínima que la experiencia necesita para
- * pintar la baraja y el estado global con UNA sola petición.
+ * Es la forma mínima que la experiencia necesita para pintar la baraja y el
+ * estado global con UNA sola petición.
  *
  * Deliberadamente FUERA de este contrato:
  * - `overdueCount` y cualquier dato de SLA: el SLA no determina la integridad
@@ -40,6 +40,14 @@ export interface CoordinationOverview {
   affectedCoordinationCount: number
   /** Dependencias INTER donde esta área es la afectada. No suma a activos propios. */
   incomingDependencyCount?: number
+  /**
+   * Vidas del personaje para esta coordinación: entero en 0..10 (5 corazones ×
+   * 2 puntos), derivado por el backend de los problemas activos. `null` cuando
+   * el backend no pudo calcularlas, cuando el campo no llega (backend anterior)
+   * o cuando llega con un valor fuera de contrato. Nunca se finge 10 ni se
+   * satura en el frontend. Independiente de `status`.
+   */
+  lifePoints: number | null
 }
 
 /**

@@ -131,3 +131,133 @@ describe('DirectionCharacter · accesibilidad y unicidad', () => {
     expect(countOf(html, 'direction-character__figure')).toBe(1)
   })
 })
+
+describe('DirectionCharacter · vidas', () => {
+  function withLives(
+    lifePoints: number | null,
+    status: OperationalIntegrityStatus = 'ALERTA',
+  ): string {
+    return renderToStaticMarkup(
+      <DirectionCharacter
+        presentation={{ status, orientation: 'NEUTRAL', interaction: 'SELECTED' }}
+        showLives
+        lifePoints={lifePoints}
+      />,
+    )
+  }
+
+  function heartStates(html: string): string[] {
+    return [...html.matchAll(/data-heart-index="\d" data-state="(\w+)"/g)].map(
+      (match) => match[1],
+    )
+  }
+
+  it('sin showLives no monta CharacterLives, pero conserva la franja reservada', () => {
+    const html = markup()
+    expect(html).not.toContain('data-testid="character-lives"')
+    expect(html).not.toContain('character-lives__heart')
+    expect(html).not.toContain('/ 10')
+    expect(html).toContain('data-lives="hidden"')
+    expect(countOf(html, 'data-testid="direction-character-lives"')).toBe(1)
+  })
+
+  it('sin showLives, un lifePoints recibido no basta para mostrar vidas', () => {
+    const html = renderToStaticMarkup(
+      <DirectionCharacter
+        presentation={DEFAULT_CHARACTER_PRESENTATION}
+        lifePoints={7}
+      />,
+    )
+    expect(html).not.toContain('character-lives__heart')
+    expect(html).toContain('aria-label="Estado: Desconocido."')
+  })
+
+  const CASES: readonly [number | null, readonly string[], string][] = [
+    [10, ['full', 'full', 'full', 'full', 'full'], '10 / 10'],
+    [7, ['full', 'full', 'full', 'half', 'empty'], '7 / 10'],
+    [0, ['empty', 'empty', 'empty', 'empty', 'empty'], '0 / 10'],
+    [null, ['unknown', 'unknown', 'unknown', 'unknown', 'unknown'], '— / 10'],
+  ]
+
+  it.each(CASES)('showLives + %s → corazones y cifra', (lifePoints, states, value) => {
+    const html = withLives(lifePoints)
+    expect(html).toContain('data-lives="shown"')
+    expect(countOf(html, 'data-testid="character-lives"')).toBe(1)
+    expect(heartStates(html)).toEqual(states)
+    expect(html).toContain(value)
+  })
+
+  it('siempre cinco corazones cuando se muestran', () => {
+    for (const lifePoints of [10, 9, 5, 1, 0, null]) {
+      expect(
+        countOf(withLives(lifePoints), 'data-testid="character-lives-heart"'),
+      ).toBe(5)
+    }
+  })
+
+  it('las vidas van entre la figura y el rótulo de estado', () => {
+    const html = withLives(7)
+    const figure = html.indexOf('direction-character__figure')
+    const lives = html.indexOf('data-testid="character-lives"')
+    const status = html.indexOf('data-testid="direction-character-status"')
+    expect(figure).toBeGreaterThan(-1)
+    expect(lives).toBeGreaterThan(figure)
+    expect(status).toBeGreaterThan(lives)
+  })
+
+  it('usa el tamaño compacto sm y muestra la cifra', () => {
+    const html = withLives(7)
+    expect(html).toContain('character-lives--sm')
+    expect(html).toContain('data-testid="character-lives-value"')
+  })
+})
+
+describe('DirectionCharacter · vidas y accesibilidad', () => {
+  function named(
+    status: OperationalIntegrityStatus,
+    lifePoints: number | null,
+  ): string {
+    return renderToStaticMarkup(
+      <DirectionCharacter
+        presentation={{ status, orientation: 'NEUTRAL', interaction: 'SELECTED' }}
+        showLives
+        lifePoints={lifePoints}
+      />,
+    )
+  }
+
+  it('el nombre accesible del personaje incluye las vidas', () => {
+    expect(named('ESTABLE', 10)).toContain(
+      'aria-label="Estado: Estable. Vidas del personaje: 10 de 10 puntos."',
+    )
+    expect(named('ALERTA', 7)).toContain(
+      'aria-label="Estado: Alerta. Vidas del personaje: 7 de 10 puntos."',
+    )
+    expect(named('ALERTA', null)).toContain(
+      'aria-label="Estado: Alerta. Vidas del personaje: estado no disponible."',
+    )
+  })
+
+  it('sin vidas mantiene exactamente el nombre anterior', () => {
+    for (const status of ALL_STATUSES) {
+      const html = markup({ status })
+      expect(html).toMatch(/aria-label="Estado: [^".]+\."/)
+      expect(html).not.toContain('Vidas del personaje')
+    }
+  })
+
+  it('no hay un segundo role="img" ni un segundo nombre accesible dentro', () => {
+    const html = named('ALERTA', 7)
+    expect(countOf(html, 'role="img"')).toBe(1)
+    expect(countOf(html, 'aria-label=')).toBe(1)
+    expect(countOf(html, 'Vidas del personaje')).toBe(1)
+  })
+
+  it('las vidas son decorativas: el bloque entero va aria-hidden', () => {
+    const html = named('ALERTA', 7)
+    expect(html).toMatch(
+      /class="direction-character__lives" data-testid="direction-character-lives" aria-hidden="true"/,
+    )
+    expect(html).toMatch(/data-testid="character-lives"[^>]*aria-hidden="true"/)
+  })
+})

@@ -33,6 +33,7 @@ const COORDINATION: CoordinationOverview = {
   activeProblemsCount: 4,
   criticalCount: 2,
   affectedCoordinationCount: 1,
+  lifePoints: 4,
 }
 
 function problem(

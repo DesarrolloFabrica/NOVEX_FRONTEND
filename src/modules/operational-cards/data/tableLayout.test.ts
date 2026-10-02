@@ -31,6 +31,7 @@ function coordinations(
     activeProblemsCount: 0,
     criticalCount: 0,
     affectedCoordinationCount: 0,
+    lifePoints: 10,
   }))
 }
 

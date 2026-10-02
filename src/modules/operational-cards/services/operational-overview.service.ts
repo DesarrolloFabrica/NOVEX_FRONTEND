@@ -91,6 +91,32 @@ function readSection(
   return value
 }
 
+/** Máximo de puntos de vida: 5 corazones × 2 puntos. Espejo del backend. */
+export const MAX_LIFE_POINTS = 10
+
+/**
+ * Vidas del personaje. Campo DERIVADO y no estructural: un valor inutilizable
+ * se degrada a `null` (estado no disponible) en lugar de tumbar todo LEVEL 0,
+ * porque la mesa sigue siendo legible sin vidas.
+ *
+ * Solo se acepta un entero en 0..MAX_LIFE_POINTS. Todo lo demás —campo ausente
+ * (backend anterior), strings, booleanos, objetos, NaN, Infinity, decimales,
+ * negativos o mayores que el máximo— es `null`. No se satura ni se redondea:
+ * un 11 o un -1 indican un contrato roto, no un valor cercano al límite, y
+ * convertirlos en 10 o 0 afirmaría algo que el backend no dijo.
+ */
+export function parseLifePoints(value: unknown): number | null {
+  if (
+    typeof value !== 'number' ||
+    !Number.isInteger(value) ||
+    value < 0 ||
+    value > MAX_LIFE_POINTS
+  ) {
+    return null
+  }
+  return value
+}
+
 function parseTotals(payload: Record<string, unknown>): OperationalOverviewTotals {
   const totals = readSection(payload, 'totals')
   return {
@@ -130,6 +156,7 @@ function parseCoordination(
       value.incomingDependencyCount >= 0
         ? value.incomingDependencyCount
         : 0,
+    lifePoints: parseLifePoints(value.lifePoints),
   }
 }
 

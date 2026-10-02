@@ -31,6 +31,7 @@ function children(): ProductTableChild[] {
       activeProblemsCount: 0,
       criticalCount: 0,
       affectedCoordinationCount: 0,
+      lifePoints: 10,
     }
     return { code, label, coordination }
   })

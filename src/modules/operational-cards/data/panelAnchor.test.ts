@@ -26,6 +26,7 @@ function productTable() {
     activeProblemsCount: 0,
     criticalCount: 0,
     affectedCoordinationCount: 0,
+    lifePoints: 10,
   }))
   return buildTableLayout(rows, { sortByDisplayOrder: false })
 }

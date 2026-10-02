@@ -9,6 +9,10 @@ import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { canCreateSituations, hasPermission } from '@/modules/auth/utils/permissions'
 import { resolveCharacterMood } from '@/modules/operational-cards/data/characterMood'
 import { buildCharacterPresentation } from '@/modules/operational-cards/data/characterReaction'
+import {
+  resolveCharacterCoordination,
+  resolveCharacterLives,
+} from '@/modules/operational-cards/data/characterLivesSource'
 import { resolveCoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
 import { buildProductTable } from '@/modules/operational-cards/data/productHierarchy'
 import { buildTableLayout } from '@/modules/operational-cards/data/tableLayout'
@@ -215,9 +219,12 @@ export function OperationalShellV2() {
     [overview, selectedCoordinationCode],
   )
 
-  const characterCoordination = isCoordinator
-    ? assignedCoordination
-    : selectedCoordination
+  const characterCoordination = resolveCharacterCoordination({
+    isCoordinator,
+    assignedCoordination,
+    selectedCoordination,
+  })
+  const characterLives = resolveCharacterLives(characterCoordination)
 
   const characterPresentation = buildCharacterPresentation({
     directionStatus,
@@ -457,6 +464,9 @@ export function OperationalShellV2() {
               reactionId={reaccionVisible && pending ? pending.id : null}
               reactionTrigger={pending?.trigger ?? 'approve'}
               onReactionPlayed={controller.consumeCharacterReaction}
+              showLives={characterLives.showLives}
+              lifePoints={characterLives.lifePoints}
+              livesOwnerKey={characterLives.ownerKey}
             />
           </ShellRegion>
 
@@ -568,6 +578,9 @@ export function OperationalShellV2() {
               reactionId={reaccionVisible && pending ? pending.id : null}
               reactionTrigger={pending?.trigger ?? 'approve'}
               onReactionPlayed={controller.consumeCharacterReaction}
+              showLives={characterLives.showLives}
+              lifePoints={characterLives.lifePoints}
+              livesOwnerKey={characterLives.ownerKey}
             />
           </ShellRegion>
 

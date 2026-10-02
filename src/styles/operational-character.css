@@ -52,6 +52,22 @@
   overflow: visible;
 }
 
+/* ---------- Vidas ---------- */
+
+/* Franja de alto FIJO entre la figura y el rótulo. Existe aunque no haya vidas
+   que mostrar: así la figura (`flex: 1 1 auto` en el shell) conserva el mismo
+   alto con y sin coordinación representada. Sin fondo, borde ni panel: las
+   vidas son una línea, no un badge. 14px = corazón `sm` (12.8px) + aire. */
+.direction-character__lives {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  height: 14px;
+  min-width: 0;
+  max-width: 100%;
+}
+
 /* ---------- Halo de energía ---------- */
 
 .dc-glow {

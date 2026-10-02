@@ -28,6 +28,7 @@ function coordination(code: string, order: number) {
     activeProblemsCount: 0,
     criticalCount: 0,
     affectedCoordinationCount: 0,
+    lifePoints: 10,
   }
 }
 

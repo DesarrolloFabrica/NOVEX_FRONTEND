@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  MAX_LIFE_POINTS,
   OperationalOverviewContractError,
+  parseLifePoints,
   parseOperationalOverview,
 } from '@/modules/operational-cards/services/operational-overview.service'
 
@@ -202,5 +204,151 @@ describe('parseOperationalOverview · contrato inutilizable', () => {
       // esperado
     }
     expect(parsed).toBe('no asignado')
+  })
+})
+
+/** Parsea un overview con UNA coordinación y devuelve su `lifePoints`. */
+function lifePointsOf(coordination: Record<string, unknown>): number | null {
+  return parseOperationalOverview(
+    overviewPayload({ coordinations: [coordination] }),
+  ).coordinations[0].lifePoints
+}
+
+describe('parseLifePoints · valores válidos', () => {
+  it('acepta todos los enteros de 0 a 10 tal cual, sin redondear ni saturar', () => {
+    expect(MAX_LIFE_POINTS).toBe(10)
+    for (let value = 0; value <= 10; value += 1) {
+      expect(parseLifePoints(value)).toBe(value)
+    }
+  })
+
+  it('los valores representativos llegan intactos a la coordinación parseada', () => {
+    for (const value of [0, 1, 5, 9, 10]) {
+      expect(lifePointsOf(coordinationPayload({ lifePoints: value }))).toBe(
+        value,
+      )
+    }
+  })
+
+  it('null explícito del backend (snapshot no interpretable) se conserva como null', () => {
+    expect(parseLifePoints(null)).toBeNull()
+    expect(lifePointsOf(coordinationPayload({ lifePoints: null }))).toBeNull()
+  })
+})
+
+describe('parseLifePoints · degradación a null', () => {
+  it('campo ausente (backend anterior) → null, nunca 10', () => {
+    const payload = coordinationPayload()
+    expect(payload).not.toHaveProperty('lifePoints')
+    expect(lifePointsOf(payload)).toBeNull()
+  })
+
+  it('fuera de rango → null, sin clamp a 0 ni a 10', () => {
+    for (const value of [-1, 11, 100, -0.5]) {
+      expect(parseLifePoints(value)).toBeNull()
+      expect(lifePointsOf(coordinationPayload({ lifePoints: value }))).toBeNull()
+    }
+  })
+
+  it('decimal → null, sin redondear', () => {
+    for (const value of [1.5, 9.99, 0.1]) {
+      expect(parseLifePoints(value)).toBeNull()
+    }
+    expect(lifePointsOf(coordinationPayload({ lifePoints: 1.5 }))).toBeNull()
+  })
+
+  it('tipos no numéricos → null, sin coerción', () => {
+    for (const value of ['7', '', true, false, {}, [], [7], undefined]) {
+      expect(parseLifePoints(value)).toBeNull()
+    }
+    expect(lifePointsOf(coordinationPayload({ lifePoints: '7' }))).toBeNull()
+  })
+
+  it('NaN e Infinity → null', () => {
+    for (const value of [
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+      Number.NEGATIVE_INFINITY,
+    ]) {
+      expect(parseLifePoints(value)).toBeNull()
+      expect(lifePointsOf(coordinationPayload({ lifePoints: value }))).toBeNull()
+    }
+  })
+})
+
+describe('parseOperationalOverview · lifePoints no es estructural', () => {
+  it('un lifePoints inválido NO tumba el overview ni altera los demás campos', () => {
+    const coordinations = [
+      coordinationPayload({
+        id: '00000000-0000-0000-0000-000000000001',
+        code: 'coord-a',
+        displayOrder: 1,
+        status: 'CRITICO',
+        activeProblemsCount: 6,
+        criticalCount: 2,
+        affectedCoordinationCount: 3,
+        incomingDependencyCount: 1,
+        lifePoints: 'roto',
+      }),
+      coordinationPayload({
+        id: '00000000-0000-0000-0000-000000000002',
+        code: 'coord-b',
+        displayOrder: 2,
+        lifePoints: 7,
+      }),
+    ]
+
+    const overview = parseOperationalOverview(overviewPayload({ coordinations }))
+
+    expect(overview.directionStatus).toBe('CRITICO')
+    expect(overview.totals).toEqual({ critical: 7, alert: 1, stable: 7 })
+    expect(overview.analystRegistry).not.toHaveProperty('lifePoints')
+    expect(overview.coordinations).toEqual([
+      {
+        id: '00000000-0000-0000-0000-000000000001',
+        code: 'coord-a',
+        name: 'Coordinación General',
+        shortName: 'General',
+        color: '#28C8F4',
+        displayOrder: 1,
+        status: 'CRITICO',
+        activeProblemsCount: 6,
+        criticalCount: 2,
+        affectedCoordinationCount: 3,
+        incomingDependencyCount: 1,
+        lifePoints: null,
+      },
+      {
+        id: '00000000-0000-0000-0000-000000000002',
+        code: 'coord-b',
+        name: 'Coordinación General',
+        shortName: 'General',
+        color: '#28C8F4',
+        displayOrder: 2,
+        status: 'ESTABLE',
+        activeProblemsCount: 0,
+        criticalCount: 0,
+        affectedCoordinationCount: 0,
+        incomingDependencyCount: 0,
+        lifePoints: 7,
+      },
+    ])
+  })
+
+  it('cada coordinación degrada su lifePoints por separado', () => {
+    const overview = parseOperationalOverview(
+      overviewPayload({
+        coordinations: [
+          coordinationPayload({ code: 'coord-a', lifePoints: 11 }),
+          coordinationPayload({ code: 'coord-b', lifePoints: 4 }),
+          coordinationPayload({ code: 'coord-c' }),
+        ],
+      }),
+    )
+    expect(overview.coordinations.map((item) => item.lifePoints)).toEqual([
+      null,
+      4,
+      null,
+    ])
   })
 })

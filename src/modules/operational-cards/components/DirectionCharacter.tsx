@@ -11,6 +11,8 @@ import type { CharacterMood } from '@/modules/operational-cards/data/characterMo
 import { DEFAULT_CHARACTER_MOOD } from '@/modules/operational-cards/data/characterMood'
 import type { CharacterPresentation } from '@/modules/operational-cards/types/character.types'
 import { OPERATIONAL_STATUS_LABEL } from '@/modules/operational-cards/data/operationalStatusLabel'
+import { describeCharacterLives } from '@/modules/operational-cards/data/characterLivesModel'
+import { CharacterLives } from '@/modules/operational-cards/components/CharacterLives'
 
 /**
  * Personaje de la Dirección de Operaciones: un reactor guardián, no una
@@ -22,12 +24,19 @@ import { OPERATIONAL_STATUS_LABEL } from '@/modules/operational-cards/data/opera
  * `data-interaction`, el nombre accesible y la lectura textual—, que es lo que
  * leen la escena y las pruebas.
  *
- * UNA LECTURA VISIBLE. Bajo el personaje solo aparece el estado: el de la
+ * UNA LECTURA DE ESTADO. Bajo el personaje aparece el estado: el de la
  * coordinación seleccionada cuando hay una, o el institucional en reposo.
  * `presentation.status` gobierna el rótulo y `data-status`; `mood` gobierna la
  * cara en Rive y, con selección, refleja la misma coordinación.
  *
  * Además acepta una REACCIÓN puntual (`reactionId`) que se dispara una sola vez.
+ *
+ * VIDAS. Entre la figura y el rótulo hay una franja RESERVADA para las vidas de
+ * la coordinación representada. La franja existe siempre —con o sin vidas— para
+ * que la figura conserve el mismo alto al seleccionar o soltar una coordinación;
+ * `CharacterLives` solo se monta dentro con `showLives`. Las vidas se anuncian
+ * en el nombre accesible del contenedor, y el componente va en modo decorativo
+ * para no crear un segundo `role="img"`.
  *
  * Lo que este componente todavía NO hace: parpadeo dirigido desde React
  * (`blink`) y seguimiento de mirada (`lookX`/`lookY`). Ambos existen en el
@@ -224,6 +233,22 @@ export interface DirectionCharacterProps {
   reactionTrigger?: CharacterReactionTrigger
   /** El personaje avisa de que ya la representó. */
   onReactionPlayed?: (id: number) => void
+  /**
+   * Hay una coordinación representada cuyas vidas mostrar. Sin ella las vidas
+   * no se montan: el personaje no habla de nadie en concreto.
+   */
+  showLives?: boolean
+  /**
+   * Vidas de la coordinación representada, tal como llegan del backend (0..10).
+   * Con `showLives` y null se muestran en estado no disponible, no se ocultan.
+   */
+  lifePoints?: number | null
+  /**
+   * Dueño de esas vidas (código de la coordinación representada). Solo se
+   * anima un cambio de puntos del mismo dueño: cambiar de coordinación
+   * reemplaza las vidas sin animación de ganancia o pérdida.
+   */
+  livesOwnerKey?: string | null
 }
 
 export function DirectionCharacter({
@@ -232,9 +257,15 @@ export function DirectionCharacter({
   reactionId = null,
   reactionTrigger = 'approve',
   onReactionPlayed,
+  showLives = false,
+  lifePoints = null,
+  livesOwnerKey = null,
 }: DirectionCharacterProps) {
   const { status, orientation, interaction } = presentation
   const statusLabel = OPERATIONAL_STATUS_LABEL[status]
+  const accessibleName = showLives
+    ? `Estado: ${statusLabel}. ${describeCharacterLives(lifePoints)}.`
+    : `Estado: ${statusLabel}.`
 
   /*
    * Guard de cliente. En servidor se dibuja la caja de la figura pero no el
@@ -259,8 +290,9 @@ export function DirectionCharacter({
       /* Lectura verificable de la reacción en curso, sin inspeccionar el canvas. */
       data-reaction={reactionId === null ? undefined : String(reactionId)}
       data-reaction-trigger={reactionId === null ? undefined : reactionTrigger}
+      data-lives={showLives ? 'shown' : 'hidden'}
       role="img"
-      aria-label={`Estado: ${statusLabel}.`}
+      aria-label={accessibleName}
     >
       {clientReady ? (
         <CharacterFigure
@@ -274,7 +306,24 @@ export function DirectionCharacter({
         <div className="direction-character__figure" aria-hidden="true" />
       )}
 
-      {/* Única lectura bajo el personaje: el estado (selección o Dirección). */}
+      {/* Franja reservada siempre: la figura no cambia de alto con la selección. */}
+      <div
+        className="direction-character__lives"
+        data-testid="direction-character-lives"
+        aria-hidden="true"
+      >
+        {showLives ? (
+          <CharacterLives
+            lifePoints={lifePoints}
+            ownerKey={livesOwnerKey}
+            size="sm"
+            showValue
+            accessible={false}
+          />
+        ) : null}
+      </div>
+
+      {/* Lectura de estado bajo las vidas: selección o Dirección. */}
       <p className="direction-character__readout">
         <span
           className="direction-character__status"

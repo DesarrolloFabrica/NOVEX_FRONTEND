@@ -15,6 +15,8 @@ interface OverviewCoordinationFixture {
   activeProblemsCount: number
   criticalCount: number
   affectedCoordinationCount: number
+  /** Vidas del personaje: entero 0..10, o null si no son calculables. */
+  lifePoints: number | null
 }
 
 const CATALOG: readonly [string, string, string, string][] = [
@@ -62,6 +64,25 @@ const STATUS_BY_CODE: Readonly<Record<string, OverviewCoordinationFixture['statu
     'coord-bellas-artes': 'ALERTA',
   }
 
+/**
+ * Vidas representativas: lleno, desgaste medio, bajo, agotado y no calculable.
+ * El resto de coordinaciones queda en 10. Son valores de fixture, no derivados
+ * del estado: el backend calcula las vidas con su propia política.
+ *
+ * 7, 4, 0 y null van en cartas de PRIMER nivel de la mesa, para poder
+ * seleccionarlas sin abrir un mazo. `coord-b2b` (3) es la coordinación del
+ * COORDINADOR en los E2E y `coord-negocios` (null) el área ajena donde ese
+ * coordinador tiene un reporte propio.
+ */
+const LIFE_POINTS_BY_CODE: Readonly<Record<string, number | null>> = {
+  'coord-especializaciones': 7,
+  'coord-saber-pro': 4,
+  'coord-operaciones-academicas': 0,
+  'coord-proyeccion-social': null,
+  'coord-b2b': 3,
+  'coord-negocios': null,
+}
+
 function coordinationFixture(
   [code, name, shortName, color]: readonly [string, string, string, string],
   index: number,
@@ -78,6 +99,7 @@ function coordinationFixture(
     activeProblemsCount: status === 'CRITICO' ? 6 : status === 'ALERTA' ? 2 : 0,
     criticalCount: status === 'CRITICO' ? 1 : 0,
     affectedCoordinationCount: status === 'CRITICO' ? 2 : 0,
+    lifePoints: code in LIFE_POINTS_BY_CODE ? LIFE_POINTS_BY_CODE[code] : 10,
   }
 }
 

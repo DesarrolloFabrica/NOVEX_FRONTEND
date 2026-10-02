@@ -1,0 +1,283 @@
+/*
+ * Vidas del personaje operacional (`CharacterLives`).
+ *
+ * Hoja AISLADA: solo cuelga de `.character-lives`, no conoce el shell, el
+ * marco ticket ni el personaje. La paleta se expone como variables para que el
+ * host pueda ajustarla sin tocar los selectores.
+ *
+ * Los colores funcionan sobre fondo oscuro y sobre crema: el borde dorado es
+ * lo que dibuja la silueta en ambos, y la lectura numérica hereda el color del
+ * host (`currentColor`).
+ *
+ * El estado nunca se distingue solo por color:
+ *   FULL     relleno vino + grano + brillo, borde dorado pleno
+ *   HALF     mitad izquierda llena, costura punteada en el eje
+ *   EMPTY    interior cálido apagado, borde dorado más fino y tenue
+ *   UNKNOWN  gris desaturado, borde PUNTEADO
+ *
+ * Sin animaciones todavía: los corazones exponen `data-state` y
+ * `data-heart-index` para animar transiciones en una fase posterior.
+ */
+
+.character-lives {
+  --cl-full: #b3343f;
+  --cl-full-deep: #8e2531;
+  --cl-shine: rgb(255 238 210 / 0.6);
+  --cl-grain: rgb(255 228 190 / 0.22);
+  --cl-gold: #d2aa5e;
+  --cl-empty: rgb(150 92 70 / 0.2);
+  --cl-seam: rgb(255 236 204 / 0.85);
+  --cl-unknown: rgb(138 140 150 / 0.2);
+  --cl-unknown-edge: rgb(150 153 164 / 0.9);
+
+  --cl-heart-size: 20px;
+  --cl-gap: 3px;
+  --cl-value-size: 12px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--cl-gap) * 2.5);
+  line-height: 1;
+}
+
+.character-lives--sm {
+  --cl-heart-size: 14px;
+  --cl-gap: 2px;
+  --cl-value-size: 10px;
+}
+
+.character-lives--lg {
+  --cl-heart-size: 28px;
+  --cl-gap: 4px;
+  --cl-value-size: 14px;
+}
+
+.character-lives__hearts {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cl-gap);
+}
+
+.character-lives__heart {
+  display: block;
+  flex: 0 0 auto;
+  width: var(--cl-heart-size);
+  height: calc(var(--cl-heart-size) * 22 / 24);
+  overflow: visible;
+}
+
+/* ---------- Capas comunes ---------- */
+
+.character-lives__base {
+  fill: var(--cl-empty);
+}
+
+.character-lives__fill {
+  fill: var(--cl-full);
+  stroke: var(--cl-full-deep);
+  stroke-width: 0.6;
+}
+
+.character-lives__grain {
+  stroke: none;
+}
+
+.character-lives__grain-dot {
+  fill: var(--cl-grain);
+}
+
+.character-lives__shine {
+  fill: none;
+  stroke: var(--cl-shine);
+  stroke-linecap: round;
+  stroke-width: 1.3;
+}
+
+.character-lives__outline {
+  fill: none;
+  stroke: var(--cl-gold);
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+
+.character-lives__seam {
+  stroke: var(--cl-seam);
+  stroke-dasharray: 1.2 1.3;
+  stroke-linecap: round;
+  stroke-width: 0.8;
+}
+
+/* ---------- EMPTY: presente pero con menos peso que FULL ---------- */
+
+.character-lives__heart[data-state='empty'] .character-lives__outline {
+  stroke-width: 1.2;
+  opacity: 0.78;
+}
+
+/* ---------- UNKNOWN: distinto de EMPTY por color Y por trazo ---------- */
+
+.character-lives__heart[data-state='unknown'] .character-lives__base {
+  fill: var(--cl-unknown);
+}
+
+.character-lives__heart[data-state='unknown'] .character-lives__outline {
+  stroke: var(--cl-unknown-edge);
+  stroke-dasharray: 2 1.6;
+  stroke-width: 1.2;
+}
+
+/* ---------- Lectura numérica ---------- */
+
+.character-lives__value {
+  color: currentColor;
+  font-family: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', monospace;
+  font-size: var(--cl-value-size);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  opacity: 0.72;
+  white-space: nowrap;
+}
+
+.character-lives[data-life-points='unknown'] .character-lives__value {
+  opacity: 0.55;
+}
+
+/* ==========================================================================
+   Transiciones entre lecturas (V3C)
+
+   El corazón ya muestra su estado FINAL. Lo que se anima es:
+   - el <svg> del corazón: pulso hacia dentro (pérdida) o hacia fuera
+     (ganancia), con un destello vino oscuro o un brillo cálido;
+   - `.character-lives__delta`: el TRAMO que cambia. En pérdida es el relleno
+     perdido, que se apaga y se desvanece; en ganancia, el ganado, que aparece.
+
+   El estado SIN animación de cada capa es el final (delta de pérdida
+   invisible, de ganancia visible): con reduced motion basta con quitar la
+   animación. `both` aplica el primer fotograma durante `--cl-delay`, de modo
+   que cada corazón conserva su aspecto anterior hasta que le toca.
+
+   Las animaciones existen en dos copias (-a / -b) que alternan con
+   `data-transition-phase`: cambiar el nombre reinicia el pulso cuando el mismo
+   corazón cambia en dos lecturas seguidas, sin desmontarlo.
+   ========================================================================== */
+
+.character-lives {
+  --cl-loss-ms: 420ms;
+  --cl-gain-ms: 480ms;
+  --cl-loss-flash: rgb(94 18 30 / 0.75);
+  --cl-loss-drain: #5e1a24;
+  --cl-gain-glow: rgb(255 196 128 / 0.85);
+  --cl-gain-bright: #e2614f;
+}
+
+.character-lives__heart {
+  transform-origin: 50% 58%;
+}
+
+.character-lives__delta--loss {
+  opacity: 0;
+}
+
+.character-lives__delta--gain {
+  opacity: 1;
+}
+
+/* ---------- Pérdida: pulso hacia dentro, sacudida mínima, destello vino ---------- */
+
+.character-lives__heart[data-transition='loss'][data-transition-phase='0'] {
+  animation: cl-heart-loss-a var(--cl-loss-ms) ease-out var(--cl-delay, 0ms) both;
+}
+
+.character-lives__heart[data-transition='loss'][data-transition-phase='1'] {
+  animation: cl-heart-loss-b var(--cl-loss-ms) ease-out var(--cl-delay, 0ms) both;
+}
+
+.character-lives__delta--loss {
+  animation: cl-delta-loss var(--cl-loss-ms) ease-in var(--cl-delay, 0ms) both;
+}
+
+.character-lives__delta--loss .character-lives__fill {
+  animation: cl-fill-loss var(--cl-loss-ms) ease-in var(--cl-delay, 0ms) both;
+}
+
+/* ---------- Ganancia: pulso hacia fuera, brillo cálido, color que vuelve ---------- */
+
+.character-lives__heart[data-transition='gain'][data-transition-phase='0'] {
+  animation: cl-heart-gain-a var(--cl-gain-ms) ease-out var(--cl-delay, 0ms) both;
+}
+
+.character-lives__heart[data-transition='gain'][data-transition-phase='1'] {
+  animation: cl-heart-gain-b var(--cl-gain-ms) ease-out var(--cl-delay, 0ms) both;
+}
+
+.character-lives__delta--gain {
+  animation: cl-delta-gain var(--cl-gain-ms) ease-out var(--cl-delay, 0ms) both;
+}
+
+.character-lives__delta--gain .character-lives__fill {
+  animation: cl-fill-gain var(--cl-gain-ms) ease-out var(--cl-delay, 0ms) both;
+}
+
+@keyframes cl-heart-loss-a {
+  0% { transform: none; filter: none; }
+  22% { transform: scale(0.88) translateX(-0.6px); filter: drop-shadow(0 0 2px var(--cl-loss-flash)); }
+  42% { transform: scale(0.91) translateX(0.6px); }
+  64% { transform: scale(0.96) translateX(-0.3px); }
+  100% { transform: none; filter: none; }
+}
+
+@keyframes cl-heart-loss-b {
+  0% { transform: none; filter: none; }
+  22% { transform: scale(0.88) translateX(-0.6px); filter: drop-shadow(0 0 2px var(--cl-loss-flash)); }
+  42% { transform: scale(0.91) translateX(0.6px); }
+  64% { transform: scale(0.96) translateX(-0.3px); }
+  100% { transform: none; filter: none; }
+}
+
+@keyframes cl-delta-loss {
+  0% { opacity: 1; }
+  40% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Caída de saturación: el relleno perdido se oscurece hacia vino apagado. */
+@keyframes cl-fill-loss {
+  0% { fill: var(--cl-full); }
+  40% { fill: var(--cl-loss-drain); }
+  100% { fill: var(--cl-loss-drain); }
+}
+
+@keyframes cl-heart-gain-a {
+  0% { transform: none; filter: none; }
+  40% { transform: scale(1.14); filter: drop-shadow(0 0 3px var(--cl-gain-glow)); }
+  100% { transform: none; filter: none; }
+}
+
+@keyframes cl-heart-gain-b {
+  0% { transform: none; filter: none; }
+  40% { transform: scale(1.14); filter: drop-shadow(0 0 3px var(--cl-gain-glow)); }
+  100% { transform: none; filter: none; }
+}
+
+@keyframes cl-delta-gain {
+  0% { opacity: 0; }
+  45% { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+/* Recuperación de color: entra cálido y brillante, asienta en el vino. */
+@keyframes cl-fill-gain {
+  0% { fill: var(--cl-gain-bright); }
+  45% { fill: var(--cl-gain-bright); }
+  100% { fill: var(--cl-full); }
+}
+
+/* Reduced motion: estado final inmediato, sin pulso, sacudida ni escalonado. */
+@media (prefers-reduced-motion: reduce) {
+  .character-lives__heart,
+  .character-lives__delta,
+  .character-lives__delta .character-lives__fill {
+    animation: none !important;
+  }
+}

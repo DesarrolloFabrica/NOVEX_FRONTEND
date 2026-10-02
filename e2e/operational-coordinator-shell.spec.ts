@@ -152,6 +152,13 @@ async function install(
   options: {
     coordinationId?: string | null
     level1Items?: (typeof OWN_INTERNAL)[]
+    /**
+     * Las vidas de B2B en el overview se DERIVAN de los problemas activos del
+     * mock con la regla del backend (LOW/MEDIUM 1, HIGH/CRITICAL 2; propios +
+     * INTER entrantes de otra responsable), en lugar de quedarse fijas. Así un
+     * alta o una resolución cambian `lifePoints` de forma coherente.
+     */
+    derivedLives?: boolean
   } = {},
 ) {
   const coordinationId =
@@ -183,6 +190,36 @@ async function install(
     INTER_RESOLVE,
     INTER_AFFECTING,
   ]
+  const resolvedIds = new Set<string>()
+
+  /** Espejo de la política `life-points-v1` sobre los problemas del mock. */
+  function b2bLifePoints(): number {
+    const weight = (severity: unknown) =>
+      severity === 'HIGH' || severity === 'CRITICAL' ? 2 : 1
+    const active = [
+      ...level1Items,
+      ...(created ? [created as typeof OWN_INTERNAL] : []),
+    ].filter((item) => !resolvedIds.has(String(item.id)))
+    const damage = active.reduce((sum, item) => {
+      const owned = item.coordinationId === B2B_ROW.id
+      const incoming =
+        item.reportKind === 'INTER_COORDINATION' &&
+        item.affectedCoordinationId === B2B_ROW.id &&
+        item.coordinationId !== B2B_ROW.id
+      return owned || incoming ? sum + weight(item.severity) : sum
+    }, 0)
+    return Math.min(10, Math.max(0, 10 - damage))
+  }
+
+  function overviewResponse() {
+    if (!options.derivedLives) return OVERVIEW
+    return {
+      ...OVERVIEW,
+      coordinations: OVERVIEW.coordinations.map((row) =>
+        row.code === B2B ? { ...row, lifePoints: b2bLifePoints() } : row,
+      ),
+    }
+  }
 
   await page.route('**/api/v1/**', async (route) => {
     const url = new URL(route.request().url())
@@ -202,7 +239,7 @@ async function install(
     }
 
     if (url.pathname.endsWith('/operational-overview')) {
-      await route.fulfill({ json: OVERVIEW })
+      await route.fulfill({ json: overviewResponse() })
       return
     }
 
@@ -286,6 +323,7 @@ async function install(
       /\/situations\/[^/]+\/resolution$/.test(url.pathname)
     ) {
       const id = url.pathname.split('/').at(-2)
+      if (id) resolvedIds.add(id)
       const body = route.request().postDataJSON() as { learning?: string }
       await route.fulfill({
         json: {
@@ -701,5 +739,308 @@ test.describe('Centro operacional COORDINADOR', () => {
         fullPage: true,
       })
     }
+  })
+
+  /*
+   * VIDAS del COORDINADOR: siempre las de su coordinación ASIGNADA (B2B, 3
+   * puntos en el fixture), desde la entrada y aunque abra un reporte propio en
+   * otra área (Negocios, lifePoints null). Se mide además que quepan en el
+   * rail en los cinco viewports de validación.
+   */
+  test('vidas desde la coordinación asignada, en cinco viewports', async ({
+    page,
+  }, testInfo) => {
+    test.slow()
+    await install(page)
+
+    expect(B2B_ROW.lifePoints).toBe(3)
+    expect(NEGOCIOS_ROW.lifePoints).toBeNull()
+
+    const character = page.getByTestId('direction-character')
+    const hearts = page.locator(
+      '[data-testid="shell-region-character"] [data-testid="character-lives-heart"]',
+    )
+    const B2B_STATES = ['full', 'half', 'empty', 'empty', 'empty']
+
+    async function expectB2BLives() {
+      await expect(character).toHaveAttribute('data-lives', 'shown')
+      await expect(hearts).toHaveCount(5)
+      expect(
+        await hearts.evaluateAll((nodes) =>
+          nodes.map((node) => node.getAttribute('data-state')),
+        ),
+      ).toEqual(B2B_STATES)
+      await expect(page.getByTestId('character-lives')).toHaveAttribute(
+        'data-life-points',
+        '3',
+      )
+      await expect(page.getByTestId('character-lives-value')).toHaveText(
+        '3 / 10',
+      )
+      await expect(character).toHaveAttribute(
+        'aria-label',
+        /^Estado: [^.]+\. Vidas del personaje: 3 de 10 puntos\.$/,
+      )
+      await expect(
+        page.locator('[data-testid="direction-character"] [role="img"]'),
+      ).toHaveCount(0)
+    }
+
+    for (const size of [
+      { width: 1920, height: 1080 },
+      { width: 1440, height: 900 },
+      { width: 1366, height: 768 },
+      { width: 1280, height: 720 },
+      { width: 1100, height: 700 },
+    ]) {
+      await page.setViewportSize(size)
+      await page.goto('/centro-operacional')
+      await settle(page)
+      await expect(page.getByTestId('operational-shell')).toHaveAttribute(
+        'data-shell-layout',
+        'coordinator',
+      )
+
+      // Desde la entrada, sin que el coordinador elija nada.
+      await expectB2BLives()
+
+      const geometry = await page.evaluate(() => {
+        const rect = (selector: string) =>
+          document.querySelector(selector)!.getBoundingClientRect()
+        const region = rect('[data-testid="shell-region-character"]')
+        const figure = rect('.direction-character__figure')
+        const slot = rect('[data-testid="direction-character-lives"]')
+        const lives = rect('[data-testid="character-lives"]')
+        const status = rect('[data-testid="direction-character-status"]')
+        const r = (value: number) => Math.round(value * 10) / 10
+        return {
+          region: { top: r(region.top), bottom: r(region.bottom), left: r(region.left), right: r(region.right) },
+          figure: { top: r(figure.top), bottom: r(figure.bottom), height: r(figure.height) },
+          slot: { top: r(slot.top), bottom: r(slot.bottom), height: r(slot.height) },
+          lives: { left: r(lives.left), right: r(lives.right), width: r(lives.width), height: r(lives.height) },
+          status: { top: r(status.top), bottom: r(status.bottom) },
+          overflow: {
+            x: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+            y: document.documentElement.scrollHeight - document.documentElement.clientHeight,
+          },
+        }
+      })
+      console.log(`COORD_LIVES_GEOMETRY ${JSON.stringify({ size, geometry })}`)
+
+      expect(geometry.slot.top).toBeGreaterThanOrEqual(geometry.figure.bottom - 0.5)
+      expect(geometry.status.top).toBeGreaterThanOrEqual(geometry.slot.bottom - 0.5)
+      expect(geometry.figure.top).toBeGreaterThanOrEqual(geometry.region.top - 1)
+      expect(geometry.status.bottom).toBeLessThanOrEqual(geometry.region.bottom + 1)
+      expect(geometry.lives.left).toBeGreaterThanOrEqual(geometry.region.left - 0.5)
+      expect(geometry.lives.right).toBeLessThanOrEqual(geometry.region.right + 0.5)
+      expect(geometry.lives.height).toBeLessThanOrEqual(geometry.slot.height + 0.5)
+      expect(geometry.overflow.x).toBeLessThanOrEqual(0)
+
+      // Solo para la captura: el `.riv` pinta de forma asíncrona.
+      await page.waitForTimeout(1500)
+      const name = `coord-lives-${size.width}x${size.height}`
+      await page.screenshot({ path: path.join(testInfo.outputDir, `${name}.png`) })
+      await page
+        .getByTestId('shell-region-character')
+        .screenshot({ path: path.join(testInfo.outputDir, `${name}-character.png`) })
+    }
+
+    // Abrir un reporte propio en Negocios (null) NO cambia las vidas: siguen
+    // siendo las de B2B, no pasan a UNKNOWN.
+    await page
+      .getByTestId('my-report-row')
+      .filter({ hasText: 'Reporté en Negocios' })
+      .click()
+    await settle(page)
+    await expect(page.getByTestId('action-panel')).toHaveAttribute(
+      'data-mode',
+      'detail',
+    )
+    await expectB2BLives()
+  })
+})
+
+/*
+ * TRANSICIÓN DE VIDAS tras un refetch real del overview. Las vidas de B2B se
+ * derivan de los problemas activos del mock (`derivedLives`):
+ *
+ *   entrada            3 HIGH activos (propio, «debemos resolver», entrante) → 4
+ *   alta MEDIUM        +1 de daño → 3   pérdida: corazón 1 FULL → HALF
+ *   resolver HIGH      −2 de daño → 5   ganancia: corazón 1 HALF → FULL,
+ *                                                 corazón 2 EMPTY → HALF
+ */
+const LIVES = '[data-testid="character-lives"]'
+
+function livesHeart(page: Page, index: number) {
+  return page.locator(
+    `[data-testid="shell-region-character"] [data-testid="character-lives-heart"][data-heart-index="${index}"]`,
+  )
+}
+
+async function createMediumInternal(page: Page) {
+  await page.getByTestId('report-internal-button').first().click()
+  await settle(page)
+  await page.getByTestId('report-title').fill('Nuevo interno B2B')
+  await page.getByTestId('report-description').fill('Descripción suficiente')
+  await page.getByTestId('report-category').selectOption('cat-acas')
+  await page.getByTestId('report-submit').click()
+}
+
+async function resolveOwnInternal(page: Page) {
+  await page
+    .getByTestId('coordinator-to-resolve')
+    .getByTestId('problem-row')
+    .filter({ hasText: 'Problema interno B2B' })
+    .click()
+  await settle(page)
+  await page.getByTestId('resolve-learning').fill('Aprendizaje registrado')
+  await page.getByTestId('resolve-submit').click()
+}
+
+async function animationNames(page: Page, index: number) {
+  return livesHeart(page, index).evaluate((heart) => ({
+    heart: getComputedStyle(heart).animationName,
+    delta:
+      heart.querySelector('.character-lives__delta') === null
+        ? null
+        : getComputedStyle(heart.querySelector('.character-lives__delta')!)
+            .animationName,
+    deltaOpacity:
+      heart.querySelector('.character-lives__delta') === null
+        ? null
+        : getComputedStyle(heart.querySelector('.character-lives__delta')!).opacity,
+  }))
+}
+
+/*
+ * El proyecto corre con `reducedMotion: 'reduce'` (en `contextOptions`); este
+ * bloque pide movimiento para ver la animación real.
+ */
+test.describe('vidas · transición con movimiento', () => {
+  test.use({ contextOptions: { reducedMotion: 'no-preference' } })
+
+  test('crear un problema anima una pérdida y resolverlo una ganancia', async ({
+    page,
+  }, testInfo) => {
+    test.slow()
+    await install(page, { derivedLives: true })
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/centro-operacional')
+    await settle(page)
+
+    const lives = page.locator(LIVES)
+    const character = page.getByTestId('direction-character')
+    const region = page.getByTestId('shell-region-character')
+
+    await expect(lives).toHaveAttribute('data-life-points', '4')
+    await expect(lives).toHaveAttribute('data-transition', 'none')
+    await page.waitForTimeout(1500)
+    await region.screenshot({ path: testInfo.outputPath('lives-transition-0-entrada-4.png') })
+
+    // ---- Alta: 4 → 3, pérdida ----
+    await createMediumInternal(page)
+    await expect(lives).toHaveAttribute('data-life-points', '3')
+    await region.screenshot({ path: testInfo.outputPath('lives-transition-1-loss-t0.png') })
+    await page.waitForTimeout(140)
+    await region.screenshot({ path: testInfo.outputPath('lives-transition-1-loss-t140.png') })
+
+    await expect(lives).toHaveAttribute('data-transition', 'loss')
+    await expect(livesHeart(page, 1)).toHaveAttribute('data-transition', 'loss')
+    await expect(livesHeart(page, 1)).toHaveAttribute('data-previous-state', 'full')
+    await expect(livesHeart(page, 1)).toHaveAttribute('data-state', 'half')
+    // Solo cambia el corazón 1.
+    for (const index of [0, 2, 3, 4]) {
+      await expect(livesHeart(page, index)).not.toHaveAttribute('data-transition', /.+/)
+    }
+    const lossNames = await animationNames(page, 1)
+    expect(lossNames.heart).toMatch(/^cl-heart-loss-[ab]$/)
+    expect(lossNames.delta).toBe('cl-delta-loss')
+    // El lector de pantalla oye solo el valor final.
+    await expect(character).toHaveAttribute(
+      'aria-label',
+      /Vidas del personaje: 3 de 10 puntos\.$/,
+    )
+
+    await page.waitForTimeout(800)
+    await region.screenshot({ path: testInfo.outputPath('lives-transition-2-after-loss-3.png') })
+
+    // ---- Resolución: 3 → 5, ganancia ----
+    await resolveOwnInternal(page)
+    await expect(lives).toHaveAttribute('data-life-points', '5')
+    await region.screenshot({ path: testInfo.outputPath('lives-transition-3-gain-t0.png') })
+    await page.waitForTimeout(160)
+    await region.screenshot({ path: testInfo.outputPath('lives-transition-3-gain-t160.png') })
+
+    await expect(lives).toHaveAttribute('data-transition', 'gain')
+    await expect(livesHeart(page, 1)).toHaveAttribute('data-previous-state', 'half')
+    await expect(livesHeart(page, 1)).toHaveAttribute('data-state', 'full')
+    await expect(livesHeart(page, 2)).toHaveAttribute('data-previous-state', 'empty')
+    await expect(livesHeart(page, 2)).toHaveAttribute('data-state', 'half')
+    for (const index of [1, 2]) {
+      await expect(livesHeart(page, index)).toHaveAttribute('data-transition', 'gain')
+    }
+    for (const index of [0, 3, 4]) {
+      await expect(livesHeart(page, index)).not.toHaveAttribute('data-transition', /.+/)
+    }
+    // Escalonado de izquierda a derecha.
+    await expect(livesHeart(page, 1)).toHaveAttribute('style', /--cl-delay:\s*0ms/)
+    await expect(livesHeart(page, 2)).toHaveAttribute('style', /--cl-delay:\s*80ms/)
+    const gainNames = await animationNames(page, 2)
+    expect(gainNames.heart).toMatch(/^cl-heart-gain-[ab]$/)
+    expect(gainNames.delta).toBe('cl-delta-gain')
+    await expect(character).toHaveAttribute(
+      'aria-label',
+      /Vidas del personaje: 5 de 10 puntos\.$/,
+    )
+
+    await page.waitForTimeout(800)
+    await region.screenshot({ path: testInfo.outputPath('lives-transition-4-after-gain-5.png') })
+  })
+})
+
+test.describe('vidas · transición con reduced motion', () => {
+  // Es el modo del proyecto; se declara aquí para que el test no dependa de él.
+  test.use({ contextOptions: { reducedMotion: 'reduce' } })
+
+  test('el estado final aparece sin animación prolongada', async ({ page }) => {
+    test.slow()
+    // La emulación llega de verdad a la página.
+    await page.goto('about:blank')
+    expect(
+      await page.evaluate(
+        () => matchMedia('(prefers-reduced-motion: reduce)').matches,
+      ),
+    ).toBe(true)
+    await install(page, { derivedLives: true })
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/centro-operacional')
+    await settle(page)
+
+    const lives = page.locator(LIVES)
+    await expect(lives).toHaveAttribute('data-life-points', '4')
+
+    await createMediumInternal(page)
+    await expect(lives).toHaveAttribute('data-life-points', '3')
+    await expect(lives).toHaveAttribute('data-transition', 'loss')
+
+    // Estado final correcto y sin animación: ni pulso, ni capa perdida visible.
+    expect(
+      await livesHeart(page, 1).getAttribute('data-state'),
+    ).toBe('half')
+    const names = await animationNames(page, 1)
+    expect(names.heart).toBe('none')
+    expect(names.delta).toBe('none')
+    expect(names.deltaOpacity).toBe('0')
+    const running = await page.evaluate(
+      () =>
+        document
+          .getAnimations()
+          .filter(
+            (animation) =>
+              animation instanceof CSSAnimation &&
+              animation.animationName.startsWith('cl-'),
+          ).length,
+    )
+    expect(running).toBe(0)
   })
 })

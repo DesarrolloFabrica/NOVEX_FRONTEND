@@ -20,6 +20,7 @@ function coordinationRow(
     activeProblemsCount: 0,
     criticalCount: 0,
     affectedCoordinationCount: 0,
+    lifePoints: 10,
     ...overrides,
   }
 }
@@ -140,7 +141,33 @@ describe('LEVEL 0 contract · identificadores', () => {
       'activeProblemsCount',
       'criticalCount',
       'affectedCoordinationCount',
+      'lifePoints',
     ])
+    for (const field of [
+      'highCount',
+      'mediumCount',
+      'lowCount',
+      'externalIncomingLowCount',
+      'externalIncomingMediumCount',
+      'externalIncomingHighCount',
+      'externalIncomingCriticalCount',
+      'violations',
+    ]) {
+      expect(coordinationRow()).not.toHaveProperty(field)
+    }
+  })
+})
+
+describe('LEVEL 0 contract · vidas', () => {
+  it('lifePoints vive en cada coordinación y admite null', () => {
+    expect(coordinationRow().lifePoints).toBe(10)
+    expect(coordinationRow({ lifePoints: null }).lifePoints).toBeNull()
+  })
+
+  it('el registro de analista y la raíz del overview NO tienen vidas', () => {
+    expect(EMPTY_ANALYST_REGISTRY).not.toHaveProperty('lifePoints')
+    expect(CRITICAL_ANALYST_REGISTRY).not.toHaveProperty('lifePoints')
+    expect(overview()).not.toHaveProperty('lifePoints')
   })
 })
 
