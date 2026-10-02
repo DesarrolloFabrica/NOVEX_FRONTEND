@@ -11,6 +11,11 @@ import {
   NOVEX_BETA_HINT,
   NOVEX_BETA_LABEL,
 } from '@/shared/constants/platformStatus'
+import { LoginStageSpotlight } from '@/pages/LoginStageSpotlight'
+import { LoginTicketFrame } from '@/pages/LoginTicketFrame'
+import type { NovexCharacterHandle } from '@/shared/character/NovexCharacterFigure'
+import { POST_LOGIN_REACTION, reactionHoldMs } from '@/shared/transition/postLoginTransition'
+import { usePostLoginTransitionCue } from '@/shared/transition/postLoginTransitionCue'
 
 /** Solo en local: VITE_ENABLE_EMAIL_LOGIN=true. En deploy no se define → solo Google. */
 const emailLoginEnabled = import.meta.env.VITE_ENABLE_EMAIL_LOGIN === 'true'
@@ -30,18 +35,29 @@ export function LoginPage() {
   const [email, setEmail] = useState('')
   const [googleError, setGoogleError] = useState<string | null>(null)
   const loginAttemptedRef = useRef(false)
+  const characterRef = useRef<NovexCharacterHandle>(null)
+  const celebratedRef = useRef(false)
+  const transitionCue = usePostLoginTransitionCue()
 
   useEffect(() => {
     if (loading) return
     if (!isAuthenticated) return
 
     if (loginAttemptedRef.current) {
+      // Inicio de la transición teatral: el personaje celebra y el host global
+      // (PostLoginCurtainTransition) espera su reacción antes de cerrar cortinas.
+      // Si el personaje aún no estaba listo, no hay reacción que esperar.
+      if (!celebratedRef.current) {
+        celebratedRef.current = true
+        const accepted = characterRef.current?.playReaction(POST_LOGIN_REACTION) ?? false
+        transitionCue.holdForReaction(reactionHoldMs(accepted))
+      }
       beginBootSplash()
       return
     }
 
     navigate(getRoleLandingPath(user), { replace: true })
-  }, [beginBootSplash, isAuthenticated, loading, navigate, user])
+  }, [beginBootSplash, isAuthenticated, loading, navigate, transitionCue, user])
 
   const handleEmailSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -67,74 +83,41 @@ export function LoginPage() {
   const authError = error || googleError
 
   return (
-    <main className="novex-login">
-      <div className="novex-login__atmosphere" aria-hidden="true">
-        <div className="novex-login__grid" />
-        <div className="novex-login__constellation" />
-        <div className="novex-login__orbital novex-login__orbital--outer" />
-        <div className="novex-login__orbital novex-login__orbital--inner" />
-        <div className="novex-login__horizon" />
-      </div>
+    <main className="novex-login-stage">
+      {/* Capas escénicas. Las cortinas (fases siguientes) se montan entre overlay y contenido. */}
+      <div className="novex-login-stage__background" aria-hidden="true" />
+      <div className="novex-login-stage__overlay" aria-hidden="true" />
 
-      <div className="novex-login__shell">
-        <section className="novex-login__intro" aria-labelledby="novex-login-title">
-          <div className="novex-login__eyebrow">
+      <div className="novex-login-stage__content">
+        <header className="novex-login-stage__brand">
+          <p className="novex-login-stage__eyebrow">
             <span aria-hidden="true" />
-            Equipo desarrollo de operaciones
-          </div>
-
-          <div className="novex-login__identity">
-            <div className="novex-login__mark-stage" aria-hidden="true">
-              <div className="novex-login__mark-halo" />
-              <div className="novex-login__mark-orbit" />
-              <img src="/novex-mark.png" alt="" draggable={false} />
-            </div>
-
-            <div className="novex-login__wordmark">
-              <div className="novex-login__wordmark-title">
-                <h1 id="novex-login-title">NOVEX</h1>
-                <span
-                  className="novex-beta-mark"
-                  title={NOVEX_BETA_HINT}
-                  aria-label={NOVEX_BETA_HINT}
-                >
-                  {NOVEX_BETA_LABEL}
-                </span>
-              </div>
-              <div className="novex-login__wordmark-tagline">
-                <span /> Inteligencia para decidir <span />
-              </div>
-            </div>
-          </div>
-
-          <p className="novex-login__intro-copy">
-            Plataforma de monitoreo e inteligencia operacional para una gestión
-            estratégica y decisiones oportunas.
+            Centro operacional
+            <span aria-hidden="true" />
           </p>
-          <p className="novex-login__beta-note">{NOVEX_BETA_HINT}</p>
+          <div className="novex-login-stage__title">
+            <h1>NOVEX</h1>
+            <span
+              className="novex-beta-mark"
+              title={NOVEX_BETA_HINT}
+              aria-label={NOVEX_BETA_HINT}
+            >
+              {NOVEX_BETA_LABEL}
+            </span>
+          </div>
+          <p className="novex-login-stage__tagline">Inteligencia para decidir</p>
+        </header>
 
-          <dl className="novex-login__capabilities" aria-label="Capacidades de la plataforma">
-            <div>
-              <dt>Monitoreo</dt>
-              <dd>en tiempo real</dd>
-            </div>
-            <div>
-              <dt>Análisis</dt>
-              <dd>operacional</dd>
-            </div>
-            <div>
-              <dt>Decisiones</dt>
-              <dd>informadas</dd>
-            </div>
-          </dl>
-        </section>
+        {/* Zona del personaje: marquesina de luces + personaje Rive. */}
+        <div className="novex-login-stage__character-slot">
+          <LoginStageSpotlight characterRef={characterRef} />
+        </div>
 
-        <section className="novex-login__panel" aria-labelledby="access-title">
-          <div className="novex-login__panel-glow" aria-hidden="true" />
-          <header className="novex-login__panel-header">
-            <p className="novex-login__panel-kicker"><span /> Bienvenido <span /></p>
+        <section className="novex-login-stage__panel" aria-labelledby="access-title">
+          <LoginTicketFrame />
+          <header className="novex-login-stage__panel-header">
             <h2 id="access-title">Accede a <strong>Novex</strong></h2>
-            <p className="novex-login__panel-lead">
+            <p className="novex-login-stage__panel-lead">
               {emailLoginEnabled
                 ? 'Ingresa con Google o con tu correo institucional.'
                 : 'Ingresa con tu cuenta de Google institucional.'}
@@ -142,15 +125,15 @@ export function LoginPage() {
           </header>
 
           {authError && (
-            <p className="novex-login__error" role="alert">
+            <p className="novex-login-stage__error" role="alert">
               {authError}
             </p>
           )}
 
-          <div className="novex-login__auth-stack">
+          <div className="novex-login-stage__auth-stack">
             {/* Botón oficial de Google (visible): el overlay casi invisible falla en deploy/FedCM. */}
             <div
-              className="novex-login__google-official"
+              className="novex-login-stage__google"
               data-loading={isBusy ? 'true' : 'false'}
             >
               <GoogleLogin
@@ -168,17 +151,17 @@ export function LoginPage() {
 
             {emailLoginEnabled && (
               <>
-                <div className="novex-login__separator" aria-hidden="true">
+                <div className="novex-login-stage__separator" aria-hidden="true">
                   <span />
                   <b>o</b>
                   <span />
                 </div>
 
-                <form className="novex-login__email-form" onSubmit={handleEmailSubmit}>
-                  <label className="novex-login__field-label" htmlFor="login-email">
+                <form className="novex-login-stage__email-form" onSubmit={handleEmailSubmit}>
+                  <label className="novex-login-stage__field-label" htmlFor="login-email">
                     Correo electrónico
                   </label>
-                  <div className="novex-login__input-wrap">
+                  <div className="novex-login-stage__input-wrap">
                     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
                       <path d="M4 6.5h16v11H4z" />
                       <path d="m5 7.5 7 5.5 7-5.5" />
@@ -193,7 +176,7 @@ export function LoginPage() {
                       value={email}
                       disabled={isBusy}
                       onChange={(event) => setEmail(event.target.value)}
-                      className="novex-login__input"
+                      className="novex-login-stage__input"
                     />
                   </div>
 
@@ -201,7 +184,7 @@ export function LoginPage() {
                     type="submit"
                     disabled={!canSubmitEmail}
                     aria-busy={loading}
-                    className="novex-login__primary-action"
+                    className="novex-login-stage__primary-action"
                   >
                     <span>Continuar con correo</span>
                     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -214,7 +197,7 @@ export function LoginPage() {
           </div>
 
           <footer
-            className="novex-login__panel-footer"
+            className="novex-login-stage__panel-footer"
             aria-live="polite"
             data-state={isBusy ? 'loading' : 'ready'}
           >
@@ -222,7 +205,7 @@ export function LoginPage() {
               <path d="M12 3.5 19 7v5c0 4.3-2.8 7.4-7 8.5C7.8 19.4 5 16.3 5 12V7l7-3.5Z" />
               <path d="m9.2 12 1.8 1.8 3.8-4" />
             </svg>
-            <p className="novex-login__security-copy">
+            <p className="novex-login-stage__security-copy">
               {bootSplashActive
                 ? 'Abriendo plataforma…'
                 : loading
@@ -232,6 +215,7 @@ export function LoginPage() {
           </footer>
         </section>
       </div>
+
     </main>
   )
 }
