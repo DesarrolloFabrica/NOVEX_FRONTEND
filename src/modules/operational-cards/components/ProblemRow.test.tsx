@@ -197,10 +197,7 @@ function myReportsHtml(items: MyReport[]): string {
         errorMessage: null,
       }}
       selectedProblemId={null}
-      hasCoordination
       onSelect={noop}
-      onReportInternal={noop}
-      onReportDependency={noop}
       onLoadMore={noop}
       labelByCode={LABELS}
     />,

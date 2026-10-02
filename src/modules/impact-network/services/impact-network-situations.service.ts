@@ -11,6 +11,10 @@ import {
 } from '@/modules/services/mappers/analysisPresentation.mapper'
 import { tryFetchSituationAnalysis } from '@/modules/api/analysis.api'
 import { situationOwnerLabel } from '@/modules/situations/utils/situationOwner'
+import {
+  situationCategoryCode,
+  situationCategoryLabel,
+} from '@/modules/situations/utils/situationCategory'
 import type {
   SituationResponse,
   SituationSeverity,
@@ -60,8 +64,8 @@ function buildFallbackInterpretation(
   return {
     id: `fallback-${situation.id}`,
     eventId: situation.id,
-    categoryId: situation.categoryCode,
-    categoryName: situation.categoryName,
+    categoryId: situationCategoryCode(situation),
+    categoryName: situationCategoryLabel(situation),
     affectedAreaIds: situation.coordinationCode ? [situation.coordinationCode] : [],
     affectedAreaNames: situation.coordinationName ? [situation.coordinationName] : [],
     impactSeverity: SEVERITY_TO_IMPACT[situation.severity],

@@ -194,7 +194,7 @@ export function ProblemHistoryPanel({
           role="status"
         >
           <p className="problem-history__empty-title">
-            {emptyHistoryMessage(period)}
+            {emptyHistoryMessage()}
           </p>
           <p className="problem-history__empty-hint">
             {emptyHistoryHint(period)}

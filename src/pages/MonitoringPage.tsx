@@ -50,7 +50,6 @@ export function MonitoringPage() {
   } = useSituationManagement()
 
   const environment = useMemo(() => resolveEnvironment(summary), [summary])
-  const canUpdate = dossier?.situation.canAdvanceToInProgress === true
 
   return (
     <NovexRoom environment={environment} scene="commitments">
@@ -71,7 +70,6 @@ export function MonitoringPage() {
             listError={listError}
             dossierError={dossierError}
             updateError={updateError ?? resolveError}
-            canUpdate={canUpdate}
             isUpdating={updatingStatus}
             isResolving={resolvingSituation}
             environment={environment}

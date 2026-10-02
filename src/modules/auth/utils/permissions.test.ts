@@ -84,6 +84,7 @@ describe('permissions utils', () => {
       canUpdateSituationStatus(coordinator, {
         createdByUserId: 'otro-usuario',
         coordinationId: 'coord-b2b',
+        coordinationCode: 'coord-b2b',
       }),
     ).toBe(true)
   })
@@ -93,6 +94,7 @@ describe('permissions utils', () => {
       canUpdateSituationStatus(coordinator, {
         createdByUserId: 'otro-usuario',
         coordinationId: 'coord-ingenierias',
+        coordinationCode: 'coord-ingenierias',
       }),
     ).toBe(false)
   })
@@ -119,6 +121,7 @@ describe('permissions utils', () => {
       canUpdateSituationStatus(analyst, {
         createdByUserId: analyst.id,
         coordinationId: 'coord-b2b',
+        coordinationCode: 'coord-b2b',
         canAdvanceToInProgress: false,
       }),
     ).toBe(false)
@@ -126,6 +129,7 @@ describe('permissions utils', () => {
       canUpdateSituationStatus(analyst, {
         createdByUserId: 'otro',
         coordinationId: 'uuid-general',
+        coordinationCode: 'coord-general',
         canAdvanceToInProgress: true,
       }),
     ).toBe(true)
@@ -141,6 +145,7 @@ describe('permissions utils', () => {
       canUpdateSituationStatus(directorWithStalePermission, {
         createdByUserId: 'otro-usuario',
         coordinationId: 'coord-b2b',
+        coordinationCode: 'coord-b2b',
       }),
     ).toBe(false)
   })

@@ -240,9 +240,6 @@ export interface CharacterReactionRequest {
   coordinationCode: CoordinationId | null
 }
 
-/** Clave de borrador cuando todavía no hay coordinación seleccionada. */
-export const UNASSIGNED_DRAFT_KEY = '__sin-coordinacion__'
-
 /**
  * Rama de LEVEL 2. `problemId` dice a qué problema pertenece, de modo que una
  * respuesta que llega tarde tras cerrar la isla se descarta en el reducer.

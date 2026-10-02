@@ -278,7 +278,7 @@ export function summaryCountLabel(
   return `${total} ${noun} ${period.summaryPhrase}`
 }
 
-export function emptyHistoryMessage(period: ProblemHistoryPeriod): string {
+export function emptyHistoryMessage(): string {
   return `No hay problemas cerrados en este período`
 }
 

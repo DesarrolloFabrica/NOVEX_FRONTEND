@@ -21,6 +21,11 @@ import {
   situationOwnerCode,
   situationOwnerLabel,
 } from '@/modules/situations/utils/situationOwner'
+import {
+  situationCategoryCode,
+  situationCategoryId,
+  situationCategoryLabel,
+} from '@/modules/situations/utils/situationCategory'
 import { getSituationSlaHealth } from '@/modules/situations/utils/situation-sla'
 
 const OPEN_STATUSES = new Set(['OPEN', 'IN_PROGRESS', 'RESOLVED'])
@@ -158,9 +163,9 @@ async function enrichSituation(
       coordinationId: source.coordinationId ?? 'analyst-registry',
       coordinationCode: situationOwnerCode(source),
       coordinationName: situationOwnerLabel(source),
-      categoryId: source.categoryId,
-      categoryCode: source.categoryCode,
-      categoryName: source.categoryName,
+      categoryId: situationCategoryId(source),
+      categoryCode: situationCategoryCode(source),
+      categoryName: situationCategoryLabel(source),
       status: source.status,
       severity: source.severity,
       occurredAt: source.occurredAt,

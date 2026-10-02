@@ -29,14 +29,10 @@ function situation(over: Partial<SituationResponse> = {}): SituationResponse {
   } as SituationResponse
 }
 
-function markup(input: {
-  situation: SituationResponse
-  canUpdate?: boolean
-}) {
+function markup(input: { situation: SituationResponse }) {
   return renderToStaticMarkup(
     <SituationPrimaryActionBar
       situation={input.situation}
-      canUpdate={input.canUpdate ?? true}
       isUpdating={false}
       onUpdate={vi.fn()}
       onResolve={vi.fn()}
@@ -63,7 +59,6 @@ describe('SituationPrimaryActionBar · canResolve ANALISTA', () => {
         canAdvanceToInProgress: true,
         canUpdate: true,
       }),
-      canUpdate: true,
     })
     expect(html).not.toContain('Resolver problema')
     expect(html).toContain('Pasar a En atención')
@@ -76,7 +71,6 @@ describe('SituationPrimaryActionBar · canResolve ANALISTA', () => {
         canResolve: false,
         canUpdate: true,
       }),
-      canUpdate: true,
     })
     expect(html).not.toContain('Pasar a En atención')
   })

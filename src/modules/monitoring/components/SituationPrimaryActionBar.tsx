@@ -12,7 +12,6 @@ import { NovexIcon } from '@/shared/components/NovexIcon'
 
 interface SituationPrimaryActionBarProps {
   situation: SituationResponse
-  canUpdate: boolean
   isUpdating: boolean
   isResolving?: boolean
   onUpdate: (input: UpdateSituationStatusInput) => Promise<void>
@@ -21,7 +20,6 @@ interface SituationPrimaryActionBarProps {
 
 export function SituationPrimaryActionBar({
   situation,
-  canUpdate,
   isUpdating,
   isResolving = false,
   onUpdate,

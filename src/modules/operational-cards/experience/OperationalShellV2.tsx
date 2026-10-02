@@ -32,6 +32,7 @@ import { getErrorMessage } from '@/shared/utils/error'
 import type { IncidentCategorySummary } from '@/modules/situations/types/situation.types'
 import type { OperationalIntegrityStatus } from '@/modules/operational-cards/types/operational-status.types'
 import type { CoordinationId } from '@/modules/impact-network/data/coordination-islands.config'
+import type { ProblemHistoryPeriod } from '@/modules/operational-cards/types/problem-history.types'
 import '@/styles/operational-character.css'
 import '@/styles/operational-shell.css'
 import '@/styles/operational-shell-ticket-fabrica.css'
@@ -352,7 +353,7 @@ export function OperationalShellV2() {
     history: controller.history,
     onOpenHistory: () => controller.openHistory(),
     onCloseHistory: () => controller.closeHistory(),
-    onHistoryPeriodChange: (period: { from: string; to: string }) =>
+    onHistoryPeriodChange: (period: ProblemHistoryPeriod) =>
       controller.setHistoryPeriod(period),
     onSelectHistoryProblem: (problemId: string) =>
       controller.selectProblem(problemId),

@@ -38,7 +38,6 @@ interface MonitoringCenterProps {
   listError: string | null
   dossierError: string | null
   updateError: string | null
-  canUpdate: boolean
   isUpdating: boolean
   isResolving: boolean
   environment: EnvironmentStatus
@@ -118,7 +117,6 @@ export function MonitoringCenter({
   listError,
   dossierError,
   updateError: _updateError,
-  canUpdate,
   isUpdating,
   isResolving,
   environment,
@@ -187,7 +185,6 @@ export function MonitoringCenter({
               {dossier ? (
                 <SituationPrimaryActionBar
                   situation={dossier.situation}
-                  canUpdate={canUpdate}
                   isUpdating={isUpdating}
                   isResolving={isResolving}
                   onUpdate={onUpdateSituationStatus}

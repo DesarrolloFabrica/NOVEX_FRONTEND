@@ -4,6 +4,7 @@ import {
   operationalCardsReducer,
   type OperationalCardsAction,
 } from '@/modules/operational-cards/state/operationalCards.reducer'
+import { defaultHistoryPeriod } from '@/modules/operational-cards/data/problemHistoryPeriod'
 import type { OperationalOverview } from '@/modules/operational-cards/types/operational-overview.contract'
 import type {
   CoordinationProblem,
@@ -103,9 +104,24 @@ describe('operationalCardsReducer · LEVEL 0', () => {
         loadingMore: false,
         errorMessage: null,
       },
+      // El histórico tampoco se pide al arrancar: vacío, sin coordinación y
+      // con el período por defecto ya resuelto.
+      history: {
+        status: 'idle',
+        items: [],
+        total: 0,
+        page: 0,
+        loadingMore: false,
+        errorMessage: null,
+        period: defaultHistoryPeriod(),
+        coordinationId: null,
+        scope: 'complete',
+      },
       // El panel abre en reposo: seleccionar una carta NO abre el formulario.
       panelMode: 'idle',
       reportFormKind: null,
+      // Cerrar un detalle sin origen previo devuelve al reposo.
+      detailReturnMode: 'idle',
       reportDrafts: {},
       learningDrafts: {},
       submission: {

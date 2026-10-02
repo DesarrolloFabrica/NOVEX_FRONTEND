@@ -240,6 +240,7 @@ describe('coherencia entre las dos listas', () => {
         code: 'coord-b2b',
         problems: [],
         scope: 'complete',
+        generation: 0,
       },
       {
         type: 'OPEN_MY_REPORT',
@@ -527,6 +528,9 @@ describe('Pasar a En atención (OPEN → IN_PROGRESS)', () => {
               status: 'OPEN',
               coordinationCode: 'coord-b2b',
               coordinationName: 'B2B',
+              affectedCoordinationCode: 'coord-b2b',
+              affectedCoordinationName: 'B2B',
+              reportKind: 'INTERNAL',
               createdAt: '2026-09-01T10:00:00.000Z',
               canResolve: true,
             },
@@ -686,6 +690,9 @@ describe('«Mis reportes»', () => {
               status: 'OPEN',
               coordinationCode: 'coord-negocios',
               coordinationName: 'Negocios',
+              affectedCoordinationCode: 'coord-negocios',
+              affectedCoordinationName: 'Negocios',
+              reportKind: 'INTERNAL',
               createdAt: '2026-09-01T10:00:00.000Z',
               canResolve: false,
             },
@@ -704,7 +711,7 @@ describe('«Mis reportes»', () => {
   })
 
   it('la segunda página acumula en lugar de reemplazar', () => {
-    const hacerPagina = (page: number, id: string) =>
+    const hacerPagina = (page: number, id: string): OperationalCardsAction =>
       ({
         type: 'LOAD_MY_REPORTS_SUCCESS',
         generation: 0,
@@ -717,6 +724,9 @@ describe('«Mis reportes»', () => {
               status: 'CLOSED',
               coordinationCode: null,
               coordinationName: null,
+              affectedCoordinationCode: null,
+              affectedCoordinationName: null,
+              reportKind: 'INTERNAL',
               createdAt: '2026-09-01T10:00:00.000Z',
               canResolve: false,
             },
@@ -725,7 +735,7 @@ describe('«Mis reportes»', () => {
           page,
           limit: 20,
         },
-      }) as OperationalCardsAction
+      })
 
     const state = reduce(READY, hacerPagina(1, 'r1'), hacerPagina(2, 'r2'))
     expect(state.myReports.items.map((r) => r.id)).toEqual(['r1', 'r2'])

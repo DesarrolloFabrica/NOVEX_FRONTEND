@@ -19,6 +19,11 @@ import {
   situationOwnerCode,
   situationOwnerLabel,
 } from '@/modules/situations/utils/situationOwner'
+import {
+  situationCategoryCode,
+  situationCategoryId,
+  situationCategoryLabel,
+} from '@/modules/situations/utils/situationCategory'
 
 const SEVERITY_TO_RISK: Record<SituationSeverity, RiskLevel> = {
   LOW: 'low',
@@ -86,9 +91,9 @@ async function enrichSituationRow(
     coordinationId: situation.coordinationId ?? 'sin-coordinacion',
     coordinationCode: situationOwnerCode(situation),
     coordinationName: situationOwnerLabel(situation),
-    categoryId: situation.categoryId,
-    categoryCode: situation.categoryCode,
-    categoryName: situation.categoryName,
+    categoryId: situationCategoryId(situation),
+    categoryCode: situationCategoryCode(situation),
+    categoryName: situationCategoryLabel(situation),
     status: situation.status,
     severity: situation.severity,
     riskScore,

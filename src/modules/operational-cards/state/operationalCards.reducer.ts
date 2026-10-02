@@ -1,11 +1,10 @@
 import type { CoordinationId } from '@/modules/impact-network/data/coordination-islands.config'
 import type { OperationalOverview } from '@/modules/operational-cards/types/operational-overview.contract'
-import {
-  UNASSIGNED_DRAFT_KEY,
-  type ActiveSituationStatus,
-  type CoordinationProblem,
-  type OperationalCardsState,
-  type ReportDraft,
+import type {
+  ActiveSituationStatus,
+  CoordinationProblem,
+  OperationalCardsState,
+  ReportDraft,
 } from '@/modules/operational-cards/types/operational-cards.state'
 import type { MyReportsPage } from '@/modules/operational-cards/types/my-reports.types'
 import type {
@@ -1206,14 +1205,22 @@ export function operationalCardsReducer(
           ? { ...problem, status: activeStatus }
           : problem
 
+      // El caché es `Partial`: una entrada ausente no se fabrica, y la que
+      // existe conserva su `scope` intacto.
       const problemsByCoordination = Object.fromEntries(
-        Object.entries(state.problemsByCoordination).map(([code, cached]) => [
-          code,
-          {
-            ...cached,
-            problems: cached.problems.map(patchProblem),
-          },
-        ]),
+        Object.entries(state.problemsByCoordination).flatMap(([code, cached]) =>
+          cached
+            ? [
+                [
+                  code,
+                  {
+                    problems: cached.problems.map(patchProblem),
+                    scope: cached.scope,
+                  },
+                ] as const,
+              ]
+            : [],
+        ),
       )
 
       const previousSections =

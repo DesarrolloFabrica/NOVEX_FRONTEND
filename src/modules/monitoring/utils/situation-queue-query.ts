@@ -94,7 +94,7 @@ export function filterSituationsForQueue(
     return (
       situation.title.toLocaleLowerCase('es-CO').includes(needle) ||
       situation.coordinationName.toLocaleLowerCase('es-CO').includes(needle) ||
-      situation.categoryName.toLocaleLowerCase('es-CO').includes(needle)
+      situation.categoryName?.toLocaleLowerCase('es-CO').includes(needle)
     )
   })
 }
