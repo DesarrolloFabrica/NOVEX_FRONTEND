@@ -9,11 +9,10 @@ import { fetchCoordinationProblems } from '@/modules/operational-cards/services/
 import {
   fetchProblemDetail,
   fetchProblemEvidences,
-  fetchProblemRecommendations,
   fetchProblemTimeline,
 } from '@/modules/operational-cards/services/problem-detail.service'
 import {
-  isLazySection,
+  lazyDataForSection,
   type LazyProblemSectionId,
   type ProblemSectionId,
 } from '@/modules/operational-cards/types/problem-detail.types'
@@ -51,6 +50,8 @@ export interface OperationalCardsController extends OperationalCardsState {
   selectProblem: (problemId: string) => void
   closeProblem: () => void
   toggleSection: (section: ProblemSectionId) => void
+  /** Reintenta una sección del detalle que falló (notas o cronología). */
+  retrySection: (section: LazyProblemSectionId) => void
   /** Reintenta la lista de la coordinación observada tras un fallo. */
   retryCoordinationProblems: () => void
   /** Abre un problema desde «Mis reportes», sincronizando la carta (salvo keepSelection). */
@@ -98,12 +99,11 @@ export interface OperationalCardsController extends OperationalCardsState {
   consumeCharacterReaction: (id: number) => void
 }
 
-/** Cargador por sección perezosa. Impacto e IA no están: salen del análisis. */
+/** Cargador de cada dato del detalle que no viene con la situación. */
 const SECTION_LOADERS: Record<
   LazyProblemSectionId,
   (problemId: string) => Promise<readonly unknown[]>
 > = {
-  recommendations: fetchProblemRecommendations,
   evidences: fetchProblemEvidences,
   timeline: fetchProblemTimeline,
 }
@@ -191,8 +191,9 @@ export function useOperationalOverview(): OperationalCardsController {
   const selectedProblemId = state.selectedProblemId
   const level2Status = state.level2.status
 
-  // Detalle del problema: dos peticiones en paralelo, y ninguna si el problema
-  // ya estaba en caché (el reducer entra directo en `ready`).
+  // Detalle del problema: una sola petición (la situación), sin análisis IA, y
+  // ninguna si el problema ya estaba en caché (el reducer entra directo en
+  // `ready`).
   useEffect(() => {
     if (!selectedProblemId || level2Status !== 'idle') return
 
@@ -219,13 +220,24 @@ export function useOperationalOverview(): OperationalCardsController {
   const expandedSections = state.level2.expanded
   const sectionsState = state.level2.sections
 
-  // Secciones perezosas: una petición la primera vez que se despliegan, y
-  // ninguna al cerrarlas y volverlas a abrir.
+  // Datos aparte de la situación, una petición cada uno y solo mientras estén
+  // en `idle` (cerrar y reabrir un acordeón no repite nada):
+  //   · evidencias: en cuanto el detalle está `ready`, sin esperar a ningún
+  //     acordeón, porque deciden si «Notas del reporte» existe. Se espera a
+  //     `ready` y no se lanzan en paralelo con la situación para que el
+  //     resultado caiga en la caché del problema, que nace con el detalle.
+  //   · cronología: al desplegarse.
   useEffect(() => {
     if (!selectedProblemId) return
 
+    const wanted = new Set<LazyProblemSectionId>()
+    if (level2Status === 'ready') wanted.add('evidences')
     for (const section of expandedSections) {
-      if (!isLazySection(section)) continue
+      const data = lazyDataForSection(section)
+      if (data) wanted.add(data)
+    }
+
+    for (const section of wanted) {
       if (sectionsState[section].status !== 'idle') continue
 
       const problemId = selectedProblemId
@@ -249,7 +261,15 @@ export function useOperationalOverview(): OperationalCardsController {
           })
         })
     }
-  }, [selectedProblemId, expandedSections, sectionsState])
+  }, [selectedProblemId, level2Status, expandedSections, sectionsState])
+
+  const retrySection = useCallback(
+    (section: LazyProblemSectionId) => {
+      if (!selectedProblemId) return
+      dispatch({ type: 'RETRY_SECTION', problemId: selectedProblemId, section })
+    },
+    [selectedProblemId],
+  )
 
   const selectProblem = useCallback((problemId: string) => {
     dispatch({ type: 'SELECT_PROBLEM', problemId })
@@ -651,6 +671,7 @@ export function useOperationalOverview(): OperationalCardsController {
     selectProblem,
     closeProblem,
     toggleSection,
+    retrySection,
     openMyReport,
     loadMoreMyReports,
     openReportForm,

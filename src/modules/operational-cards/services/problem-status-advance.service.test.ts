@@ -21,7 +21,6 @@ describe('submitProblemStatusAdvance', () => {
   beforeEach(() => {
     updateSituation.mockReset()
     loadAnalysis.mockReset()
-    loadAnalysis.mockResolvedValue(null)
   })
 
   it('envía PATCH con IN_PROGRESS y no usa resolution', async () => {
@@ -52,6 +51,8 @@ describe('submitProblemStatusAdvance', () => {
     expect(detail.reportKind).toBe('INTER_COORDINATION')
     expect(detail.coordinationCode).toBe('coord-b2b')
     expect(detail.affectedCoordinationCode).toBe('coord-negocios')
+    // El detalle ya no se apoya en IA: avanzar el estado no consulta el análisis.
+    expect(loadAnalysis).not.toHaveBeenCalled()
   })
 
   it('rechaza avance si el estado local no es OPEN', async () => {

@@ -1,5 +1,4 @@
 import { resolveSituation } from '@/modules/api/situations.api'
-import { loadAnalysis } from '@/modules/services/situationAnalysis.service'
 import type { ProblemDetail } from '@/modules/operational-cards/types/problem-detail.types'
 import { toProblemDetail } from '@/modules/operational-cards/services/problem-detail.service'
 import { assertResolutionLearning } from '@/modules/situations/data/assertResolutionLearning'
@@ -19,7 +18,6 @@ export async function submitProblemResolution(
   const trimmed = assertResolutionLearning(learning)
 
   const situation = await resolveSituation(problemId, trimmed)
-  const analysis = await loadAnalysis(problemId).catch(() => null)
 
-  return toProblemDetail(situation, analysis)
+  return toProblemDetail(situation)
 }

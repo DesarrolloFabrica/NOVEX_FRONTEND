@@ -66,10 +66,9 @@ const DETAIL: ProblemDetail = {
   status: 'OPEN',
   slaHealth: 'overdue',
   dueAt: '2026-08-10T10:00:00.000Z',
-  summary: 'Resumen real del problema.',
+  description: 'Resumen real del problema.',
   coordinationName: 'Coordinador Ingenierías',
   createdAt: '2026-08-01T10:00:00.000Z',
-  impact: null,
   coordinationCode: 'coord-b2b',
   affectedCoordinationCode: 'coord-b2b',
   affectedCoordinationName: 'Coordinador Ingenierías',
@@ -81,7 +80,6 @@ const DETAIL: ProblemDetail = {
   canAdvanceToInProgress: false,
   canUpdate: false,
   resolution: null,
-  intelligence: null,
 }
 
 function from(
@@ -256,14 +254,14 @@ describe('LEVEL 2 · secciones', () => {
     const open = from(readyDetail(), {
       type: 'TOGGLE_SECTION',
       problemId: 'p1',
-      section: 'impact',
+      section: 'notes',
     })
-    expect(open.level2.expanded).toEqual(['impact'])
+    expect(open.level2.expanded).toEqual(['notes'])
 
     const closed = from(open, {
       type: 'TOGGLE_SECTION',
       problemId: 'p1',
-      section: 'impact',
+      section: 'notes',
     })
     expect(closed.level2.expanded).toEqual([])
   })
@@ -271,16 +269,15 @@ describe('LEVEL 2 · secciones', () => {
   it('varias secciones pueden estar abiertas a la vez', () => {
     const state = from(
       readyDetail(),
-      { type: 'TOGGLE_SECTION', problemId: 'p1', section: 'impact' },
-      { type: 'TOGGLE_SECTION', problemId: 'p1', section: 'ai' },
+      { type: 'TOGGLE_SECTION', problemId: 'p1', section: 'notes' },
+      { type: 'TOGGLE_SECTION', problemId: 'p1', section: 'timeline' },
     )
-    expect(state.level2.expanded).toEqual(['impact', 'ai'])
+    expect(state.level2.expanded).toEqual(['notes', 'timeline'])
   })
 
   it('una sección perezosa carga y queda ready', () => {
     const state = from(
       readyDetail(),
-      { type: 'TOGGLE_SECTION', problemId: 'p1', section: 'evidences' },
       { type: 'LOAD_SECTION', problemId: 'p1', section: 'evidences' },
       {
         type: 'LOAD_SECTION_SUCCESS',
@@ -296,7 +293,6 @@ describe('LEVEL 2 · secciones', () => {
   it('el fallo de una sección no rompe la isla ni las demás', () => {
     const state = from(
       readyDetail(),
-      { type: 'TOGGLE_SECTION', problemId: 'p1', section: 'evidences' },
       { type: 'LOAD_SECTION', problemId: 'p1', section: 'evidences' },
       {
         type: 'LOAD_SECTION_ERROR',
@@ -333,7 +329,6 @@ describe('LEVEL 2 · secciones', () => {
   it('reabrir el problema conserva las secciones ya cargadas', () => {
     const state = from(
       readyDetail(),
-      { type: 'TOGGLE_SECTION', problemId: 'p1', section: 'evidences' },
       { type: 'LOAD_SECTION', problemId: 'p1', section: 'evidences' },
       {
         type: 'LOAD_SECTION_SUCCESS',
@@ -351,7 +346,6 @@ describe('LEVEL 2 · secciones', () => {
   it('descarta una sección que llega tras cerrar la isla', () => {
     const state = from(
       readyDetail(),
-      { type: 'TOGGLE_SECTION', problemId: 'p1', section: 'evidences' },
       { type: 'LOAD_SECTION', problemId: 'p1', section: 'evidences' },
       { type: 'CLOSE_PROBLEM' },
       {
@@ -363,5 +357,50 @@ describe('LEVEL 2 · secciones', () => {
     )
     expect(state.level2.sections.evidences.status).toBe('idle')
     expect(state.detailByProblem['p1']?.sections.evidences.status).toBe('ready')
+  })
+
+  it('reintentar una sección fallida la devuelve a idle para volver a pedirla', () => {
+    const failed = from(
+      readyDetail(),
+      { type: 'LOAD_SECTION', problemId: 'p1', section: 'evidences' },
+      {
+        type: 'LOAD_SECTION_ERROR',
+        problemId: 'p1',
+        section: 'evidences',
+        message: 'sin red',
+      },
+    )
+    // El error se conserva como error: no se confunde con «sin notas».
+    expect(failed.level2.sections.evidences.status).toBe('error')
+
+    const retried = from(failed, {
+      type: 'RETRY_SECTION',
+      problemId: 'p1',
+      section: 'evidences',
+    })
+    expect(retried.level2.sections.evidences).toEqual({
+      status: 'idle',
+      items: [],
+      errorMessage: null,
+    })
+  })
+
+  it('reintentar no toca una sección que no falló', () => {
+    const ready = from(
+      readyDetail(),
+      { type: 'LOAD_SECTION', problemId: 'p1', section: 'timeline' },
+      {
+        type: 'LOAD_SECTION_SUCCESS',
+        problemId: 'p1',
+        section: 'timeline',
+        items: [{ id: 't1' }],
+      },
+    )
+    const retried = from(ready, {
+      type: 'RETRY_SECTION',
+      problemId: 'p1',
+      section: 'timeline',
+    })
+    expect(retried).toBe(ready)
   })
 })

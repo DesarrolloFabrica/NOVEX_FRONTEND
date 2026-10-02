@@ -11,8 +11,13 @@ import { operationalOverviewFixture } from './operational-overview.fixture'
  * pulsar una fila ya no abre nada encima de la escena.
  *
  * Presupuesto vigilado en cada prueba: una petición de LEVEL 0, dos de LEVEL 1
- * por coordinación nueva, dos al abrir un problema y una por sección perezosa
- * la primera vez que se despliega.
+ * por coordinación nueva y DOS al abrir un problema: la situación y, en cuanto
+ * está lista, sus evidencias (de ellas depende que «Notas del reporte»
+ * exista). La cronología, una vez, al desplegarse por primera vez.
+ *
+ * Sin IA: el detalle no pide `/analysis` ni `/recommendations`. Los mocks de
+ * esas rutas siguen instalados a propósito, como trampa: si algo volviera a
+ * pedirlas, las pruebas lo contarían.
  */
 
 const SESSION_KEY = 'novex.auth.session.v1'
@@ -89,6 +94,18 @@ function situationFixture(
     occurredAt: '2026-08-01T10:00:00.000Z',
     createdAt: '2026-08-01T10:00:00.000Z',
     updatedAt: '2026-08-01T10:00:00.000Z',
+    // Persisten en el backend, pero el detalle ya no las muestra: no son un
+    // impacto medido. Se dejan aquí para comprobar que no reaparecen.
+    relatedCoordinations: [
+      {
+        id: 'rel-1',
+        coordinationId: 'coord-transversales-id',
+        coordinationCode: 'coord-transversales',
+        coordinationName: 'Coordinación Transversales',
+        coordinationShortName: 'TRV',
+        displayOrder: 7,
+      },
+    ],
   }
 }
 
@@ -182,10 +199,10 @@ interface ApiOptions {
   failDetail?: boolean
   /** Falla la sección de evidencias. */
   failEvidences?: boolean
+  /** Falla solo la primera petición de evidencias, para probar el reintento. */
+  failEvidencesOnce?: boolean
   /** Retrasa el detalle inicial, para poder observar el estado de carga. */
   detailDelayMs?: number
-  /** Devuelve 404 en el análisis: situación sin IA. */
-  withoutAnalysis?: boolean
 }
 
 async function installApi(page: Page, options: ApiOptions = {}) {
@@ -228,24 +245,64 @@ async function installApi(page: Page, options: ApiOptions = {}) {
       return
     }
 
+    // Trampa: el detalle ya no debe pedir el análisis IA (se cuenta en las pruebas).
     if (path.endsWith('/analysis')) {
-      if (options.withoutAnalysis) {
-        await route.fulfill({ status: 404, json: { message: 'Sin análisis' } })
-        return
-      }
       await route.fulfill({ json: ANALYSIS })
       return
     }
 
     if (path.endsWith('/evidences')) {
-      if (options.failEvidences) {
+      const evidenceCalls = requested.filter((entry) =>
+        entry.endsWith('/evidences'),
+      ).length
+      if (
+        options.failEvidences ||
+        (options.failEvidencesOnce && evidenceCalls === 1)
+      ) {
         await route.fulfill({ status: 500, json: { message: 'E2E' } })
+        return
+      }
+      // El segundo problema no tiene notas: «Notas del reporte» no debe aparecer.
+      if (path.includes(`/${SECOND_PROBLEM_ID}/`)) {
+        await route.fulfill({
+          json: { situationId: SECOND_PROBLEM_ID, items: [], total: 0 },
+        })
         return
       }
       await route.fulfill({
         json: {
           situationId: PROBLEM_ID,
           items: [
+            {
+              id: 'ev-note-1',
+              situationId: PROBLEM_ID,
+              uploadedByUserId: 'u',
+              uploadedByUserName: 'Ana Pérez',
+              type: 'NOTE',
+              title: 'Notas adicionales',
+              description:
+                'El proveedor confirmó la caída del enlace principal.\nSe pidió un enlace de respaldo para el bloque B.',
+              fileName: null,
+              storagePath: null,
+              mimeType: null,
+              fileSize: null,
+              createdAt: '2026-08-01T12:00:00.000Z',
+            },
+            {
+              id: 'ev-note-2',
+              situationId: PROBLEM_ID,
+              uploadedByUserId: 'u',
+              // Autor ausente: la vista debe declararlo, no inventarlo.
+              uploadedByUserName: '',
+              type: 'NOTE',
+              title: 'Método de detección',
+              description: 'Reporte directo de docentes.',
+              fileName: null,
+              storagePath: null,
+              mimeType: null,
+              fileSize: null,
+              createdAt: '2026-08-01T12:05:00.000Z',
+            },
             {
               id: 'ev-1',
               situationId: PROBLEM_ID,
@@ -261,7 +318,7 @@ async function installApi(page: Page, options: ApiOptions = {}) {
               createdAt: '2026-08-01T12:00:00.000Z',
             },
           ],
-          total: 1,
+          total: 3,
         },
       })
       return
@@ -275,16 +332,68 @@ async function installApi(page: Page, options: ApiOptions = {}) {
             {
               id: 'tl-1',
               situationId: PROBLEM_ID,
-              userId: null,
-              userName: null,
+              userId: 'u-coord',
+              userName: 'Coordinadora Operaciones',
               eventType: 'STATUS_CHANGED',
               title: 'Estado actualizado',
-              description: '',
-              metadata: null,
+              description: 'El estado cambió de Abierto a En atención.',
+              metadata: {
+                field: 'status',
+                previousValue: 'OPEN',
+                newValue: 'IN_PROGRESS',
+                statusComment: 'Se escaló al proveedor de conectividad.',
+                commentKind: 'note',
+              },
               createdAt: '2026-08-01T12:30:00.000Z',
             },
+            {
+              id: 'tl-sla',
+              situationId: PROBLEM_ID,
+              userId: null,
+              userName: null,
+              eventType: 'SLA_BREACHED',
+              title: 'Plazo operativo vencido',
+              description: 'La situación superó su fecha límite de resolución.',
+              metadata: { dueAt: '2026-08-02T10:00:00.000Z', slaHealth: 'overdue' },
+              createdAt: '2026-08-02T10:20:00.000Z',
+            },
+            // Código aún no catalogado y fecha rota: etiqueta neutra, sin romper.
+            {
+              id: 'tl-unknown',
+              situationId: PROBLEM_ID,
+              userId: null,
+              userName: null,
+              eventType: 'SOMETHING_NEW',
+              title: 'Algo nuevo',
+              description: 'Actividad de un tipo aún no catalogado.',
+              metadata: { nested: { raw: true } },
+              createdAt: 'fecha-rota',
+            },
+            // Eventos del circuito de IA: la Cronología debe descartarlos.
+            {
+              id: 'tl-ai',
+              situationId: PROBLEM_ID,
+              userId: null,
+              userName: null,
+              eventType: 'AI_ANALYZED',
+              title: 'Análisis IA ejecutado',
+              description: '',
+              metadata: null,
+              createdAt: '2026-08-01T11:00:00.000Z',
+            },
+            {
+              id: 'tl-rec',
+              situationId: PROBLEM_ID,
+              userId: null,
+              userName: null,
+              eventType: 'RECOMMENDATION_GENERATED',
+              title: 'Recomendación generada por IA',
+              description: '',
+              metadata: { generatedBy: 'AI' },
+              createdAt: '2026-08-01T11:05:00.000Z',
+            },
           ],
-          total: 1,
+          total: 3,
         },
       })
       return
@@ -361,14 +470,13 @@ function callsTo(requested: readonly string[], fragment: string): string[] {
   return requested.filter((entry) => entry.includes(fragment))
 }
 
-/** Peticiones de detalle inicial: la situación concreta y su análisis. */
 /**
- * Peticiones de LEVEL 2: el detalle de UN problema y su análisis.
+ * Peticiones de LEVEL 2: el detalle de UN problema (y cualquier subruta suya).
  *
  * Se excluye `/situations/categories`, que desde la fase 2 pide el formulario
  * del panel derecho una sola vez al montar y no tiene nada que ver con abrir un
- * problema. El presupuesto que esta prueba vigila —dos peticiones al abrir,
- * cero al volver— es el mismo.
+ * problema. El presupuesto que esta prueba vigila —una petición al abrir,
+ * cero al volver— no admite el análisis IA.
  */
 function detailCalls(requested: readonly string[]): string[] {
   return requested.filter(
@@ -504,13 +612,32 @@ test.describe('detalle persistente del problema · 1440x900', () => {
     await expect(page.getByTestId('detail-severity')).toHaveText('Crítica')
     await expect(page.getByTestId('detail-status')).toHaveText('Abierto')
     await expect(page.getByTestId('detail-sla')).toHaveText('SLA vencido')
-    await expect(page.getByTestId('detail-summary')).toContainText(
-      'continuidad docente',
+    await expect(page.getByTestId('detail-folio')).toBeVisible()
+    // Contexto antes de la descripción, y la descripción es la del reporte.
+    await expect(page.getByTestId('detail-context')).toContainText(
+      'Coordinador Operaciones Académicas',
+    )
+    await expect(page.getByTestId('detail-description')).toContainText(
+      'La sede norte perdió conectividad',
     )
 
-    // Las cinco secciones, todas cerradas.
-    await expect(page.getByTestId('detail-section-toggle')).toHaveCount(5)
+    // Notas, Otras evidencias y Cronología, todas cerradas y sin contador.
+    // Ni Impacto ni IA.
+    await expect(page.getByTestId('detail-section-toggle')).toHaveCount(3)
     await expect(page.getByTestId('detail-section-panel')).toHaveCount(0)
+    await expect(detail.locator('.detail-section__hint')).toHaveCount(0)
+    for (const forbidden of [
+      'Impacto',
+      'Coordinación Transversales',
+      'Inteligencia IA',
+      'Recomendaciones',
+      'Timeline',
+    ]) {
+      await expect(detail).not.toContainText(forbidden)
+    }
+    await expect(detail).toContainText('Notas del reporte')
+    await expect(detail).toContainText('Otras evidencias')
+    await expect(detail).toContainText('Cronología')
 
     // El contexto sigue detrás: personaje, mesa completa y panel de LEVEL 1.
     await expect(page.getByTestId('direction-character')).toBeVisible()
@@ -527,13 +654,14 @@ test.describe('detalle persistente del problema · 1440x900', () => {
       page.locator('[data-testid="coordination-deck-fan-slot"]'),
     ).toHaveCount(5)
 
-    // Presupuesto: 1 LEVEL 0 + 2 LEVEL 1 + 2 LEVEL 2.
+    // Presupuesto: 1 LEVEL 0 + 2 LEVEL 1 + 2 LEVEL 2 (situación y evidencias,
+    // sin IA). La cronología no se pide hasta desplegarse.
     expect(callsTo(requested, '/operational-overview')).toHaveLength(1)
     expect(detailCalls(requested)).toHaveLength(2)
-    // Nada de secciones perezosas todavía.
-    expect(callsTo(requested, '/evidences')).toHaveLength(0)
-    expect(callsTo(requested, '/timeline')).toHaveLength(0)
+    expect(callsTo(requested, '/evidences')).toHaveLength(1)
+    expect(callsTo(requested, '/analysis')).toHaveLength(0)
     expect(callsTo(requested, '/recommendations')).toHaveLength(0)
+    expect(callsTo(requested, '/timeline')).toHaveLength(0)
 
     // La página no desplaza.
     const overflow = await page.evaluate(() => ({
@@ -658,25 +786,31 @@ test.describe('detalle persistente del problema · 1440x900', () => {
     const requested = await installApi(page)
     await openProblem(page)
 
+    // Situación y evidencias: hay que esperar a que las notas se resuelvan.
+    await expect(page.getByTestId('detail-notes-loading')).toHaveCount(0)
     const first = detailCalls(requested).length
     expect(first).toBe(2)
 
     // Se mira otro problema y se vuelve al primero.
     await page.getByTestId('problem-row').nth(1).click()
     await expect(page.getByTestId('problem-detail')).toContainText('Cupos')
+    await expect(page.getByTestId('detail-notes-loading')).toHaveCount(0)
     const afterSecond = detailCalls(requested).length
 
     await page.getByTestId('problem-row').first().click()
-    await expect(page.getByTestId('detail-summary')).toBeVisible()
+    await expect(page.getByTestId('detail-description')).toBeVisible()
     await expect(page.getByTestId('problem-detail')).toContainText(
       'Aulas sin conectividad',
     )
 
-    // El primero estaba en caché: ni una petición más.
+    // El primero estaba en caché, notas incluidas: ni una petición más.
     expect(detailCalls(requested)).toHaveLength(afterSecond)
+    await expect(page.getByTestId('problem-detail')).toContainText(
+      'Notas del reporte',
+    )
   })
 
-  test('Impacto e Inteligencia IA se abren sin pedir nada', async ({
+  test('Notas del reporte: contenido completo, autor y fecha, sin pedir nada al abrir', async ({
     page,
   }, testInfo) => {
     test.slow()
@@ -684,76 +818,147 @@ test.describe('detalle persistente del problema · 1440x900', () => {
     const requested = await installApi(page)
     await openProblem(page)
 
-    const before = requested.length
-
-    await page.getByTestId('detail-section-toggle').first().click()
-    await expect(page.getByTestId('detail-impact-areas')).toBeVisible()
-    await expect(page.getByTestId('detail-section-panel')).toHaveCount(1)
-
-    await page.getByTestId('detail-section-toggle').nth(1).click()
-    await expect(page.getByTestId('detail-ai')).toBeVisible()
-    await expect(page.getByTestId('detail-ai')).toContainText(
-      'Riesgo concentrado',
+    const notesToggle = page.locator(
+      '[data-section="notes"] [data-testid="detail-section-toggle"]',
     )
+    await expect(notesToggle).toContainText('Notas del reporte')
+    const before = callsTo(requested, '/evidences').length
+    expect(before).toBe(1)
 
-    // Ambas salen del análisis ya cargado: cero peticiones nuevas.
-    expect(requested).toHaveLength(before)
+    await notesToggle.click()
+    const notes = page.getByTestId('detail-notes')
+    await expect(notes).toContainText('Notas adicionales')
+    // Contenido íntegro, con sus dos líneas, y autor y fecha legibles.
+    await expect(notes).toContainText(
+      'El proveedor confirmó la caída del enlace principal.',
+    )
+    await expect(notes).toContainText(
+      'Se pidió un enlace de respaldo para el bloque B.',
+    )
+    await expect(notes).toContainText('Ana Pérez')
+    await expect(notes).toContainText('Autor no registrado')
+    // 12:00 UTC = 07:00 en Bogotá.
+    await expect(notes).toContainText('07:00')
+    await expect(notes).not.toContainText('NOTE')
+    await expect(notes.locator('button, a')).toHaveCount(0)
+
+    // Desplegar no cuesta peticiones: las notas ya estaban.
+    expect(callsTo(requested, '/evidences')).toHaveLength(before)
+
+    // Otras evidencias: tipo traducido, sin enlaces ni descargas.
+    await page
+      .locator('[data-section="other-evidences"] [data-testid="detail-section-toggle"]')
+      .click()
+    const others = page.getByTestId('detail-other-evidences')
+    await expect(others).toContainText('Foto del rack')
+    await expect(others).toContainText('Imagen')
+    await expect(others).not.toContainText('IMAGE')
+    await expect(others.locator('a, img, button')).toHaveCount(0)
 
     await page.screenshot({
-      path: testInfo.outputPath('problem-detail-impact-open-1440x900.png'),
+      path: testInfo.outputPath('problem-detail-notes-open-1440x900.png'),
       fullPage: false,
     })
   })
 
-  test('Evidencias carga al desplegarse y no vuelve a pedir', async ({
-    page,
-  }, testInfo) => {
+  test('un problema sin notas no muestra «Notas del reporte»', async ({ page }) => {
     test.slow()
     await installSession(page)
     const requested = await installApi(page)
     await openProblem(page)
 
-    expect(callsTo(requested, '/evidences')).toHaveLength(0)
+    await page.getByTestId('problem-row').nth(1).click()
+    await expect(page.getByTestId('problem-detail')).toContainText('Cupos')
+    await expect
+      .poll(() => callsTo(requested, `/${SECOND_PROBLEM_ID}/evidences`).length)
+      .toBe(1)
+    await expect(page.getByTestId('detail-notes-loading')).toHaveCount(0)
 
-    await page.getByTestId('detail-section-toggle').nth(3).click()
-    await expect(page.getByTestId('detail-evidences')).toBeVisible()
-    await expect(page.getByTestId('detail-evidences')).toContainText(
-      'Foto del rack',
-    )
-    expect(callsTo(requested, '/evidences')).toHaveLength(1)
-
-    await page.screenshot({
-      path: testInfo.outputPath('problem-detail-evidence-open-1440x900.png'),
-      fullPage: false,
-    })
-
-    // Cerrar y reabrir la sección no repite la petición.
-    await page.getByTestId('detail-section-toggle').nth(3).click()
-    await expect(page.getByTestId('detail-evidences')).toHaveCount(0)
-    await page.getByTestId('detail-section-toggle').nth(3).click()
-    await expect(page.getByTestId('detail-evidences')).toBeVisible()
-    expect(callsTo(requested, '/evidences')).toHaveLength(1)
+    const detail = page.getByTestId('problem-detail')
+    await expect(detail).not.toContainText('Notas del reporte')
+    await expect(detail).not.toContainText('Otras evidencias')
+    await expect(page.getByTestId('detail-notes-error')).toHaveCount(0)
+    // Solo queda la Cronología: ningún acordeón vacío.
+    await expect(page.getByTestId('detail-section-toggle')).toHaveCount(1)
   })
 
-  test('Timeline y Recomendaciones cargan cada uno con una petición', async ({
+  test('si las notas fallan se avisa y el reintento las recupera', async ({
     page,
   }) => {
     test.slow()
     await installSession(page)
+    const requested = await installApi(page, { failEvidencesOnce: true })
+    await openProblem(page)
+
+    // El error no se confunde con «sin notas».
+    const error = page.getByTestId('detail-notes-error')
+    await expect(error).toContainText('No pudimos cargar las notas del reporte.')
+    await expect(page.getByTestId('problem-detail')).not.toContainText(
+      'Notas del reporte',
+    )
+    // El resto del panel sigue utilizable.
+    await expect(page.getByTestId('detail-description')).toBeVisible()
+    await expect(page.getByTestId('problem-actions')).toBeVisible()
+
+    await page.getByTestId('detail-notes-error-retry').click()
+    await expect(page.getByTestId('problem-detail')).toContainText(
+      'Notas del reporte',
+    )
+    await expect(error).toHaveCount(0)
+    expect(callsTo(requested, '/evidences')).toHaveLength(2)
+  })
+
+  test('Cronología: legible, en orden, sin IA ni códigos técnicos', async ({
+    page,
+  }, testInfo) => {
+    test.slow()
+    await installSession(page)
     const requested = await installApi(page)
     await openProblem(page)
 
-    await page.getByTestId('detail-section-toggle').nth(2).click()
-    await expect(page.getByTestId('detail-recommendations')).toContainText(
-      'Escalar al proveedor',
+    const toggle = page.locator(
+      '[data-section="timeline"] [data-testid="detail-section-toggle"]',
     )
-    expect(callsTo(requested, '/recommendations')).toHaveLength(1)
+    await expect(toggle).toContainText('Cronología')
+    await toggle.click()
 
-    await page.getByTestId('detail-section-toggle').nth(4).click()
-    await expect(page.getByTestId('detail-timeline')).toContainText(
-      'Estado actualizado',
+    const timeline = page.getByTestId('detail-timeline')
+    const items = timeline.locator('li')
+    // Tres visibles (los dos de IA se filtran), en el orden del backend.
+    await expect(items).toHaveCount(3)
+    await expect(items.nth(0)).toContainText('Estado cambiado')
+    await expect(items.nth(0)).toContainText('Abierto → En atención')
+    await expect(items.nth(0)).toContainText(
+      'Nota: Se escaló al proveedor de conectividad.',
     )
+    await expect(items.nth(0)).toContainText('Coordinadora Operaciones')
+    // 12:30 UTC = 07:30 en Bogotá.
+    await expect(items.nth(0)).toContainText('07:30')
+    await expect(items.nth(1)).toContainText('Plazo operativo vencido')
+    await expect(items.nth(1)).toContainText('Sistema')
+    await expect(items.nth(1)).toContainText('Fecha límite:')
+    await expect(items.nth(2)).toContainText('Actividad registrada')
+    await expect(items.nth(2)).toContainText('Fecha no disponible')
+    await expect(items.nth(2)).not.toContainText('Sistema')
+
+    for (const hidden of [
+      'STATUS_CHANGED',
+      'SLA_BREACHED',
+      'SOMETHING_NEW',
+      'Análisis IA ejecutado',
+      'Recomendación generada por IA',
+      '2026-08-01T',
+      '[object Object]',
+    ]) {
+      await expect(timeline).not.toContainText(hidden)
+    }
     expect(callsTo(requested, '/timeline')).toHaveLength(1)
+    expect(callsTo(requested, '/recommendations')).toHaveLength(0)
+
+    await page.screenshot({
+      path: testInfo.outputPath('problem-detail-timeline-open-1440x900.png'),
+      fullPage: false,
+    })
   })
 
   test('H2 · el fallo de una sección no rompe la región', async ({ page }) => {
@@ -762,12 +967,13 @@ test.describe('detalle persistente del problema · 1440x900', () => {
     await installApi(page, { failEvidences: true })
     await openProblem(page)
 
-    await page.getByTestId('detail-section-toggle').nth(3).click()
-    await expect(page.getByTestId('detail-section-error')).toBeVisible()
+    // Las notas fallan fuera de cualquier acordeón; no aparece uno vacío.
+    await expect(page.getByTestId('detail-notes-error')).toBeVisible()
+    await expect(page.getByTestId('detail-section-toggle')).toHaveCount(1)
 
-    // La región sigue viva: otra sección abre con normalidad.
-    await expect(page.getByTestId('detail-summary')).toBeVisible()
-    await page.getByTestId('detail-section-toggle').nth(4).click()
+    // La región sigue viva: la cronología abre con normalidad.
+    await expect(page.getByTestId('detail-description')).toBeVisible()
+    await page.getByTestId('detail-section-toggle').first().click()
     await expect(page.getByTestId('detail-timeline')).toBeVisible()
   })
 
@@ -803,21 +1009,27 @@ test.describe('detalle persistente del problema · 1440x900', () => {
     })
   })
 
-  test('una situación sin análisis declara la ausencia y usa la descripción', async ({
+  test('abrir el detalle y todas sus secciones no consulta IA', async ({
     page,
   }) => {
     test.slow()
     await installSession(page)
-    await installApi(page, { withoutAnalysis: true })
+    const requested = await installApi(page)
     await openProblem(page)
 
-    // El resumen viene de la descripción, sin inventar texto ni llamar a IA.
-    await expect(page.getByTestId('detail-summary')).toContainText(
-      'La sede norte perdió conectividad',
+    // La descripción completa del reporte, no un resumen generado.
+    await expect(page.getByTestId('detail-description')).toContainText(
+      'sin fecha estimada de restablecimiento por parte del proveedor.',
     )
 
-    await page.getByTestId('detail-section-toggle').nth(1).click()
-    await expect(page.getByTestId('detail-ai-absent')).toBeVisible()
+    for (const section of [0, 1, 2]) {
+      await page.getByTestId('detail-section-toggle').nth(section).click()
+    }
+    await expect(page.getByTestId('detail-section-panel')).toHaveCount(3)
+
+    expect(callsTo(requested, '/analysis')).toHaveLength(0)
+    expect(callsTo(requested, '/recommendations')).toHaveLength(0)
+    expect(callsTo(requested, '/ai')).toHaveLength(0)
   })
 
   test('no hay acciones mutables en el detalle', async ({ page }) => {
@@ -826,10 +1038,10 @@ test.describe('detalle persistente del problema · 1440x900', () => {
     await installApi(page)
     await openProblem(page)
 
-    for (const section of [0, 1, 2, 3, 4]) {
+    for (const section of [0, 1, 2]) {
       await page.getByTestId('detail-section-toggle').nth(section).click()
     }
-    await expect(page.getByTestId('detail-section-panel')).toHaveCount(5)
+    await expect(page.getByTestId('detail-section-panel')).toHaveCount(3)
 
     const detail = page.getByTestId('problem-detail')
     await expect(detail.locator('form')).toHaveCount(0)
@@ -837,6 +1049,9 @@ test.describe('detalle persistente del problema · 1440x900', () => {
     await expect(detail.locator('textarea')).toHaveCount(0)
     for (const label of [
       /reanalizar/i,
+      /analizar/i,
+      /generar/i,
+      /recomendaci/i,
       /editar/i,
       /eliminar/i,
       /cerrar situación/i,
@@ -897,7 +1112,7 @@ test.describe('detalle persistente del problema · 1440x900', () => {
 
     // C · y al elegir un problema, la región se llena en su sitio.
     await page.getByTestId('problem-row').first().click()
-    await expect(page.getByTestId('detail-summary')).toBeVisible()
+    await expect(page.getByTestId('detail-description')).toBeVisible()
     await expect(page.getByTestId('problem-detail')).toContainText(
       'Aulas sin conectividad',
     )
@@ -936,7 +1151,7 @@ test.describe('detalle persistente del problema · 1440x900', () => {
       'loading',
     )
 
-    await expect(page.getByTestId('detail-summary')).toBeVisible()
+    await expect(page.getByTestId('detail-description')).toBeVisible()
   })
 
   test('E · cambiar de coordinación se lleva el detalle anterior', async ({
@@ -1030,7 +1245,7 @@ test.describe('detalle persistente del problema · 1440x900', () => {
     )
 
     await page.getByTestId('problem-row').first().click()
-    await expect(page.getByTestId('detail-summary')).toBeVisible()
+    await expect(page.getByTestId('detail-description')).toBeVisible()
 
     // La mano sigue repartida y la composición no retrocede.
     await expect(
@@ -1070,13 +1285,13 @@ test.describe('detalle persistente del problema · 1440x900', () => {
      */
     const stageBefore = await page.getByTestId('shell-stage').boundingBox()
     await page.getByTestId('problem-row').first().click()
-    await expect(page.getByTestId('detail-summary')).toBeVisible()
+    await expect(page.getByTestId('detail-description')).toBeVisible()
 
-    // Las cinco secciones abiertas: el peor caso de contenido.
-    for (const section of [0, 1, 2, 3, 4]) {
+    // Todas las secciones abiertas: el peor caso de contenido.
+    for (const section of [0, 1, 2]) {
       await page.getByTestId('detail-section-toggle').nth(section).click()
     }
-    await expect(page.getByTestId('detail-section-panel')).toHaveCount(5)
+    await expect(page.getByTestId('detail-section-panel')).toHaveCount(3)
 
     await page.screenshot({
       path: testInfo.outputPath('f3-4-detail-sections-open-1440x900.png'),
@@ -1101,10 +1316,39 @@ test.describe('detalle persistente del problema · 1440x900', () => {
     expect(measurement.overflow.y).toBeLessThanOrEqual(0)
     expect(measurement.routeScroll!.scrollTop).toBe(0)
 
-    // El detalle cabe en su región: lo que sobra se desplaza por dentro.
-    expect(measurement.detail!.bottom).toBeLessThanOrEqual(
-      measurement.region.bottom + 1,
+    /*
+     * Lo que sobra se desplaza por dentro. El contenedor que desplaza es
+     * `.action-panel`, no el detalle: un detalle que se encogía para «caber»
+     * dejaba su contenido derramado bajo «Seguimiento del problema». Por eso
+     * se afirma la contención del panel y el orden sin solape, no la caja del
+     * detalle (que, dentro de un scroll, puede medir más que la región).
+     */
+    const containment = await page.evaluate(() => {
+      const panel = document.querySelector('.action-panel') as HTMLElement
+      const region = document.querySelector(
+        '[data-testid="shell-region-action"]',
+      ) as HTMLElement
+      const detail = document.querySelector(
+        '[data-testid="problem-detail"]',
+      ) as HTMLElement
+      const actions = document.querySelector(
+        '[data-testid="problem-actions"]',
+      ) as HTMLElement
+      return {
+        panelBottom: panel.getBoundingClientRect().bottom,
+        regionBottom: region.getBoundingClientRect().bottom,
+        panelScrollable: panel.scrollHeight > panel.clientHeight + 1,
+        overflowY: getComputedStyle(panel).overflowY,
+        detailBottom: detail.getBoundingClientRect().bottom,
+        actionsTop: actions.getBoundingClientRect().top,
+      }
+    })
+    expect(containment.panelBottom).toBeLessThanOrEqual(
+      containment.regionBottom + 1,
     )
+    expect(containment.overflowY).toBe('auto')
+    expect(containment.panelScrollable).toBe(true)
+    expect(containment.detailBottom).toBeLessThanOrEqual(containment.actionsTop)
   })
 
   test('I · las secciones se abren y cierran con teclado', async ({ page }) => {
@@ -1143,10 +1387,10 @@ test.describe('detalle persistente del problema · 1920x1080', () => {
     await installApi(page)
     await openProblem(page)
 
-    for (const section of [0, 1, 2, 3, 4]) {
+    for (const section of [0, 1, 2]) {
       await page.getByTestId('detail-section-toggle').nth(section).click()
     }
-    await expect(page.getByTestId('detail-section-panel')).toHaveCount(5)
+    await expect(page.getByTestId('detail-section-panel')).toHaveCount(3)
 
     const overflow = await page.evaluate(() => ({
       x:
@@ -1188,7 +1432,7 @@ test.describe('detalle persistente del problema · 1920x1080', () => {
     await page.locator(`${CARD}[data-code="coord-b2b"]`).click()
     await expect(page.getByTestId('problem-row')).toHaveCount(4)
     await page.getByTestId('problem-row').first().click()
-    await expect(page.getByTestId('detail-summary')).toBeVisible()
+    await expect(page.getByTestId('detail-description')).toBeVisible()
 
     const simple = await measureDetail(page, 'DETALLE 1920 · B2B')
     expect(simple.dialogs).toBe(0)
@@ -1217,7 +1461,7 @@ test.describe('detalle persistente del problema · 1920x1080', () => {
       'coord-ingenierias',
     )
     await page.getByTestId('problem-row').first().click()
-    await expect(page.getByTestId('detail-summary')).toBeVisible()
+    await expect(page.getByTestId('detail-description')).toBeVisible()
 
     const child = await measureDetail(page, 'DETALLE 1920 · hija')
     expect(child.dialogs).toBe(0)

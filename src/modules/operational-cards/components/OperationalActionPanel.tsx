@@ -3,7 +3,10 @@ import { ProblemActions } from '@/modules/operational-cards/components/ProblemAc
 import { ReportProblemForm } from '@/modules/operational-cards/components/ReportProblemForm'
 import type { ReportProblemFormProps } from '@/modules/operational-cards/components/ReportProblemForm'
 import { ProblemHistoryPanel } from '@/modules/operational-cards/components/ProblemHistoryPanel'
-import type { ProblemSectionId } from '@/modules/operational-cards/types/problem-detail.types'
+import type {
+  LazyProblemSectionId,
+  ProblemSectionId,
+} from '@/modules/operational-cards/types/problem-detail.types'
 import type {
   OperationalCardsLevel2State,
   OperationalPanelMode,
@@ -32,6 +35,7 @@ export interface OperationalActionPanelProps {
   learningDraft: string
   history: ProblemHistoryState
   onToggleSection: (section: ProblemSectionId) => void
+  onRetrySection: (section: LazyProblemSectionId) => void
   onLearningChange: (value: string) => void
   onResolve: () => void
   onAdvanceToInProgress: () => void
@@ -65,6 +69,7 @@ export function OperationalActionPanel({
   learningDraft,
   history,
   onToggleSection,
+  onRetrySection,
   onLearningChange,
   onResolve,
   onAdvanceToInProgress,
@@ -149,6 +154,7 @@ export function OperationalActionPanel({
           level2={level2}
           selectedCoordinationCode={selectedCoordinationCode}
           onToggleSection={onToggleSection}
+          onRetrySection={onRetrySection}
         />
 
         {level2.status === 'error' && (

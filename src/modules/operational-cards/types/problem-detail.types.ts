@@ -1,5 +1,4 @@
 import type { SituationEvidenceItem } from '@/modules/api/evidences.api'
-import type { SituationRecommendation } from '@/modules/api/recommendations.api'
 import type { SituationTimelineEntry } from '@/modules/api/timeline.api'
 import type {
   SituationReportKind,
@@ -8,51 +7,27 @@ import type {
 import type { LoadState } from '@/modules/operational-cards/types/operational-cards.state'
 
 /**
- * Contrato de LEVEL 2: lo que la isla flotante necesita para responder «¿qué
+ * Contrato de LEVEL 2: lo que el detalle necesita para responder «¿qué
  * ocurre exactamente con este problema?».
  *
- * Solo lectura. No hay campos para editar, cerrar, revalidar ni reanalizar: la
- * experiencia ADMIN no muta nada.
- *
- * `impact` e `ai` salen del MISMO análisis que se carga en la apertura, así
- * que abrir esas dos secciones no cuesta ninguna petición.
+ * Sin IA: no hay resumen ejecutivo, evaluación de impacto del análisis ni
+ * recomendaciones. Todo lo que llega aquí lo registró una persona o lo produjo
+ * el propio flujo operacional (estado, SLA, resolución).
  */
 
-export type ProblemSectionId =
-  | 'impact'
-  | 'ai'
-  | 'recommendations'
-  | 'evidences'
-  | 'timeline'
+/**
+ * Acordeones del detalle. «Notas del reporte» y «Otras evidencias» salen de la
+ * MISMA carga de evidencias (se separan por tipo) y solo se pintan si tienen
+ * contenido; «Cronología», siempre.
+ */
+export type ProblemSectionId = 'notes' | 'other-evidences' | 'timeline'
 
-/** Orden congelado de las secciones de la isla. */
+/** Orden congelado de los acordeones. */
 export const PROBLEM_SECTION_ORDER: readonly ProblemSectionId[] = [
-  'impact',
-  'ai',
-  'recommendations',
-  'evidences',
+  'notes',
+  'other-evidences',
   'timeline',
 ]
-
-export interface ProblemImpactArea {
-  coordinationCode: string
-  impactLevel: SituationSeverity
-  description: string
-}
-
-export interface ProblemImpact {
-  summary: string
-  areas: readonly ProblemImpactArea[]
-  propagationDepth: number
-}
-
-export interface ProblemIntelligence {
-  headline: string
-  summary: string
-  keyPoints: readonly string[]
-  rootCause: string | null
-  risks: readonly { title: string; severity: string }[]
-}
 
 export interface ProblemDetail {
   id: string
@@ -61,12 +36,9 @@ export interface ProblemDetail {
   status: string
   slaHealth: 'on_track' | 'at_risk' | 'overdue' | 'closed' | null
   dueAt: string | null
-  /** Resumen real: del análisis si existe, o de la descripción si no. */
-  summary: string
+  /** Descripción tal como la escribió quien reportó el problema. */
+  description: string
   createdAt: string
-  /** Null cuando la situación no tiene análisis IA (ocurre en ~20 %). */
-  impact: ProblemImpact | null
-  intelligence: ProblemIntelligence | null
   /** Coordinación RESPONSABLE. `null` es «Sin coordinación», no un hueco. */
   coordinationCode: string | null
   coordinationName: string | null
@@ -110,25 +82,25 @@ export interface ProblemSectionState<T> {
 }
 
 export interface ProblemSectionsState {
-  recommendations: ProblemSectionState<SituationRecommendation>
   evidences: ProblemSectionState<SituationEvidenceItem>
   timeline: ProblemSectionState<SituationTimelineEntry>
 }
 
 export const initialProblemSectionsState: ProblemSectionsState = {
-  recommendations: { status: 'idle', items: [], errorMessage: null },
   evidences: { status: 'idle', items: [], errorMessage: null },
   timeline: { status: 'idle', items: [], errorMessage: null },
 }
 
+/** Datos que se piden aparte de la situación, cada uno con su petición. */
 export type LazyProblemSectionId = keyof ProblemSectionsState
 
-export function isLazySection(
+/**
+ * Datos que pide un acordeón al desplegarse. Las evidencias no están: se piden
+ * en cuanto el detalle está listo, porque de ellas depende saber si las notas
+ * existen, y eso no puede exigir abrir un acordeón que quizá esté vacío.
+ */
+export function lazyDataForSection(
   section: ProblemSectionId,
-): section is LazyProblemSectionId {
-  return (
-    section === 'recommendations' ||
-    section === 'evidences' ||
-    section === 'timeline'
-  )
+): LazyProblemSectionId | null {
+  return section === 'timeline' ? 'timeline' : null
 }

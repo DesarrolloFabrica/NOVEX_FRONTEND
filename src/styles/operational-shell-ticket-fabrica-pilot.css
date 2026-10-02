@@ -1433,7 +1433,7 @@
   .problem-detail__context,
 .operational-shell[data-ticket-theme]
   .operational-shell__region--ticket-panel
-  .problem-detail__summary,
+  .problem-detail__description-text,
 .operational-shell[data-ticket-theme]
   .operational-shell__region--ticket-panel
   .detail-section__hint {
@@ -1989,7 +1989,7 @@
 
 .operational-shell[data-ticket-theme]
   .operational-shell__region--ticket-panel
-  .problem-detail__summary,
+  .problem-detail__description-text,
 .operational-shell[data-ticket-theme]
   .operational-shell__region--ticket-panel
   .detail-section__text {
@@ -2039,6 +2039,78 @@
   background: rgb(255 250 238 / 0.95);
 }
 
+/* Folio, rótulos de bloque y contexto: tinta suave sobre crema. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail__folio,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail__block-title,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail__context dt {
+  color: var(--ticket-pilot-ink-soft);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail__context dd {
+  color: var(--ticket-pilot-ink);
+}
+
+/* Entradas de notas, evidencias y cronología: tinta sobre papel, filete sepia. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-entry {
+  border-top-color: rgb(42 33 24 / 0.2);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-entry:first-child {
+  border-top: 0;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-entry__title,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-entry__content,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-entry__transition,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-entry__facts dd {
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-entry__kind,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-entry__byline,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-entry__facts dt {
+  color: var(--ticket-pilot-ink-soft);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-retry__button {
+  border-color: var(--ticket-pilot-teal-deep);
+  color: var(--ticket-pilot-teal-deep);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-retry__button:focus-visible {
+  outline-color: rgb(12 95 104 / 0.55);
+}
+
 .operational-shell[data-ticket-theme]
   .operational-shell__region--ticket-panel
   .problem-detail__notice,
@@ -2064,6 +2136,9 @@
 .operational-shell[data-ticket-theme]
   .operational-shell__region--ticket-panel
   .report-form__note--error,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-section__note--error,
 .operational-shell[data-ticket-theme]
   .operational-shell__region--ticket-panel
   .problem-actions__note--error {

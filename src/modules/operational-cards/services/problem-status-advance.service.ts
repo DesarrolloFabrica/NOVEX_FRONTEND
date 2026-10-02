@@ -1,5 +1,4 @@
 import { updateSituation } from '@/modules/api/situations.api'
-import { loadAnalysis } from '@/modules/services/situationAnalysis.service'
 import type { ProblemDetail } from '@/modules/operational-cards/types/problem-detail.types'
 import { toProblemDetail } from '@/modules/operational-cards/services/problem-detail.service'
 
@@ -27,7 +26,6 @@ export async function submitProblemStatusAdvance(
   const situation = await updateSituation(problemId, {
     status: 'IN_PROGRESS',
   })
-  const analysis = await loadAnalysis(problemId).catch(() => null)
 
-  return toProblemDetail(situation, analysis)
+  return toProblemDetail(situation)
 }

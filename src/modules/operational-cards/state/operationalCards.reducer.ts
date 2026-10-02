@@ -83,6 +83,7 @@ export type OperationalCardsAction =
       section: LazyProblemSectionId
       message: string
     }
+  | { type: 'RETRY_SECTION'; problemId: string; section: LazyProblemSectionId }
   // ---- «Mis reportes» ----
   | { type: 'LOAD_MY_REPORTS'; page: number }
   | {
@@ -614,6 +615,23 @@ export function operationalCardsReducer(
               items: [],
               errorMessage: action.message,
             },
+          },
+        },
+      }
+
+    case 'RETRY_SECTION':
+      // Solo se reintenta lo que falló. Volver a `idle` basta: el hook vuelve
+      // a pedir cualquier sección idle que el detalle necesite. Un error no se
+      // convierte nunca en «sin datos».
+      if (state.selectedProblemId !== action.problemId) return state
+      if (state.level2.sections[action.section].status !== 'error') return state
+      return {
+        ...state,
+        level2: {
+          ...state.level2,
+          sections: {
+            ...state.level2.sections,
+            [action.section]: { status: 'idle', items: [], errorMessage: null },
           },
         },
       }

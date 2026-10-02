@@ -331,6 +331,7 @@ export function OperationalShellV2() {
     submission: controller.submission,
     learningDraft,
     onToggleSection: controller.toggleSection,
+    onRetrySection: controller.retrySection,
     onLearningChange: (value: string) => {
       if (!controller.selectedProblemId) return
       controller.setLearningDraft(controller.selectedProblemId, value)

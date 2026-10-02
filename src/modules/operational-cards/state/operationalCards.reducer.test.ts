@@ -88,7 +88,6 @@ describe('operationalCardsReducer · LEVEL 0', () => {
         detail: null,
         errorMessage: null,
         sections: {
-          recommendations: { status: 'idle', items: [], errorMessage: null },
           evidences: { status: 'idle', items: [], errorMessage: null },
           timeline: { status: 'idle', items: [], errorMessage: null },
         },
