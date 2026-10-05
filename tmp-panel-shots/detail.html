@@ -1,0 +1,44 @@
+﻿<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"/><title>Panel composición</title>
+<style>
+  body{margin:0;font-family:Georgia,serif;background:#1a2438;color:#2a2118}
+  .wrap{display:grid;grid-template-columns:1fr;gap:16px;padding:16px}
+  .ticket{background:linear-gradient(180deg,#fff8e6,#f3e6c8);border-radius:14px;padding:14px;min-height:420px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+  .label{font:600 11px/1 system-ui;color:#6e5e4c;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px}
+  .idle{text-align:center;padding:48px 12px}
+  .idle h2{margin:0 0 8px;font-size:18px;font-weight:500}
+  .idle p{margin:0 0 16px;font:12px/1.45 system-ui;color:#6e5e4c}
+  .cta{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .cta button{border:1px solid #2a2118;background:#fffaf0;border-radius:8px;padding:8px 12px;font:600 12px system-ui;cursor:default}
+  .section{border:1px solid rgba(42,33,24,.2);border-radius:10px;background:rgba(255,250,240,.45);margin:0 0 6px;padding:9px 11px;font:600 12.5px system-ui}
+  .section.expanded{padding-bottom:12px}
+  .section .body{margin-top:8px;font:12px/1.45 system-ui;font-weight:400;color:#4a3d30}
+  .actions{margin-top:16px;border:1px solid rgba(42,33,24,.18);border-radius:10px;background:rgba(255,248,230,.45);padding:12px 10px;position:relative;z-index:0}
+  .actions h3{margin:0;font-size:13px;font-weight:500}
+  .note{margin:8px 0 0;font:11px/1.4 system-ui;color:#6e5e4c}
+  .title{margin:0 0 8px;font-size:18px;font-weight:500}
+  .badge{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid rgba(42,33,24,.3);font:600 10px system-ui;margin-right:4px}
+</style></head><body>
+<div class="wrap">
+  <div class="ticket" id="detail">
+    <p class="label">Detalle · sin CTAs de creación</p>
+    <h2 class="title">Caída del portal de notas</h2>
+    <span class="badge">Alta</span><span class="badge">Abierto</span>
+    <p class="note" style="margin:10px 0">Resumen del incidente en Coordinación General.</p>
+    <div class="section">Impacto</div>
+    <div class="section">Análisis IA</div>
+    <div class="section">Recomendaciones</div>
+    <div class="section">Evidencias</div>
+    <div class="section expanded">Timeline
+      <div class="body">01 Sep · Registrado<br/>01 Sep · Escalado a atención</div>
+    </div>
+    <section class="actions">
+      <h3>Seguimiento del problema</h3>
+      <p class="note">Estado: Abierto · Pasar a En atención</p>
+      <h3 style="margin-top:12px">Cerrar con aprendizaje</h3>
+      <p class="note">Aprendizaje del cierre (formulario). Sin botones «Problema interno» / «Dependencia».</p>
+    </section>
+  </div>
+</div>
+</body></html>
+

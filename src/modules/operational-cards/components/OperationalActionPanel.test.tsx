@@ -191,6 +191,18 @@ describe('OperationalActionPanel · composición por modo', () => {
     expect(html).not.toContain('data-testid="report-internal-button"')
   })
 
+  it('modo report sin canCreate no pinta el formulario', () => {
+    const html = markup({
+      mode: 'report',
+      reportFormKind: 'INTERNAL',
+      canCreate: false,
+      canViewHistory: true,
+    })
+    expect(html).toContain('data-mode="idle"')
+    expect(html).not.toContain('data-testid="report-form"')
+    expect(html).not.toContain('data-testid="report-internal-button"')
+  })
+
   it('modo report no muestra CTAs de idle', () => {
     const html = markup({
       mode: 'report',

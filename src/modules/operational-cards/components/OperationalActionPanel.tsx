@@ -52,6 +52,11 @@ export interface OperationalActionPanelProps {
   onRetryHistory: () => void
   reportForm: ReportProblemFormProps
   canCreate?: boolean
+  /**
+   * Avance y cierre en el detalle. False en shells de solo lectura
+   * (DIRECTOR / ADMIN) aunque el API enviara flags de escritura.
+   */
+  allowLifecycleActions?: boolean
   /** Quien puede consultar situaciones ve el acceso al historial. */
   canViewHistory?: boolean
   idleHint?: string | null
@@ -86,12 +91,13 @@ export function OperationalActionPanel({
   onRetryHistory,
   reportForm,
   canCreate = false,
+  allowLifecycleActions = true,
   canViewHistory = false,
   idleHint = null,
   labelByCode,
   colorByCode,
 }: OperationalActionPanelProps) {
-  if (mode === 'report' && reportFormKind) {
+  if (mode === 'report' && reportFormKind && canCreate) {
     return (
       <div
         className="action-panel"
@@ -177,6 +183,7 @@ export function OperationalActionPanel({
             onLearningChange={onLearningChange}
             onResolve={onResolve}
             onAdvanceToInProgress={onAdvanceToInProgress}
+            allowLifecycleActions={allowLifecycleActions}
           />
         )}
       </div>
@@ -202,6 +209,7 @@ export function OperationalActionPanel({
       data-can-create={canCreate ? 'true' : 'false'}
       data-can-view-history={canViewHistory ? 'true' : 'false'}
       data-consult-only={consultOnly ? 'true' : 'false'}
+      data-allow-lifecycle={allowLifecycleActions ? 'true' : 'false'}
     >
       <div
         className={

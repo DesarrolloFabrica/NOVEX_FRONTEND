@@ -42,6 +42,7 @@ function markup(input: {
   detail: ProblemDetail
   submission?: OperationalSubmissionState
   onAdvance?: () => void
+  allowLifecycleActions?: boolean
 }) {
   return renderToStaticMarkup(
     <ProblemActions
@@ -51,6 +52,7 @@ function markup(input: {
       onLearningChange={() => undefined}
       onResolve={() => undefined}
       onAdvanceToInProgress={input.onAdvance ?? (() => undefined)}
+      allowLifecycleActions={input.allowLifecycleActions}
     />,
   )
 }
@@ -103,6 +105,17 @@ describe('ProblemActions · Pasar a En atención', () => {
     expect(html).not.toContain('Cerrar con aprendizaje')
     expect(html).not.toContain('data-testid="resolve-form"')
     expect(html).toContain('data-testid="resolve-not-allowed"')
+  })
+
+  it('en shell de consulta oculta avance y cierre aunque el DTO los conceda', () => {
+    const html = markup({
+      detail: detail(),
+      allowLifecycleActions: false,
+    })
+    expect(html).toContain('data-allow-lifecycle="false"')
+    expect(html).not.toContain('data-testid="status-advance-button"')
+    expect(html).not.toContain('data-testid="resolve-form"')
+    expect(html).not.toContain('data-testid="resolve-not-allowed"')
   })
 
   it('oculta la acción si canAdvanceToInProgress es false (p. ej. ADMIN/DIRECTOR)', () => {

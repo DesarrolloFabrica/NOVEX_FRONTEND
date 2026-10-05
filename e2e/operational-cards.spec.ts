@@ -162,6 +162,11 @@ test.describe('estado operacional', () => {
     await page.goto('/centro-operacional')
     await waitForOverviewReady(page)
 
+    await expect(page.getByTestId('operational-shell')).toHaveAttribute(
+      'data-shell-experience',
+      'admin',
+    )
+
     await expect(page.getByTestId('operational-cards-experience')).toBeVisible()
 
     // Un solo personaje, con el estado global del overview.

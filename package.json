@@ -17,6 +17,7 @@
     "@react-oauth/google": "^0.13.5",
     "@rive-app/react-webgl2": "^4.34.2",
     "@xyflow/react": "^12.11.2",
+    "echarts": "^6.1.0",
     "jspdf": "^4.2.1",
     "motion": "^12.42.2",
     "react": "^19.2.7",

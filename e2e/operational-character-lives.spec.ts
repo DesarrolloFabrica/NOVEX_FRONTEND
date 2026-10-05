@@ -27,7 +27,6 @@ const PERMISSIONS: Record<DeckRole, string[]> = {
   ADMIN: [
     'SITUATIONS_VIEW',
     'COORDINATIONS_VIEW',
-    'SITUATIONS_CREATE',
     'AI_VIEW_REPORTS',
     'REPORTS_VIEW',
   ],
@@ -36,6 +35,7 @@ const PERMISSIONS: Record<DeckRole, string[]> = {
     'COORDINATIONS_VIEW',
     'AI_VIEW_REPORTS',
     'REPORTS_VIEW',
+    'KPIS_VIEW',
   ],
   ANALISTA: [
     'SITUATIONS_VIEW',
@@ -130,6 +130,47 @@ async function install(page: Page, roleCode: DeckRole) {
     }
     if (url.pathname.endsWith('/operational-overview')) {
       await route.fulfill({ json: overviewResponse() })
+      return
+    }
+    if (url.pathname.includes('/operational-kpis')) {
+      await route.fulfill({
+        json: {
+          scope: { type: 'direction' },
+          generatedAt: OVERVIEW.generatedAt,
+          universe: {
+            type: 'active-catalog',
+            coordinationCount: OVERVIEW.coordinations.length,
+          },
+          metricVersions: {
+            integrity: 'integrity-mvp-v1',
+            lifePoints: 'life-points-v1',
+          },
+          direction: {
+            directionStatus: OVERVIEW.directionStatus,
+            problems: {
+              activeCount: 0,
+              status: { open: 0, inProgress: 0 },
+              severity: { critical: 0, high: 0, medium: 0, low: 0 },
+            },
+            dependencies: { incoming: 0, outgoing: 0 },
+            coordinationStatusTotals: {
+              critical: OVERVIEW.totals.critical,
+              alert: OVERVIEW.totals.alert,
+              stable: OVERVIEW.totals.stable,
+              unknown: 0,
+            },
+            analystRegistry: {
+              integrityStatus: 'ESTABLE',
+              problems: {
+                activeCount: 0,
+                status: { open: 0, inProgress: 0 },
+                severity: { critical: 0, high: 0, medium: 0, low: 0 },
+              },
+            },
+            coordinations: [],
+          },
+        },
+      })
       return
     }
     if (url.pathname.endsWith('/situations/categories')) {
@@ -325,6 +366,10 @@ for (const role of ['ADMIN', 'DIRECTOR', 'ANALISTA'] as const) {
     await page.setViewportSize({ width: 1440, height: 900 })
     await install(page, role)
     await openShell(page)
+    await expect(page.getByTestId('operational-shell')).toHaveAttribute(
+      'data-shell-experience',
+      { ADMIN: 'admin', DIRECTOR: 'director', ANALISTA: 'analyst' }[role],
+    )
 
     await expectNoLives(page)
 

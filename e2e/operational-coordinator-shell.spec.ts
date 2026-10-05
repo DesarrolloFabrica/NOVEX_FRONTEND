@@ -413,6 +413,7 @@ test.describe('Centro operacional COORDINADOR', () => {
 
     const shell = page.getByTestId('operational-shell')
     await expect(shell).toHaveAttribute('data-shell-layout', 'coordinator')
+    await expect(shell).toHaveAttribute('data-shell-experience', 'coordinator')
     await expect(page.getByTestId('shell-stage')).toHaveCount(0)
     await expect(page.getByTestId('coordinator-own-card')).toBeVisible()
     await expect(page.locator(CARD)).toHaveCount(1)
@@ -644,6 +645,12 @@ test.describe('Centro operacional COORDINADOR', () => {
   })
 
   test('ADMIN conserva la baraja', async ({ page }) => {
+    const adminPerms = [
+      'SITUATIONS_VIEW',
+      'COORDINATIONS_VIEW',
+      'AI_VIEW_REPORTS',
+      'REPORTS_VIEW',
+    ]
     const adminToken = `${base64Url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))}.${base64Url(
       JSON.stringify({
         sub: 'e2e-admin',
@@ -651,7 +658,7 @@ test.describe('Centro operacional COORDINADOR', () => {
         roleId: 'role-admin',
         roleCode: 'ADMIN',
         coordinationId: null,
-        permissions: PERMISSIONS,
+        permissions: adminPerms,
         status: 'ACTIVE',
       }),
     )}.e2e`
@@ -673,7 +680,7 @@ test.describe('Centro operacional COORDINADOR', () => {
               name: 'Admin',
               roleCode: 'ADMIN',
               roleName: 'Administrador',
-              permissions: PERMISSIONS,
+              permissions: adminPerms,
               coordinationId: null,
               fullName: 'Admin',
             },
@@ -705,6 +712,10 @@ test.describe('Centro operacional COORDINADOR', () => {
     await expect(page.getByTestId('operational-shell')).toHaveAttribute(
       'data-shell-layout',
       'deck',
+    )
+    await expect(page.getByTestId('operational-shell')).toHaveAttribute(
+      'data-shell-experience',
+      'admin',
     )
     await expect(page.getByTestId('shell-stage')).toBeVisible()
     await expect(page.locator(CARD).first()).toBeVisible()

@@ -12,9 +12,9 @@ export function hasPermission(
  * Capacidad de REGISTRO en la experiencia de producto (centro operacional).
  *
  * Producto: solo ANALISTA y COORDINADOR (con coordinación) registran.
- * ADMIN/DIRECTOR consultan; aunque un seed de backend les deje
- * `SITUATIONS_CREATE`, el front no presenta botones de creación aquí.
- * No altera las reglas del API: solo la UI de esta experiencia.
+ * ADMIN/DIRECTOR consultan. El catálogo RBAC ya no les otorga
+ * `SITUATIONS_CREATE`; si un JWT antiguo aún lo trajera, el front tampoco
+ * presenta botones de creación aquí. El API es la autoridad; esto es la UX.
  */
 export function canCreateSituations(
   user:

@@ -27,9 +27,9 @@ const PERMISSIONS = [
 ]
 
 /*
- * Creación solo para ANALISTA/COORDINADOR en producto. ADMIN puede llevar
- * SITUATIONS_CREATE en el seed del API, pero esta experiencia no le muestra
- * botones de registro; el fixture usa ANALISTA para ejercitar los CTAs.
+ * Creación solo para ANALISTA/COORDINADOR. ADMIN y DIRECTOR no tienen
+ * `SITUATIONS_CREATE` en el catálogo RBAC; esta experiencia tampoco muestra
+ * botones de registro. El fixture usa ANALISTA para ejercitar los CTAs.
  */
 const session = {
   id: 'e2e-analyst',
@@ -189,6 +189,10 @@ test.describe('panel derecho · modos', () => {
     await install(page)
     await page.goto('/centro-operacional')
     await settle(page)
+    await expect(page.getByTestId('operational-shell')).toHaveAttribute(
+      'data-shell-experience',
+      'analyst',
+    )
   })
 
   test('arranca en reposo, no en el formulario', async ({ page }) => {

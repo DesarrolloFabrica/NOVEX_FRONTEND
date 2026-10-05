@@ -182,7 +182,7 @@ async function installAdmin(page: Page) {
     role: 'supervisor',
     roleCode: 'ADMIN',
     roleName: 'Administrador',
-    permissions: [...VIEW_PERMS, 'SITUATIONS_CREATE'],
+    permissions: [...VIEW_PERMS],
     onboardingStep: 100,
     onboardingCompleted: true,
   }

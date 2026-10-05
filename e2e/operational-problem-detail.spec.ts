@@ -731,9 +731,9 @@ test.describe('detalle persistente del problema · 1440x900', () => {
     })
 
     /*
-     * ADMIN consulta: al volver a idle no aparecen botones de registro aunque
-     * algún seed de backend conceda SITUATIONS_CREATE. La creación se ejercita
-     * con ANALISTA/COORDINADOR en otros specs.
+     * ADMIN consulta: al volver a idle no aparecen botones de registro.
+     * El catálogo RBAC no otorga SITUATIONS_CREATE a ADMIN. La creación se
+     * ejercita con ANALISTA/COORDINADOR en otros specs.
      */
     await page.getByTestId('breadcrumb-direction').click()
     await expect(panel).toHaveAttribute('data-mode', 'idle')

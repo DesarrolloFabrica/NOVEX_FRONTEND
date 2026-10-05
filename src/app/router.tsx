@@ -23,7 +23,7 @@ import {
   PanoramaPage,
   ReportesPage,
 } from '@/modules/executive-operations-center'
-import { OperationalShellV2 } from '@/modules/operational-cards/experience/OperationalShellV2'
+import { OperationalCenterHome } from '@/modules/operational-cards/experience/OperationalCenterHome'
 
 function RedirectPreservingSearch({ to }: { to: string }) {
   const location = useLocation()
@@ -78,7 +78,7 @@ export const router = createBrowserRouter([
               </RequireRoleRoute>
             ),
             children: [
-              { index: true, element: <OperationalShellV2 /> },
+              { index: true, element: <OperationalCenterHome /> },
               {
                 path: 'panorama',
                 element: (

@@ -65,9 +65,7 @@ describe('permissions utils', () => {
     expect(canCreateCoordinationSituations(analystWithCreate)).toBe(false)
   })
 
-  it('oculta el registro aunque un admin conserve SITUATIONS_CREATE del backend', () => {
-    // Discrepancia producto vs API: el seed puede conceder el permiso, pero
-    // ADMIN solo consulta en centro operacional (ver canCreateSituations).
+  it('oculta el registro si un JWT antiguo aún trajera SITUATIONS_CREATE', () => {
     const adminWithStalePermission: User = {
       ...director,
       roleCode: 'ADMIN',
@@ -77,6 +75,22 @@ describe('permissions utils', () => {
 
     expect(canCreateSituations(adminWithStalePermission)).toBe(false)
     expect(canCreateCoordinationSituations(adminWithStalePermission)).toBe(false)
+  })
+
+  it('el permiso de catálogo vigente no basta: DIRECTOR/ADMIN no registran en UI', () => {
+    expect(
+      canCreateSituations({
+        ...director,
+        permissions: ['SITUATIONS_VIEW'],
+      }),
+    ).toBe(false)
+    expect(
+      canCreateSituations({
+        ...director,
+        roleCode: 'ADMIN',
+        permissions: ['SITUATIONS_VIEW', 'USERS_VIEW'],
+      }),
+    ).toBe(false)
   })
 
   it('deja avanzar al coordinador responsable', () => {

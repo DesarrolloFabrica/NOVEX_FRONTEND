@@ -15,7 +15,6 @@ const TOKEN_KEY = 'novex.auth.accessToken.v1'
 
 const PERMISSIONS = [
   'SITUATIONS_VIEW',
-  'SITUATIONS_CREATE',
   'COORDINATIONS_VIEW',
   'AI_VIEW_REPORTS',
   'REPORTS_VIEW',

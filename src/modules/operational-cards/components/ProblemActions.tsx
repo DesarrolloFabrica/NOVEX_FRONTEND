@@ -30,6 +30,11 @@ export interface ProblemActionsProps {
   onResolve: () => void
   /** OPEN → IN_PROGRESS. Solo se llama si la UI ya filtró permiso y estado. */
   onAdvanceToInProgress: () => void
+  /**
+   * False: no muestra avance ni cierre aunque el DTO traiga flags.
+   * Shells de consulta (DIRECTOR / ADMIN).
+   */
+  allowLifecycleActions?: boolean
 }
 
 export function ProblemActions({
@@ -39,6 +44,7 @@ export function ProblemActions({
   onLearningChange,
   onResolve,
   onAdvanceToInProgress,
+  allowLifecycleActions = true,
 }: ProblemActionsProps) {
   const idPrefijo = useId()
   const copy = resolveResolutionCopy(detail.reportKind)
@@ -67,6 +73,7 @@ export function ProblemActions({
   const ocupado = enviandoResolucion || enviandoAvance
   const yaCerrado = CERRADO.has(detail.status)
   const puedeAvanzar =
+    allowLifecycleActions &&
     !yaCerrado &&
     detail.status === 'OPEN' &&
     detail.canAdvanceToInProgress === true
@@ -87,6 +94,7 @@ export function ProblemActions({
       data-can-resolve={detail.canResolve ? 'true' : 'false'}
       data-can-advance={detail.canAdvanceToInProgress ? 'true' : 'false'}
       data-can-update={detail.canUpdate ? 'true' : 'false'}
+      data-allow-lifecycle={allowLifecycleActions ? 'true' : 'false'}
       data-resolved={yaCerrado ? 'true' : undefined}
       data-report-kind={detail.reportKind ?? 'INTERNAL'}
       data-status={detail.status}
@@ -192,7 +200,7 @@ export function ProblemActions({
         </div>
       )}
 
-      {!yaCerrado && detail.canResolve && (
+      {!yaCerrado && allowLifecycleActions && detail.canResolve && (
         <div
           className="problem-actions__block problem-actions__block--resolution"
           data-surface="problem-resolution"
@@ -256,7 +264,7 @@ export function ProblemActions({
         </div>
       )}
 
-      {!yaCerrado && !detail.canResolve && (
+      {!yaCerrado && allowLifecycleActions && !detail.canResolve && (
         <p
           className="problem-actions__note problem-actions__note--readonly"
           data-testid="resolve-not-allowed"

@@ -6,6 +6,56 @@
  * para placeholders sería trabajo a tirar.
  */
 
+/*
+ * DIRECTOR: misma rejilla que la baraja (main + carril derecho), no mesa a
+ * ancho completo. Lectura ~38 %; personaje/problemas ≈ 19 / 43 del ancho total.
+ * Baraja ~33–36 % de la altura útil del main. Cartas con techo propio (no
+ * toca ANALISTA/ADMIN): escala cercana a la mesa compartida, acotada al
+ * escenario más estrecho del DIRECTOR.
+ */
+.operational-shell[data-shell-layout='director'] {
+  --shell-action-w: 38%;
+}
+
+.operational-shell[data-shell-layout='director'] .operational-shell__main {
+  grid-template-rows: minmax(300px, 1.95fr) minmax(170px, 1fr);
+}
+
+.operational-shell[data-shell-layout='director'] .operational-shell__top {
+  grid-template-columns: minmax(0, 0.3fr) minmax(0, 0.7fr);
+}
+
+.operational-shell[data-shell-layout='director'] .operational-table {
+  --card-width-max: clamp(140px, 9.6vw, 188px);
+}
+
+.operational-shell__region--director-kpi,
+.operational-shell__region--director-reading {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.operational-shell__region--director-reading > .director-reading {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+.operational-shell[data-shell-layout='director-direction'] {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'main'
+    'bottom';
+}
+
+.operational-shell[data-shell-layout='director-direction'] .operational-shell__main {
+  grid-template-rows: minmax(0, 1fr);
+  padding: 8px 10px 0;
+}
+
 .operational-shell {
   position: relative;
   isolation: isolate;
