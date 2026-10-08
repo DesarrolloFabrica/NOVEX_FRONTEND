@@ -744,3 +744,67 @@ describe('«Mis reportes»', () => {
     expect(state.myReports.items.map((r) => r.id)).toEqual(['r1', 'r2'])
   })
 })
+
+describe('afectaciones · agregar desde el detalle', () => {
+  const CON_AFECTACION = {
+    ...DETAIL,
+    consequences: [
+      {
+        id: 'c1',
+        description: 'Se retrasó una entrega.',
+        occurredAt: '2026-09-02T10:00:00.000Z',
+        createdAt: '2026-09-02T10:20:00.000Z',
+        authorName: 'Autor',
+        authorRole: 'Coordinador',
+        severityAtOccurrence: 'HIGH',
+      },
+    ],
+  } as ProblemDetail
+
+  function abierto() {
+    return reduce(
+      READY,
+      { type: 'SELECT_COORDINATION', code: 'coord-b2b' },
+      { type: 'SELECT_PROBLEM', problemId: 'p1' },
+      { type: 'LOAD_DETAIL_SUCCESS', problemId: 'p1', detail: DETAIL, generation: 0 },
+    )
+  }
+
+  it('un envío en curso bloquea otro y el éxito reemplaza el detalle', () => {
+    const enviando = operationalCardsReducer(abierto(), {
+      type: 'SUBMIT_CONSEQUENCE',
+      problemId: 'p1',
+    })
+    expect(enviando.submission).toMatchObject({ kind: 'consequence', status: 'sending' })
+    // Una segunda acción de escritura no pisa la que está en vuelo.
+    expect(
+      operationalCardsReducer(enviando, { type: 'SUBMIT_CONSEQUENCE', problemId: 'p1' }),
+    ).toBe(enviando)
+
+    const ok = operationalCardsReducer(enviando, {
+      type: 'SUBMIT_CONSEQUENCE_SUCCESS',
+      problemId: 'p1',
+      detail: CON_AFECTACION,
+    })
+    expect(ok.level2.detail?.consequences).toHaveLength(1)
+    expect(ok.detailByProblem.p1?.detail.consequences).toHaveLength(1)
+    // La cronología ganó un evento: se vuelve a pedir.
+    expect(ok.level2.sections.timeline.status).toBe('idle')
+    expect(ok.submission.status).toBe('idle')
+    // No es un cierre: el personaje no reacciona.
+    expect(ok.pendingCharacterReaction).toBeNull()
+  })
+
+  it('un error (p. ej. 409 por cierre concurrente) se muestra y no toca el detalle', () => {
+    const enviando = operationalCardsReducer(abierto(), {
+      type: 'SUBMIT_CONSEQUENCE',
+      problemId: 'p1',
+    })
+    const fallo = operationalCardsReducer(enviando, {
+      type: 'SUBMIT_CONSEQUENCE_ERROR',
+      message: 'El problema está cerrado: el cierre congela sus afectaciones.',
+    })
+    expect(fallo.submission).toMatchObject({ kind: 'consequence', status: 'error' })
+    expect(fallo.level2.detail).toBe(enviando.level2.detail)
+  })
+})

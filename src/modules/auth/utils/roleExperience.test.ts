@@ -6,19 +6,17 @@ import {
 } from './roleExperience'
 
 describe('roleExperience', () => {
-  it('envía cada rol a su experiencia inicial', () => {
-    expect(getRoleLandingPath({ roleCode: 'ANALISTA' })).toBe('/red-impacto')
-    expect(getRoleLandingPath({ roleCode: 'DIRECTOR' })).toBe('/red-impacto')
-    expect(getRoleLandingPath({ roleCode: 'ADMIN' })).toBe('/red-impacto')
-    // VERDAD NUEVA: el coordinador aterriza en el Centro Operacional, que es
-    // donde reporta y donde resuelve. Antes llegaba a la red de impacto con su
-    // coordinación preseleccionada, y a esta pantalla solo se entraba a mano.
+  it('envía los cuatro roles al Centro Operacional', () => {
+    // Fase 1: landing único. Ningún rol aterriza ya en `/red-impacto`.
+    for (const roleCode of ['ADMIN', 'DIRECTOR', 'ANALISTA', 'COORDINADOR']) {
+      expect(getRoleLandingPath({ roleCode })).toBe('/centro-operacional')
+    }
     expect(
       getRoleLandingPath({ roleCode: 'COORDINADOR', selectedAreaId: 'B2B' }),
     ).toBe('/centro-operacional')
-    expect(getRoleLandingPath({ roleCode: 'COORDINADOR' })).toBe(
-      '/centro-operacional',
-    )
+    // Sin sesión o con un rol desconocido tampoco hay destino legacy.
+    expect(getRoleLandingPath(null)).toBe('/centro-operacional')
+    expect(getRoleLandingPath({ roleCode: 'OTRO' })).toBe('/centro-operacional')
   })
 
   it('solo permite que el administrador previsualice otro rol', () => {

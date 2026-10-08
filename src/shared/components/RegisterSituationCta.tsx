@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { canCreateSituations } from '@/modules/auth/utils/permissions'
+import { buildInternalReportUrl } from '@/modules/operational-cards/experience/reportIntent'
 
 type RegisterSituationCtaVariant = 'rail' | 'topbar' | 'inline' | 'command' | 'footer'
 
@@ -25,7 +26,7 @@ export function RegisterSituationCta({
 
   return (
     <Link
-      to="/situaciones/nueva"
+      to={buildInternalReportUrl()}
       viewTransition
       className={`novex-register-cta novex-register-cta--${variant} ${className}`.trim()}
       aria-label="Registrar nueva situación"

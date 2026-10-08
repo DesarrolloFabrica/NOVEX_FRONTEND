@@ -36,6 +36,63 @@ export const DEFAULT_NOVEX_CHART_TOKENS: NovexChartThemeTokens = {
   fontFamily: "Georgia, 'Times New Roman', Times, serif",
 }
 
+/**
+ * FLUJO DE PROBLEMAS: tokens propios (no severidad). Reportados = tinta
+ * sólida; Solucionados = salvia estable con trama. El acento de coordinación
+ * no se usa aquí porque en algunas (B2B) es rojizo y se leería como «crítico».
+ */
+export const NOVEX_FLOW_TOKENS = {
+  /** Carga activa: internos (tinta oscura) + externos (malva apagado). */
+  internal: '#3a2b1f',
+  internalHover: '#231910',
+  external: '#9a7b8f',
+  externalHover: '#86687b',
+  /** Movimiento: reportados (pizarra) vs solucionados (salvia + trama). */
+  reported: '#55657f',
+  reportedHover: '#45546c',
+  resolved: '#8fa89c',
+  resolvedHover: '#7a968a',
+  resolvedDecal: 'rgb(35 25 16 / 0.42)',
+  /** Área bajo la línea de CARGA (presencia sin peso). */
+  activeArea: 'rgb(58 43 31 / 0.08)',
+  future: 'rgb(35 25 16 / 0.32)',
+} as const
+
+/**
+ * ANTIGÜEDAD: un solo lenguaje de tinta. La intensidad crece con la EDAD
+ * (nunca con la severidad, que es información secundaria del tooltip).
+ */
+export const NOVEX_AGING_TOKENS = {
+  /** Sepia/tinta: sin rojo semántico de CRÍTICO. */
+  ink: '#3f2d1f',
+  border: '#231910',
+  /**
+   * Opacidad por rango de edad (0–7 · 8–14 · 15–30 · 31+): tinta muy clara →
+   * más profunda. Misma escala en el ranking y en la distribución.
+   */
+  bandAlphas: [0.22, 0.45, 0.68, 0.92],
+  label: '#231910',
+} as const
+
+/**
+ * RESOLUCIÓN: escala tonal PROPIA de duración (pizarra-salvia, emparentada con
+ * «Solucionados»), distinta de la tinta sepia de Antigüedad. Más tiempo hasta
+ * solución = tono más profundo. Sin verde = rápido / rojo = lento, sin colores
+ * de severidad: la duración no es un estado ni un cumplimiento de SLA.
+ */
+export const NOVEX_RESOLUTION_TOKENS = {
+  /** Línea de la mediana y borde de barras. */
+  line: '#3e5a55',
+  border: '#22332f',
+  /** Relleno de un punto con POCOS cierres (hueco, discreto). */
+  paper: '#fbf6ea',
+  lowN: 'rgb(62 90 85 / 0.6)',
+  /** Opacidad por rango (< 1 d → 30+ d) sobre la base pizarra-salvia. */
+  base: '#3e5a55',
+  bandAlphas: [0.16, 0.3, 0.44, 0.6, 0.76, 0.92],
+  label: '#22332f',
+} as const
+
 export function resolveAccent(tokens: NovexChartThemeTokens = DEFAULT_NOVEX_CHART_TOKENS): string {
   if (typeof window === 'undefined') return '#2a2118'
   const raw = getComputedStyle(document.documentElement)

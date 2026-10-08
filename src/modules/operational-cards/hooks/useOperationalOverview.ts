@@ -26,6 +26,10 @@ import type { ProblemHistoryPeriod } from '@/modules/operational-cards/types/pro
 import { submitProblemReport } from '@/modules/operational-cards/services/report-submission.service'
 import { submitProblemResolution } from '@/modules/operational-cards/services/problem-resolution.service'
 import { submitProblemStatusAdvance } from '@/modules/operational-cards/services/problem-status-advance.service'
+import {
+  submitProblemConsequence,
+  type ConsequenceDraft,
+} from '@/modules/operational-cards/services/problem-consequence.service'
 import type { ReportDraft } from '@/modules/operational-cards/types/operational-cards.state'
 
 /**
@@ -94,6 +98,11 @@ export interface OperationalCardsController extends OperationalCardsState {
   submitStatusAdvance: (
     problemId: string,
     currentStatus: string,
+  ) => Promise<boolean>
+  /** Registra una afectación (append-only) y relee el detalle. */
+  submitConsequence: (
+    problemId: string,
+    draft: ConsequenceDraft,
   ) => Promise<boolean>
   /** El personaje avisa de que ya representó la reacción. */
   consumeCharacterReaction: (id: number) => void
@@ -642,6 +651,30 @@ export function useOperationalOverview(): OperationalCardsController {
     [],
   )
 
+  const submitConsequence = useCallback(
+    async (problemId: string, draft: ConsequenceDraft): Promise<boolean> => {
+      if (sendingRef.current) return false
+      sendingRef.current = true
+
+      dispatch({ type: 'SUBMIT_CONSEQUENCE', problemId })
+
+      try {
+        const detail = await submitProblemConsequence(problemId, draft)
+        dispatch({ type: 'SUBMIT_CONSEQUENCE_SUCCESS', problemId, detail })
+        return true
+      } catch (error: unknown) {
+        dispatch({
+          type: 'SUBMIT_CONSEQUENCE_ERROR',
+          message: getErrorMessage(error),
+        })
+        return false
+      } finally {
+        sendingRef.current = false
+      }
+    },
+    [],
+  )
+
   /*
    * El resumen operacional se vuelve a pedir tras cada escritura confirmada: es
    * la fuente del aura de las cartas y del estado del personaje, y crear o
@@ -686,6 +719,7 @@ export function useOperationalOverview(): OperationalCardsController {
     submitReport,
     submitResolution,
     submitStatusAdvance,
+    submitConsequence,
     consumeCharacterReaction,
   }
 }

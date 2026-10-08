@@ -436,6 +436,256 @@
   text-align: center;
 }
 
+/* ---------- Severidad: reportada vs actual ---------- */
+
+/*
+ * Una línea bajo los badges, no una caja: solo aparece cuando el nivel actual
+ * no es el reportado. El historial se despliega en la misma línea de lectura.
+ */
+.severity-trail {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.severity-trail__summary {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin: 0;
+  color: var(--deck-muted, #8b9cb6);
+  font-size: 11px;
+  flex-wrap: wrap;
+}
+
+.severity-trail__label {
+  letter-spacing: 0.02em;
+}
+
+.severity-trail__value {
+  --badge-rgb: 132 150 176;
+
+  color: rgb(var(--badge-rgb) / 0.98);
+  font-weight: 600;
+}
+
+.severity-trail__value[data-severity='CRITICAL'],
+.problem-consequences__severity[data-severity='CRITICAL'] {
+  --badge-rgb: var(--status-critical-rgb, 244 96 104);
+}
+
+.severity-trail__value[data-severity='HIGH'],
+.problem-consequences__severity[data-severity='HIGH'] {
+  --badge-rgb: 244 140 90;
+}
+
+.severity-trail__value[data-severity='MEDIUM'],
+.problem-consequences__severity[data-severity='MEDIUM'] {
+  --badge-rgb: var(--status-alert-rgb, 240 176 84);
+}
+
+.severity-trail__toggle {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #9ad0ff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.severity-trail__toggle {
+  margin-left: 4px;
+}
+
+.severity-trail__toggle:focus-visible {
+  outline: 2px solid #9ad0ff;
+  outline-offset: 2px;
+}
+
+.severity-trail__steps {
+  display: flex;
+  margin: 0;
+  padding: 0 0 0 2px;
+  flex-direction: column;
+  gap: 1px;
+  list-style: none;
+  color: rgb(214 232 255 / 0.84);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.severity-trail__transition {
+  font-weight: 600;
+}
+
+.severity-trail__reason {
+  color: var(--deck-muted, #8b9cb6);
+}
+
+/* ---------- Afectaciones ---------- */
+
+.problem-consequences {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.problem-consequences__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.problem-consequences__count {
+  margin-left: 6px;
+  color: var(--deck-muted, #8b9cb6);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.problem-consequences__severity {
+  --badge-rgb: 132 150 176;
+
+  padding: 0 6px;
+  border: 1px solid rgb(var(--badge-rgb) / 0.42);
+  border-radius: 999px;
+  background: rgb(var(--badge-rgb) / 0.12);
+  color: rgb(var(--badge-rgb) / 0.98);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.problem-consequences__frozen {
+  margin: 0;
+  color: var(--deck-muted, #8b9cb6);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/*
+ * AGREGAR AFECTACIÓN: subbloque propio del mismo ticket, no una tarjeta
+ * aparte. Filete superior marcado (la acción empieza aquí), fondo apenas
+ * distinto y marco interior discreto. Solo existe con permiso y caso activo.
+ */
+.problem-consequences__composer {
+  display: flex;
+  margin-top: 6px;
+  padding: 9px 10px 10px;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid rgb(126 168 224 / 0.22);
+  border-top: 2px solid rgb(154 208 255 / 0.55);
+  border-radius: 0 0 8px 8px;
+  background: rgb(154 208 255 / 0.05);
+}
+
+.problem-consequences__composer-title {
+  margin: 0;
+  color: var(--deck-text, #edf5ff);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.problem-consequences__composer-help {
+  margin: 0 0 2px;
+  color: var(--deck-muted, #8b9cb6);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+/* La etiqueta del texto se anuncia, no se pinta: el título ya la dice. */
+.problem-consequences__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.problem-consequences__form-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.problem-consequences__date-label {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 180px;
+  flex-direction: column;
+  gap: 3px;
+  color: var(--deck-muted, #8b9cb6);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+/*
+ * CTA primario de la subsección, en contorno: se reconoce como la acción del
+ * bloque sin competir con «Cerrar problema» (relleno) ni con «Pasar a En
+ * atención».
+ */
+.problem-consequences__submit {
+  flex: 0 0 auto;
+  /* Si el panel es estrecho y baja de línea, cierra el bloque a la derecha. */
+  margin-left: auto;
+  padding: 7px 14px;
+  border: 1.5px solid rgb(154 208 255 / 0.7);
+  border-radius: 6px;
+  background: rgb(154 208 255 / 0.1);
+  color: #cfe7ff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.problem-consequences__submit:hover:not(:disabled),
+.problem-consequences__submit:focus-visible {
+  background: rgb(154 208 255 / 0.2);
+  outline: 2px solid rgb(154 208 255 / 0.45);
+  outline-offset: 2px;
+}
+
+.problem-consequences__submit:disabled {
+  border-color: rgb(150 196 255 / 0.2);
+  background: transparent;
+  color: #6c7d95;
+  cursor: not-allowed;
+}
+
+.problem-consequences__datetime {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgb(150 196 255 / 0.28);
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: rgb(12 22 40 / 0.8);
+  color: #dce9fb;
+  font: inherit;
+  font-size: 12px;
+  color-scheme: dark;
+}
+
+.problem-consequences__datetime:focus-visible {
+  outline: 2px solid #9ad0ff;
+  outline-offset: 1px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .detail-section__chevron,
   .detail-section__toggle {

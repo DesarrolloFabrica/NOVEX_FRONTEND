@@ -216,32 +216,27 @@ test('el coordinador aterriza en el Centro Operacional', async ({ page }) => {
   await expect(page.getByTestId('report-problem-button')).toBeVisible()
 })
 
-test('el analista aterriza primero en Red de impacto', async ({
-  page,
-}) => {
-  await installRoleExperience(page, 'ANALISTA')
-  await page.goto('/')
+/*
+ * FASE 1 — landing único. ANALISTA, DIRECTOR y ADMIN ya no aterrizan en la Red
+ * de impacto: entran al Centro Operacional, cada uno en su shell.
+ */
+for (const [roleCode, experience] of [
+  ['ANALISTA', 'analyst'],
+  ['DIRECTOR', 'director'],
+  ['ADMIN', 'admin'],
+] as const) {
+  test(`${roleCode} aterriza en el Centro Operacional con su shell`, async ({
+    page,
+  }) => {
+    await installRoleExperience(page, roleCode)
+    await page.goto('/')
 
-  await expect(page).toHaveURL(/\/red-impacto$/)
-  await expect(page.locator('.impact-executive__status-board')).toBeVisible()
-})
-
-test('el director aterriza primero en Red de impacto', async ({
-  page,
-}) => {
-  await installRoleExperience(page, 'DIRECTOR')
-  await page.goto('/')
-
-  await expect(page).toHaveURL(/\/red-impacto$/)
-  await expect(page.locator('.impact-executive__status-board')).toBeVisible()
-})
-
-test('el administrador aterriza primero en Red de impacto', async ({
-  page,
-}) => {
-  await installRoleExperience(page, 'ADMIN')
-  await page.goto('/')
-
-  await expect(page).toHaveURL(/\/red-impacto$/)
-  await expect(page.locator('.impact-executive__status-board')).toBeVisible()
-})
+    await expect(page).toHaveURL(/\/centro-operacional$/)
+    const shell = page.getByTestId('operational-shell')
+    await expect(shell).toBeVisible()
+    await expect(shell).toHaveAttribute('data-shell-experience', experience)
+    // Nada del shell legacy: ni carril ni menú Plataforma.
+    await expect(page.locator('.novex-os-rail')).toHaveCount(0)
+    await expect(page.getByTestId('platform-menu-trigger')).toHaveCount(0)
+  })
+}

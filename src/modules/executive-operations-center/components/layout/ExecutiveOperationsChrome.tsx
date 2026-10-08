@@ -1,17 +1,11 @@
 import type { ReactNode } from 'react'
-import { NavLink } from 'react-router-dom'
 import { NovexBrandMark } from '@/shared/components/NovexBrandMark'
-import { NovexPlatformMenu } from '@/shared/components/NovexPlatformMenu'
 import { NovexUserMenu } from '@/shared/components/NovexUserMenu'
 import { NovexViewHelp } from '@/shared/components/NovexViewHelp'
 import {
   NOVEX_BETA_HINT,
   NOVEX_BETA_LABEL,
 } from '@/shared/constants/platformStatus'
-import { visibleSubNavItems } from '@/modules/executive-operations-center/constants/navigation'
-import { useAuth } from '@/modules/auth/hooks/useAuth'
-import { normalizeRoleCode } from '@/modules/auth/utils/roleExperience'
-import { EXECUTIVE_OPERATIONS_HOME } from '@/modules/executive-operations-center/constants/routes'
 import '@/modules/executive-operations-center/styles/executive-chrome.css'
 
 /**
@@ -36,6 +30,11 @@ import '@/modules/executive-operations-center/styles/executive-chrome.css'
  *
  * `NovexProductHeader` sigue intacto y en uso por las demás experiencias: esta
  * fase no lo modifica, solo deja de usarlo aquí.
+ *
+ * FASE 1 (retiro del shell legacy): salen las pestañas de sección (Panorama
+ * global, Inteligencia IA, Auditoría) y el menú «Plataforma». Queda, de forma
+ * TEMPORAL y sin rediseño: identidad NOVEX, nombre de la pantalla, ayuda y
+ * menú de usuario (rol, cerrar sesión y, para ADMIN, Administración).
  */
 
 export interface ExecutiveOperationsChromeProps {
@@ -48,14 +47,6 @@ export function ExecutiveOperationsChrome({
   help,
   helpTitle,
 }: ExecutiveOperationsChromeProps) {
-  /*
-   * Solo las secciones que este rol puede abrir de verdad. El coordinador ve
-   * «Inicio» y nada más: las otras tres tienen guarda de `EXECUTIVE_ROLES` y lo
-   * habrían devuelto a su landing en cuanto pulsara.
-   */
-  const { user } = useAuth()
-  const secciones = visibleSubNavItems(normalizeRoleCode(user?.roleCode))
-
   return (
     <header className="eoc-chrome" data-testid="eoc-chrome">
       <div className="eoc-chrome__brand">
@@ -73,33 +64,12 @@ export function ExecutiveOperationsChrome({
               {NOVEX_BETA_LABEL}
             </span>
           </span>
-          {/* Nombre de la pantalla. Estable en las cuatro secciones: la sección
-              activa la marca la navegación, no el título. */}
+          {/* Nombre de la pantalla y nombre accesible de la vista. */}
           <h1 className="eoc-chrome__title">Centro operacional</h1>
         </div>
       </div>
 
-      <nav
-        className="eoc-subnav eoc-chrome__sections"
-        aria-label="Secciones del centro operacional"
-      >
-        {secciones.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            viewTransition
-            className={({ isActive }) =>
-              `eoc-subnav__link ${isActive ? 'is-active' : ''}`
-            }
-          >
-            {item.label}
-          </NavLink>
-        ))}
-      </nav>
-
       <div className="eoc-chrome__actions">
-        <NovexPlatformMenu excludeTo={EXECUTIVE_OPERATIONS_HOME} />
         {help ? <NovexViewHelp title={helpTitle}>{help}</NovexViewHelp> : null}
         <NovexUserMenu />
       </div>

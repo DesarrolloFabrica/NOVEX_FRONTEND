@@ -20,6 +20,9 @@ export const NOVEX_SEVERITY_COLORS = {
 export const NOVEX_ATTENTION_COLORS = {
   open: '#6b5a3e',
   inProgress: '#3d5a6b',
+  /** Ya no activo hoy: neutro, no compite con los dos estados vivos. */
+  closedAfterCut: '#cfc2a8',
+  unclassified: '#e2d9c6',
 } as const
 
 const SEVERITY_ORDER: ReadonlyArray<{
@@ -142,10 +145,41 @@ export function buildSeverityBarsOption(
   }
 }
 
+/**
+ * Atención de una población. En un corte histórico pueden existir problemas
+ * activos entonces que hoy ya están cerrados (`closedAfterCut`): se muestran
+ * como su propio segmento, nunca se les inventa un status de aquella fecha.
+ */
+export type AttentionComposition = OperationalKpiStatusCounts & {
+  closedAfterCut?: number
+  unclassified?: number
+}
+
+export function attentionTotal(status: AttentionComposition): number {
+  return (
+    status.open +
+    status.inProgress +
+    (status.closedAfterCut ?? 0) +
+    (status.unclassified ?? 0)
+  )
+}
+
 export function buildAttentionDonutOption(
-  status: OperationalKpiStatusCounts,
+  status: AttentionComposition,
 ): EChartsCoreOption {
-  const total = status.open + status.inProgress
+  const total = attentionTotal(status)
+  const extra = [
+    {
+      name: 'Solucionados después del corte',
+      value: status.closedAfterCut ?? 0,
+      color: NOVEX_ATTENTION_COLORS.closedAfterCut,
+    },
+    {
+      name: 'Sin clasificar',
+      value: status.unclassified ?? 0,
+      color: NOVEX_ATTENTION_COLORS.unclassified,
+    },
+  ].filter((item) => item.value > 0)
 
   const data =
     total === 0
@@ -180,6 +214,15 @@ export function buildAttentionDonutOption(
               borderWidth: 1.4,
             },
           },
+          ...extra.map((item) => ({
+            name: item.name,
+            value: item.value,
+            itemStyle: {
+              color: item.color,
+              borderColor: '#231910',
+              borderWidth: 1.4,
+            },
+          })),
         ]
 
   return {
@@ -252,16 +295,18 @@ export function buildAttentionDonutOption(
 }
 
 /** Porcentajes para labels HTML compactos bajo el donut. */
-export function attentionPercents(status: OperationalKpiStatusCounts): {
+export function attentionPercents(status: AttentionComposition): {
   openPct: number
   progressPct: number
+  closedAfterPct: number
   total: number
 } {
-  const total = status.open + status.inProgress
-  const openPct = total > 0 ? Math.round((status.open / total) * 100) : 0
+  const total = attentionTotal(status)
+  const pct = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0)
   return {
-    openPct,
-    progressPct: total > 0 ? 100 - openPct : 0,
+    openPct: pct(status.open),
+    progressPct: pct(status.inProgress),
+    closedAfterPct: pct(status.closedAfterCut ?? 0),
     total,
   }
 }
@@ -287,10 +332,13 @@ export function SeverityBarsChart({
 export function AttentionDonutChart({
   status,
 }: {
-  status: OperationalKpiStatusCounts
+  status: AttentionComposition
 }) {
-  const total = status.open + status.inProgress
-  const aria = `${status.open} abiertos y ${status.inProgress} en atención; ${total} activos.`
+  const total = attentionTotal(status)
+  const after = status.closedAfterCut ?? 0
+  const aria = `${status.open} abiertos y ${status.inProgress} en atención${
+    after > 0 ? `, ${after} solucionados después del corte` : ''
+  }; ${total} activos.`
 
   return (
     <NovexEChart

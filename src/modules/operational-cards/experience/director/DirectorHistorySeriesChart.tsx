@@ -38,6 +38,16 @@ function axisLabel(
   return month
 }
 
+/**
+ * Formato de eje para buckets de AnalysisPeriod: día y semana se rotulan
+ * «6 oct» (inicio del bucket); mes, por su nombre.
+ */
+export function historyAxisForBucket(
+  bucket: 'day' | 'week' | 'month' | null,
+): OperationalKpiHistoryGranularity {
+  return bucket === 'month' ? 'month' : 'week'
+}
+
 function metricLabel(metric: OperationalKpiHistoryMetric): string {
   if (metric === 'created') return 'Presentados'
   if (metric === 'closed') return 'Cerrados'

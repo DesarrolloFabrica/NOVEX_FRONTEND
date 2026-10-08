@@ -1,5 +1,10 @@
 import { expect, test } from 'playwright/test'
 
+// Fase 1 de retiro del shell legacy: Situaciones registradas (/situaciones) ya no es destino.
+// La ruta redirige al Centro Operacional; el módulo se conserva, pero esta
+// suite prueba una pantalla que ya no se monta. Reactivar si se recupera.
+test.skip(true, 'Fase 1: Situaciones registradas (/situaciones) ya no es destino')
+
 const session = {
   id: 'e2e-supervisor',
   name: 'Supervisora E2E',

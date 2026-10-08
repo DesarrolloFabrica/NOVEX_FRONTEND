@@ -3,6 +3,7 @@ import { ProblemActions } from '@/modules/operational-cards/components/ProblemAc
 import { ReportProblemForm } from '@/modules/operational-cards/components/ReportProblemForm'
 import type { ReportProblemFormProps } from '@/modules/operational-cards/components/ReportProblemForm'
 import { ProblemHistoryPanel } from '@/modules/operational-cards/components/ProblemHistoryPanel'
+import type { ConsequenceDraft } from '@/modules/operational-cards/services/problem-consequence.service'
 import type {
   LazyProblemSectionId,
   ProblemSectionId,
@@ -39,6 +40,8 @@ export interface OperationalActionPanelProps {
   onLearningChange: (value: string) => void
   onResolve: () => void
   onAdvanceToInProgress: () => void
+  /** Registra una afectación del problema abierto; true si se confirmó. */
+  onAddConsequence?: (draft: ConsequenceDraft) => Promise<boolean>
   onReportInternal: () => void
   onReportDependency: () => void
   onCancelReport: () => void
@@ -78,6 +81,7 @@ export function OperationalActionPanel({
   onLearningChange,
   onResolve,
   onAdvanceToInProgress,
+  onAddConsequence,
   onReportInternal,
   onReportDependency,
   onCancelReport,
@@ -161,6 +165,13 @@ export function OperationalActionPanel({
           selectedCoordinationCode={selectedCoordinationCode}
           onToggleSection={onToggleSection}
           onRetrySection={onRetrySection}
+          consequenceActions={
+            // Shells de solo lectura (DIRECTOR / ADMIN) nunca escriben, aunque
+            // el API enviara el indicador.
+            allowLifecycleActions && onAddConsequence
+              ? { submission, onSubmit: onAddConsequence }
+              : null
+          }
         />
 
         {level2.status === 'error' && (

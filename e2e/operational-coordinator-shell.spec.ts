@@ -589,7 +589,10 @@ test.describe('Centro operacional COORDINADOR', () => {
       'data-report-kind',
       'INTERNAL',
     )
-    await expect(page.getByTestId('report-internal-destination')).toBeVisible()
+    // INTERNAL vivo: el coordinador registra en SU coordinación (sin «Destino»)
+    // y puede declarar una afectación inicial opcional.
+    await expect(page.getByTestId('report-internal-destination')).toHaveCount(0)
+    await expect(page.getByTestId('report-initial-consequence')).toBeVisible()
     await page.getByTestId('report-title').fill('Nuevo interno B2B')
     await page.getByTestId('report-description').fill('Descripción suficiente')
     await page.getByTestId('report-category').selectOption('cat-acas')

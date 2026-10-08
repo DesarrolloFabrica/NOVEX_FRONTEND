@@ -1,13 +1,16 @@
 import { expect, test, type Page } from 'playwright/test'
 
 /**
- * Shell del Centro Operacional: reparto del carril de plataforma.
+ * Shell del Centro Operacional — FASE 1 (retiro de la navegación legacy).
  *
- * Desde R2 el Centro Operacional NO monta el carril vertical. Este fichero
- * recorre las demás rutas que montan `NovexRoom` y verifica que el carril
- * sigue en el DOM y sigue siendo tabulable, que el grid de la sala conserva
- * sus dos columnas, y que sin carril el logout y la navegación de plataforma
- * siguen alcanzables.
+ * Verdades que protege este fichero:
+ * - las pantallas legacy (Dashboard, Red de impacto, Situaciones, Gestión,
+ *   Panorama, Inteligencia IA, Auditoría y sus alias) ya no son destinos:
+ *   redirigen al Centro Operacional, sin carril;
+ * - el chrome del Centro no ofrece pestañas legacy ni menú «Plataforma»;
+ * - identidad, usuario/rol, ayuda y cerrar sesión siguen disponibles;
+ * - la Administración (solo ADMIN) se conserva y se alcanza desde el menú de
+ *   usuario, sin carril.
  */
 
 const SESSION_KEY = 'novex.auth.session.v1'
@@ -98,114 +101,116 @@ async function install(page: Page) {
   })
 }
 
-/** Rutas que montan `NovexRoom` y NO son el Centro Operacional. */
-const RAIL_ROUTES = [
+const LEGACY_ROUTES = [
   '/dashboard',
   '/red-impacto',
   '/situaciones',
-  '/situaciones/nueva',
   '/gestion',
-  '/admin',
+  '/centro-operacional/panorama',
+  '/centro-operacional/inteligencia',
+  '/centro-operacional/reportes',
+  '/intelligence',
+  '/operational-events',
+  '/situation-management',
+  '/legacy-monitoring',
+  '/monitoring',
 ] as const
 
-for (const route of RAIL_ROUTES) {
-  test(`conserva el carril en ${route}`, async ({ page }) => {
+for (const route of LEGACY_ROUTES) {
+  test(`${route} redirige al Centro Operacional sin carril`, async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
     await install(page)
     await page.goto(route)
 
-    const rail = page.locator('.novex-os-rail')
-    await expect(rail).toHaveCount(1, { timeout: 30_000 })
-    await expect(rail).toBeVisible()
-
-    // Sigue navegable con teclado: el carril no es decorativo.
-    const focusables = await page
-      .locator('.novex-os-rail a, .novex-os-rail button')
-      .count()
-    expect(focusables).toBeGreaterThan(0)
-
-    const grid = await page.evaluate(
-      () =>
-        getComputedStyle(document.querySelector('.novex-os') as Element)
-          .gridTemplateColumns,
-    )
-    expect(grid.startsWith('228px')).toBe(true)
-
-    console.log(
-      `\n@@RAIL@@ ${JSON.stringify({ route, focusables, grid })}\n`,
-    )
+    await expect(page).toHaveURL(/\/centro-operacional$/, { timeout: 30_000 })
+    await expect(page.getByTestId('eoc-chrome')).toBeVisible({ timeout: 30_000 })
+    await expect(page.locator('.novex-os-rail')).toHaveCount(0)
   })
 }
 
-test('el Centro Operacional es la unica ruta sin carril, en sus cuatro secciones', async ({
+test('el registro legado no rebota: un rol sin creación cae en el Centro', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await install(page)
-
-  for (const route of [
-    '/centro-operacional',
-    '/centro-operacional/panorama',
-    '/centro-operacional/inteligencia',
-    '/centro-operacional/reportes',
-  ]) {
-    await page.goto(route)
-    await expect(page.getByTestId('eoc-chrome')).toBeVisible({ timeout: 30_000 })
-    await expect(page.locator('.novex-os-rail')).toHaveCount(0)
-    // Nada del carril queda en el orden de foco.
-    await expect(
-      page.locator('.novex-os-rail a, .novex-os-rail button'),
-    ).toHaveCount(0)
-    const grid = await page.evaluate(
-      () =>
-        getComputedStyle(document.querySelector('.novex-os') as Element)
-          .gridTemplateColumns,
-    )
-    console.log(`\n@@NORAIL@@ ${JSON.stringify({ route, grid })}\n`)
-  }
+  await page.goto('/situaciones/nueva')
+  await expect(page).toHaveURL(/\/centro-operacional$/, { timeout: 30_000 })
 })
 
-/** §11 — sin carril, cerrar sesion y el perfil siguen alcanzables. */
-test('logout y perfil siguen accesibles sin carril', async ({ page }) => {
+test('el chrome del Centro no ofrece navegación legacy', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await install(page)
+  await page.goto('/centro-operacional')
+  const chrome = page.getByTestId('eoc-chrome')
+  await expect(chrome).toBeVisible({ timeout: 30_000 })
+
+  await expect(page.getByTestId('platform-menu-trigger')).toHaveCount(0)
+  await expect(page.locator('.eoc-subnav')).toHaveCount(0)
+  for (const label of [
+    'Panorama global',
+    'Inteligencia IA',
+    'Auditoría',
+    'Dashboard',
+    'Red de impacto',
+    'Situaciones registradas',
+    'Gestión de situaciones',
+  ]) {
+    await expect(page.getByRole('link', { name: label })).toHaveCount(0)
+  }
+  // Ningún enlace de la página apunta a una ruta legacy.
+  const hrefs = await page
+    .locator('a[href]')
+    .evaluateAll((links) => links.map((link) => link.getAttribute('href')))
+  expect(
+    hrefs.filter((href) =>
+      /^\/(dashboard|red-impacto|situaciones|gestion)\b|\/centro-operacional\/(panorama|inteligencia|reportes)/.test(
+        href ?? '',
+      ),
+    ),
+  ).toEqual([])
+
+  // Identidad y nombre accesible de la pantalla.
+  await expect(chrome.getByText('NOVEX', { exact: false })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Centro operacional', level: 1 }),
+  ).toBeVisible()
+})
+
+test('usuario, rol, Administración y cerrar sesión siguen accesibles', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await install(page)
   await page.goto('/centro-operacional')
   await expect(page.getByTestId('eoc-chrome')).toBeVisible({ timeout: 30_000 })
 
-  // Identidad visible en el disparador del menú de usuario.
-  const userTrigger = page.getByRole('button', {
-    name: /Menú de usuario/,
-  })
+  const userTrigger = page.getByRole('button', { name: /Menú de usuario/ })
   await expect(userTrigger).toBeVisible()
+  await expect(userTrigger).toContainText('Administrador')
   await userTrigger.click()
+
+  // El ADMIN conserva la Administración, desde el menú de usuario.
+  const admin = page.getByRole('menuitem', { name: 'Administración' })
+  await expect(admin).toBeVisible()
   await expect(
     page.getByRole('menuitem', { name: 'Cerrar sesión' }),
   ).toBeVisible()
-  await page.keyboard.press('Escape')
+  // El tutorial está suspendido: no se ofrece.
+  await expect(page.getByRole('menuitem', { name: /tutorial/i })).toHaveCount(0)
 
-  // Navegación de plataforma alcanzable en el menú compacto.
-  const platform = page.getByTestId('platform-menu-trigger')
-  await expect(platform).toBeVisible()
-  await platform.click()
-  const popover = page.getByTestId('platform-menu-popover')
-  await expect(popover).toBeVisible()
-  const destinations = await popover.getByRole('menuitem').allInnerTexts()
-  console.log(`\n@@PLATFORM@@ ${JSON.stringify({ destinations })}\n`)
-  // El destino de la experiencia activa no se ofrece dentro de ella misma.
-  expect(destinations.join(' | ')).not.toContain('Centro operacional')
+  await admin.click()
+  await expect(page).toHaveURL(/\/admin$/)
+  await expect(page.locator('.novex-os-rail')).toHaveCount(0)
 
-  // Las cuatro secciones del Centro siguen visibles y horizontales.
-  for (const label of [
-    'Inicio',
-    'Panorama global',
-    'Inteligencia IA',
-    'Auditoría',
-  ]) {
-    await expect(page.getByRole('link', { name: label, exact: true })).toBeVisible()
-  }
+  // Y vuelve al Centro por el mismo menú.
+  await page.getByRole('button', { name: /Menú de usuario/ }).click()
+  await page.getByRole('menuitem', { name: 'Centro operacional' }).click()
+  await expect(page).toHaveURL(/\/centro-operacional$/)
 
-  // La identificación de pantalla sobrevive a la simplificación del header.
-  await expect(
-    page.getByRole('heading', { name: 'Centro operacional', level: 1 }),
-  ).toBeVisible()
+  // Cerrar sesión lleva al login.
+  await page.getByRole('button', { name: /Menú de usuario/ }).click()
+  await page.getByRole('menuitem', { name: 'Cerrar sesión' }).click()
+  await expect(page).toHaveURL(/\/login$/, { timeout: 30_000 })
 })

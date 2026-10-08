@@ -29,10 +29,49 @@ export const PROBLEM_SECTION_ORDER: readonly ProblemSectionId[] = [
   'timeline',
 ]
 
+/** Un nivel del historial de severidad, listo para la vista. */
+export interface ProblemSeverityStep {
+  id: string
+  from: SituationSeverity | null
+  to: SituationSeverity
+  source: 'REPORTED' | 'AUTO_TIME'
+  /** Desde cuándo rige. */
+  effectiveAt: string
+  /**
+   * Historia QA simulada (`policy_code` `qa-*`): se rotula como tal para que
+   * nadie la lea como el resultado de una política aprobada.
+   */
+  simulated: boolean
+}
+
+/** Una afectación del problema (append-only). */
+export interface ProblemConsequence {
+  id: string
+  description: string
+  occurredAt: string
+  createdAt: string
+  authorName: string | null
+  authorRole: string | null
+  /** Severidad vigente cuando ocurrió (la deriva el servidor). */
+  severityAtOccurrence: SituationSeverity | null
+}
+
 export interface ProblemDetail {
   id: string
   title: string
+  /** Severidad EFECTIVA: el nivel actual. */
   severity: SituationSeverity
+  /** Severidad REPORTADA al registrar. Igual a `severity` si nunca cambió. */
+  reportedSeverity: SituationSeverity
+  /** Historial ascendente; la primera fila es la reportada. */
+  severityHistory: readonly ProblemSeverityStep[]
+  /** Afectaciones en orden de ocurrencia. Vacía es un estado legítimo. */
+  consequences: readonly ProblemConsequence[]
+  /**
+   * Decisión del BACKEND sobre si este usuario puede registrar una afectación.
+   * La interfaz no reconstruye la regla.
+   */
+  canAddConsequence: boolean
   status: string
   slaHealth: 'on_track' | 'at_risk' | 'overdue' | 'closed' | null
   dueAt: string | null

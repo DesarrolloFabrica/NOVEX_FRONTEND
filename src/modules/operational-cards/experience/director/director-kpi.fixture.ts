@@ -27,8 +27,6 @@ export const DIRECTOR_KPI_CATALOG_CODES = [
 function problems(overrides: Partial<OperationalKpiProblemCounts> = {}): OperationalKpiProblemCounts {
   return {
     activeCount: 0,
-    status: { open: 0, inProgress: 0 },
-    severity: { critical: 0, high: 0, medium: 0, low: 0 },
     ...overrides,
     status: { open: 0, inProgress: 0, ...overrides.status },
     severity: {
@@ -49,12 +47,6 @@ export function kpiCoordinationFixture(
 ): OperationalKpiCoordinationSnapshot {
   const code = DIRECTOR_KPI_CATALOG_CODES[index] ?? `coord-extra-${index}`
   return {
-    coordination: {
-      id: `00000000-0000-0000-0000-${String(index + 1).padStart(12, '0')}`,
-      code,
-      name: `Coordinación ${code}`,
-      shortName: code.replace('coord-', ''),
-    },
     problems: problems(),
     dependencies: { incoming: 0, outgoing: 0 },
     integrityStatus: 'ESTABLE',

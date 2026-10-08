@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  buildCurrentWeekPeriod,
+  buildCurrentCyclePeriod,
+  refreshAnalysisPeriod,
   type AnalysisPeriod,
 } from '@/modules/operational-cards/domain/analysis-period'
+import { DirectorAnalysisPeriodPicker } from '@/modules/operational-cards/experience/director/DirectorAnalysisPeriodPicker'
+import { DirectorAprendizajesPanel } from '@/modules/operational-cards/experience/director/DirectorAprendizajesPanel'
 import { DirectorDependenciasPanel } from '@/modules/operational-cards/experience/director/DirectorDependenciasPanel'
-import type { EstadoEvolutionView } from '@/modules/operational-cards/experience/director/DirectorEstadoEvolucion'
 import { DirectorEstadoPanel } from '@/modules/operational-cards/experience/director/DirectorEstadoPanel'
 import { DirectorInternosPanel } from '@/modules/operational-cards/experience/director/DirectorInternosPanel'
 import { DirectorReadingContextHeader } from '@/modules/operational-cards/experience/director/DirectorReadingContextHeader'
@@ -13,7 +15,6 @@ import type {
   OperationalKpiCoordinationSnapshot,
   OperationalKpiDependencySide,
   OperationalKpiDirectionSnapshot,
-  OperationalKpiHistoryGranularity,
   OperationalKpiHistoryMetric,
 } from '@/modules/operational-cards/types/operational-kpi.types'
 import type { CoordinationOverview } from '@/modules/operational-cards/types/operational-overview.contract'
@@ -55,6 +56,8 @@ export function DirectorReadingPanel({
   coordinationStatus,
   coordination,
   coordinationError,
+  openProblemId = null,
+  onOpenProblem = null,
 }: {
   selectedCoordination: CoordinationOverview | null
   directionStatus: DirectorKpiLoadStatus
@@ -64,38 +67,74 @@ export function DirectorReadingPanel({
   coordinationStatus: DirectorKpiLoadStatus
   coordination: OperationalKpiCoordinationSnapshot | null
   coordinationError: string | null
+  /** Problema abierto en el panel central (fila marcada en INTERNOS). */
+  openProblemId?: string | null
+  /** Abre el detalle existente, en solo lectura, en el panel central. */
+  onOpenProblem?: ((problemId: string) => void) | null
 }) {
   const [mode, setMode] = useState<DirectorReadingMode>('state')
-  const [estadoView, setEstadoView] =
-    useState<EstadoEvolutionView>('pendientes')
-  /** Única fuente temporal de ESTADO: fechas explícitas, no granularidad suelta. */
+  /**
+   * Única fuente temporal de toda la lectura de coordinación
+   * (ESTADO · INTERNOS · DEPENDENCIAS · APRENDIZAJES). Sobrevive a cambios de
+   * tab y de coordinación: una coordinación + un periodo = una lectura.
+   */
   const [analysisPeriod, setAnalysisPeriod] = useState<AnalysisPeriod>(() =>
-    buildCurrentWeekPeriod(),
-  )
-  const [internosMetric, setInternosMetric] =
-    useState<OperationalKpiHistoryMetric>('created')
-  const [internosGranularity, setInternosGranularity] =
-    useState<OperationalKpiHistoryGranularity>('week')
-  const [internosCategoryId, setInternosCategoryId] = useState<string | null>(
-    null,
+    // Default de producto: el ciclo actual (perspectiva amplia → drill-down).
+    buildCurrentCyclePeriod(),
   )
   const [relationsMetric, setRelationsMetric] =
     useState<OperationalKpiHistoryMetric>('created')
-  const [relationsGranularity, setRelationsGranularity] =
-    useState<OperationalKpiHistoryGranularity>('week')
   const [relationsPartnerId, setRelationsPartnerId] = useState<string | null>(
     null,
   )
   const [relationsSide, setRelationsSide] =
     useState<OperationalKpiDependencySide | null>(null)
+  const onRelationsSelectionChange = useCallback(
+    (
+      partnerId: string | null,
+      side: OperationalKpiDependencySide | null,
+    ) => {
+      setRelationsPartnerId(partnerId)
+      setRelationsSide(side)
+    },
+    [],
+  )
+  /**
+   * Lámina del carrusel de ESTADO. Vive aquí (no en ESTADO) para sobrevivir
+   * a cambios de tab, de coordinación y de periodo: permite comparar la misma
+   * dimensión entre coordinaciones sin volver a navegar. No es un filtro.
+   */
+  const [estadoPage, setEstadoPage] = useState(0)
+  /** Lámina de INTERNOS (Recurrencia | Afectaciones): misma regla que ESTADO. */
+  const [internosPage, setInternosPage] = useState(0)
   const [canScrollMore, setCanScrollMore] = useState(false)
   const bodyRef = useRef<HTMLDivElement | null>(null)
 
   const selected = selectedCoordination !== null
   const coordinationKey = selectedCoordination?.id ?? null
+  // ESTADO e INTERNOS de coordinación caben enteros (carrusel): sin scroll ni
+  // pista de «hay más abajo». Los demás modos conservan su scroll.
+  const fixedHeight = (mode === 'state' || mode === 'internos') && selected
 
+  // «Actual / en curso» caduca si la app queda abierta al cambiar de día.
+  // Se revalida al volver a la pestaña (sin polling); el picker también
+  // revalida al abrirse. El periodo elegido no cambia, solo su metadata.
   useEffect(() => {
-    setInternosCategoryId(null)
+    const revalidate = () => {
+      if (document.visibilityState === 'hidden') return
+      setAnalysisPeriod((current) => refreshAnalysisPeriod(current))
+    }
+    document.addEventListener('visibilitychange', revalidate)
+    window.addEventListener('focus', revalidate)
+    return () => {
+      document.removeEventListener('visibilitychange', revalidate)
+      window.removeEventListener('focus', revalidate)
+    }
+  }, [])
+
+  // Cambiar de coordinación conserva el periodo pero limpia selecciones que
+  // pertenecen a la coordinación (pareja INTER).
+  useEffect(() => {
     setRelationsPartnerId(null)
     setRelationsSide(null)
   }, [coordinationKey])
@@ -135,24 +174,25 @@ export function DirectorReadingPanel({
       data-testid="director-reading-panel"
       data-mode={mode}
       data-scope={selected ? 'coordination' : 'direction'}
-      data-scroll-more={canScrollMore ? 'true' : 'false'}
+      data-scroll-more={canScrollMore && !fixedHeight ? 'true' : 'false'}
+      data-fixed-height={fixedHeight ? 'true' : 'false'}
     >
       <header className="director-reading__header">
         <p className="director-reading__kicker">
           {selected ? 'Lectura de coordinación' : 'Lectura de Dirección'}
         </p>
-        <DirectorReadingContextHeader
-          selectedCoordination={selectedCoordination}
-          directionStatus={directionStatus}
-          direction={direction}
-          coordinationStatus={coordinationStatus}
-          coordination={coordination}
-          activeCount={
-            selected
-              ? (coordination?.problems.activeCount ?? null)
-              : (direction?.problems.activeCount ?? null)
-          }
-        />
+        {/*
+         * Con coordinación, la identidad (carta, personaje, problemas) y la
+         * carga activa («Pendientes ahora» del flujo) ya están en otra parte:
+         * la cabecera queda solo como título estructural del panel.
+         * En Lectura de Dirección se conserva el contexto global (no hay flujo).
+         */}
+        {selected ? null : (
+          <DirectorReadingContextHeader
+            selectedCoordination={null}
+            activeCount={direction?.problems.activeCount ?? null}
+          />
+        )}
         <nav
           className="director-reading__modes"
           aria-label="Modo de lectura"
@@ -171,6 +211,23 @@ export function DirectorReadingPanel({
             </button>
           ))}
         </nav>
+        {/*
+         * Un solo periodo para todos los modos: vive aquí, fuera del body, para
+         * no desmontarse al cambiar de tab. Sin coordinación no hay analítica
+         * histórica de Dirección todavía → no se muestra un filtro inerte.
+         */}
+        {selected ? (
+          <div
+            className="director-reading__period"
+            data-testid="director-reading-period"
+          >
+            <DirectorAnalysisPeriodPicker
+              variant="cycle"
+              period={analysisPeriod}
+              onChange={setAnalysisPeriod}
+            />
+          </div>
+        ) : null}
       </header>
 
       <div
@@ -178,6 +235,7 @@ export function DirectorReadingPanel({
         className="director-reading__body"
         data-testid="director-reading-body"
         data-mode={mode}
+        data-fixed-height={fixedHeight ? 'true' : 'false'}
       >
         {mode === 'state' ? (
           <DirectorEstadoPanel
@@ -191,59 +249,43 @@ export function DirectorReadingPanel({
             coordinationStatus={coordinationStatus}
             coordination={coordination}
             coordinationError={coordinationError}
-            evolutionView={estadoView}
             analysisPeriod={analysisPeriod}
-            onEvolutionViewChange={setEstadoView}
             onAnalysisPeriodChange={setAnalysisPeriod}
             onOpenDependencias={() => setMode('dependencias')}
+            carouselPage={estadoPage}
+            onCarouselPageChange={setEstadoPage}
           />
         ) : null}
 
         {mode === 'internos' ? (
           <DirectorInternosPanel
             coordinationId={selectedCoordination?.id ?? null}
-            metric={internosMetric}
-            granularity={internosGranularity}
-            onMetricChange={setInternosMetric}
-            onGranularityChange={setInternosGranularity}
-            selectedCategoryId={internosCategoryId}
-            onSelectedCategoryChange={setInternosCategoryId}
+            analysisPeriod={analysisPeriod}
+            onAnalysisPeriodChange={setAnalysisPeriod}
+            page={internosPage}
+            onPageChange={setInternosPage}
+            openProblemId={openProblemId}
+            onOpenProblem={onOpenProblem}
           />
         ) : null}
 
         {mode === 'dependencias' ? (
           <DirectorDependenciasPanel
             coordinationId={selectedCoordination?.id ?? null}
+            analysisPeriod={analysisPeriod}
             metric={relationsMetric}
-            granularity={relationsGranularity}
             onMetricChange={setRelationsMetric}
-            onGranularityChange={setRelationsGranularity}
             selectedPartnerId={relationsPartnerId}
             selectedSide={relationsSide}
-            onSelectionChange={(partnerId, side) => {
-              setRelationsPartnerId(partnerId)
-              setRelationsSide(side)
-            }}
+            onSelectionChange={onRelationsSelectionChange}
           />
         ) : null}
 
         {mode === 'aprendizajes' ? (
-          <div
-            className="director-aprendizajes director-reading__placeholder"
-            data-testid="director-reading-aprendizajes"
-          >
-            <p className="director-block__title">Últimos aprendizajes</p>
-            <p>
-              Aprendizajes registrados al cerrar situaciones. Cada entrada
-              mostrará categoría, fecha de cierre y extracto — sin barras.
-            </p>
-            <p className="director-internos__hint">
-              Filtro previsto: Todos · Internet · Aplicativos · …
-            </p>
-            <p className="director-reading__phase-note">
-              Diseño preparado · datos en la siguiente fase
-            </p>
-          </div>
+          <DirectorAprendizajesPanel
+            coordinationId={selectedCoordination?.id ?? null}
+            analysisPeriod={analysisPeriod}
+          />
         ) : null}
       </div>
     </div>

@@ -28,9 +28,10 @@ export interface IncidentCategorySummary {
 export interface CreateSituationPayload {
   title: string
   description: string
-  reportKind?: SituationReportKind
-  /** Coordinación RESPONSABLE. */
-  coordinationId?: string
+  /** Obligatorio: el backend ya no asume INTERNAL por omisión. */
+  reportKind: SituationReportKind
+  /** Coordinación RESPONSABLE. Obligatoria en ambos tipos. */
+  coordinationId: string
   /** Coordinación AFECTADA (obligatoria en INTER). */
   affectedCoordinationId?: string
   /** Obligatoria en INTERNAL; omitida en INTER. */
@@ -40,6 +41,45 @@ export interface CreateSituationPayload {
   affectedProcess?: string
   pendingDelivery?: string
   relatedCoordinationIds?: string[]
+  /** Solo INTERNAL, opcional. Sin fecha propia: ocurre con el problema. */
+  initialConsequence?: { description: string }
+}
+
+/** Origen de un nivel de severidad. */
+export type SituationSeverityChangeSource = 'REPORTED' | 'AUTO_TIME'
+
+/** Un nivel del historial de severidad (append-only en el backend). */
+export interface SituationSeverityHistoryItem {
+  id: string
+  from: SituationSeverity | null
+  to: SituationSeverity
+  source: SituationSeverityChangeSource
+  /** Desde cuándo rige el nivel. */
+  effectiveAt: string
+  /** Cuándo lo registró el sistema. */
+  recordedAt: string
+  policyCode: string | null
+  ruleKey: string | null
+}
+
+/** Una afectación del problema (append-only). */
+export interface SituationConsequenceResponse {
+  id: string
+  situationId: string
+  description: string
+  occurredAt: string
+  createdAt: string
+  createdByUserId: string
+  createdByUserName: string
+  createdByRoleName: string | null
+  /** Derivada del historial en el servidor; no se persiste. */
+  severityAtOccurrence: SituationSeverity | null
+}
+
+export interface CreateSituationConsequencePayload {
+  description: string
+  /** ISO. Por defecto, ahora (lo decide el servidor). */
+  occurredAt?: string
 }
 
 export interface RelatedCoordinationResponse {
@@ -72,7 +112,12 @@ export interface SituationResponse {
   categoryCode: string | null
   categoryName: string | null
   categoryIcon?: string | null
+  /** false = categoría legacy (ya no seleccionable), solo lectura. */
+  categorySelectable?: boolean | null
+  /** Severidad EFECTIVA: el nivel operacional actual. */
   severity: SituationSeverity
+  /** Severidad REPORTADA al registrar. Inmutable; base del SLA. */
+  reportedSeverity?: SituationSeverity
   status: string
   lastStatusComment?: string | null
   resolvedAt?: string | null
@@ -108,6 +153,17 @@ export interface SituationResponse {
    * No sustituye a `canAdvanceToInProgress` para «En atención».
    */
   canUpdate?: boolean
+  /**
+   * Si puede registrar una afectación (autor ANALISTA o coordinador
+   * responsable, problema INTERNAL activo). La interfaz NO reconstruye la
+   * regla: solo lee este indicador.
+   */
+  canAddConsequence?: boolean
+  /** Solo en el detalle: historial ascendente; la primera fila es REPORTED. */
+  severityHistory?: SituationSeverityHistoryItem[]
+  /** Solo en el detalle: orden por ocurrencia. */
+  consequences?: SituationConsequenceResponse[]
+  consequenceCount?: number
 }
 
 export interface SituationResolutionSummary {

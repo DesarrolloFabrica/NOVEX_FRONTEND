@@ -1,24 +1,26 @@
 import { useEffect, useState } from 'react'
+import type { AnalysisPeriod } from '@/modules/operational-cards/domain/analysis-period'
 import {
   fetchOperationalKpiRelations,
   OperationalKpiContractError,
 } from '@/modules/operational-cards/services/operational-kpi.service'
 import type {
-  OperationalKpiHistoryGranularity,
   OperationalKpiHistoryMetric,
   OperationalKpiRelationItem,
 } from '@/modules/operational-cards/types/operational-kpi.types'
-import { buildDefaultHistoryRange } from '@/modules/operational-cards/utils/kpi-history-range'
 import { getErrorMessage } from '@/shared/utils/error'
 
 export type DirectorRelationsLoadStatus = 'idle' | 'loading' | 'error' | 'success'
 
+/** Relaciones INTER de la coordinación dentro del AnalysisPeriod común. */
 export function useDirectorRelations(
   coordinationId: string | null,
   metric: OperationalKpiHistoryMetric,
-  granularity: OperationalKpiHistoryGranularity,
+  analysisPeriod: AnalysisPeriod | null,
 ) {
-  const [status, setStatus] = useState<DirectorRelationsLoadStatus>('idle')
+  const [status, setStatus] = useState<DirectorRelationsLoadStatus>(() =>
+    coordinationId && analysisPeriod ? 'loading' : 'idle',
+  )
   const [commitments, setCommitments] = useState<OperationalKpiRelationItem[]>(
     [],
   )
@@ -26,33 +28,38 @@ export function useDirectorRelations(
     OperationalKpiRelationItem[]
   >([])
   const [error, setError] = useState<string | null>(null)
+  /** Consulta a la que pertenecen las listas (evita leer datos de otro periodo). */
+  const [loadedKey, setLoadedKey] = useState<string | null>(null)
+
+  const from = analysisPeriod?.from
+  const to = analysisPeriod?.to
+  const queryKey =
+    coordinationId && from && to
+      ? `${coordinationId}|${metric}|${from}|${to}`
+      : null
 
   useEffect(() => {
-    if (!coordinationId) {
+    if (!coordinationId || !from || !to) {
       setStatus('idle')
       setCommitments([])
       setDependencies([])
       setError(null)
+      setLoadedKey(null)
       return
     }
     const controller = new AbortController()
-    const range = buildDefaultHistoryRange(granularity)
     setStatus('loading')
     setError(null)
 
     void fetchOperationalKpiRelations(
-      {
-        coordinationId,
-        metric,
-        from: range.from,
-        to: range.to,
-      },
+      { coordinationId, metric, from, to },
       { signal: controller.signal },
     )
       .then((response) => {
         if (controller.signal.aborted) return
         setCommitments(response.commitments)
         setDependencies(response.dependencies)
+        setLoadedKey(queryKey)
         setStatus('success')
       })
       .catch((cause: unknown) => {
@@ -69,7 +76,10 @@ export function useDirectorRelations(
       })
 
     return () => controller.abort()
-  }, [coordinationId, metric, granularity])
+  }, [coordinationId, metric, from, to, queryKey])
 
-  return { status, commitments, dependencies, error }
+  /** true solo cuando las listas corresponden a la consulta vigente. */
+  const fresh = status === 'success' && loadedKey === queryKey
+
+  return { status, commitments, dependencies, error, fresh }
 }

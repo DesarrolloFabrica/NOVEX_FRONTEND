@@ -15,8 +15,15 @@ import { EXECUTIVE_CENTER_RAIL_ITEM } from '@/modules/executive-operations-cente
  * ofrezcan destinos distintos al mismo usuario, que es la forma habitual en la
  * que una navegación duplicada se desincroniza.
  *
+ * FASE 1 — retiro de la navegación legacy. Situaciones registradas, Dashboard,
+ * Red de impacto y Gestión de situaciones dejaron de ser destinos: sus rutas
+ * redirigen al Centro Operacional. Ni el carril ni el menú Plataforma se montan
+ * ya en ninguna pantalla; la única superficie que lee esta lista es el menú de
+ * usuario (`NovexUserMenu`), que ofrece al ADMIN el paso entre el Centro y la
+ * Administración.
+ *
  * NO se confunda con `EOC_SUB_NAV_ITEMS`: esas son las SECCIONES internas del
- * Centro Operacional (Inicio, Panorama, IA, Auditoría) y viven en su módulo.
+ * Centro Operacional y viven en su módulo.
  */
 
 export type PlatformNavIcon =
@@ -37,44 +44,9 @@ export interface PlatformNavItem {
   end?: boolean
 }
 
+/** Todos los roles: el Centro Operacional (antes faltaba al COORDINADOR). */
 const OPERATIONAL_NAV_ITEMS: readonly PlatformNavItem[] = [
-  {
-    to: '/situaciones',
-    label: 'Situaciones registradas',
-    eyebrow: 'Historial operativo',
-    icon: 'events',
-    end: true,
-  },
-  {
-    to: '/dashboard',
-    label: 'Dashboard',
-    eyebrow: 'Visión general',
-    icon: 'intelligence',
-    end: true,
-  },
-  {
-    to: '/red-impacto',
-    label: 'Red de impacto',
-    eyebrow: 'Mapa operacional',
-    icon: 'impact',
-    end: true,
-  },
-  {
-    to: '/gestion',
-    label: 'Gestión de situaciones',
-    eyebrow: 'Ciclo operativo',
-    icon: 'monitoring',
-  },
-]
-
-const DIRECTOR_NAV_ITEMS: readonly PlatformNavItem[] = [
   EXECUTIVE_CENTER_RAIL_ITEM,
-  ...OPERATIONAL_NAV_ITEMS.filter((item) => item.to !== '/gestion'),
-]
-
-const ANALISTA_NAV_ITEMS: readonly PlatformNavItem[] = [
-  EXECUTIVE_CENTER_RAIL_ITEM,
-  ...OPERATIONAL_NAV_ITEMS,
 ]
 
 const ADMIN_NAV_ITEMS: readonly PlatformNavItem[] = [
@@ -86,25 +58,14 @@ const ADMIN_NAV_ITEMS: readonly PlatformNavItem[] = [
     end: true,
   },
   EXECUTIVE_CENTER_RAIL_ITEM,
-  ...OPERATIONAL_NAV_ITEMS.filter((item) => item.to !== '/gestion'),
 ]
 
 /**
- * Destinos de plataforma para un rol. Réplica exacta del reparto que el carril
- * aplicaba antes de R2: un rol desconocido cae en la lista operativa, igual
- * que cuando el carril usaba `user?.roleCode ?? 'COORDINADOR'`.
+ * Destinos de plataforma para un rol. Un rol desconocido cae en la lista
+ * operativa, igual que cuando el carril usaba `user?.roleCode ?? 'COORDINADOR'`.
  */
 export function resolvePlatformNavItems(
   roleCode: string | undefined,
 ): readonly PlatformNavItem[] {
-  switch (roleCode ?? 'COORDINADOR') {
-    case 'ADMIN':
-      return ADMIN_NAV_ITEMS
-    case 'DIRECTOR':
-      return DIRECTOR_NAV_ITEMS
-    case 'ANALISTA':
-      return ANALISTA_NAV_ITEMS
-    default:
-      return OPERATIONAL_NAV_ITEMS
-  }
+  return roleCode === 'ADMIN' ? ADMIN_NAV_ITEMS : OPERATIONAL_NAV_ITEMS
 }

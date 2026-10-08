@@ -139,7 +139,9 @@ const analysisResponse = {
   updatedAt: '2026-08-04T13:06:00.000Z',
 }
 
-test('auto-inicia el recorrido después de completar el splash de login', async ({
+// Fase 1: el recorrido está suspendido (ONBOARDING_TOUR_SUSPENDED); no
+// auto-inicia para ningún rol. Reactivar con el nuevo recorrido.
+test.skip('auto-inicia el recorrido después de completar el splash de login', async ({
   page,
 }) => {
   const coordinatorSession = {
@@ -233,7 +235,8 @@ test('auto-inicia el recorrido después de completar el splash de login', async 
   await page.getByRole('button', { name: 'Pausar tutorial' }).click()
 })
 
-test('acompaña una primera situación real hasta informe, historial y estado', async ({
+// INTERNAL vivo: el tour del analista ya no pasa por el asistente retirado.
+test.skip('acompaña una primera situación real hasta informe, historial y estado', async ({
   page,
 }) => {
   let registered = false

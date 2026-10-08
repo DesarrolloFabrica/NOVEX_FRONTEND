@@ -178,13 +178,19 @@ const TIMELINE_EVENT_LABEL: Record<string, string> = {
   SLA_WARNING: 'Plazo próximo a vencer',
   SLA_BREACHED: 'Plazo operativo vencido',
   CLOSED: 'Problema cerrado',
+  CONSEQUENCE_ADDED: 'Afectación registrada',
+  SEVERITY_ESCALATED: 'Severidad escalada',
 }
 
 /** Etiqueta neutra: un código nuevo no se expone ni se atribuye a nadie. */
 const UNKNOWN_EVENT_LABEL = 'Actividad registrada'
 
-/** Eventos que emite el barrido de SLA del backend, sin usuario. */
-const SYSTEM_EVENT_TYPES = new Set(['SLA_WARNING', 'SLA_BREACHED'])
+/** Eventos que emite el barrido del backend (SLA y escalamiento), sin usuario. */
+const SYSTEM_EVENT_TYPES = new Set([
+  'SLA_WARNING',
+  'SLA_BREACHED',
+  'SEVERITY_ESCALATED',
+])
 
 /**
  * Eventos cuya `description` del backend solo repite lo que ya dicen la
@@ -200,6 +206,8 @@ const STRUCTURED_EVENT_TYPES = new Set([
   'SLA_WARNING',
   'SLA_BREACHED',
   'CLOSED',
+  'CONSEQUENCE_ADDED',
+  'SEVERITY_ESCALATED',
 ])
 
 const UPDATED_FIELD_LABEL: Record<string, string> = {
@@ -233,12 +241,13 @@ function resolveActor(entry: SituationTimelineEntry): string {
 
 function resolveTransition(
   metadata: Record<string, unknown> | null,
+  eventType: string,
 ): { from: string; to: string } | null {
   if (!metadata) return null
   const dictionary =
     metadata.field === 'status'
       ? DOSSIER_HISTORY_STATUS_LABEL
-      : metadata.field === 'severity'
+      : metadata.field === 'severity' || eventType === 'SEVERITY_ESCALATED'
         ? (DOSSIER_SEVERITY_LABEL as Record<string, string>)
         : null
   if (!dictionary) return null
@@ -289,6 +298,20 @@ function resolveDetails(entry: SituationTimelineEntry): string[] {
       if (typeLabel) details.push(`Tipo: ${typeLabel}`)
       break
     }
+    case 'CONSEQUENCE_ADDED': {
+      // El texto vive en «Afectaciones»; aquí solo cuándo ocurrió.
+      const occurredAt = formatProblemDateTime(nonEmpty(metadata?.occurredAt))
+      if (occurredAt.iso) details.push(`Ocurrió: ${occurredAt.label}`)
+      break
+    }
+    case 'SEVERITY_ESCALATED': {
+      // La fecha del evento es la del registro; rige desde la de la regla.
+      const effectiveAt = formatProblemDateTime(nonEmpty(metadata?.effectiveAt))
+      if (effectiveAt.iso) details.push(`Rige desde: ${effectiveAt.label}`)
+      const policy = nonEmpty(metadata?.policyCode)
+      if (policy?.startsWith('qa-')) details.push('Historia QA simulada')
+      break
+    }
     default:
       break
   }
@@ -312,7 +335,7 @@ export function toProblemTimelineEntryView(
     id: entry.id,
     label: TIMELINE_EVENT_LABEL[entry.eventType] ?? UNKNOWN_EVENT_LABEL,
     actor: resolveActor(entry),
-    transition: resolveTransition(entry.metadata),
+    transition: resolveTransition(entry.metadata, entry.eventType),
     details: resolveDetails(entry),
     date: formatProblemDateTime(entry.createdAt),
   }

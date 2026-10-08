@@ -1,5 +1,10 @@
 import { expect, test, type Page } from 'playwright/test'
 
+// Fase 1 de retiro del shell legacy: el recorrido de onboarding está suspendido (ONBOARDING_TOUR_SUSPENDED).
+// El estado persistido y el contrato con backend se conservan, pero el
+// overlay no se muestra a ningún rol. Reactivar con el nuevo recorrido.
+test.skip(true, 'Fase 1: el recorrido de onboarding está suspendido (ONBOARDING_TOUR_SUSPENDED)')
+
 type TutorialRole = 'DIRECTOR' | 'ADMIN'
 
 const AUTH_SESSION_KEY = 'novex.auth.session.v1'

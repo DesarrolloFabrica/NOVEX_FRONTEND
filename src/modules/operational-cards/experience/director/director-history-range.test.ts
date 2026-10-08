@@ -34,17 +34,36 @@ describe('buildDefaultHistoryRange', () => {
 })
 
 describe('layout DIRECTOR', () => {
-  it('ensancha lectura y acota baraja/cartas sin tocar ANALISTA', () => {
-    expect(shellCss).toContain(
-      ".operational-shell[data-shell-layout='director']",
-    )
-    expect(shellCss).toMatch(/--shell-action-w:\s*38%/)
-    expect(shellCss).toContain('minmax(300px, 1.95fr) minmax(170px, 1fr)')
-    expect(shellCss).toContain('clamp(140px, 9.6vw, 188px)')
-    const directorBlock = shellCss.slice(
-      shellCss.indexOf("[data-shell-layout='director']"),
-      shellCss.indexOf("[data-shell-layout='director-direction']"),
-    )
-    expect(directorBlock).toContain('--shell-action-w: 38%')
+  const directorBlock = shellCss.slice(
+    shellCss.indexOf(".operational-shell[data-shell-layout='director']"),
+    shellCss.indexOf('.operational-shell__region--director-kpi,'),
+  )
+
+  it('variante analítica: Lectura ≈50 %, baraja algo más baja, carta seleccionada destacada', () => {
+    expect(directorBlock).toContain('--shell-action-w: 50%')
+    expect(directorBlock).toContain('minmax(300px, 2.35fr) minmax(170px, 1fr)')
+    expect(directorBlock).toContain('minmax(0, 0.365fr) minmax(0, 0.635fr)')
+    expect(directorBlock).toContain('clamp(112px, 8.6vw, 172px)')
+    expect(directorBlock).toContain('--selected-scale: 1.08')
+    // Problemas compactos (títulos a una línea), siempre bajo el scope DIRECTOR.
+    expect(directorBlock).toContain('.operational-shell__region--coordination-problems')
+  })
+
+  it('todo selector de la variante está bajo data-shell-layout=director', () => {
+    const rules = directorBlock
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .split('}')
+      .map((rule) => rule.split('{')[0].trim())
+      .filter(Boolean)
+    expect(rules.length).toBeGreaterThan(4)
+    for (const selector of rules) {
+      expect(selector.startsWith(".operational-shell[data-shell-layout='director']")).toBe(true)
+    }
+  })
+
+  it('ANALISTA/ADMIN conservan su rejilla base (panel de acción 30 %)', () => {
+    const base = shellCss.slice(shellCss.indexOf("[data-shell-layout='director-direction']"))
+    expect(base).toMatch(/--shell-action-w:\s*30%/)
+    expect(base).not.toContain('--shell-action-w: 50%')
   })
 })

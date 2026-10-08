@@ -162,6 +162,13 @@ export type OperationalCardsAction =
       detail: ProblemDetail
     }
   | { type: 'SUBMIT_STATUS_ADVANCE_ERROR'; message: string }
+  | { type: 'SUBMIT_CONSEQUENCE'; problemId: string }
+  | {
+      type: 'SUBMIT_CONSEQUENCE_SUCCESS'
+      problemId: string
+      detail: ProblemDetail
+    }
+  | { type: 'SUBMIT_CONSEQUENCE_ERROR'; message: string }
   | { type: 'CONSUME_CHARACTER_REACTION'; id: number }
 
 export const initialOperationalCardsState: OperationalCardsState = {
@@ -233,7 +240,7 @@ export function emptyReportDraft(occurredAt: string): ReportDraft {
     severity: 'MEDIUM',
     occurredAt,
     responsibleCoordinationId: '',
-    internalDestinationCoordinationId: '',
+    initialConsequence: '',
     affectedProcess: '',
     pendingDelivery: '',
   }
@@ -1302,6 +1309,69 @@ export function operationalCardsReducer(
         ...state,
         submission: {
           kind: 'status-advance',
+          status: 'error',
+          targetKey: state.submission.targetKey,
+          errorMessage: action.message,
+          confirmedButStale: false,
+        },
+      }
+
+    case 'SUBMIT_CONSEQUENCE':
+      if (state.submission.status === 'sending') return state
+      return {
+        ...state,
+        submission: {
+          kind: 'consequence',
+          status: 'sending',
+          targetKey: action.problemId,
+          errorMessage: null,
+          confirmedButStale: false,
+        },
+      }
+
+    case 'SUBMIT_CONSEQUENCE_SUCCESS': {
+      /*
+       * Una afectación NO cambia el estado ni la lista: el problema sigue
+       * activo y en su sitio. Se reemplaza el detalle (con la afectación ya
+       * persistida, tal como la devuelve el servidor) y se invalida la
+       * cronología, que ganó un CONSEQUENCE_ADDED.
+       */
+      const previousSections =
+        state.detailByProblem[action.problemId]?.sections ??
+        state.level2.sections
+      const sections = {
+        ...previousSections,
+        timeline: {
+          status: 'idle' as const,
+          items: [],
+          errorMessage: null,
+        },
+      }
+      return {
+        ...state,
+        detailByProblem: {
+          ...state.detailByProblem,
+          [action.problemId]: { detail: action.detail, sections },
+        },
+        level2:
+          state.selectedProblemId === action.problemId
+            ? {
+                ...state.level2,
+                status: 'ready',
+                detail: action.detail,
+                sections,
+                errorMessage: null,
+              }
+            : state.level2,
+        submission: initialOperationalCardsState.submission,
+      }
+    }
+
+    case 'SUBMIT_CONSEQUENCE_ERROR':
+      return {
+        ...state,
+        submission: {
+          kind: 'consequence',
           status: 'error',
           targetKey: state.submission.targetKey,
           errorMessage: action.message,

@@ -16,7 +16,8 @@ import '@/modules/executive-operations-center/styles/executive-home.css'
  *
  * El opt-out es explícito y por componente (`rail={false}`), no por ruta: este
  * layout sirve exclusivamente `/centro-operacional` y sus tres secciones
- * hijas —Panorama, Inteligencia y Auditoría—, que son partes del mismo Centro
+ * hijas —Panorama, Inteligencia y Auditoría, que desde la fase 1 solo
+ * redirigen a la home—, que son partes del mismo Centro
  * y comparten su chrome. Ninguna otra ruta pasa por aquí, así que no hay nada
  * que condicionar por `pathname`.
  */
@@ -47,12 +48,13 @@ export function ExecutiveOperationsLayout() {
                   help={
                     <>
                       <p>
-                        Lectura consolidada de situaciones, prioridad operativa,
-                        inteligencia asistida y trazabilidad institucional.
+                        Cada carta representa una coordinación. Al
+                        seleccionarla, la lectura, los problemas y las acciones
+                        de su rol cambian a esa coordinación.
                       </p>
                       <p>
-                        Use las pestañas para pasar del resumen ejecutivo al
-                        panorama, al análisis IA o a la auditoría completa.
+                        El personaje refleja el estado operacional de la
+                        coordinación.
                       </p>
                     </>
                   }

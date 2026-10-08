@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
 import { NovexIcon } from '@/shared/components/NovexIcon'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { getRoleDisplayName } from '@/modules/auth/utils/roleDisplay'
 import { useOnboarding } from '@/modules/onboarding/OnboardingContext'
+import { NovexPlatformIcon } from '@/shared/components/NovexPlatformIcon'
+import { resolvePlatformNavItems } from '@/shared/constants/platformNavigation'
 
 interface NovexUserMenuProps {
   onLogout?: () => void
@@ -20,6 +23,18 @@ export function NovexUserMenu({
   const firstName = user?.name?.split(' ')[0] ?? 'Operador'
   const role = getRoleDisplayName(user)
   const tutorialAvailable = steps.length > 0
+  const { pathname } = useLocation()
+  /*
+   * Fase 1: sin carril ni menú «Plataforma», el paso entre experiencias que
+   * sobreviven vive aquí. Hoy solo el ADMIN tiene más de un destino
+   * (Centro operacional ⇄ Administración); para los demás roles la lista,
+   * sin la experiencia activa, queda vacía y no se pinta nada.
+   */
+  const destinations = resolvePlatformNavItems(user?.roleCode).filter(
+    (item) =>
+      pathname !== item.to &&
+      (item.end || !pathname.startsWith(`${item.to}/`)),
+  )
 
   useEffect(() => {
     if (!open) return
@@ -80,6 +95,18 @@ export function NovexUserMenu({
             </div>
           </div>
           <div className="novex-user-menu__items">
+            {destinations.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                role="menuitem"
+                viewTransition
+                onClick={() => setOpen(false)}
+              >
+                <NovexPlatformIcon name={item.icon} />
+                {item.label}
+              </NavLink>
+            ))}
             {onRestartImpactNetworkTutorial ? (
               <button
                 type="button"

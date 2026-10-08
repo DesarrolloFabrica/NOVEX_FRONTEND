@@ -9,11 +9,17 @@ import type { SituationSeverity } from '@/modules/situations/types/situation.typ
 import { ResponsibleCoordinationPicker } from '@/modules/operational-cards/components/ResponsibleCoordinationPicker'
 
 /**
- * FORMULARIO DE REPORTE, en el panel derecho.
+ * FORMULARIO DE REPORTE, en el panel derecho. Única puerta de creación de
+ * problemas internos.
  *
- *   INTERNAL  Destino = carta seleccionada; categorías del catálogo.
+ *   INTERNAL  Coordinación = carta seleccionada (la propia, para un
+ *             COORDINADOR); categorías vigentes del catálogo; severidad
+ *             inicial; afectación inicial opcional.
  *   INTER     Afectada fija (carta); selector de responsable externa;
  *             proceso afectado y entrega pendiente.
+ *
+ * Descripción = QUÉ está fallando. Afectación = QUÉ CONSECUENCIA produjo. No
+ * se mezclan: la afectación vive en su propia colección.
  */
 
 const SEVERITY_OPTIONS: ReadonlyArray<{
@@ -42,14 +48,6 @@ export interface ReportProblemFormProps {
   categoriesError: string | null
   /** Opciones de responsable (INTER), sin incluir la carta seleccionada. */
   responsibleOptions: readonly ResponsibleOption[]
-  /**
-   * Selector de destino INTERNAL (vista COORDINADOR).
-   * Si está presente, el formulario permite reportar un problema interno en
-   * otra área sin cambiar la carta. Distinto de «coordinación responsable».
-   */
-  destinationOptions?: readonly ResponsibleOption[] | null
-  /** UUID de la coordinación propia (opción por defecto del destino). */
-  ownCoordinationId?: string | null
   draft: ReportDraft
   submission: OperationalSubmissionState
   onDraftChange: (patch: Partial<ReportDraft>) => void
@@ -65,8 +63,6 @@ export function ReportProblemForm({
   categories,
   categoriesError,
   responsibleOptions,
-  destinationOptions = null,
-  ownCoordinationId = null,
   draft,
   submission,
   onDraftChange,
@@ -83,17 +79,6 @@ export function ReportProblemForm({
 
   const sinDestino = affectedLabel === null
   const esInter = reportKind === 'INTER_COORDINATION'
-  const tieneSelectorDestino =
-    !esInter && Boolean(destinationOptions && destinationOptions.length > 0)
-
-  const destinoEfectivo =
-    draft.internalDestinationCoordinationId.trim() ||
-    ownCoordinationId ||
-    ''
-
-  const destinoLabel =
-    destinationOptions?.find((option) => option.id === destinoEfectivo)?.label ??
-    affectedLabel
 
   const pickerOptions = responsibleOptions.map((option) => ({
     id: option.id,
@@ -167,14 +152,6 @@ export function ReportProblemForm({
           >
             Seleccione una coordinación en las cartas para poder reportar.
           </p>
-        ) : tieneSelectorDestino ? (
-          <p
-            className="report-form__destination"
-            data-testid="report-form-destination"
-          >
-            Destino del registro:{' '}
-            <strong>{destinoLabel ?? affectedLabel}</strong>
-          </p>
         ) : (
           <p
             className="report-form__destination"
@@ -193,38 +170,6 @@ export function ReportProblemForm({
           </p>
         )}
       </header>
-
-      {tieneSelectorDestino ? (
-        <div className="report-form__field">
-          <label htmlFor={`${idPrefijo}-destination`}>
-            Coordinación destino del problema interno
-          </label>
-          <select
-            id={`${idPrefijo}-destination`}
-            data-testid="report-internal-destination"
-            value={destinoEfectivo}
-            disabled={enviando}
-            onChange={(e) =>
-              onDraftChange({
-                internalDestinationCoordinationId:
-                  e.target.value === ownCoordinationId ? '' : e.target.value,
-              })
-            }
-          >
-            {destinationOptions!.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.id === ownCoordinationId
-                  ? `${option.label} (mi coordinación)`
-                  : option.label}
-              </option>
-            ))}
-          </select>
-          <p className="report-form__hint">
-            Por defecto es su área. Elija otra solo si registra un problema
-            interno hacia esa coordinación, sin abrir su lista ni su estado.
-          </p>
-        </div>
-      ) : null}
 
       {esInter && (
         <div className="report-form__field">
@@ -264,8 +209,14 @@ export function ReportProblemForm({
           required
           value={draft.description}
           disabled={enviando}
+          aria-describedby={esInter ? undefined : `${idPrefijo}-description-hint`}
           onChange={(e) => onDraftChange({ description: e.target.value })}
         />
+        {!esInter && (
+          <p className="report-form__hint" id={`${idPrefijo}-description-hint`}>
+            Qué está fallando. Las consecuencias van en «Afectación inicial».
+          </p>
+        )}
       </div>
 
       {esInter ? (
@@ -332,7 +283,7 @@ export function ReportProblemForm({
       )}
 
       <fieldset className="report-form__field report-form__severity">
-        <legend>Severidad</legend>
+        <legend>{esInter ? 'Severidad' : '¿Qué tan grave es ahora?'}</legend>
         <div className="report-form__severity-options">
           {SEVERITY_OPTIONS.map((option) => (
             <label
@@ -371,9 +322,34 @@ export function ReportProblemForm({
         />
       </div>
 
+      {!esInter && (
+        <div className="report-form__field">
+          <label htmlFor={`${idPrefijo}-consequence`}>
+            Afectación inicial (opcional)
+          </label>
+          <textarea
+            id={`${idPrefijo}-consequence`}
+            data-testid="report-initial-consequence"
+            rows={2}
+            maxLength={2000}
+            value={draft.initialConsequence}
+            disabled={enviando}
+            aria-describedby={`${idPrefijo}-consequence-hint`}
+            placeholder="Ej.: Se retrasó la entrega de dos contenidos."
+            onChange={(e) =>
+              onDraftChange({ initialConsequence: e.target.value })
+            }
+          />
+          <p className="report-form__hint" id={`${idPrefijo}-consequence-hint`}>
+            ¿Qué se retrasó, bloqueó o no se pudo hacer como consecuencia de
+            este problema?
+          </p>
+        </div>
+      )}
+
       {enviando && (
         <p className="report-form__note" data-testid="report-sending" role="status">
-          Registrando el problema y generando su análisis…
+          Registrando el problema…
         </p>
       )}
 

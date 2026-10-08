@@ -1,13 +1,14 @@
 import { useEffect } from 'react'
+import type { AnalysisPeriod } from '@/modules/operational-cards/domain/analysis-period'
 import {
   DirectorHistorySeriesChart,
+  historyAxisForBucket,
   isHistorySeriesEmpty,
 } from '@/modules/operational-cards/experience/director/DirectorHistorySeriesChart'
-import { useDirectorCoordinationHistory } from '@/modules/operational-cards/hooks/useDirectorCoordinationHistory'
+import { useDirectorPeriodHistory } from '@/modules/operational-cards/hooks/useDirectorPeriodHistory'
 import { useDirectorRelations } from '@/modules/operational-cards/hooks/useDirectorRelations'
 import type {
   OperationalKpiDependencySide,
-  OperationalKpiHistoryGranularity,
   OperationalKpiHistoryMetric,
   OperationalKpiRelationItem,
 } from '@/modules/operational-cards/types/operational-kpi.types'
@@ -22,17 +23,16 @@ const METRICS: ReadonlyArray<{
   { id: 'backlog', label: 'Backlog' },
 ]
 
-const PERIODS: ReadonlyArray<{
-  id: OperationalKpiHistoryGranularity
-  label: string
-}> = [
-  { id: 'week', label: 'Semanal' },
-  { id: 'month', label: 'Mensual' },
-  { id: 'cycle', label: 'Ciclo' },
-]
+function evolutionCaption(bucket: 'day' | 'week' | 'month' | null): string {
+  if (bucket === 'day') return 'Por día'
+  if (bucket === 'week') return 'Por semana'
+  if (bucket === 'month') return 'Por mes'
+  return ''
+}
 
 function RelationList({
   title,
+  help,
   items,
   side,
   selectedPartnerId,
@@ -41,6 +41,7 @@ function RelationList({
   testId,
 }: {
   title: string
+  help: string
   items: readonly OperationalKpiRelationItem[]
   side: OperationalKpiDependencySide
   selectedPartnerId: string | null
@@ -51,7 +52,16 @@ function RelationList({
   const max = Math.max(0, ...items.map((item) => item.value))
   return (
     <section className="director-relations__group" data-testid={testId}>
-      <p className="director-block__title">{title}</p>
+      <p className="director-block__title">
+        {title}
+        <span
+          className="director-status-badge__help"
+          title={help}
+          aria-label={help}
+        >
+          ?
+        </span>
+      </p>
       {items.length === 0 ? (
         <p className="director-internos__hint">Ninguna en este periodo.</p>
       ) : (
@@ -101,9 +111,7 @@ function RelationList({
 
 export function DirectorDependenciasPanelView({
   metric,
-  granularity,
   onMetricChange,
-  onGranularityChange,
   hasCoordination,
   status,
   commitments,
@@ -115,12 +123,11 @@ export function DirectorDependenciasPanelView({
   selectedPartnerName,
   evolutionStatus,
   evolutionSeries,
+  evolutionBucket,
   evolutionError,
 }: {
   metric: OperationalKpiHistoryMetric
-  granularity: OperationalKpiHistoryGranularity
   onMetricChange: (metric: OperationalKpiHistoryMetric) => void
-  onGranularityChange: (granularity: OperationalKpiHistoryGranularity) => void
   hasCoordination: boolean
   status: 'idle' | 'loading' | 'error' | 'success'
   commitments: readonly OperationalKpiRelationItem[]
@@ -140,6 +147,7 @@ export function DirectorDependenciasPanelView({
     label: string
     value: number
   }[]
+  evolutionBucket: 'day' | 'week' | 'month' | null
   evolutionError: string | null
 }) {
   const empty =
@@ -154,25 +162,7 @@ export function DirectorDependenciasPanelView({
       className="director-relations"
       data-testid="director-dependencias-panel"
       data-metric={metric}
-      data-granularity={granularity}
     >
-      <p className="director-block__title">Periodo</p>
-      <div className="director-reading__chips" role="group" aria-label="Periodo">
-        {PERIODS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className="director-history__chip"
-            data-testid={`director-relations-period-${item.id}`}
-            data-active={granularity === item.id ? 'true' : 'false'}
-            aria-pressed={granularity === item.id}
-            onClick={() => onGranularityChange(item.id)}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
-
       <p className="director-block__title">Métrica</p>
       <div className="director-reading__chips" role="group" aria-label="Métrica">
         {METRICS.map((item) => (
@@ -223,6 +213,7 @@ export function DirectorDependenciasPanelView({
         <>
           <RelationList
             title="Compromisos con otras áreas"
+            help="Problemas INTER cuya responsable es esta coordinación y que afectan a otra área."
             items={commitments}
             side="commitment"
             selectedPartnerId={selectedPartnerId}
@@ -232,6 +223,7 @@ export function DirectorDependenciasPanelView({
           />
           <RelationList
             title="Dependencias de otras áreas"
+            help="Problemas INTER registrados por otra área responsable que afectan a esta coordinación."
             items={dependencies}
             side="dependency"
             selectedPartnerId={selectedPartnerId}
@@ -249,10 +241,16 @@ export function DirectorDependenciasPanelView({
         <section
           className="director-internos__evolution"
           data-testid="director-relations-evolution"
+          data-bucket={evolutionBucket ?? ''}
         >
           <p className="director-block__title">
             Evolución con {selectedPartnerName}
           </p>
+          {evolutionBucket ? (
+            <p className="director-internos__hint">
+              {evolutionCaption(evolutionBucket)}
+            </p>
+          ) : null}
           {evolutionStatus === 'loading' ? (
             <p className="director-kpi-panel__hint">Leyendo evolución…</p>
           ) : null}
@@ -270,7 +268,7 @@ export function DirectorDependenciasPanelView({
           {evolutionStatus === 'success' && !evolutionEmpty ? (
             <DirectorHistorySeriesChart
               metric={metric}
-              granularity={granularity}
+              granularity={historyAxisForBucket(evolutionBucket)}
               series={evolutionSeries}
               testId="director-relations-evolution-chart"
             />
@@ -281,21 +279,23 @@ export function DirectorDependenciasPanelView({
   )
 }
 
+/**
+ * DEPENDENCIAS: ¿qué relaciones INTER se registraron durante ESTE periodo?
+ * Mismo AnalysisPeriod que ESTADO e INTERNOS; sin selector temporal propio.
+ */
 export function DirectorDependenciasPanel({
   coordinationId,
+  analysisPeriod,
   metric,
-  granularity,
   onMetricChange,
-  onGranularityChange,
   selectedPartnerId,
   selectedSide,
   onSelectionChange,
 }: {
   coordinationId: string | null
+  analysisPeriod: AnalysisPeriod
   metric: OperationalKpiHistoryMetric
-  granularity: OperationalKpiHistoryGranularity
   onMetricChange: (metric: OperationalKpiHistoryMetric) => void
-  onGranularityChange: (granularity: OperationalKpiHistoryGranularity) => void
   selectedPartnerId: string | null
   selectedSide: OperationalKpiDependencySide | null
   onSelectionChange: (
@@ -303,21 +303,22 @@ export function DirectorDependenciasPanel({
     side: OperationalKpiDependencySide | null,
   ) => void
 }) {
-  const { status, commitments, dependencies, error } = useDirectorRelations(
+  const { status, commitments, dependencies, error, fresh } = useDirectorRelations(
     coordinationId,
     metric,
-    granularity,
+    analysisPeriod,
   )
 
+  // La pareja se conserva al cambiar de periodo solo si sigue en su lado.
   useEffect(() => {
-    if (status !== 'success' || !selectedPartnerId || !selectedSide) return
+    if (!fresh || !selectedPartnerId || !selectedSide) return
     const pool =
       selectedSide === 'commitment' ? commitments : dependencies
     if (!pool.some((item) => item.coordination.id === selectedPartnerId)) {
       onSelectionChange(null, null)
     }
   }, [
-    status,
+    fresh,
     commitments,
     dependencies,
     selectedPartnerId,
@@ -325,30 +326,38 @@ export function DirectorDependenciasPanel({
     onSelectionChange,
   ])
 
-  const selectedName =
-    [...commitments, ...dependencies].find(
-      (item) => item.coordination.id === selectedPartnerId,
-    )?.coordination.shortName ?? null
+  // Solo con datos del periodo vigente (ver useDirectorRelations.fresh).
+  const pool = !fresh
+    ? []
+    : selectedSide === 'commitment'
+      ? commitments
+      : selectedSide === 'dependency'
+        ? dependencies
+        : []
+  const selectedPartner =
+    pool.find((item) => item.coordination.id === selectedPartnerId) ?? null
 
   const {
     status: evolutionStatus,
     series: evolutionSeries,
+    bucket: evolutionBucket,
     error: evolutionError,
-  } = useDirectorCoordinationHistory(
-    selectedPartnerId && selectedSide ? coordinationId : null,
+  } = useDirectorPeriodHistory(
+    coordinationId,
     metric,
-    granularity,
-    null,
-    selectedPartnerId,
-    selectedSide,
+    analysisPeriod,
+    selectedPartner && selectedSide
+      ? {
+          partnerCoordinationId: selectedPartner.coordination.id,
+          dependencySide: selectedSide,
+        }
+      : null,
   )
 
   return (
     <DirectorDependenciasPanelView
       metric={metric}
-      granularity={granularity}
       onMetricChange={onMetricChange}
-      onGranularityChange={onGranularityChange}
       hasCoordination={coordinationId !== null}
       status={status}
       commitments={commitments}
@@ -359,9 +368,10 @@ export function DirectorDependenciasPanel({
       onSelectPartner={(partnerId, side) =>
         onSelectionChange(partnerId, side)
       }
-      selectedPartnerName={selectedName}
+      selectedPartnerName={selectedPartner?.coordination.shortName ?? null}
       evolutionStatus={evolutionStatus}
       evolutionSeries={evolutionSeries}
+      evolutionBucket={evolutionBucket}
       evolutionError={evolutionError}
     />
   )

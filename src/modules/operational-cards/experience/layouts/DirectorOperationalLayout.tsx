@@ -90,6 +90,8 @@ export function DirectorOperationalLayout({
           coordinationStatus={kpi.coordinationStatus}
           coordination={kpi.coordination}
           coordinationError={kpi.coordinationError}
+          openProblemId={controller.level2.problemId}
+          onOpenProblem={controller.selectProblem}
         />
       </ShellRegion>
 

@@ -8,13 +8,17 @@ import type { ReportDraft } from '@/modules/operational-cards/types/operational-
 /**
  * REPORTAR UN PROBLEMA desde el panel derecho.
  *
- * Usa el endpoint existente `POST /situations/register-with-analysis`.
- * INTERNAL conserva el contrato histórico (categoría + coordinación carta).
- * INTER envía tipo, afectada, responsable, proceso y entrega pendiente.
+ * Usa el endpoint existente `POST /situations/register-with-analysis`. Es la
+ * ÚNICA puerta de creación de problemas internos del producto.
+ *
+ * INTERNAL  Coordinación = la carta (para un COORDINADOR, siempre la suya),
+ *           categoría, severidad reportada y afectación inicial opcional.
+ * INTER     Tipo, afectada, responsable, proceso y entrega pendiente.
  */
 
 export const REPORT_TITLE_MAX = 200
 export const REPORT_DESCRIPTION_MAX = 4000
+export const REPORT_CONSEQUENCE_MAX = 2000
 
 export interface ReportSubmissionInput {
   draft: ReportDraft
@@ -51,6 +55,11 @@ export function validateReportDraft(
 
   if (reportKind === 'INTERNAL') {
     if (!draft.categoryId) problemas.push('Seleccione una categoría.')
+    if (draft.initialConsequence.trim().length > REPORT_CONSEQUENCE_MAX) {
+      problemas.push(
+        `La afectación inicial no puede superar ${REPORT_CONSEQUENCE_MAX} caracteres.`,
+      )
+    }
   } else {
     if (!draft.responsibleCoordinationId) {
       problemas.push('Seleccione la coordinación responsable.')
@@ -124,23 +133,28 @@ export async function submitProblemReport(
     return situation
   }
 
-  const destinationId =
-    input.draft.internalDestinationCoordinationId.trim() ||
-    input.selectedCoordinationId
-
-  if (!destinationId) {
-    throw new Error('Seleccione una coordinación destino para poder reportar.')
+  // INTERNAL ocurre en la carta. Para un COORDINADOR la carta está fijada a su
+  // coordinación: ya no existe un «destino» distinto.
+  const coordinationId = input.selectedCoordinationId
+  if (!coordinationId) {
+    throw new Error('Seleccione una coordinación en las cartas para poder reportar.')
   }
+
+  const initialConsequence = input.draft.initialConsequence.trim()
 
   const { situation } = await createSituationWithAnalysis({
     title: input.draft.title.trim(),
     description: input.draft.description.trim(),
     reportKind: 'INTERNAL',
-    coordinationId: destinationId,
-    affectedCoordinationId: destinationId,
+    coordinationId,
+    affectedCoordinationId: coordinationId,
     categoryId: input.draft.categoryId,
     severity: input.draft.severity,
     occurredAt: localInputToIso(input.draft.occurredAt),
+    // Opcional: vacía = el problema nace sin afectaciones (no se envía).
+    ...(initialConsequence
+      ? { initialConsequence: { description: initialConsequence } }
+      : {}),
   })
 
   return situation

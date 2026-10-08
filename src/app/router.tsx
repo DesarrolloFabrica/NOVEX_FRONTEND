@@ -1,58 +1,57 @@
 // Capa: app (enrutado).
 // Responsabilidad: declarar las rutas y su protección. Sin lógica de negocio.
-// Experiencia principal: Red de impacto.
+// Experiencia principal: Centro Operacional (los cuatro roles aterrizan aquí).
 
-import { createBrowserRouter, Navigate, useLocation } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute'
 import { RootLayout } from '@/shared/components/RootLayout'
 import { LoginPage } from '@/pages/LoginPage'
-import { MonitoringPage } from '@/pages/MonitoringPage'
-import { OperationalEventsCenterPage } from '@/pages/OperationalEventsCenterPage'
-import { OperationalIntelligencePage } from '@/pages/OperationalIntelligencePage'
-import { RegisterOperationalEventPage } from '@/pages/RegisterOperationalEventPage'
-import { RequirePermissionRoute } from '@/shared/components/RequirePermissionRoute'
+import { RedirectToInternalReport } from '@/shared/components/RedirectToInternalReport'
 import { RoleLandingRoute } from '@/shared/components/RoleLandingRoute'
 import { RequireRoleRoute } from '@/shared/components/RequireRoleRoute'
 import { RequireSituationCreationRoute } from '@/shared/components/RequireSituationCreationRoute'
 import { AdminConsolePage } from '@/pages/AdminConsolePage'
 import {
-  EXECUTIVE_ROLES,
+  EXECUTIVE_OPERATIONS_HOME,
   OPERATIONAL_SHELL_ROLES,
   ExecutiveOperationsLayout,
-  InteligenciaPage,
-  PanoramaPage,
-  ReportesPage,
 } from '@/modules/executive-operations-center'
 import { OperationalCenterHome } from '@/modules/operational-cards/experience/OperationalCenterHome'
 
-function RedirectPreservingSearch({ to }: { to: string }) {
-  const location = useLocation()
-  return <Navigate to={`${to}${location.search}`} replace />
-}
+/**
+ * Pantallas legacy retiradas como destino (fase 1).
+ *
+ * Dashboard, Red de impacto, Situaciones registradas, Gestión de situaciones y
+ * las secciones Panorama / Inteligencia IA / Auditoría dejaron de ser destinos
+ * de navegación: sus rutas llevan al Centro Operacional. Los módulos, páginas
+ * y servicios NO se borran en esta fase; solo dejan de montarse desde aquí.
+ *
+ * Se redirige directamente al Centro (no al alias intermedio) para que ninguna
+ * cadena de redirecciones pase por otra ruta legacy. El Centro admite los
+ * cuatro roles, así que el destino nunca rebota.
+ */
+const toOperationalCenter = (
+  <Navigate to={EXECUTIVE_OPERATIONS_HOME} replace />
+)
 
 export const router = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
       { path: '/login', element: <LoginPage /> },
-      // Alias legados para no romper enlaces anteriores.
-      {
-        path: '/monitoring',
-        element: <RedirectPreservingSearch to="/gestion" />,
-      },
+      // Alias legado. Fuera de ProtectedRoute desde siempre; el destino sí
+      // está protegido, así que sin sesión termina en /login.
+      { path: '/monitoring', element: toOperationalCenter },
       {
         element: <ProtectedRoute />,
         children: [
           { index: true, element: <RoleLandingRoute /> },
           {
-            path: '/dashboard',
-            element: (
-              <RequirePermissionRoute permission="SITUATIONS_VIEW">
-                <OperationalIntelligencePage />
-              </RequirePermissionRoute>
-            ),
-          },
-          {
+            /*
+             * Administración de usuarios: se CONSERVA. Solo ADMIN. Ya no se
+             * llega por el carril ni por el menú Plataforma (retirados): el
+             * acceso está en el menú de usuario del ADMIN.
+             */
             path: '/admin',
             element: (
               <RequireRoleRoute role="ADMIN">
@@ -61,17 +60,7 @@ export const router = createBrowserRouter([
             ),
           },
           {
-            /*
-             * DOS NIVELES DE GUARDA, a propósito.
-             *
-             * El LAYOUT admite a todos los roles operativos —incluido el
-             * COORDINADOR, que es el único que puede solucionar— porque su home
-             * es la experiencia operacional. Cada SECCIÓN EJECUTIVA hija
-             * conserva su propia guarda con `EXECUTIVE_ROLES`, de modo que
-             * habilitar esta pantalla no abre panorama, inteligencia ni
-             * reportes. Ampliar la constante compartida lo habría hecho.
-             */
-            path: '/centro-operacional',
+            path: EXECUTIVE_OPERATIONS_HOME,
             element: (
               <RequireRoleRoute role={OPERATIONAL_SHELL_ROLES}>
                 <ExecutiveOperationsLayout />
@@ -79,90 +68,34 @@ export const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <OperationalCenterHome /> },
-              {
-                path: 'panorama',
-                element: (
-                  <RequireRoleRoute role={EXECUTIVE_ROLES}>
-                    <PanoramaPage />
-                  </RequireRoleRoute>
-                ),
-              },
-              {
-                path: 'inteligencia',
-                element: (
-                  <RequireRoleRoute role={EXECUTIVE_ROLES}>
-                    <InteligenciaPage />
-                  </RequireRoleRoute>
-                ),
-              },
-              {
-                path: 'reportes',
-                element: (
-                  <RequireRoleRoute role={EXECUTIVE_ROLES}>
-                    <ReportesPage />
-                  </RequireRoleRoute>
-                ),
-              },
+              // Secciones ejecutivas legacy (pestañas retiradas).
+              { path: 'panorama', element: toOperationalCenter },
+              { path: 'inteligencia', element: toOperationalCenter },
+              { path: 'reportes', element: toOperationalCenter },
             ],
           },
+          { path: '/dashboard', element: toOperationalCenter },
+          { path: '/red-impacto', element: toOperationalCenter },
+          { path: '/situaciones', element: toOperationalCenter },
+          { path: '/gestion', element: toOperationalCenter },
           {
-            path: '/red-impacto',
-            lazy: async () => {
-              const { ImpactNetworkPage } =
-                await import('@/pages/ImpactNetworkPage')
-              return {
-                Component: () => (
-                  <RequirePermissionRoute permission="COORDINATIONS_VIEW">
-                    <ImpactNetworkPage />
-                  </RequirePermissionRoute>
-                ),
-              }
-            },
-          },
-          {
-            path: '/situaciones',
-            element: (
-              <RequirePermissionRoute permission="SITUATIONS_VIEW">
-                <OperationalEventsCenterPage />
-              </RequirePermissionRoute>
-            ),
-          },
-          {
+            // Compatibilidad con el antiguo registro de situaciones: abre el
+            // formulario INTERNAL del Centro (se conserva tal cual).
             path: '/situaciones/nueva',
             element: (
               <RequireSituationCreationRoute>
-                <RegisterOperationalEventPage />
+                <RedirectToInternalReport />
               </RequireSituationCreationRoute>
             ),
           },
           {
-            path: '/gestion',
-            element: (
-              <RequirePermissionRoute permission="SITUATIONS_VIEW">
-                <MonitoringPage />
-              </RequirePermissionRoute>
-            ),
-          },
-          {
-            path: '/intelligence',
-            element: <RedirectPreservingSearch to="/dashboard" />,
-          },
-          {
-            path: '/operational-events',
-            element: <RedirectPreservingSearch to="/situaciones" />,
-          },
-          {
             path: '/operational-events/register',
-            element: <RedirectPreservingSearch to="/situaciones/nueva" />,
+            element: <RedirectToInternalReport />,
           },
-          {
-            path: '/situation-management',
-            element: <RedirectPreservingSearch to="/gestion" />,
-          },
-          {
-            path: '/legacy-monitoring',
-            element: <RedirectPreservingSearch to="/gestion" />,
-          },
+          { path: '/intelligence', element: toOperationalCenter },
+          { path: '/operational-events', element: toOperationalCenter },
+          { path: '/situation-management', element: toOperationalCenter },
+          { path: '/legacy-monitoring', element: toOperationalCenter },
         ],
       },
       { path: '*', element: <Navigate to="/" replace /> },

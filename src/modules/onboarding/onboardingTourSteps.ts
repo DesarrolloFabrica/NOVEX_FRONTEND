@@ -31,154 +31,6 @@ const SHARED_INTRO: OnboardingTourStep = {
     'Este recorrido le mostrará el flujo que usará en el trabajo diario.',
 }
 
-const OPERATIONAL_FLOW: OnboardingTourStep[] = [
-  {
-    id: 'impact',
-    route: '/red-impacto',
-    target: '[data-tour="impact-network"]',
-    eyebrow: 'Red de impacto',
-    title: 'Entienda el alcance antes de actuar',
-    description:
-      'Explore cómo una situación se origina y se propaga entre coordinaciones.',
-    expectation:
-      'Al seleccionar una coordinación verá sus situaciones y relaciones.',
-  },
-  {
-    id: 'register',
-    route: '/red-impacto',
-    target: '[data-tour="register-situation"]',
-    eyebrow: 'Captura operacional',
-    title: 'Registre una situación desde cualquier vista',
-    description:
-      'Este acceso inicia el expediente operativo y está disponible solo para roles autorizados.',
-    expectation: 'El formulario conservará su avance mientras agrega contexto.',
-  },
-  {
-    id: 'capture',
-    route: '/situaciones/nueva',
-    target: '[data-tour="capture-form"]',
-    eyebrow: 'Paso 1 de 3',
-    title: 'Registre ahora su primera situación',
-    description:
-      'Complete los campos dentro del área iluminada. El recorrido continuará cuando el formulario esté validado y pulse Continuar.',
-    expectation:
-      'NOVEX conservará el borrador y validará la información antes de avanzar.',
-    advanceOnTarget: '[data-tour="capture-review"]',
-    waitingLabel: 'Complete el formulario para continuar',
-  },
-  {
-    id: 'review',
-    route: '/situaciones/nueva',
-    target: '[data-tour="capture-review"]',
-    eyebrow: 'Paso 2 de 3',
-    title: 'Revise el expediente antes de enviarlo',
-    description:
-      'Compruebe el resumen y confirme el registro. Puede volver si encuentra algo que deba corregir.',
-    expectation:
-      'Al confirmar se crea una única situación y comienza la IA automáticamente.',
-    advanceOnTarget: '[data-tour="analysis-stage"]',
-    waitingLabel: 'Confirme el expediente para continuar',
-  },
-  {
-    id: 'analysis',
-    route: '/situaciones/nueva',
-    target: '[data-tour="analysis-stage"]',
-    eyebrow: 'Inteligencia operacional',
-    title: 'NOVEX está preparando el informe',
-    description:
-      'El recorrido esperará aquí mientras se clasifican riesgo, impacto y recomendaciones. Si ocurre un error, puede reintentar sin duplicar la situación.',
-    expectation:
-      'Al terminar será llevado al expediente operativo recién creado.',
-    advanceOnTarget: '[data-tour="ai-report"]',
-    lockNavigation: true,
-    waitingLabel: 'Esperando el análisis IA…',
-  },
-  {
-    id: 'report',
-    route: '/gestion',
-    target: '[data-tour="ai-report"]',
-    eyebrow: 'Informe generado',
-    title: 'Revise la lectura ejecutiva de la IA',
-    description:
-      'Este bloque resume impacto, hipótesis y conclusión. Pulse Ver análisis ejecutivo IA para abrir el informe completo.',
-    expectation:
-      'El informe conserva el contexto original y la versión de análisis utilizada.',
-    advanceOnTarget: '[data-tour="report-modal"]',
-    waitingLabel: 'Abra el análisis ejecutivo para continuar',
-  },
-  {
-    id: 'report-detail',
-    route: '/gestion',
-    target: '[data-tour="report-scroll"]',
-    eyebrow: 'An\u00e1lisis ejecutivo IA',
-    title: 'Revise el informe completo antes de exportarlo',
-    description:
-      'Recorra el an\u00e1lisis, sus hallazgos y recomendaciones. El siguiente paso aparecer\u00e1 cuando llegue al final del informe.',
-    expectation:
-      'Despl\u00e1cese dentro del \u00e1rea iluminada; el resto de la interfaz permanecer\u00e1 bloqueado.',
-    advanceOnVisibleTarget: '[data-tour="report-end"]',
-    visibilityRoot: '[data-tour="report-scroll"]',
-    waitingLabel: 'Despl\u00e1cese hasta el final del informe',
-    placement: 'left',
-  },
-  {
-    id: 'pdf',
-    route: '/gestion',
-    target: '[data-tour="download-report"]',
-    eyebrow: 'Reporte portable',
-    title: 'Descargue el PDF cuando necesite compartirlo',
-    description:
-      'El PDF reúne el expediente y la inteligencia disponible sin alterar la situación.',
-    expectation:
-      'La descarga es opcional; siempre podrá volver a generarla desde el expediente.',
-  },
-  {
-    id: 'history',
-    route: '/situaciones',
-    target: '[data-tour="situations-registry"]',
-    eyebrow: 'Historial',
-    title: 'Todo queda disponible para consulta',
-    description:
-      'Busque, filtre y abra cualquier situación dentro de su alcance.',
-    expectation: 'El detalle conserva informe IA, evidencias y actividad.',
-  },
-  {
-    id: 'management',
-    route: '/gestion',
-    target: '[data-tour="management-dossier"]',
-    eyebrow: 'Ciclo operativo',
-    title: 'Acompañe la situación hasta resolverla',
-    description:
-      'Revise recomendaciones, actividad y trazabilidad sin perder el expediente seleccionado.',
-    expectation: 'Cada cambio queda disponible para auditoría y seguimiento.',
-  },
-  {
-    id: 'status',
-    route: '/gestion',
-    target:
-      '[data-tour="status-update-trigger"], [data-tour="status-management"]',
-    eyebrow: 'Estados y trazabilidad',
-    title: 'Actualice el estado con una razón verificable',
-    description:
-      'Pase a En atención cuando inicie el seguimiento y a Cerrada cuando el caso esté documentado. Al cerrar, sale de la Red de impacto y de la cola de gestión.',
-    expectation:
-      'NOVEX validará las transiciones permitidas según el estado actual.',
-  },
-  {
-    id: 'complete',
-    route: '/gestion',
-    target: '[data-tour="situation-management"]',
-    placement: 'center',
-    highlightTarget: false,
-    eyebrow: 'Recorrido completado',
-    title: 'Ya puede operar NOVEX de principio a fin',
-    description:
-      'Completó captura, análisis, consulta y seguimiento de su primera situación.',
-    expectation:
-      'Puede volver a ver este tutorial desde el menú de usuario cuando lo necesite.',
-  },
-]
-
 const EXECUTIVE_FLOW: OnboardingTourStep[] = [
   {
     id: 'overview',
@@ -234,13 +86,12 @@ const EXECUTIVE_FLOW: OnboardingTourStep[] = [
 ]
 
 /**
- * RECORRIDO DEL COORDINADOR sobre la experiencia ACTUAL.
+ * RECORRIDO OPERACIONAL (COORDINADOR y ANALISTA) sobre la experiencia ACTUAL.
  *
- * El flujo anterior (`OPERATIONAL_FLOW`) paseaba por `/red-impacto`, el
- * asistente de captura de `/situaciones/nueva` y la cola de `/gestion`. Esas
- * pantallas siguen existiendo, pero ya no son donde el coordinador trabaja: su
- * jornada ocurre entera en el Centro Operacional, y es el único rol que puede
- * SOLUCIONAR un problema.
+ * El flujo anterior paseaba por el asistente de captura de
+ * `/situaciones/nueva`, retirado como creador de problemas internos: la única
+ * puerta de creación es el formulario del Centro Operacional, y ahí ocurre la
+ * jornada de ambos roles.
  *
  * Por eso el recorrido no navega: los seis pasos ocurren en la MISMA ruta y
  * señalan las regiones reales. Ninguno exige crear ni cerrar un problema de
@@ -295,10 +146,11 @@ const OPERATIONAL_SHELL_FLOW: OnboardingTourStep[] = [
     route: EXECUTIVE_OPERATIONS_HOME,
     target: '[data-tour="report-problem"]',
     eyebrow: 'Reportar',
-    title: 'Registre un problema en cualquier coordinación',
+    title: 'Registre un problema de su coordinación',
     description:
-      'El formulario aparece a la derecha y muestra siempre a qué área quedará atribuido. Usted elige la severidad.',
-    expectation: 'Se registra en la coordinación que tenga seleccionada.',
+      'El formulario aparece a la derecha y muestra siempre a qué área quedará atribuido. Usted indica qué tan grave es y, si ya produjo una consecuencia, su afectación inicial.',
+    expectation:
+      'Un problema que ocurre en otra coordinación se registra como dependencia.',
   },
   {
     id: 'shell-resolve',
@@ -327,6 +179,33 @@ const OPERATIONAL_SHELL_FLOW: OnboardingTourStep[] = [
   },
 ]
 
+/**
+ * Variante del ANALISTA: misma pantalla y mismas regiones; cambian los textos
+ * de reportar (elige la carta) y de resolver (solo Coordinación General).
+ */
+const ANALYST_SHELL_COPY: Record<string, Partial<OnboardingTourStep>> = {
+  'shell-intro': {
+    description:
+      'Aquí ve el estado de las coordinaciones y reporta problemas en la que tenga seleccionada, sin cambiar de vista.',
+  },
+  'shell-report': {
+    title: 'Registre un problema en la coordinación seleccionada',
+    description:
+      'Elija una carta y abra «Problema interno». Usted indica qué tan grave es y, si ya produjo una consecuencia, su afectación inicial.',
+    expectation: 'En sus propios reportes podrá registrar después nuevas afectaciones.',
+  },
+  'shell-resolve': {
+    title: 'Consulte el detalle y siga sus reportes',
+    description:
+      'En el detalle verá cómo fue reportado, su severidad actual y sus afectaciones. Un analista resuelve solo problemas de Coordinación General.',
+    expectation: 'En los demás casos el cierre corresponde al coordinador responsable.',
+  },
+}
+
+const ANALYST_SHELL_FLOW: OnboardingTourStep[] = OPERATIONAL_SHELL_FLOW.map(
+  (step) => ({ ...step, ...ANALYST_SHELL_COPY[step.id] }),
+)
+
 const ADMIN_FLOW: OnboardingTourStep[] = []
 
 export function getOnboardingSteps(role: NovexRoleCode): OnboardingTourStep[] {
@@ -334,7 +213,10 @@ export function getOnboardingSteps(role: NovexRoleCode): OnboardingTourStep[] {
   if (role === 'ADMIN') return ADMIN_FLOW
   if (role === 'DIRECTOR') return [SHARED_INTRO, ...EXECUTIVE_FLOW]
   if (role === 'ANALISTA')
-    return [SHARED_INTRO, ...EXECUTIVE_FLOW.slice(0, 2), ...OPERATIONAL_FLOW]
+    return [
+      { ...SHARED_INTRO, route: EXECUTIVE_OPERATIONS_HOME },
+      ...ANALYST_SHELL_FLOW,
+    ]
   /*
    * COORDINADOR. Recorre el Centro Operacional, que es su landing y su puesto
    * de trabajo. El intro comparte esa ruta para que el recorrido no empiece

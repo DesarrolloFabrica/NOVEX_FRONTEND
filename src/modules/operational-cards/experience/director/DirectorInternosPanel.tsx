@@ -1,406 +1,227 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import type { AnalysisPeriod } from '@/modules/operational-cards/domain/analysis-period'
+import { DirectorEstadoCarousel } from '@/modules/operational-cards/experience/director/DirectorEstadoCarousel'
+import { DirectorInternosAfectaciones } from '@/modules/operational-cards/experience/director/DirectorInternosAfectaciones'
+import { DirectorInternosRecurrencia } from '@/modules/operational-cards/experience/director/DirectorInternosRecurrencia'
+import { internalProblemsReference } from '@/modules/operational-cards/experience/director/internal-problems.presentation'
 import {
-  DirectorHistorySeriesChart,
-  isHistorySeriesEmpty,
-} from '@/modules/operational-cards/experience/director/DirectorHistorySeriesChart'
-import { useDirectorCoordinationHistory } from '@/modules/operational-cards/hooks/useDirectorCoordinationHistory'
-import {
-  useDirectorInternosBreakdown,
-  type InternosBreakdownItem,
-} from '@/modules/operational-cards/hooks/useDirectorInternosBreakdown'
+  useDirectorInternalProblems,
+  useDirectorInternalRecurrence,
+  type DirectorInternosLoadStatus,
+} from '@/modules/operational-cards/hooks/useDirectorInternalProblems'
 import type {
-  OperationalKpiHistoryGranularity,
-  OperationalKpiHistoryMetric,
-} from '@/modules/operational-cards/types/operational-kpi.types'
-import { formatCaseDelta } from '@/modules/operational-cards/utils/kpi-period-compare'
+  InternalProblemsResponse,
+  InternalRecurrenceResponse,
+} from '@/modules/operational-cards/types/internal-problems.types'
 import '@/styles/director-kpi-panel.css'
+import '@/styles/director-internos.css'
 
-const METRICS: ReadonlyArray<{
-  id: OperationalKpiHistoryMetric
-  label: string
-}> = [
-  { id: 'created', label: 'Presentados' },
-  { id: 'closed', label: 'Cerrados' },
-  { id: 'backlog', label: 'Backlog' },
-]
+/** Marca única de entorno local: los datos QA no son operación real. */
+const SHOW_DEMO_MARK = import.meta.env.DEV
 
-const PERIODS: ReadonlyArray<{
-  id: OperationalKpiHistoryGranularity
-  label: string
-}> = [
-  { id: 'week', label: 'Semanal' },
-  { id: 'month', label: 'Mensual' },
-  { id: 'cycle', label: 'Ciclo' },
-]
-
-function periodCaption(granularity: OperationalKpiHistoryGranularity): string {
-  if (granularity === 'week') return 'Últimas semanas'
-  if (granularity === 'month') return 'Últimos meses'
-  return 'Últimos ciclos'
-}
-
-export function DirectorInternosPanelView({
-  metric,
-  granularity,
-  onMetricChange,
-  onGranularityChange,
-  selectedCategoryId,
-  onSelectCategory,
-  hasCoordination,
-  breakdownStatus,
-  breakdownItems,
-  breakdownError,
-  incompletePeriod,
-  evolutionStatus,
-  evolutionSeries,
-  evolutionError,
-  selectedCategoryName,
+/**
+ * Región de scroll vertical PROPIA de cada lámina de INTERNOS. El carrusel
+ * compartido no cambia: flechas y puntos quedan fuera de esta región (siempre
+ * accesibles) y cada página conserva su propio scrollTop.
+ * `resetKey` (coordinación + periodo) vuelve al inicio: es otra lectura. Abrir
+ * un detalle no la cambia, así que al volver se conserva la posición.
+ */
+function InternosScrollRegion({
+  id,
+  label,
+  resetKey,
+  children,
 }: {
-  metric: OperationalKpiHistoryMetric
-  granularity: OperationalKpiHistoryGranularity
-  onMetricChange: (metric: OperationalKpiHistoryMetric) => void
-  onGranularityChange: (granularity: OperationalKpiHistoryGranularity) => void
-  selectedCategoryId: string | null
-  onSelectCategory: (categoryId: string) => void
-  hasCoordination: boolean
-  breakdownStatus: 'idle' | 'loading' | 'error' | 'success'
-  breakdownItems: readonly InternosBreakdownItem[]
-  breakdownError: string | null
-  incompletePeriod: boolean
-  evolutionStatus: 'idle' | 'loading' | 'error' | 'success'
-  evolutionSeries: readonly {
-    start: string
-    end: string
-    label: string
-    value: number
-  }[]
-  evolutionError: string | null
-  selectedCategoryName: string | null
+  id: string
+  label: string
+  resetKey: string
+  children: ReactNode
 }) {
-  const maxValue = Math.max(0, ...breakdownItems.map((item) => item.value))
-  const total = breakdownItems.reduce((sum, item) => sum + item.value, 0)
-  const dominant = breakdownItems[0] ?? null
-  const dominantShare =
-    dominant && total > 0
-      ? Math.round((dominant.value / total) * 100)
-      : null
-  const emptyBreakdown =
-    breakdownStatus === 'success' && breakdownItems.length === 0
-  const evolutionEmpty =
-    evolutionStatus === 'success' && isHistorySeriesEmpty(evolutionSeries)
-
+  const ref = useRef<HTMLDivElement | null>(null)
+  // Fade inferior discreto solo si queda contenido por debajo.
+  const [more, setMore] = useState(false)
+  const measure = useCallback(() => {
+    const el = ref.current
+    if (el) setMore(el.scrollTop + el.clientHeight < el.scrollHeight - 2)
+  }, [])
+  useEffect(() => {
+    if (ref.current) ref.current.scrollTop = 0
+    measure()
+  }, [resetKey, measure])
+  useEffect(() => {
+    const el = ref.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    if (el.firstElementChild) observer.observe(el.firstElementChild)
+    return () => observer.disconnect()
+  }, [measure])
   return (
     <div
-      className="director-internos"
-      data-testid="director-internos-panel"
-      data-metric={metric}
-      data-granularity={granularity}
-      data-selected-category={selectedCategoryId ?? ''}
+      ref={ref}
+      className="director-internos-scroll"
+      data-testid={`director-internos-scroll-${id}`}
+      data-more={more ? 'true' : 'false'}
+      onScroll={measure}
+      role="region"
+      aria-label={label}
+      tabIndex={0}
     >
-      <p className="director-block__title">Periodo</p>
-      <div
-        className="director-reading__chips"
-        role="group"
-        aria-label="Periodo de internos"
-      >
-        {PERIODS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className="director-history__chip"
-            data-testid={`director-internos-period-${item.id}`}
-            data-active={granularity === item.id ? 'true' : 'false'}
-            aria-pressed={granularity === item.id}
-            onClick={() => onGranularityChange(item.id)}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
-
-      <p className="director-block__title">Métrica</p>
-      <div
-        className="director-reading__chips"
-        role="group"
-        aria-label="Métrica de internos"
-      >
-        {METRICS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className="director-history__chip"
-            data-testid={`director-internos-metric-${item.id}`}
-            data-active={metric === item.id ? 'true' : 'false'}
-            aria-pressed={metric === item.id}
-            onClick={() => onMetricChange(item.id)}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
-
-      {incompletePeriod ? (
-        <p
-          className="director-reading__phase-note"
-          data-testid="director-internos-incomplete"
-        >
-          Periodo actual incompleto · comparación con el anterior equivalente
-        </p>
-      ) : null}
-
-      {!hasCoordination ? (
-        <p className="director-history__empty" data-testid="director-internos-empty">
-          Selecciona una coordinación en la baraja para ver sus problemas
-          internos.
-        </p>
-      ) : null}
-
-      {hasCoordination && breakdownStatus === 'loading' ? (
-        <p
-          className="director-kpi-panel__hint"
-          data-testid="director-internos-loading"
-        >
-          Leyendo distribución interna…
-        </p>
-      ) : null}
-
-      {hasCoordination && breakdownStatus === 'error' ? (
-        <p
-          className="director-kpi-panel__error"
-          role="alert"
-          data-testid="director-internos-error"
-        >
-          No se pudo leer la distribución interna.
-          {breakdownError ? ` ${breakdownError}` : ''}
-        </p>
-      ) : null}
-
-      {hasCoordination && emptyBreakdown ? (
-        <p className="director-history__empty" data-testid="director-internos-empty">
-          No hay problemas internos en este periodo.
-        </p>
-      ) : null}
-
-      {hasCoordination &&
-      breakdownStatus === 'success' &&
-      dominant &&
-      dominantShare !== null ? (
-        <section
-          className="director-internos__dominant"
-          data-testid="director-internos-dominant"
-        >
-          <p className="director-block__title">Categoría más frecuente</p>
-          <p className="director-internos__dominant-name">{dominant.category.name}</p>
-          <p className="director-internos__dominant-meta">
-            {dominant.value} casos en el periodo
-            <span aria-hidden="true"> · </span>
-            {dominantShare}% de los internos
-          </p>
-        </section>
-      ) : null}
-
-      {hasCoordination &&
-      breakdownStatus === 'success' &&
-      breakdownItems.length > 0 ? (
-        <section
-          className="director-internos__distribution"
-          data-testid="director-internos-distribution"
-          aria-label="Categorías principales"
-        >
-          <p className="director-block__title">Categorías principales</p>
-          <ul className="director-internos__bars">
-            {breakdownItems.map((item) => {
-              const active = selectedCategoryId === item.category.id
-              return (
-                <li key={item.category.id}>
-                  <button
-                    type="button"
-                    className="director-internos__category"
-                    data-testid={`director-internos-category-${item.category.code}`}
-                    data-active={active ? 'true' : 'false'}
-                    aria-pressed={active}
-                    onClick={() => onSelectCategory(item.category.id)}
-                  >
-                    <span className="director-internos__category-name">
-                      {active ? (
-                        <span className="director-internos__marker" aria-hidden="true">
-                          ▶
-                        </span>
-                      ) : null}
-                      {item.category.name}
-                      {!item.category.selectable ? (
-                        <em className="director-internos__legacy">Histórica</em>
-                      ) : null}
-                    </span>
-                    <span className="director-internos__category-track">
-                      <span
-                        className="director-internos__category-fill"
-                        style={{
-                          width: `${maxValue === 0 ? 0 : (item.value / maxValue) * 100}%`,
-                        }}
-                      />
-                    </span>
-                    <strong className="director-internos__category-value">
-                      {item.value}
-                    </strong>
-                    <span
-                      className="director-internos__delta"
-                      data-delta={
-                        item.delta > 0
-                          ? 'up'
-                          : item.delta < 0
-                            ? 'down'
-                            : 'flat'
-                      }
-                      data-testid={`director-internos-delta-${item.category.code}`}
-                    >
-                      {formatCaseDelta(item.delta)}
-                    </span>
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
-        </section>
-      ) : null}
-
-      {hasCoordination && selectedCategoryId && selectedCategoryName ? (
-        <section
-          className="director-internos__evolution"
-          data-testid="director-internos-evolution"
-        >
-          <p className="director-block__title">
-            Evolución de {selectedCategoryName}
-          </p>
-          <p className="director-internos__hint">{periodCaption(granularity)}</p>
-
-          {evolutionStatus === 'loading' ? (
-            <p
-              className="director-kpi-panel__hint"
-              data-testid="director-internos-evolution-loading"
-            >
-              Leyendo evolución…
-            </p>
-          ) : null}
-
-          {evolutionStatus === 'error' ? (
-            <p
-              className="director-kpi-panel__error"
-              role="alert"
-              data-testid="director-internos-evolution-error"
-            >
-              No se pudo leer la evolución.
-              {evolutionError ? ` ${evolutionError}` : ''}
-            </p>
-          ) : null}
-
-          {evolutionStatus === 'success' && evolutionEmpty ? (
-            <p
-              className="director-history__empty"
-              data-testid="director-internos-evolution-empty"
-            >
-              No hay suficientes datos en este periodo.
-            </p>
-          ) : null}
-
-          {evolutionStatus === 'success' && !evolutionEmpty ? (
-            <DirectorHistorySeriesChart
-              metric={metric}
-              granularity={granularity}
-              series={evolutionSeries}
-              testId="director-internos-evolution-chart"
-            />
-          ) : null}
-        </section>
-      ) : null}
-
-      {hasCoordination &&
-      breakdownStatus === 'success' &&
-      breakdownItems.length > 0 &&
-      !selectedCategoryId ? (
-        <p
-          className="director-internos__pick"
-          data-testid="director-internos-pick"
-        >
-          Selecciona una categoría para ver su evolución.
-        </p>
-      ) : null}
+      {children}
     </div>
   )
 }
 
+export function DirectorInternosPanelView({
+  hasCoordination,
+  period,
+  onPeriodChange,
+  page,
+  onPageChange,
+  recurrenceStatus,
+  recurrence,
+  recurrenceError,
+  problemsStatus,
+  problems,
+  problemsError,
+  reference,
+  openProblemId,
+  onOpenProblem,
+  showDemoMark = SHOW_DEMO_MARK,
+  coordinationKey = null,
+}: {
+  hasCoordination: boolean
+  period: AnalysisPeriod
+  onPeriodChange: (next: AnalysisPeriod) => void
+  page: number
+  onPageChange: (page: number) => void
+  recurrenceStatus: DirectorInternosLoadStatus
+  recurrence: InternalRecurrenceResponse | null
+  recurrenceError: string | null
+  problemsStatus: DirectorInternosLoadStatus
+  problems: InternalProblemsResponse | null
+  problemsError: string | null
+  reference: Date
+  openProblemId: string | null
+  onOpenProblem: ((problemId: string) => void) | null
+  showDemoMark?: boolean
+  /** Identidad de la coordinación: al cambiar, las láminas vuelven arriba. */
+  coordinationKey?: string | null
+}) {
+  const resetKey = `${coordinationKey ?? ''}|${period.kind}|${period.from}|${period.calendarEnd}`
+  if (!hasCoordination) {
+    return (
+      <div className="director-internos" data-testid="director-internos-panel">
+        <p className="director-history__empty" data-testid="director-internos-empty">
+          Selecciona una coordinación en la baraja para ver sus problemas internos.
+        </p>
+      </div>
+    )
+  }
+  return (
+    <div
+      className="director-internos"
+      data-testid="director-internos-panel"
+      data-page={page}
+      data-period-kind={period.kind}
+      data-period-from={period.from}
+    >
+      {showDemoMark ? (
+        <span className="director-internos__demo" data-testid="director-internos-demo">
+          Datos de demostración
+        </span>
+      ) : null}
+      <DirectorEstadoCarousel
+        testIdPrefix="director-internos"
+        ariaLabel="Gráficas de internos"
+        page={page}
+        onPageChange={onPageChange}
+        pages={[
+          {
+            id: 'recurrencia',
+            label: 'Recurrencia de problemas internos',
+            content: (
+              <InternosScrollRegion id="recurrencia" label="Recurrencia de problemas internos" resetKey={resetKey}>
+                <DirectorInternosRecurrencia
+                  period={period}
+                  status={recurrenceStatus}
+                  recurrence={recurrence}
+                  error={recurrenceError}
+                  onPeriodChange={onPeriodChange}
+                />
+              </InternosScrollRegion>
+            ),
+          },
+          {
+            id: 'afectaciones',
+            label: 'Afectaciones de problemas activos',
+            content: (
+              <InternosScrollRegion id="afectaciones" label="Afectaciones de problemas activos" resetKey={resetKey}>
+                <DirectorInternosAfectaciones
+                  status={problemsStatus}
+                  problems={problems}
+                  error={problemsError}
+                  reference={reference}
+                  openProblemId={openProblemId}
+                  onOpenProblem={onOpenProblem}
+                />
+              </InternosScrollRegion>
+            ),
+          },
+        ]}
+      />
+    </div>
+  )
+}
+
+/**
+ * INTERNOS · dos láminas sobre el AnalysisPeriod GLOBAL del DirectorReadingPanel:
+ *   1. RECURRENCIA (flujo por created_at) — su heatmap NAVEGA el periodo.
+ *   2. AFECTACIONES ACTIVAS (foto al corte) — reacciona al periodo.
+ * Sin selector temporal propio ni estado temporal local.
+ */
 export function DirectorInternosPanel({
   coordinationId,
-  metric,
-  granularity,
-  onMetricChange,
-  onGranularityChange,
-  selectedCategoryId,
-  onSelectedCategoryChange,
+  analysisPeriod,
+  onAnalysisPeriodChange,
+  page,
+  onPageChange,
+  openProblemId = null,
+  onOpenProblem = null,
 }: {
   coordinationId: string | null
-  metric: OperationalKpiHistoryMetric
-  granularity: OperationalKpiHistoryGranularity
-  onMetricChange: (metric: OperationalKpiHistoryMetric) => void
-  onGranularityChange: (granularity: OperationalKpiHistoryGranularity) => void
-  selectedCategoryId: string | null
-  onSelectedCategoryChange: (categoryId: string | null) => void
+  analysisPeriod: AnalysisPeriod
+  onAnalysisPeriodChange: (next: AnalysisPeriod) => void
+  page: number
+  onPageChange: (page: number) => void
+  openProblemId?: string | null
+  onOpenProblem?: ((problemId: string) => void) | null
 }) {
-  const {
-    status: breakdownStatus,
-    items,
-    error: breakdownError,
-    incompletePeriod,
-  } = useDirectorInternosBreakdown(coordinationId, metric, granularity)
-
-  useEffect(() => {
-    if (breakdownStatus !== 'success') return
-    if (!selectedCategoryId) return
-    const stillPresent = items.some(
-      (item) => item.category.id === selectedCategoryId,
-    )
-    if (!stillPresent) {
-      onSelectedCategoryChange(null)
-    }
-  }, [
-    breakdownStatus,
-    items,
-    selectedCategoryId,
-    onSelectedCategoryChange,
-  ])
-
-  const selected = items.find(
-    (item) => item.category.id === selectedCategoryId,
-  )
-
-  const {
-    status: evolutionStatus,
-    series: evolutionSeries,
-    error: evolutionError,
-  } = useDirectorCoordinationHistory(
-    selectedCategoryId ? coordinationId : null,
-    metric,
-    granularity,
-    selectedCategoryId,
+  const recurrence = useDirectorInternalRecurrence(coordinationId, analysisPeriod)
+  const problems = useDirectorInternalProblems(coordinationId, analysisPeriod)
+  const cutAt = problems.data?.period.cutAt ?? null
+  const reference = useMemo(
+    () => (cutAt ? internalProblemsReference(cutAt) : new Date()),
+    [cutAt],
   )
 
   return (
     <DirectorInternosPanelView
-      metric={metric}
-      granularity={granularity}
-      onMetricChange={onMetricChange}
-      onGranularityChange={onGranularityChange}
-      selectedCategoryId={selectedCategoryId}
-      onSelectCategory={onSelectedCategoryChange}
       hasCoordination={coordinationId !== null}
-      breakdownStatus={breakdownStatus}
-      breakdownItems={items}
-      breakdownError={breakdownError}
-      incompletePeriod={incompletePeriod}
-      evolutionStatus={evolutionStatus}
-      evolutionSeries={evolutionSeries}
-      evolutionError={evolutionError}
-      selectedCategoryName={selected?.category.name ?? null}
+      coordinationKey={coordinationId}
+      period={analysisPeriod}
+      onPeriodChange={onAnalysisPeriodChange}
+      page={page}
+      onPageChange={onPageChange}
+      recurrenceStatus={recurrence.status}
+      recurrence={recurrence.data}
+      recurrenceError={recurrence.error}
+      problemsStatus={problems.status}
+      problems={problems.data}
+      problemsError={problems.error}
+      reference={reference}
+      openProblemId={openProblemId}
+      onOpenProblem={onOpenProblem}
     />
   )
 }

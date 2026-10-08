@@ -31,6 +31,17 @@ echartsUse([
 export type NovexChartOption = EChartsCoreOption
 
 /**
+ * Interacción por banda de categoría (eje X): toda la columna de la categoría
+ * es el objetivo de hover/click, no solo la barra.
+ */
+export type NovexChartCategoryInteraction = {
+  isClickable: (index: number) => boolean
+  onClick: (index: number) => void
+  /** Categoría bajo el puntero (null al salir): hover coordinado entre gráficas. */
+  onHover?: (index: number | null) => void
+}
+
+/**
  * Contenedor ECharts (SVG) con tema NOVEX.
  * Alias exportado también como NovexEChart.
  */
@@ -41,6 +52,8 @@ export function NovexChart({
   ariaLabel,
   height = 140,
   tokens,
+  categoryInteraction,
+  highlightIndex = null,
 }: {
   option: NovexChartOption
   className?: string
@@ -48,13 +61,21 @@ export function NovexChart({
   ariaLabel: string
   height?: number
   tokens?: Partial<NovexChartThemeTokens>
+  categoryInteraction?: NovexChartCategoryInteraction
+  /**
+   * Banda resaltada desde fuera (hover de otra gráfica sincronizada).
+   * Resalta la columna en todas las series (banda + punto / barras).
+   */
+  highlightIndex?: number | null
 }) {
   const hostRef = useRef<HTMLDivElement | null>(null)
   const chartRef = useRef<EChartsType | null>(null)
   const optionRef = useRef(option)
   const tokensRef = useRef(tokens)
+  const interactionRef = useRef(categoryInteraction)
   optionRef.current = option
   tokensRef.current = tokens
+  interactionRef.current = categoryInteraction
 
   useEffect(() => {
     const host = hostRef.current
@@ -82,6 +103,7 @@ export function NovexChart({
           width: w,
         })
         chartRef.current = chart
+        bindCategoryInteraction(chart, () => interactionRef.current)
       }
       const merged = mergeNovexChartOption(
         buildNovexChartBaseOption(tokensRef.current),
@@ -121,6 +143,21 @@ export function NovexChart({
     chart.resize({ width: host.clientWidth, height: h })
   }, [option, tokens, height])
 
+  // Solo se toca la columna que cambia: un downplay global durante la
+  // animación de entrada congelaría los símbolos de una línea en escala 0.
+  const highlightedRef = useRef<number | null>(null)
+  useEffect(() => {
+    const chart = chartRef.current
+    if (!chart) return
+    const previous = highlightedRef.current
+    if (previous === highlightIndex) return
+    if (previous !== null) chart.dispatchAction({ type: 'downplay', dataIndex: previous })
+    if (highlightIndex !== null) {
+      chart.dispatchAction({ type: 'highlight', dataIndex: highlightIndex })
+    }
+    highlightedRef.current = highlightIndex
+  }, [highlightIndex])
+
   return (
     <div
       className={className ? `novex-chart ${className}` : 'novex-chart'}
@@ -135,6 +172,57 @@ export function NovexChart({
       />
     </div>
   )
+}
+
+/** Índice de categoría bajo el puntero, o null fuera del grid. */
+function categoryIndexAt(chart: EChartsType, x: number, y: number): number | null {
+  if (!chart.containPixel({ gridIndex: 0 }, [x, y])) return null
+  const point = chart.convertFromPixel({ gridIndex: 0 }, [x, y]) as
+    | number[]
+    | number
+  const raw = Array.isArray(point) ? point[0] : point
+  return typeof raw === 'number' && Number.isFinite(raw) ? Math.round(raw) : null
+}
+
+function bindCategoryInteraction(
+  chart: EChartsType,
+  read: () => NovexChartCategoryInteraction | undefined,
+) {
+  const zr = chart.getZr()
+  let hovered: number | null = null
+  const emitHover = (index: number | null) => {
+    if (index === hovered) return
+    hovered = index
+    read()?.onHover?.(index)
+  }
+  zr.on('mousemove', (event) => {
+    const interaction = read()
+    if (!interaction) return
+    const index = categoryIndexAt(chart, event.offsetX, event.offsetY)
+    zr.setCursorStyle(
+      index !== null && interaction.isClickable(index) ? 'pointer' : 'default',
+    )
+    emitHover(index)
+  })
+  zr.on('globalout', () => emitHover(null))
+  // Click = mousedown + mouseup sobre la MISMA categoría. No se usa el
+  // «click» del DOM: con el puntero de banda activo, el renderer SVG repinta el
+  // path entre down y up, el nodo original desaparece y el navegador no emite
+  // click (le pasaría a cualquier usuario que pasa el ratón antes de hacer click).
+  let pressedIndex: number | null = null
+  zr.on('mousedown', (event) => {
+    pressedIndex = categoryIndexAt(chart, event.offsetX, event.offsetY)
+  })
+  zr.on('mouseup', (event) => {
+    const interaction = read()
+    const pressed = pressedIndex
+    pressedIndex = null
+    if (!interaction || pressed === null) return
+    const index = categoryIndexAt(chart, event.offsetX, event.offsetY)
+    if (index === pressed && interaction.isClickable(index)) {
+      interaction.onClick(index)
+    }
+  })
 }
 
 /** Nombre canónico del ticket de diseño. */

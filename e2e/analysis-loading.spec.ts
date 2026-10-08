@@ -1,5 +1,10 @@
 import { expect, test } from 'playwright/test'
 
+// INTERNAL vivo: el asistente de /situaciones/nueva se retiró como creador de
+// problemas internos (la ruta redirige al Centro Operacional). Estas pruebas
+// cubrían su etapa de análisis y quedan fuera hasta decidir si se eliminan.
+test.skip(true, 'Asistente /situaciones/nueva retirado (INTERNAL vivo).')
+
 const situationId = '6ce4e56e-4444-4444-8444-444444444444'
 const coordinationId = '5ce4e56e-1111-4111-8111-111111111111'
 const categoryId = '4ce4e56e-1111-4111-8111-111111111111'

@@ -5,8 +5,10 @@ import {
   OperationalKpiContractError,
 } from '@/modules/operational-cards/services/operational-kpi.service'
 import type { OperationalKpiStateResponse } from '@/modules/operational-cards/types/operational-kpi.types'
-import type { DirectorKpiLoadStatus } from '@/modules/operational-cards/hooks/useDirectorKpi'
 import { getErrorMessage } from '@/shared/utils/error'
+
+/** `idle` = sin coordinación o sin periodo: no hay nada que consultar. */
+export type DirectorEstadoLoadStatus = 'idle' | 'loading' | 'error' | 'success'
 
 /**
  * Una sola consulta de ESTADO para el AnalysisPeriod seleccionado.
@@ -16,7 +18,11 @@ export function useDirectorEstadoState(
   coordinationId: string | null,
   analysisPeriod: AnalysisPeriod | null,
 ) {
-  const [status, setStatus] = useState<DirectorKpiLoadStatus>('idle')
+  // Con entradas presentes el primer render ya es 'loading' (evita un frame
+  // de composición en cero antes de que corra el efecto).
+  const [status, setStatus] = useState<DirectorEstadoLoadStatus>(() =>
+    coordinationId && analysisPeriod ? 'loading' : 'idle',
+  )
   const [data, setData] = useState<OperationalKpiStateResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
 

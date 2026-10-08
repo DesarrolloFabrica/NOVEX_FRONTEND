@@ -743,8 +743,11 @@ test.describe('robustez de la transición', () => {
     await page.setViewportSize({ width: 1440, height: 900 })
     await createInSelected(page, 'MEDIUM')
     await expect(page.locator(LIVES)).toHaveAttribute('data-transition', 'loss')
-    await page.getByRole('link', { name: 'Panorama global', exact: true }).click()
-    await expect(page).toHaveURL(/\/centro-operacional\/panorama$/)
+    // Fase 1: ya no hay pestañas hacia otras secciones; la salida de la ruta
+    // dentro de la SPA que queda es cerrar sesión desde el menú de usuario.
+    await page.getByRole('button', { name: /Menú de usuario/ }).click()
+    await page.getByRole('menuitem', { name: 'Cerrar sesión' }).click()
+    await expect(page).toHaveURL(/\/login$/)
     await expect(page.getByTestId('direction-character')).toHaveCount(0)
     expect(await runningLifeAnimations(page)).toBe(0)
     await page.waitForTimeout(600)

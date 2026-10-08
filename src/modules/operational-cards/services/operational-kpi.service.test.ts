@@ -1,3 +1,4 @@
+import { resolutionFixture } from '@/modules/operational-cards/charts/resolucion.fixture'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   fetchOperationalKpiBreakdown,
@@ -239,6 +240,149 @@ describe('fetchOperationalKpiPeriod', () => {
   })
 })
 
+function agingItem(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'f0000000-0000-4000-8000-000000000001',
+    title: 'Falla en matrícula de nuevos ingresos',
+    createdAt: '2026-08-17T15:00:00.000Z',
+    ageDays: 43,
+    severity: 'CRITICAL',
+    reportKind: 'INTERNAL',
+    categoryName: 'Admisiones',
+    affectedCoordinationName: null,
+    status: null,
+    slaOverdue: null,
+    closedAfterCutAt: '2026-11-12T15:00:00.000Z',
+    ...overrides,
+  }
+}
+
+function historicalAging(overrides: Record<string, unknown> = {}) {
+  return {
+    semantics: 'active-at-cut-age-since-created',
+    at: '2026-09-29',
+    isNow: false,
+    reliability: { status: 'unavailable', sla: 'unavailable' },
+    severitySemantics: 'current-severity',
+    activeCount: 3,
+    medianAgeDays: 12.5,
+    bands: [
+      { key: '0-7', count: 1 },
+      { key: '8-14', count: 1 },
+      { key: '15-30', count: 0 },
+      { key: '31+', count: 1 },
+    ],
+    oldest: [agingItem()],
+    ...overrides,
+  }
+}
+
+/** Snapshot coherente con un aging crudo (misma población y corte). */
+function snapshotFor(aging: unknown) {
+  if (typeof aging !== 'object' || aging === null) return undefined
+  const a = aging as { at?: unknown; isNow?: unknown; activeCount?: unknown }
+  const n = typeof a.activeCount === 'number' ? a.activeCount : 0
+  return {
+    semantics: 'active-at-cut',
+    at: a.at,
+    isNow: a.isNow,
+    activeCount: n,
+    severity: { low: 0, medium: n, high: 0, critical: 0 },
+    attention: { open: n, inProgress: 0, closedAfterCut: 0, unclassified: 0 },
+    reliability: a.isNow
+      ? { severity: 'exact', attention: 'exact' }
+      : { severity: 'current-value', attention: 'current-value' },
+  }
+}
+
+/** /state con un aging crudo y el snapshot de la MISMA población y corte. */
+function stateWithAging(aging: unknown, period: Record<string, unknown> = {}) {
+  const a = (aging ?? {}) as { at?: string; isNow?: boolean; activeCount?: number }
+  return {
+    scope: { type: 'coordination', coordinationId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' },
+    timezone: 'America/Bogota',
+    period: {
+      kind: 'month',
+      from: '2026-09-01',
+      to: '2026-09-29',
+      calendarEnd: '2026-09-30',
+      label: 'x',
+      isCurrent: false,
+      isPartial: false,
+      dataTo: '2026-09-29',
+      ...period,
+    },
+    relations: { dependencies: 0, commitments: 0 },
+    evolution: { bucket: 'week', backlog: [], created: [], closed: [], buckets: [] },
+    activeAtPeriodEnd: { count: 0, at: '2026-09-29', isNow: false },
+    aging,
+    snapshot: snapshotFor({ at: a.at, isNow: a.isNow, activeCount: a.activeCount ?? 0 }),
+    resolution: resolutionFixture([]),
+  }
+}
+
+const CURRENT = { isCurrent: true, isPartial: true }
+
+describe('parseOperationalKpiStateResponse · aging (scope coordinación)', () => {
+  it('acepta un corte HOY con status y SLA vigentes', () => {
+    const parsed = parseOperationalKpiStateResponse(
+      stateWithAging(
+        historicalAging({
+          isNow: true,
+          reliability: { status: 'current', sla: 'current' },
+          oldest: [agingItem({ status: 'IN_PROGRESS', slaOverdue: true, closedAfterCutAt: null })],
+        }),
+        CURRENT,
+      ),
+    )
+    expect(parsed.aging).toMatchObject({ isNow: true, activeCount: 3, medianAgeDays: 12.5 })
+    expect(parsed.aging.oldest[0]).toMatchObject({ status: 'IN_PROGRESS', slaOverdue: true })
+    expect(parsed.aging.oldest[0]).not.toHaveProperty('responsibleCoordination')
+  })
+
+  it('rechaza aging ausente o que no describe la misma población/corte que el snapshot', () => {
+    expect(() => parseOperationalKpiStateResponse(stateWithAging(undefined))).toThrow(
+      OperationalKpiContractError,
+    )
+    const aging = historicalAging()
+    expect(() =>
+      parseOperationalKpiStateResponse({
+        ...stateWithAging(aging),
+        snapshot: snapshotFor({ at: '2026-09-29', isNow: false, activeCount: 4 }),
+      }),
+    ).toThrow(/misma población/)
+  })
+
+  it('rechaza un corte histórico que afirma status o SLA', () => {
+    expect(() =>
+      parseOperationalKpiStateResponse(
+        stateWithAging(historicalAging({ reliability: { status: 'current', sla: 'unavailable' } })),
+      ),
+    ).toThrow(/histórico/)
+    expect(() =>
+      parseOperationalKpiStateResponse(
+        stateWithAging(historicalAging({ oldest: [agingItem({ slaOverdue: false })] })),
+      ),
+    ).toThrow(/slaOverdue/)
+    expect(() =>
+      parseOperationalKpiStateResponse(
+        stateWithAging(historicalAging({ oldest: [agingItem({ status: 'OPEN' })] })),
+      ),
+    ).toThrow(/status/)
+  })
+
+  it('rechaza más de 5 ítems, edades no enteras y enumerados desconocidos', () => {
+    const six = Array.from({ length: 6 }, (_, i) => agingItem({ id: `id-${i}` }))
+    const bad = (aging: unknown) => () => parseOperationalKpiStateResponse(stateWithAging(aging))
+    expect(bad(historicalAging({ activeCount: 9, oldest: six }))).toThrow(/top 5/)
+    expect(bad(historicalAging({ oldest: [agingItem({ ageDays: 4.5 })] }))).toThrow(
+      OperationalKpiContractError,
+    )
+    expect(bad(historicalAging({ oldest: [agingItem({ severity: 'URGENT' })] }))).toThrow(/severity/)
+    expect(bad(historicalAging({ semantics: 'avg-age' }))).toThrow(/semantics/)
+  })
+})
+
 describe('fetchOperationalKpiState', () => {
   it('pide GET /operational-kpis/state', async () => {
     const statePayload = {
@@ -257,11 +401,7 @@ describe('fetchOperationalKpiState', () => {
         isPartial: true,
         dataTo: '2026-10-05',
       },
-      severity: { low: 1, medium: 3, high: 2, critical: 0 },
-      attention: { open: 4, inProgress: 2 },
       relations: { dependencies: 1, commitments: 0 },
-      registeredCount: 6,
-      severitySemantics: 'current-severity-of-period-registrations',
       evolution: {
         bucket: 'day',
         backlog: [
@@ -274,12 +414,101 @@ describe('fetchOperationalKpiState', () => {
         ],
         created: [],
         closed: [],
+        buckets: [
+          {
+            start: '2026-09-29',
+            end: '2026-09-29',
+            dataEnd: '2026-09-29',
+            calendarStart: '2026-09-29',
+            calendarEnd: '2026-09-29',
+            label: 'Lun 29',
+            current: false,
+            future: false,
+            created: 1,
+            closed: 0,
+            backlog: 2,
+            active: {
+              total: 3,
+              internal: 2,
+              external: 1,
+              internalBreakdown: [
+                {
+                  categoryId: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+                  categoryCode: 'internet',
+                  categoryName: 'Internet',
+                  selectable: true,
+                  count: 2,
+                },
+              ],
+              externalBreakdown: [
+                {
+                  coordinationId: null,
+                  coordinationCode: null,
+                  coordinationName: 'Sin coordinación afectada',
+                  count: 1,
+                },
+              ],
+            },
+            solved: { total: 0 },
+          },
+          {
+            start: '2026-09-30',
+            end: '2026-09-30',
+            dataEnd: null,
+            calendarStart: '2026-09-30',
+            calendarEnd: '2026-09-30',
+            label: 'Mar 30',
+            current: false,
+            future: true,
+            created: null,
+            closed: null,
+            backlog: null,
+            active: null,
+            solved: null,
+          },
+        ],
       },
+      activeAtPeriodEnd: { count: 2, at: '2026-09-29', isNow: false },
+      aging: historicalAging({
+        at: '2026-10-05',
+        isNow: true,
+        reliability: { status: 'current', sla: 'current' },
+        oldest: [agingItem({ status: 'OPEN', slaOverdue: true, closedAfterCutAt: null })],
+      }),
+      snapshot: snapshotFor({ at: '2026-10-05', isNow: true, activeCount: 3 }),
     }
-    expect(parseOperationalKpiStateResponse(statePayload).evolution.bucket).toBe(
-      'day',
-    )
-    mockedApi.mockResolvedValue(statePayload)
+    const parsedState = parseOperationalKpiStateResponse({
+      ...statePayload,
+      resolution: resolutionFixture(statePayload.evolution.buckets),
+    })
+    expect(parsedState.aging).toMatchObject({ at: '2026-10-05', activeCount: 3 })
+    expect(parsedState.snapshot).toMatchObject({ at: '2026-10-05', activeCount: 3 })
+    expect(parsedState.evolution.bucket).toBe('day')
+    // Futuro: null, no 0.
+    expect(parsedState.evolution.buckets[1]).toMatchObject({
+      future: true,
+      created: null,
+      backlog: null,
+    })
+    expect(parsedState.evolution.buckets[0].active).toMatchObject({
+      total: 3,
+      internal: 2,
+      external: 1,
+    })
+    expect(parsedState.evolution.buckets[0].active?.externalBreakdown[0].coordinationId).toBeNull()
+    expect(parsedState.evolution.buckets[1]).toMatchObject({ active: null, solved: null })
+    expect(parsedState.activeAtPeriodEnd).toEqual({
+      count: 2,
+      at: '2026-09-29',
+      isNow: false,
+    })
+    expect(() =>
+      parseOperationalKpiStateResponse({ ...statePayload, activeAtPeriodEnd: undefined }),
+    ).toThrow(OperationalKpiContractError)
+    mockedApi.mockResolvedValue({
+      ...statePayload,
+      resolution: resolutionFixture(statePayload.evolution.buckets),
+    })
     await fetchOperationalKpiState({
       coordinationId: statePayload.scope.coordinationId,
       from: '2026-09-29',
@@ -290,5 +519,127 @@ describe('fetchOperationalKpiState', () => {
     const path = String(mockedApi.mock.calls[0]?.[0])
     expect(path).toContain('/operational-kpis/state?')
     expect(path).toContain('kind=week')
+  })
+})
+
+/* ── RESOLUCIÓN: parser estricto (mismos cierres que «Solucionados») ── */
+function flowRaw(start: string, solved: number | null) {
+  const future = solved === null
+  return {
+    start,
+    end: start,
+    dataEnd: future ? null : start,
+    calendarStart: start,
+    calendarEnd: start,
+    label: start,
+    current: false,
+    future,
+    created: future ? null : 1,
+    closed: solved,
+    backlog: future ? null : 3,
+    active: future
+      ? null
+      : { total: 3, internal: 3, external: 0, internalBreakdown: [], externalBreakdown: [] },
+    solved: future ? null : { total: solved },
+  }
+}
+
+const RES_FLOW = [
+  flowRaw('2026-09-01', 2),
+  flowRaw('2026-09-07', 0),
+  flowRaw('2026-09-14', 4),
+  flowRaw('2026-09-21', null),
+]
+
+function resolutionRaw(overrides: Record<string, unknown> = {}) {
+  return {
+    semantics: 'closed-in-period-duration-since-created',
+    closedCount: 6,
+    medianDays: 5.5,
+    p75Days: 12,
+    buckets: [
+      { start: '2026-09-01', closedCount: 2, medianDays: 0.17, p75Days: 1.2 },
+      { start: '2026-09-07', closedCount: 0, medianDays: null, p75Days: null },
+      { start: '2026-09-14', closedCount: 4, medianDays: 9, p75Days: 14 },
+      { start: '2026-09-21', closedCount: null, medianDays: null, p75Days: null },
+    ],
+    distribution: [
+      { key: 'lt-1d', fromHours: 0, toHours: 24, count: 1 },
+      { key: '1-3d', fromHours: 24, toHours: 72, count: 1 },
+      { key: '3-7d', fromHours: 72, toHours: 168, count: 0 },
+      { key: '7-14d', fromHours: 168, toHours: 336, count: 3 },
+      { key: '14-30d', fromHours: 336, toHours: 720, count: 1 },
+      { key: '30d+', fromHours: 720, toHours: null, count: 0 },
+    ],
+    ...overrides,
+  }
+}
+
+function stateWithResolution(resolution: unknown) {
+  return {
+    ...stateWithAging(historicalAging()),
+    evolution: { bucket: 'week', backlog: [], created: [], closed: [], buckets: RES_FLOW },
+    resolution,
+  }
+}
+
+describe('parseOperationalKpiStateResponse · resolution', () => {
+  const parse = (resolution: unknown) => () =>
+    parseOperationalKpiStateResponse(stateWithResolution(resolution))
+
+  it('acepta una resolución que cuadra con Solucionados; futuro null, sin cierres sin mediana', () => {
+    const { resolution } = parseOperationalKpiStateResponse(stateWithResolution(resolutionRaw()))
+    expect(resolution.closedCount).toBe(6)
+    expect(resolution.buckets.map((b) => b.closedCount)).toEqual([2, 0, 4, null])
+    expect(resolution.buckets[1]).toMatchObject({ medianDays: null, p75Days: null })
+    expect(resolution.distribution.map((b) => b.key)).toEqual([
+      'lt-1d',
+      '1-3d',
+      '3-7d',
+      '7-14d',
+      '14-30d',
+      '30d+',
+    ])
+  })
+
+  it('rechaza resolución ausente o con otra semántica', () => {
+    expect(parse(undefined)).toThrow(/resolution/)
+    expect(parse(resolutionRaw({ semantics: 'closed-by-created-cohort' }))).toThrow(/semantics/)
+  })
+
+  it('INVARIANTE: closedCount por bucket = Solucionados (también null en futuro)', () => {
+    const buckets: Array<Record<string, unknown>> = resolutionRaw().buckets.map((b) => ({ ...b }))
+    buckets[2] = { ...buckets[2], closedCount: 3 }
+    expect(parse(resolutionRaw({ buckets }))).toThrow(/Solucionados/)
+    const future: Array<Record<string, unknown>> = resolutionRaw().buckets.map((b) => ({ ...b }))
+    future[3] = { start: '2026-09-21', closedCount: 0, medianDays: null, p75Days: null }
+    expect(parse(resolutionRaw({ buckets: future }))).toThrow(/Solucionados/)
+  })
+
+  it('rechaza otra geometría (cantidad u orden de buckets)', () => {
+    const buckets = resolutionRaw().buckets
+    expect(parse(resolutionRaw({ buckets: buckets.slice(0, 3) }))).toThrow(/geometría/)
+    expect(parse(resolutionRaw({ buckets: [buckets[1], buckets[0], buckets[2], buckets[3]] }))).toThrow(
+      /start/,
+    )
+  })
+
+  it('rechaza mediana 0 sin cierres, mediana sin cierres y P75 < mediana', () => {
+    const zero: Array<Record<string, unknown>> = resolutionRaw().buckets.map((b) => ({ ...b }))
+    zero[1] = { ...zero[1], medianDays: 0, p75Days: 0 }
+    expect(parse(resolutionRaw({ buckets: zero }))).toThrow(/solo cuando hay cierres/)
+    expect(parse(resolutionRaw({ p75Days: 2 }))).toThrow(/P75/)
+    expect(parse(resolutionRaw({ medianDays: -1 }))).toThrow(OperationalKpiContractError)
+  })
+
+  it('rechaza rangos fuera de orden, incompletos o que no suman closedCount', () => {
+    const dist = resolutionRaw().distribution
+    expect(parse(resolutionRaw({ distribution: dist.slice(0, 5) }))).toThrow(/seis rangos/)
+    expect(parse(resolutionRaw({ distribution: [dist[1], dist[0], ...dist.slice(2)] }))).toThrow(
+      /en orden/,
+    )
+    const wrongSum = dist.map((b, i) => (i === 0 ? { ...b, count: 2 } : b))
+    expect(parse(resolutionRaw({ distribution: wrongSum }))).toThrow(/distribution no suma/)
+    expect(parse(resolutionRaw({ closedCount: 7 }))).toThrow(/no suma/)
   })
 })

@@ -2,8 +2,10 @@ import type {
   ExecuteAIAnalysisResponse,
 } from '@/modules/api/types/analysis.types'
 import type {
+  CreateSituationConsequencePayload,
   CreateSituationPayload,
   IncidentCategorySummary,
+  SituationConsequenceResponse,
   SituationResponse,
 } from '@/modules/situations/types/situation.types'
 import { apiRequest } from '@/shared/api/http'
@@ -95,12 +97,14 @@ export async function fetchSituation(
   return apiRequest<SituationResponse>(`/situations/${situationId}`)
 }
 
+/**
+ * PATCH de una situación. `categoryId` y `severity` ya no existen: la
+ * categoría es inmutable y la severidad solo la cambia el sistema.
+ */
 export interface UpdateSituationPayload {
   title?: string
   description?: string
   coordinationId?: string
-  categoryId?: string
-  severity?: SituationResponse['severity']
   status?: SituationResponse['status']
   statusComment?: string
   /** Estructura preparada para evidencias futuras. */
@@ -139,6 +143,24 @@ export async function resolveSituation(
     method: 'POST',
     body: JSON.stringify({ learning }),
   })
+}
+
+/**
+ * AGREGAR UNA AFECTACIÓN a un problema INTERNAL activo. Append-only: no hay
+ * edición ni borrado. El servidor decide quién puede (`canAddConsequence`) y
+ * responde 409 si el problema ya se cerró.
+ */
+export async function addSituationConsequence(
+  situationId: string,
+  payload: CreateSituationConsequencePayload,
+): Promise<SituationConsequenceResponse> {
+  return apiRequest<SituationConsequenceResponse>(
+    `/situations/${situationId}/consequences`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+  )
 }
 
 export async function updateSituation(

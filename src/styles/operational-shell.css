@@ -7,26 +7,74 @@
  */
 
 /*
- * DIRECTOR: misma rejilla que la baraja (main + carril derecho), no mesa a
- * ancho completo. Lectura ~38 %; personaje/problemas ≈ 19 / 43 del ancho total.
- * Baraja ~33–36 % de la altura útil del main. Cartas con techo propio (no
- * toca ANALISTA/ADMIN): escala cercana a la mesa compartida, acotada al
- * escenario más estrecho del DIRECTOR.
+ * DIRECTOR (analítica visual primero): DATOS → PATRONES → PROBLEMAS.
+ * - Lectura ≈ 57 % del ancho: superficie dominante.
+ * - Personaje ≈ 16 % y Problemas ≈ 27 % del total (fila superior del main).
+ * - Baraja ≈ 25 % del alto del main (antes ≈ 33 %): selector de coordinación,
+ *   no contenido principal. Cartas con techo propio más bajo.
+ * Todo scoped a data-shell-layout='director': no toca ANALISTA/ADMIN/COORDINADOR.
  */
 .operational-shell[data-shell-layout='director'] {
-  --shell-action-w: 38%;
+  --shell-action-w: 50%;
 }
 
 .operational-shell[data-shell-layout='director'] .operational-shell__main {
-  grid-template-rows: minmax(300px, 1.95fr) minmax(170px, 1fr);
+  grid-template-rows: minmax(300px, 2.35fr) minmax(170px, 1fr);
 }
 
 .operational-shell[data-shell-layout='director'] .operational-shell__top {
-  grid-template-columns: minmax(0, 0.3fr) minmax(0, 0.7fr);
+  grid-template-columns: minmax(0, 0.365fr) minmax(0, 0.635fr);
 }
 
+/*
+ * El ancho de carta lo limita el ancho de la baraja (arco en unidades de
+ * carta): el techo solo evita que crezca de más en pantallas anchas.
+ * La carta seleccionada sobresale algo más que en la mesa compartida.
+ */
 .operational-shell[data-shell-layout='director'] .operational-table {
-  --card-width-max: clamp(140px, 9.6vw, 188px);
+  --card-width-max: clamp(112px, 8.6vw, 172px);
+  --selected-scale: 1.08;
+  --selected-lift: -18px;
+}
+
+/* Lectura: algo menos de marco interno, sin pegar las gráficas al borde. */
+.operational-shell[data-shell-layout='director'] .director-reading {
+  padding: 16px 22px 10px;
+}
+
+/* Problemas (DIRECTOR): consulta rápida y densa; «Expandir» sigue igual. */
+.operational-shell[data-shell-layout='director']
+  .operational-shell__region--coordination-problems
+  .coordination-panel {
+  gap: 5px;
+  padding: 8px 9px 9px;
+}
+
+.operational-shell[data-shell-layout='director']
+  .operational-shell__region--coordination-problems
+  .coordination-panel__problems {
+  gap: 3px;
+}
+
+.operational-shell[data-shell-layout='director']
+  .operational-shell__region--coordination-problems
+  .problem-dossier__body {
+  row-gap: 1px;
+  padding: 3px 6px 3px 5px;
+}
+
+.operational-shell[data-shell-layout='director']
+  .operational-shell__region--coordination-problems
+  .problem-dossier__title {
+  font-size: 12px;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
+
+.operational-shell[data-shell-layout='director']
+  .operational-shell__region--coordination-problems
+  .problem-dossier__meta {
+  max-width: 6.2rem;
 }
 
 .operational-shell__region--director-kpi,

@@ -7,7 +7,13 @@ import {
 } from '@/modules/operational-cards/data/problemDetailPresentation'
 import { formatDossierFolio } from '@/modules/operational-cards/data/problemDossier'
 import { resolveSituationViewpointLabel } from '@/modules/operational-cards/data/situationViewpoint'
-import type { OperationalCardsLevel2State } from '@/modules/operational-cards/types/operational-cards.state'
+import { ProblemConsequences } from '@/modules/operational-cards/components/ProblemConsequences'
+import { ProblemSeverityTrail } from '@/modules/operational-cards/components/ProblemSeverityTrail'
+import type { ConsequenceDraft } from '@/modules/operational-cards/services/problem-consequence.service'
+import type {
+  OperationalCardsLevel2State,
+  OperationalSubmissionState,
+} from '@/modules/operational-cards/types/operational-cards.state'
 import type {
   LazyProblemSectionId,
   ProblemDetail as ProblemDetailData,
@@ -26,11 +32,13 @@ import '@/styles/operational-problem-detail.css'
  * recomendaciones.
  *
  * Orden de lectura:
- *   1. Encabezado        tipo, folio, título, severidad, estado y SLA.
+ *   1. Encabezado        tipo, folio, título, severidad, estado y SLA; si la
+ *                        severidad cambió, «Reportado como · Actual».
  *   2. Contexto          coordinaciones, proceso afectado y entrega pendiente.
  *   3. Descripción       el texto del reporte, íntegro (no se deduplica).
- *   4. Notas del reporte y Otras evidencias, solo si existen.
- *   5. Cronología        perezosa, sin eventos del circuito de IA.
+ *   4. Afectaciones      solo INTERNAL: consecuencias acumuladas (append-only).
+ *   5. Notas del reporte y Otras evidencias, solo si existen.
+ *   6. Cronología        perezosa, sin eventos del circuito de IA.
  * Seguimiento, resolución y aprendizaje viven en `ProblemActions`, debajo.
  *
  * Los acordeones no llevan contador: el número aparecía o desaparecía según el
@@ -201,6 +209,22 @@ export interface ProblemDetailProps {
   onToggleSection: (section: ProblemSectionId) => void
   /** Reintenta la carga fallida de notas o cronología. */
   onRetrySection?: (section: LazyProblemSectionId) => void
+  /**
+   * Escritura de afectaciones. Ausente = solo lectura (shells sin escritura).
+   * Aun presente, el CTA solo aparece si el backend dice `canAddConsequence`.
+   */
+  consequenceActions?: {
+    submission: OperationalSubmissionState
+    onSubmit: (draft: ConsequenceDraft) => Promise<boolean>
+  } | null
+}
+
+const IDLE_SUBMISSION: OperationalSubmissionState = {
+  kind: null,
+  status: 'idle',
+  targetKey: null,
+  errorMessage: null,
+  confirmedButStale: false,
 }
 
 export function ProblemDetail({
@@ -208,6 +232,7 @@ export function ProblemDetail({
   selectedCoordinationCode = null,
   onToggleSection,
   onRetrySection = () => undefined,
+  consequenceActions = null,
 }: ProblemDetailProps) {
   const { detail, sections, expanded, status } = level2
   const isExpanded = (section: ProblemSectionId) => expanded.includes(section)
@@ -288,6 +313,14 @@ export function ProblemDetail({
               )}
             </p>
           )}
+
+          {detail && (
+            <ProblemSeverityTrail
+              reportedSeverity={detail.reportedSeverity}
+              severity={detail.severity}
+              history={detail.severityHistory}
+            />
+          )}
         </div>
       </header>
 
@@ -349,6 +382,18 @@ export function ProblemDetail({
               {detail.description}
             </p>
           </section>
+
+          {detail.reportKind === 'INTERNAL' && (
+            <ProblemConsequences
+              consequences={detail.consequences}
+              canAdd={Boolean(consequenceActions) && detail.canAddConsequence}
+              closed={detail.status === 'CLOSED'}
+              submission={consequenceActions?.submission ?? IDLE_SUBMISSION}
+              onSubmit={
+                consequenceActions?.onSubmit ?? (() => Promise.resolve(false))
+              }
+            />
+          )}
 
           {/*
            * Mientras no se sabe si hay notas se dice en una línea, sin pintar un

@@ -436,6 +436,18 @@
   gap: 0;
   padding-bottom: 0;
   border-bottom: 0;
+  /* Sobre el body: el popover del periodo se superpone al contenido del tab. */
+  position: relative;
+  z-index: 3;
+}
+
+/* Periodo común de la lectura de coordinación: bajo los tabs, fuera del scroll. */
+.director-reading__period {
+  margin-top: 10px;
+}
+
+.director-reading__period .director-analysis-period {
+  margin-bottom: 0;
 }
 
 .director-reading__kicker {
@@ -653,193 +665,282 @@
   overflow: visible;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+ * Selector temporal de ESTADO
+ * Pasivo: rango (nivel 1) · tipo (nivel 2) · estado (nivel 3).
+ * Exploración: programa de temporada — ciclos → cartelera de meses → semanas.
+ * Ruta (dónde navego) ≠ sellos de selección (qué está aplicado).
+ * ───────────────────────────────────────────────────────────────────────── */
+
 .director-analysis-period {
   position: relative;
   flex: 0 0 auto;
-  margin: 0 0 10px;
-  padding: 0 0 8px;
+  margin: 0 0 12px;
+  padding: 0 0 10px;
   border-bottom: 1px solid rgb(35 25 16 / 0.1);
+  color: #231910;
 }
 
 .director-analysis-period__title {
-  margin: 0 0 4px;
+  margin: 0 0 3px;
   font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #231910;
-  opacity: 0.72;
+  opacity: 0.6;
 }
 
+/* ── Estado pasivo ── */
+
 .director-analysis-period__bar {
-  display: flex;
-  align-items: stretch;
-  gap: 2px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: 2px;
 }
 
 .director-analysis-period__nav {
   appearance: none;
-  flex: 0 0 22px;
+  width: 20px;
+  height: 24px;
+  padding: 0;
   border: 0;
+  border-radius: 2px;
   background: transparent;
-  color: #231910;
-  font-size: 16px;
+  color: inherit;
+  font: inherit;
+  font-size: 15px;
   line-height: 1;
   cursor: pointer;
-  opacity: 0.45;
-  border-radius: 2px;
+  opacity: 0.38;
+  transition: opacity 120ms ease-out;
 }
 
-.director-analysis-period__nav--quiet {
-  border: 0;
-  background: transparent;
+.director-analysis-period__nav:hover:not(:disabled) {
+  opacity: 0.9;
 }
 
+/* Deshabilitado pero presente: la navegación no salta. */
 .director-analysis-period__nav:disabled {
-  opacity: 0.18;
-  cursor: not-allowed;
-}
-
-.director-analysis-period__nav:focus-visible,
-.director-analysis-period__trigger:focus-visible,
-.director-analysis-period__use:focus-visible,
-.director-analysis-period__drill:focus-visible,
-.director-analysis-period__week-btn:focus-visible,
-.director-analysis-period__current:focus-visible,
-.director-analysis-period__crumb-link:focus-visible,
-.director-analysis-period__back:focus-visible {
-  outline: 2px solid #231910;
-  outline-offset: 2px;
+  opacity: 0.14;
+  cursor: default;
 }
 
 .director-analysis-period__trigger {
   appearance: none;
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1px;
-  padding: 4px 6px 5px;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'range caret'
+    'meta caret';
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 1px;
+  padding: 1px 6px 6px;
   border: 0;
-  border-bottom: 2px solid rgb(35 25 16 / 0.35);
+  border-bottom: 1.5px solid rgb(35 25 16 / 0.28);
   background: transparent;
-  color: #231910;
-  cursor: pointer;
+  color: inherit;
   font: inherit;
   text-align: left;
+  cursor: pointer;
+  transition: border-color 140ms ease-out;
+}
+
+.director-analysis-period__trigger:hover,
+.director-analysis-period__trigger[aria-expanded='true'] {
+  border-bottom-color: #231910;
 }
 
 .director-analysis-period__range {
-  font-size: 14px;
+  grid-area: range;
+  overflow: hidden;
+  font-size: 17px;
   font-weight: 800;
+  line-height: 1.25;
   letter-spacing: 0.04em;
+  text-overflow: ellipsis;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
-.director-analysis-period__status {
-  font-size: 10px;
-  font-weight: 600;
+.director-analysis-period__meta {
+  grid-area: meta;
+  font-size: 11px;
   letter-spacing: 0.02em;
-  opacity: 0.62;
 }
 
-.director-analysis-period__caret {
-  font-size: 10px;
+.director-analysis-period__kind {
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.director-analysis-period__state {
+  font-style: italic;
   opacity: 0.55;
+}
+
+/* Chevron de tinta (el glifo ▾ sale diminuto en la tipografía del ticket). */
+.director-analysis-period__caret {
+  grid-area: caret;
+  width: 7px;
+  height: 7px;
+  margin: 0 2px 4px;
+  border-right: 1.75px solid currentColor;
+  border-bottom: 1.75px solid currentColor;
+  opacity: 0.6;
+  transform: rotate(45deg);
+  transition: transform 160ms ease-out;
+}
+
+.director-analysis-period__trigger[aria-expanded='true']
+  .director-analysis-period__caret {
+  margin-bottom: 0;
+  transform: rotate(225deg);
 }
 
 .director-analysis-period__current {
   appearance: none;
-  margin: 4px 0 0;
+  margin: 6px 0 0 22px;
   padding: 0;
   border: 0;
   background: transparent;
-  color: #231910;
+  color: inherit;
   font: inherit;
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 700;
-  letter-spacing: 0.03em;
-  text-decoration: underline;
+  letter-spacing: 0.05em;
+  text-decoration: underline dotted;
+  text-transform: uppercase;
+  text-underline-offset: 3px;
   cursor: pointer;
-  opacity: 0.7;
+  opacity: 0.68;
 }
+
+.director-analysis-period__current:hover {
+  opacity: 1;
+}
+
+/* ── Estado de exploración ── */
 
 .director-analysis-period__panel {
   position: absolute;
   z-index: 20;
+  top: calc(100% - 4px);
   left: 0;
   right: 0;
-  top: calc(100% - 2px);
-  padding: 10px;
-  border: 1.5px solid rgb(35 25 16 / 0.28);
+  display: flex;
+  flex-direction: column;
+  max-height: min(440px, 62vh);
+  border: 1.5px solid rgb(35 25 16 / 0.55);
   border-top-width: 3px;
   background: #f7f1e6;
-  overflow: hidden;
+  box-shadow:
+    0 10px 0 -6px rgb(35 25 16 / 0.1),
+    0 16px 28px rgb(35 25 16 / 0.18);
+}
+
+/* Cabecera fija: título + ruta / año. */
+.director-analysis-period__head {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 38px;
+  padding: 6px 12px;
+  border-bottom: 1px dashed rgb(35 25 16 / 0.32);
 }
 
 .director-analysis-period__panel-title {
-  margin: 0 0 8px;
+  margin: 0;
   font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  opacity: 0.7;
+  opacity: 0.6;
+  white-space: nowrap;
 }
 
+.director-analysis-period__year {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.director-analysis-period__year-label {
+  min-width: 3.4em;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
+/* Ruta en su propia línea: es «dónde navego», no un control más. */
 .director-analysis-period__crumb {
-  margin: 0 0 8px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
+  flex: 1 0 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: 2px 6px;
+  margin-top: -2px;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-align: left;
   text-transform: uppercase;
 }
 
 .director-analysis-period__crumb-link {
   appearance: none;
-  border: 0;
-  padding: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  font-weight: 800;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.director-analysis-period__back {
-  appearance: none;
-  display: block;
-  margin: 0 0 8px;
   padding: 0;
   border: 0;
   background: transparent;
   color: inherit;
   font: inherit;
-  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  text-decoration: underline dotted;
+  text-transform: inherit;
+  text-underline-offset: 3px;
   cursor: pointer;
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
-.director-analysis-period__browse {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
+.director-analysis-period__crumb-link:hover {
+  opacity: 1;
 }
 
-.director-analysis-period__browse-label {
-  margin: 0;
-  font-size: 14px;
+.director-analysis-period__crumb-sep {
+  opacity: 0.35;
+}
+
+.director-analysis-period__crumb-here {
   font-weight: 800;
-  letter-spacing: 0.06em;
+}
+
+.director-analysis-period__crumb-noun {
+  font-weight: 600;
+  opacity: 0.55;
+}
+
+/* Cuerpo con scroll propio: el selector no estira el ticket. */
+.director-analysis-period__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 10px 12px 12px;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(35 25 16 / 0.35) transparent;
 }
 
 .director-analysis-period__level {
-  animation: director-period-slide 160ms ease-out;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  animation: director-period-slide 170ms ease-out;
 }
 
 .director-analysis-period__panel[data-direction='back']
@@ -849,8 +950,8 @@
 
 @keyframes director-period-slide {
   from {
-    opacity: 0.35;
-    transform: translateX(10px);
+    opacity: 0.25;
+    transform: translateX(8px);
   }
   to {
     opacity: 1;
@@ -860,8 +961,8 @@
 
 @keyframes director-period-slide-back {
   from {
-    opacity: 0.35;
-    transform: translateX(-10px);
+    opacity: 0.25;
+    transform: translateX(-8px);
   }
   to {
     opacity: 1;
@@ -869,93 +970,194 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .director-analysis-period__level {
-    animation: none;
-  }
-}
-
-.director-analysis-period__acts {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.director-analysis-period__cycles {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  max-height: 260px;
-  overflow-y: auto;
+  gap: 8px;
 }
 
+/* Cartelera de temporada: siempre 3 × 2 (JUL AGO SEP / OCT NOV DIC). */
+.director-analysis-period__months {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.director-analysis-period__weeks {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* Boleto: cuerpo + talón perforado con las dos acciones. */
 .director-analysis-period__act {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 8px;
-  border: 1.5px solid rgb(35 25 16 / 0.18);
-  border-bottom-width: 2.5px;
-  background: rgb(35 25 16 / 0.02);
+  border: 1.5px solid rgb(35 25 16 / 0.26);
+  background: rgb(255 255 255 / 0.3);
+  transition:
+    border-color 140ms ease-out,
+    box-shadow 140ms ease-out;
 }
 
-.director-analysis-period__act[data-current='true'] {
-  border-color: rgb(35 25 16 / 0.4);
-  background: rgb(35 25 16 / 0.05);
-}
-
-.director-analysis-period__act[data-future='true'] {
-  opacity: 0.42;
+.director-analysis-period__act-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  padding: 8px 10px 7px;
 }
 
 .director-analysis-period__act-title {
-  margin: 0;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .director-analysis-period__act-meta {
-  margin: 2px 0 0;
-  font-size: 10px;
+  font-size: 11px;
+  letter-spacing: 0.03em;
   opacity: 0.65;
 }
 
-.director-analysis-period__act-actions {
-  display: flex;
+.director-analysis-period__tags {
+  display: inline-flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.director-analysis-period__tag {
+  padding: 1px 5px;
+  border: 1px solid transparent;
+  font-size: 8.5px;
+  font-weight: 800;
+  line-height: 1.45;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.director-analysis-period__tag[data-tone='current'] {
+  padding-inline: 0;
+  opacity: 0.6;
+}
+
+.director-analysis-period__tag[data-tone='current']::before {
+  content: '• ';
+}
+
+/* Sello sólido = aplicado. Sello discontinuo = lo contiene. */
+.director-analysis-period__tag[data-tone='selected'] {
+  background: #231910;
+  color: #f7f1e6;
+}
+
+.director-analysis-period__tag[data-tone='contains'] {
+  border: 1px dashed rgb(35 25 16 / 0.7);
+}
+
+.director-analysis-period__act[data-selection='selected'] {
+  border: 2px solid #231910;
+  box-shadow: 3px 3px 0 rgb(35 25 16 / 0.16);
+}
+
+.director-analysis-period__act[data-selection='contains'] {
+  border-style: dashed;
+  border-color: rgb(35 25 16 / 0.62);
+}
+
+.director-analysis-period__act[data-future='true'] {
+  opacity: 0.4;
+}
+
+.director-analysis-period__stub {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  border-top: 1px dashed rgb(35 25 16 / 0.35);
+}
+
+/* Muescas del talón sobre la perforación. */
+.director-analysis-period__stub::before,
+.director-analysis-period__stub::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #f7f1e6;
+}
+
+.director-analysis-period__stub::before {
+  left: -6px;
+}
+
+.director-analysis-period__stub::after {
+  right: -6px;
 }
 
 .director-analysis-period__use,
 .director-analysis-period__drill {
   appearance: none;
-  border: 1.5px solid rgb(35 25 16 / 0.28);
+  flex: 1 1 50%;
+  padding: 6px 10px;
+  border: 0;
   background: transparent;
   color: inherit;
   font: inherit;
   font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.07em;
+  text-align: left;
   text-transform: uppercase;
-  padding: 4px 8px;
   cursor: pointer;
-  border-radius: 2px;
-}
-
-.director-analysis-period__use {
-  border-bottom-width: 2.5px;
-  background: rgb(35 25 16 / 0.06);
-}
-
-.director-analysis-period__use:disabled,
-.director-analysis-period__drill:disabled,
-.director-analysis-period__week-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+  transition:
+    background-color 120ms ease-out,
+    opacity 120ms ease-out;
 }
 
 .director-analysis-period__drill {
-  border-style: dashed;
-  opacity: 0.85;
+  text-align: right;
+  opacity: 0.7;
+}
+
+.director-analysis-period__use:hover:not(:disabled),
+.director-analysis-period__drill:hover:not(:disabled) {
+  background: rgb(35 25 16 / 0.07);
+  opacity: 1;
+}
+
+/* En la cartelera el boleto es estrecho: talón en dos renglones. */
+.director-analysis-period__month .director-analysis-period__act-head {
+  padding: 7px 8px 6px;
+}
+
+/* En la casilla estrecha los sellos ocupan su renglón y pueden partirse. */
+.director-analysis-period__month .director-analysis-period__tags {
+  flex-basis: 100%;
+  margin-left: 0;
+}
+
+.director-analysis-period__month .director-analysis-period__tag {
+  white-space: normal;
+}
+
+.director-analysis-period__month .director-analysis-period__stub {
+  flex-direction: column;
+}
+
+.director-analysis-period__month .director-analysis-period__use,
+.director-analysis-period__month .director-analysis-period__drill {
+  padding: 5px 8px;
+  text-align: left;
+}
+
+.director-analysis-period__month .director-analysis-period__drill {
+  border-top: 1px dotted rgb(35 25 16 / 0.22);
 }
 
 .director-analysis-period__week-btn {
@@ -963,34 +1165,68 @@
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
-  padding: 7px 8px;
+  padding: 8px 10px;
   border: 1.5px solid transparent;
-  border-bottom: 2px solid rgb(35 25 16 / 0.18);
+  border-bottom: 1px dashed rgb(35 25 16 / 0.24);
   background: transparent;
   color: inherit;
   font: inherit;
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  letter-spacing: 0.05em;
   text-align: left;
-  cursor: pointer;
-}
-
-.director-analysis-period__week-btn[data-active='true'],
-.director-analysis-period__week-btn[data-current='true'] {
-  border-color: rgb(35 25 16 / 0.28);
-  background: rgb(35 25 16 / 0.05);
-}
-
-.director-analysis-period__badge {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
   text-transform: uppercase;
-  opacity: 0.7;
+  cursor: pointer;
+  transition: background-color 120ms ease-out;
+}
+
+.director-analysis-period__week-btn:hover:not(:disabled) {
+  background: rgb(35 25 16 / 0.06);
+}
+
+.director-analysis-period__week-btn[data-selection='selected'] {
+  border: 2px solid #231910;
+  box-shadow: 3px 3px 0 rgb(35 25 16 / 0.16);
+}
+
+.director-analysis-period__week-btn[data-future='true'] {
+  opacity: 0.38;
+}
+
+.director-analysis-period__use:disabled,
+.director-analysis-period__drill:disabled,
+.director-analysis-period__week-btn:disabled {
+  cursor: default;
+}
+
+.director-analysis-period__nav:focus-visible,
+.director-analysis-period__trigger:focus-visible,
+.director-analysis-period__current:focus-visible,
+.director-analysis-period__crumb-link:focus-visible,
+.director-analysis-period__use:focus-visible,
+.director-analysis-period__drill:focus-visible,
+.director-analysis-period__week-btn:focus-visible,
+.director-analysis-period__crumb-here:focus-visible,
+.director-analysis-period__year-label:focus-visible {
+  outline: 2px solid #231910;
+  outline-offset: 2px;
+}
+
+/* Encabezado de nivel enfocado por programa: sin anillo con ratón. */
+.director-analysis-period__crumb-here:focus:not(:focus-visible),
+.director-analysis-period__year-label:focus:not(:focus-visible) {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .director-analysis-period__level {
+    animation: none;
+  }
+
+  .director-analysis-period__caret {
+    transition: none;
+  }
 }
 
 .director-estado-period {
@@ -2000,4 +2236,818 @@
   font-size: 12px;
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+/* ─────────────────────────────────────────────────────────────────────────
+ * ESTADO (coordinación): CARGA | MOVIMIENTO lado a lado, mismo periodo.
+ * Ruta (nivel) compartida + dos columnas (título ?, leyenda, gráfica).
+ * ───────────────────────────────────────────────────────────────────────── */
+
+.director-flujo {
+  margin-top: 4px;
+  color: #231910;
+}
+
+.director-flujo__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-bottom: 8px;
+}
+
+/*
+ * Dos lecturas en una sola superficie: sin tarjetas, solo aire y una regla
+ * fina. Carga (línea) ≈52 % | Movimiento (barras) ≈48 %.
+ */
+.director-flujo__pair {
+  display: grid;
+  grid-template-columns: minmax(0, 52fr) 1px minmax(0, 48fr);
+  column-gap: clamp(12px, 1.4vw, 22px);
+  align-items: stretch;
+}
+
+.director-flujo__col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.director-flujo__divider {
+  align-self: stretch;
+  margin: 4px 0 26px;
+  background: repeating-linear-gradient(180deg, #231910 0 4px, transparent 4px 10px);
+  opacity: 0.13;
+}
+
+/* Hero analítico de ESTADO: algo más de peso que los títulos de sección. */
+.director-flujo .director-estado__section-title {
+  margin: 0;
+  font-size: 13.5px;
+  letter-spacing: 0.05em;
+}
+
+.director-flujo__chart-title {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+/* Ayuda «?»: un círculo discreto; el texto aparece con hover o foco. */
+.director-flujo__help {
+  position: relative;
+  display: inline-flex;
+}
+
+.director-flujo__help-button {
+  appearance: none;
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 1.2px solid rgb(35 25 16 / 0.55);
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: help;
+  opacity: 0.7;
+}
+
+.director-flujo__help-button:hover,
+.director-flujo__help-button:focus-visible {
+  opacity: 1;
+}
+
+.director-flujo__help-button:focus-visible {
+  outline: 2px solid #231910;
+  outline-offset: 2px;
+}
+
+.director-flujo__help-text {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: -8px;
+  z-index: 5;
+  width: max-content;
+  max-width: 230px;
+  padding: 6px 8px;
+  border: 1.2px solid #231910;
+  border-radius: 4px;
+  background: #fbf6ea;
+  box-shadow: 2px 2px 0 rgb(35 25 16 / 0.18);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.35;
+  text-transform: none;
+  white-space: normal;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+  pointer-events: none;
+}
+
+.director-flujo__help:hover .director-flujo__help-text,
+.director-flujo__help-button:focus-visible + .director-flujo__help-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+.director-flujo__crumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.director-flujo__crumb-step {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.director-flujo__crumb-sep {
+  opacity: 0.35;
+}
+
+.director-flujo__crumb-link {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline dotted;
+  text-transform: inherit;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  opacity: 0.62;
+}
+
+.director-flujo__crumb-link:hover {
+  opacity: 1;
+}
+
+.director-flujo__crumb-here {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.director-flujo__live {
+  margin-left: 4px;
+  font-size: 10px;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  opacity: 0.55;
+}
+
+
+.director-flujo__legend {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin: 5px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.director-flujo__legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.director-flujo__swatch {
+  width: 12px;
+  height: 10px;
+  border: 1.2px solid #231910;
+  border-radius: 3px 3px 1px 1px;
+  background: #3a2b1f;
+}
+
+.director-flujo__legend li[data-series='external'] .director-flujo__swatch {
+  background: #9a7b8f;
+}
+
+/* Línea con punto: la Carga se lee como tendencia, no como barra. */
+.director-flujo__legend li[data-series='active'] .director-flujo__swatch {
+  position: relative;
+  width: 18px;
+  height: 2.2px;
+  border: 0;
+  border-radius: 0;
+  background: #3a2b1f;
+}
+
+.director-flujo__legend li[data-series='active'] .director-flujo__swatch::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border: 1.8px solid #3a2b1f;
+  border-radius: 50%;
+  background: #fbf6ea;
+  transform: translate(-50%, -50%);
+}
+
+.director-flujo__legend li[data-series='reported'] .director-flujo__swatch {
+  background: #55657f;
+}
+
+.director-flujo__legend li[data-series='resolved'] .director-flujo__swatch {
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgb(35 25 16 / 0.42) 0 1px,
+      transparent 1px 4px
+    ),
+    #8fa89c;
+}
+
+/* Pista a la derecha de la ruta (o sola, en el nivel ciclo). */
+.director-flujo__hint {
+  flex: 0 0 auto;
+  margin-left: auto;
+  white-space: nowrap;
+  font-size: 10.5px;
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  opacity: 0.55;
+}
+
+/*
+ * Altura responsive y compartida por las dos gráficas: tabs + periodo +
+ * títulos + ambas gráficas sin scroll en 1440×900.
+ */
+.director-flujo__frame {
+  position: relative;
+  height: clamp(250px, 34vh, 325px);
+  transition: opacity 180ms ease-out;
+}
+
+.director-flujo__frame > .novex-chart {
+  height: 100%;
+}
+
+.director-flujo__frame[data-loading='true'] {
+  opacity: 0.55;
+}
+
+/* Botones de teclado: invisibles hasta recibir foco (luego en línea). */
+.director-flujo__keys {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  list-style: none;
+  white-space: nowrap;
+}
+
+.director-flujo__keys:focus-within {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 6px;
+}
+
+.director-flujo__keys button {
+  appearance: none;
+  padding: 2px 4px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-decoration: underline dotted;
+  cursor: pointer;
+}
+
+.director-flujo__crumb-link:focus-visible,
+.director-flujo__keys button:focus-visible {
+  outline: 2px solid #231910;
+  outline-offset: 2px;
+}
+
+/* Carril estrecho: una gráfica debajo de la otra. */
+@media (max-width: 900px) {
+  .director-flujo__pair {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 14px;
+  }
+
+  .director-flujo__divider {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .director-flujo__frame,
+  .director-flujo__help-text {
+    transition: none;
+  }
+}
+
+/* Lectura de coordinación: sin identidad repetida, tabs pegados al título. */
+.director-reading[data-scope='coordination'] .director-reading__modes {
+  margin-top: 2px;
+}
+
+/*
+ * Datos > decoración: en el carril de lectura los ornamentos del ticket
+ * (globo, birrete, comillas…) quedan por DEBAJO del contenido, nunca encima
+ * de barras, ejes, etiquetas o tooltip.
+ */
+.operational-shell__region--director-reading > .ticket-panel .ticket-panel__ornaments {
+  z-index: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * ESTADO (coordinación) · CARRUSEL DE LÁMINAS, sin scroll vertical.
+ * La cadena body → estado → carrusel → página → gráfica es flex con
+ * min-height: 0: el contenido CABE (no se recorta escondiendo la barra).
+ * Solo con data-fixed-height (ESTADO + coordinación): INTERNOS,
+ * DEPENDENCIAS, APRENDIZAJES y la lectura de Dirección conservan su scroll.
+ * ───────────────────────────────────────────────────────────────────────── */
+
+.director-reading__body[data-fixed-height='true'] {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Los controles del carrusel ocupan el margen interno del ticket: las
+     gráficas conservan el ancho de la lectura. */
+  margin-inline: -18px;
+  padding-bottom: 4px;
+  padding-right: 0;
+  scrollbar-gutter: auto;
+}
+
+.director-reading__body[data-fixed-height='true'] > .director-estado {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.director-estado-carousel {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) 16px;
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'prev view next'
+    '.    dots .';
+  column-gap: 2px;
+}
+
+.director-estado-carousel__viewport {
+  grid-area: view;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.director-estado-carousel__track {
+  display: flex;
+  height: 100%;
+  transition: transform 220ms cubic-bezier(0.22, 0.8, 0.3, 1);
+  will-change: transform;
+}
+
+/* Cada lámina con ancho y alto reales: ECharts nunca mide 0. */
+.director-estado-carousel__page {
+  flex: 0 0 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  /* Nada de una lámina asoma en la vecina durante o tras el desplazamiento. */
+  overflow: hidden;
+}
+
+/* Títulos de la lámina 1 algo más compactos: caben con su «?» en 1440. */
+.director-estado-carousel .director-flujo .director-flujo__chart-title {
+  font-size: 13px;
+  letter-spacing: 0.035em;
+  gap: 6px;
+}
+
+/*
+ * Navegación ANALÍTICA: marcas laterales finas, en su propio carril (nunca
+ * encima de ejes o tooltips). Distinta de la navegación temporal, que vive
+ * dentro de las gráficas.
+ */
+.director-estado-carousel__nav {
+  appearance: none;
+  align-self: center;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 44px;
+  padding: 0 0 2px;
+  border: 1.2px solid rgb(35 25 16 / 0.32);
+  border-radius: 8px;
+  background: rgb(246 240 230 / 0.6);
+  color: #231910;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: opacity 140ms ease-out, background 140ms ease-out;
+}
+
+.director-estado-carousel__nav[data-side='prev'] {
+  grid-area: prev;
+}
+
+.director-estado-carousel__nav[data-side='next'] {
+  grid-area: next;
+}
+
+.director-estado-carousel__nav:hover:not(:disabled) {
+  background: rgb(35 25 16 / 0.08);
+  border-color: rgb(35 25 16 / 0.6);
+}
+
+.director-estado-carousel__nav:disabled {
+  opacity: 0.22;
+  cursor: default;
+}
+
+.director-estado-carousel__dots {
+  grid-area: dots;
+  justify-self: center;
+  display: flex;
+  gap: 7px;
+  padding-top: 6px;
+}
+
+.director-estado-carousel__dot {
+  appearance: none;
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: 1.2px solid rgb(35 25 16 / 0.6);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.director-estado-carousel__dot[data-active='true'] {
+  background: #231910;
+  border-color: #231910;
+}
+
+.director-estado-carousel__nav:focus-visible,
+.director-estado-carousel__dot:focus-visible {
+  outline: 2px solid #231910;
+  outline-offset: 2px;
+}
+
+/* Lámina 1 · Carga | Movimiento: las gráficas llenan el alto disponible. */
+.director-estado-carousel .director-flujo {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-top: 0;
+}
+
+.director-estado-carousel .director-flujo__pair {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.director-estado-carousel .director-flujo__col {
+  min-height: 0;
+}
+
+.director-estado-carousel .director-flujo__frame {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+}
+
+.director-estado-carousel .director-flujo__divider {
+  margin-bottom: 22px;
+}
+
+/* El host de ECharts trae un min-height en línea: aquí manda el frame. */
+.director-estado-carousel .novex-chart__canvas {
+  min-height: 0 !important;
+}
+
+/* Lámina 2 · Severidad | Atención, mismo alto que la lámina 1. */
+.director-estado-carousel .director-estado-comp {
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: 6px;
+}
+
+.director-estado-carousel .director-estado-comp__charts {
+  flex: 1 1 auto;
+  min-height: 0;
+  grid-template-columns: minmax(0, 58fr) minmax(0, 42fr);
+  column-gap: clamp(12px, 1.4vw, 22px);
+  align-items: stretch;
+}
+
+.director-estado-carousel .director-estado-comp__chart {
+  min-height: 0;
+}
+
+/* Regla vertical tenue entre las dos, como en la lámina 1 (sin tarjetas). */
+.director-estado-carousel .director-estado-comp__chart--attention {
+  padding-left: clamp(12px, 1.4vw, 22px);
+  background: repeating-linear-gradient(
+      180deg,
+      rgb(35 25 16 / 0.13) 0 4px,
+      transparent 4px 10px
+    )
+    left top / 1px 100% no-repeat;
+}
+
+.director-estado-carousel .director-estado-comp__chart .novex-chart--composition {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+}
+
+.director-estado-carousel .director-estado-comp__chart .novex-chart__canvas {
+  height: 100% !important;
+  min-height: 0 !important;
+}
+
+/*
+ * Sin scroll, las gráficas llegan a las esquinas inferiores del ticket:
+ * datos > decoración, los ornamentos de abajo se retiran solo en ESTADO
+ * (los de arriba siguen; INTERNOS/DEPENDENCIAS/APRENDIZAJES sin cambios).
+ */
+.operational-shell__region--director-reading:has(.director-reading[data-fixed-height='true'])
+  :is(.ticket-panel__ornament--bl, .ticket-panel__ornament--br) {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .director-estado-carousel__track {
+    transition: none;
+  }
+}
+
+/* ── ESTADO · lámina ANTIGÜEDAD (ranking | distribución, un solo corte) ── */
+.director-antiguedad {
+  /* Misma altura útil que Carga | Movimiento: la lámina no crece. */
+  --aging-frame: clamp(250px, 38vh, 380px);
+  margin-top: 4px;
+  color: #231910;
+}
+
+/* Cabecera común de la lámina: sección + corte (una sola vez). */
+.director-antiguedad__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed rgb(35 25 16 / 0.22);
+}
+
+.director-antiguedad__eyebrow {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+/* Corte de la lectura: «HOY» o «AL CIERRE DEL …». */
+.director-antiguedad__cut {
+  flex: none;
+  padding: 2px 8px;
+  border: 1.4px solid rgb(35 25 16 / 0.55);
+  border-radius: 2px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.director-antiguedad__cut[data-now='false'] {
+  border-style: dashed;
+  opacity: 0.8;
+}
+
+/* Ranking ≈ 60 % (títulos) | distribución ≈ 40 % (cuatro rangos). */
+.director-antiguedad__pair {
+  display: grid;
+  grid-template-columns: minmax(0, 60fr) 1px minmax(0, 40fr);
+  column-gap: clamp(12px, 1.4vw, 22px);
+  align-items: start;
+  transition: opacity 180ms ease-out;
+}
+
+.director-antiguedad__pair[data-loading='true'] {
+  opacity: 0.55;
+}
+
+.director-antiguedad__col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.director-antiguedad__divider {
+  align-self: stretch;
+  margin: 4px 0 18px;
+  background: repeating-linear-gradient(180deg, #231910 0 4px, transparent 4px 10px);
+  opacity: 0.13;
+}
+
+.director-antiguedad .director-estado__section-title {
+  margin: 0;
+  font-size: clamp(12px, 0.92vw, 13.5px);
+}
+
+/*
+ * Títulos que pueden partirse en dos líneas en columnas estrechas (1440): la
+ * ayuda «?» nunca queda recortada. La cabecera de ambas columnas comparte
+ * alto mínimo para que las dos gráficas arranquen a la misma altura.
+ */
+.director-antiguedad .director-flujo__chart-title {
+  align-items: flex-start;
+  white-space: normal;
+}
+
+.director-antiguedad .director-flujo__chart-title > span:nth-child(2) {
+  min-width: 0;
+}
+
+.director-antiguedad__col-head {
+  min-height: 52px;
+}
+
+/* Línea secundaria bajo cada título (Top N · Mediana). */
+.director-antiguedad__sub {
+  margin: 2px 0 0;
+  font-size: 11px;
+  font-style: italic;
+  opacity: 0.62;
+}
+
+/* El ranking no reserva cinco huecos: alto según filas, con tope común. */
+.director-antiguedad__frame {
+  position: relative;
+  height: min(var(--aging-frame), calc(var(--aging-rows, 5) * 58px + 56px));
+}
+
+.director-antiguedad__frame--dist {
+  height: min(var(--aging-frame), 290px);
+}
+
+.director-antiguedad__measure,
+.director-antiguedad__measure > .novex-chart {
+  height: 100%;
+}
+
+.director-antiguedad__more {
+  margin: 2px 0 0;
+  font-size: 11px;
+  font-style: italic;
+  opacity: 0.62;
+}
+
+/* Sin activos: una sola lectura para toda la lámina. */
+.director-antiguedad__empty {
+  margin: 48px 0;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .director-antiguedad__pair {
+    transition: none;
+  }
+}
+
+/* ── ESTADO · lámina 4: RESOLUCIÓN (métrica de intervalo, sin chip de corte) ── */
+.director-resolucion {
+  margin-top: 4px;
+  color: #231910;
+}
+
+/* Línea ≈ 58 % (necesita ancho temporal) | distribución ≈ 42 % (seis rangos). */
+.director-resolucion__pair {
+  display: grid;
+  grid-template-columns: minmax(0, 58fr) 1px minmax(0, 42fr);
+  column-gap: clamp(12px, 1.4vw, 22px);
+  align-items: start;
+  transition: opacity 180ms ease-out;
+}
+
+.director-resolucion__pair[data-loading='true'] {
+  opacity: 0.55;
+}
+
+.director-resolucion .director-estado__section-title {
+  margin: 0;
+  font-size: clamp(12px, 0.92vw, 13.5px);
+}
+
+.director-resolucion .director-flujo__chart-title {
+  align-items: flex-start;
+  white-space: normal;
+}
+
+.director-resolucion .director-flujo__chart-title > span:nth-child(2) {
+  min-width: 0;
+}
+
+/* Misma altura útil que Carga | Movimiento: la lámina no crece ni hace scroll. */
+.director-resolucion__frame {
+  position: relative;
+  height: clamp(250px, 34vh, 325px);
+}
+
+.director-resolucion__measure,
+.director-resolucion__measure > .novex-chart {
+  height: 100%;
+}
+
+@media (max-width: 900px) {
+  .director-resolucion__pair {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 14px;
+  }
+
+  .director-resolucion__pair .director-antiguedad__divider {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .director-resolucion__pair {
+    transition: none;
+  }
+}
+
+/* ── ESTADO · lámina 2: snapshot al corte del AnalysisPeriod ─────────── */
+.director-estado-comp__cut {
+  margin: 0 0 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+/* Valor actual aplicado a un corte histórico: secundario, nunca oculto. */
+.director-estado-comp__reliability {
+  margin: -2px 0 2px;
+  font-size: 10.5px;
+  font-style: italic;
+  opacity: 0.62;
+}
+
+.director-estado-attention__facts li[data-kind='closed-after']
+  .director-estado-attention__swatch {
+  background: #cfc2a8;
+}
+
+.director-estado-attention__facts li[data-kind='unclassified']
+  .director-estado-attention__swatch {
+  background: #e2d9c6;
 }

@@ -1,6 +1,11 @@
 import { expect, test, type Page } from 'playwright/test'
 import { operationalOverviewFixture } from './operational-overview.fixture'
 
+// Fase 1 de retiro del shell legacy: Panorama / Inteligencia IA / Auditoría ya no son destino.
+// La ruta redirige al Centro Operacional; el módulo se conserva, pero esta
+// suite prueba una pantalla que ya no se monta. Reactivar si se recupera.
+test.skip(true, 'Fase 1: Panorama / Inteligencia IA / Auditoría ya no son destino')
+
 const SESSION_KEY = 'novex.auth.session.v1'
 const TOKEN_KEY = 'novex.auth.accessToken.v1'
 const SITUATION_A = '11111111-1111-4111-8111-111111111111'

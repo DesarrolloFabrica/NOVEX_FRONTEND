@@ -23,11 +23,34 @@ import type { ProblemDetail } from '@/modules/operational-cards/types/problem-de
  * existiendo en el backend y en otras vistas.
  */
 
+/** Prefijo de la historia mock del escenario QA (nunca una política real). */
+const SIMULATED_POLICY_PREFIX = 'qa-'
+
 export function toProblemDetail(situation: SituationResponse): ProblemDetail {
   return {
     id: situation.id,
     title: situation.title,
     severity: situation.severity,
+    // Un backend anterior a esta fase no la envía: entonces nunca cambió.
+    reportedSeverity: situation.reportedSeverity ?? situation.severity,
+    severityHistory: (situation.severityHistory ?? []).map((step) => ({
+      id: step.id,
+      from: step.from,
+      to: step.to,
+      source: step.source,
+      effectiveAt: step.effectiveAt,
+      simulated: Boolean(step.policyCode?.startsWith(SIMULATED_POLICY_PREFIX)),
+    })),
+    consequences: (situation.consequences ?? []).map((item) => ({
+      id: item.id,
+      description: item.description,
+      occurredAt: item.occurredAt,
+      createdAt: item.createdAt,
+      authorName: item.createdByUserName || null,
+      authorRole: item.createdByRoleName,
+      severityAtOccurrence: item.severityAtOccurrence,
+    })),
+    canAddConsequence: situation.canAddConsequence === true,
     status: situation.status,
     slaHealth: situation.slaHealth ?? null,
     dueAt: situation.dueAt ?? null,

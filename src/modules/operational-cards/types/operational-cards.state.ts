@@ -111,11 +111,11 @@ export interface ReportDraft {
   /** UUID de la coordinación responsable (INTER) o vacío (INTERNAL usa la carta). */
   responsibleCoordinationId: string
   /**
-   * Destino explícito de un INTERNAL (vista COORDINADOR).
-   * Vacío = la coordinación propia / carta seleccionada.
-   * Distinto de `responsibleCoordinationId` (solo INTER).
+   * Afectación inicial (solo INTERNAL, opcional). Qué CONSECUENCIA produjo el
+   * problema; la descripción sigue diciendo qué está fallando. Vacía = el
+   * problema nace sin afectaciones.
    */
-  internalDestinationCoordinationId: string
+  initialConsequence: string
   affectedProcess: string
   pendingDelivery: string
 }
@@ -129,7 +129,7 @@ export interface ReportDraft {
  * respuesta actualice ese destino aunque el usuario ya esté mirando otro.
  */
 export interface OperationalSubmissionState {
-  kind: 'report' | 'resolution' | 'status-advance' | null
+  kind: 'report' | 'resolution' | 'status-advance' | 'consequence' | null
   status: 'idle' | 'sending' | 'error'
   targetKey: string | null
   errorMessage: string | null

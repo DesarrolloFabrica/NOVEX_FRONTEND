@@ -311,9 +311,11 @@ test.describe('estado operacional', () => {
     await expect(page.getByTestId('direction-character')).toHaveCount(1)
   })
 
-  test('las secciones hijas del Centro Operacional siguen accesibles', async ({
+  test('las secciones hijas legacy ya no se ofrecen y vuelven a la home', async ({
     page,
   }) => {
+    // Fase 1: Panorama global, Inteligencia IA y Auditoría se retiraron como
+    // pestañas; sus URLs redirigen a la home del Centro.
     await installAdminSession(page)
     await installApi(page)
 
@@ -321,17 +323,18 @@ test.describe('estado operacional', () => {
     await expect(page.getByTestId('operational-cards-experience')).toBeVisible()
 
     for (const label of ['Panorama global', 'Inteligencia IA', 'Auditoría']) {
-      await page.getByRole('link', { name: label, exact: true }).click()
-      await expect(page).toHaveURL(
-        /\/centro-operacional\/(panorama|inteligencia|reportes)/,
-      )
-      await expect(page.getByTestId('operational-cards-experience')).toHaveCount(
-        0,
-      )
+      await expect(
+        page.getByRole('link', { name: label, exact: true }),
+      ).toHaveCount(0)
     }
 
-    await page.getByRole('link', { name: 'Inicio', exact: true }).click()
-    await expect(page.getByTestId('operational-cards-experience')).toBeVisible()
+    for (const section of ['panorama', 'inteligencia', 'reportes']) {
+      await page.goto(`/centro-operacional/${section}`)
+      await expect(page).toHaveURL(/\/centro-operacional$/)
+      await expect(
+        page.getByTestId('operational-cards-experience'),
+      ).toBeVisible()
+    }
   })
 })
 

@@ -1,5 +1,10 @@
 import { expect, test, type Page } from 'playwright/test'
 
+// Fase 1 de retiro del shell legacy: la Red de impacto (/red-impacto) ya no es destino.
+// La ruta redirige al Centro Operacional; el módulo se conserva, pero esta
+// suite prueba una pantalla que ya no se monta. Reactivar si se recupera.
+test.skip(true, 'Fase 1: la Red de impacto (/red-impacto) ya no es destino')
+
 const AUTH_SESSION_KEY = 'novex.auth.session.v1'
 const AUTH_TOKEN_KEY = 'novex.auth.accessToken.v1'
 

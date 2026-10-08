@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useReducedMotion } from 'motion/react'
+import { buildInternalReportUrl } from '@/modules/operational-cards/experience/reportIntent'
 import { OrganizationalScene } from '@/modules/impact-network/components/OrganizationalScene'
 import { OperationalContextPanel } from '@/modules/impact-network/components/OperationalContextPanel'
 import {
@@ -916,10 +917,8 @@ export function ImpactNetworkExperience() {
 
   const handleCreateSituation = useCallback(() => {
     if (!selectedCoordinationId || !canCreateInSelectedCoordination) return
-    const returnTo = `/red-impacto?coordination=${encodeURIComponent(selectedCoordinationId)}`
-    navigate(
-      `/situaciones/nueva?coordination=${encodeURIComponent(selectedCoordinationId)}&returnTo=${encodeURIComponent(returnTo)}`,
-    )
+    // Única puerta de creación INTERNAL: el formulario del Centro Operacional.
+    navigate(buildInternalReportUrl(selectedCoordinationId))
   }, [canCreateInSelectedCoordination, navigate, selectedCoordinationId])
 
   const handleUpdateSituationStatus = useCallback(

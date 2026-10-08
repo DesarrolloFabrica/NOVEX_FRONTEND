@@ -106,6 +106,9 @@
 .eoc-chrome__actions {
   display: flex;
   flex: 0 0 auto;
+  /* Fase 1: sin la fila de secciones (que ocupaba el hueco flexible), las
+     acciones se empujan solas al extremo derecho. */
+  margin-left: auto;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;

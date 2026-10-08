@@ -21,6 +21,10 @@ import {
 import { nowAsLocalInput } from '@/modules/operational-cards/services/report-submission.service'
 import { resolveTicketTheme } from '@/modules/operational-cards/experience/ticketThemes'
 import {
+  parseReportIntent,
+  stripReportIntent,
+} from '@/modules/operational-cards/experience/reportIntent'
+import {
   experienceAllowsOperation,
   type OperationalCenterExperienceId,
 } from '@/modules/operational-cards/experience/resolveOperationalCenterExperience'
@@ -132,6 +136,45 @@ export function useOperationalShellModel(
     [overview, selectedCoordinationCode],
   )
 
+  /*
+   * Intención de reportar que llega por URL (los accesos del antiguo asistente
+   * `/situaciones/nueva`). Se consume UNA vez, cuando el overview está listo:
+   * preselecciona la carta si quien reporta puede elegirla y abre el formulario
+   * INTERNAL, que es la única puerta de creación.
+   */
+  const [reportIntent, setReportIntent] = useState(() =>
+    typeof window === 'undefined'
+      ? null
+      : parseReportIntent(window.location.search),
+  )
+  const openReportForm = controller.openReportForm
+  useEffect(() => {
+    if (!reportIntent || level0 !== 'ready' || !overview) return
+    if (!isCoordinator && reportIntent.coordination) {
+      const match = overview.coordinations.find(
+        (row) =>
+          row.id === reportIntent.coordination ||
+          row.code === reportIntent.coordination,
+      )
+      if (match) selectCoordination(match.code as CoordinationId)
+    }
+    if (canCreate) openReportForm('INTERNAL')
+    setReportIntent(null)
+    window.history.replaceState(
+      window.history.state,
+      '',
+      `${window.location.pathname}${stripReportIntent(window.location.search)}${window.location.hash}`,
+    )
+  }, [
+    reportIntent,
+    level0,
+    overview,
+    isCoordinator,
+    canCreate,
+    selectCoordination,
+    openReportForm,
+  ])
+
   const characterCoordination = resolveCharacterCoordination({
     isCoordinator,
     assignedCoordination,
@@ -196,22 +239,14 @@ export function useOperationalShellModel(
     assignedCoordination,
   ])
 
-  const destinationOptions = useMemo(() => {
-    if (!isCoordinator || !overview || !assignedCoordination) return null
-    return overview.coordinations.map((row) => ({
-      id: row.id,
-      label: labelByCode[row.code] ?? row.shortName,
-      code: row.code,
-    }))
-  }, [isCoordinator, overview, assignedCoordination, labelByCode])
-
+  /*
+   * INTERNAL se registra SIEMPRE en la carta seleccionada; para un COORDINADOR
+   * la carta está fijada a su coordinación, así que su INTERNAL es de su área.
+   * (El antiguo selector «Destino» se retiró: un problema que ocurre en otra
+   * área se reporta como dependencia INTER.)
+   */
   const responsibleCodeForSubmit = useMemo(() => {
     if (reportKind === 'INTERNAL') {
-      const destId = draft.internalDestinationCoordinationId.trim()
-      if (destId && overview) {
-        const match = overview.coordinations.find((row) => row.id === destId)
-        return (match?.code as CoordinationId | undefined) ?? null
-      }
       return selectedCoordinationCode
     }
     const match = overview?.coordinations.find(
@@ -223,7 +258,6 @@ export function useOperationalShellModel(
     selectedCoordinationCode,
     overview,
     draft.responsibleCoordinationId,
-    draft.internalDestinationCoordinationId,
   ])
 
   const ticketTheme = resolveTicketTheme(
@@ -269,6 +303,11 @@ export function useOperationalShellModel(
       if (!detail) return
       void controller.submitStatusAdvance(detail.id, detail.status)
     },
+    onAddConsequence: (consequenceDraft) => {
+      const detail = controller.level2.detail
+      if (!allowLifecycleActions || !detail) return Promise.resolve(false)
+      return controller.submitConsequence(detail.id, consequenceDraft)
+    },
     onReportInternal: canCreate
       ? () => controller.openReportForm('INTERNAL')
       : noop,
@@ -309,9 +348,6 @@ export function useOperationalShellModel(
       categories,
       categoriesError,
       responsibleOptions,
-      destinationOptions,
-      ownCoordinationId:
-        assignedCoordination?.id ?? selectedCoordination?.id ?? null,
       draft,
       submission: controller.submission,
       maxOccurredAt: nowAsLocalInput(),

@@ -3878,3 +3878,120 @@
     max-width: 22%;
   }
 }
+
+/*
+ * INTERNAL VIVO sobre papel: rastro de severidad y afectaciones con la misma
+ * tinta que el resto del detalle. Sin estos ajustes heredaban los tonos del
+ * panel oscuro y se perdían sobre la crema.
+ */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .severity-trail__summary,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .severity-trail__reason,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__count,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__frozen {
+  color: var(--ticket-pilot-ink-soft);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .severity-trail__steps {
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .severity-trail__toggle {
+  color: var(--ticket-pilot-teal-deep);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .severity-trail__toggle:focus-visible {
+  outline-color: color-mix(in srgb, var(--ticket-accent-deep) 55%, transparent);
+}
+
+/*
+ * AGREGAR AFECTACIÓN sobre papel: una franja del mismo ticket. Filete superior
+ * con el acento de la coordinación, crema algo más cálido que el papel y un
+ * marco interior en tinta tenue. Sin sombra: no es una tarjeta aparte.
+ */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__composer {
+  border-color: rgb(42 33 24 / 0.22);
+  border-top: 2px solid var(--ticket-accent-deep);
+  background: rgb(255 244 222 / 0.7);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__composer-title {
+  color: var(--ticket-pilot-ink);
+  font-family: var(--ticket-pilot-serif);
+  font-size: 12.5px;
+  letter-spacing: 0.1em;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__composer-help,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__date-label {
+  color: var(--ticket-pilot-ink-soft);
+}
+
+/* CTA en contorno con el acento: claro, pero por debajo de «Cerrar problema». */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__submit {
+  border-color: var(--ticket-accent-deep);
+  background: rgb(255 250 240 / 0.75);
+  color: var(--ticket-accent-deep);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__submit:hover:not(:disabled),
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__submit:focus-visible {
+  background: color-mix(in srgb, var(--ticket-accent) 14%, #fffaf0);
+  outline-color: color-mix(in srgb, var(--ticket-accent-deep) 55%, transparent);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__submit:disabled {
+  border-color: rgb(42 33 24 / 0.2);
+  background: transparent;
+  color: rgb(42 33 24 / 0.42);
+}
+
+/* Fecha de la afectación: mismo campo de papel que el formulario de reporte. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__datetime {
+  border: 1px solid rgb(42 33 24 / 0.38) !important;
+  border-radius: 8px !important;
+  background: rgb(255 250 240 / 0.55) !important;
+  color: var(--ticket-pilot-ink) !important;
+  box-shadow: inset 0 1px 2px rgb(42 33 24 / 0.08) !important;
+  color-scheme: light;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__datetime:focus-visible {
+  border-color: var(--ticket-accent-deep) !important;
+  outline: 2px solid color-mix(in srgb, var(--ticket-accent-deep) 45%, transparent) !important;
+  outline-offset: 1px;
+}
