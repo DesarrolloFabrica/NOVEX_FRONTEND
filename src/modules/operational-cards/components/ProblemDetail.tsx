@@ -1,14 +1,21 @@
-import type { ReactNode } from 'react'
+import { useRef, type CSSProperties, type ReactNode } from 'react'
+import { CoordinationMark } from '@/modules/operational-cards/components/CoordinationMark'
 import { ProblemDetailSection } from '@/modules/operational-cards/components/ProblemDetailSection'
+import { resolveCoordinationMarkAsset } from '@/modules/operational-cards/data/coordinationMark'
 import {
   splitProblemEvidences,
   toProblemTimelineEntryView,
   type FormattedDateTime,
 } from '@/modules/operational-cards/data/problemDetailPresentation'
-import { formatDossierFolio } from '@/modules/operational-cards/data/problemDossier'
+import {
+  formatDossierFolio,
+  resolveDossierCoordinationColor,
+  resolveDossierTypeBadge,
+} from '@/modules/operational-cards/data/problemDossier'
 import { resolveSituationViewpointLabel } from '@/modules/operational-cards/data/situationViewpoint'
 import { ProblemConsequences } from '@/modules/operational-cards/components/ProblemConsequences'
 import { ProblemSeverityTrail } from '@/modules/operational-cards/components/ProblemSeverityTrail'
+import { useOrnamentClearance } from '@/modules/operational-cards/hooks/useOrnamentClearance'
 import type { ConsequenceDraft } from '@/modules/operational-cards/services/problem-consequence.service'
 import type {
   OperationalCardsLevel2State,
@@ -26,15 +33,17 @@ import '@/styles/operational-problem-detail.css'
  * Detalle de un problema (LEVEL 2), en la región permanente del shell.
  *
  * No hay velo, ni `role="dialog"`, ni botón de cerrar: no se cierra nada, se
- * mira otro problema. «Volver» lo pone el panel que lo contiene.
+ * mira otro problema. El regreso (flecha) lo decide el panel que lo contiene
+ * vía `onBack`; aquí solo se coloca en la primera línea del expediente.
  *
  * Sin IA: el detalle no muestra ni pide análisis, resúmenes generados ni
  * recomendaciones.
  *
- * Orden de lectura:
- *   1. Encabezado        tipo, folio, título, severidad, estado y SLA; si la
- *                        severidad cambió, «Reportado como · Actual».
- *   2. Contexto          coordinaciones, proceso afectado y entrega pendiente.
+ * Orden de lectura (expediente):
+ *   1. Encabezado        regreso, folio y tipo; título; severidad, estado y
+ *                        SLA; si la severidad cambió, «Reportado como · Actual».
+ *   2. Coordinación      responsable (y afectada en dependencias), con su logo
+ *                        y color de identidad; proceso y entrega si existen.
  *   3. Descripción       el texto del reporte, íntegro (no se deduplica).
  *   4. Afectaciones      solo INTERNAL: consecuencias acumuladas (append-only).
  *   5. Notas del reporte y Otras evidencias, solo si existen.
@@ -55,10 +64,11 @@ const SEVERITY_LABEL = {
   LOW: 'Baja',
 } as const
 
+/** `IN_PROGRESS` se presenta como «En revisión»; el valor de dominio no cambia. */
 const STATUS_LABEL: Record<string, string> = {
   OPEN: 'Abierto',
-  IN_PROGRESS: 'En atención',
-  RESOLVED: 'En atención',
+  IN_PROGRESS: 'En revisión',
+  RESOLVED: 'En revisión',
   CLOSED: 'Cerrado',
 }
 
@@ -165,25 +175,37 @@ function Byline({ author, date }: { author: string; date: FormattedDateTime }) {
 }
 
 /**
- * Filas del bloque de contexto. Se arman como lista para que el `<dl>` solo
- * contenga lo que existe: en un problema interno no hay «afectada» distinta,
- * y proceso/entrega solo existen en las dependencias que los registraron.
+ * Filas del bloque de coordinación. Se arman como lista para que el `<dl>`
+ * solo contenga lo que existe: en un problema interno no hay «afectada»
+ * distinta, y proceso/entrega solo existen en las dependencias que los
+ * registraron. Responsable y afectada salen de sus propios campos: nunca se
+ * presenta a la afectada como responsable.
  */
-function contextRows(
-  detail: ProblemDetailData,
-): { key: string; label: string; value: string }[] {
-  const responsible = detail.coordinationName ?? NO_COORDINATION
+interface ContextRow {
+  key: string
+  label: string
+  value: string
+  /** Code de la coordinación, solo en filas de coordinación (logo y color). */
+  code?: string | null
+}
 
-  if (detail.reportKind !== 'INTER_COORDINATION') {
-    return [{ key: 'responsible', label: 'Coordinación', value: responsible }]
+function contextRows(detail: ProblemDetailData): ContextRow[] {
+  const responsible: ContextRow = {
+    key: 'responsible',
+    label: 'Coordinación responsable',
+    value: detail.coordinationName ?? NO_COORDINATION,
+    code: detail.coordinationCode ?? null,
   }
 
-  const rows = [
-    { key: 'responsible', label: 'Responsable', value: responsible },
+  if (detail.reportKind !== 'INTER_COORDINATION') return [responsible]
+
+  const rows: ContextRow[] = [
+    responsible,
     {
       key: 'affected',
-      label: 'Afectada',
+      label: 'Coordinación afectada',
       value: detail.affectedCoordinationName ?? NO_COORDINATION,
+      code: detail.affectedCoordinationCode ?? null,
     },
   ]
   if (detail.affectedProcess) {
@@ -203,6 +225,29 @@ function contextRows(
   return rows
 }
 
+/** Flecha de regreso dibujada en línea: el proyecto no trae librería de iconos. */
+function BackArrowIcon() {
+  return (
+    <svg
+      className="problem-detail__back-icon"
+      viewBox="0 0 16 16"
+      width="16"
+      height="16"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        d="M10 3 5 8l5 5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 export interface ProblemDetailProps {
   level2: OperationalCardsLevel2State
   selectedCoordinationCode?: string | null
@@ -217,6 +262,10 @@ export interface ProblemDetailProps {
     submission: OperationalSubmissionState
     onSubmit: (draft: ConsequenceDraft) => Promise<boolean>
   } | null
+  /** Regreso que decide el panel contenedor. Sin él, no hay flecha. */
+  onBack?: () => void
+  /** Nombre accesible de la flecha («Volver a problemas», «Volver»…). */
+  backLabel?: string
 }
 
 const IDLE_SUBMISSION: OperationalSubmissionState = {
@@ -233,6 +282,8 @@ export function ProblemDetail({
   onToggleSection,
   onRetrySection = () => undefined,
   consequenceActions = null,
+  onBack,
+  backLabel = 'Volver a problemas',
 }: ProblemDetailProps) {
   const { detail, sections, expanded, status } = level2
   const isExpanded = (section: ProblemSectionId) => expanded.includes(section)
@@ -244,6 +295,10 @@ export function ProblemDetail({
         affectedCode: detail.affectedCoordinationCode,
       })
     : null
+  const typeBadge = detail ? resolveDossierTypeBadge(detail.reportKind) : null
+  // El encabezado rodea el adorno superior derecho del ticket (si lo hay).
+  const headingRef = useRef<HTMLDivElement>(null)
+  useOrnamentClearance(headingRef)
 
   // Notas y otras evidencias salen de la misma carga; separarlas aquí decide
   // qué acordeones existen sin pedir nada más.
@@ -263,24 +318,45 @@ export function ProblemDetail({
       aria-labelledby={HEADING_ID}
     >
       <header className="problem-detail__header">
-        <div className="problem-detail__heading">
-          {detail && (
-            <p className="problem-detail__eyebrow">
-              {kindLabel && (
-                <span
-                  className="problem-detail__kind"
-                  data-testid="detail-report-kind"
+        <div className="problem-detail__heading" ref={headingRef}>
+          {/*
+            Primera línea del expediente: regreso, folio y tipo. La flecha va
+            aquí aunque el detalle siga cargando o haya fallado: volver nunca
+            depende de que el detalle exista.
+          */}
+          {(onBack || detail) && (
+            <div className="problem-detail__topline">
+              {onBack && (
+                <button
+                  type="button"
+                  className="problem-detail__back"
+                  data-testid="detail-back"
+                  aria-label={backLabel}
+                  title={backLabel}
+                  onClick={onBack}
                 >
-                  {kindLabel}
+                  <BackArrowIcon />
+                </button>
+              )}
+              {detail && (
+                <span
+                  className="problem-detail__folio"
+                  data-testid="detail-folio"
+                >
+                  {formatDossierFolio(detail.id)}
                 </span>
               )}
-              <span
-                className="problem-detail__folio"
-                data-testid="detail-folio"
-              >
-                {formatDossierFolio(detail.id)}
-              </span>
-            </p>
+              {detail && (
+                <span
+                  className="problem-detail__type"
+                  data-testid="detail-report-kind"
+                  data-dossier-type={typeBadge?.key}
+                  title={kindLabel ?? undefined}
+                >
+                  {typeBadge?.label}
+                </span>
+              )}
+            </div>
           )}
           <h3 id={HEADING_ID} className="problem-detail__title">
             {detail?.title ?? 'Detalle del problema'}
@@ -325,22 +401,57 @@ export function ProblemDetail({
       </header>
 
       {detail && (
-        <dl
-          className="problem-detail__context"
-          data-testid="detail-context"
-          aria-label="Contexto del problema"
-        >
-          {contextRows(detail).map((row) => (
-            <div
-              key={row.key}
-              className="problem-detail__context-row"
-              data-context={row.key}
+        <div className="problem-detail__coordination">
+          <dl
+            className="problem-detail__context"
+            data-testid="detail-context"
+            aria-label="Coordinación del problema"
+          >
+            {contextRows(detail).map((row) => {
+              const isCoordination = row.code !== undefined
+              const accent = isCoordination
+                ? resolveDossierCoordinationColor(row.code)
+                : null
+              return (
+                <div
+                  key={row.key}
+                  className="problem-detail__context-row"
+                  data-context={row.key}
+                  data-coordination={isCoordination ? 'true' : undefined}
+                  style={
+                    accent
+                      ? ({ '--coord-accent': accent } as CSSProperties)
+                      : undefined
+                  }
+                >
+                  <dt>{row.label}</dt>
+                  <dd>
+                    {isCoordination && (
+                      <CoordinationMark
+                        className="problem-detail__coord-mark"
+                        asset={resolveCoordinationMarkAsset(row.code)}
+                        code={row.code ?? null}
+                      />
+                    )}
+                    <span className="problem-detail__context-value">
+                      {row.value}
+                    </span>
+                  </dd>
+                </div>
+              )
+            })}
+          </dl>
+          {/* Desde qué lado se lee la dependencia («nos afecta», «debemos
+              resolver»): dato del punto de vista, no una coordinación más. */}
+          {detail.reportKind === 'INTER_COORDINATION' && kindLabel && (
+            <p
+              className="problem-detail__viewpoint"
+              data-testid="detail-viewpoint"
             >
-              <dt>{row.label}</dt>
-              <dd>{row.value}</dd>
-            </div>
-          ))}
-        </dl>
+              {kindLabel}
+            </p>
+          )}
+        </div>
       )}
 
       {(status === 'loading' || status === 'idle') && (
@@ -376,7 +487,7 @@ export function ProblemDetail({
               id="problem-detail-description-title"
               className="problem-detail__block-title"
             >
-              Descripción del problema
+              Descripción
             </h4>
             <p className="problem-detail__description-text">
               {detail.description}

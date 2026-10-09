@@ -471,3 +471,142 @@ button.problem-dossier.my-reports__row {
     transition-duration: 0ms;
   }
 }
+
+/*
+ * VARIANTE COMPACTA — paneles «Problemas de la coordinación» (ProblemRow).
+ *
+ * Todo va acotado a `.problem-dossier--compact`: «Mis reportes» e historial
+ * siguen con la ficha dossier. El talón deja el folio y lleva solo el logo de
+ * la coordinación representada sobre su color; el cuerpo queda en dos líneas
+ * (tipo + coordinación, título) con severidad y estado apilados a la derecha.
+ */
+button.problem-dossier.problem-dossier--compact {
+  grid-template-columns: 30px minmax(0, 1fr);
+}
+
+.problem-dossier.problem-dossier--compact .problem-dossier__stub {
+  justify-content: center;
+  gap: 0;
+  padding: 0;
+  border-right-style: solid;
+}
+
+.problem-dossier.problem-dossier--compact .problem-dossier__stub-mark {
+  width: 20px;
+  height: 20px;
+}
+
+.problem-dossier.problem-dossier--compact .problem-dossier__body {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  column-gap: 8px;
+  row-gap: 2px;
+  align-items: center;
+  padding: 5px 8px 6px;
+}
+
+.problem-dossier.problem-dossier--compact .problem-dossier__context {
+  grid-column: 1;
+  grid-row: 1;
+  gap: 5px;
+}
+
+/* Tipo: interno con relleno pleno, dependencia con tinte y trazo discontinuo. */
+.problem-dossier.problem-dossier--compact .problem-dossier__kind {
+  flex: 0 0 auto;
+  border: 1px solid var(--dossier-edge-strong);
+  border-radius: 3px;
+  padding: 0 4px;
+  background: transparent;
+  color: var(--dossier-ink-soft);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.problem-dossier.problem-dossier--compact
+  .problem-dossier__kind[data-dossier-type='dependency'] {
+  border-style: dashed;
+}
+
+.problem-dossier.problem-dossier--compact[data-stub-colored='true']
+  .problem-dossier__kind[data-dossier-type='internal'] {
+  border-color: var(--dossier-stub-bg);
+  background: var(--dossier-stub-bg);
+  color: var(--dossier-stub-ink);
+}
+
+.problem-dossier.problem-dossier--compact[data-stub-colored='true']
+  .problem-dossier__kind[data-dossier-type='dependency'] {
+  border-color: var(--dossier-stub-bg);
+  background: color-mix(in srgb, var(--dossier-stub-bg) 22%, transparent);
+  color: var(--dossier-ink);
+}
+
+/* Coordinación: subtítulo de menor contraste, una línea. */
+.problem-dossier.problem-dossier--compact
+  .problem-dossier__context
+  .problem-dossier__origin {
+  display: block;
+  overflow: hidden;
+  /* Los temas pueden afinar el tono con `--dossier-context-ink`. */
+  color: var(--dossier-context-ink, var(--dossier-ink-soft));
+  font-size: 10.5px;
+  line-height: 1.3;
+  opacity: var(--dossier-context-opacity, 0.85);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.problem-dossier.problem-dossier--compact .problem-dossier__title {
+  grid-column: 1;
+  grid-row: 2;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.problem-dossier.problem-dossier--compact .problem-dossier__meta {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  max-width: 6.5rem;
+  /* Explícito: la regla estrecha base (< 280 px) pondría la meta en fila. */
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  gap: 2px;
+  align-self: center;
+}
+
+.problem-dossier.problem-dossier--compact .problem-dossier__severity,
+.problem-dossier.problem-dossier--compact .problem-dossier__status {
+  padding: 0 6px;
+  font-size: 9.5px;
+  line-height: 1.4;
+}
+
+@container problem-rows (min-width: 420px) {
+  .problem-dossier.problem-dossier--compact .problem-dossier__stub-mark {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+/* Paneles muy estrechos: la meta baja a una tercera línea, en fila. */
+@container problem-rows (max-width: 239px) {
+  .problem-dossier.problem-dossier--compact .problem-dossier__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .problem-dossier.problem-dossier--compact .problem-dossier__meta {
+    grid-column: 1;
+    grid-row: 3;
+    max-width: none;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-self: auto;
+    margin-top: 2px;
+  }
+}

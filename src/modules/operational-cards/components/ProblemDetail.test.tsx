@@ -220,9 +220,9 @@ describe('ProblemDetail · contexto', () => {
   it('una dependencia muestra responsable, afectada, proceso y entrega', () => {
     const html = markup(level2({ detail: INTER_DETAIL }))
     for (const text of [
-      'Responsable',
+      'Coordinación responsable',
       'Coordinación B2B',
-      'Afectada',
+      'Coordinación afectada',
       'Coordinación Negocios',
       'Cierre académico',
       'Planilla de notas',
@@ -319,8 +319,12 @@ describe('ProblemDetail · otras evidencias', () => {
     expect(html).toContain('rack.png')
     expect(html).not.toContain('IMAGE')
     // Sin soporte real de archivos: ni enlaces, ni descargas, ni previsualización.
+    // (La única imagen del detalle es el logo de la coordinación, fuera de la
+    // lista de evidencias.)
+    const evidences = html.slice(html.indexOf('data-testid="detail-other-evidences"'))
+    const list = evidences.slice(0, evidences.indexOf('</ul>'))
     expect(html).not.toContain('<a ')
-    expect(html).not.toContain('<img')
+    expect(list).not.toContain('<img')
     expect(html).not.toContain('Descargar')
     expect(html).not.toContain('data-section="notes"')
   })
@@ -425,5 +429,100 @@ describe('ProblemDetail · accesibilidad y solo lectura', () => {
     ]) {
       expect(html).not.toContain(forbidden)
     }
+  })
+})
+
+describe('ProblemDetail · expediente', () => {
+  const withBack = (state: OperationalCardsLevel2State = level2()) =>
+    renderToStaticMarkup(
+      <ProblemDetail
+        level2={state}
+        onToggleSection={() => undefined}
+        onBack={() => undefined}
+      />,
+    )
+
+  it('primera línea: flecha de regreso, folio y tipo, antes del título', () => {
+    const html = withBack()
+    const order = [
+      'data-testid="detail-back"',
+      'data-testid="detail-folio"',
+      'data-testid="detail-report-kind"',
+      'id="problem-detail-title"',
+    ].map((needle) => html.indexOf(needle))
+    expect(order.every((index) => index >= 0)).toBe(true)
+    expect(order).toEqual([...order].sort((left, right) => left - right))
+  })
+
+  it('la flecha no lleva texto visible pero sí nombre accesible', () => {
+    const html = withBack()
+    const back = html.slice(html.indexOf('<button'), html.indexOf('</button>'))
+    expect(back).toContain('aria-label="Volver a problemas"')
+    expect(back).toContain('<svg')
+    expect(back).not.toMatch(/>\s*Volver\s*</)
+  })
+
+  it('sin `onBack` no hay flecha', () => {
+    expect(markup()).not.toContain('data-testid="detail-back"')
+  })
+
+  it('la flecha sigue disponible mientras carga o si el detalle falla', () => {
+    expect(withBack(level2({ status: 'loading', detail: null }))).toContain(
+      'data-testid="detail-back"',
+    )
+    expect(withBack(level2({ status: 'error', detail: null }))).toContain(
+      'data-testid="detail-back"',
+    )
+  })
+
+  it('distintivo de tipo: INTERNO o DEPENDENCIA', () => {
+    expect(markup()).toMatch(/data-dossier-type="internal"[^>]*>Interno</)
+    expect(markup(level2({ detail: INTER_DETAIL }))).toMatch(
+      /data-dossier-type="dependency"[^>]*>Dependencia</,
+    )
+  })
+
+  it('IN_PROGRESS se presenta como «En revisión» sin cambiar el valor', () => {
+    const html = markup(
+      level2({ detail: { ...DETAIL, status: 'IN_PROGRESS' } }),
+    )
+    expect(html).toContain('data-status="IN_PROGRESS"')
+    expect(html).toContain('>En revisión<')
+    expect(html).not.toContain('En atención')
+  })
+
+  it('CLOSED se presenta como «Cerrado»', () => {
+    const html = markup(level2({ detail: { ...DETAIL, status: 'CLOSED' } }))
+    expect(html).toContain('>Cerrado<')
+  })
+
+  it('interno: «Coordinación responsable» con su nombre completo, nunca solo «Coordinación»', () => {
+    const html = markup()
+    expect(html).toContain('<dt>Coordinación responsable</dt>')
+    expect(html).toContain('Coordinador Ingenierías')
+    expect(html).not.toContain('<dt>Coordinación</dt>')
+  })
+
+  it('dependencia: la afectada nunca se presenta como responsable', () => {
+    const html = markup(level2({ detail: INTER_DETAIL }))
+    const responsible = html.slice(html.indexOf('data-context="responsible"'))
+    const affected = html.slice(html.indexOf('data-context="affected"'))
+    expect(responsible.slice(0, responsible.indexOf('</div>'))).toContain(
+      'Coordinación B2B',
+    )
+    expect(affected.slice(0, affected.indexOf('</div>'))).toContain(
+      'Coordinación Negocios',
+    )
+    expect(responsible.slice(0, responsible.indexOf('</div>'))).not.toContain(
+      'Coordinación Negocios',
+    )
+  })
+
+  it('la descripción conserva sus saltos de línea', () => {
+    const html = markup(
+      level2({ detail: { ...DETAIL, description: 'Línea uno.\nLínea dos.' } }),
+    )
+    expect(html).toContain('Línea uno.\nLínea dos.')
+    expect(html).toContain('>Descripción</h4>')
   })
 })

@@ -1,6 +1,7 @@
 import { CoordinationProblemList } from '@/modules/operational-cards/components/CoordinationProblemList'
 import { ProblemDetail } from '@/modules/operational-cards/components/ProblemDetail'
 import { resolveCoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
+import { useProblemListFilters } from '@/modules/operational-cards/hooks/useProblemListFilters'
 import type { OperationalKpiDirectionSnapshot } from '@/modules/operational-cards/types/operational-kpi.types'
 import type { OperationalShellModel } from '@/modules/operational-cards/hooks/useOperationalShellModel'
 import '@/styles/director-kpi-panel.css'
@@ -24,22 +25,19 @@ export function DirectorProblemPanel({
     rowLabelByCode,
     colorByCode,
   } = model
+  // Los filtros viven aquí: el detalle sustituye a la lista y «Volver» debe
+  // recuperarlos tal como estaban.
+  const [filters, setFilters] = useProblemListFilters(
+    selectedCoordination?.code ?? '',
+  )
 
   if (controller.level2.problemId) {
     return (
       <div className="director-problem-panel" data-testid="director-problem-panel">
-        <div className="action-panel__detail-nav">
-          <button
-            type="button"
-            className="action-panel__detail-back"
-            data-testid="detail-back"
-            onClick={controller.closeProblem}
-          >
-            Volver
-          </button>
-        </div>
         <ProblemDetail
           level2={controller.level2}
+          onBack={controller.closeProblem}
+          backLabel="Volver a problemas"
           selectedCoordinationCode={controller.selectedCoordinationCode}
           onToggleSection={controller.toggleSection}
           onRetrySection={controller.retrySection}
@@ -60,6 +58,8 @@ export function DirectorProblemPanel({
         onRetry={controller.retryCoordinationProblems}
         labelByCode={rowLabelByCode}
         colorByCode={colorByCode}
+        filters={filters}
+        onFiltersChange={setFilters}
       />
     )
   }

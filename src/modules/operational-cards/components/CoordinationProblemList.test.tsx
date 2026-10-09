@@ -83,14 +83,21 @@ function countOf(html: string, needle: string): number {
 }
 
 describe('CoordinationProblemList · identidad de la coordinación', () => {
-  it('titula con el nombre de PRODUCTO, no con el técnico', () => {
-    // El nodo se llama «Servicio» y se apoya en la fila `coord-homologaciones`.
-    // Leer «Homologaciones» en la región se interpreta como un error de datos,
-    // así que el catálogo manda sobre el nombre de la fila.
+  it('el título visible es solo «Problemas de la coordinación»', () => {
     const html = markup(level1('ready', [problem('p1', 'CRITICAL')]))
 
-    expect(html).toContain('Servicio')
-    expect(html).not.toContain('>Homologaciones<')
+    expect(html).toMatch(/<h3[^>]*>Problemas de la coordinación<span/)
+    expect(html).not.toContain('coordination-panel__eyebrow')
+  })
+
+  it('el encabezado nombra el área con el nombre de PRODUCTO, solo para lectores', () => {
+    // El nodo se llama «Servicio» y se apoya en la fila `coord-homologaciones`.
+    // Leer «Homologaciones» se interpretaría como un error de datos, así que el
+    // catálogo manda sobre el nombre de la fila.
+    const html = markup(level1('ready', [problem('p1', 'CRITICAL')]))
+
+    expect(html).toContain('<span class="coordination-panel__sr-only">: Servicio</span>')
+    expect(html).not.toContain('Homologaciones')
   })
 
   it('el nombre es un encabezado de verdad, y nombra a la región', () => {
@@ -105,11 +112,12 @@ describe('CoordinationProblemList · identidad de la coordinación', () => {
     )
   })
 
-  it('el estado se dice con TEXTO, no solo con color', () => {
+  it('no pinta badge de integridad: el estado queda como dato, sin recalcular', () => {
+    // El estado lo cuentan la carta y el personaje; esta región no lo repite.
     const html = markup(level1('ready'))
 
-    expect(html).toContain('data-testid="coordination-panel-status"')
-    expect(html).toContain('Crítico')
+    expect(html).not.toContain('data-testid="coordination-panel-status"')
+    expect(html).not.toContain('Crítico')
     expect(html).toContain('data-status="CRITICO"')
   })
 
@@ -176,9 +184,10 @@ describe('CoordinationProblemList · los cuatro estados de LEVEL 1', () => {
     )
 
     expect(countOf(html, 'data-testid="problem-row"')).toBe(3)
-    // Tres filas + el toggle Expandir/Contraer del panel.
-    expect(countOf(html, '<button')).toBe(4)
-    expect(html).toContain('data-testid="coordination-problems-expand"')
+    // Solo las tres filas: el panel ya no tiene Expandir/Contraer.
+    expect(countOf(html, '<button')).toBe(3)
+    expect(html).not.toContain('data-testid="coordination-problems-expand"')
+    expect(html).not.toContain('data-expanded')
     expect(html).not.toContain('data-testid="coordination-panel-empty"')
   })
 
@@ -198,27 +207,17 @@ describe('CoordinationProblemList · los cuatro estados de LEVEL 1', () => {
   })
 })
 
-describe('CoordinationProblemList · el resumen no contradice a la lista', () => {
-  it('con la lista cargada cuenta lo que se está viendo', () => {
-    const html = markup(
-      level1('ready', [problem('p1', 'CRITICAL'), problem('p2', 'MEDIUM')]),
-    )
-
-    // Dos problemas y un crítico, aunque LEVEL 0 dijera cuatro y dos: la
-    // cabecera describe la lista que el usuario tiene delante.
-    expect(html).toContain('2 problemas activos')
-    expect(html).toContain('1 crítico')
-  })
-
-  it('mientras carga se apoya en el conteo de LEVEL 0', () => {
-    const html = markup(level1('loading'))
-
-    expect(html).toContain('4 problemas activos')
-  })
-
-  it('con la lista vacía la cabecera no puede decir que hay problemas', () => {
-    const html = markup(level1('ready', []))
-
-    expect(html).not.toContain('4 problemas activos')
+describe('CoordinationProblemList · la cabecera no cuenta problemas', () => {
+  it('ni con la lista cargada, ni cargando, ni vacía', () => {
+    // Sin recuento en la cabecera, no puede contradecir a la lista ni presentar
+    // un conteo restringido como el del área.
+    for (const html of [
+      markup(level1('ready', [problem('p1', 'CRITICAL'), problem('p2', 'MEDIUM')])),
+      markup(level1('loading')),
+      markup(level1('ready', [])),
+    ]) {
+      expect(html).not.toContain('data-testid="coordination-panel-summary"')
+      expect(html).not.toMatch(/\d+ problemas? activos?/)
+    }
   })
 })

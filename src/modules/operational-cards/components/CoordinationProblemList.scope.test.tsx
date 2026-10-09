@@ -80,17 +80,19 @@ describe('lectura PARCIAL sin resultados', () => {
     expect(html).not.toContain('Sin problemas activos')
   })
 
-  it('NO convierte el área en estable: conserva su estado del resumen', () => {
+  it('NO convierte el área en estable: el estado autorizado no se toca', () => {
     /*
      * Es el caso que motivó la corrección: Especializaciones aparecía CRÍTICO
-     * en su carta mientras la lista decía «todo bajo control».
+     * en su carta mientras la lista decía «todo bajo control». La cabecera ya
+     * no pinta estado; el autorizado sigue en el DOM y nada dice «estable».
      */
-    expect(html).toContain('Crítico')
+    expect(html).toContain('data-status="CRITICO"')
+    expect(html).not.toContain('Todo bajo control')
+    expect(html).not.toContain('Estable')
   })
 
-  it('no presenta su recuento como el total del área', () => {
-    // La cabecera sigue hablando de los doce problemas del área, no de cero.
-    expect(html).toContain('12 problemas activos')
+  it('no presenta ningún recuento como el total del área', () => {
+    expect(html).not.toMatch(/\d+ problemas? activos?/)
   })
 
   it('declara el alcance en el DOM', () => {
@@ -113,8 +115,7 @@ describe('lectura PARCIAL con resultados', () => {
   })
 
   it('sigue sin presentar ese recuento como el del área', () => {
-    expect(html).toContain('12 problemas activos')
-    expect(html).not.toContain('1 problema activo')
+    expect(html).not.toMatch(/\d+ problemas? activos?/)
   })
 })
 

@@ -267,6 +267,10 @@ test.describe('Registro dual ANALISTA', () => {
       'logo',
     )
     await expect(problemRow.getByTestId('problem-row-origin')).toHaveText(
+      'Fábrica de Contenidos',
+    )
+    await expect(problemRow.getByTestId('problem-row-origin')).toHaveAttribute(
+      'title',
       'Nos afecta desde Fábrica de Contenidos',
     )
     await expect(problemRow).toHaveAttribute(

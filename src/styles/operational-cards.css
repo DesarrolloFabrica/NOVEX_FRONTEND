@@ -1290,6 +1290,112 @@
   text-align: center;
 }
 
+/* ---------- Filtros de la lista (severidad · estado) ---------- */
+
+/* Dos columnas que se reparten el ancho: en paneles estrechos el texto del
+   desplegable se recorta, la fila no se rompe. */
+.coordination-panel__filters {
+  display: grid;
+  flex: 0 0 auto;
+  min-width: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.coordination-panel__filter {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Texto solo para lectores de pantalla (rótulos de filtros, área del título). */
+.coordination-panel__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  border: 0;
+  white-space: nowrap;
+}
+
+/*
+ * Select nativo sin su piel: flecha dibujada con currentColor.
+ *
+ * `novex-os.css` viste todos los `select` con `!important` (fondo, borde,
+ * color, también en :hover y :focus), así que aquí se responde igual que el
+ * formulario del ticket: `!important` con más especificidad, acotado a esta
+ * clase. El fondo es UNA declaración que lee `--filter-select-bg`; los estados
+ * solo cambian la variable.
+ */
+.coordination-panel .coordination-panel__filter-select {
+  --filter-select-bg: rgb(20 34 58 / 0.7);
+
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgb(150 196 255 / 0.35) !important;
+  border-radius: 6px !important;
+  padding: 3px 22px 3px 8px;
+  appearance: none;
+  color: #dce9fb !important;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+}
+
+.coordination-panel .coordination-panel__filter-select,
+.coordination-panel .coordination-panel__filter-select:is(:hover, :focus) {
+  background:
+    linear-gradient(45deg, transparent 50%, currentColor 50%)
+      calc(100% - 12px) 50% / 4px 4px no-repeat,
+    linear-gradient(135deg, currentColor 50%, transparent 50%)
+      calc(100% - 8px) 50% / 4px 4px no-repeat,
+    var(--filter-select-bg) !important;
+}
+
+.coordination-panel .coordination-panel__filter-select:hover {
+  --filter-select-bg: rgb(30 52 88 / 0.85);
+}
+
+.coordination-panel .coordination-panel__filter-select:focus-visible {
+  outline: 2px solid rgb(120 200 255 / 0.8) !important;
+  outline-offset: 1px;
+}
+
+/* Notas al pie de la lista (cerrados cargando o con error). */
+.coordination-panel__list-note {
+  margin: 4px 0 0;
+  color: var(--deck-muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+/* Página siguiente de cerrados: se pide sola al acercarse el scroll. */
+.coordination-panel__load-more {
+  flex: 0 0 auto;
+  align-self: center;
+  margin: 4px 0 2px;
+  border: 1px dashed rgb(150 196 255 / 0.35);
+  border-radius: 6px;
+  padding: 3px 10px;
+  background: transparent;
+  color: var(--deck-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 10.5px;
+}
+
+.coordination-panel__load-more:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .coordination-panel,
   .problem-row {

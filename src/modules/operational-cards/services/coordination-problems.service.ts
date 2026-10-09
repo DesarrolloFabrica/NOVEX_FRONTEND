@@ -1,6 +1,10 @@
 import { fetchSituations } from '@/modules/api/situations.api'
 import type { SituationsListScope } from '@/modules/api/situations.api'
-import type { SituationResponse } from '@/modules/situations/types/situation.types'
+import type {
+  SituationResponse,
+  SituationSeverity,
+} from '@/modules/situations/types/situation.types'
+import type { CoordinationPanelProblem } from '@/modules/operational-cards/data/coordinationProblemFilters'
 import { sortProblemsByPriority } from '@/modules/operational-cards/data/problemPriority'
 import type {
   ActiveSituationStatus,
@@ -100,6 +104,64 @@ export async function fetchCoordinationProblems(
     : 'complete'
 
   return { problems: sortProblemsByPriority(problems), scope }
+}
+
+/**
+ * CERRADOS de una coordinación, para el filtro de estado del panel.
+ *
+ * Mismo endpoint que el historial y que LEVEL 1, con `status=CLOSED`: el
+ * servidor aplica la visibilidad dual (responsable O afectada), el alcance
+ * del actor (`own-only`) y la severidad, y ordena por cierre descendente. Se
+ * pide PÁGINA A PÁGINA: `total` dice cuánto falta, de modo que la primera
+ * página nunca se presenta como el universo. No pasa por el reducer: no
+ * altera LEVEL 1, el snapshot, los KPI ni las vidas.
+ */
+export const CLOSED_PROBLEMS_PAGE_SIZE = 25
+
+export interface ClosedCoordinationProblemsPage {
+  problems: CoordinationPanelProblem[]
+  total: number
+  page: number
+  limit: number
+  scope: SituationsListScope
+}
+
+function toClosedProblem(situation: SituationResponse): CoordinationPanelProblem {
+  return {
+    id: situation.id,
+    title: situation.title,
+    severity: situation.severity,
+    status: 'CLOSED',
+    createdAt: situation.createdAt,
+    affectedCoordinationCount: situation.relatedCoordinations?.length,
+    reportKind: situation.reportKind ?? 'INTERNAL',
+    coordinationCode: situation.coordinationCode ?? null,
+    affectedCoordinationCode: situation.affectedCoordinationCode ?? null,
+  }
+}
+
+export async function fetchClosedCoordinationProblems(input: {
+  coordinationUuid: string
+  severity: SituationSeverity | null
+  page: number
+}): Promise<ClosedCoordinationProblemsPage> {
+  const response = await fetchSituations({
+    coordinationId: input.coordinationUuid,
+    status: 'CLOSED',
+    severity: input.severity ?? undefined,
+    page: input.page,
+    limit: CLOSED_PROBLEMS_PAGE_SIZE,
+  })
+
+  return {
+    problems: response.items
+      .filter((situation) => situation.status === 'CLOSED')
+      .map(toClosedProblem),
+    total: response.total,
+    page: response.page,
+    limit: response.limit,
+    scope: response.scope ?? 'complete',
+  }
 }
 
 /**

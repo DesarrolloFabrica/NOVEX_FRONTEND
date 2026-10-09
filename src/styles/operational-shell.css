@@ -42,7 +42,7 @@
   padding: 16px 22px 10px;
 }
 
-/* Problemas (DIRECTOR): consulta rápida y densa; «Expandir» sigue igual. */
+/* Problemas (DIRECTOR): consulta rápida y densa. */
 .operational-shell[data-shell-layout='director']
   .operational-shell__region--coordination-problems
   .coordination-panel {

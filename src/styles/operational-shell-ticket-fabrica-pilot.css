@@ -532,10 +532,30 @@
   align-items: flex-start;
   justify-content: flex-start;
   box-sizing: border-box;
-  min-height: 48px;
-  padding: 2px 78px 6px 4px;
+  /*
+   * Solo el título: sin nombre del área, recuento ni badge, la franja ya no
+   * reserva alto mínimo ni el hueco derecho del badge. Sube 3 px hacia el
+   * filete del marco, que sigue quedando por encima.
+   */
+  min-height: 0;
+  margin-top: -3px;
+  padding: 0 4px;
   overflow: visible;
   text-align: left;
+}
+
+/*
+ * Lista de la coordinación: filtros pegados al título y lista a 5 px.
+ *
+ * Abajo se reserva la banda de los ornamentos del ticket, en `cqi` como ellos
+ * (su alto también escala con el ancho del panel): lo que cruza esa banda es
+ * solo la franja que se desvanece, y al final del scroll la última ficha queda
+ * por encima del ornamento.
+ */
+.coordination-panel--ticket-pilot .coordination-panel__stub + .coordination-panel__body {
+  gap: 5px;
+  padding-top: 4px;
+  padding-bottom: clamp(24px, 7cqi, 40px);
 }
 
 .coordination-panel--ticket-pilot .coordination-panel__header {
@@ -609,7 +629,8 @@
   flex: 1 1 auto;
   flex-direction: column;
   gap: 6px;
-  padding: 4px 2px 40px;
+  /* Margen de seguridad sobre EXPANDIR; el resto del alto es de la lista. */
+  padding: 4px 2px 8px;
   overflow: hidden;
 }
 
@@ -621,6 +642,122 @@
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-gutter: stable;
+}
+
+/*
+ * LA LISTA SE PIERDE SOBRE EL PAPEL.
+ *
+ * Máscara solo sobre el viewport desplazable (no hay capa encima: el ratón y
+ * el teclado siguen llegando a las fichas). La franja mide `--problems-fade`,
+ * proporcional al alto real del viewport. Un espaciador final del mismo alto
+ * deja que la última ficha suba por encima de la franja al llegar al fondo, y
+ * `scroll-padding-bottom` hace lo mismo con el foco por teclado.
+ */
+.coordination-panel--ticket-pilot .coordination-panel__problems,
+.coordination-panel--ticket-pilot .coordinator-problems__groups {
+  --problems-fade: min(72px, 32%);
+
+  scroll-padding-bottom: var(--problems-fade);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - var(--problems-fade)),
+    rgb(0 0 0 / 0.72) calc(100% - var(--problems-fade) * 0.62),
+    rgb(0 0 0 / 0.3) calc(100% - var(--problems-fade) * 0.3),
+    rgb(0 0 0 / 0.04) 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - var(--problems-fade)),
+    rgb(0 0 0 / 0.72) calc(100% - var(--problems-fade) * 0.62),
+    rgb(0 0 0 / 0.3) calc(100% - var(--problems-fade) * 0.3),
+    rgb(0 0 0 / 0.04) 100%
+  );
+}
+
+/*
+ * «Problemas de la coordinación»: franja DISCRETA. Opaca en el ~88 % superior
+ * del viewport y transición solo en el último ~12 %, entre 14 y 40 px, para
+ * que nunca haya varias fichas desvaneciéndose a la vez. El espaciador final
+ * mide lo mismo: no deja un hueco permanente mayor que la propia franja.
+ */
+.coordination-panel--ticket-pilot .coordination-panel__problems {
+  --problems-fade: clamp(14px, 12%, 40px);
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__problems::after,
+.coordination-panel--ticket-pilot .coordinator-problems__groups::after {
+  content: '';
+  flex: 0 0 var(--problems-fade);
+}
+
+/* Expandido (solo el panel del coordinador): franja más contenida. */
+.coordination-panel--ticket-pilot[data-expanded='true']
+  .coordinator-problems__groups {
+  --problems-fade: min(56px, 18%);
+}
+
+/*
+ * Filtros sobre papel: crema, trazo de tinta y sombra desplazada (dibujo
+ * animado de los años 30), sin el control nativo oscuro. `color-scheme: light`
+ * mantiene clara también la lista desplegable del sistema.
+ */
+.coordination-panel--ticket-pilot .coordination-panel__filters {
+  margin: 0;
+  padding: 0 4px 0 0;
+  gap: 8px;
+}
+
+/* `!important` por la misma razón que el formulario de reporte (novex-os). */
+.coordination-panel.coordination-panel--ticket-pilot .coordination-panel__filter-select {
+  --filter-select-bg: rgb(255 250 238 / 0.94);
+
+  border: 1.5px solid color-mix(in srgb, var(--ticket-pilot-ink) 62%, transparent) !important;
+  border-radius: 7px !important;
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--ticket-pilot-ink) 24%, transparent) !important;
+  color: var(--ticket-pilot-ink) !important;
+  color-scheme: light;
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  font-weight: 600;
+}
+
+.coordination-panel.coordination-panel--ticket-pilot .coordination-panel__filter-select:hover {
+  --filter-select-bg: #fffaf0;
+
+  border-color: var(--ticket-accent-deep) !important;
+}
+
+.coordination-panel.coordination-panel--ticket-pilot
+  .coordination-panel__filter-select:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ticket-accent-deep) 55%, transparent) !important;
+  outline-offset: 1px;
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__filter-select option {
+  background: #fffaf0;
+  color: #2a2118;
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__list-note,
+.coordination-panel--ticket-pilot .coordination-panel__load-more {
+  color: var(--ticket-pilot-ink-soft);
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__load-more {
+  border-color: color-mix(in srgb, var(--ticket-pilot-ink) 34%, transparent);
+  background: rgb(255 250 238 / 0.6);
+}
+
+/* Una sola ficha: no hay nada que desvanecer. */
+.coordination-panel--ticket-pilot
+  .coordination-panel__problems:not(:has(> :nth-child(2))) {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.coordination-panel--ticket-pilot
+  .coordination-panel__problems:not(:has(> :nth-child(2)))::after {
+  content: none;
 }
 
 .coordination-panel--ticket-pilot .coordination-panel__empty {
@@ -685,6 +822,10 @@
   );
   --dossier-stub: color-mix(in srgb, var(--report-field-bg-solid, #fffaf0) 55%, #e8dcc8 45%);
   --dossier-folio: color-mix(in srgb, var(--ticket-pilot-ink-soft) 85%, #2a2118);
+  /* Coordinación en la ficha compacta: marrón oscuro velado, legible sobre
+     crema sin competir con el título. */
+  --dossier-context-ink: color-mix(in srgb, var(--ticket-pilot-ink) 74%, transparent);
+  --dossier-context-opacity: 1;
 
   --sev-critical-ink: #7a2a24;
   --sev-critical-fill: rgb(154 58 50 / 0.12);
@@ -3994,4 +4135,258 @@
   border-color: var(--ticket-accent-deep) !important;
   outline: 2px solid color-mix(in srgb, var(--ticket-accent-deep) 45%, transparent) !important;
   outline-offset: 1px;
+}
+
+/* ==========================================================================
+ * EXPEDIENTE DEL PROBLEMA SOBRE PAPEL (detalle LEVEL 2 dentro del ticket).
+ *
+ * Mismo prefijo que los ajustes de detalle de arriba + `.problem-detail`: gana
+ * por especificidad y por orden sin `!important`. Solo presentación; el
+ * contrato, los testids y la interacción no cambian.
+ * ========================================================================== */
+
+/* Primera línea: unos píxeles por debajo del filete interior del marco. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__topline {
+  padding-top: 10px;
+}
+
+/* Regreso: tecla cuadrada de tinta con sombra desplazada (dibujo de los 30). */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__back {
+  border: 1.5px solid color-mix(in srgb, var(--ticket-pilot-ink) 70%, transparent);
+  background: rgb(255 250 238 / 0.96);
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--ticket-pilot-ink) 30%, transparent);
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__back:hover {
+  border-color: var(--ticket-accent-deep);
+  background: #fffaf0;
+  color: var(--ticket-accent-deep);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__back:focus-visible {
+  /* `!important` frente al anillo verde global (`.novex-os :focus-visible`). */
+  outline: 2px solid color-mix(in srgb, var(--ticket-accent-deep) 55%, transparent) !important;
+  outline-offset: 2px;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__back:active {
+  box-shadow: 0 0 0 color-mix(in srgb, var(--ticket-pilot-ink) 30%, transparent);
+  transform: translateY(2px);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__folio {
+  color: var(--ticket-pilot-ink-soft);
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__type {
+  border-color: rgb(42 33 24 / 0.34);
+  background: rgb(255 250 240 / 0.6);
+  color: var(--ticket-pilot-ink-soft);
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+}
+
+/* Título: el elemento principal del expediente. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__title {
+  color: var(--ticket-pilot-ink);
+  font-family: var(--ticket-pilot-serif);
+  font-size: clamp(18px, 1.3cqi + 14px, 22px);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* Franja de estado: tintas oscuras con velo del mismo tono sobre crema. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__badge {
+  --badge-rgb: 92 74 56;
+
+  border-color: rgb(var(--badge-rgb) / 0.42);
+  background: rgb(var(--badge-rgb) / 0.1);
+  color: rgb(var(--badge-rgb));
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__badge:is([data-severity='CRITICAL'], [data-sla='overdue']) {
+  --badge-rgb: 154 52 44;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__badge:is([data-severity='HIGH'], [data-sla='at_risk']) {
+  --badge-rgb: 150 84 26;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__badge[data-severity='MEDIUM'] {
+  --badge-rgb: 120 94 36;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__badge:is([data-severity='LOW'], [data-sla='closed']) {
+  --badge-rgb: 110 94 76;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__badge--status:is([data-status='IN_PROGRESS'], [data-status='RESOLVED']) {
+  --badge-rgb: 12 95 104;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__badge--status[data-status='CLOSED'] {
+  --badge-rgb: 58 104 66;
+}
+
+/* Coordinación: crema algo más clara que el papel, filete de identidad. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__coordination {
+  border: 1px solid rgb(42 33 24 / 0.12);
+  background: rgb(255 251 242 / 0.72);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__context-row[data-coordination='true'] {
+  border-left-color: var(--coord-accent, rgb(42 33 24 / 0.3));
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__context dt,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__viewpoint {
+  color: var(--ticket-pilot-ink-soft);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__context dd {
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__coord-mark {
+  border-color: rgb(42 33 24 / 0.28);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__coord-mark[data-mark='neutral'] {
+  border-color: rgb(42 33 24 / 0.45);
+}
+
+/* Secciones: filete sepia fino; sin cajas. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  :is(.problem-detail__description, .problem-consequences, .detail-section) {
+  border-top-color: rgb(42 33 24 / 0.18);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .detail-section {
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 0;
+  background: transparent;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  :is(.problem-detail__block-title, .detail-section__title) {
+  color: var(--ticket-pilot-ink-soft);
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .detail-section__toggle:hover {
+  background: rgb(42 33 24 / 0.05);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .detail-section__toggle:focus-visible {
+  background: rgb(42 33 24 / 0.05);
+  outline: 2px solid color-mix(in srgb, var(--ticket-accent-deep) 55%, transparent) !important;
+  outline-offset: -2px;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .detail-section__chevron {
+  border-left-color: var(--ticket-pilot-ink-soft);
+}
+
+/*
+ * Contenedores del expediente dentro del ticket: margen interior para no
+ * tocar el filete del marco y, abajo, la banda de los ornamentos (en `cqi`,
+ * como ellos) para que el final del contenido quede por encima al desplazar.
+ */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .director-problem-panel {
+  padding: 0 8px clamp(24px, 7cqi, 40px);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel[data-mode='detail'] {
+  padding-bottom: clamp(24px, 7cqi, 40px);
 }

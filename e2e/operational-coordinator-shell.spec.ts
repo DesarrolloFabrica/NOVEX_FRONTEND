@@ -470,7 +470,10 @@ test.describe('Centro operacional COORDINADOR', () => {
       'data-mark-code',
       B2B,
     )
-    await expect(internal.getByTestId('problem-row-origin')).toHaveText(
+    // Ficha compacta: visible solo la coordinación; la relación, en el tooltip.
+    await expect(internal.getByTestId('problem-row-origin')).toHaveText('B2B')
+    await expect(internal.getByTestId('problem-row-origin')).toHaveAttribute(
+      'title',
       'Problema interno · B2B',
     )
 
@@ -482,7 +485,8 @@ test.describe('Centro operacional COORDINADOR', () => {
       'data-mark-code',
       NEGOCIOS,
     )
-    await expect(resolveRow.getByTestId('problem-row-origin')).toContainText(
+    await expect(resolveRow.getByTestId('problem-row-origin')).toHaveAttribute(
+      'title',
       /Debemos resolver/i,
     )
 
@@ -492,8 +496,9 @@ test.describe('Centro operacional COORDINADOR', () => {
       'data-mark-code',
       NEGOCIOS,
     )
-    await expect(affectingRow.getByTestId('problem-row-origin')).toContainText(
-      'Nos afecta desde',
+    await expect(affectingRow.getByTestId('problem-row-origin')).toHaveAttribute(
+      'title',
+      /Nos afecta desde/,
     )
     await expect(affectingRow).toHaveAttribute(
       'aria-label',

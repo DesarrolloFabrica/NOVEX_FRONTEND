@@ -43,7 +43,8 @@ describe('ProblemRow con marca lateral', () => {
     expect(html).toContain('data-mark="logo"')
     expect(html).toContain('data-mark-code="coord-saber-pro"')
     expect(html).toContain('src="/iconos/display/IconoSaberPro.jpg"')
-    expect(html).toContain('Problema interno · Saber Pro')
+    // Visible: solo la coordinación; la relación completa queda en el tooltip.
+    expect(html).toContain('title="Problema interno · Saber Pro">Saber Pro<')
     expect(html).not.toContain('problem-row-kind')
     expect(html).toContain('data-testid="problem-row-severity"')
     expect(html).toContain('data-testid="problem-row-status"')
@@ -110,25 +111,19 @@ describe('ProblemRow con marca lateral', () => {
     expect(html).toContain('alt=""')
   })
 
-  it('muestra aviso SLA solo si viene overdue o at_risk', () => {
-    const overdue = renderToStaticMarkup(
-      <ProblemRow
-        problem={problem({ slaHealth: 'overdue' })}
-        selectedCoordinationCode="coord-saber-pro"
-        labelByCode={LABELS}
-      />,
-    )
-    expect(overdue).toContain('data-testid="problem-dossier-sla"')
-    expect(overdue).toContain('SLA vencido')
-
-    const onTrack = renderToStaticMarkup(
-      <ProblemRow
-        problem={problem({ slaHealth: 'on_track' })}
-        selectedCoordinationCode="coord-saber-pro"
-        labelByCode={LABELS}
-      />,
-    )
-    expect(onTrack).not.toContain('data-testid="problem-dossier-sla"')
+  it('ficha compacta: no muestra SLA aunque venga vencido o en riesgo', () => {
+    for (const slaHealth of ['overdue', 'at_risk', 'on_track'] as const) {
+      const html = renderToStaticMarkup(
+        <ProblemRow
+          problem={problem({ slaHealth })}
+          selectedCoordinationCode="coord-saber-pro"
+          labelByCode={LABELS}
+        />,
+      )
+      expect(html).not.toContain('data-testid="problem-dossier-sla"')
+      expect(html).not.toContain('SLA')
+      expect(html).not.toContain('data-sla=')
+    }
   })
 
   it('ficha dossier conserva severidad y estado separados', () => {
@@ -139,15 +134,47 @@ describe('ProblemRow con marca lateral', () => {
         labelByCode={LABELS}
       />,
     )
-    expect(html).toContain('class="problem-dossier problem-row"')
+    expect(html).toContain(
+      'class="problem-dossier problem-dossier--compact problem-row"',
+    )
     expect(html).toContain('data-testid="problem-row-severity"')
     expect(html).toContain('Crítica')
     expect(html).toContain('data-testid="problem-row-status"')
     expect(html).toContain('En atención')
-    expect(html).toContain('problem-dossier__folio')
     expect(html).toContain('data-testid="problem-dossier-type"')
     expect(html).toContain('Interno')
     expect(html).toContain('data-stub-colored="true"')
+  })
+
+  it('talón compacto: logo de la coordinación, sin folio ni perforación', () => {
+    const html = renderToStaticMarkup(
+      <ProblemRow
+        problem={problem({ id: 'abcd-1234' })}
+        selectedCoordinationCode="coord-saber-pro"
+        labelByCode={LABELS}
+      />,
+    )
+    expect(html).not.toContain('problem-dossier__folio')
+    expect(html).not.toContain('Nº')
+    expect(html).not.toContain('problem-dossier__perforation')
+    expect(html).toMatch(
+      /data-testid="problem-dossier-stub"[^>]*><span class="problem-dossier__stub-mark problem-row__mark"/,
+    )
+  })
+
+  it('un cerrado, si llega, se nombra y baja énfasis', () => {
+    const html = renderToStaticMarkup(
+      <ProblemRow
+        problem={problem({
+          status: 'CLOSED' as CoordinationProblem['status'],
+        })}
+        selectedCoordinationCode="coord-saber-pro"
+        labelByCode={LABELS}
+      />,
+    )
+    expect(html).toContain('data-closed="true"')
+    expect(html).toContain('>Cerrado<')
+    expect(html).toContain('Severidad Alta. Cerrado.')
   })
 
   it('dependencia muestra distintivo Dependencia y no Interno', () => {
@@ -237,7 +264,9 @@ describe('«Mis reportes» con marca lateral', () => {
       report({ status: 'CLOSED', severity: 'CRITICAL' }),
     ])
     expect(html).toContain('data-closed="true"')
+    // «Mis reportes» no hereda la variante compacta: conserva folio.
     expect(html).toContain('class="problem-dossier my-reports__row"')
+    expect(html).toContain('problem-dossier__folio')
     expect(html).toContain('Cerrado')
     expect(html).toContain('Crítica')
     expect(html).not.toContain('data-testid="problem-dossier-sla"')

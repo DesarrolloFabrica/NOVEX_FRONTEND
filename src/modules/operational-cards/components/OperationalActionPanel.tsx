@@ -150,18 +150,12 @@ export function OperationalActionPanel({
         data-surface="action-panel"
         data-mode="detail"
       >
-        <div className="action-panel__detail-nav">
-          <button
-            type="button"
-            className="action-panel__detail-back"
-            data-testid="detail-back"
-            onClick={onCloseDetail}
-          >
-            Volver
-          </button>
-        </div>
+        {/* La flecha de regreso vive en la primera línea del expediente. Puede
+            volver a la lista o al historial, así que se nombra «Volver». */}
         <ProblemDetail
           level2={level2}
+          onBack={onCloseDetail}
+          backLabel="Volver"
           selectedCoordinationCode={selectedCoordinationCode}
           onToggleSection={onToggleSection}
           onRetrySection={onRetrySection}

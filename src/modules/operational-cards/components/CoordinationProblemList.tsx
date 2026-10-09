@@ -1,9 +1,20 @@
-import { useState, type CSSProperties } from 'react'
+import { useEffect, useRef, type CSSProperties, type RefObject } from 'react'
 import { hexToRgbChannels } from '@/modules/impact-network/data/coordination-islands.config'
+import { CoordinationProblemFilters } from '@/modules/operational-cards/components/CoordinationProblemFilters'
 import { ProblemRow } from '@/modules/operational-cards/components/ProblemRow'
-import { buildCoordinationSummary } from '@/modules/operational-cards/services/coordination-problems.service'
+import {
+  buildFilteredEmptyMessage,
+  filterActiveProblems,
+  isDefaultProblemListFilters,
+  needsActiveProblems,
+  needsClosedProblems,
+  PANEL_STATUS_LABEL,
+  type CoordinationPanelProblem,
+  type ProblemListFilters,
+} from '@/modules/operational-cards/data/coordinationProblemFilters'
+import { useClosedCoordinationProblems } from '@/modules/operational-cards/hooks/useClosedCoordinationProblems'
+import { useProblemListFilters } from '@/modules/operational-cards/hooks/useProblemListFilters'
 import type { CoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
-import { OPERATIONAL_STATUS_LABEL } from '@/modules/operational-cards/data/operationalStatusLabel'
 import type { CoordinationOverview } from '@/modules/operational-cards/types/operational-overview.contract'
 import type { OperationalCardsLevel1State } from '@/modules/operational-cards/types/operational-cards.state'
 import { resolveTicketTheme } from '@/modules/operational-cards/experience/ticketThemes'
@@ -29,9 +40,8 @@ import '@/styles/operational-cards.css'
  * convertirse en una segunda petición.
  *
  * El estado operacional es el de LEVEL 0 y no se recalcula con los problemas
- * cargados: el backend sigue siendo la autoridad de integridad. Lo que sí sale
- * de LEVEL 1, en cuanto está, es el CONTEO del resumen, para que la cabecera no
- * pueda decir «Todo bajo control» sobre una lista llena.
+ * cargados: el backend sigue siendo la autoridad de integridad. La cabecera ya
+ * no lo pinta (lo cuentan la carta y el personaje); queda en `data-status`.
  *
  * Conserva las clases visuales del panel a propósito: esta fase MUEVE la
  * lectura, no la rediseña, y reescribir su superficie habría mezclado dos
@@ -55,6 +65,64 @@ export interface CoordinationProblemListProps {
   labelByCode?: Readonly<Record<string, string>>
   /** Colores de overview por code (talón de identidad). */
   colorByCode?: Readonly<Record<string, string>>
+  /**
+   * Filtros controlados por el padre. Dirección los guarda porque desmonta la
+   * lista mientras enseña el detalle; sin ellos, la lista guarda los suyos.
+   */
+  filters?: ProblemListFilters
+  onFiltersChange?: (next: ProblemListFilters) => void
+}
+
+/**
+ * Pie de la lista de cerrados: carga la página siguiente al acercarse el
+ * scroll (IntersectionObserver sobre el viewport de la lista) y, por si el
+ * observador no existe o se prefiere el teclado, es también un botón.
+ */
+function ClosedLoadMore({
+  rootRef,
+  remaining,
+  loading,
+  error,
+  onLoadMore,
+}: {
+  rootRef: RefObject<HTMLDivElement | null>
+  remaining: number
+  loading: boolean
+  error: string | null
+  onLoadMore: () => void
+}) {
+  const ref = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    const target = ref.current
+    if (!target || loading || error) return
+    if (typeof IntersectionObserver === 'undefined') return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) onLoadMore()
+      },
+      { root: rootRef.current, rootMargin: '0px 0px 96px 0px' },
+    )
+    observer.observe(target)
+    return () => observer.disconnect()
+  }, [loading, error, onLoadMore, rootRef])
+
+  return (
+    <button
+      ref={ref}
+      type="button"
+      className="coordination-panel__load-more"
+      data-testid="coordination-panel-load-more"
+      disabled={loading}
+      onClick={onLoadMore}
+    >
+      {loading
+        ? 'Cargando cerrados…'
+        : error
+          ? 'No se pudieron cargar más cerrados. Reintentar'
+          : `Ver más cerrados (${remaining})`}
+    </button>
+  )
 }
 
 export function CoordinationProblemList({
@@ -67,51 +135,74 @@ export function CoordinationProblemList({
   onRetry,
   labelByCode,
   colorByCode,
+  filters: controlledFilters,
+  onFiltersChange,
 }: CoordinationProblemListProps) {
-  const statusLabel = OPERATIONAL_STATUS_LABEL[coordination.status]
   const name = productLabel ?? identity.name
-  const [expanded, setExpanded] = useState(false)
+  const scrollerRef = useRef<HTMLDivElement>(null)
+
+  const [ownFilters, setOwnFilters] = useProblemListFilters(coordination.code)
+  const filters = controlledFilters ?? ownFilters
+  const setFilters = onFiltersChange ?? setOwnFilters
 
   /*
-   * LA CABECERA HABLA DEL ÁREA, NO DE LO QUE ESTE USUARIO ALCANZA A VER.
+   * QUÉ SE ENSEÑA CON LOS FILTROS.
    *
-   * Con lectura completa manda LEVEL 1, que describe la lista que se tiene
-   * delante. Con lectura PARCIAL manda LEVEL 0 —el resumen autorizado—, porque
-   * presentar «1 problema activo» cuando el área tiene doce y solo uno es tuyo
-   * sería convertir un recuento restringido en el total del área.
+   * Los activos salen de LEVEL 1, tal cual estaba cargado, y se filtran aquí.
+   * Los cerrados se piden aparte, paginados y con la severidad en el servidor,
+   * solo cuando el estado los incluye. La cabecera y el badge NO miran esto:
+   * siguen contando el universo activo y el snapshot operacional.
    */
-  const lecturaCompleta = level1.status === 'ready' && level1.scope === 'complete'
-
-  const summary = buildCoordinationSummary({
-    activeProblemsCount: lecturaCompleta
-      ? level1.problems.length
-      : coordination.activeProblemsCount,
-    criticalCount: lecturaCompleta
-      ? level1.problems.filter((problem) => problem.severity === 'CRITICAL')
-          .length
-      : coordination.criticalCount,
-    affectedCoordinationCount: coordination.affectedCoordinationCount,
+  const showActive = needsActiveProblems(filters.status)
+  const showClosed = needsClosedProblems(filters.status)
+  const closed = useClosedCoordinationProblems({
+    coordinationUuid: coordination.id,
+    severity: filters.severity === 'ALL' ? null : filters.severity,
+    enabled: showClosed,
   })
+
+  const activeLoading =
+    showActive && (level1.status === 'loading' || level1.status === 'idle')
+  const activeError = showActive && level1.status === 'error'
+  const closedLoading = showClosed && closed.status === 'loading'
+  const closedError = showClosed && closed.status === 'error'
+
+  const rows: readonly CoordinationPanelProblem[] = [
+    ...(showActive && level1.status === 'ready'
+      ? filterActiveProblems(level1.problems, filters)
+      : []),
+    ...(showClosed && closed.status === 'ready' ? closed.problems : []),
+  ]
+
+  const restricted =
+    (showActive && level1.status === 'ready' && level1.scope === 'own-only') ||
+    (showClosed && closed.status === 'ready' && closed.scope === 'own-only')
+  const defaultFilters = isDefaultProblemListFilters(filters)
 
   const headingId = `coordination-list-title-${coordination.code}`
 
   /*
-   * Tipografía ticket (fases 2–4): Fábrica y Saber Pro comparten jerarquía
-   * «Problemas de la coordinación» + contexto de producto. Sin tema → título
-   * con el nombre del área. No altera LEVEL 1 ni vacíos.
+   * CABECERA MÍNIMA: solo «Problemas de la coordinación».
+   *
+   * El nombre del área, el recuento y el estado de integridad ya los cuentan
+   * la carta, el personaje y sus vidas; repetirlos aquí le quitaba alto a la
+   * lista. No se recalcula ni se oculta ningún dato: simplemente esta región
+   * deja de pintarlos. El estado sigue en `data-status` y el nombre del área
+   * viaja en el encabezado como texto para lectores de pantalla, para que la
+   * región siga diciendo DE QUÉ coordinación habla.
    */
   const ticketThemeId = resolveTicketTheme(coordination.code)
   const ticketPilot = Boolean(ticketThemeId)
-  const titleText = ticketPilot ? 'Problemas de la coordinación' : name
-  const contextLabel = ticketPilot ? (productLabel ?? name) : null
 
   const bodyContent = (
     <>
+      <CoordinationProblemFilters filters={filters} onChange={setFilters} />
+
       {/*
         Aviso de lectura parcial: va DESPUÉS del encabezado del ticket
         para no competir con el título. Mismo testid que en el shell.
       */}
-      {level1.status === 'ready' && level1.scope === 'own-only' ? (
+      {restricted ? (
         <p
           className="coordination-panel__scope-note"
           data-testid="coordination-scope-note"
@@ -122,7 +213,7 @@ export function CoordinationProblemList({
         </p>
       ) : null}
 
-      {level1.status === 'loading' || level1.status === 'idle' ? (
+      {activeLoading || (closedLoading && rows.length === 0) ? (
         <div
           className="coordination-panel__skeleton"
           data-testid="coordination-panel-loading"
@@ -132,14 +223,12 @@ export function CoordinationProblemList({
             <span key={index} />
           ))}
         </div>
-      ) : null}
-
-      {/*
-        ERROR DE CARGA. Lleva su propio reintento: no saber si hay problemas no
-        es lo mismo que saber que no los hay, y el usuario debe poder
-        distinguirlo y volver a intentarlo sin recargar la pantalla.
-      */}
-      {level1.status === 'error' && (
+      ) : activeError ? (
+        /*
+          ERROR DE CARGA. Lleva su propio reintento: no saber si hay problemas
+          no es lo mismo que saber que no los hay, y el usuario debe poder
+          distinguirlo y volver a intentarlo sin recargar la pantalla.
+        */
         <div
           className="coordination-panel__notice"
           data-testid="coordination-panel-error"
@@ -157,59 +246,124 @@ export function CoordinationProblemList({
             </button>
           )}
         </div>
-      )}
-
-      {level1.status === 'ready' &&
-        (level1.problems.length === 0 ? (
-          /*
-           * VACÍO, PERO ¿VACÍO DE QUÉ?
-           *
-           * Con lectura COMPLETA, cero resultados significa que el área no tiene
-           * problemas activos. Con lectura PARCIAL solo significa que no hay
-           * ninguno que este usuario pueda ver, y decir «todo bajo control» sería
-           * afirmar algo que nadie ha comprobado: el estado del área lo da el
-           * resumen autorizado, y puede ser CRÍTICO mientras esta lista está
-           * vacía. El alcance lo declara el servidor; aquí solo se obedece.
-           */
-          level1.scope === 'own-only' ? (
-            <p
-              className="coordination-panel__empty"
-              data-testid="coordination-panel-empty-restricted"
-            >
-              No hay problemas activos visibles para tu usuario
-            </p>
-          ) : (
-            <p
-              className="coordination-panel__empty"
-              data-testid="coordination-panel-empty"
-            >
-              Sin problemas activos
-            </p>
-          )
-        ) : (
-          <div
-            className="coordination-panel__problems"
-            data-testid="coordination-panel-problems"
-            // Contenedor enfocable: la lista tiene scroll propio y debe poder
-            // recorrerse con el teclado. No es una trampa de foco: el tabulador
-            // entra y sale con normalidad.
-            tabIndex={0}
-            role="group"
-            aria-label={`Problemas activos de ${productLabel ?? identity.shortName}`}
+      ) : closedError && rows.length === 0 ? (
+        <div
+          className="coordination-panel__notice"
+          data-testid="coordination-panel-closed-error"
+          role="alert"
+        >
+          <p>No pudimos cargar los problemas cerrados de esta coordinación.</p>
+          <button
+            type="button"
+            className="coordination-panel__retry"
+            data-testid="coordination-panel-closed-retry"
+            onClick={closed.retry}
           >
-            {level1.problems.map((problem) => (
-              <ProblemRow
-                key={problem.id}
-                problem={problem}
-                selectedCoordinationCode={coordination.code}
-                selected={problem.id === selectedProblemId}
-                onSelect={onProblemSelect}
-                labelByCode={labelByCode}
-                colorByCode={colorByCode}
-              />
-            ))}
-          </div>
-        ))}
+            Reintentar
+          </button>
+        </div>
+      ) : rows.length === 0 ? (
+        /*
+         * VACÍO, PERO ¿VACÍO DE QUÉ?
+         *
+         * Con lectura COMPLETA, cero resultados significa que el área no tiene
+         * problemas activos. Con lectura PARCIAL solo significa que no hay
+         * ninguno que este usuario pueda ver, y decir «todo bajo control» sería
+         * afirmar algo que nadie ha comprobado: el estado del área lo da el
+         * resumen autorizado, y puede ser CRÍTICO mientras esta lista está
+         * vacía. El alcance lo declara el servidor; aquí solo se obedece. Con
+         * filtros, el vacío nombra la combinación elegida.
+         */
+        !defaultFilters ? (
+          <p
+            className="coordination-panel__empty"
+            data-testid="coordination-panel-empty-filtered"
+          >
+            {buildFilteredEmptyMessage(
+              filters,
+              restricted ? 'own-only' : 'complete',
+            )}
+          </p>
+        ) : restricted ? (
+          <p
+            className="coordination-panel__empty"
+            data-testid="coordination-panel-empty-restricted"
+          >
+            No hay problemas activos visibles para tu usuario
+          </p>
+        ) : (
+          <p
+            className="coordination-panel__empty"
+            data-testid="coordination-panel-empty"
+          >
+            Sin problemas activos
+          </p>
+        )
+      ) : (
+        <div
+          ref={scrollerRef}
+          className="coordination-panel__problems"
+          data-testid="coordination-panel-problems"
+          // Contenedor enfocable: la lista tiene scroll propio y debe poder
+          // recorrerse con el teclado. No es una trampa de foco: el tabulador
+          // entra y sale con normalidad.
+          tabIndex={0}
+          role="group"
+          aria-label={`${defaultFilters ? 'Problemas activos' : 'Problemas filtrados'} de ${productLabel ?? identity.shortName}`}
+        >
+          {rows.map((problem) => (
+            <ProblemRow
+              key={problem.id}
+              problem={problem}
+              selectedCoordinationCode={coordination.code}
+              selected={problem.id === selectedProblemId}
+              onSelect={onProblemSelect}
+              labelByCode={labelByCode}
+              colorByCode={colorByCode}
+              statusLabels={PANEL_STATUS_LABEL}
+            />
+          ))}
+
+          {/* «Todos»: los activos ya están; los cerrados llegan después. */}
+          {closedLoading ? (
+            <p
+              className="coordination-panel__list-note"
+              data-testid="coordination-panel-closed-loading"
+              role="status"
+            >
+              Cargando cerrados…
+            </p>
+          ) : null}
+
+          {closedError ? (
+            <div
+              className="coordination-panel__list-note"
+              data-testid="coordination-panel-closed-error"
+              role="alert"
+            >
+              No pudimos cargar los cerrados.{' '}
+              <button
+                type="button"
+                className="coordination-panel__retry"
+                data-testid="coordination-panel-closed-retry"
+                onClick={closed.retry}
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : null}
+
+          {closed.hasMore ? (
+            <ClosedLoadMore
+              rootRef={scrollerRef}
+              remaining={Math.max(0, closed.total - closed.problems.length)}
+              loading={closed.loadingMore}
+              error={closed.loadMoreError}
+              onLoadMore={closed.loadMore}
+            />
+          ) : null}
+        </div>
+      )}
     </>
   )
 
@@ -224,29 +378,10 @@ export function CoordinationProblemList({
               : 'coordination-panel__name'
           }
         >
-          {titleText}
+          Problemas de la coordinación
+          <span className="coordination-panel__sr-only">: {name}</span>
         </h3>
-        {ticketPilot && contextLabel ? (
-          <p className="coordination-panel__eyebrow">{contextLabel}</p>
-        ) : null}
-        {summary && (
-          <p
-            className="coordination-panel__summary"
-            data-testid="coordination-panel-summary"
-          >
-            {summary}
-          </p>
-        )}
       </div>
-
-      {/* El estado nunca se comunica solo con color: siempre hay texto. */}
-      <span
-        className="coordination-panel__status"
-        data-testid="coordination-panel-status"
-      >
-        <span className="coordination-panel__status-dot" aria-hidden="true" />
-        {statusLabel}
-      </span>
     </header>
   )
 
@@ -266,7 +401,8 @@ export function CoordinationProblemList({
       data-level1={level1.status}
       data-scope={level1.scope}
       data-ticket-pilot={ticketThemeId}
-      data-expanded={expanded ? 'true' : undefined}
+      data-filter-severity={filters.severity}
+      data-filter-status={filters.status}
       style={
         { '--coord-rgb': hexToRgbChannels(identity.color) } as CSSProperties
       }
@@ -283,15 +419,6 @@ export function CoordinationProblemList({
           {bodyContent}
         </>
       )}
-      <button
-        type="button"
-        className="panel-expand-toggle"
-        data-testid="coordination-problems-expand"
-        aria-expanded={expanded}
-        onClick={() => setExpanded((value) => !value)}
-      >
-        {expanded ? 'Contraer' : 'Expandir'}
-      </button>
     </section>
   )
 }
