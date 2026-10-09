@@ -76,6 +76,8 @@ export function toProblemDetail(situation: SituationResponse): ProblemDetail {
           learning: situation.resolution.learning,
           resolvedByUserName: situation.resolution.resolvedByUserName,
           resolvedAt: situation.resolution.resolvedAt,
+          closedAt: situation.closedAt ?? null,
+          recordedAt: situation.resolution.recordedAt ?? null,
         }
       : null,
   }

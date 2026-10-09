@@ -285,6 +285,8 @@ export function DirectorReadingPanel({
           <DirectorAprendizajesPanel
             coordinationId={selectedCoordination?.id ?? null}
             analysisPeriod={analysisPeriod}
+            openProblemId={openProblemId}
+            onOpenProblem={onOpenProblem}
           />
         ) : null}
       </div>

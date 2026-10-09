@@ -1,5 +1,6 @@
 import { CoordinationProblemList } from '@/modules/operational-cards/components/CoordinationProblemList'
 import { ProblemDetail } from '@/modules/operational-cards/components/ProblemDetail'
+import { ProblemResolutionRecord } from '@/modules/operational-cards/components/ProblemResolutionRecord'
 import { resolveCoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
 import { useProblemListFilters } from '@/modules/operational-cards/hooks/useProblemListFilters'
 import type { OperationalKpiDirectionSnapshot } from '@/modules/operational-cards/types/operational-kpi.types'
@@ -32,6 +33,8 @@ export function DirectorProblemPanel({
   )
 
   if (controller.level2.problemId) {
+    const detail =
+      controller.level2.status === 'ready' ? controller.level2.detail : null
     return (
       <div className="director-problem-panel" data-testid="director-problem-panel">
         <ProblemDetail
@@ -42,6 +45,24 @@ export function DirectorProblemPanel({
           onToggleSection={controller.toggleSection}
           onRetrySection={controller.retrySection}
         />
+        {/*
+         * Expediente de CONSULTA: el aprendizaje del cierre en solo lectura.
+         * No se monta `ProblemActions`: el Director no avanza, no cierra y no
+         * edita aprendizajes, aunque el DTO trajera indicadores.
+         */}
+        {detail && detail.status === 'CLOSED' ? (
+          <section
+            className="problem-actions"
+            data-testid="director-problem-resolution"
+            data-read-only="true"
+            aria-label="Cierre del problema"
+          >
+            <ProblemResolutionRecord
+              resolution={detail.resolution}
+              reportKind={detail.reportKind}
+            />
+          </section>
+        ) : null}
       </div>
     )
   }

@@ -3,6 +3,7 @@ import type { ProblemDetail } from '@/modules/operational-cards/types/problem-de
 import type { OperationalSubmissionState } from '@/modules/operational-cards/types/operational-cards.state'
 import { DOSSIER_HISTORY_STATUS_LABEL } from '@/modules/operational-cards/data/problemDossier'
 import { resolveResolutionCopy } from '@/modules/situations/data/resolutionCopy'
+import { ProblemResolutionRecord } from '@/modules/operational-cards/components/ProblemResolutionRecord'
 
 /**
  * ACCIONES sobre el problema, bajo su detalle y en el mismo panel.
@@ -101,44 +102,10 @@ export function ProblemActions({
       aria-label="Acciones sobre el problema"
     >
       {yaCerrado && (
-        <div className="problem-actions__resolved" data-testid="problem-resolved">
-          <h3 className="problem-actions__heading">Problema cerrado</h3>
-          {detail.resolution ? (
-            <>
-              <p
-                className="problem-actions__label"
-                data-testid="problem-resolution-label"
-              >
-                {copy.resolvedLabel}
-              </p>
-              <p
-                className="problem-actions__learning"
-                data-testid="problem-learning"
-              >
-                {detail.resolution.learning}
-              </p>
-              <p className="problem-actions__byline">
-                {detail.resolution.resolvedByUserName}
-                {detail.resolution.resolvedAt && (
-                  <>
-                    {' · '}
-                    {new Date(detail.resolution.resolvedAt).toLocaleDateString(
-                      'es-CO',
-                      { day: '2-digit', month: 'short', year: 'numeric' },
-                    )}
-                  </>
-                )}
-              </p>
-            </>
-          ) : (
-            <p
-              className="problem-actions__note"
-              data-testid="problem-without-learning"
-            >
-              Este problema se cerró antes de que se registrara el aprendizaje.
-            </p>
-          )}
-        </div>
+        <ProblemResolutionRecord
+          resolution={detail.resolution}
+          reportKind={detail.reportKind}
+        />
       )}
 
       {muestraSeguimiento && (

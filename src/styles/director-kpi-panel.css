@@ -2129,8 +2129,372 @@
   margin-top: 8px;
 }
 
+/* ── APRENDIZAJES · indicadores → categorías → fichas ─────────────────── */
+
 .director-aprendizajes {
+  --aprendizajes-tint: var(--ticket-accent, #2a2118);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 8px 2px 12px 0;
   animation: director-fade-in 160ms ease-out;
+}
+
+.director-aprendizajes__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.director-aprendizajes__indicators {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.director-aprendizajes__indicator {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 10px 7px;
+  border: 1px solid color-mix(in srgb, var(--aprendizajes-tint) 26%, transparent);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--aprendizajes-tint) 5%, rgb(255 251 240 / 0.7));
+  box-shadow: inset 0 0 0 3px rgb(255 252 245 / 0.45);
+}
+
+.director-aprendizajes__value {
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-size: 26px;
+  line-height: 1;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #231910;
+}
+
+.director-aprendizajes__value[data-empty='true'] {
+  opacity: 0.45;
+}
+
+.director-aprendizajes__label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  overflow-wrap: anywhere;
+}
+
+.director-aprendizajes__block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.director-aprendizajes__title {
+  margin: 0;
+}
+
+.director-aprendizajes__count {
+  margin-left: 2px;
+  padding: 0 6px;
+  border: 1px solid rgb(35 25 16 / 0.22);
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+
+.director-aprendizajes__chart-frame.chart-safe-area {
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 6px 8px 4px 6px;
+}
+
+.director-aprendizajes__chart {
+  width: 100%;
+  min-width: 0;
+}
+
+.director-aprendizajes__cards-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 10px;
+  min-width: 0;
+}
+
+/*
+ * Mismo control que los filtros de «Problemas de la coordinación» (papel
+ * crema, trazo de tinta, sombra desplazada). `!important` por la misma razón
+ * que allí: una regla global oscurece los <select> nativos del ticket.
+ */
+.director-aprendizajes .director-aprendizajes__filter select {
+  --filter-select-bg: rgb(255 250 238 / 0.94);
+
+  box-sizing: border-box;
+  max-width: 230px;
+  min-width: 0;
+  padding: 3px 24px 3px 9px;
+  border: 1.5px solid rgb(42 33 24 / 0.62) !important;
+  border-radius: 7px !important;
+  box-shadow: 0 2px 0 rgb(42 33 24 / 0.24) !important;
+  appearance: none;
+  background:
+    linear-gradient(45deg, transparent 50%, currentColor 50%)
+      calc(100% - 13px) 50% / 4px 4px no-repeat,
+    linear-gradient(135deg, currentColor 50%, transparent 50%)
+      calc(100% - 9px) 50% / 4px 4px no-repeat,
+    var(--filter-select-bg) !important;
+  color: #2a2118 !important;
+  color-scheme: light;
+  cursor: pointer;
+  font: inherit;
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+}
+
+.director-aprendizajes .director-aprendizajes__filter select:hover {
+  --filter-select-bg: #fffaf0;
+
+  border-color: var(--ticket-accent-deep, #2a2118) !important;
+}
+
+.director-aprendizajes .director-aprendizajes__filter select option {
+  background: #fffaf0;
+  color: #2a2118;
+}
+
+.director-aprendizajes__filter select:focus-visible,
+.director-aprendizajes__more:focus-visible,
+.director-aprendizaje-card__open:focus-visible,
+.director-aprendizajes__link:focus-visible,
+.director-aprendizajes__retry:focus-visible {
+  outline: 2px solid #231910;
+  outline-offset: 2px;
+}
+
+.director-aprendizajes__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Ficha de archivo: crema algo más clara que el panel, borde fino, doble filete. */
+.director-aprendizaje-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 9px 12px 8px 14px;
+  border: 1px solid rgb(35 25 16 / 0.2);
+  border-left: 3px double color-mix(in srgb, var(--aprendizajes-tint) 55%, rgb(35 25 16 / 0.4));
+  border-radius: 2px;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--aprendizajes-tint) 4%, rgb(255 252 244 / 0.92)) 0%,
+      rgb(253 248 236 / 0.86) 100%
+    );
+  box-shadow: 2px 2px 0 rgb(35 25 16 / 0.07);
+  color: #231910;
+}
+
+.director-aprendizaje-card::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px dashed rgb(35 25 16 / 0.07);
+  pointer-events: none;
+}
+
+.director-aprendizaje-card[data-selected='true'] {
+  border-color: color-mix(in srgb, var(--aprendizajes-tint) 60%, rgb(35 25 16 / 0.4));
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--aprendizajes-tint) 25%, transparent);
+}
+
+.director-aprendizaje-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgb(35 25 16 / 0.62);
+}
+
+.director-aprendizaje-card__category {
+  color: color-mix(in srgb, var(--aprendizajes-tint) 70%, #231910);
+  overflow-wrap: anywhere;
+}
+
+.director-aprendizaje-card__folio,
+.director-aprendizaje-card__date {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.director-aprendizaje-card__date {
+  margin-left: auto;
+}
+
+.director-aprendizaje-card__kind {
+  padding: 0 4px;
+  border: 1px solid rgb(35 25 16 / 0.2);
+  border-radius: 2px;
+}
+
+.director-aprendizaje-card__head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.director-aprendizaje-card__head .director-aprendizaje-card__open {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.director-aprendizaje-card__problem {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0.72;
+}
+
+.director-aprendizaje-card__learning {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-size: 14px;
+  line-height: 1.42;
+  overflow-wrap: break-word;
+  hyphens: manual;
+}
+
+
+.director-aprendizaje-card__open,
+.director-aprendizajes__more,
+.director-aprendizajes__link,
+.director-aprendizajes__retry {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #231910;
+  font: inherit;
+  cursor: pointer;
+}
+
+.director-aprendizaje-card__open {
+  padding: 2px 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.director-aprendizaje-card__open::after {
+  content: ' →';
+}
+
+.director-aprendizaje-card__open:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.director-aprendizajes__more {
+  align-self: center;
+  margin-top: 2px;
+  padding: 5px 12px;
+  border: 1px dashed rgb(35 25 16 / 0.4);
+  border-radius: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.director-aprendizajes__more:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+.director-aprendizajes__link,
+.director-aprendizajes__retry {
+  padding: 0;
+  margin-left: 6px;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.director-aprendizajes__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.director-aprendizajes__skeleton-row {
+  display: block;
+  height: 46px;
+  border: 1px solid rgb(35 25 16 / 0.08);
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    rgb(35 25 16 / 0.04) 0%,
+    rgb(35 25 16 / 0.09) 50%,
+    rgb(35 25 16 / 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: director-aprendizajes-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes director-aprendizajes-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .director-aprendizajes,
+  .director-aprendizajes__skeleton-row {
+    animation: none;
+  }
 }
 
 @keyframes director-fade-in {

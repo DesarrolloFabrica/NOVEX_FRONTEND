@@ -46,6 +46,13 @@ vi.mock('@/modules/operational-cards/services/internal-problems.service', () => 
   fetchInternalRecurrence: vi.fn(),
 }))
 
+// APRENDIZAJES tiene su propia suite; aquí solo importa que reciba el periodo.
+vi.mock('@/modules/operational-cards/services/learnings.service', () => ({
+  LEARNINGS_PAGE_SIZE: 20,
+  fetchLearningsSummary: vi.fn(() => new Promise(() => undefined)),
+  fetchLearningItems: vi.fn(() => new Promise(() => undefined)),
+}))
+
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT =
   true
 

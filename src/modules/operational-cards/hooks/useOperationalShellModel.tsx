@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { canCreateSituations, hasPermission } from '@/modules/auth/utils/permissions'
 import { fetchIncidentCategories } from '@/modules/api/situations.api'
@@ -29,7 +29,10 @@ import {
   type OperationalCenterExperienceId,
 } from '@/modules/operational-cards/experience/resolveOperationalCenterExperience'
 import type { OperationalIntegrityStatus } from '@/modules/operational-cards/types/operational-status.types'
-import type { CoordinationId } from '@/modules/impact-network/data/coordination-islands.config'
+import {
+  GENERAL_COORDINATION_ID,
+  type CoordinationId,
+} from '@/modules/impact-network/data/coordination-islands.config'
 import type { IncidentCategorySummary } from '@/modules/situations/types/situation.types'
 import type { ProblemHistoryPeriod } from '@/modules/operational-cards/types/problem-history.types'
 import { getErrorMessage } from '@/shared/utils/error'
@@ -173,6 +176,33 @@ export function useOperationalShellModel(
     canCreate,
     selectCoordination,
     openReportForm,
+  ])
+
+  /*
+   * DIRECTOR, ADMIN y ANALISTA entran con Coordinación General de Operaciones activa:
+   * sin carta seleccionada el centro arranca vacío. Se aplica UNA vez, cuando
+   * el overview está listo; si después el usuario vuelve a la Dirección, no se
+   * le fuerza de nuevo. Una intención de reporte con carta propia tiene
+   * prioridad.
+   */
+  const defaultsToGeneral = experience !== 'coordinator'
+  const defaultAppliedRef = useRef(false)
+  useEffect(() => {
+    if (!defaultsToGeneral || defaultAppliedRef.current) return
+    if (level0 !== 'ready' || !overview) return
+    defaultAppliedRef.current = true
+    if (selectedCoordinationCode || reportIntent?.coordination) return
+    const general = overview.coordinations.find(
+      (row) => row.code === GENERAL_COORDINATION_ID,
+    )
+    if (general) selectCoordination(general.code as CoordinationId)
+  }, [
+    defaultsToGeneral,
+    level0,
+    overview,
+    selectedCoordinationCode,
+    reportIntent,
+    selectCoordination,
   ])
 
   const characterCoordination = resolveCharacterCoordination({

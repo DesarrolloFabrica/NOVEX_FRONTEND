@@ -110,7 +110,12 @@ export interface ProblemDetail {
 export interface ProblemResolution {
   learning: string
   resolvedByUserName: string
+  /** `situations.resolved_at`: en filas legadas puede preceder al cierre. */
   resolvedAt: string | null
+  /** Cierre del problema (`situations.closed_at`): la fecha que se muestra. */
+  closedAt?: string | null
+  /** Alta de la fila de aprendizaje. */
+  recordedAt?: string | null
 }
 
 /** Estado de una sección que necesita su propia petición. */
