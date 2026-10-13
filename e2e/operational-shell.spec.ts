@@ -2,7 +2,7 @@ import { expect, test, type Page } from 'playwright/test'
 import { operationalOverviewFixture } from './operational-overview.fixture'
 
 /**
- * SHELL del Centro Operacional: dos zonas y un control inferior.
+ * SHELL del Centro Operacional: dos zonas y un menú flotante.
  *
  * Comprueba la estructura y, sobre todo, LA FRONTERA: nada de lo que se dibuja
  * en la banda de la baraja puede meterse en el carril de indicadores ni salirse
@@ -234,7 +234,7 @@ async function measure(page: Page, label: string) {
   const kpi = await boxOf(page, '[data-testid="shell-region-action"]')
   const top = await boxOf(page, '[data-testid="shell-top"]')
   const stage = await boxOf(page, '[data-testid="shell-stage"]')
-  const bottom = await boxOf(page, '[data-testid="shell-bottom"]')
+  const menu = await boxOf(page, '[data-testid="shell-menu-anchor"]')
   const drawn = await drawnCards(page)
 
   const cardWidth = await page.evaluate(() => {
@@ -254,7 +254,7 @@ async function measure(page: Page, label: string) {
     kpi: { x: round(kpi.x), width: round(kpi.width), height: round(kpi.height) },
     top: { y: round(top.y), height: round(top.height) },
     stage: { x: round(stage.x), y: round(stage.y), width: round(stage.width), height: round(stage.height) },
-    bottom: { y: round(bottom.y), height: round(bottom.height) },
+    menu: { x: round(menu.x), y: round(menu.y), width: round(menu.width), height: round(menu.height) },
     /** Ancho del SLOT, que es el ancho de carta sin la sangría del giro. */
     slotWidth: cardWidth,
     cards: drawn,
@@ -375,7 +375,7 @@ test.describe('shell del Centro · 1440x900', () => {
     }
     await expect(page.getByTestId('shell-main')).toBeVisible()
     await expect(page.getByTestId('shell-stage')).toBeVisible()
-    await expect(page.getByTestId('shell-bottom')).toBeVisible()
+    await expect(page.getByTestId('shell-menu-anchor')).toBeVisible()
 
     const global = await measure(page, 'GLOBAL 1440')
     await expect(page.locator(CARD)).toHaveCount(9)

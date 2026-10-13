@@ -3,6 +3,7 @@ import {
   TicketPanelFrame,
   type TicketPanelVariant,
 } from '@/modules/operational-cards/experience/TicketPanelFrame'
+import { OperationalCenterMenu } from '@/modules/operational-cards/experience/layouts/OperationalCenterMenu'
 import type { TicketThemeId } from '@/modules/operational-cards/experience/ticketThemes'
 
 /**
@@ -66,9 +67,5 @@ export function CircusScene() {
 }
 
 export function ShellBottom() {
-  return (
-    <div className="operational-shell__bottom" data-testid="shell-bottom">
-      <span className="operational-shell__bottom-label">Menú</span>
-    </div>
-  )
+  return <OperationalCenterMenu />
 }

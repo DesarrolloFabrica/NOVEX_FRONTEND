@@ -35,8 +35,13 @@
   --cl-value-size: 12px;
 
   display: inline-flex;
+  /* Columna estrecha: la lectura numérica baja bajo los corazones en vez de
+     salirse del host. Con espacio suficiente sigue en una sola línea. */
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
-  gap: calc(var(--cl-gap) * 2.5);
+  gap: 2px calc(var(--cl-gap) * 2.5);
+  max-width: 100%;
   line-height: 1;
 }
 
@@ -54,15 +59,21 @@
 
 .character-lives__hearts {
   display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
   align-items: center;
   gap: var(--cl-gap);
 }
 
+/* Tamaño nominal `--cl-heart-size`; si la fila no cabe, los cinco corazones
+   encogen por igual (sin perder ninguno ni su proporción). */
 .character-lives__heart {
   display: block;
-  flex: 0 0 auto;
+  flex: 0 1 var(--cl-heart-size);
   width: var(--cl-heart-size);
-  height: calc(var(--cl-heart-size) * 22 / 24);
+  min-width: 0;
+  height: auto;
+  aspect-ratio: 24 / 22;
   overflow: visible;
 }
 

@@ -133,6 +133,8 @@ export function buildSeverityBarsOption(
     ],
     tooltip: {
       trigger: 'item',
+      // La celda recorta (`overflow: hidden`): el tooltip no debe salirse.
+      confine: true,
       formatter: (params: unknown) => {
         const item = params as { dataIndex?: number; value?: number }
         const index = item.dataIndex ?? 0
@@ -278,6 +280,7 @@ export function buildAttentionDonutOption(
     ],
     tooltip: {
       trigger: 'item',
+      confine: true,
       formatter: (params: unknown) => {
         if (total === 0) return 'Sin problemas activos'
         const item = params as {

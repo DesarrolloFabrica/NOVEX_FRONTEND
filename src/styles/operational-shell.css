@@ -1,5 +1,5 @@
 /*
- * SHELL del Centro Operacional: dos zonas y un control inferior.
+ * SHELL del Centro Operacional: dos zonas y un menú flotante.
  *
  * Solo reparto de espacio y superficies discretas. El refinamiento visual de
  * cada región llega con su contenido, no antes: pintar ahora un sistema visual
@@ -8,14 +8,14 @@
 
 /*
  * DIRECTOR (analítica visual primero): DATOS → PATRONES → PROBLEMAS.
- * - Lectura ≈ 57 % del ancho: superficie dominante.
- * - Personaje ≈ 16 % y Problemas ≈ 27 % del total (fila superior del main).
+ * - Lectura ≈ 42 % del ancho: mantiene una superficie analítica amplia.
+ * - Personaje ≈ 21 % y Problemas ≈ 37 % del total (fila superior del main).
  * - Baraja ≈ 25 % del alto del main (antes ≈ 33 %): selector de coordinación,
  *   no contenido principal. Cartas con techo propio más bajo.
  * Todo scoped a data-shell-layout='director': no toca ANALISTA/ADMIN/COORDINADOR.
  */
 .operational-shell[data-shell-layout='director'] {
-  --shell-action-w: 50%;
+  --shell-action-w: 42%;
 }
 
 .operational-shell[data-shell-layout='director'] .operational-shell__main {
@@ -32,9 +32,9 @@
  * La carta seleccionada sobresale algo más que en la mesa compartida.
  */
 .operational-shell[data-shell-layout='director'] .operational-table {
-  --card-width-max: clamp(112px, 8.6vw, 172px);
+  --card-width-max: clamp(120px, 9.2vw, 184px);
   --selected-scale: 1.08;
-  --selected-lift: -18px;
+  --selected-lift: -22px;
 }
 
 /* Lectura: algo menos de marco interno, sin pegar las gráficas al borde. */
@@ -94,9 +94,7 @@
 
 .operational-shell[data-shell-layout='director-direction'] {
   grid-template-columns: minmax(0, 1fr);
-  grid-template-areas:
-    'main'
-    'bottom';
+  grid-template-areas: 'main';
 }
 
 .operational-shell[data-shell-layout='director-direction'] .operational-shell__main {
@@ -111,14 +109,11 @@
   /*
    * DOS ZONAS con significados distintos: a la izquierda se opera, a la derecha
    * se lee el estado. El carril cruza las dos filas de la izquierda —no es una
-   * cuarta tarjeta de la fila superior— y el control inferior pasa por debajo de
-   * ambas.
+   * cuarta tarjeta de la fila superior—. El menú flota fuera de esta rejilla.
    */
   grid-template-columns: minmax(0, 1fr) var(--shell-action-w);
-  grid-template-rows: minmax(0, 1fr) var(--shell-bottom-h);
-  grid-template-areas:
-    'main action'
-    'bottom bottom';
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: 'main action';
   height: 100%;
   min-height: 0;
   gap: var(--shell-gap);
@@ -140,9 +135,10 @@
    * detalle completo con sus acciones, así que necesita más ancho que el carril
    * al que sustituye: un campo de texto y un botón no caben con la holgura de
    * una columna de números. 24% daban 333 px a 1440; 30% dan 424 px, que es
-   * donde el formulario deja de apretarse. La zona operativa conserva el resto.
+   * donde el formulario deja de apretarse. En esta fase baja a 28 %: la acción
+   * conserva ancho funcional y la baraja gana presencia sin rehacer la tableta.
    */
-  --shell-action-w: 30%;
+  --shell-action-w: 28%;
   /*
    * La banda superior dejó de ser un presupuesto: el personaje ya vive en
    * ella, y su alto sale de MEDIRLO, no de estimarlo.
@@ -156,11 +152,10 @@
    * Subir más solo dejaría aire muerto: la figura no puede crecer sin una
    * columna más ancha.
    *
-   * No le cuesta nada a las cartas: su tamaño sale del ANCHO de la banda
-   * inferior, que no cambia, y ahí sobraba alto (mesa de 250 px en 511).
+   * La baraja recibe además la fila que antes consumía el control inferior; su
+   * tamaño sigue saliendo del ancho y ahora dispone de alto para no recortarse.
    */
   --shell-top-h: 268px;
-  --shell-bottom-h: 48px;
   --shell-gap: 10px;
 
   --shell-line: rgb(150 196 255 / 0.28);
@@ -269,7 +264,7 @@
    * baja y deja de asomar. El personaje no se mueve —vive en la banda superior,
    * que no cambia— y la mesa sigue siendo utilizable.
    */
-  padding-bottom: 32px;
+  padding-bottom: 36px;
   /*
    * `clip` y no `hidden`: son el mismo recorte, pero `hidden` deja un
    * contenedor DESPLAZABLE. Medido: al cerrar la isla del problema, el
@@ -1854,31 +1849,432 @@
   font-size: 12px;
 }
 
-/* ---------- Control inferior ---------- */
+/* ---------- Menú flotante ---------- */
 
-.operational-shell__bottom {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgb(150 196 255 / 0.18);
-  border-radius: 14px;
+.operational-shell__menu-anchor {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 50;
+  display: block;
+  width: 44px;
+  height: 44px;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
   /*
-   * Menú inferior: menos opaco para que el escenario asome, pero con contraste
-   * suficiente para la etiqueta «Menú». No intercepta más clics que antes.
+   * El ancla no pinta ninguna franja: solo posiciona el botón flotante y deja
+   * que todo el alto pertenezca al escenario.
    */
-  background: rgb(14 24 42 / 0.28);
-  grid-area: bottom;
+  background: transparent;
+  pointer-events: none;
 }
 
-.operational-shell__bottom-label {
-  color: var(--os-muted, #8b9cb6);
+.operational-shell__menu-trigger {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgb(91 61 29 / 0.66);
+  border-radius: 11px;
+  color: #4c3520;
+  background:
+    linear-gradient(rgb(250 241 216 / 0.94), rgb(232 211 169 / 0.94)),
+    url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
+  box-shadow:
+    0 7px 18px rgb(2 5 12 / 0.42),
+    inset 0 0 0 2px rgb(255 250 230 / 0.54);
+  cursor: pointer;
+  font: inherit;
+  pointer-events: auto;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.operational-shell__menu-trigger:hover,
+.operational-shell__menu-trigger[aria-expanded='true'] {
+  color: #26190f;
+  background:
+    linear-gradient(rgb(255 247 221 / 0.98), rgb(239 218 173 / 0.98)),
+    url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
+  box-shadow:
+    0 9px 22px rgb(2 5 12 / 0.48),
+    inset 0 0 0 2px rgb(255 250 230 / 0.68);
+}
+
+.operational-shell__menu-trigger:focus-visible {
+  outline: 2px solid var(--os-focus, #a3ff5c);
+  outline-offset: 2px;
+}
+
+.operational-shell__menu-hamburger {
+  display: grid;
+  width: 20px;
+  gap: 4px;
+}
+
+.operational-shell__menu-hamburger > span {
+  display: block;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  transition:
+    transform 160ms ease,
+    opacity 160ms ease;
+}
+
+.operational-shell__menu-trigger[aria-expanded='true']
+  .operational-shell__menu-hamburger > span:first-child {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.operational-shell__menu-trigger[aria-expanded='true']
+  .operational-shell__menu-hamburger > span:nth-child(2) {
+  opacity: 0;
+}
+
+.operational-shell__menu-trigger[aria-expanded='true']
+  .operational-shell__menu-hamburger > span:last-child {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/*
+ * Panel no modal: queda dentro del stacking context del shell (por encima de
+ * listas expandidas, z=40), pero no compite con overlays globales. Al estar
+ * anclado de forma absoluta al botón, abrirlo no participa en la rejilla ni
+ * cambia un solo rectángulo operacional.
+ */
+.operational-shell__menu-panel {
+  --menu-ink: #342719;
+  --menu-muted: #74634f;
+  --menu-line: rgb(91 61 29 / 0.25);
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  display: flex;
+  width: min(320px, calc(100vw - 24px));
+  max-height: calc(100dvh - 80px);
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 2px solid rgb(73 48 25 / 0.76);
+  border-radius: 13px;
+  color: var(--menu-ink);
+  background:
+    linear-gradient(rgb(250 241 216 / 0.9), rgb(238 222 184 / 0.91)),
+    url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
+  box-shadow:
+    0 18px 42px rgb(2 5 12 / 0.68),
+    inset 0 0 0 3px rgb(255 250 230 / 0.55),
+    inset 0 0 0 5px rgb(91 61 29 / 0.16);
+  scrollbar-gutter: stable;
+  animation: operational-shell-menu-in 180ms ease-out both;
+  overscroll-behavior: contain;
+  pointer-events: auto;
+}
+
+.operational-shell__menu-panel::before,
+.operational-shell__menu-panel::after {
+  position: absolute;
+  top: 8px;
+  color: rgb(118 76 34 / 0.5);
+  content: '◆';
+  font-size: 9px;
+}
+
+.operational-shell__menu-panel::before {
+  left: 10px;
+}
+
+.operational-shell__menu-panel::after {
+  right: 10px;
+}
+
+.operational-shell__menu-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 1px 3px 9px;
+  border-bottom: 1px solid var(--menu-line);
+}
+
+.operational-shell__menu-sr-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.operational-shell__menu-user {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.operational-shell__menu-user > span {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgb(91 61 29 / 0.35);
+  border-radius: 50%;
+  color: #f7edcf;
+  background: #614223;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+}
+
+.operational-shell__menu-user div,
+.operational-shell__menu-user strong,
+.operational-shell__menu-user small {
+  display: block;
+  min-width: 0;
+}
+
+.operational-shell__menu-user strong {
+  overflow: hidden;
+  color: var(--menu-ink);
   font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  /* Contraste sobre el suelo del escenario sin panel opaco extra. */
-  text-shadow: 0 1px 2px rgb(2 6 16 / 0.65);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.operational-shell__menu-user small {
+  margin-top: 2px;
+  color: var(--menu-muted);
+  font-size: 10px;
+}
+
+.operational-shell__menu-navigation,
+.operational-shell__menu-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.operational-shell__menu-option,
+.operational-shell .operational-shell__menu-register,
+.operational-shell__menu-logout,
+.operational-shell__menu-panel .novex-help-menu__trigger {
+  display: flex;
+  min-width: 0;
+  min-height: 44px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 7px 10px;
+  border: 1px solid var(--menu-line);
+  border-radius: 9px;
+  color: var(--menu-ink);
+  background: rgb(255 251 235 / 0.5);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.72);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    transform 150ms ease;
+}
+
+.operational-shell__menu-option:hover,
+.operational-shell .operational-shell__menu-register:hover,
+.operational-shell__menu-logout:hover,
+.operational-shell__menu-panel .novex-help-menu__trigger:hover,
+.operational-shell__menu-panel .novex-help-menu__trigger[aria-expanded='true'] {
+  border-color: rgb(91 61 29 / 0.52);
+  color: #24190f;
+  background: rgb(255 248 220 / 0.9);
+  transform: translateY(-1px);
+}
+
+.operational-shell__menu-option:focus-visible,
+.operational-shell__menu-logout:focus-visible,
+.operational-shell__menu-panel .novex-help-menu__trigger:focus-visible {
+  outline: 3px solid rgb(61 112 48 / 0.72);
+  outline-offset: 1px;
+}
+
+.operational-shell__menu-option.is-active {
+  border-color: rgb(61 112 48 / 0.48);
+  background: rgb(204 222 169 / 0.55);
+}
+
+.operational-shell__menu-option-icon,
+.operational-shell__menu-panel .novex-help-menu__trigger > svg,
+.operational-shell__menu-logout > svg {
+  display: grid;
+  width: 21px;
+  height: 21px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #76512b;
+}
+
+.operational-shell__menu-option-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.operational-shell__menu-option > span:last-child,
+.operational-shell__menu-logout > span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.operational-shell__menu-option strong,
+.operational-shell__menu-logout strong {
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.operational-shell__menu-option small,
+.operational-shell__menu-logout small {
+  margin-top: 2px;
+  color: var(--menu-muted);
+  font-size: 9px;
+}
+
+.operational-shell .operational-shell__menu-register {
+  min-height: 44px;
+  padding: 7px 10px;
+  white-space: normal;
+}
+
+.operational-shell__menu-register::before {
+  display: grid;
+  width: 21px;
+  height: 21px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #76512b;
+  content: '+';
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.operational-shell__menu-register .novex-register-cta__label {
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.operational-shell__menu-panel .novex-help-menu {
+  position: relative;
+  z-index: auto;
+  display: block;
+  min-width: 0;
+}
+
+.operational-shell__menu-panel .novex-help-menu__trigger {
+  width: 100%;
+  height: auto;
+}
+
+.operational-shell__menu-panel .novex-help-menu__trigger > span {
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.operational-shell__menu-panel .novex-help-menu__popover {
+  position: static;
+  width: auto;
+  margin-top: 7px;
+  padding: 12px 13px;
+  border: 1px solid var(--menu-line);
+  border-radius: 9px;
+  color: var(--menu-muted);
+  background: rgb(255 249 226 / 0.76);
+  box-shadow: inset 0 1px 7px rgb(91 61 29 / 0.08);
+  animation: operational-shell-help-in 150ms ease-out both;
+}
+
+.operational-shell__menu-panel .novex-help-menu__popover strong {
+  color: var(--menu-ink);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 12px;
+}
+
+.operational-shell__menu-panel .novex-help-menu__popover p {
+  color: var(--menu-muted);
+  font-size: 10px;
+}
+
+.operational-shell__menu-logout {
+  width: 100%;
+  border-color: rgb(132 49 36 / 0.3);
+  color: #702e25;
+  background: rgb(171 64 48 / 0.07);
+}
+
+.operational-shell__menu-logout > svg {
+  color: #8b3d32;
+}
+
+@keyframes operational-shell-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes operational-shell-help-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 820px) {
+  .operational-shell__menu-panel {
+    width: min(310px, calc(100vw - 24px));
+  }
+}
+
+@media (max-width: 640px) {
+  .operational-shell__menu-anchor {
+    top: 8px;
+    right: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .operational-shell__menu-trigger,
+  .operational-shell__menu-hamburger > span,
+  .operational-shell__menu-option,
+  .operational-shell__menu-logout,
+  .operational-shell__menu-panel .novex-help-menu__trigger {
+    transition-duration: 0ms;
+  }
+
+  .operational-shell__menu-panel,
+  .operational-shell__menu-panel .novex-help-menu__popover {
+    animation: none;
+  }
 }
 
 /*
@@ -1908,19 +2304,60 @@
   flex-direction: column;
 }
 
-.eoc-deck .novex-os-deck__content:has(> .eoc-embedded--shell) {
+.novex-os[data-scene='intelligence']
+  .eoc-deck.eoc-deck--home
+  > .novex-os-deck__content {
   display: flex;
   min-height: 0;
   flex-direction: column;
+  grid-row: 2;
   /* Sin scroll de ruta: la escena se reparte, no se desplaza. Si algo no cabe
      tiene que verse en la medición, no esconderse detrás de un scroll que
-     además sacaría de vista las lecturas permanentes. */
-  overflow: hidden;
+     además sacaría de vista las lecturas permanentes. La mayor especificidad
+     evita depender del orden de carga frente a `novex-os.css`. */
+  overflow-x: hidden;
+  overflow-y: hidden;
+  scrollbar-gutter: auto;
+  /* El margen exterior pasa al shell (abajo) para que el escenario sangre. */
+  padding: 0;
+}
+
+/*
+ * ESCENARIO A SANGRE. El telón y el suelo deben llenar la pantalla, no quedar
+ * enmarcados por el padding del stage de la sala y de la ruta (≈24/22/32 px de
+ * franja oscura). La escena no puede salir del shell —el contenido de la ruta
+ * conserva un `transform` de su animación de entrada, que atrapa incluso a un
+ * `position: fixed`, y recorta con `overflow`—, así que es el margen el que
+ * entra: la sala y la ruta pierden su padding solo en la home del Centro y el
+ * shell lo recupera como padding propio. Las regiones quedan exactamente donde
+ * estaban; la escena (`inset: 0`) cubre ahora también ese margen.
+ *
+ * Selector por atributos, sin `:has()`: escena «intelligence» sin carril solo
+ * la monta `ExecutiveOperationsLayout` (el Centro; sus otras secciones
+ * redirigen a la home). Un `:has(.eoc-deck--home)` en el stage obligaba a
+ * reevaluar estilos en cada mutación del subárbol y, medido, congelaba el
+ * renderer en tablet vertical durante capturas e interacciones.
+ */
+.novex-os[data-scene='intelligence'][data-rail='none'] .novex-os__stage {
+  padding: 0;
 }
 
 .eoc-embedded--shell > .operational-shell {
   flex: 1 1 auto;
   min-height: 0;
+  padding: 24px 22px 32px;
+}
+
+@media (max-width: 1120px) {
+  .eoc-embedded--shell > .operational-shell {
+    padding-inline: 16px;
+  }
+}
+
+@media (max-width: 820px) {
+  .eoc-embedded--shell > .operational-shell {
+    padding: 22px 14px 24px;
+  }
 }
 
 /* ---------- Composici�n COORDINADOR (4 columnas, sin baraja) ---------- */
@@ -1936,9 +2373,7 @@
     minmax(0, 1fr)
     minmax(0, 1fr)
     minmax(0, 1fr);
-  grid-template-areas:
-    'rail reports problems action'
-    'bottom bottom bottom bottom';
+  grid-template-areas: 'rail reports problems action';
   gap: var(--shell-gap);
   /* Mismos tokens de carta que `.operational-deck` (baraja de otros roles). */
   --card-width-max: clamp(152px, 13.1vw, 252px);
@@ -2005,6 +2440,20 @@
   border: none;
   background: transparent;
   overflow: visible;
+  /*
+   * La carta se mide contra el hueco REAL que le deja el rail, no solo contra
+   * el viewport: sin esto el token `clamp(…vw…)` la hacía más ancha que la
+   * columna (1920) o más alta que su fila (2×2 ≤1100), y acababa debajo del
+   * panel de problemas. Misma técnica que `.operational-table`: el alto se
+   * rehace aquí porque `--card-height` se sustituye donde se declara.
+   */
+  container-type: size;
+  --card-width: min(
+    var(--card-width-max),
+    100cqw,
+    calc(100cqh / var(--card-aspect))
+  );
+  --card-height: calc(var(--card-width) * var(--card-aspect));
 }
 
 .operational-shell--coordinator .operational-shell__own-card .coordination-card {
@@ -2031,10 +2480,6 @@
 .operational-shell--coordinator .operational-shell__action {
   grid-area: action;
   min-height: 0;
-}
-
-.operational-shell--coordinator .operational-shell__bottom {
-  grid-area: bottom;
 }
 
 .operational-shell__assignment-error {
@@ -2157,10 +2602,18 @@
 @media (max-width: 1100px) {
   .operational-shell--coordinator {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-rows: minmax(0, 0.9fr) minmax(0, 1.1fr) var(--shell-bottom-h);
+    grid-template-rows: minmax(0, 0.9fr) minmax(0, 1.1fr);
     grid-template-areas:
       'rail reports'
-      'problems action'
-      'bottom bottom';
+      'problems action';
+  }
+
+  /*
+   * En 2×2 la celda del rail mide lo que da su fila (~266px a 1024×768), no la
+   * banda fija de 268px más la carta. Personaje y carta se reparten esa celda;
+   * la carta se ajusta a su mitad con el `min()` de `__own-card`.
+   */
+  .operational-shell--coordinator .operational-shell__rail-stack {
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
   }
 }

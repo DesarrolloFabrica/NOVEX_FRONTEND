@@ -39,11 +39,11 @@ describe('layout DIRECTOR', () => {
     shellCss.indexOf('.operational-shell__region--director-kpi,'),
   )
 
-  it('variante analítica: Lectura ≈50 %, baraja algo más baja, carta seleccionada destacada', () => {
-    expect(directorBlock).toContain('--shell-action-w: 50%')
+  it('variante analítica: preserva la lectura y da prioridad visible a la baraja', () => {
+    expect(directorBlock).toContain('--shell-action-w: 42%')
     expect(directorBlock).toContain('minmax(300px, 2.35fr) minmax(170px, 1fr)')
     expect(directorBlock).toContain('minmax(0, 0.365fr) minmax(0, 0.635fr)')
-    expect(directorBlock).toContain('clamp(112px, 8.6vw, 172px)')
+    expect(directorBlock).toContain('clamp(120px, 9.2vw, 184px)')
     expect(directorBlock).toContain('--selected-scale: 1.08')
     // Problemas compactos (títulos a una línea), siempre bajo el scope DIRECTOR.
     expect(directorBlock).toContain('.operational-shell__region--coordination-problems')
@@ -61,9 +61,9 @@ describe('layout DIRECTOR', () => {
     }
   })
 
-  it('ANALISTA/ADMIN conservan su rejilla base (panel de acción 30 %)', () => {
+  it('ANALISTA/ADMIN ceden una fracción moderada del panel a la baraja', () => {
     const base = shellCss.slice(shellCss.indexOf("[data-shell-layout='director-direction']"))
-    expect(base).toMatch(/--shell-action-w:\s*30%/)
-    expect(base).not.toContain('--shell-action-w: 50%')
+    expect(base).toMatch(/--shell-action-w:\s*28%/)
+    expect(base).not.toContain('--shell-action-w: 42%')
   })
 })

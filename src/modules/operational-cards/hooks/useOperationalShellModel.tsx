@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { canCreateSituations, hasPermission } from '@/modules/auth/utils/permissions'
 import { fetchIncidentCategories } from '@/modules/api/situations.api'
@@ -47,6 +48,8 @@ export function useOperationalShellModel(
   experience: OperationalCenterExperienceId,
 ) {
   const { user } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
   const isCoordinator = experience === 'coordinator'
   const canOperate = experienceAllowsOperation(experience)
   const canCreate = canOperate && canCreateSituations(user)
@@ -145,10 +148,9 @@ export function useOperationalShellModel(
    * preselecciona la carta si quien reporta puede elegirla y abre el formulario
    * INTERNAL, que es la única puerta de creación.
    */
-  const [reportIntent, setReportIntent] = useState(() =>
-    typeof window === 'undefined'
-      ? null
-      : parseReportIntent(window.location.search),
+  const reportIntent = useMemo(
+    () => parseReportIntent(location.search),
+    [location.search],
   )
   const openReportForm = controller.openReportForm
   useEffect(() => {
@@ -162,11 +164,13 @@ export function useOperationalShellModel(
       if (match) selectCoordination(match.code as CoordinationId)
     }
     if (canCreate) openReportForm('INTERNAL')
-    setReportIntent(null)
-    window.history.replaceState(
-      window.history.state,
-      '',
-      `${window.location.pathname}${stripReportIntent(window.location.search)}${window.location.hash}`,
+    navigate(
+      {
+        pathname: location.pathname,
+        search: stripReportIntent(location.search),
+        hash: location.hash,
+      },
+      { replace: true },
     )
   }, [
     reportIntent,
@@ -176,6 +180,10 @@ export function useOperationalShellModel(
     canCreate,
     selectCoordination,
     openReportForm,
+    location.hash,
+    location.pathname,
+    location.search,
+    navigate,
   ])
 
   /*

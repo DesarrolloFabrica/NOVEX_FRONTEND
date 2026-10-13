@@ -63,7 +63,10 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  height: 14px;
+  /* 14px de mínimo; crece solo si la lectura numérica pasa a segunda línea
+     en una columna estrecha (ver `character-lives.css`). */
+  height: auto;
+  min-height: 14px;
   min-width: 0;
   max-width: 100%;
 }

@@ -2,13 +2,20 @@ import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { DirectorDirectionView } from '@/modules/operational-cards/experience/director/DirectorDirectionView'
 import { DirectorDirectionLayout } from '@/modules/operational-cards/experience/layouts/DirectorDirectionLayout'
 import {
   kpiCoordinationFixture,
   kpiDirectionSnapshotFixture,
 } from '@/modules/operational-cards/experience/director/director-kpi.fixture'
+
+vi.mock(
+  '@/modules/operational-cards/experience/layouts/OperationalCenterMenu',
+  () => ({
+    OperationalCenterMenu: () => <div data-testid="shell-menu-anchor" />,
+  }),
+)
 
 const here = dirname(fileURLToPath(import.meta.url))
 

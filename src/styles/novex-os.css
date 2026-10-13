@@ -4024,6 +4024,16 @@ textarea {
     overflow: hidden;
   }
 
+  /*
+   * La fila de 70px es para el carril móvil. Una sala sin carril
+   * (`data-rail='none'`, p. ej. el Centro Operacional) no la necesita: sin esta
+   * regla quedaba una franja vacía bajo el menú. El atributo sube la
+   * especificidad, así que no depende del orden de los imports.
+   */
+  .novex-os[data-rail='none'] {
+    grid-template-rows: minmax(0, 1fr);
+  }
+
   .novex-os__backdrop::before,
   .novex-orbital-hero__visual img {
     will-change: auto;
