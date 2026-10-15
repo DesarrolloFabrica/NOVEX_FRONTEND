@@ -444,12 +444,18 @@ test.describe('QA ESTADO visualización-first v3', () => {
 
         // SNAPSHOT AT CUT: Severidad y Atención describen la MISMA población
         // (activos al corte): Σ severidad = total del donut.
+        // Descripción de Severidad: «Severidad de los N activos: crítica a, alta b, …».
         const sevAria = (await severityChart.getAttribute('aria-label')) ?? ''
-        const sevTotal = [...sevAria.matchAll(/(\d+)/g)].reduce((a, m) => a + Number(m[1]), 0)
+        const sevTotal = [...(sevAria.split(':')[1] ?? '').matchAll(/(\d+)/g)].reduce(
+          (a, m) => a + Number(m[1]),
+          0,
+        )
         const attAria = (await attentionChart.getAttribute('aria-label')) ?? ''
-        const attTotal = Number(/(\d+) activos/.exec(attAria)?.[1] ?? -1)
+        const attTotal = Number(/de los (\d+) activos/.exec(attAria)?.[1] ?? -1)
         expect(sevTotal).toBe(attTotal)
+        // Cabecera: el mismo total de la población del corte.
         await expect(panel.getByTestId('director-estado-comp-cut')).toBeVisible()
+        await expect(panel.getByTestId('director-corte-total')).toHaveText(String(attTotal))
 
         // Vuelta a la lámina 1 (Carga | Movimiento).
         await panel.getByTestId('director-estado-carousel-prev').click()
@@ -495,7 +501,11 @@ test.describe('QA ESTADO visualización-first v3', () => {
         expect(chartMetrics.svgChildren).toBeGreaterThan(0)
         expect(chartMetrics.width).toBeGreaterThan(120)
         expect(chartMetrics.height).toBeGreaterThan(160)
-        expect(chartMetrics.frameHeight).toBeGreaterThanOrEqual(200)
+        // Alto CONTENIDO (no estirado al panel) y proporción apaisada a todo
+        // el ancho de la lectura: ≈ 194 px a 1440×900, 232 px a 1920×1080.
+        expect(chartMetrics.frameHeight).toBeGreaterThanOrEqual(150)
+        expect(chartMetrics.frameHeight).toBeLessThanOrEqual(240)
+        expect(chartMetrics.width / chartMetrics.height).toBeGreaterThanOrEqual(2.4)
         expect(chartMetrics.clippedBottom).toBe(false)
 
         // Reset al cambiar de tab.
@@ -515,8 +525,8 @@ test.describe('QA ESTADO visualización-first v3', () => {
         const flujo = panel.getByTestId('director-flujo')
         await expect(estado).toHaveAttribute('data-period-kind', 'cycle')
         await expect(flujo).toHaveAttribute('data-level', 'month')
-        // Snapshot al corte (carta): el donut declara sus abiertos; Σ = activos del corte.
-        await expect(panel.getByTestId('director-kpi-status-split')).toContainText(/Abiertos \d+/)
+        // Snapshot al corte (carta): la leyenda de la dona declara sus abiertos (cantidad y %).
+        await expect(panel.getByTestId('director-attention-open')).toHaveText(/^Abiertos\d+\d+ %$/)
 
         // Ciclo → octubre (teclado: botón real del bucket).
         await panel.getByTestId('director-flujo-drill-2026-10-01').focus()

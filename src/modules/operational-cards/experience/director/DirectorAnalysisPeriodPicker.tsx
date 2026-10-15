@@ -46,6 +46,12 @@ const MONTH_LONG = [
   'Diciembre',
 ] as const
 
+/**
+ * Un «ciclo» de ESTADO es la mitad del año CALENDARIO (H1 ene–jun, H2
+ * jul–dic). Se nombra así, sin equipararlo a un periodo académico.
+ */
+const CALENDAR_SEMESTER = 'semestre calendario'
+
 /* ───────────── Presentación (no dominio): textos humanos del periodo ───────────── */
 
 function ymdParts(ymd: string): { year: number; month: number; day: number } {
@@ -313,15 +319,16 @@ export function DirectorAnalysisPeriodPicker({
    * la gráfica dice «SEPTIEMBRE 2026 · Mes», nunca el ciclo contenedor. En la
    * variante ciclo solo la navegación (‹ › y el diálogo) opera por ciclo.
    */
+  // Un ciclo aplicado se titula igual en ambas variantes («H2 2026», como la
+  // ruta del flujo) y declara su naturaleza: semestre del año calendario.
   const showsCycle = period.kind === 'cycle'
-  const meta =
-    cycleOnly && showsCycle
-      ? {
-          kind: cycleDisplay.meta,
-          state: containingCycle.isCurrent && containingCycle.isPartial ? 'En curso' : null,
-        }
-      : displayMeta(period)
-  const range = cycleOnly && showsCycle ? cycleDisplay.range : displayRange(period)
+  const meta = showsCycle
+    ? {
+        kind: `${cycleDisplay.meta} · ${CALENDAR_SEMESTER}`,
+        state: containingCycle.isCurrent && containingCycle.isPartial ? 'En curso' : null,
+      }
+    : displayMeta(period)
+  const range = showsCycle ? cycleDisplay.range : displayRange(period)
   const unitLabel =
     period.kind === 'cycle' ? 'Ciclo' : period.kind === 'month' ? 'Mes' : 'Semana'
   const prevLabel = `${unitLabel} anterior`
@@ -568,7 +575,8 @@ export function DirectorAnalysisPeriodPicker({
                           H{half}
                         </span>
                         <span className="director-analysis-period__act-meta">
-                          {half === 1 ? 'Ene — Jun' : 'Jul — Dic'} {drill.year}
+                          {half === 1 ? 'Ene — Jun' : 'Jul — Dic'} {drill.year} ·{' '}
+                          {CALENDAR_SEMESTER}
                         </span>
                         <Tags current={isActual} mark={mark} />
                       </div>

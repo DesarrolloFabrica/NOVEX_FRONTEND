@@ -215,6 +215,9 @@ export function DirectorReadingPanel({
          * Un solo periodo para todos los modos: vive aquí, fuera del body, para
          * no desmontarse al cambiar de tab. Sin coordinación no hay analítica
          * histórica de Dirección todavía → no se muestra un filtro inerte.
+         * Variante COMPLETA: ciclo, mes y semana se eligen explícitamente sin
+         * pasar por las gráficas. Selector, ‹ ›, ruta y clic en las gráficas
+         * escriben el MISMO `analysisPeriod` (no hay estado temporal paralelo).
          */}
         {selected ? (
           <div
@@ -222,7 +225,7 @@ export function DirectorReadingPanel({
             data-testid="director-reading-period"
           >
             <DirectorAnalysisPeriodPicker
-              variant="cycle"
+              variant="full"
               period={analysisPeriod}
               onChange={setAnalysisPeriod}
             />

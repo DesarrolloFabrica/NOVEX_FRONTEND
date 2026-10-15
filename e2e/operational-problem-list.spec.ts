@@ -445,7 +445,7 @@ test.describe('lista persistente de problemas · 1440x900', () => {
     await openShell(page)
 
     await selectCard(page, 'coord-b2b')
-    await page.getByTestId('return-to-table').click()
+    await page.getByTestId('breadcrumb-direction').click()
 
     await expect(page.locator(LIST)).toHaveCount(0)
     await expect(page.getByTestId('shell-region-coordination-problems')).toContainText(
@@ -618,7 +618,7 @@ test.describe('lista persistente de problemas · 1920x1080', () => {
       fullPage: false,
     })
 
-    await page.getByTestId('return-to-table').click()
+    await page.getByTestId('breadcrumb-direction').click()
     await expect(page.locator(LIST)).toHaveCount(0)
 
     await selectCard(page, DECK_PARENT)

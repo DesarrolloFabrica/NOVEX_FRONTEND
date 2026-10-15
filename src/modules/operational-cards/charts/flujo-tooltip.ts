@@ -1,10 +1,15 @@
+import {
+  flujoCoverageNote,
+  formatFlujoDay,
+} from '@/modules/operational-cards/charts/flujo-coverage'
 import type { OperationalKpiFlowBucket } from '@/modules/operational-cards/types/operational-kpi.types'
 
 /**
  * Tooltips (HTML para ECharts) de ESTADO:
  * - CARGA: total de activos con la composición Internos (categorías) /
  *   Externos (coordinaciones afectadas), top 3 + «+ N más».
- * - MOVIMIENTO: reportados y solucionados del bucket.
+ * - MOVIMIENTO: reportados y cerrados del bucket.
+ * Ambos añaden la nota de cobertura si el tramo es parcial o está en curso.
  */
 
 export const TOOLTIP_TOP = 3
@@ -41,6 +46,14 @@ const title = (text: string) =>
 
 const rule = '<div style="margin:4px 0;border-top:1px dashed rgb(35 25 16 / .3)"></div>'
 
+/** Tramo incompleto: lo dice en una línea discreta (cifras reales, sin proyectar). */
+const coverage = (bucket: OperationalKpiFlowBucket) => {
+  const note = flujoCoverageNote(bucket)
+  return note
+    ? `<div style="margin-top:4px;font-size:10px;font-style:italic;opacity:.75">${escapeHtml(note)}</div>`
+    : ''
+}
+
 /** Bloque de composición: cabecera con su total + top N indentado. */
 function block(heading: string, total: number, top: TopRows, emptyText: string) {
   const lines = top.rows.map((item) => row(item.label, item.count, false, true))
@@ -57,7 +70,7 @@ function block(heading: string, total: number, top: TopRows, emptyText: string) 
 
 /**
  * MOVIMIENTO DE PROBLEMAS (eventos): reportados (created_at en el bucket) y
- * solucionados (closed_at en el bucket). Sin desglose en esta fase.
+ * cerrados (closed_at en el bucket). Sin desglose en esta fase.
  */
 export function movimientoTooltipHtml(
   bucket: OperationalKpiFlowBucket,
@@ -69,7 +82,8 @@ export function movimientoTooltipHtml(
   return [
     title(`${bucketTitle}${bucket.current ? ' · actual' : ''}`),
     row('Reportados', bucket.created ?? 0, true),
-    row('Solucionados', bucket.solved.total, true),
+    row('Cerrados', bucket.solved.total, true),
+    coverage(bucket),
   ].join('')
 }
 
@@ -91,9 +105,15 @@ export function flujoTooltipHtml(bucket: OperationalKpiFlowBucket, bucketTitle: 
   )
   return [
     title(`${bucketTitle}${bucket.current ? ' · actual' : ''}`),
-    row(bucket.current ? 'Activos ahora' : 'Activos al cierre', active.total, true),
+    // El corte siempre con su fecha (dataEnd): nunca «hoy» ni «ahora».
+    row(
+      bucket.dataEnd ? `Activos al corte · ${formatFlujoDay(bucket.dataEnd)}` : 'Activos al corte',
+      active.total,
+      true,
+    ),
     rule,
     block('Internos', active.internal, internal, 'Sin internos activos'),
     block('Externos · coordinaciones afectadas', active.external, external, 'Sin externos activos'),
+    coverage(bucket),
   ].join('')
 }

@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { CoordinationTable } from '@/modules/operational-cards/components/CoordinationTable'
 import { OperationalBreadcrumb } from '@/modules/operational-cards/components/OperationalBreadcrumb'
-import { TableReturnAction } from '@/modules/operational-cards/components/TableReturnAction'
 import { resolveDeckSelectionContext } from '@/modules/operational-cards/data/deckContext'
 import { buildTableLayout } from '@/modules/operational-cards/data/tableLayout'
 import { buildProductTable } from '@/modules/operational-cards/data/productHierarchy'
@@ -175,20 +174,31 @@ export function OperationalCardExperience({
         Estado operacional de la Dirección de Operaciones
       </h1>
 
-      {selectedCoordination && (
-        <OperationalBreadcrumb
-          /* La miga usa el nombre de PRODUCTO, no el técnico: si no, pulsar la
-             carta «Servicio» abriría una miga que dice «Homologaciones». */
-          coordinationName={
-            labelByCode[selectedCoordination.code] ??
-            selectedCoordination.name
-          }
-          onBackToDirection={clearCoordination}
-        />
-      )}
+      {/*
+        HUECO FIJO de la flecha de regreso, exista o no.
+
+        En DIRECTOR la banda de la baraja mide lo que pide su contenido
+        (`max-content`). Si la fila de la flecha apareciera y desapareciera con
+        la selección, la banda crecería y menguaría con ella, y la banda de
+        arriba —personaje y problemas— saltaría ~33 px cada vez que se vuelve a
+        la mesa. Reservar la fila siempre deja la escena quieta.
+      */}
+      <div className="operational-deck__crumb-slot">
+        {selectedCoordination && (
+          <OperationalBreadcrumb
+            /* La miga usa el nombre de PRODUCTO, no el técnico: si no, pulsar
+               la carta «Servicio» abriría una miga que dice «Homologaciones». */
+            coordinationName={
+              labelByCode[selectedCoordination.code] ??
+              selectedCoordination.name
+            }
+            onBackToDirection={clearCoordination}
+          />
+        )}
+      </div>
 
       {/*
-        ZONA DE COMPOSICIÓN: personaje, mesa y la acción de retorno.
+        ZONA DE COMPOSICIÓN: personaje y mesa.
 
         Existe para que la escena pueda tener DOS COLUMNAS sin que la mesa ni el
         personaje tengan que saberlo. En estado global es una columna vertical y
@@ -252,16 +262,10 @@ export function OperationalCardExperience({
               onHoverChange={hoverCoordination}
             />
 
-            {/* Retorno narrativo de la composición simple. Un mazo abierto
-                tendrá el suyo —«Recoger mazo»—, que es otra acción sobre otra
-                composición; hasta entonces esta solo aparece donde ya está
-                definida. */}
-            {compositionMode === 'SIMPLE_SELECTED' && (
-              <TableReturnAction
-                label="Volver a la mesa"
-                onReturn={clearCoordination}
-              />
-            )}
+            {/* Aquí se montaba «Volver a la mesa», un segundo botón de retorno
+                bajo las cartas. Hacía lo mismo que la flecha de la miga
+                (`clearCoordination`) y robaba alto a la baraja; el regreso es
+                ahora solo la flecha, encima de la mesa. */}
           </>
         )}
       </div>

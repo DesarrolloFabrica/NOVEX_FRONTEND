@@ -298,7 +298,7 @@ async function openShell(page: Page) {
  * quedaría sobre un mazo y su hover mantendría transiciones en marcha.
  */
 async function returnToTable(page: Page) {
-  await page.getByTestId('return-to-table').click()
+  await page.getByTestId('breadcrumb-direction').click()
   await expect(page.locator(PANEL)).toHaveCount(0)
   await page.mouse.move(1, 1)
   await settle(page)
@@ -712,7 +712,7 @@ test.describe('robustez de la transición', () => {
     await select(page, ESPECIALIZACIONES)
     await createInSelected(page, 'MEDIUM')
     await expect(page.locator(LIVES)).toHaveAttribute('data-transition', 'loss')
-    await domClick(page, '[data-testid="return-to-table"]')
+    await domClick(page, '[data-testid="breadcrumb-direction"]')
     await expect(page.locator(PANEL)).toHaveCount(0)
     await expect(page.locator(LIVES)).toHaveCount(0)
     await expect(page.locator('.character-lives__delta')).toHaveCount(0)

@@ -124,7 +124,6 @@
   --card-veil-color: 7 13 26;
   --card-veil-dimmed: 0.55;
   --stack-dimmed-opacity: 0.88;
-  --z-return: 80;
 
   /*
    * Aquí se declaraban el ancho y el alto del panel de LEVEL 1. El ancho iba
@@ -153,7 +152,7 @@
   gap: 12px;
 }
 
-/* ---------- Zona de composición: personaje + mesa + retorno ---------- */
+/* ---------- Zona de composición: personaje + mesa ---------- */
 
 /*
  * En estado global no hace nada visible: reproduce la columna vertical que
@@ -248,10 +247,30 @@
     calc(100cqw * var(--card-fill) / var(--table-stage-w))
   );
   --card-height: calc(var(--card-width) * var(--card-aspect));
+  /*
+   * RESERVA DE MOVIMIENTO bajo el arco, en ALTOS DE CARTA, la misma unidad que
+   * `--table-stage-h`.
+   *
+   * El alto del layout cubre la carta más baja y la sangría de su giro, pero no
+   * lo que se pinta por debajo de ella: los cantos de un mazo con
+   * subordinaciones se escalonan hacia abajo. Medido en navegador, ese exceso
+   * es ~0,061–0,069 altos de carta en todas las resoluciones (10 px con cartas
+   * de 144 px a 1440; 13 px con 194 px a 1920), porque escala con la carta.
+   * 0,07 lo cubre con un margen mínimo. Hover y selección suben la carta, así
+   * que no piden aire inferior.
+   *
+   * Vive aquí y no como `padding` en px de la banda: la mesa es quien conoce su
+   * unidad, y una reserva fija sobra en pantallas pequeñas y falta en grandes.
+   * Solo añade alto al FINAL de la caja: las cartas siguen colocadas desde
+   * `top: 0` con el mismo layout, sin moverse.
+   */
+  --table-motion-reserve: 0.07;
   position: relative;
   flex: 0 0 auto;
   width: 100%;
-  height: calc(var(--table-stage-h) * var(--card-height));
+  height: calc(
+    (var(--table-stage-h) + var(--table-motion-reserve)) * var(--card-height)
+  );
 }
 
 /*
@@ -935,26 +954,55 @@
   font-size: 12px;
 }
 
-.operational-breadcrumb__root {
-  padding: 2px 6px;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  background: none;
-  color: var(--deck-muted);
-  font: inherit;
-  cursor: pointer;
-  transition: color 160ms ease, border-color 160ms ease;
+/* Alto de la flecha, reservado aunque no haya selección (ver la experiencia). */
+.operational-deck__crumb-slot {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  min-height: 32px;
 }
 
-.operational-breadcrumb__root:hover,
-.operational-breadcrumb__root:focus-visible {
-  border-color: var(--deck-line-strong);
+/*
+ * Flecha de regreso: el único control de vuelta a la mesa.
+ *
+ * 32 × 32 px de área interactiva aunque el icono mida 16: cumple el mínimo de
+ * 24 × 24 de WCAG 2.2 (2.5.8) con holgura para el dedo, y no hay otro control
+ * a su alrededor con el que pueda solaparse —a su derecha solo hay texto—.
+ */
+.operational-breadcrumb__back {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--deck-line-strong);
+  border-radius: 999px;
+  background: rgb(14 24 42 / 0.6);
   color: var(--deck-text);
+  cursor: pointer;
+  /* Sin retardo de doble toque en pantallas táctiles. */
+  touch-action: manipulation;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
 }
 
-.operational-breadcrumb__root:focus-visible {
+.operational-breadcrumb__back:hover,
+.operational-breadcrumb__back:focus-visible {
+  border-color: rgb(150 196 255 / 0.5);
+  background: rgb(20 34 58 / 0.85);
+}
+
+.operational-breadcrumb__back:focus-visible {
   outline: 2px solid rgb(120 200 255 / 0.85);
   outline-offset: 2px;
+}
+
+.operational-breadcrumb__back-icon {
+  width: 16px;
+  height: 16px;
 }
 
 .operational-breadcrumb__current {
@@ -1597,62 +1645,6 @@
 .operational-deck[data-composition-mode='SIMPLE_SELECTED']
   .operational-table__slot {
   transition-duration: 0ms;
-}
-
-/* ---------- Retorno narrativo de la composición ---------- */
-
-/*
- * Vive bajo la mesa y dentro de su columna, no en el panel ni en el encabezado:
- * lo que deshace es dónde está el usuario, no nada del problema que se está
- * leyendo.
- */
-.operational-deck__return {
-  /*
-   * POR ENCIMA DE LAS CARTAS, y no es decoración.
-   *
-   * La acción vive bajo la mesa en el flujo, pero las cartas se pintan fuera
-   * de su caja —el arco desborda el alto declarado de la mesa— y acababan
-   * tapándola desde que la composición simple recuperó el ancho entero. Medido:
-   * el puntero que soltaba el botón caía sobre una carta, el mazo se elevaba al
-   * hover, se escapaba del puntero, volvía a bajar y entraba de nuevo bajo él;
-   * la escena se quedaba oscilando y nunca asentaba. Con la acción delante, el
-   * puntero que la pulsa no alcanza ninguna carta.
-   */
-  position: relative;
-  z-index: var(--z-return);
-  display: flex;
-  flex: 0 0 auto;
-  justify-content: center;
-}
-
-.operational-deck__return-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 7px 14px 7px 11px;
-  border: 1px solid var(--deck-line-strong);
-  border-radius: 999px;
-  background: rgb(14 24 42 / 0.72);
-  color: var(--deck-text);
-  font-size: 13px;
-  letter-spacing: 0.01em;
-}
-
-.operational-deck__return-button:hover,
-.operational-deck__return-button:focus-visible {
-  border-color: rgb(150 196 255 / 0.5);
-  background: rgb(20 34 58 / 0.85);
-}
-
-.operational-deck__return-button:focus-visible {
-  outline: 2px solid rgb(120 200 255 / 0.7);
-  outline-offset: 2px;
-}
-
-.operational-deck__return-icon {
-  width: 15px;
-  height: 15px;
-  color: var(--deck-muted);
 }
 
 /* ==========================================================================

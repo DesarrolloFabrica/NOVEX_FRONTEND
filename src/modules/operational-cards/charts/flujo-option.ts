@@ -6,15 +6,19 @@ import type { EChartsCoreOption } from 'echarts/core'
 import {
   DEFAULT_NOVEX_CHART_TOKENS,
   NOVEX_FLOW_TOKENS,
-  NOVEX_SAFE_GRID,
 } from '@/modules/operational-cards/charts/novex-chart-theme'
+import { flujoCoverageTag } from '@/modules/operational-cards/charts/flujo-coverage'
 import {
   flujoTooltipHtml,
   movimientoTooltipHtml,
 } from '@/modules/operational-cards/charts/flujo-tooltip'
 import type { OperationalKpiFlowBucket } from '@/modules/operational-cards/types/operational-kpi.types'
 
-export const FLUJO_CHART_HEIGHT = 236
+/**
+ * Alto de reserva del host antes de medir. El alto real lo fija el CSS de la
+ * lámina (`.director-flujo__frame`), contenido: ya no se estira al panel.
+ */
+export const FLUJO_CHART_HEIGHT = 200
 
 const MONTH_SHORT = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'] as const
 const MONTH_LONG = [
@@ -85,8 +89,15 @@ export function flujoBucketTitle(bucket: OperationalKpiFlowBucket, level: FlujoL
 const SERIES = {
   band: '__banda',
   active: 'Activos',
-  solved: 'Solucionados',
+  closed: 'Cerrados',
   reported: 'Reportados',
+} as const
+
+/** Un cero real se rotula atenuado: se reconoce sin competir con las cifras. */
+const ZERO_LABEL = {
+  color: 'rgb(35 25 16 / 0.5)',
+  fontWeight: 700,
+  fontSize: 9.5,
 } as const
 
 const BAR_BORDER = { borderColor: '#231910', borderWidth: 1.2 } as const
@@ -133,11 +144,24 @@ function valueLabel(format: (index: number, value: number) => string) {
   }
 }
 
+/** Marca del eje: la de cobertura (lámina 1) o solo ACTUAL (otras láminas). */
+function axisTagOf(bucket: OperationalKpiFlowBucket, coverageTags: boolean): string | null {
+  if (coverageTags) return flujoCoverageTag(bucket)
+  return bucket.current ? 'ACTUAL' : null
+}
+
 /**
- * Eje temporal COMPARTIDO por Carga y Movimiento: mismas categorías, mismas
- * etiquetas (ACTUAL; futuros atenuados) y un eje gemelo oculto para la banda.
+ * Eje temporal COMPARTIDO por Carga y Movimiento (y reutilizado por
+ * Resolución): mismas categorías, mismas etiquetas (futuros atenuados) y un
+ * eje gemelo oculto para la banda. `coverageTags` (solo «Carga y movimiento»)
+ * marca además los tramos incompletos (EN CURSO / PARCIAL); sin él, el eje
+ * conserva su marca previa (ACTUAL) para no alterar otras láminas.
  */
-export function temporalAxes(buckets: readonly OperationalKpiFlowBucket[], level: FlujoLevel) {
+export function temporalAxes(
+  buckets: readonly OperationalKpiFlowBucket[],
+  level: FlujoLevel,
+  { coverageTags = false }: { coverageTags?: boolean } = {},
+) {
   const font = DEFAULT_NOVEX_CHART_TOKENS.fontFamily
   const categories = buckets.map((bucket) => {
     const text = flujoAxisTick(bucket, level)
@@ -146,8 +170,10 @@ export function temporalAxes(buckets: readonly OperationalKpiFlowBucket[], level
     const [head, tail] = level === 'day' ? text.split(' ') : [null, text]
     const tone = bucket.future ? 'future' : 'name'
     const main = head ? `{${tone}Dow|${head}}\n{${tone}|${tail}}` : `{${tone}|${tail}}`
-    // Futuro: etiqueta atenuada, sin marca extra (no satura ejes estrechos).
-    if (bucket.current) return `${main}\n{currentTag|ACTUAL}`
+    // Tramo incompleto: marca breve. Las cifras son las reales del tramo: no
+    // se normalizan ni se proyectan.
+    const tag = axisTagOf(bucket, coverageTags)
+    if (tag) return `${main}\n{${tag === 'PARCIAL' ? 'partialTag' : 'currentTag'}|${tag}}`
     return main
   })
   return [
@@ -164,6 +190,12 @@ export function temporalAxes(buckets: readonly OperationalKpiFlowBucket[], level
           nameDow: { fontFamily: font, fontSize: 8.5, fontWeight: 800, color: '#231910' },
           futureDow: { fontFamily: font, fontSize: 8.5, fontWeight: 700, color: NOVEX_FLOW_TOKENS.future },
           currentTag: { fontFamily: font, fontSize: 8, fontWeight: 800, color: '#231910' },
+          partialTag: {
+            fontFamily: font,
+            fontSize: 8,
+            fontWeight: 700,
+            color: 'rgb(35 25 16 / 0.72)',
+          },
         },
       },
     },
@@ -191,6 +223,17 @@ export function bandSeries(buckets: readonly OperationalKpiFlowBucket[], yMax: n
   }
 }
 
+/**
+ * Área de trazado ALINEADA entre Carga y Movimiento: márgenes fijos, sin
+ * `containLabel`, para que el ancho de las cifras del eje Y no desplace el
+ * plot y cada columna caiga exactamente bajo la de la otra gráfica. El margen
+ * inferior reserva las líneas de la etiqueta del eje (día y marca de tramo).
+ */
+export function flujoGrid(buckets: readonly OperationalKpiFlowBucket[], level: FlujoLevel) {
+  const lines = (level === 'day' ? 2 : 1) + (buckets.some((b) => flujoCoverageTag(b)) ? 1 : 0)
+  return { left: 34, right: 14, top: 24, bottom: 12 + lines * 14, containLabel: false }
+}
+
 function baseOption(
   buckets: readonly OperationalKpiFlowBucket[],
   level: FlujoLevel,
@@ -200,9 +243,22 @@ function baseOption(
   return {
     animationDurationUpdate: 220,
     animationEasingUpdate: 'cubicOut' as const,
-    grid: { ...NOVEX_SAFE_GRID, top: 22, bottom: 6 },
-    xAxis: temporalAxes(buckets, level),
-    yAxis: { type: 'value', min: 0, max: scale.max, interval: scale.interval },
+    grid: flujoGrid(buckets, level),
+    xAxis: temporalAxes(buckets, level, { coverageTags: true }),
+    yAxis: {
+      type: 'value',
+      min: 0,
+      max: scale.max,
+      interval: scale.interval,
+      // Cifras del eje algo más legibles que el `muted` del tema (0,55).
+      axisLabel: {
+        color: 'rgb(35 25 16 / 0.72)',
+        fontSize: 10,
+        fontWeight: 700,
+        fontFamily: DEFAULT_NOVEX_CHART_TOKENS.fontFamily,
+        formatter: (value: number) => String(Math.round(value)),
+      },
+    },
     tooltip: {
       trigger: 'item',
       confine: true,
@@ -215,9 +271,12 @@ function baseOption(
   }
 }
 
+/** Con pocos puntos (ciclo ≤ 6, mes ≤ 6, semana ≤ 7) todos llevan su cifra. */
+export const FLUJO_LABEL_ALL_MAX = 8
+
 /**
- * Puntos rotulados de la línea: el actual (o último con dato) y el máximo.
- * El resto se lee con hover: sin ruido de etiquetas en cada punto.
+ * Puntos rotulados de la línea cuando NO caben todos: el actual (o último con
+ * dato) y el máximo. El resto se lee con hover.
  */
 export function flujoLabeledIndexes(totals: ReadonlyArray<number | null>): Set<number> {
   const known = totals.flatMap((value, index) => (value === null ? [] : [index]))
@@ -246,7 +305,9 @@ export function buildFlujoOption(
   // Futuro: null → la línea se corta, nunca baja a 0.
   const totals = buckets.map((b) => (b.active ? b.active.total : null))
   const scale = flujoScale(totals)
-  const labeled = flujoLabeledIndexes(totals)
+  const knownIndexes = totals.flatMap((value, index) => (value === null ? [] : [index]))
+  const labeled =
+    knownIndexes.length <= FLUJO_LABEL_ALL_MAX ? new Set(knownIndexes) : flujoLabeledIndexes(totals)
 
   return {
     ...baseOption(buckets, level, scale, (bucket) =>
@@ -304,20 +365,26 @@ export function buildFlujoOption(
 
 /**
  * MOVIMIENTO DE PROBLEMAS (eventos dentro de cada bucket), barras agrupadas:
- * Reportados (created_at) vs Solucionados (closed_at). Mismo eje temporal y
- * misma banda que la Carga; escala Y propia.
+ * Reportados (created_at) vs Cerrados (closed_at dentro del tramo). Mismo eje
+ * temporal, misma banda y misma área de trazado que la Carga; escala Y propia.
+ * Un 0 real lleva su «0» atenuado; un tramo futuro no tiene valor (null).
  */
 export function buildMovimientoOption(
   buckets: readonly OperationalKpiFlowBucket[],
   level: FlujoLevel,
 ): EChartsCoreOption {
   const radius = DEFAULT_NOVEX_CHART_TOKENS.barRadius
-  // Futuro: sin barra (null), nunca 0. Solucionados = mismo dato que la Carga.
+  // Futuro: sin barra (null), nunca 0. Cerrados = solved.total (closed_at).
   const reported = buckets.map((b) => (b.future || !b.solved ? null : (b.created ?? 0)))
-  const solved = buckets.map((b) => (b.solved ? b.solved.total : null))
-  const scale = flujoScale([...reported, ...solved])
+  const closed = buckets.map((b) => (b.solved ? b.solved.total : null))
+  const scale = flujoScale([...reported, ...closed])
   const barWidth = barWidthFor(buckets, level)
-  const label = valueLabel((_index, value) => (value > 0 ? String(value) : ''))
+  const label = valueLabel((_index, value) => String(value))
+  const item = (value: number | null) => ({
+    value,
+    itemStyle: zeroless(value),
+    ...(value === 0 ? { label: ZERO_LABEL } : {}),
+  })
 
   return {
     ...baseOption(buckets, level, scale, (bucket) =>
@@ -329,7 +396,7 @@ export function buildMovimientoOption(
         type: 'bar',
         name: SERIES.reported,
         z: 2,
-        data: reported.map((value) => ({ value, itemStyle: zeroless(value) })),
+        data: reported.map(item),
         barMaxWidth: barWidth,
         barGap: '22%',
         barCategoryGap: '34%',
@@ -343,9 +410,9 @@ export function buildMovimientoOption(
       },
       {
         type: 'bar',
-        name: SERIES.solved,
+        name: SERIES.closed,
         z: 2,
-        data: solved.map((value) => ({ value, itemStyle: zeroless(value) })),
+        data: closed.map(item),
         barMaxWidth: barWidth,
         itemStyle: {
           color: NOVEX_FLOW_TOKENS.resolved,

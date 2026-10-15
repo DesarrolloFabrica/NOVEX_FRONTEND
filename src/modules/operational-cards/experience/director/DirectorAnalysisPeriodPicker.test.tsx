@@ -370,13 +370,23 @@ describe('DirectorAnalysisPeriodPicker · estado pasivo', () => {
     )
   })
 
-  it('ciclo aplicado: «JUL — DIC 2026 · Ciclo H2 · En curso»', () => {
+  it('ciclo aplicado: «H2 2026» · «JUL — DIC 2026 · semestre calendario · En curso»', () => {
     renderPicker(analysisPeriodFromCycle(2026, 2))
-    expect(byTestId('director-analysis-period-range').textContent).toBe(
-      'JUL — DIC 2026',
-    )
+    // Mismo titular que la ruta del flujo y que la variante ciclo.
+    expect(byTestId('director-analysis-period-range').textContent).toBe('H2 2026')
     expect(byTestId('director-analysis-period').textContent).toContain(
-      'Ciclo H2 · En curso',
+      'JUL — DIC 2026 · semestre calendario · En curso',
+    )
+  })
+
+  it('el diálogo nombra H1/H2 como semestres del calendario', () => {
+    renderPicker(analysisPeriodFromCycle(2026, 2))
+    click('director-analysis-period-trigger')
+    expect(byTestId('director-analysis-period-cycle-H1').textContent).toContain(
+      'Ene — Jun 2026 · semestre calendario',
+    )
+    expect(byTestId('director-analysis-period-cycle-H2').textContent).toContain(
+      'Jul — Dic 2026 · semestre calendario',
     )
   })
 
@@ -533,19 +543,21 @@ describe('DirectorAnalysisPeriodPicker · ruta y foco', () => {
 })
 
 describe('DirectorAnalysisPeriodPicker · variante ciclo (el flujo hace el drill-down)', () => {
-  it('pasivo: «H2 2026» y «JUL — DIC 2026 · En curso»; sin «Ciclo actual» en el actual', () => {
+  it('pasivo: «H2 2026» y «JUL — DIC 2026 · semestre calendario · En curso»; sin «Ciclo actual» en el actual', () => {
     renderPicker(buildCurrentCyclePeriod(), 'cycle')
     expect(byTestId('director-analysis-period-range').textContent).toBe('H2 2026')
     expect(byTestId('director-analysis-period').textContent).toContain(
-      'JUL — DIC 2026 · En curso',
+      'JUL — DIC 2026 · semestre calendario · En curso',
     )
     expect(query('director-analysis-period-go-current')).toBeNull()
   })
 
-  it('el trigger refleja el periodo REAL: ciclo «H2 2026 · JUL — DIC 2026 · En curso»', () => {
+  it('el trigger refleja el periodo REAL: ciclo «H2 2026 · JUL — DIC 2026 · semestre calendario · En curso»', () => {
     renderPicker(buildCurrentCyclePeriod(), 'cycle')
     expect(byTestId('director-analysis-period-range').textContent).toBe('H2 2026')
-    expect(byTestId('director-analysis-period').textContent).toContain('JUL — DIC 2026 · En curso')
+    expect(byTestId('director-analysis-period').textContent).toContain(
+      'JUL — DIC 2026 · semestre calendario · En curso',
+    )
     expect(byTestId('director-analysis-period').dataset.kind).toBe('cycle')
   })
 

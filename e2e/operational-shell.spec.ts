@@ -403,7 +403,9 @@ test.describe('shell del Centro · 1440x900', () => {
 
     await expect(page.locator(CARD)).toHaveCount(9)
     await expect(page.locator(`${SLOT}[data-state="dimmed"]`)).toHaveCount(8)
-    await expect(page.getByTestId('return-to-table')).toBeVisible()
+    // El regreso es la flecha de la miga; el botón inferior ya no existe.
+    await expect(page.getByTestId('breadcrumb-direction')).toBeVisible()
+    await expect(page.getByTestId('return-to-table')).toHaveCount(0)
     expectInsideStage(simple)
     expect(simple.overflow.x).toBeLessThanOrEqual(0)
 
@@ -491,7 +493,7 @@ test.describe('shell del Centro · 1440x900', () => {
     await select(page, 'coord-b2b')
     const inSimple = await measureCharacter(page, 'SIMPLE_SELECTED')
 
-    await page.getByTestId('return-to-table').click()
+    await page.getByTestId('breadcrumb-direction').click()
     await expect(page.locator(PANEL)).toHaveCount(0)
     await select(page, PARENT)
     const inDeck = await measureCharacter(page, 'DECK_SELECTED')
@@ -529,13 +531,13 @@ test.describe('shell del Centro · 1440x900', () => {
     const before = await measure(page, 'GLOBAL antes')
 
     await select(page, 'coord-b2b')
-    await page.getByTestId('return-to-table').click()
+    await page.getByTestId('breadcrumb-direction').click()
     await expect(page.locator(PANEL)).toHaveCount(0)
 
     /*
      * El puntero se retira de la mesa antes de medir, y no para evitar un
      * fallo: para medir la GEOMETRÍA EN REPOSO, que es de lo que habla este
-     * test. Al desaparecer la acción de retorno, el puntero que la pulsó queda
+     * test. Tras pulsar la flecha de regreso, el puntero puede quedar
      * sobre el arco, y ahí la carta señalada se eleva —es lo que debe hacer—,
      * de modo que lo medido sería una mesa con un mazo levantado.
      *

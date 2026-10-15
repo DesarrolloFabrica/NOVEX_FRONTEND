@@ -22,14 +22,13 @@ type ChartProps = {
 const unitOf = (level: FlujoLevel) =>
   level === 'month' ? 'meses' : level === 'week' ? 'semanas' : 'días'
 
-/** CARGA DE PROBLEMAS: activos al cierre (internos + externos) y solucionados. */
+/** CARGA DE PROBLEMAS: activos al corte de cada tramo (internos + externos). */
 export function FlujoChart({ buckets, level, categoryInteraction, highlightIndex }: ChartProps) {
   const option = useMemo(() => buildFlujoOption(buckets, level), [buckets, level])
   const known = buckets.filter((b) => b.active)
   const last = known.at(-1)
-  const solvedTotal = known.reduce((sum, b) => sum + (b.solved?.total ?? 0), 0)
   const aria = last?.active
-    ? `Carga de problemas por ${unitOf(level)}. Último bucket: ${last.active.total} activos (${last.active.internal} internos, ${last.active.external} externos). ${solvedTotal} solucionados en el periodo.`
+    ? `Carga de problemas por ${unitOf(level)}: ${known.map((b) => b.active!.total).join(', ')} activos al corte de cada tramo. Último tramo: ${last.active.total} activos (${last.active.internal} internos, ${last.active.external} externos).`
     : `Carga de problemas por ${unitOf(level)}: sin datos todavía.`
   return (
     <NovexEChart
@@ -43,7 +42,7 @@ export function FlujoChart({ buckets, level, categoryInteraction, highlightIndex
   )
 }
 
-/** MOVIMIENTO DE PROBLEMAS: reportados vs solucionados durante cada bucket. */
+/** MOVIMIENTO DE PROBLEMAS: reportados vs cerrados durante cada tramo. */
 export function MovimientoChart({
   buckets,
   level,
@@ -53,10 +52,10 @@ export function MovimientoChart({
   const option = useMemo(() => buildMovimientoOption(buckets, level), [buckets, level])
   const known = buckets.filter((b) => !b.future && b.solved)
   const reported = known.reduce((sum, b) => sum + (b.created ?? 0), 0)
-  const solved = known.reduce((sum, b) => sum + (b.solved?.total ?? 0), 0)
+  const closed = known.reduce((sum, b) => sum + (b.solved?.total ?? 0), 0)
   const aria =
     known.length > 0
-      ? `Movimiento de problemas por ${unitOf(level)}: ${reported} reportados y ${solved} solucionados en el periodo.`
+      ? `Movimiento de problemas por ${unitOf(level)}: ${reported} reportados y ${closed} cerrados en el periodo.`
       : `Movimiento de problemas por ${unitOf(level)}: sin datos todavía.`
   return (
     <NovexEChart

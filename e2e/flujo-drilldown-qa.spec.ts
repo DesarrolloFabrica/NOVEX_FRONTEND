@@ -221,12 +221,14 @@ async function flujoReady(page: Page, level: 'month' | 'week' | 'day') {
   await page.waitForTimeout(500)
 }
 
-/** Etiquetas del eje X (sin las marcas ACTUAL/FUTURO). */
+/** Etiquetas del eje X (sin las marcas de tramo ACTUAL / EN CURSO / PARCIAL / FUTURO). */
 async function axisLabels(page: Page, chartId: string) {
   const texts = await tid(page, chartId)
     .locator('svg text')
     .evaluateAll((nodes) => nodes.map((n) => n.textContent ?? ''))
-  return texts.map((t) => t.trim()).filter((t) => t && !/^(ACTUAL|FUTURO|\d+)$/.test(t))
+  return texts
+    .map((t) => t.trim())
+    .filter((t) => t && !/^(ACTUAL|EN CURSO|PARCIAL|FUTURO|\d+)$/.test(t))
 }
 
 /** Click real en la BANDA de una categoría: misma X que su etiqueta, dentro del grid. */
@@ -398,7 +400,7 @@ test.describe('QA ESTADO · Carga | Movimiento · drill-down ciclo → mes → s
         await page.locator(`${CARD}[data-code="${code}"]`).first().click()
         const short = code.replace('coord-', '')
 
-        // 1 · CICLO (default): meses JUL–DIC; NOV/DIC futuros.
+        // 1 · CICLO (default): meses con datos JUL–OCT; NOV/DIC futuros sin columna.
         await flujoReady(page, 'month')
         // Sin ruta en nivel ciclo (el periodo está justo encima, en el picker).
         await expect(tid(page, 'director-flujo-crumb')).toHaveCount(0)
@@ -408,22 +410,28 @@ test.describe('QA ESTADO · Carga | Movimiento · drill-down ciclo → mes → s
         await expect(header).not.toContainText(meta(code).shortName)
         await expect(header).not.toContainText(/activos?/)
         await expect(tid(page, 'director-estado-operativo')).toHaveCount(0)
-        // Al entrar: tabs → periodo → CARGA | MOVIMIENTO completas, sin scroll.
+        // Al entrar: tabs → periodo → resumen → CARGA y MOVIMIENTO completas, sin scroll.
         const bodyBox = await tid(page, 'director-reading-body').boundingBox()
         const cargaBox = await tid(page, CARGA).boundingBox()
         const movBox = await tid(page, MOVIMIENTO).boundingBox()
-        expect(bodyBox && cargaBox && movBox).toBeTruthy()
+        const summaryBox = await tid(page, 'director-flujo-summary').boundingBox()
+        expect(bodyBox && cargaBox && movBox && summaryBox).toBeTruthy()
         for (const box of [cargaBox!, movBox!]) {
           expect(box.y + box.height).toBeLessThanOrEqual(bodyBox!.y + bodyBox!.height + 1)
-          expect(box.height).toBeGreaterThanOrEqual(240)
+          // Alto CONTENIDO y apaisado (≈ 194 px a 1440×900, 232 px a 1920×1080):
+          // legible, sin estirarse al alto del panel.
+          expect(box.height).toBeGreaterThanOrEqual(150)
+          expect(box.height).toBeLessThanOrEqual(240)
+          expect(box.width / box.height).toBeGreaterThanOrEqual(2.4)
         }
-        // Lado a lado, misma línea base; Carga algo más ancha que Movimiento.
-        expect(Math.abs(cargaBox!.y - movBox!.y)).toBeLessThanOrEqual(2)
-        expect(movBox!.x).toBeGreaterThan(cargaBox!.x + cargaBox!.width)
-        expect(cargaBox!.width).toBeGreaterThan(movBox!.width)
-        // Mismo eje temporal en las dos.
+        // Apiladas a todo el ancho: resumen → Carga → Movimiento, mismo x y ancho.
+        expect(cargaBox!.y).toBeGreaterThan(summaryBox!.y + summaryBox!.height)
+        expect(movBox!.y).toBeGreaterThan(cargaBox!.y + cargaBox!.height)
+        expect(Math.abs(movBox!.x - cargaBox!.x)).toBeLessThanOrEqual(1)
+        expect(Math.abs(movBox!.width - cargaBox!.width)).toBeLessThanOrEqual(1)
+        // Mismo eje temporal en las dos; solo tramos con cobertura (sin NOV/DIC).
         expect(await axisLabels(page, MOVIMIENTO)).toEqual(await axisLabels(page, CARGA))
-        expect(await axisLabels(page, CARGA)).toEqual(['JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'])
+        expect(await axisLabels(page, CARGA)).toEqual(['JUL', 'AGO', 'SEP', 'OCT'])
         await expectNoOrnamentOverChart(page)
         await expectNoOrnamentOverChart(page, MOVIMIENTO)
         await expect(tid(page, 'director-analysis-period-range')).toHaveText('H2 2026')
@@ -452,12 +460,20 @@ test.describe('QA ESTADO · Carga | Movimiento · drill-down ciclo → mes → s
           (node) => node.getBoundingClientRect().bottom,
         )
         for (const box of [severityBox!, attentionBox!]) {
-          expect(box.height).toBeGreaterThanOrEqual(180)
           expect(box.y + box.height).toBeLessThanOrEqual(bodyBottom + 1)
         }
-        // Severidad más ancha que el donut, lado a lado.
-        expect(severityBox!.width).toBeGreaterThan(attentionBox!.width)
-        expect(attentionBox!.x).toBeGreaterThan(severityBox!.x + severityBox!.width)
+        // Alturas ajustadas al contenido: cuatro filas de severidad (≈ 146 px)
+        // y una dona compacta (≈ 132 px), no estiradas al alto de la lámina.
+        expect(severityBox!.height).toBeGreaterThanOrEqual(120)
+        expect(severityBox!.height).toBeLessThanOrEqual(170)
+        expect(attentionBox!.height).toBeLessThanOrEqual(150)
+        expect(Math.abs(attentionBox!.width - attentionBox!.height)).toBeLessThanOrEqual(2)
+        // Orden: Severidad (a todo el ancho) → Atención debajo, leyenda junto al anillo.
+        expect(attentionBox!.y).toBeGreaterThan(severityBox!.y + severityBox!.height)
+        expect(severityBox!.width).toBeGreaterThan(attentionBox!.width * 2)
+        const legendBox = await page.locator('.director-corte__legend').first().boundingBox()
+        expect(legendBox!.x).toBeGreaterThan(attentionBox!.x + attentionBox!.width)
+        expect(legendBox!.x - (attentionBox!.x + attentionBox!.width)).toBeLessThanOrEqual(40)
         await expectNoOrnamentOverChart(page, 'director-estado-severity-chart')
         await expectNoOrnamentOverChart(page, 'director-estado-attention-chart')
         await shootFull(page, `${short}-0-centro-pagina2-${size}`)
@@ -488,31 +504,34 @@ test.describe('QA ESTADO · Carga | Movimiento · drill-down ciclo → mes → s
         // Ayuda «?» de cada gráfica (hover).
         await tid(page, 'director-carga-help').hover()
         await expect(
-          page.getByText('Problemas que seguían pendientes al cierre de cada periodo.'),
+          page.getByText('Problemas que seguían activos al corte de cada tramo', { exact: false }),
         ).toBeVisible()
         await tid(page, 'director-movimiento-help').hover()
         await expect(
-          page.getByText('Problemas reportados y solucionados durante cada periodo.'),
+          page.getByText(
+            'Problemas reportados (registrados) y cerrados (con fecha de cierre) dentro de cada tramo.',
+          ),
         ).toBeVisible()
 
         // Hover sobre OCT: tooltip con pendientes; click sobre la banda.
         const oct = await clickBand(page, 'OCT')
         // Tooltip de la banda OCT: su título «Octubre 2026 · actual» no existe en
-        // ningún otro lugar de la página (el resumen dice solo «Pendientes ahora»).
+        // ningún otro lugar de la página. El corte lleva su fecha, nunca «ahora».
         const tooltip = page.getByText('Octubre 2026 · actual')
         await expect(tooltip).toBeVisible()
-        await expect(tooltip.locator('xpath=..')).toContainText('Activos ahora')
+        await expect(tooltip.locator('xpath=..')).toContainText(/Activos al corte · \d+ oct/)
+        await expect(tooltip.locator('xpath=..')).toContainText('Tramo en curso · datos hasta el')
         // Hover sincronizado: la columna OCT (índice 3) se resalta en las dos.
         await expect(tid(page, 'director-flujo')).toHaveAttribute('data-hover-index', '3')
         await shoot(page, `${short}-1b-ciclo-tooltip-oct-${size}`)
         void oct
 
-        // Tooltip del MOVIMIENTO: reportados y solucionados de OCT.
+        // Tooltip del MOVIMIENTO: reportados y cerrados de OCT.
         await clickBand(page, 'OCT', MOVIMIENTO)
         const movTip = tid(page, MOVIMIENTO).getByText('Octubre 2026 · actual')
         await expect(movTip).toBeVisible()
         await expect(movTip.locator('xpath=..')).toContainText('Reportados')
-        await expect(movTip.locator('xpath=..')).toContainText('Solucionados')
+        await expect(movTip.locator('xpath=..')).toContainText('Cerrados')
         await expect(tid(page, 'director-flujo')).toHaveAttribute('data-hover-index', '3')
         await shoot(page, `${short}-1e-ciclo-hover-movimiento-oct-${size}`)
 
@@ -527,7 +546,7 @@ test.describe('QA ESTADO · Carga | Movimiento · drill-down ciclo → mes → s
         const lineTip = tid(page, CARGA).getByText('Octubre 2026 · actual')
         await expect(lineTip).toBeVisible()
         const lineTipBox = lineTip.locator('xpath=..')
-        await expect(lineTipBox).toContainText('Activos ahora')
+        await expect(lineTipBox).toContainText(/Activos al corte · \d+ oct/)
         await expect(lineTipBox).toContainText('Internet')
         await expect(lineTipBox).toContainText('coordinaciones afectadas')
         await expect(lineTipBox).toContainText('Saber Pro')

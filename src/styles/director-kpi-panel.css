@@ -1249,6 +1249,23 @@
   margin: 0;
 }
 
+/* Error sin datos: hueco neutro (el motivo vive en el aviso role=alert). */
+.director-estado-comp__nodata {
+  font-size: 18px;
+  opacity: 0.35;
+}
+
+/*
+ * Aviso de error de ESTADO sobre el papel crema. El rosa global
+ * (`.novex-os [role='alert']`, pensado para fondos oscuros) daba ≈ 1,7:1 aquí.
+ * Solo dentro de `.director-estado`: DEPENDENCIAS y el resto no cambian.
+ * Granate de la paleta del ticket: ≈ 7:1 sobre #f3e8d4.
+ */
+.director-estado .director-kpi-panel__error[role='alert'] {
+  color: #8a2430;
+  font-weight: 700;
+}
+
 .director-estado__top {
   flex: 0 0 auto;
   min-height: 0;
@@ -2602,8 +2619,9 @@
   font-variant-numeric: tabular-nums;
 }
 /* ─────────────────────────────────────────────────────────────────────────
- * ESTADO (coordinación): CARGA | MOVIMIENTO lado a lado, mismo periodo.
- * Ruta (nivel) compartida + dos columnas (título ?, leyenda, gráfica).
+ * ESTADO (coordinación): lámina «Carga y movimiento», mismo periodo.
+ * Ruta (nivel) + resumen + CARGA y MOVIMIENTO apiladas (título ?, leyenda,
+ * gráfica).
  * ───────────────────────────────────────────────────────────────────────── */
 
 .director-flujo {
@@ -2620,20 +2638,134 @@
 }
 
 /*
- * Dos lecturas en una sola superficie: sin tarjetas, solo aire y una regla
- * fina. Carga (línea) ≈52 % | Movimiento (barras) ≈48 %.
+ * Dos lecturas en una sola superficie, APILADAS a todo el ancho: mismo ancho
+ * y misma área de trazado (márgenes fijos en flujo-option), de modo que cada
+ * columna de Movimiento cae bajo su punto de Carga. Sin tarjetas: una regla
+ * fina punteada separa las dos gráficas.
  */
 .director-flujo__pair {
-  display: grid;
-  grid-template-columns: minmax(0, 52fr) 1px minmax(0, 48fr);
-  column-gap: clamp(12px, 1.4vw, 22px);
-  align-items: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: opacity 180ms ease-out;
+}
+
+.director-flujo__pair[data-loading='true'] {
+  opacity: 0.55;
 }
 
 .director-flujo__col {
   display: flex;
   flex-direction: column;
   min-width: 0;
+}
+
+.director-flujo__col + .director-flujo__col {
+  padding-top: 8px;
+  background: repeating-linear-gradient(90deg, rgb(35 25 16 / 0.13) 0 4px, transparent 4px 10px)
+    left top / 100% 1px no-repeat;
+}
+
+/* Título (con su «?») a la izquierda y leyenda a la derecha, en una línea. */
+.director-flujo__col-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px 14px;
+}
+
+.director-flujo__col-head .director-flujo__legend {
+  margin: 0;
+}
+
+/*
+ * RESUMEN compacto: tres cifras con etiqueta breve, en una fila. Sin
+ * tarjetas grandes: reglas finas del papel, cifra destacada.
+ */
+.director-flujo__summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0 0 10px;
+  padding: 6px 0;
+  border-top: 1.2px solid rgb(35 25 16 / 0.2);
+  border-bottom: 1.2px solid rgb(35 25 16 / 0.2);
+}
+
+.director-flujo__stat {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'value label'
+    'value sub';
+  align-items: center;
+  column-gap: 8px;
+  min-width: 0;
+  padding: 0 10px;
+}
+
+.director-flujo__stat + .director-flujo__stat {
+  border-left: 1px dashed rgb(35 25 16 / 0.22);
+}
+
+.director-flujo__stat:first-child {
+  padding-left: 0;
+}
+
+.director-flujo__stat dt,
+.director-flujo__stat dd {
+  margin: 0;
+  min-width: 0;
+}
+
+/* Cifra algo más presente (sin pasar a tarjeta): peso del dato > etiqueta. */
+.director-flujo__stat-value {
+  grid-area: value;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.director-flujo__stat-label {
+  grid-area: label;
+  align-self: end;
+  overflow: hidden;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Fechas del resumen: legibles (antes 10,5 px al 72 %). */
+.director-flujo__stat-sub {
+  grid-area: sub;
+  align-self: start;
+  overflow: hidden;
+  font-size: 11px;
+  font-style: italic;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.85;
+}
+
+/*
+ * Pie discreto de la lámina: cómo profundizar (según el nivel) y, si hay,
+ * la nota de tramos incompletos. Sustituye a la fila «Toca un mes» que
+ * ocupaba una línea entre el selector y el resumen.
+ */
+.director-flujo__note {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  margin: 6px 0 0;
+  font-size: 10.5px;
+  font-style: italic;
+  letter-spacing: 0.01em;
+  opacity: 0.78;
 }
 
 .director-flujo__divider {
@@ -2783,7 +2915,7 @@
   margin: 5px 0 0;
   padding: 0;
   list-style: none;
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -2845,26 +2977,22 @@
     #8fa89c;
 }
 
-/* Pista a la derecha de la ruta (o sola, en el nivel ciclo). */
+/* Pista de profundización: al pie, sin protagonismo (el pie ya va atenuado). */
 .director-flujo__hint {
-  flex: 0 0 auto;
-  margin-left: auto;
   white-space: nowrap;
-  font-size: 10.5px;
-  font-style: italic;
   font-weight: 600;
-  letter-spacing: 0.02em;
   text-transform: none;
-  opacity: 0.55;
 }
 
 /*
- * Altura responsive y compartida por las dos gráficas: tabs + periodo +
- * títulos + ambas gráficas sin scroll en 1440×900.
+ * Alto CONTENIDO y compartido por las dos gráficas apiladas: con el ancho
+ * completo de la lectura dan una proporción apaisada (≈ 2,4 : 1 a 1440×900).
+ * Medido: tabs + periodo + resumen + ambas gráficas caben sin scroll en
+ * 1440×900; el techo evita gráficas estiradas en 1920×1080.
  */
 .director-flujo__frame {
   position: relative;
-  height: clamp(250px, 34vh, 325px);
+  height: clamp(150px, 21.5vh, 232px);
   transition: opacity 180ms ease-out;
 }
 
@@ -2971,6 +3099,14 @@
   padding-bottom: 4px;
   padding-right: 0;
   scrollbar-gutter: auto;
+}
+
+/*
+ * Solo ESTADO con coordinación: menos aire entre el selector temporal y la
+ * lámina (14 → 8 px). INTERNOS y el resto de pestañas conservan el suyo.
+ */
+.director-reading__body[data-fixed-height='true'][data-mode='state'] {
+  margin-top: 8px;
 }
 
 .director-reading__body[data-fixed-height='true'] > .director-estado {
@@ -3096,32 +3232,28 @@
   outline-offset: 2px;
 }
 
-/* Lámina 1 · Carga | Movimiento: las gráficas llenan el alto disponible. */
+/*
+ * Lámina 1 · Carga y movimiento: resumen + dos gráficas de alto CONTENIDO
+ * (`.director-flujo__frame`), apiladas. Ya no se estiran al alto restante:
+ * en pantallas altas sobra aire abajo en vez de alargar las gráficas. Si el
+ * contenido no cabe (p. ej. los botones de teclado al recibir foco), la
+ * lámina hace scroll interno: la página del carrusel sigue recortando para
+ * que nada asome en la vecina.
+ */
 .director-estado-carousel .director-flujo {
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
   margin-top: 0;
-}
-
-.director-estado-carousel .director-flujo__pair {
-  flex: 1 1 auto;
-  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(35 25 16 / 0.35) transparent;
 }
 
 .director-estado-carousel .director-flujo__col {
   min-height: 0;
-}
-
-.director-estado-carousel .director-flujo__frame {
-  flex: 1 1 auto;
-  height: auto;
-  min-height: 0;
-}
-
-.director-estado-carousel .director-flujo__divider {
-  margin-bottom: 22px;
 }
 
 /* El host de ECharts trae un min-height en línea: aquí manda el frame. */
@@ -3168,6 +3300,256 @@
 .director-estado-carousel .director-estado-comp__chart .novex-chart__canvas {
   height: 100% !important;
   min-height: 0 !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Lámina 2 · composición POR CORTE (`.director-corte`, scope coordinación).
+ * Cabecera → Severidad (filas) → Atención (dona + leyenda) → Relaciones.
+ * Alturas ajustadas al contenido: nada se estira para llenar la lámina; si
+ * no cabe, scroll interno de la lámina (la página del carrusel sigue
+ * recortando). La lectura de Dirección (live) no usa estas clases.
+ * ───────────────────────────────────────────────────────────────────────── */
+.director-estado-carousel .director-corte {
+  gap: 10px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(35 25 16 / 0.35) transparent;
+}
+
+/* 1 · Cabecera: cifra + «activos al corte» + fecha (+ «Valores actuales»). */
+.director-corte__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  padding-bottom: 6px;
+  border-bottom: 1.2px solid rgb(35 25 16 / 0.2);
+}
+
+.director-corte__total {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.director-corte__label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.director-corte__date {
+  font-size: 11.5px;
+  font-style: italic;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+/* La ayuda de «Valores actuales» se abre hacia la izquierda: el chip va al borde. */
+.director-corte__current .director-flujo__help-text {
+  left: auto;
+  right: -8px;
+}
+
+/* Marca breve del corte histórico; la explicación completa va en su «?». */
+.director-corte__current {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  padding: 1px 6px;
+  border: 1px solid rgb(35 25 16 / 0.45);
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.director-corte__block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.director-corte .director-corte__title {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+}
+
+/* 2 · Severidad: cuatro filas de 30 px + eje (alto fijo, no se estira). */
+.director-corte__severity {
+  height: 146px;
+}
+
+/* 3 · Atención: dona compacta y su leyenda pegada (debajo si no cabe). */
+.director-corte__attention {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 18px;
+}
+
+.director-corte__donut {
+  flex: 0 0 auto;
+  width: 132px;
+  height: 132px;
+}
+
+.director-corte__severity > .novex-chart,
+.director-corte__donut > .novex-chart {
+  height: 100%;
+}
+
+.director-corte__legend {
+  display: grid;
+  grid-template-columns: 12px minmax(0, auto) auto auto;
+  /* Columnas pegadas a su contenido: cantidad y % junto al nombre. */
+  justify-content: start;
+  align-items: center;
+  gap: 6px 14px;
+  flex: 1 1 220px;
+  max-width: 340px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+
+/* Cada fila reparte sus celdas en la rejilla del <ul>. */
+.director-corte__legend-row {
+  display: contents;
+}
+
+.director-corte__swatch {
+  width: 12px;
+  height: 12px;
+  border: 1.2px solid #231910;
+  border-radius: 2px;
+}
+
+.director-corte__legend-name {
+  font-weight: 700;
+}
+
+.director-corte__legend-count {
+  font-size: 13px;
+  font-weight: 800;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.director-corte__legend-pct {
+  font-size: 11px;
+  font-weight: 600;
+  text-align: right;
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}
+
+.director-corte__empty {
+  margin: 8px 0;
+  padding: 18px 0;
+  font-size: 13px;
+  font-style: italic;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.director-corte__pending {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  margin: 0;
+  font-size: 12px;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+.director-corte__pending--error {
+  font-size: 16px;
+  opacity: 0.35;
+}
+
+/* 4 · Relaciones: flujo del periodo, separado de la foto por una regla. */
+.director-corte__relations {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1.2px dashed rgb(35 25 16 / 0.3);
+}
+
+.director-corte__relations-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 12px;
+}
+
+.director-corte__relations-period {
+  font-size: 11px;
+  font-style: italic;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.director-corte__relations-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 18px;
+}
+
+.director-corte__relations-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 22px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.director-corte__relations-facts li {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-areas:
+    'value name'
+    'value desc';
+  align-items: center;
+  column-gap: 8px;
+}
+
+.director-corte__relations-value {
+  grid-area: value;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.director-corte__relations-name {
+  grid-area: name;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.director-corte__relations-desc {
+  grid-area: desc;
+  font-size: 11px;
+  font-style: italic;
+  opacity: 0.8;
 }
 
 /*

@@ -5,6 +5,7 @@ import {
   flujoAxisTick,
   flujoLabeledIndexes,
   flujoScale,
+  temporalAxes,
 } from "@/modules/operational-cards/charts/flujo-option";
 import {
   flujoTooltipHtml,
@@ -159,7 +160,7 @@ describe("buildFlujoOption · CARGA = LÍNEA del total de activos (stock)", () =
     expect(y.min).toBe(0);
   });
 
-  it("punto actual con más presencia; rótulos solo en actual/último y máximo", () => {
+  it("punto actual con más presencia; con ≤ 8 puntos TODOS llevan su cifra (futuro no)", () => {
     const peak = bucket("2026-08-01", {
       active: { ...bucket("x").active!, total: 20 },
     });
@@ -177,12 +178,23 @@ describe("buildFlujoOption · CARGA = LÍNEA del total de activos (stock)", () =
     expect(activos.data[3]?.symbolSize).toBe(10);
     expect(activos.data[0]?.symbolSize).toBeUndefined();
     expect(activos.data.map((p) => Boolean(p?.label?.show))).toEqual([
-      false,
       true,
-      false,
+      true,
+      true,
       true,
       false,
     ]);
+  });
+
+  it("con más de 8 puntos vuelve a rotular solo último y máximo", () => {
+    const many = Array.from({ length: 9 }, (_, i) =>
+      bucket(`2026-10-${String(i + 1).padStart(2, "0")}`, {
+        active: { ...bucket("x").active!, total: i === 2 ? 30 : 5 },
+      }),
+    );
+    const activos = line(many);
+    const shown = activos.data.flatMap((p, i) => (p?.label?.show ? [i] : []));
+    expect(shown).toEqual([2, 8]);
   });
 
   it("flujoLabeledIndexes: último con dato + máximo; vacío sin datos", () => {
@@ -200,27 +212,49 @@ describe("buildFlujoOption · CARGA = LÍNEA del total de activos (stock)", () =
   });
 });
 
-describe("buildMovimientoOption · REPORTADOS vs SOLUCIONADOS agrupados", () => {
+describe("buildMovimientoOption · REPORTADOS vs CERRADOS agrupados", () => {
   const oct = bucket("2026-10-01", { created: 6 });
 
-  it("banda índice 0 + dos barras agrupadas (sin stack), solucionados con trama", () => {
+  it("banda índice 0 + dos barras agrupadas (sin stack), cerrados con trama", () => {
     const { option, byName } = series([oct], buildMovimientoOption);
     expect(option.series.map((s) => s.name)).toEqual([
       "__banda",
       "Reportados",
-      "Solucionados",
+      "Cerrados",
     ]);
     expect(byName("Reportados").stack).toBeUndefined();
-    expect(byName("Solucionados").stack).toBeUndefined();
-    expect(byName("Solucionados").itemStyle?.decal).toBeTruthy();
+    expect(byName("Cerrados").stack).toBeUndefined();
+    expect(byName("Cerrados").itemStyle?.decal).toBeTruthy();
     expect(byName("__banda").xAxisIndex).toBe(1);
   });
 
   it("valores = eventos del bucket (created / solved.total) y futuro null", () => {
     const { byName, values } = series([oct, FUTURE], buildMovimientoOption);
     expect(values(byName("Reportados"))).toEqual([6, null]);
-    expect(values(byName("Solucionados"))).toEqual([4, null]);
+    expect(values(byName("Cerrados"))).toEqual([4, null]);
     expect(values(byName("__banda"))[1]).toBeNull();
+  });
+
+  it("un 0 real lleva su «0» atenuado; un valor > 0 su cifra normal", () => {
+    const zero = bucket("2026-09-01", { created: 0, solved: { total: 3 } });
+    const { byName } = series([zero], buildMovimientoOption);
+    const reported = byName("Reportados") as unknown as {
+      data: Array<{ value: number; label?: { color?: string } }>;
+      label: { formatter: (p: { dataIndex: number; value?: number }) => string };
+    };
+    expect(reported.data[0].value).toBe(0);
+    expect(reported.data[0].label?.color).toMatch(/0\.5\)/);
+    expect(reported.label.formatter({ dataIndex: 0, value: 0 })).toBe("0");
+    const closed = byName("Cerrados") as unknown as { data: Array<{ label?: unknown }> };
+    expect(closed.data[0].label).toBeUndefined();
+  });
+
+  it("Carga y Movimiento comparten área de trazado fija (columnas alineadas)", () => {
+    const buckets = [bucket("2026-09-01"), bucket("2026-10-01", { current: true })];
+    const grid = (build: typeof buildFlujoOption) =>
+      (build(buckets, "month") as unknown as { grid: unknown }).grid;
+    expect(grid(buildMovimientoOption)).toEqual(grid(buildFlujoOption));
+    expect(grid(buildFlujoOption)).toMatchObject({ containLabel: false });
   });
 
   it("mismo eje temporal que la Carga (categorías idénticas)", () => {
@@ -234,11 +268,34 @@ describe("buildMovimientoOption · REPORTADOS vs SOLUCIONADOS agrupados", () => 
     expect(axes(buildMovimientoOption)).toEqual(axes(buildFlujoOption));
   });
 
-  it("tooltip: reportados y solucionados del bucket; futuro sin cifras", () => {
+  it("tooltip: reportados y cerrados del bucket; futuro sin cifras", () => {
     const html = movimientoTooltipHtml(oct, "Octubre 2026");
     expect(html).toMatch(/Reportados.*6/);
-    expect(html).toMatch(/Solucionados.*4/);
+    expect(html).toMatch(/Cerrados.*4/);
+    expect(html).not.toContain("Solucionados");
     expect(movimientoTooltipHtml(FUTURE, "Noviembre 2026")).toContain("Futuro");
+  });
+
+  it("tooltip: tramo en curso y semana recortada lo dicen (cifras reales)", () => {
+    const inProgress = bucket("2026-10-01", {
+      end: "2026-10-31",
+      calendarEnd: "2026-10-31",
+      dataEnd: "2026-10-15",
+      current: true,
+      created: 6,
+    });
+    expect(movimientoTooltipHtml(inProgress, "Octubre 2026")).toContain(
+      "datos hasta el 15 oct",
+    );
+    const clipped = bucket("2026-10-01", {
+      end: "2026-10-04",
+      dataEnd: "2026-10-04",
+      calendarStart: "2026-09-28",
+      calendarEnd: "2026-10-04",
+    });
+    expect(flujoTooltipHtml(clipped, "1–4 oct")).toContain(
+      "semana del 28 sep al 4 oct, recortada al mes",
+    );
   });
 });
 
@@ -248,7 +305,7 @@ describe("flujoTooltipHtml · una sola interacción explica la composición", ()
   it("total + bloque INTERNOS (categorías) + bloque EXTERNOS (afectadas)", () => {
     const html = flujoTooltipHtml(oct, "Octubre 2026");
     expect(html).toContain("Octubre 2026");
-    expect(html).toMatch(/Activos al cierre.*12/);
+    expect(html).toMatch(/Activos al corte · 1 oct.*12/);
     expect(html).toMatch(/Internos.*7/);
     expect(html).toContain("Externos · coordinaciones afectadas");
     expect(html.indexOf("Internet")).toBeLessThan(html.indexOf("Externos"));
@@ -270,11 +327,29 @@ describe("flujoTooltipHtml · una sola interacción explica la composición", ()
     expect(html).toContain("+ 1 más");
   });
 
-  it("bucket actual: «Activos ahora» en vez de «al cierre»", () => {
-    const html = flujoTooltipHtml({ ...oct, current: true }, "Octubre 2026");
-    expect(html).toContain("Activos ahora");
-    expect(html).not.toContain("Activos al cierre");
+  it("bucket actual: el corte con su fecha, nunca «ahora» ni «hoy»", () => {
+    const html = flujoTooltipHtml(
+      { ...oct, end: "2026-10-31", calendarEnd: "2026-10-31", dataEnd: "2026-10-15", current: true },
+      "Octubre 2026",
+    );
+    expect(html).toContain("Activos al corte · 15 oct");
+    expect(html).not.toMatch(/ahora|hoy/i);
     expect(html).toContain("· actual");
+  });
+
+  it("eje: solo «Carga y movimiento» marca EN CURSO / PARCIAL; el eje compartido conserva ACTUAL", () => {
+    const current = bucket("2026-10-01", {
+      end: "2026-10-31",
+      calendarEnd: "2026-10-31",
+      dataEnd: "2026-10-15",
+      current: true,
+    });
+    const flujoAxis = (buildFlujoOption([current], "month") as unknown as {
+      xAxis: Array<{ data: string[] }>;
+    }).xAxis[0].data[0];
+    expect(flujoAxis).toContain("EN CURSO");
+    expect(temporalAxes([current], "month")[0].data?.[0]).toContain("ACTUAL");
+    expect(temporalAxes([current], "month")[0].data?.[0]).not.toContain("EN CURSO");
   });
 
   it("futuro: sin cifras", () => {

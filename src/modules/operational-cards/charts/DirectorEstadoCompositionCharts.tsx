@@ -172,7 +172,8 @@ export function buildAttentionDonutOption(
   const total = attentionTotal(status)
   const extra = [
     {
-      name: 'Solucionados después del corte',
+      // closed_at posterior al corte: «Cerrados», como en Movimiento.
+      name: 'Cerrados después del corte',
       value: status.closedAfterCut ?? 0,
       color: NOVEX_ATTENTION_COLORS.closedAfterCut,
     },
@@ -340,7 +341,7 @@ export function AttentionDonutChart({
   const total = attentionTotal(status)
   const after = status.closedAfterCut ?? 0
   const aria = `${status.open} abiertos y ${status.inProgress} en atención${
-    after > 0 ? `, ${after} solucionados después del corte` : ''
+    after > 0 ? `, ${after} cerrados después del corte` : ''
   }; ${total} activos.`
 
   return (

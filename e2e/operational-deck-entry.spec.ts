@@ -431,7 +431,9 @@ test.describe('entrada al mazo · 1440x900', () => {
     )
     await expect(page.locator(PANEL)).toHaveAttribute('data-code', PARENT)
 
-    // Todavía no hay retorno narrativo propio del mazo.
+    // Un solo camino de regreso: la flecha de la miga, nunca un botón bajo
+    // las cartas.
+    await expect(page.getByTestId('breadcrumb-direction')).toHaveCount(1)
     await expect(page.getByTestId('return-to-table')).toHaveCount(0)
 
     expect(deck.overflow.x).toBeLessThanOrEqual(0)

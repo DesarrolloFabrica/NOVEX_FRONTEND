@@ -536,11 +536,18 @@ describe('DirectorReadingPanel · un periodo para toda la lectura', () => {
     expect(header.textContent).not.toContain('B2B')
     expect(header.textContent).not.toMatch(/activos?/)
     expect(query('director-estado-operativo')).toBeNull()
-    // La carga activa se lee en la gráfica (total del bucket actual).
+    // La carga activa se lee en el resumen y en la gráfica (tramo actual),
+    // con su corte explícito: el tramo actual está en curso.
     const current = container.querySelector<HTMLElement>(
       '[data-testid^="director-flujo-row-"][data-current="true"]',
     )
-    expect(current?.textContent).toContain('5 ahora')
+    expect(current?.querySelector('th')?.textContent).toContain(
+      'Tramo en curso · datos hasta el 6 oct',
+    )
+    expect(current?.querySelector('td')?.textContent).toBe('5')
+    const active = byTestId('director-flujo-stat-active')
+    expect(active.querySelector('.director-flujo__stat-value')?.textContent).toBe('5')
+    expect(active.textContent).toContain('6 oct · en curso')
   })
 
   it('orden: tabs → periodo → flujo (sin bloques intermedios)', async () => {
@@ -690,7 +697,7 @@ describe('PERIODO · el encabezado refleja el AnalysisPeriod REAL', () => {
   it('ciclo → SEPTIEMBRE 2026 · Mes → 7 — 13 SEP 2026 · Semana → (ruta) → ciclo', async () => {
     await render(B2B)
     expect(range()).toBe('H2 2026')
-    expect(pickerText()).toContain('JUL — DIC 2026 · En curso')
+    expect(pickerText()).toContain('JUL — DIC 2026 · semestre calendario · En curso')
 
     await drillSeptember()
     expect(range()).toBe('SEPTIEMBRE 2026')
@@ -813,11 +820,12 @@ describe('ESTADO · carrusel de láminas frente a periodo, coordinación y tab',
 
 describe('ESTADO · AnalysisPeriod como ÚNICA fuente temporal de TODAS las láminas', () => {
   const page = () => byTestId('director-estado-carousel').dataset.page
-  /** Lo que la lámina 2 dice de la severidad (texto accesible de la gráfica). */
+  /** Lo que la lámina 2 dice de la severidad (descripción accesible de la gráfica). */
   const severityText = () =>
-    byTestId('director-kpi-severity').querySelector('.visually-hidden')?.textContent ?? ''
-  const attentionText = () =>
-    byTestId('director-kpi-status-split').querySelector('.visually-hidden')?.textContent ?? ''
+    byTestId('director-estado-severity-chart').getAttribute('aria-label') ?? ''
+  /** Leyenda de Atención: «Abiertos{n}{pct} %» por fila (texto visible y accesible). */
+  const attentionRow = (kind: string) => byTestId(`director-attention-${kind}`).textContent ?? ''
+  const cutText = () => byTestId('director-estado-comp-cut').textContent ?? ''
   const agingCut = () => byTestId('director-antiguedad-cut').textContent
   const agingRows = () =>
     container.querySelectorAll('[data-testid^="director-antiguedad-row-"]').length
@@ -838,7 +846,8 @@ describe('ESTADO · AnalysisPeriod como ÚNICA fuente temporal de TODAS las lám
     await render(B2B)
     await click('director-estado-carousel-dot-1')
     const h2Severity = severityText()
-    expect(byTestId('director-estado-comp-cut').textContent).toBe('Activos hoy')
+    expect(cutText()).toContain('Corte 6 oct · en curso')
+    expect(query('director-corte-current-values')).toBeNull()
 
     await click('director-estado-carousel-dot-0')
     await drillSeptember()
@@ -846,10 +855,10 @@ describe('ESTADO · AnalysisPeriod como ÚNICA fuente temporal de TODAS las lám
 
     await click('director-estado-carousel-dot-1')
     expect(severityText()).not.toBe(h2Severity)
-    expect(byTestId('director-estado-comp-cut').textContent).toBe(
-      'Activos al cierre del 30 sep 2026',
-    )
-    expect(byTestId('director-severity-reliability').textContent).toBe('Valor actual')
+    // Corte histórico: fecha completa + «Valores actuales» (explicado en su ayuda).
+    expect(cutText()).toContain('Corte 30 sep 2026')
+    expect(cutText()).not.toContain('en curso')
+    expect(byTestId('director-corte-current-values').textContent).toContain('Valores actuales')
 
     await click('director-estado-carousel-dot-2')
     expect(agingCut()).toBe('AL CIERRE DEL 30 SEP 2026')
@@ -867,8 +876,10 @@ describe('ESTADO · AnalysisPeriod como ÚNICA fuente temporal de TODAS las lám
       expect(att.open + att.inProgress + att.closedAfterCut + att.unclassified).toBe(activeCount)
       expect(response.aging.activeCount).toBe(activeCount)
       expect(response.aging.at).toBe(response.snapshot.at)
-      // En pantalla: el donut y el ranking dicen lo mismo que el contrato.
-      expect(attentionText()).toContain(`${att.open} abiertos y ${att.inProgress} en atención`)
+      // En pantalla: cabecera, leyenda de la dona y ranking dicen lo mismo que el contrato.
+      expect(byTestId('director-corte-total').textContent).toBe(String(activeCount))
+      expect(attentionRow('open')).toMatch(new RegExp(`^Abiertos${att.open}\\d+ %$`))
+      expect(attentionRow('progress')).toMatch(new RegExp(`^En atención${att.inProgress}\\d+ %$`))
       expect(agingRows()).toBe(Math.min(5, response.aging.activeCount))
       void last
     }
@@ -884,7 +895,7 @@ describe('ESTADO · AnalysisPeriod como ÚNICA fuente temporal de TODAS las lám
     expect(page()).toBe('1')
     expect(byTestId('director-analysis-period-range').textContent).toBe('OCTUBRE 2026')
     expect(severityText()).not.toBe(sepSeverity)
-    expect(byTestId('director-estado-comp-cut').textContent).toBe('Activos hoy')
+    expect(cutText()).toContain('Corte 6 oct · en curso')
     await click('director-estado-carousel-dot-2')
     expect(agingCut()).toBe('HOY')
   })
@@ -951,9 +962,7 @@ describe('ESTADO · AnalysisPeriod como ÚNICA fuente temporal de TODAS las lám
     })
     expect(agingCut()).toBe('AL CIERRE DEL 30 SEP 2026')
     await click('director-estado-carousel-dot-1')
-    expect(byTestId('director-estado-comp-cut').textContent).toBe(
-      'Activos al cierre del 30 sep 2026',
-    )
+    expect(cutText()).toContain('Corte 30 sep 2026')
   })
 
   it('si falla el periodo nuevo: error visible y sin gráficas del periodo anterior', async () => {
@@ -1043,5 +1052,101 @@ describe('ESTADO · AnalysisPeriod como ÚNICA fuente temporal de TODAS las lám
       resolve(stateResponse(pending))
     })
     expect(query('director-resolucion-table')).not.toBeNull()
+  })
+})
+
+describe('SELECTOR COMPLETO · ciclo, mes y semana por controles (mismo AnalysisPeriod)', () => {
+  const range = () => byTestId('director-analysis-period-range').textContent
+  const calls = () => vi.mocked(fetchOperationalKpiState).mock.calls.length
+  const openDialog = () => click('director-analysis-period-trigger')
+
+  it('el selector se monta en su variante completa', async () => {
+    await render(B2B)
+    expect(byTestId('director-analysis-period').dataset.variant).toBe('full')
+  })
+
+  it('mes por controles: una consulta, cabecera, ruta, gráficas y resumen cambian juntos', async () => {
+    await render(B2B)
+    const before = calls()
+    await openDialog()
+    await click('director-analysis-period-drill-cycle-H2')
+    await click('director-analysis-period-use-month-8')
+    expect(calls()).toBe(before + 1)
+    expect(lastState()).toMatchObject({ kind: 'month', ...SEPTEMBER, calendarEnd: '2026-09-30' })
+    expect(range()).toBe('SEPTIEMBRE 2026')
+    expect(byTestId('director-flujo').dataset.level).toBe('week')
+    expect(crumb()).toEqual(['H2 2026', 'SEPTIEMBRE'])
+    // Septiembre por semanas: 1–6, 7–13, 14–20, 21–27, 28–30 (todas con datos).
+    expect(
+      container.querySelectorAll('[data-testid="director-flujo-table"] tbody tr'),
+    ).toHaveLength(5)
+    // Σ de los 5 tramos (2 reportados y 1 cerrado por tramo en el fixture).
+    const stat = (key: string) =>
+      byTestId(`director-flujo-stat-${key}`).querySelector('.director-flujo__stat-value')
+        ?.textContent
+    expect(stat('reported')).toBe('10')
+    expect(stat('closed')).toBe('5')
+    // Corte histórico: fecha completa, sin «en curso».
+    expect(byTestId('director-flujo-stat-active').textContent).toContain('30 sep 2026')
+    // Los extremos recortados del mes se marcan (1–6 sep y 28–30 sep).
+    const coverage = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-testid^="director-flujo-row-"]'),
+    ).map((row) => row.dataset.coverage)
+    expect(coverage).toEqual(['clipped', 'full', 'full', 'full', 'clipped'])
+  })
+
+  it('semana por controles y vuelta al ciclo por la ruta: el selector acompaña', async () => {
+    await render(B2B)
+    await openDialog()
+    await click('director-analysis-period-drill-cycle-H2')
+    await click('director-analysis-period-drill-month-8')
+    await click('director-analysis-period-week-2026-09-07')
+    expect(lastState()).toMatchObject({ kind: 'week', from: '2026-09-07', to: '2026-09-13' })
+    expect(range()).toBe('7 — 13 SEP 2026')
+    expect(byTestId('director-flujo').dataset.level).toBe('day')
+    // ‹ del selector navega al nivel real (semana anterior).
+    await click('director-analysis-period-prev')
+    expect(lastState()).toMatchObject({ kind: 'week', from: '2026-08-31' })
+    await click('director-flujo-crumb-cycle')
+    expect(lastState()).toMatchObject({ kind: 'cycle', from: '2026-07-01' })
+    expect(range()).toBe('H2 2026')
+  })
+
+  it('ciclo por controles y drill-down desde la gráfica escriben el mismo estado', async () => {
+    await render(B2B)
+    await openDialog()
+    await click('director-analysis-period-use-cycle-H1')
+    expect(lastState()).toMatchObject({ kind: 'cycle', from: '2026-01-01', to: '2026-06-30' })
+    expect(range()).toBe('H1 2026')
+    // Ciclo histórico completo: seis meses, ninguno «actual» ni futuro.
+    expect(
+      container.querySelectorAll('[data-testid="director-flujo-table"] tbody tr'),
+    ).toHaveLength(6)
+    await click('director-flujo-drill-2026-03-01')
+    expect(lastState()).toMatchObject({ kind: 'month', from: '2026-03-01' })
+    expect(range()).toBe('MARZO 2026')
+  })
+
+  it('meses y semanas futuros no se pueden elegir por controles', async () => {
+    await render(B2B)
+    await openDialog()
+    await click('director-analysis-period-drill-cycle-H2')
+    expect((byTestId('director-analysis-period-use-month-10') as HTMLButtonElement).disabled).toBe(true)
+    expect((byTestId('director-analysis-period-use-month-9') as HTMLButtonElement).disabled).toBe(false)
+    await click('director-analysis-period-drill-month-9')
+    expect((byTestId('director-analysis-period-week-2026-10-12') as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('ciclo en curso: el eje no reserva noviembre ni diciembre', async () => {
+    await render(B2B)
+    const rows = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-testid^="director-flujo-row-"]'),
+    ).map((row) => row.dataset.testid)
+    expect(rows).toEqual([
+      'director-flujo-row-2026-07-01',
+      'director-flujo-row-2026-08-01',
+      'director-flujo-row-2026-09-01',
+      'director-flujo-row-2026-10-01',
+    ])
   })
 })

@@ -133,23 +133,66 @@ const indexOf = (props: ChartProps | null, start: string) =>
   props!.buckets.findIndex((b) => b.calendarStart === start)
 
 describe('ESTADO · CARGA | MOVIMIENTO sobre un único AnalysisPeriod', () => {
-  it('renderiza las dos gráficas lado a lado con títulos, ayuda y leyendas', () => {
-    expect(container.querySelector('[data-testid="director-carga"]')).not.toBeNull()
-    expect(container.querySelector('[data-testid="director-movimiento"]')).not.toBeNull()
+  it('resumen + Carga ARRIBA y Movimiento DEBAJO, con títulos, ayuda y leyendas', () => {
+    const carga = container.querySelector('[data-testid="director-carga"]')!
+    const movimiento = container.querySelector('[data-testid="director-movimiento"]')!
+    const summary = container.querySelector('[data-testid="director-flujo-summary"]')!
+    // Orden del documento: resumen → carga → movimiento.
+    expect(summary.compareDocumentPosition(carga) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(carga.compareDocumentPosition(movimiento) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(container.textContent).toContain('Carga de problemas')
     expect(container.textContent).toContain('Movimiento de problemas')
     expect(container.textContent).toContain(
-      'Problemas que seguían pendientes al cierre de cada periodo.',
+      'Problemas que seguían activos al corte de cada tramo: su último día, o el último día con datos si el tramo está en curso.',
     )
     expect(container.textContent).toContain(
-      'Problemas reportados y solucionados durante cada periodo.',
+      'Problemas reportados (registrados) y cerrados (con fecha de cierre) dentro de cada tramo.',
     )
     const legend = (chart: string) =>
       Array.from(
         container.querySelectorAll(`[data-chart="${chart}"] .director-flujo__legend li`),
       ).map((li) => li.textContent?.trim())
-    expect(legend('carga')).toEqual(['Activos al cierre'])
-    expect(legend('movimiento')).toEqual(['Reportados', 'Solucionados'])
+    expect(legend('carga')).toEqual(['Activos al corte'])
+    expect(legend('movimiento')).toEqual(['Reportados', 'Cerrados'])
+  })
+
+  it('resumen: activos = último corte (no la suma de la línea); reportados y cerrados = Σ de tramos con datos', () => {
+    const stat = (key: string) =>
+      container.querySelector(`[data-testid="director-flujo-stat-${key}"]`)!
+    const value = (key: string) =>
+      stat(key).querySelector('.director-flujo__stat-value')!.textContent
+    // Ciclo H2 a 6 oct: jul–oct con datos (5 activos cada uno), nov–dic futuros.
+    expect(value('active')).toBe('5')
+    expect(value('reported')).toBe('12')
+    expect(value('closed')).toBe('4')
+    // Corte del último tramo con datos; sin «hoy».
+    expect(stat('active').textContent).toContain('31 oct · en curso')
+    expect(stat('reported').textContent).toContain('1 jul – 31 oct 2026')
+    expect(container.textContent).not.toMatch(/\bhoy\b/i)
+  })
+
+  it('periodo histórico: el corte lleva fecha completa y no dice «en curso» ni «hoy»', () => {
+    const h1 = ['01', '02', '03', '04', '05', '06'].map((m) => {
+      const last = new Date(Date.UTC(2026, Number(m), 0)).getUTCDate()
+      return slot(`2026-${m}-01`, `2026-${m}-${last}`)
+    })
+    act(() =>
+      root.render(
+        <DirectorFlujoProblemas
+          period={{ ...buildCurrentCyclePeriod(NOW), from: '2026-01-01', to: '2026-06-30', calendarEnd: '2026-06-30', isCurrent: false, isPartial: false, navigationContext: { year: 2026, half: 1 } }}
+          buckets={h1}
+          loading={false}
+          error={null}
+          onPeriodChange={() => {}}
+        />,
+      ),
+    )
+    const active = container.querySelector('[data-testid="director-flujo-stat-active"]')!
+    expect(active.textContent).toContain('30 jun 2026')
+    expect(active.textContent).not.toContain('en curso')
+    expect(container.textContent).not.toMatch(/\bhoy\b/i)
+    // Seis meses completos: ninguna marca de tramo incompleto.
+    expect(container.querySelector('[data-testid="director-flujo-partial-note"]')).toBeNull()
   })
 
   it('ambas gráficas reciben exactamente los mismos buckets y nivel', () => {
@@ -200,12 +243,43 @@ describe('ESTADO · CARGA | MOVIMIENTO sobre un único AnalysisPeriod', () => {
     expect(charts.movimiento!.level).toBe('day')
   })
 
-  it('buckets futuros y el nivel día no son clicables en ninguna de las dos', () => {
-    const future = indexOf(charts.carga, '2026-11-01')
-    expect(charts.carga!.categoryInteraction!.isClickable(future)).toBe(false)
-    expect(charts.movimiento!.categoryInteraction!.isClickable(future)).toBe(false)
-    act(() => charts.movimiento!.categoryInteraction!.onClick(future))
+  it('los tramos futuros no llegan a ninguna gráfica (sin columnas reservadas)', () => {
+    const starts = (props: ChartProps | null) => props!.buckets.map((b) => b.start)
+    expect(starts(charts.carga)).toEqual(['2026-07-01', '2026-08-01', '2026-09-01', '2026-10-01'])
+    expect(starts(charts.movimiento)).toEqual(starts(charts.carga))
+    expect(charts.carga!.buckets.some((b) => b.future)).toBe(false)
+    // Un índice fuera de los tramos visibles no es clicable ni navega.
+    expect(charts.carga!.categoryInteraction!.isClickable(4)).toBe(false)
+    act(() => charts.movimiento!.categoryInteraction!.onClick(4))
     expect(current().kind).toBe('cycle')
+    // Teclado: un botón por tramo con datos, ninguno para nov/dic.
+    const keys = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-testid^="director-flujo-drill-"]'),
+    ).map((el) => el.dataset.testid)
+    expect(keys).toEqual([
+      'director-flujo-drill-2026-07-01',
+      'director-flujo-drill-2026-08-01',
+      'director-flujo-drill-2026-09-01',
+      'director-flujo-drill-2026-10-01',
+    ])
+  })
+
+  it('el índice de cada columna resuelve SU tramo al hacer clic (sin desfase tras excluir futuros)', () => {
+    act(() => charts.movimiento!.categoryInteraction!.onClick(3))
+    expect(current()).toMatchObject({ kind: 'month', from: '2026-10-01' })
+    // Semanas de octubre a 6 oct: 28 sep–4 oct y 5–11 oct; 12–18 futura fuera.
+    expect(charts.carga!.buckets.map((b) => b.calendarStart)).toEqual(['2026-09-28', '2026-10-05'])
+    act(() => charts.carga!.categoryInteraction!.onClick(1))
+    expect(current()).toMatchObject({ kind: 'week', from: '2026-10-05' })
+  })
+
+  it('el nivel día no es clicable', () => {
+    act(() => charts.carga!.categoryInteraction!.onClick(3))
+    act(() => charts.carga!.categoryInteraction!.onClick(1))
+    expect(charts.carga!.level).toBe('day')
+    expect(charts.carga!.categoryInteraction!.isClickable(0)).toBe(false)
+    act(() => charts.carga!.categoryInteraction!.onClick(0))
+    expect(current().kind).toBe('week')
   })
 
   it('hover sincronizado: resalta la misma columna solo en la OTRA gráfica', () => {
@@ -220,17 +294,39 @@ describe('ESTADO · CARGA | MOVIMIENTO sobre un único AnalysisPeriod', () => {
     expect(charts.movimiento!.highlightIndex).toBeNull()
   })
 
-  it('tabla accesible incluye Reportados junto a la carga', () => {
+  it('tabla accesible: Reportados y Cerrados junto a la carga, solo tramos con datos', () => {
     const headers = Array.from(
       container.querySelectorAll('[data-testid="director-flujo-table"] thead th'),
     ).map((th) => th.textContent)
     expect(headers).toEqual([
-      'Bloque',
+      'Tramo',
       'Activos',
       'Internos',
       'Externos',
       'Reportados',
-      'Solucionados',
+      'Cerrados',
     ])
+    expect(
+      container.querySelectorAll('[data-testid="director-flujo-table"] tbody tr'),
+    ).toHaveLength(4)
+  })
+
+  it('error sin datos: solo el aviso; ni resumen, ni gráficas, ni pista «Toca un mes»', () => {
+    act(() =>
+      root.render(
+        <DirectorFlujoProblemas
+          period={buildCurrentCyclePeriod(NOW)}
+          buckets={null}
+          loading={false}
+          error="fallo simulado"
+          onPeriodChange={() => {}}
+        />,
+      ),
+    )
+    expect(container.querySelector('[data-testid="director-flujo-error"]')).not.toBeNull()
+    expect(container.querySelector('[data-testid="director-flujo-summary"]')).toBeNull()
+    expect(container.querySelector('[data-testid="director-carga"]')).toBeNull()
+    expect(container.textContent).not.toContain('Toca un mes')
+    expect(container.textContent).not.toContain('Leyendo flujo')
   })
 })

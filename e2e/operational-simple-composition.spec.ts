@@ -258,9 +258,6 @@ async function measure(page: Page, label: string) {
   const cards = await page.locator(CARD).all()
   const first = (await cards[0].boundingBox())!
   const last = (await cards[cards.length - 1].boundingBox())!
-  const returnAction = (await page.getByTestId('return-to-table').count())
-    ? await boxOf(page, '[data-testid="return-to-table"]')
-    : null
   const selected = await page.locator(`${SLOT}[data-state="selected"]`).count()
     ? await boxOf(page, `${SLOT}[data-state="selected"]`)
     : null
@@ -283,25 +280,14 @@ async function measure(page: Page, label: string) {
     },
     /*
      * VACÍO INFERIOR. Definición estable: desde el borde inferior del contenido
-     * más bajo de la columna izquierda —el retorno si existe, y si no la mesa—
-     * hasta el borde inferior de la escena. Es lo que se percibe como escenario
-     * muerto, y no depende de dónde acabe el carril del panel, que tiene su
-     * propia altura.
+     * más bajo de la columna izquierda —la mesa: ya no hay botón de retorno
+     * bajo ella— hasta el borde inferior de la escena. Es lo que se percibe
+     * como escenario muerto, y no depende de dónde acabe el carril del panel,
+     * que tiene su propia altura.
      */
     emptyBelow: Number(
-      (
-        shell.y +
-        shell.height -
-        (returnAction
-          ? returnAction.y + returnAction.height
-          : table.y + table.height)
-      ).toFixed(1),
+      (shell.y + shell.height - (table.y + table.height)).toFixed(1),
     ),
-    returnAction: returnAction && {
-      y: Number(returnAction.y.toFixed(1)),
-      height: Number(returnAction.height.toFixed(1)),
-      centerX: Number((returnAction.x + returnAction.width / 2).toFixed(1)),
-    },
     table: {
       x: Number(table.x.toFixed(1)),
       y: Number(table.y.toFixed(1)),
@@ -492,7 +478,7 @@ test.describe('composición simple · 1440x900', () => {
     })
   })
 
-  test('«Volver a la mesa» restaura la composición global', async ({
+  test('la flecha de regreso restaura la composición global', async ({
     page,
   }, testInfo) => {
     test.slow()
@@ -503,19 +489,23 @@ test.describe('composición simple · 1440x900', () => {
     const globalBefore = await measure(page, 'GLOBAL (antes)')
 
     await select(page, 'coord-saber-pro')
-    const action = page.getByTestId('return-to-table')
-    // Es un control real, con nombre accesible propio, y pertenece a la
-    // composición de la mesa: no está dentro del panel.
+    const action = page.getByRole('button', {
+      name: 'Volver a Dirección de Operaciones',
+    })
+    // Un único control de regreso, con nombre accesible propio: la flecha de
+    // la miga. El botón «Volver a la mesa» bajo las cartas ya no existe.
     await expect(action).toBeVisible()
-    await expect(action).toHaveText('Volver a la mesa')
-    await expect(page.locator(`${PANEL} [data-testid="return-to-table"]`)).toHaveCount(0)
-    await expect(
-      page.locator(
-        '[data-testid="operational-composition"] [data-testid="return-to-table"]',
-      ),
-    ).toHaveCount(1)
+    await expect(action).toHaveAttribute('data-testid', 'breadcrumb-direction')
+    await expect(page.getByTestId('operational-breadcrumb')).toContainText(
+      'Saber Pro',
+    )
+    await expect(page.getByTestId('return-to-table')).toHaveCount(0)
+    await expect(page.getByText('Volver a la mesa')).toHaveCount(0)
 
-    await action.click()
+    // Teclado: es un `<button>` nativo, así que Enter lo activa sin lógica
+    // propia de teclado.
+    await action.focus()
+    await page.keyboard.press('Enter')
 
     // El puntero se retira antes de medir: al recuperar la mesa su ancho, la
     // carta que quede bajo el cursor se eleva y ensancha su caja, y lo que

@@ -191,6 +191,12 @@ export function DirectorEstadoPanel({
                       ? { at: periodData.snapshot.at, isNow: periodData.snapshot.isNow }
                       : null
                   }
+                  // Relaciones = INTER creados en [from, dataTo] (mismo intervalo que la consulta).
+                  relationsPeriod={
+                    periodData
+                      ? { from: periodData.period.from, to: periodData.period.dataTo }
+                      : null
+                  }
                   error={stateFailed ? state.error : null}
                   onOpenDependencias={onOpenDependencias}
                 />

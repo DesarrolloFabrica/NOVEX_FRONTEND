@@ -19,7 +19,24 @@
 }
 
 .operational-shell[data-shell-layout='director'] .operational-shell__main {
-  grid-template-rows: minmax(300px, 2.35fr) minmax(170px, 1fr);
+  /*
+   * La banda de la baraja nunca será menor que el contenido necesario para
+   * mostrar las cartas y sus interacciones.
+   *
+   * Antes el mínimo era fijo (170 px) y el `1fr` no sabe cuánto mide la mesa:
+   * medido, a 1366×768 la banda daba 210 px y los cantos del mazo de Operación
+   * Académica quedaban 34 px por debajo de su borde, recortados por el `clip`.
+   * Con `max-content` la fila pide lo que la baraja necesita y la banda
+   * superior cede solo esa diferencia; cuando la baraja ya cabe, manda el
+   * reparto 2.35 : 1 de siempre.
+   *
+   * No es circular: el tamaño de carta sale del ANCHO de la mesa (`cqw`) y su
+   * alto, en altos de carta, del layout; nada de eso depende del alto de esta
+   * fila.
+   */
+  grid-template-rows:
+    minmax(300px, 2.35fr)
+    minmax(max-content, 1fr);
 }
 
 .operational-shell[data-shell-layout='director'] .operational-shell__top {
@@ -250,21 +267,20 @@
   min-width: 0;
   min-height: 0;
   /*
-   * AIRE INFERIOR PARA EL MAZO.
+   * MARGEN EXTERIOR MÍNIMO, no reserva para el mazo.
    *
-   * La carta de Servicio se dibuja como PILA: sus cartas asomadas se escalonan
-   * hacia abajo, así que la caja del mazo termina por debajo de la última carta
-   * visible. Medido en navegador, ese exceso llegaba a 27,8 px a 1440 y la
-   * banda —que recorta con `clip`— se comía el borde inferior de la pila. El
-   * recorte NO lo introdujo el panel derecho: a 24 % ya eran 22,5 px; ensanchar
-   * la columna solo lo agravó, porque la banda más estrecha comprime el arco.
+   * Aquí se reservaban 36 px porque los cantos de los mazos (la pila de
+   * Operación Académica) se escalonan por debajo de la última carta y la banda
+   * —que recorta con `clip`— se los comía. Ese aire era un número en px para
+   * un desborde que escala con la carta, y además convivía con el botón
+   * «Volver a la mesa», que ya no existe.
    *
-   * Reservar el aire aquí lo resuelve en su origen y sin tocar la geometría de
-   * las cartas: el mazo se recompone dentro de una caja de contenido algo más
-   * baja y deja de asomar. El personaje no se mueve —vive en la banda superior,
-   * que no cambia— y la mesa sigue siendo utilizable.
+   * La reserva vive ahora en la propia mesa (`--table-motion-reserve`, en
+   * altos de carta), que es quien sabe cuánto mide su carta. Aquí queda solo
+   * el respiro exterior: así el borde inferior de la baraja cae a ~4 px del
+   * borde inferior del panel de lectura.
    */
-  padding-bottom: 36px;
+  padding-bottom: 4px;
   /*
    * `clip` y no `hidden`: son el mismo recorte, pero `hidden` deja un
    * contenedor DESPLAZABLE. Medido: al cerrar la isla del problema, el
