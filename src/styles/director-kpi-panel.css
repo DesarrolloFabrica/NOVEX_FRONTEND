@@ -403,6 +403,12 @@
   /* Safe content area: aire respecto al marco y ornamentos. */
   padding: 20px 28px 12px;
   box-sizing: border-box;
+  /*
+   * Las parejas de gráficas deciden si van lado a lado según el ANCHO del
+   * panel, no del viewport: en tablet vertical el panel ocupa toda la fila
+   * (~790 px) aunque la pantalla mida menos de 900 px.
+   */
+  container: director-reading / inline-size;
 }
 
 /* Pista de continuación: no bloquea scroll ni clicks. */
@@ -2932,6 +2938,23 @@
   }
 }
 
+/*
+ * …salvo que el panel sea ancho aunque el viewport no lo sea (tablet vertical:
+ * la lectura ocupa la fila entera). Con 620 px de panel cada gráfica conserva
+ * ~280 px, lo mismo que en escritorio. En 1024×768 el panel mide ~380 px y
+ * esto no aplica.
+ */
+@container director-reading (min-width: 620px) {
+  .director-flujo__pair {
+    grid-template-columns: minmax(0, 52fr) 1px minmax(0, 48fr);
+    row-gap: 0;
+  }
+
+  .director-flujo__divider {
+    display: block;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .director-flujo__frame,
   .director-flujo__help-text {
@@ -3379,6 +3402,18 @@
 
   .director-resolucion__pair .director-antiguedad__divider {
     display: none;
+  }
+}
+
+/* Igual que la pareja de flujo: panel ancho, gráficas lado a lado. */
+@container director-reading (min-width: 620px) {
+  .director-resolucion__pair {
+    grid-template-columns: minmax(0, 58fr) 1px minmax(0, 42fr);
+    row-gap: 0;
+  }
+
+  .director-resolucion__pair .director-antiguedad__divider {
+    display: block;
   }
 }
 

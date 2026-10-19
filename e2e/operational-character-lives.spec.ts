@@ -298,7 +298,7 @@ async function openShell(page: Page) {
  * quedaría sobre un mazo y su hover mantendría transiciones en marcha.
  */
 async function returnToTable(page: Page) {
-  await page.getByTestId('return-to-table').click()
+  await page.getByTestId('breadcrumb-direction').click()
   await expect(page.locator(PANEL)).toHaveCount(0)
   await page.mouse.move(1, 1)
   await settle(page)
@@ -712,7 +712,7 @@ test.describe('robustez de la transición', () => {
     await select(page, ESPECIALIZACIONES)
     await createInSelected(page, 'MEDIUM')
     await expect(page.locator(LIVES)).toHaveAttribute('data-transition', 'loss')
-    await domClick(page, '[data-testid="return-to-table"]')
+    await domClick(page, '[data-testid="breadcrumb-direction"]')
     await expect(page.locator(PANEL)).toHaveCount(0)
     await expect(page.locator(LIVES)).toHaveCount(0)
     await expect(page.locator('.character-lives__delta')).toHaveCount(0)
@@ -730,8 +730,13 @@ test.describe('robustez de la transición', () => {
     await expect(page.locator(LIVES)).toHaveAttribute('data-transition', 'loss')
     await page.setViewportSize({ width: 1100, height: 700 })
     await expect(page.locator(LIVES)).toHaveAttribute('data-life-points', '4')
-    await page.waitForTimeout(900)
-    expect(await runningLifeAnimations(page)).toBe(0)
+    /*
+     * Tras el cambio de viewport el navegador tarda ~1,3 s en volver a pintar
+     * (medido: las animaciones siguen con currentTime = 0 hasta entonces, con
+     * y sin el escenario a sangre de la Fase 1.5). Lo que se protege es que
+     * terminan sin restos, no su reloj: se espera a que acaben, con techo.
+     */
+    await expect.poll(() => runningLifeAnimations(page), { timeout: 3_000 }).toBe(0)
     expect(await heartStates(page)).toEqual(['full', 'full', 'empty', 'empty', 'empty'])
     // La capa animada de pérdida queda invisible al terminar.
     const opacities = await page
@@ -744,9 +749,10 @@ test.describe('robustez de la transición', () => {
     await createInSelected(page, 'MEDIUM')
     await expect(page.locator(LIVES)).toHaveAttribute('data-transition', 'loss')
     // Fase 1: ya no hay pestañas hacia otras secciones; la salida de la ruta
-    // dentro de la SPA que queda es cerrar sesión desde el menú de usuario.
-    await page.getByRole('button', { name: /Menú de usuario/ }).click()
-    await page.getByRole('menuitem', { name: 'Cerrar sesión' }).click()
+    // dentro de la SPA que queda es cerrar sesión, desde la Fase 1.5 en la
+    // hamburguesa flotante del Centro.
+    await page.getByTestId('shell-menu-trigger').click()
+    await page.getByTestId('shell-menu-logout').click()
     await expect(page).toHaveURL(/\/login$/)
     await expect(page.getByTestId('direction-character')).toHaveCount(0)
     expect(await runningLifeAnimations(page)).toBe(0)

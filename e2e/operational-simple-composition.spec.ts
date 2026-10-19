@@ -492,7 +492,7 @@ test.describe('composición simple · 1440x900', () => {
     })
   })
 
-  test('«Volver a la mesa» restaura la composición global', async ({
+  test('la flecha de la miga restaura la composición global', async ({
     page,
   }, testInfo) => {
     test.slow()
@@ -503,17 +503,20 @@ test.describe('composición simple · 1440x900', () => {
     const globalBefore = await measure(page, 'GLOBAL (antes)')
 
     await select(page, 'coord-saber-pro')
-    const action = page.getByTestId('return-to-table')
-    // Es un control real, con nombre accesible propio, y pertenece a la
-    // composición de la mesa: no está dentro del panel.
+    // Único retorno de la baraja: la flecha de la miga, encima de las cartas.
+    // El «Volver a la mesa» inferior se retiró (mismo `clearCoordination`).
+    const action = page.getByTestId('breadcrumb-direction')
+    await expect(page.getByTestId('return-to-table')).toHaveCount(0)
     await expect(action).toBeVisible()
-    await expect(action).toHaveText('Volver a la mesa')
-    await expect(page.locator(`${PANEL} [data-testid="return-to-table"]`)).toHaveCount(0)
-    await expect(
-      page.locator(
-        '[data-testid="operational-composition"] [data-testid="return-to-table"]',
-      ),
-    ).toHaveCount(1)
+    // Control real, sin etiqueta visible y con nombre accesible propio.
+    await expect(action).toHaveAccessibleName('Volver a Dirección de Operaciones')
+    await expect(action).toHaveText('')
+    await expect(page.locator(`${PANEL} [data-testid="breadcrumb-direction"]`)).toHaveCount(0)
+    const arrow = (await action.boundingBox())!
+    expect(arrow.width).toBeGreaterThanOrEqual(24)
+    expect(arrow.height).toBeGreaterThanOrEqual(24)
+    const table = await boxOf(page, '[data-testid="coordination-table"]')
+    expect(arrow.y + arrow.height).toBeLessThanOrEqual(table.y + 1)
 
     await action.click()
 

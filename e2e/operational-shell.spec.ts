@@ -403,7 +403,7 @@ test.describe('shell del Centro · 1440x900', () => {
 
     await expect(page.locator(CARD)).toHaveCount(9)
     await expect(page.locator(`${SLOT}[data-state="dimmed"]`)).toHaveCount(8)
-    await expect(page.getByTestId('return-to-table')).toBeVisible()
+    await expect(page.getByTestId('breadcrumb-direction')).toBeVisible()
     expectInsideStage(simple)
     expect(simple.overflow.x).toBeLessThanOrEqual(0)
 
@@ -491,7 +491,7 @@ test.describe('shell del Centro · 1440x900', () => {
     await select(page, 'coord-b2b')
     const inSimple = await measureCharacter(page, 'SIMPLE_SELECTED')
 
-    await page.getByTestId('return-to-table').click()
+    await page.getByTestId('breadcrumb-direction').click()
     await expect(page.locator(PANEL)).toHaveCount(0)
     await select(page, PARENT)
     const inDeck = await measureCharacter(page, 'DECK_SELECTED')
@@ -529,7 +529,7 @@ test.describe('shell del Centro · 1440x900', () => {
     const before = await measure(page, 'GLOBAL antes')
 
     await select(page, 'coord-b2b')
-    await page.getByTestId('return-to-table').click()
+    await page.getByTestId('breadcrumb-direction').click()
     await expect(page.locator(PANEL)).toHaveCount(0)
 
     /*

@@ -41,7 +41,8 @@ describe('layout DIRECTOR', () => {
 
   it('variante analítica: preserva la lectura y da prioridad visible a la baraja', () => {
     expect(directorBlock).toContain('--shell-action-w: 42%')
-    expect(directorBlock).toContain('minmax(300px, 2.35fr) minmax(170px, 1fr)')
+    // La banda de la baraja nunca baja de lo que mide la mesa (sin recorte).
+    expect(directorBlock).toContain('minmax(300px, 2.35fr) minmax(max-content, 1fr)')
     expect(directorBlock).toContain('minmax(0, 0.365fr) minmax(0, 0.635fr)')
     expect(directorBlock).toContain('clamp(120px, 9.2vw, 184px)')
     expect(directorBlock).toContain('--selected-scale: 1.08')

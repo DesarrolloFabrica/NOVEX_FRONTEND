@@ -90,4 +90,16 @@ test.describe('menú flotante táctil', () => {
     await expect(page.getByTestId('shell-menu-panel')).toBeHidden()
     expect(await shell.boundingBox()).toEqual(before)
   })
+
+  test('la flecha de la baraja vuelve a la mesa mediante tap', async ({ page }) => {
+    await openCenter('DIRECTOR', page)
+    const card = page
+      .getByTestId('shell-stage')
+      .locator('[data-testid="coordination-card"][data-code="coord-especializaciones"]')
+    await card.tap()
+    await expect(card).toHaveAttribute('data-selected', 'true')
+    await page.getByTestId('breadcrumb-direction').tap()
+    await expect(page.getByTestId('operational-breadcrumb')).toHaveCount(0)
+    await expect(card).toHaveAttribute('data-selected', 'false')
+  })
 })

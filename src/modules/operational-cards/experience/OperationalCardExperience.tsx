@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { CoordinationTable } from '@/modules/operational-cards/components/CoordinationTable'
 import { OperationalBreadcrumb } from '@/modules/operational-cards/components/OperationalBreadcrumb'
-import { TableReturnAction } from '@/modules/operational-cards/components/TableReturnAction'
 import { resolveDeckSelectionContext } from '@/modules/operational-cards/data/deckContext'
 import { buildTableLayout } from '@/modules/operational-cards/data/tableLayout'
 import { buildProductTable } from '@/modules/operational-cards/data/productHierarchy'
@@ -188,7 +187,7 @@ export function OperationalCardExperience({
       )}
 
       {/*
-        ZONA DE COMPOSICIÓN: personaje, mesa y la acción de retorno.
+        ZONA DE COMPOSICIÓN: la mesa (el retorno vive en la miga superior).
 
         Existe para que la escena pueda tener DOS COLUMNAS sin que la mesa ni el
         personaje tengan que saberlo. En estado global es una columna vertical y
@@ -252,16 +251,10 @@ export function OperationalCardExperience({
               onHoverChange={hoverCoordination}
             />
 
-            {/* Retorno narrativo de la composición simple. Un mazo abierto
-                tendrá el suyo —«Recoger mazo»—, que es otra acción sobre otra
-                composición; hasta entonces esta solo aparece donde ya está
-                definida. */}
-            {compositionMode === 'SIMPLE_SELECTED' && (
-              <TableReturnAction
-                label="Volver a la mesa"
-                onReturn={clearCoordination}
-              />
-            )}
+            {/* El retorno vive SOLO en la miga superior (flecha). Aquí hubo un
+                «Volver a la mesa» que llamaba al mismo `clearCoordination`; se
+                retiró para no duplicar el control y devolver su alto a la
+                mesa. */}
           </>
         )}
       </div>
