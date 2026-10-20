@@ -363,7 +363,7 @@ test.describe('QA ESTADO · ANTIGÜEDAD · scope COORDINACIÓN', () => {
       await expect(
         tid(page, 'director-antiguedad-table').locator('[data-testid^="director-antiguedad-responsible-"]'),
       ).toHaveCount(0)
-      await expect(tid(page, 'director-analysis-period-range')).toHaveText('H2 2026')
+      await expect(tid(page, 'director-analysis-period-range')).toHaveText('1 JUL — 31 DIC 2026')
       await expect(tid(page, 'director-antiguedad-cut')).toHaveText('HOY')
 
       await expectSquared(page, response)
@@ -418,7 +418,7 @@ test.describe('QA ESTADO · ANTIGÜEDAD · scope COORDINACIÓN', () => {
     // 2 · Ingenierías (hija visible en el mazo abierto): misma lámina y periodo, OTRA lectura.
     await selectCard(page, 'coord-ingenierias')
     await expect(tid(page, 'director-estado-carousel')).toHaveAttribute('data-page', '2')
-    await expect(tid(page, 'director-analysis-period-range')).toHaveText('H2 2026')
+    await expect(tid(page, 'director-analysis-period-range')).toHaveText('1 JUL — 31 DIC 2026')
     await expect(tid(page, 'director-antiguedad-cut')).toHaveText('HOY')
     expect(served.at(-1)!.scope.coordinationId).toBe(ING)
     const ing = await agingView(page)
@@ -438,7 +438,7 @@ test.describe('QA ESTADO · ANTIGÜEDAD · scope COORDINACIÓN', () => {
     await page.waitForTimeout(400)
     await tid(page, 'director-flujo-drill-2026-09-01').focus()
     await page.keyboard.press('Enter')
-    await expect(tid(page, 'director-analysis-period-range')).toHaveText('SEPTIEMBRE 2026')
+    await expect(tid(page, 'director-analysis-period-range')).toHaveText('1 — 30 SEP 2026')
     await goToAntiguedad(page)
     await expect(tid(page, 'director-antiguedad-cut')).toHaveText('AL CIERRE DEL 30 SEP 2026')
     const sep = served.at(-1)!

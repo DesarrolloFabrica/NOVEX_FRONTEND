@@ -15,6 +15,7 @@
  * Todo scoped a data-shell-layout='director': no toca ANALISTA/ADMIN/COORDINADOR.
  */
 .operational-shell[data-shell-layout='director'] {
+  /* 46 % en escritorio (≥1280 px): ver «Lectura más ancha» al final del archivo. */
   --shell-action-w: 42%;
 }
 
@@ -2635,6 +2636,23 @@
    */
   .operational-shell--coordinator .operational-shell__rail-stack {
     grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+/* ==========================================================================
+   LECTURA MÁS ANCHA EN ESCRITORIO (DIRECTOR)
+   ==========================================================================
+
+   42 % → 46 % (≈+56 px a 1440 y ≈+75 px a 1920) para que pestañas, filtros
+   temporales y las cuatro láminas respiren: a 1440 el título «Movimiento de
+   problemas» se cortaba. Las gráficas ganan ancho, no alto. El personaje está
+   limitado por el ancho y pierde ≈8 %, la baraja ≈7 %; problemas sigue por
+   encima de 400 px. Por debajo de 1280 px (tablet horizontal) se conserva el
+   42 %; en vertical el shell es de una columna y esta variable no aplica.
+*/
+@media (min-width: 1280px) {
+  .operational-shell[data-shell-layout='director'] {
+    --shell-action-w: 46%;
   }
 }
 

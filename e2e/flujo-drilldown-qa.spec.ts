@@ -311,7 +311,6 @@ async function shootFull(page: Page, name: string) {
   await page.screenshot({ path: path.join(OUT, `${name}.png`) })
 }
 
-const crumbText = (page: Page) => tid(page, 'director-flujo-crumb').innerText()
 
 /**
  * Datos > decoración: en puntos clave de la gráfica (etiquetas del eje y
@@ -426,7 +425,7 @@ test.describe('QA ESTADO · Carga | Movimiento · drill-down ciclo → mes → s
         expect(await axisLabels(page, CARGA)).toEqual(['JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'])
         await expectNoOrnamentOverChart(page)
         await expectNoOrnamentOverChart(page, MOVIMIENTO)
-        await expect(tid(page, 'director-analysis-period-range')).toHaveText('H2 2026')
+        await expect(tid(page, 'director-analysis-period-range')).toHaveText('1 JUL — 31 DIC 2026')
         expect(states.at(-1)).toMatchObject({ kind: 'cycle', from: '2026-07-01', calendarEnd: '2026-12-31' })
         await shoot(page, `${short}-1-ciclo-${size}`)
         await shootFull(page, `${short}-0-centro-ciclo-${size}`)
@@ -444,7 +443,7 @@ test.describe('QA ESTADO · Carga | Movimiento · drill-down ciclo → mes → s
         await expect(tid(page, 'director-estado-attention-chart').locator('svg')).toBeVisible()
         // Lámina 3 (Antigüedad) existe a la derecha: «siguiente» sigue activo.
         await expect(tid(page, 'director-estado-carousel-next')).toBeEnabled()
-        await expect(tid(page, 'director-analysis-period-range')).toHaveText('H2 2026')
+        await expect(tid(page, 'director-analysis-period-range')).toHaveText('1 JUL — 31 DIC 2026')
         await expectNoVerticalScroll(page)
         const severityBox = await tid(page, 'director-estado-severity-chart').boundingBox()
         const attentionBox = await tid(page, 'director-estado-attention-chart').boundingBox()
@@ -466,7 +465,7 @@ test.describe('QA ESTADO · Carga | Movimiento · drill-down ciclo → mes → s
         await tid(page, 'director-estado-carousel-next').click()
         await expectCarouselPage(page, 2)
         await expect(tid(page, 'director-antiguedad-chart').locator('svg')).toBeVisible()
-        await expect(tid(page, 'director-analysis-period-range')).toHaveText('H2 2026')
+        await expect(tid(page, 'director-analysis-period-range')).toHaveText('1 JUL — 31 DIC 2026')
         await expectNoVerticalScroll(page)
 
         // → Lámina 4: Resolución, última; mismo periodo, sin scroll.
@@ -475,14 +474,14 @@ test.describe('QA ESTADO · Carga | Movimiento · drill-down ciclo → mes → s
         await expect(tid(page, 'director-resolucion-trend-chart').locator('svg')).toBeVisible()
         await expect(tid(page, 'director-tiempo-solucion-chart').locator('svg')).toBeVisible()
         await expect(tid(page, 'director-estado-carousel-next')).toBeDisabled()
-        await expect(tid(page, 'director-analysis-period-range')).toHaveText('H2 2026')
+        await expect(tid(page, 'director-analysis-period-range')).toHaveText('1 JUL — 31 DIC 2026')
         await expectNoVerticalScroll(page)
         await shootFull(page, `${short}-0-centro-pagina4-${size}`)
 
         // ← Lámina 1 de nuevo: el periodo no se movió.
         await tid(page, 'director-estado-carousel-dot-0').click()
         await expectCarouselPage(page, 0)
-        await expect(tid(page, 'director-analysis-period-range')).toHaveText('H2 2026')
+        await expect(tid(page, 'director-analysis-period-range')).toHaveText('1 JUL — 31 DIC 2026')
         expect(states.at(-1)).toMatchObject({ kind: 'cycle', from: '2026-07-01' })
 
         // Ayuda «?» de cada gráfica (hover).
@@ -549,7 +548,9 @@ test.describe('QA ESTADO · Carga | Movimiento · drill-down ciclo → mes → s
         expect(weeks[0]).toBe('1–4')
         expect(weeks).toContain('5–11')
         expect(await axisLabels(page, MOVIMIENTO)).toEqual(weeks)
-        expect(await crumbText(page)).toMatch(/H2 2026\s*›\s*OCTUBRE/)
+        // La ruta vive en los filtros de la cabecera (el flujo ya no la repite).
+        await expect(tid(page, 'director-period-cycle')).toHaveValue('2026-2')
+        await expect(tid(page, 'director-period-month')).toHaveValue('9')
         expect(states.at(-1)).toMatchObject({ kind: 'month', from: '2026-10-01', calendarEnd: '2026-10-31' })
         await expectNoOrnamentOverChart(page)
         await expectNoOrnamentOverChart(page, MOVIMIENTO)
@@ -562,15 +563,16 @@ test.describe('QA ESTADO · Carga | Movimiento · drill-down ciclo → mes → s
         const week = await clickBand(page, '5–11')
         await week.click()
         await flujoReady(page, 'day')
-        expect(await crumbText(page)).toMatch(/OCTUBRE\s*›\s*5–11 OCT/)
+        await expect(tid(page, 'director-period-month')).toHaveValue('9')
+        await expect(tid(page, 'director-period-week')).toHaveValue('2026-10-05')
         expect(states.at(-1)).toMatchObject({ kind: 'week', from: '2026-10-05', calendarEnd: '2026-10-11' })
         await expect(page.locator('[data-testid^="director-flujo-drill-"]')).toHaveCount(0)
         expect(await axisLabels(page, MOVIMIENTO)).toEqual(await axisLabels(page, CARGA))
         await expectNoOrnamentOverChart(page)
         await shoot(page, `${short}-3-semana-dias-${size}`)
 
-        // Ruta: volver al ciclo directamente.
-        await tid(page, 'director-flujo-crumb-cycle').click()
+        // Volver al ciclo directamente: «Todo el ciclo» en los filtros.
+        await tid(page, 'director-period-month').selectOption('')
         await flujoReady(page, 'month')
         expect(states.at(-1)).toMatchObject({ kind: 'cycle', from: '2026-07-01' })
       })

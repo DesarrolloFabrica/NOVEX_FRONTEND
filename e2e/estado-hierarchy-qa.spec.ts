@@ -530,8 +530,8 @@ test.describe('QA ESTADO visualización-first v3', () => {
         await expect(estado).toHaveAttribute('data-period-kind', 'week')
         await expect(flujo).toHaveAttribute('data-level', 'day')
 
-        // Ruta: volver directamente al ciclo.
-        await panel.getByTestId('director-flujo-crumb-cycle').click()
+        // Volver directamente al ciclo: «Todo el ciclo» en los filtros.
+        await panel.getByTestId('director-period-month').selectOption('')
         await expect(estado).toHaveAttribute('data-period-kind', 'cycle')
 
         // Ciclo histórico → «↺ Ciclo actual».

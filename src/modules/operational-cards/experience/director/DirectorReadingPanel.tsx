@@ -4,7 +4,7 @@ import {
   refreshAnalysisPeriod,
   type AnalysisPeriod,
 } from '@/modules/operational-cards/domain/analysis-period'
-import { DirectorAnalysisPeriodPicker } from '@/modules/operational-cards/experience/director/DirectorAnalysisPeriodPicker'
+import { DirectorAnalysisPeriodFilters } from '@/modules/operational-cards/experience/director/DirectorAnalysisPeriodPicker'
 import { DirectorAprendizajesPanel } from '@/modules/operational-cards/experience/director/DirectorAprendizajesPanel'
 import { DirectorDependenciasPanel } from '@/modules/operational-cards/experience/director/DirectorDependenciasPanel'
 import { DirectorEstadoPanel } from '@/modules/operational-cards/experience/director/DirectorEstadoPanel'
@@ -221,8 +221,9 @@ export function DirectorReadingPanel({
             className="director-reading__period"
             data-testid="director-reading-period"
           >
-            <DirectorAnalysisPeriodPicker
-              variant="cycle"
+            {/* Ciclo · Mes · Semana visibles; mismo AnalysisPeriod que los
+                clics de las gráficas y las flechas. */}
+            <DirectorAnalysisPeriodFilters
               period={analysisPeriod}
               onChange={setAnalysisPeriod}
             />

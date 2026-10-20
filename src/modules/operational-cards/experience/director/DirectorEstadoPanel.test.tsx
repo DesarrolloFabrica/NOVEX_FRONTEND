@@ -151,11 +151,10 @@ describe('DirectorEstadoPanel periodo jerárquico', () => {
     expect(html).toContain('Abiertos 4')
     expect(html).toContain('En atención 3')
     // FLUJO DE PROBLEMAS sustituye a «Evolución»: barras de eventos +
-    // pendientes (stock) en el resumen, con ruta ciclo › mes › semana.
+    // pendientes (stock) en el resumen. La ruta ciclo › mes › semana vive en
+    // los filtros de la cabecera de la lectura: el flujo ya no la repite.
     expect(html).toContain('Carga de problemas')
-    expect(html).toContain('data-testid="director-flujo-crumb"')
-    expect(html).toContain('H2 2026')
-    expect(html).toContain('OCTUBRE')
+    expect(html).not.toContain('data-testid="director-flujo-crumb"')
     expect(html).toContain('Internos')
     expect(html).toContain('Externos')
     // MOVIMIENTO al lado de la CARGA, mismo periodo.

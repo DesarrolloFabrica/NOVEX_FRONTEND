@@ -105,15 +105,18 @@ export function DirectorFlujoProblemas({
   loading,
   error,
   onPeriodChange,
+  showTrail = true,
 }: {
   period: AnalysisPeriod
   buckets: readonly OperationalKpiFlowBucket[] | null
   loading: boolean
   error: string | null
   onPeriodChange: (next: AnalysisPeriod) => void
+  /** `false` cuando un filtro visible ya muestra la ruta y permite subir. */
+  showTrail?: boolean
 }) {
   const level = flujoLevelOf(period)
-  const trail = analysisPeriodTrail(period)
+  const trail = showTrail ? analysisPeriodTrail(period) : [period]
   const canDrill = level !== 'day'
   // Hover sincronizado: la gráfica de origen ya resalta su columna sola.
   const [hover, setHover] = useState<{ source: ChartKey; index: number } | null>(null)
