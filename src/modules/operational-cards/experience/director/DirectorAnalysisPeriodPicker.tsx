@@ -708,3 +708,223 @@ export function DirectorAnalysisPeriodPicker({
     </section>
   )
 }
+
+/* ───────────── Franja de filtros: Ciclo · Mes · Semana ───────────── */
+
+/** «1 JUL — 31 DIC 2026», «1 — 30 SEP 2026», «28 SEP — 4 OCT 2026». */
+function explicitRange(period: AnalysisPeriod): string {
+  const start = ymdParts(period.from)
+  const end = ymdParts(period.calendarEnd)
+  if (start.year !== end.year) {
+    return `${start.day} ${MONTH_SHORT[start.month]} ${start.year} — ${end.day} ${MONTH_SHORT[end.month]} ${end.year}`
+  }
+  if (start.month === end.month) {
+    return `${start.day} — ${end.day} ${MONTH_SHORT[end.month]} ${end.year}`
+  }
+  return `${start.day} ${MONTH_SHORT[start.month]} — ${end.day} ${MONTH_SHORT[end.month]} ${end.year}`
+}
+
+/** Ciclos ofrecidos: el año actual y los dos anteriores, más el elegido si es más antiguo. */
+function cycleOptions(period: AnalysisPeriod, todayYear: number) {
+  const selectedYear = containingCyclePeriod(period).navigationContext.year
+  const firstYear = Math.min(todayYear - 2, selectedYear)
+  const options: { value: string; label: string; future: boolean }[] = []
+  for (let year = todayYear; year >= firstYear; year -= 1) {
+    for (const half of [2, 1] as const) {
+      const candidate = analysisPeriodFromCycle(year, half)
+      options.push({
+        value: `${year}-${half}`,
+        label: `H${half} ${year} · ${half === 1 ? 'Ene — Jun' : 'Jul — Dic'}`,
+        future: isPeriodFullyFuture(candidate.from),
+      })
+    }
+  }
+  return options
+}
+
+/**
+ * Selección temporal EXPLÍCITA de la lectura de coordinación.
+ *
+ * No guarda estado propio: cada control se deriva del único `AnalysisPeriod`
+ * y cada cambio emite un periodo nuevo con los constructores del dominio. Así
+ * selectores, flechas y clics en las gráficas no pueden desincronizarse.
+ *
+ * - Ciclo elegido y mes «Todo el ciclo» → periodo de ciclo.
+ * - Mes elegido y semana «Todo el mes» → periodo de mes.
+ * - Semana elegida → periodo de semana (lun–dom completa, como el drill-down;
+ *   conserva el mes desde el que se eligió como contexto).
+ * Cambiar el ciclo descarta mes y semana; cambiar el mes descarta la semana.
+ * Las opciones totalmente futuras quedan deshabilitadas.
+ */
+export function DirectorAnalysisPeriodFilters({
+  period,
+  onChange,
+}: {
+  period: AnalysisPeriod
+  onChange: (next: AnalysisPeriod) => void
+}) {
+  const rootId = useId()
+  const weekReasonId = `${rootId}-week-reason`
+  const today = bogotaTodayParts()
+  const cycle = containingCyclePeriod(period)
+  const year = cycle.navigationContext.year
+  const half = cycleHalfOf(period)
+  const monthIndex =
+    period.kind === 'cycle' ? null : (period.navigationContext.month ?? null)
+  const weekFrom = period.kind === 'week' ? period.from : null
+
+  const currentWeekFrom = buildCurrentWeekPeriod().from
+  const nextAllowed = canNavigateNext(period)
+  const unitLabel =
+    period.kind === 'cycle' ? 'Ciclo' : period.kind === 'month' ? 'Mes' : 'Semana'
+
+  const onCycle = (value: string) => {
+    const [y, h] = value.split('-').map(Number)
+    onChange(analysisPeriodFromCycle(y, h as 1 | 2))
+  }
+  const onMonth = (value: string) => {
+    if (value === '') onChange(analysisPeriodFromCycle(year, half))
+    else onChange(analysisPeriodFromMonth(year, Number(value)))
+  }
+  const onWeek = (value: string) => {
+    if (monthIndex === null) return
+    if (value === '') {
+      onChange(analysisPeriodFromMonth(year, monthIndex))
+      return
+    }
+    // Misma regla que el drill-down: semana completa, contexto = mes elegido.
+    onChange({
+      ...analysisPeriodFromWeek(value),
+      navigationContext: { year, month: monthIndex },
+    })
+  }
+
+  const weeks = monthIndex === null ? [] : listWeeksInBrowseMonth(year, monthIndex)
+  const inProgress = period.isCurrent && period.isPartial
+
+  return (
+    <section
+      className="director-analysis-period director-analysis-period--filters"
+      data-testid="director-analysis-period"
+      data-kind={period.kind}
+      data-partial={period.isPartial ? 'true' : 'false'}
+      data-current={period.isCurrent ? 'true' : 'false'}
+      data-variant="filters"
+      aria-label="Periodo analizado"
+    >
+      <div className="director-period-filters">
+        <button
+          type="button"
+          className="director-analysis-period__nav"
+          aria-label={`${unitLabel} anterior`}
+          data-testid="director-analysis-period-prev"
+          onClick={() => onChange(shiftAnalysisPeriod(period, -1))}
+        >
+          ‹
+        </button>
+
+        <label className="director-period-filters__field">
+          <span className="director-period-filters__label">Ciclo</span>
+          <select
+            className="director-period-filters__select"
+            data-testid="director-period-cycle"
+            value={`${year}-${half}`}
+            onChange={(event) => onCycle(event.target.value)}
+          >
+            {cycleOptions(period, today.year).map((option) => (
+              <option key={option.value} value={option.value} disabled={option.future}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="director-period-filters__field">
+          <span className="director-period-filters__label">Mes</span>
+          <select
+            className="director-period-filters__select"
+            data-testid="director-period-month"
+            value={monthIndex === null ? '' : String(monthIndex)}
+            onChange={(event) => onMonth(event.target.value)}
+          >
+            <option value="">Todo el ciclo</option>
+            {monthsInCycleHalf(half).map((m) => {
+              const future = isPeriodFullyFuture(formatYmd(year, m, 1))
+              const current = year === today.year && m === today.monthIndex
+              return (
+                <option key={m} value={String(m)} disabled={future}>
+                  {MONTH_LONG[m]}
+                  {current ? ' (actual)' : ''}
+                </option>
+              )
+            })}
+          </select>
+        </label>
+
+        <label className="director-period-filters__field">
+          <span className="director-period-filters__label">Semana</span>
+          <select
+            className="director-period-filters__select"
+            data-testid="director-period-week"
+            value={weekFrom ?? ''}
+            disabled={monthIndex === null}
+            aria-describedby={monthIndex === null ? weekReasonId : undefined}
+            title={monthIndex === null ? 'Elija un mes para ver sus semanas' : undefined}
+            onChange={(event) => onWeek(event.target.value)}
+          >
+            <option value="">{monthIndex === null ? 'Elija un mes' : 'Todo el mes'}</option>
+            {weeks.map((week) => (
+              <option
+                key={week.from}
+                value={week.from}
+                disabled={isPeriodFullyFuture(week.from)}
+              >
+                {weekRangeShort(week.from, week.to)}
+                {week.from === currentWeekFrom ? ' (actual)' : ''}
+              </option>
+            ))}
+          </select>
+          {monthIndex === null ? (
+            <span id={weekReasonId} className="director-period-filters__sr">
+              Elija un mes para filtrar por semana.
+            </span>
+          ) : null}
+        </label>
+
+        <button
+          type="button"
+          className="director-analysis-period__nav"
+          aria-label={`${unitLabel} siguiente`}
+          data-testid="director-analysis-period-next"
+          disabled={!nextAllowed}
+          onClick={() => {
+            if (nextAllowed) onChange(shiftAnalysisPeriod(period, 1))
+          }}
+        >
+          ›
+        </button>
+      </div>
+
+      {/* Intervalo efectivo: fechas exactas y si está en curso. */}
+      <p className="director-period-filters__effective">
+        <span data-testid="director-analysis-period-range">{explicitRange(period)}</span>
+        {inProgress ? (
+          <span className="director-period-filters__live">
+            <span aria-hidden="true"> · </span>En curso
+          </span>
+        ) : null}
+        {!cycle.isCurrent ? (
+          <button
+            type="button"
+            className="director-analysis-period__current"
+            data-testid="director-analysis-period-go-current"
+            aria-label="Volver al ciclo actual"
+            onClick={() => onChange(buildCurrentCyclePeriod())}
+          >
+            <span aria-hidden="true">↺ </span>Ciclo actual
+          </button>
+        ) : null}
+      </p>
+    </section>
+  )
+}

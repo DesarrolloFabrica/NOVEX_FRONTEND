@@ -41,8 +41,8 @@ describe('layout DIRECTOR', () => {
 
   it('variante analítica: preserva la lectura y da prioridad visible a la baraja', () => {
     expect(directorBlock).toContain('--shell-action-w: 42%')
-    // La banda de la baraja pide al menos su contenido: con un mínimo fijo
-    // (170 px) las cartas se recortaban a 1366×768.
+    // La banda de la baraja nunca baja de lo que mide la mesa (sin recorte):
+    // con un mínimo fijo (170 px) las cartas se recortaban a 1366×768.
     expect(directorBlock.replace(/\s+/g, ' ')).toContain(
       'grid-template-rows: minmax(300px, 2.35fr) minmax(max-content, 1fr);',
     )

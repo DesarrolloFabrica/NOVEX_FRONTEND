@@ -362,11 +362,11 @@ test.describe('QA periodo común de la lectura de coordinación', () => {
 
       // Default: ciclo actual. Septiembre se elige EN LA GRÁFICA (flujo).
       await expect(tid(page, 'director-flujo')).toHaveAttribute('data-level', 'month')
-      await expect(tid(page, 'director-analysis-period-range')).toHaveText('H2 2026')
+      await expect(tid(page, 'director-analysis-period-range')).toHaveText('1 JUL — 31 DIC 2026')
       await tid(page, 'director-flujo-drill-2026-09-01').focus()
       await page.keyboard.press('Enter')
       await expect(tid(page, 'director-flujo')).toHaveAttribute('data-level', 'week')
-      await expect(tid(page, 'director-flujo-crumb')).toContainText('SEPTIEMBRE')
+      await expect(tid(page, 'director-period-month')).toHaveValue('8')
       await expect.poll(() => lastFor(log, '/operational-kpis/state')?.params.from).toBe('2026-09-01')
       await shoot(page, '1-sep-estado', size)
 
@@ -400,7 +400,7 @@ test.describe('QA periodo común de la lectura de coordinación', () => {
 
       // Semana 5–11 OCT 2026 elegida en el flujo (ciclo → octubre → semana).
       await tid(page, 'director-reading-mode-state').click()
-      await tid(page, 'director-flujo-crumb-cycle').click()
+      await tid(page, 'director-period-month').selectOption('')
       await tid(page, 'director-flujo-drill-2026-10-01').focus()
       await page.keyboard.press('Enter')
       await tid(page, 'director-flujo-drill-2026-10-05').focus()

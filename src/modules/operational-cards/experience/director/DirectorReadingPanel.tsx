@@ -4,7 +4,7 @@ import {
   refreshAnalysisPeriod,
   type AnalysisPeriod,
 } from '@/modules/operational-cards/domain/analysis-period'
-import { DirectorAnalysisPeriodPicker } from '@/modules/operational-cards/experience/director/DirectorAnalysisPeriodPicker'
+import { DirectorAnalysisPeriodFilters } from '@/modules/operational-cards/experience/director/DirectorAnalysisPeriodPicker'
 import { DirectorAprendizajesPanel } from '@/modules/operational-cards/experience/director/DirectorAprendizajesPanel'
 import { DirectorDependenciasPanel } from '@/modules/operational-cards/experience/director/DirectorDependenciasPanel'
 import { DirectorEstadoPanel } from '@/modules/operational-cards/experience/director/DirectorEstadoPanel'
@@ -215,17 +215,24 @@ export function DirectorReadingPanel({
          * Un solo periodo para todos los modos: vive aquí, fuera del body, para
          * no desmontarse al cambiar de tab. Sin coordinación no hay analítica
          * histórica de Dirección todavía → no se muestra un filtro inerte.
-         * Variante COMPLETA: ciclo, mes y semana se eligen explícitamente sin
-         * pasar por las gráficas. Selector, ‹ ›, ruta y clic en las gráficas
-         * escriben el MISMO `analysisPeriod` (no hay estado temporal paralelo).
+         * Ciclo, mes y semana se eligen explícitamente sin pasar por las
+         * gráficas. Filtros, ‹ › y clic en las gráficas escriben el MISMO
+         * `analysisPeriod` (no hay estado temporal paralelo).
+         *
+         * Integración casa/oficina: una rama lo resolvió abriendo el selector
+         * en su variante `full` (diálogo) y la otra con esta franja de filtros
+         * siempre visibles, que además sustituye a la ruta del flujo
+         * (`showTrail={false}` en Estado). Se monta solo la franja: dos
+         * controles para el mismo periodo serían redundantes.
          */}
         {selected ? (
           <div
             className="director-reading__period"
             data-testid="director-reading-period"
           >
-            <DirectorAnalysisPeriodPicker
-              variant="full"
+            {/* Ciclo · Mes · Semana visibles; mismo AnalysisPeriod que los
+                clics de las gráficas y las flechas. */}
+            <DirectorAnalysisPeriodFilters
               period={analysisPeriod}
               onChange={setAnalysisPeriod}
             />

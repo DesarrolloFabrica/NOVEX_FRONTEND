@@ -89,6 +89,70 @@ function intersects(a: Box, b: Box, eps = EPS) {
   )
 }
 
+/** Tablet vertical: la composición por filas de la Fase 2A. */
+function isPortraitTablet(page: Page) {
+  const viewport = page.viewportSize()!
+  return viewport.height > viewport.width && viewport.width <= 1100
+}
+
+/**
+ * Objetivos de la Fase 2A en tablet vertical: personaje dibujado ≥160 px
+ * (≥120 en COORDINADOR), cartas ≥90 px, pestañas de lectura enteras y ningún
+ * botón de acción partido en 3+ líneas. El tamaño dibujado sale del artboard
+ * 800×900 con Contain dentro de la figura.
+ */
+async function checkPortraitTargets(
+  page: Page,
+  role: ResponsiveRole,
+  record: Record<string, unknown>,
+) {
+  if (!isPortraitTablet(page)) return
+  const targets = await page.evaluate(() => {
+    const figure = document.querySelector('.direction-character__figure')!.getBoundingClientRect()
+    const drawnWidth = Math.min(figure.width, (figure.height * 800) / 900)
+    const stage = document.querySelector('[data-testid="shell-stage"]')
+    const cards = stage
+      ? Array.from(stage.querySelectorAll<HTMLElement>('[data-testid="coordination-card"]'))
+          .filter((c) => c.offsetWidth > 0)
+          .map((c) => c.offsetWidth)
+      : []
+    const nav = document.querySelector('.director-reading__modes')
+    const navBox = nav?.getBoundingClientRect()
+    const cutTabs = nav
+      ? Array.from(nav.querySelectorAll('button')).filter((b) => {
+          const r = b.getBoundingClientRect()
+          return r.right > navBox!.right + 1 || r.left < navBox!.left - 1
+        }).length
+      : 0
+    const action = document.querySelector('.operational-shell__action')
+    const brokenButtons = action
+      ? Array.from(action.querySelectorAll<HTMLElement>('button, a')).filter((b) => {
+          if (!b.offsetWidth) return false
+          const cs = getComputedStyle(b)
+          const lineHeight = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.2
+          const content = b.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
+          return Math.round(content / lineHeight) >= 3
+        }).length
+      : 0
+    return {
+      drawnWidth: Math.round(drawnWidth),
+      minCard: cards.length ? Math.min(...cards) : null,
+      cutTabs,
+      brokenButtons,
+    }
+  })
+  record['vertical.objetivos'] = targets
+  const minDrawn = role === 'COORDINADOR' ? 120 : 160
+  expect
+    .soft(targets.drawnWidth, `vertical: personaje dibujado ≥ ${minDrawn} px`)
+    .toBeGreaterThanOrEqual(minDrawn)
+  if (targets.minCard !== null) {
+    expect.soft(targets.minCard, 'vertical: cartas ≥ 90 px').toBeGreaterThanOrEqual(90)
+  }
+  expect.soft(targets.cutTabs, 'vertical: pestañas de lectura enteras').toBe(0)
+  expect.soft(targets.brokenButtons, 'vertical: ningún botón de acción partido en 3+ líneas').toBe(0)
+}
+
 async function settle(page: Page) {
   await page.waitForTimeout(900)
 }
@@ -397,6 +461,65 @@ async function shot(page: Page, name: string) {
   await page.screenshot({ path: path.join(OUT, `${name}.png`) })
 }
 
+/**
+ * Todas las piezas de la baraja —las nueve cartas y las subcartas asomadas de
+ * las pilas— se ven enteras: ningún antepasado con `overflow` distinto de
+ * `visible` las recorta. Las cartas están giradas, así que su caja envolvente
+ * marca la esquina real más extrema, que es la que el recorte se comería.
+ */
+async function checkDeckPieces(page: Page, record: Record<string, unknown>, phase: string) {
+  const pieces = await page.getByTestId('shell-stage').evaluate((stage) => {
+    const visible = (el: Element) => {
+      const style = getComputedStyle(el)
+      return (
+        (el as HTMLElement).offsetWidth > 0 &&
+        style.visibility !== 'hidden' &&
+        Number(style.opacity) > 0.05
+      )
+    }
+    return Array.from(
+      stage.querySelectorAll(
+        '[data-testid="coordination-card"], [data-testid="coordination-deck-peek"]',
+      ),
+    )
+      .filter(visible)
+      .map((el) => {
+        const rect = el.getBoundingClientRect()
+        let clip = { left: -Infinity, top: -Infinity, right: Infinity, bottom: Infinity }
+        for (let p = el.parentElement; p; p = p.parentElement) {
+          const style = getComputedStyle(p)
+          if (style.overflowX === 'visible' && style.overflowY === 'visible') continue
+          const r = p.getBoundingClientRect()
+          clip = {
+            left: Math.max(clip.left, r.left),
+            top: Math.max(clip.top, r.top),
+            right: Math.min(clip.right, r.right),
+            bottom: Math.min(clip.bottom, r.bottom),
+          }
+        }
+        return {
+          piece: (el as HTMLElement).dataset.code ?? 'subcarta',
+          width: Math.round(rect.width),
+          bottom: Math.max(0, Math.round(rect.bottom - clip.bottom)),
+          top: Math.max(0, Math.round(clip.top - rect.top)),
+          left: Math.max(0, Math.round(clip.left - rect.left)),
+          right: Math.max(0, Math.round(rect.right - clip.right)),
+        }
+      })
+  })
+  record[`${phase}.deck`] = pieces
+  const cards = pieces.filter((piece) => piece.piece !== 'subcarta')
+  expect.soft(cards.length, `${phase}: las nueve cartas de la mesa están presentes`).toBeGreaterThanOrEqual(9)
+  for (const piece of pieces) {
+    expect
+      .soft(
+        Math.max(piece.bottom, piece.top, piece.left, piece.right),
+        `${phase}: ${piece.piece} entera (recorte b${piece.bottom} t${piece.top} l${piece.left} r${piece.right})`,
+      )
+      .toBeLessThanOrEqual(1)
+  }
+}
+
 async function checkProblemList(page: Page, phase: string) {
   const list = page.getByTestId('coordination-problem-list')
   const rows = list.getByTestId('problem-row')
@@ -428,7 +551,9 @@ for (const role of ROLES) {
       const tag = `${role}-${viewport.width}x${viewport.height}`
 
       test(`${tag}`, async ({ page }) => {
-        test.setTimeout(240_000)
+        // Margen para máquinas cargadas: con WebGL por software un caso vertical
+        // llega a ~4 min sin que haya bloqueo (medido en la Fase 2A).
+        test.setTimeout(360_000)
         const record: Record<string, unknown> = { role, viewport }
         await page.setViewportSize(viewport)
         await installResponsiveCentro(page, role)
@@ -464,6 +589,19 @@ async function runDeckRole(
     'inicio',
   )
   await checkShellMenu(page, role, tag, record)
+  await checkDeckPieces(page, record, 'reposo')
+
+  // Hover sobre el mazo con subcartas: se eleva y abre su vista previa.
+  const parentDeck = page
+    .getByTestId('shell-stage')
+    .locator('[data-testid="coordination-card"][data-code="coord-operaciones-academicas"]')
+    .first()
+  const parentBox = await box(parentDeck)
+  await page.mouse.move(parentBox.x + parentBox.width / 2, parentBox.y + parentBox.height * 0.6)
+  await settle(page)
+  await checkDeckPieces(page, record, 'hover')
+  await page.mouse.move(2, 2)
+  await settle(page)
 
   // Selección de una coordinación desde la baraja.
   const card = page.getByTestId('shell-stage').locator(`[data-testid="coordination-card"][data-code="${ESPE}"]`)
@@ -472,6 +610,51 @@ async function runDeckRole(
   await settle(page)
   await settle(page)
   await shot(page, `${tag}-1-seleccion`)
+  await checkDeckPieces(page, record, 'seleccion')
+
+  /*
+   * Un solo retorno: la flecha de la miga, encima de las cartas y entera en la
+   * banda. El «Volver a la mesa» inferior ya no existe ni reserva alto.
+   */
+  await expect(page.getByTestId('return-to-table')).toHaveCount(0)
+  const back = page.getByTestId('breadcrumb-direction')
+  await expect(back).toBeVisible()
+  await expect(back).toHaveText('')
+  const backBox = await box(back)
+  const tableBox = await box(page.getByTestId('coordination-table'))
+  expect
+    .soft(inside(backBox, await box(page.getByTestId('shell-stage'))), 'flecha de retorno dentro de la banda')
+    .toBe(true)
+  expect.soft(backBox.y + backBox.height, 'flecha de retorno encima de la mesa').toBeLessThanOrEqual(tableBox.y + 1)
+
+  /*
+   * La baraja termina abajo, sin suelo muerto: en escritorio y tablet
+   * horizontal, alineada con el borde inferior del panel de la derecha; en
+   * tablet vertical (Fase 2A) ese panel va DEBAJO, así que la referencia es el
+   * borde inferior de su propia banda.
+   */
+  const bottoms = await page.evaluate(() => {
+    const stage = document.querySelector('[data-testid="shell-stage"]')!
+    const pieces = Array.from(
+      stage.querySelectorAll('[data-testid="coordination-card"], [data-testid="coordination-deck-peek"]'),
+    ).filter((el) => (el as HTMLElement).offsetWidth > 0 && Number(getComputedStyle(el).opacity) > 0.05)
+    const panel = document.querySelector('.operational-shell__action')!.getBoundingClientRect()
+    const band = stage.getBoundingClientRect()
+    return {
+      deck: Math.max(...pieces.map((el) => el.getBoundingClientRect().bottom)),
+      panel: panel.bottom,
+      band: band.bottom,
+      panelBeside: panel.left >= band.right - 1,
+    }
+  })
+  record['seleccion.alineacion'] = bottoms
+  const reference = bottoms.panelBeside ? bottoms.panel : bottoms.band
+  expect
+    .soft(reference - bottoms.deck, 'baraja alineada abajo: con el panel derecho o con su banda (≤ 12 px)')
+    .toBeLessThanOrEqual(12)
+  if (isPortraitTablet(page)) {
+    expect.soft(bottoms.panelBeside, 'vertical: la lectura/acción va debajo de la baraja').toBe(false)
+  }
 
   const stage = await box(page.getByTestId('shell-stage'))
   const cardBox = await box(card)
@@ -488,9 +671,35 @@ async function runDeckRole(
 
   await checkGlobal(page, record, 'seleccion')
   await checkLives(page, record, 'seleccion')
+  await checkPortraitTargets(page, role, record)
   await checkProblemList(page, 'seleccion')
 
   if (role === 'DIRECTOR') {
+    /*
+     * La banda superior cede alto a la baraja solo mientras el personaje siga
+     * limitado por el ANCHO (artboard 800×900, Contain): si la figura fuera más
+     * baja que eso, la ilustración empezaría a encoger.
+     */
+    const figure = await box(page.locator('.direction-character__figure'))
+    record['seleccion.figure'] = figure
+    if (!isPortraitTablet(page)) {
+      expect
+        .soft(figure.height, 'personaje: la banda superior no encoge la ilustración')
+        .toBeGreaterThanOrEqual(figure.width * (900 / 800) - EPS)
+    }
+    // En vertical la figura es ancha y la limita el alto: lo que se garantiza
+    // es el tamaño dibujado (comprobación común en `checkPortraitTargets`).
+    // La lista sigue siendo consultable: al menos tres filas completas a la vista.
+    const fullRows = await page.getByTestId('coordination-panel-problems').evaluate((scroller) => {
+      const s = scroller.getBoundingClientRect()
+      return Array.from(scroller.querySelectorAll('[data-testid="problem-row"]')).filter((row) => {
+        const r = row.getBoundingClientRect()
+        return r.top >= s.top - 1 && r.bottom <= s.bottom + 1
+      }).length
+    })
+    record['seleccion.filasVisibles'] = fullRows
+    expect.soft(fullRows, 'problemas: al menos tres filas completas visibles').toBeGreaterThanOrEqual(3)
+
     const reading = page.getByTestId('director-reading-panel')
     await expect(reading).toBeVisible()
     await expect(page.getByTestId('director-flujo-chart')).toBeVisible({ timeout: 20_000 })
@@ -529,6 +738,12 @@ async function runDeckRole(
   if (page.viewportSize()?.width === 1024) {
     await expectMenuAboveCurrentContent(page, 'detalle de problema abierto')
   }
+
+  // La flecha también se usa con teclado: foco + Enter devuelve a la mesa.
+  await page.getByTestId('breadcrumb-direction').focus()
+  await page.keyboard.press('Enter')
+  await expect(page.getByTestId('operational-breadcrumb')).toHaveCount(0)
+  await expect(card).toHaveAttribute('data-selected', 'false')
 }
 
 async function runCoordinator(page: Page, tag: string, record: Record<string, unknown>) {
@@ -546,6 +761,7 @@ async function runCoordinator(page: Page, tag: string, record: Record<string, un
     'inicio',
   )
   await checkShellMenu(page, 'COORDINADOR', tag, record)
+  await checkPortraitTargets(page, 'COORDINADOR', record)
 
   if (page.viewportSize()?.width === 1024) {
     const expand = page.getByTestId('coordinator-problems-expand')
@@ -567,7 +783,12 @@ async function runCoordinator(page: Page, tag: string, record: Record<string, un
   record['inicio.rail'] = rail
   expect.soft(cardBox.height, 'carta propia con alto legible').toBeGreaterThanOrEqual(110)
   expect.soft(inside(cardBox, rail, 4), 'carta propia dentro del rail').toBe(true)
-  expect.soft(cardBox.y >= character.y + character.height - EPS, 'carta propia debajo del personaje').toBe(true)
+  if (isPortraitTablet(page)) {
+    // Fase 2A: en vertical la celda del rail es ancha; carta al lado del personaje.
+    expect.soft(cardBox.x >= character.x + character.width - EPS, 'carta propia al lado del personaje').toBe(true)
+  } else {
+    expect.soft(cardBox.y >= character.y + character.height - EPS, 'carta propia debajo del personaje').toBe(true)
+  }
   for (const id of [
     'shell-region-my-reports',
     'shell-region-coordination-problems',

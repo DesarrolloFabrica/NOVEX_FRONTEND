@@ -14,7 +14,12 @@
  * No navega por router ni toca la URL: solo limpia la selección en el estado
  * interno (`clearCoordination`, que la experiencia cablea a
  * `onBackToDirection`). Desde un mazo o una subcarta vuelve igualmente a la
- * mesa global: no hay niveles intermedios de navegación.
+ * mesa global: no hay niveles intermedios de navegación. La sincronización
+ * con query params pertenece al hardening.
+ *
+ * Integración casa/oficina: ambos lados llegaron a esta misma flecha. Se
+ * conservan las clases `__back`/`__back-icon` (las que estiliza
+ * operational-cards.css) y la etiqueta exportada, que usan las pruebas.
  */
 
 /*
@@ -27,6 +32,8 @@ export interface OperationalBreadcrumbProps {
   coordinationName: string
   onBackToDirection: () => void
 }
+
+export const BACK_TO_DIRECTION_LABEL = 'Volver a Dirección de Operaciones'
 
 export function OperationalBreadcrumb({
   coordinationName,
@@ -42,10 +49,11 @@ export function OperationalBreadcrumb({
         type="button"
         className="operational-breadcrumb__back"
         data-testid="breadcrumb-direction"
-        aria-label="Volver a Dirección de Operaciones"
-        title="Volver a Dirección de Operaciones"
+        aria-label={BACK_TO_DIRECTION_LABEL}
+        title={BACK_TO_DIRECTION_LABEL}
         onClick={onBackToDirection}
       >
+        {/* Decorativa: el nombre accesible lo da `aria-label`. */}
         <svg
           className="operational-breadcrumb__back-icon"
           viewBox="0 0 16 16"

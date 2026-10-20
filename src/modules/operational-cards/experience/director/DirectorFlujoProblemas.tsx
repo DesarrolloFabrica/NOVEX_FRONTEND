@@ -152,15 +152,18 @@ export function DirectorFlujoProblemas({
   loading,
   error,
   onPeriodChange,
+  showTrail = true,
 }: {
   period: AnalysisPeriod
   buckets: readonly OperationalKpiFlowBucket[] | null
   loading: boolean
   error: string | null
   onPeriodChange: (next: AnalysisPeriod) => void
+  /** `false` cuando un filtro visible ya muestra la ruta y permite subir. */
+  showTrail?: boolean
 }) {
   const level = flujoLevelOf(period)
-  const trail = analysisPeriodTrail(period)
+  const trail = showTrail ? analysisPeriodTrail(period) : [period]
   const canDrill = level !== 'day'
   // Única lista de tramos para dibujo, hover, clic, teclado y tabla: el índice
   // de una columna siempre se resuelve sobre ESTA lista (sin desfases).

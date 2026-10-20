@@ -198,7 +198,7 @@ export function OperationalCardExperience({
       </div>
 
       {/*
-        ZONA DE COMPOSICIÓN: personaje y mesa.
+        ZONA DE COMPOSICIÓN: la mesa (el retorno vive en la miga superior).
 
         Existe para que la escena pueda tener DOS COLUMNAS sin que la mesa ni el
         personaje tengan que saberlo. En estado global es una columna vertical y

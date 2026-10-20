@@ -261,16 +261,22 @@
    *
    * Vive aquí y no como `padding` en px de la banda: la mesa es quien conoce su
    * unidad, y una reserva fija sobra en pantallas pequeñas y falta en grandes.
-   * Solo añade alto al FINAL de la caja: las cartas siguen colocadas desde
+   * Solo añade aire al FINAL de la caja: las cartas siguen colocadas desde
    * `top: 0` con el mismo layout, sin moverse.
    */
   --table-motion-reserve: 0.07;
   position: relative;
   flex: 0 0 auto;
   width: 100%;
-  height: calc(
-    (var(--table-stage-h) + var(--table-motion-reserve)) * var(--card-height)
-  );
+  height: calc(var(--table-stage-h) * var(--card-height));
+  /*
+   * Integración casa/oficina: las dos ramas reservaron este mismo 0,07 (una
+   * sumándolo al alto, otra como margen; medido en 6 resoluciones y 3 estados:
+   * hasta 0,061). Se aplica UNA sola vez, como margen —la mesa no recorta, así
+   * que el efecto es el mismo y su caja sigue siendo la del arco—. Sumarlo en
+   * ambos sitios duplicaría el aire y le quitaría alto a la banda superior.
+   */
+  margin-bottom: calc(var(--card-height) * var(--table-motion-reserve));
 }
 
 /*
@@ -961,6 +967,10 @@
   align-items: center;
   min-height: 32px;
 }
+
+/* Integración casa/oficina: las dos ramas estilizaron esta misma flecha de
+   32 px (como `__root`/`__icon` y como `__back`/`__back-icon`). Queda una
+   sola definición, la de `__back`, que es la clase que lleva el marcado. */
 
 /*
  * Flecha de regreso: el único control de vuelta a la mesa.

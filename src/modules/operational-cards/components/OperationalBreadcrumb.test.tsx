@@ -2,7 +2,10 @@
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { OperationalBreadcrumb } from '@/modules/operational-cards/components/OperationalBreadcrumb'
+import {
+  BACK_TO_DIRECTION_LABEL,
+  OperationalBreadcrumb,
+} from '@/modules/operational-cards/components/OperationalBreadcrumb'
 
 /**
  * La miga es ahora UN control de regreso: flecha + nombre de la coordinación.
@@ -11,6 +14,10 @@ import { OperationalBreadcrumb } from '@/modules/operational-cards/components/Op
  * es texto informativo— y que el regreso siga siendo `onBackToDirection`, que
  * la experiencia cablea a `clearCoordination`. El recorrido real (volver a la
  * mesa global, también desde un mazo) lo comprueban los e2e de la baraja.
+ *
+ * Integración casa/oficina: ambos lados escribieron esta prueba; se conserva
+ * la versión con DOM (permite pulsar de verdad) y se suma la etiqueta
+ * exportada que introdujo la otra rama.
  */
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT =
@@ -70,9 +77,8 @@ describe('OperationalBreadcrumb · flecha de regreso', () => {
   it('su nombre accesible es «Volver a Dirección de Operaciones»', () => {
     const { back } = render()
 
-    expect(back.getAttribute('aria-label')).toBe(
-      'Volver a Dirección de Operaciones',
-    )
+    expect(BACK_TO_DIRECTION_LABEL).toBe('Volver a Dirección de Operaciones')
+    expect(back.getAttribute('aria-label')).toBe(BACK_TO_DIRECTION_LABEL)
   })
 
   it('el nombre de la coordinación sigue visible y NO es un botón', () => {

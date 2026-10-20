@@ -390,13 +390,32 @@ async function click(testId: string) {
   })
 }
 
-/** Ruta del flujo; en nivel ciclo no se muestra (el periodo está encima). */
-const crumb = () =>
-  Array.from(
-    (query('director-flujo-crumb') ?? document.createElement('nav')).querySelectorAll(
-      '.director-flujo__crumb-link, .director-flujo__crumb-here',
-    ),
-  ).map((node) => node.textContent)
+/**
+ * Ruta de selección visible en la franja de filtros: [] en nivel ciclo y
+ * [ciclo, MES, semana?] al profundizar. Sustituye a la ruta del flujo, que ya
+ * no se muestra porque repetiría lo mismo.
+ */
+const selectedText = (testId: string) => {
+  const select = byTestId(testId) as HTMLSelectElement
+  return (select.selectedOptions[0]?.textContent ?? '').replace(' (actual)', '')
+}
+const crumb = () => {
+  const kind = byTestId('director-analysis-period').dataset.kind
+  if (kind === 'cycle') return []
+  const [year, half] = (byTestId('director-period-cycle') as HTMLSelectElement).value.split('-')
+  const path = [`H${half} ${year}`, selectedText('director-period-month').toUpperCase()]
+  if (kind === 'week') path.push(selectedText('director-period-week'))
+  return path
+}
+
+/** Cambia un selector de la franja como lo haría la persona. */
+async function selectValue(testId: string, value: string) {
+  await act(async () => {
+    const select = byTestId(testId) as HTMLSelectElement
+    select.value = value
+    select.dispatchEvent(new Event('change', { bubbles: true }))
+  })
+}
 
 const lastState = () => vi.mocked(fetchOperationalKpiState).mock.calls.at(-1)?.[0]
 
@@ -420,7 +439,7 @@ describe('Flujo de problemas · default y drill-down', () => {
     expect(byTestId('director-flujo').dataset.level).toBe('month')
     // Nivel ciclo: sin ruta repetida; el periodo (con «En curso») está en el picker.
     expect(crumb()).toEqual([])
-    expect(byTestId('director-analysis-period-range').textContent).toBe('H2 2026')
+    expect(byTestId('director-analysis-period-range').textContent).toBe('1 JUL — 31 DIC 2026')
     expect(byTestId('director-analysis-period').textContent).toContain('En curso')
     expect(query('director-flujo-live')).toBeNull()
   })
@@ -456,7 +475,7 @@ describe('Flujo de problemas · default y drill-down', () => {
       to: '2026-10-04',
       calendarEnd: '2026-10-04',
     })
-    expect(crumb()).toEqual(['H2 2026', 'OCTUBRE', '28 SEP – 4 OCT'])
+    expect(crumb()).toEqual(['H2 2026', 'OCTUBRE', '28 SEP — 4 OCT'])
   })
 
   it('mes → click semana → días; los días no son navegables', async () => {
@@ -464,18 +483,18 @@ describe('Flujo de problemas · default y drill-down', () => {
     await click('director-flujo-drill-2026-10-01')
     await click('director-flujo-drill-2026-10-05')
     expect(byTestId('director-flujo').dataset.level).toBe('day')
-    expect(crumb()).toEqual(['H2 2026', 'OCTUBRE', '5–11 OCT'])
+    expect(crumb()).toEqual(['H2 2026', 'OCTUBRE', '5 — 11 OCT'])
     expect(container.querySelector('[data-testid^="director-flujo-drill-"]')).toBeNull()
   })
 
-  it('ruta: semana → OCTUBRE (mes) → H2 2026 (ciclo)', async () => {
+  it('ruta: semana → «Todo el mes» (OCTUBRE) → «Todo el ciclo» (H2 2026)', async () => {
     await render(B2B)
     await click('director-flujo-drill-2026-10-01')
     await click('director-flujo-drill-2026-10-05')
-    await click('director-flujo-crumb-month')
+    await selectValue('director-period-week', '')
     expect(lastState()).toMatchObject({ kind: 'month', from: '2026-10-01' })
     expect(crumb()).toEqual(['H2 2026', 'OCTUBRE'])
-    await click('director-flujo-crumb-cycle')
+    await selectValue('director-period-month', '')
     expect(lastState()).toMatchObject({ kind: 'cycle', from: '2026-07-01' })
     expect(crumb()).toEqual([])
   })
@@ -490,12 +509,11 @@ describe('Flujo de problemas · default y drill-down', () => {
     expect(byTestId('director-analysis-period-range').textContent).toBe('28 SEP — 4 OCT 2026')
   })
 
-  it('elegir un ciclo en el diálogo vuelve a kind = cycle (nivel meses)', async () => {
+  it('elegir un ciclo en el filtro vuelve a kind = cycle y descarta mes y semana', async () => {
     await render(B2B)
     await click('director-flujo-drill-2026-10-01')
     await click('director-flujo-drill-2026-10-05')
-    await click('director-analysis-period-trigger')
-    await click('director-analysis-period-use-cycle-H1')
+    await selectValue('director-period-cycle', '2026-1')
     expect(lastState()).toMatchObject({
       kind: 'cycle',
       from: '2026-01-01',
@@ -503,7 +521,9 @@ describe('Flujo de problemas · default y drill-down', () => {
     })
     expect(byTestId('director-flujo').dataset.level).toBe('month')
     expect(crumb()).toEqual([])
-    expect(byTestId('director-analysis-period-range').textContent).toBe('H1 2026')
+    expect(byTestId('director-analysis-period-range').textContent).toBe('1 ENE — 30 JUN 2026')
+    expect((byTestId('director-period-month') as HTMLSelectElement).value).toBe('')
+    expect((byTestId('director-period-week') as HTMLSelectElement).disabled).toBe(true)
   })
 
   it('«↺ Ciclo actual» solo en un ciclo histórico y vuelve a H2 2026', async () => {
@@ -511,9 +531,9 @@ describe('Flujo de problemas · default y drill-down', () => {
     expect(query('director-analysis-period-go-current')).toBeNull()
     await click('director-analysis-period-prev')
     await click('director-analysis-period-prev')
-    expect(byTestId('director-analysis-period-range').textContent).toBe('H2 2025')
+    expect(byTestId('director-analysis-period-range').textContent).toBe('1 JUL — 31 DIC 2025')
     await click('director-analysis-period-go-current')
-    expect(byTestId('director-analysis-period-range').textContent).toBe('H2 2026')
+    expect(byTestId('director-analysis-period-range').textContent).toBe('1 JUL — 31 DIC 2026')
     expect(lastState()).toMatchObject({ kind: 'cycle', from: '2026-07-01' })
   })
 })
@@ -608,13 +628,13 @@ describe('DirectorReadingPanel · un periodo para toda la lectura', () => {
     )
   })
 
-  it('cerrar y reabrir el picker conserva Septiembre', async () => {
+  it('el clic en la gráfica se refleja al instante en los filtros (sin estado paralelo)', async () => {
     await render(B2B)
     await drillSeptember()
-    await click('director-analysis-period-trigger')
-    await act(async () => {
-      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
-    })
+    expect((byTestId('director-period-cycle') as HTMLSelectElement).value).toBe('2026-2')
+    expect((byTestId('director-period-month') as HTMLSelectElement).value).toBe('8')
+    expect((byTestId('director-period-week') as HTMLSelectElement).value).toBe('')
+    expect((byTestId('director-period-week') as HTMLSelectElement).disabled).toBe(false)
     expect(crumb()).toEqual(['H2 2026', 'SEPTIEMBRE'])
   })
 
@@ -640,7 +660,7 @@ describe('DirectorReadingPanel · INTERNOS: 2 láminas sobre el AnalysisPeriod g
     expect(fetchInternalRecurrence).toHaveBeenLastCalledWith(sep, expect.anything())
     expect(fetchInternalProblems).toHaveBeenLastCalledWith(sep, expect.anything())
     expect(byTestId('director-internos-recurrence').dataset.level).toBe('week')
-    expect(byTestId('director-analysis-period-range').textContent).toBe('SEPTIEMBRE 2026')
+    expect(byTestId('director-analysis-period-range').textContent).toBe('1 — 30 SEP 2026')
 
     // Clic en una CELDA (semana del 14): drill a esa semana, sin filtrar categoría.
     const cell = container.querySelector<HTMLElement>('[data-testid="director-internos-cell-' + INTERNET.id + '-2"]')!
@@ -696,32 +716,31 @@ describe('PERIODO · el encabezado refleja el AnalysisPeriod REAL', () => {
 
   it('ciclo → SEPTIEMBRE 2026 · Mes → 7 — 13 SEP 2026 · Semana → (ruta) → ciclo', async () => {
     await render(B2B)
-    expect(range()).toBe('H2 2026')
-    expect(pickerText()).toContain('JUL — DIC 2026 · semestre calendario · En curso')
+    expect(range()).toBe('1 JUL — 31 DIC 2026')
+    expect(pickerText()).toContain('31 DIC 2026 · En curso')
 
     await drillSeptember()
-    expect(range()).toBe('SEPTIEMBRE 2026')
-    expect(pickerText()).toContain('Mes')
-    expect(pickerText()).not.toContain('H2 2026')
+    expect(range()).toBe('1 — 30 SEP 2026')
+    expect((byTestId('director-period-month') as HTMLSelectElement).value).toBe('8')
     expect(byTestId('director-analysis-period').dataset.kind).toBe('month')
 
     await click('director-flujo-drill-2026-09-07')
     expect(lastState()).toMatchObject({ kind: 'week', from: '2026-09-07' })
     expect(range()).toBe('7 — 13 SEP 2026')
-    expect(pickerText()).toContain('Semana')
+    expect((byTestId('director-period-week') as HTMLSelectElement).value).toBe('2026-09-07')
 
-    // La ruta del flujo sigue siendo la forma de subir; el header acompaña.
-    await click('director-flujo-crumb-month')
-    expect(range()).toBe('SEPTIEMBRE 2026')
-    await click('director-flujo-crumb-cycle')
-    expect(range()).toBe('H2 2026')
+    // Subir: «Todo el mes» y «Todo el ciclo» en la franja de filtros.
+    await selectValue('director-period-week', '')
+    expect(range()).toBe('1 — 30 SEP 2026')
+    await selectValue('director-period-month', '')
+    expect(range()).toBe('1 JUL — 31 DIC 2026')
   })
 
   it('el mismo contexto en todas las láminas: el corte de ANTIGÜEDAD es el del header', async () => {
     await render(B2B)
     await drillSeptember()
     await click('director-estado-carousel-dot-2')
-    expect(range()).toBe('SEPTIEMBRE 2026')
+    expect(range()).toBe('1 — 30 SEP 2026')
     expect(byTestId('director-antiguedad-cut').textContent).toBe('AL CIERRE DEL 30 SEP 2026')
   })
 })
@@ -893,7 +912,7 @@ describe('ESTADO · AnalysisPeriod como ÚNICA fuente temporal de TODAS las lám
     await click('director-analysis-period-next')
     expect(lastState()).toMatchObject({ kind: 'month', from: '2026-10-01', to: TODAY })
     expect(page()).toBe('1')
-    expect(byTestId('director-analysis-period-range').textContent).toBe('OCTUBRE 2026')
+    expect(byTestId('director-analysis-period-range').textContent).toBe('1 — 31 OCT 2026')
     expect(severityText()).not.toBe(sepSeverity)
     expect(cutText()).toContain('Corte 6 oct · en curso')
     await click('director-estado-carousel-dot-2')
@@ -908,7 +927,7 @@ describe('ESTADO · AnalysisPeriod como ÚNICA fuente temporal de TODAS las lám
     await render(ESPE)
     expect(page()).toBe('2')
     expect(lastState()).toMatchObject({ coordinationId: ESPE_ID, kind: 'month', ...SEPTEMBER })
-    expect(byTestId('director-analysis-period-range').textContent).toBe('SEPTIEMBRE 2026')
+    expect(byTestId('director-analysis-period-range').textContent).toBe('1 — 30 SEP 2026')
     const espe = agingSnapshot()
     // Mismo corte, distinta coordinación: top 5, rangos y mediana de Especializaciones.
     expect(espe.cut).toBe('AL CIERRE DEL 30 SEP 2026')
@@ -1018,7 +1037,7 @@ describe('ESTADO · AnalysisPeriod como ÚNICA fuente temporal de TODAS las lám
     await render(ESPE)
     expect(page()).toBe('3')
     expect(lastState()).toMatchObject({ coordinationId: ESPE_ID, kind: 'month', ...SEPTEMBER })
-    expect(byTestId('director-analysis-period-range').textContent).toBe('SEPTIEMBRE 2026')
+    expect(byTestId('director-analysis-period-range').textContent).toBe('1 — 30 SEP 2026')
     const espe = resolucionSnapshot()
     expect(espe).not.toEqual(b2b)
     expect((await lastResponse()).scope.coordinationId).toBe(ESPE_ID)
@@ -1055,25 +1074,34 @@ describe('ESTADO · AnalysisPeriod como ÚNICA fuente temporal de TODAS las lám
   })
 })
 
+/*
+ * Integración casa/oficina: este bloque se escribió para el selector en su
+ * variante `full` (diálogo). El panel monta ahora la franja de filtros
+ * (Ciclo · Mes · Semana siempre visibles), así que los mismos comportamientos
+ * se comprueban accionando sus selects; las expectativas sobre consultas,
+ * gráficas, resumen y cobertura no cambian.
+ */
 describe('SELECTOR COMPLETO · ciclo, mes y semana por controles (mismo AnalysisPeriod)', () => {
   const range = () => byTestId('director-analysis-period-range').textContent
   const calls = () => vi.mocked(fetchOperationalKpiState).mock.calls.length
-  const openDialog = () => click('director-analysis-period-trigger')
+  const option = (testId: string, value: string) =>
+    (byTestId(testId) as HTMLSelectElement).querySelector<HTMLOptionElement>(
+      `option[value="${value}"]`,
+    )!
 
-  it('el selector se monta en su variante completa', async () => {
+  it('el panel monta la franja de filtros explícitos', async () => {
     await render(B2B)
-    expect(byTestId('director-analysis-period').dataset.variant).toBe('full')
+    expect(byTestId('director-analysis-period').dataset.variant).toBe('filters')
+    expect(query('director-analysis-period-trigger')).toBeNull()
   })
 
   it('mes por controles: una consulta, cabecera, ruta, gráficas y resumen cambian juntos', async () => {
     await render(B2B)
     const before = calls()
-    await openDialog()
-    await click('director-analysis-period-drill-cycle-H2')
-    await click('director-analysis-period-use-month-8')
+    await selectValue('director-period-month', '8')
     expect(calls()).toBe(before + 1)
     expect(lastState()).toMatchObject({ kind: 'month', ...SEPTEMBER, calendarEnd: '2026-09-30' })
-    expect(range()).toBe('SEPTIEMBRE 2026')
+    expect(range()).toBe('1 — 30 SEP 2026')
     expect(byTestId('director-flujo').dataset.level).toBe('week')
     expect(crumb()).toEqual(['H2 2026', 'SEPTIEMBRE'])
     // Septiembre por semanas: 1–6, 7–13, 14–20, 21–27, 28–30 (todas con datos).
@@ -1095,46 +1123,45 @@ describe('SELECTOR COMPLETO · ciclo, mes y semana por controles (mismo Analysis
     expect(coverage).toEqual(['clipped', 'full', 'full', 'full', 'clipped'])
   })
 
-  it('semana por controles y vuelta al ciclo por la ruta: el selector acompaña', async () => {
+  it('semana por controles y vuelta al ciclo por los filtros: el selector acompaña', async () => {
     await render(B2B)
-    await openDialog()
-    await click('director-analysis-period-drill-cycle-H2')
-    await click('director-analysis-period-drill-month-8')
-    await click('director-analysis-period-week-2026-09-07')
+    await selectValue('director-period-month', '8')
+    await selectValue('director-period-week', '2026-09-07')
     expect(lastState()).toMatchObject({ kind: 'week', from: '2026-09-07', to: '2026-09-13' })
     expect(range()).toBe('7 — 13 SEP 2026')
     expect(byTestId('director-flujo').dataset.level).toBe('day')
     // ‹ del selector navega al nivel real (semana anterior).
     await click('director-analysis-period-prev')
     expect(lastState()).toMatchObject({ kind: 'week', from: '2026-08-31' })
-    await click('director-flujo-crumb-cycle')
+    // La ruta del flujo ya no se muestra: se sube con «Todo el ciclo».
+    await selectValue('director-period-month', '')
     expect(lastState()).toMatchObject({ kind: 'cycle', from: '2026-07-01' })
-    expect(range()).toBe('H2 2026')
+    expect(range()).toBe('1 JUL — 31 DIC 2026')
   })
 
   it('ciclo por controles y drill-down desde la gráfica escriben el mismo estado', async () => {
     await render(B2B)
-    await openDialog()
-    await click('director-analysis-period-use-cycle-H1')
+    await selectValue('director-period-cycle', '2026-1')
     expect(lastState()).toMatchObject({ kind: 'cycle', from: '2026-01-01', to: '2026-06-30' })
-    expect(range()).toBe('H1 2026')
+    expect(range()).toBe('1 ENE — 30 JUN 2026')
     // Ciclo histórico completo: seis meses, ninguno «actual» ni futuro.
     expect(
       container.querySelectorAll('[data-testid="director-flujo-table"] tbody tr'),
     ).toHaveLength(6)
     await click('director-flujo-drill-2026-03-01')
     expect(lastState()).toMatchObject({ kind: 'month', from: '2026-03-01' })
-    expect(range()).toBe('MARZO 2026')
+    expect(range()).toBe('1 — 31 MAR 2026')
+    // Y los filtros reflejan el drill-down sin estado paralelo.
+    expect((byTestId('director-period-cycle') as HTMLSelectElement).value).toBe('2026-1')
+    expect((byTestId('director-period-month') as HTMLSelectElement).value).toBe('2')
   })
 
   it('meses y semanas futuros no se pueden elegir por controles', async () => {
     await render(B2B)
-    await openDialog()
-    await click('director-analysis-period-drill-cycle-H2')
-    expect((byTestId('director-analysis-period-use-month-10') as HTMLButtonElement).disabled).toBe(true)
-    expect((byTestId('director-analysis-period-use-month-9') as HTMLButtonElement).disabled).toBe(false)
-    await click('director-analysis-period-drill-month-9')
-    expect((byTestId('director-analysis-period-week-2026-10-12') as HTMLButtonElement).disabled).toBe(true)
+    expect(option('director-period-month', '10').disabled).toBe(true)
+    expect(option('director-period-month', '9').disabled).toBe(false)
+    await selectValue('director-period-month', '9')
+    expect(option('director-period-week', '2026-10-12').disabled).toBe(true)
   })
 
   it('ciclo en curso: el eje no reserva noviembre ni diciembre', async () => {

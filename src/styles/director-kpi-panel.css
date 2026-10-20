@@ -403,6 +403,12 @@
   /* Safe content area: aire respecto al marco y ornamentos. */
   padding: 20px 28px 12px;
   box-sizing: border-box;
+  /*
+   * Las parejas de gráficas deciden si van lado a lado según el ANCHO del
+   * panel, no del viewport: en tablet vertical el panel ocupa toda la fila
+   * (~790 px) aunque la pantalla mida menos de 900 px.
+   */
+  container: director-reading / inline-size;
 }
 
 /* Pista de continuación: no bloquea scroll ni clicks. */
@@ -820,6 +826,184 @@
 
 .director-analysis-period__current:hover {
   opacity: 1;
+}
+
+/* ── Franja de filtros explícitos: Ciclo · Mes · Semana ── */
+
+.director-analysis-period--filters {
+  margin: 0 0 10px;
+  padding: 0 0 8px;
+}
+
+.director-period-filters {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  column-gap: 12px;
+  row-gap: 8px;
+}
+
+.director-period-filters .director-analysis-period__nav {
+  height: 28px;
+}
+
+.director-period-filters__field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.director-period-filters__label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+/* Control reconocible sobre papel: subrayado de tinta y chevron dibujado. */
+.director-period-filters__select {
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  min-height: 28px;
+  padding: 3px 22px 4px 2px;
+  border: 0;
+  border-bottom: 1.5px solid rgb(35 25 16 / 0.28);
+  border-radius: 0;
+  background-color: transparent;
+  background-image:
+    linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position:
+    calc(100% - 10px) 55%,
+    calc(100% - 5px) 55%;
+  background-repeat: no-repeat;
+  background-size: 5px 5px;
+  color: #231910;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: border-color 140ms ease-out;
+}
+
+.director-period-filters__select:hover:not(:disabled) {
+  border-bottom-color: #231910;
+}
+
+.director-period-filters__select:focus-visible {
+  outline: 2px solid #231910;
+  outline-offset: 2px;
+}
+
+.director-period-filters__select:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.director-period-filters__select option {
+  color: #231910;
+  background: #f6ecd6;
+}
+
+/*
+ * `.novex-os :is(input, textarea, select)` pinta TODOS los controles con fondo
+ * oscuro, texto claro y borde redondeado, con `!important`. Sobre el papel de la
+ * lectura eso dejaba píldoras oscuras: aquí se restablece el trazo de tinta.
+ * `.director-reading` sube la especificidad para no depender del orden de carga,
+ * y el fondo se redeclara entero porque el atajo global borra el chevron.
+ */
+.director-reading .director-period-filters__select,
+.director-reading .director-period-filters__select:hover,
+.director-reading .director-period-filters__select:focus {
+  border: 0 !important;
+  border-bottom: 1.5px solid rgb(35 25 16 / 0.28) !important;
+  border-radius: 0 !important;
+  color: #231910 !important;
+  background:
+    linear-gradient(45deg, transparent 50%, currentColor 50%) calc(100% - 10px) 55% / 5px 5px no-repeat,
+    linear-gradient(135deg, currentColor 50%, transparent 50%) calc(100% - 5px) 55% / 5px 5px no-repeat,
+    transparent !important;
+  box-shadow: none !important;
+}
+
+.director-reading .director-period-filters__select:hover:not(:disabled),
+.director-reading .director-period-filters__select:focus-visible {
+  border-bottom-color: #231910 !important;
+}
+
+.director-reading .director-period-filters__select option {
+  color: #231910;
+  background: #f6ecd6;
+}
+
+.director-period-filters__effective {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 10px;
+  margin: 6px 0 0 32px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.director-period-filters__effective [data-testid='director-analysis-period-range'] {
+  font-weight: 800;
+}
+
+.director-period-filters__live {
+  font-style: italic;
+  opacity: 0.6;
+}
+
+.director-period-filters__effective .director-analysis-period__current {
+  margin: 0;
+}
+
+.director-period-filters__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Panel estrecho (≈1024×768): dos filas en vez de encoger el texto. */
+@container director-reading (max-width: 520px) {
+  .director-period-filters {
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto;
+    grid-template-areas:
+      'prev cycle cycle next'
+      'month month week week';
+  }
+
+  .director-period-filters > .director-analysis-period__nav:first-child {
+    grid-area: prev;
+  }
+
+  .director-period-filters > .director-analysis-period__nav:last-child {
+    grid-area: next;
+  }
+
+  .director-period-filters > .director-period-filters__field:nth-of-type(1) {
+    grid-area: cycle;
+  }
+
+  .director-period-filters > .director-period-filters__field:nth-of-type(2) {
+    grid-area: month;
+  }
+
+  .director-period-filters > .director-period-filters__field:nth-of-type(3) {
+    grid-area: week;
+  }
 }
 
 /* ── Estado de exploración ── */
@@ -3060,6 +3244,15 @@
   }
 }
 
+/*
+ * Integración casa/oficina: aquí la otra rama devolvía Carga y Movimiento a
+ * dos columnas cuando el panel es ancho (≥620 px, tablet vertical). Esta rama
+ * ya las APILA siempre a todo el ancho (flex en columna, ejes alineados) y
+ * retiró el divisor, así que esa regla no tenía efecto salvo `row-gap: 0`,
+ * que pegaba las dos gráficas en paneles anchos (1920). No se reintroduce.
+ * La pareja de Resolución sigue en rejilla y conserva su regla de contenedor.
+ */
+
 @media (prefers-reduced-motion: reduce) {
   .director-flujo__frame,
   .director-flujo__help-text {
@@ -3761,6 +3954,19 @@
 
   .director-resolucion__pair .director-antiguedad__divider {
     display: none;
+  }
+}
+
+/* Panel ancho aunque el viewport no lo sea (tablet vertical): gráficas lado a
+   lado. Con 620 px de panel cada una conserva lo mismo que en escritorio. */
+@container director-reading (min-width: 620px) {
+  .director-resolucion__pair {
+    grid-template-columns: minmax(0, 58fr) 1px minmax(0, 42fr);
+    row-gap: 0;
+  }
+
+  .director-resolucion__pair .director-antiguedad__divider {
+    display: block;
   }
 }
 

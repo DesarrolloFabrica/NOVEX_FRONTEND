@@ -214,8 +214,10 @@ test('serializa reinicio y omisión para no reabrir un tutorial completado', asy
   await page.goto('/')
 
   await expect(page).toHaveURL(/\/centro-operacional$/)
-  await page.locator('[data-tour="user-menu"] > button').click()
-  await page.getByRole('menuitem', { name: 'Ver tutorial nuevamente' }).click()
+  // Fase 1.5: el Centro no tiene cabecera; el tutorial se reabre desde la
+  // hamburguesa flotante.
+  await page.getByTestId('shell-menu-trigger').click()
+  await page.getByTestId('shell-menu-tutorial').click()
   await expect(
     page.getByRole('heading', { name: 'Su espacio de trabajo está listo' }),
   ).toBeVisible()

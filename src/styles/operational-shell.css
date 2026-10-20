@@ -15,28 +15,32 @@
  * Todo scoped a data-shell-layout='director': no toca ANALISTA/ADMIN/COORDINADOR.
  */
 .operational-shell[data-shell-layout='director'] {
+  /* 46 % en escritorio (≥1280 px): ver «Lectura más ancha» al final del archivo. */
   --shell-action-w: 42%;
 }
 
+/*
+ * Banda de la baraja: nunca más baja que lo que mide la mesa.
+ *
+ * El alto de la mesa sale del ANCHO (cartas ≈ ancho/7,2 y mesa ≈ 1,345 altos
+ * de carta), mientras que una fila `1fr` solo daba ~1/3,35 del alto. En
+ * proporciones anchas la mesa no cabía y el `clip` de la banda se comía hasta
+ * 34 px de las cartas y de la pila de subcartas (medido a 1366×768; 22 px a
+ * 1920×1080). Con `max-content` como mínimo la banda crece EXACTAMENTE lo que
+ * la mesa necesita y la banda superior cede solo eso; cuando la mesa cabe
+ * (p. ej. vertical) se conserva el reparto de siempre, sin suelo extra.
+ *
+ * La banda superior puede ceder sin encoger al personaje: su figura está
+ * limitada por el ANCHO (Contain, 800×900), así que el alto que se le quita
+ * era aire sobre la ilustración.
+ */
 .operational-shell[data-shell-layout='director'] .operational-shell__main {
   /*
-   * La banda de la baraja nunca será menor que el contenido necesario para
-   * mostrar las cartas y sus interacciones.
-   *
-   * Antes el mínimo era fijo (170 px) y el `1fr` no sabe cuánto mide la mesa:
-   * medido, a 1366×768 la banda daba 210 px y los cantos del mazo de Operación
-   * Académica quedaban 34 px por debajo de su borde, recortados por el `clip`.
-   * Con `max-content` la fila pide lo que la baraja necesita y la banda
-   * superior cede solo esa diferencia; cuando la baraja ya cabe, manda el
-   * reparto 2.35 : 1 de siempre.
-   *
-   * No es circular: el tamaño de carta sale del ANCHO de la mesa (`cqw`) y su
-   * alto, en altos de carta, del layout; nada de eso depende del alto de esta
-   * fila.
+   * Las dos ramas llegaron a esta misma regla (ver arriba). No es circular: el
+   * tamaño de carta sale del ANCHO de la mesa (`cqw`) y su alto, en altos de
+   * carta, del layout; nada de eso depende del alto de esta fila.
    */
-  grid-template-rows:
-    minmax(300px, 2.35fr)
-    minmax(max-content, 1fr);
+  grid-template-rows: minmax(300px, 2.35fr) minmax(max-content, 1fr);
 }
 
 .operational-shell[data-shell-layout='director'] .operational-shell__top {
@@ -275,10 +279,11 @@
    * un desborde que escala con la carta, y además convivía con el botón
    * «Volver a la mesa», que ya no existe.
    *
-   * La reserva vive ahora en la propia mesa (`--table-motion-reserve`, en
-   * altos de carta), que es quien sabe cuánto mide su carta. Aquí queda solo
-   * el respiro exterior: así el borde inferior de la baraja cae a ~4 px del
-   * borde inferior del panel de lectura.
+   * La reserva vive ahora en la propia mesa (`margin-bottom` de
+   * `--table-motion-reserve` altos de carta, operational-cards.css), que es
+   * quien sabe cuánto mide su carta. Aquí queda solo el respiro exterior: así
+   * el borde inferior de la baraja cae a ~4 px del borde inferior del panel
+   * de lectura.
    */
   padding-bottom: 4px;
   /*
@@ -2631,5 +2636,96 @@
    */
   .operational-shell--coordinator .operational-shell__rail-stack {
     grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+/* ==========================================================================
+   LECTURA MÁS ANCHA EN ESCRITORIO (DIRECTOR)
+   ==========================================================================
+
+   42 % → 46 % (≈+56 px a 1440 y ≈+75 px a 1920) para que pestañas, filtros
+   temporales y las cuatro láminas respiren: a 1440 el título «Movimiento de
+   problemas» se cortaba. Las gráficas ganan ancho, no alto. El personaje está
+   limitado por el ancho y pierde ≈8 %, la baraja ≈7 %; problemas sigue por
+   encima de 400 px. Por debajo de 1280 px (tablet horizontal) se conserva el
+   42 %; en vertical el shell es de una columna y esta variable no aplica.
+*/
+@media (min-width: 1280px) {
+  .operational-shell[data-shell-layout='director'] {
+    --shell-action-w: 46%;
+  }
+}
+
+/* ==========================================================================
+   FASE 2A — TABLET VERTICAL: reorganización por filas
+   ==========================================================================
+
+   En vertical el escritorio comprimido dejaba columnas de 200–300 px: un
+   personaje de 65–124 px, cartas de 57–76 px, botones partidos palabra por
+   palabra y 300–600 px de suelo sin uso. Aquí el ancho completo pasa a cada
+   fila. Sin `:has()` (en contenedores exteriores congelaba el renderer) y sin
+   shells nuevos: solo se reordenan las mismas regiones.
+*/
+@media (orientation: portrait) and (max-width: 1100px) {
+  /*
+   * DIRECTOR y ADMIN/ANALISTA: la zona operativa arriba (alto de su contenido)
+   * y la lectura o las acciones debajo, con el alto restante.
+   */
+  .operational-shell[data-shell-layout='director'],
+  .operational-shell[data-shell-layout='deck'] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas:
+      'main'
+      'action';
+  }
+
+  /*
+   * DIRECTOR. Fila 1: personaje + problemas (≈28 % del alto, acotado); fila 2:
+   * la baraja a ancho completo con exactamente el alto de su mesa (misma regla
+   * `max-content` que evita recortes en escritorio); fila 3: la lectura.
+   * 260 px dejan ≥160 px de personaje dibujado y ≥3 filas de problemas.
+   */
+  .operational-shell[data-shell-layout='director'] .operational-shell__main {
+    grid-template-rows: clamp(260px, 28dvh, 340px) max-content;
+  }
+
+  /*
+   * ADMIN/ANALISTA. La banda superior deja de ser 268 px fijos: crece con el
+   * alto para que la lista muestre filas, y el personaje recibe una columna
+   * más ancha (≈28 %) para superar los 160 px dibujados. Con 740–790 px no
+   * caben a la vez personaje ≥160, problemas ≥300 y «Mis reportes» legible:
+   * se prioriza el personaje y se deja el reparto de las listas documentado.
+   */
+  .operational-shell[data-shell-layout='deck'] {
+    --shell-top-h: clamp(290px, 28dvh, 340px);
+  }
+
+  .operational-shell[data-shell-layout='deck'] .operational-shell__main {
+    grid-template-rows: var(--shell-top-h) max-content;
+  }
+
+  .operational-shell[data-shell-layout='deck'] .operational-shell__top {
+    grid-template-columns:
+      minmax(0, 0.28fr)
+      minmax(0, 0.33fr)
+      minmax(0, 0.39fr);
+  }
+
+  /*
+   * COORDINADOR conserva su 2×2, pero en vertical la celda del rail es más
+   * ancha que alta: personaje y carta propia van LADO A LADO en vez de
+   * apilados, así el personaje tiene todo el alto de la celda. La carta sigue
+   * midiéndose contra su hueco real (`min()` de `__own-card`).
+   */
+  .operational-shell--coordinator .operational-shell__rail-stack {
+    /* El personaje está limitado por el ancho: se le da la columna mayor. */
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .operational-shell--coordinator .operational-shell__own-card {
+    align-items: center;
+    padding: 0;
   }
 }

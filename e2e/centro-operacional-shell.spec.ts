@@ -7,10 +7,11 @@ import { expect, test, type Page } from 'playwright/test'
  * - las pantallas legacy (Dashboard, Red de impacto, Situaciones, Gestión,
  *   Panorama, Inteligencia IA, Auditoría y sus alias) ya no son destinos:
  *   redirigen al Centro Operacional, sin carril;
- * - el chrome del Centro no ofrece pestañas legacy ni menú «Plataforma»;
- * - identidad, usuario/rol, ayuda y cerrar sesión siguen disponibles;
- * - la Administración (solo ADMIN) se conserva y se alcanza desde el menú de
- *   usuario, sin carril.
+ * - el Centro no ofrece pestañas legacy ni menú «Plataforma»;
+ * - usuario/rol, ayuda y cerrar sesión siguen disponibles (desde la Fase 1.5,
+ *   en la hamburguesa flotante: el Centro ya no monta cabecera);
+ * - la Administración (solo ADMIN) se conserva y se alcanza desde ese menú,
+ *   sin carril.
  */
 
 const SESSION_KEY = 'novex.auth.session.v1'
@@ -125,7 +126,9 @@ for (const route of LEGACY_ROUTES) {
     await page.goto(route)
 
     await expect(page).toHaveURL(/\/centro-operacional$/, { timeout: 30_000 })
-    await expect(page.getByTestId('eoc-chrome')).toBeVisible({ timeout: 30_000 })
+    // Fase 1.5: sin cabecera; la navegación vive en la hamburguesa flotante.
+    await expect(page.getByTestId('shell-menu-trigger')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByTestId('eoc-chrome')).toHaveCount(0)
     await expect(page.locator('.novex-os-rail')).toHaveCount(0)
   })
 }
@@ -139,12 +142,15 @@ test('el registro legado no rebota: un rol sin creación cae en el Centro', asyn
   await expect(page).toHaveURL(/\/centro-operacional$/, { timeout: 30_000 })
 })
 
-test('el chrome del Centro no ofrece navegación legacy', async ({ page }) => {
+test('el Centro no ofrece navegación legacy', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await install(page)
   await page.goto('/centro-operacional')
-  const chrome = page.getByTestId('eoc-chrome')
-  await expect(chrome).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByTestId('eoc-chrome')).toHaveCount(0)
+  // Los enlaces de navegación viven ahora en el menú: se revisan con él abierto.
+  await page.getByTestId('shell-menu-trigger').click({ timeout: 30_000 })
+  const menu = page.getByTestId('shell-menu-panel')
+  await expect(menu).toBeVisible()
 
   await expect(page.getByTestId('platform-menu-trigger')).toHaveCount(0)
   await expect(page.locator('.eoc-subnav')).toHaveCount(0)
@@ -171,11 +177,12 @@ test('el chrome del Centro no ofrece navegación legacy', async ({ page }) => {
     ),
   ).toEqual([])
 
-  // Identidad y nombre accesible de la pantalla.
-  await expect(chrome.getByText('NOVEX', { exact: false })).toBeVisible()
+  // Identidad del usuario en el menú y nombre accesible de la pantalla (sin
+  // cabecera visible: el h1 es solo para tecnologías de apoyo).
+  await expect(menu).toContainText('Administrador E2E')
   await expect(
     page.getByRole('heading', { name: 'Centro operacional', level: 1 }),
-  ).toBeVisible()
+  ).toHaveCount(1)
 })
 
 test('usuario, rol, Administración y cerrar sesión siguen accesibles', async ({
@@ -184,33 +191,34 @@ test('usuario, rol, Administración y cerrar sesión siguen accesibles', async (
   await page.setViewportSize({ width: 1440, height: 900 })
   await install(page)
   await page.goto('/centro-operacional')
-  await expect(page.getByTestId('eoc-chrome')).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByTestId('eoc-chrome')).toHaveCount(0)
 
-  const userTrigger = page.getByRole('button', { name: /Menú de usuario/ })
-  await expect(userTrigger).toBeVisible()
-  await expect(userTrigger).toContainText('Administrador')
-  await userTrigger.click()
+  // Fase 1.5: usuario, rol, destinos y sesión viven en la hamburguesa.
+  const trigger = page.getByTestId('shell-menu-trigger')
+  await trigger.click({ timeout: 30_000 })
+  const menu = page.getByTestId('shell-menu-panel')
+  await expect(menu).toContainText('Administrador E2E')
+  await expect(menu).toContainText('Administrador')
 
-  // El ADMIN conserva la Administración, desde el menú de usuario.
-  const admin = page.getByRole('menuitem', { name: 'Administración' })
+  // El ADMIN conserva la Administración.
+  const admin = page.getByTestId('shell-menu-option-admin')
   await expect(admin).toBeVisible()
-  await expect(
-    page.getByRole('menuitem', { name: 'Cerrar sesión' }),
-  ).toBeVisible()
-  // El tutorial está suspendido: no se ofrece.
-  await expect(page.getByRole('menuitem', { name: /tutorial/i })).toHaveCount(0)
+  await expect(page.getByTestId('shell-menu-logout')).toBeVisible()
+  // El tutorial está suspendido (sin pasos en este entorno): no se ofrece.
+  await expect(page.getByTestId('shell-menu-tutorial')).toHaveCount(0)
 
   await admin.click()
   await expect(page).toHaveURL(/\/admin$/)
   await expect(page.locator('.novex-os-rail')).toHaveCount(0)
 
-  // Y vuelve al Centro por el mismo menú.
+  // Y vuelve al Centro por el menú de usuario de la Administración, que
+  // conserva su cabecera.
   await page.getByRole('button', { name: /Menú de usuario/ }).click()
   await page.getByRole('menuitem', { name: 'Centro operacional' }).click()
   await expect(page).toHaveURL(/\/centro-operacional$/)
 
   // Cerrar sesión lleva al login.
-  await page.getByRole('button', { name: /Menú de usuario/ }).click()
-  await page.getByRole('menuitem', { name: 'Cerrar sesión' }).click()
+  await page.getByTestId('shell-menu-trigger').click()
+  await page.getByTestId('shell-menu-logout').click()
   await expect(page).toHaveURL(/\/login$/, { timeout: 30_000 })
 })

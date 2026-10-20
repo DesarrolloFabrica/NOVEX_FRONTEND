@@ -478,7 +478,7 @@ test.describe('composición simple · 1440x900', () => {
     })
   })
 
-  test('la flecha de regreso restaura la composición global', async ({
+  test('la flecha de la miga restaura la composición global', async ({
     page,
   }, testInfo) => {
     test.slow()
@@ -489,11 +489,12 @@ test.describe('composición simple · 1440x900', () => {
     const globalBefore = await measure(page, 'GLOBAL (antes)')
 
     await select(page, 'coord-saber-pro')
+    // Único retorno de la baraja: la flecha de la miga, encima de las cartas.
+    // El «Volver a la mesa» inferior se retiró (mismo `clearCoordination`).
+    // (Aserciones de ambas ramas: rol + nombre, ubicación, tamaño táctil.)
     const action = page.getByRole('button', {
       name: 'Volver a Dirección de Operaciones',
     })
-    // Un único control de regreso, con nombre accesible propio: la flecha de
-    // la miga. El botón «Volver a la mesa» bajo las cartas ya no existe.
     await expect(action).toBeVisible()
     await expect(action).toHaveAttribute('data-testid', 'breadcrumb-direction')
     await expect(page.getByTestId('operational-breadcrumb')).toContainText(
@@ -501,6 +502,14 @@ test.describe('composición simple · 1440x900', () => {
     )
     await expect(page.getByTestId('return-to-table')).toHaveCount(0)
     await expect(page.getByText('Volver a la mesa')).toHaveCount(0)
+    // Control real, sin etiqueta visible y con nombre accesible propio.
+    await expect(action).toHaveText('')
+    await expect(page.locator(`${PANEL} [data-testid="breadcrumb-direction"]`)).toHaveCount(0)
+    const arrow = (await action.boundingBox())!
+    expect(arrow.width).toBeGreaterThanOrEqual(24)
+    expect(arrow.height).toBeGreaterThanOrEqual(24)
+    const table = await boxOf(page, '[data-testid="coordination-table"]')
+    expect(arrow.y + arrow.height).toBeLessThanOrEqual(table.y + 1)
 
     // Teclado: es un `<button>` nativo, así que Enter lo activa sin lógica
     // propia de teclado.

@@ -157,6 +157,9 @@ export function DirectorEstadoPanel({
                   loading={stateLoading}
                   error={stateFailed ? state.error : null}
                   onPeriodChange={onAnalysisPeriodChange}
+                  // Los filtros de la cabecera ya muestran ciclo › mes › semana
+                  // y permiten subir de nivel: la ruta repetiría lo mismo.
+                  showTrail={false}
                 />
               ),
             },

@@ -315,7 +315,7 @@ test.describe('QA ESTADO · RESOLUCIÓN · scope COORDINACIÓN', () => {
       await openCoordination(page, code)
       await goToResolucion(page)
       const response = served.at(-1)!
-      await expect(tid(page, 'director-analysis-period-range')).toHaveText('H2 2026')
+      await expect(tid(page, 'director-analysis-period-range')).toHaveText('1 JUL — 31 DIC 2026')
       await expect(tid(page, 'director-resolucion').locator('[data-testid$="-cut"]')).toHaveCount(0)
       await expect(tid(page, TREND).locator('svg')).toBeVisible()
       await expect(tid(page, DIST).locator('svg')).toBeVisible()
@@ -346,7 +346,7 @@ test.describe('QA ESTADO · RESOLUCIÓN · scope COORDINACIÓN', () => {
     await openCoordination(page, 'coord-operaciones-academicas')
     await tid(page, 'director-flujo-drill-2026-09-01').focus()
     await page.keyboard.press('Enter')
-    await expect(tid(page, 'director-analysis-period-range')).toHaveText('SEPTIEMBRE 2026')
+    await expect(tid(page, 'director-analysis-period-range')).toHaveText('1 — 30 SEP 2026')
     await goToResolucion(page)
     await expect(tid(page, 'director-resolucion')).toHaveAttribute('data-level', 'week')
     expect(served.at(-1)!.scope.coordinationId).toBe(OA)
@@ -356,7 +356,7 @@ test.describe('QA ESTADO · RESOLUCIÓN · scope COORDINACIÓN', () => {
 
     await selectCard(page, 'coord-ingenierias')
     await expect(tid(page, 'director-estado-carousel')).toHaveAttribute('data-page', '3')
-    await expect(tid(page, 'director-analysis-period-range')).toHaveText('SEPTIEMBRE 2026')
+    await expect(tid(page, 'director-analysis-period-range')).toHaveText('1 — 30 SEP 2026')
     expect(served.at(-1)!.scope.coordinationId).toBe(ING)
     const ing = await resolucionView(page)
     expect(ing).not.toEqual(oa)
