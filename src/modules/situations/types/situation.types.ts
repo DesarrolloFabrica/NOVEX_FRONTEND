@@ -85,6 +85,8 @@ export interface CreateEvidencePayload {
   type: EvidenceType
   title: string
   description: string
+  /** Identidad estable de la nota de captura; un reintento no la duplica. */
+  clientKey?: string
   fileName?: string
   storagePath?: string
   mimeType?: string

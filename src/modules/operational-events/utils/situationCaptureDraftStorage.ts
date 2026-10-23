@@ -13,6 +13,11 @@ import {
 
 const DRAFT_KEY = 'novex.situationCapture.draft.v1'
 const STEP_KEY = 'novex.situationCapture.step.v1'
+const REQUEST_ID_KEY = 'novex.situationCapture.requestId.v1'
+const UUID_V4_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+/** Respaldo de la clave cuando el almacenamiento del navegador no está disponible. */
+let memoryRequestId: string | null = null
 /** Claves legacy del rebrand Cunmark -> NOVEX. */
 const LEGACY_DRAFT_KEYS = ['cunmark.situationCapture.draft.v1'] as const
 const LEGACY_STEP_KEYS = ['cunmark.situationCapture.step.v1'] as const
@@ -187,15 +192,73 @@ export function writeSituationCaptureWizardStep(step: WizardStepId): void {
 }
 
 export function clearSituationCapturePersistence(): void {
+  memoryRequestId = null
   const storage = getStorage()
   if (!storage) return
 
   try {
     storage.removeItem(DRAFT_KEY)
     storage.removeItem(STEP_KEY)
+    storage.removeItem(REQUEST_ID_KEY)
     clearLegacyDraftKeys(storage)
     clearLegacyStepKeys(storage)
   } catch {
     // Ignorar.
   }
+}
+
+/**
+ * Clave de idempotencia del intento lógico de registro en curso. Se reutiliza
+ * tras recargas o errores de resultado incierto, para que el servidor reconozca
+ * el mismo registro. Solo cambia al terminar con éxito o al iniciar un registro nuevo.
+ */
+export function readOrCreateSituationCaptureRequestId(): string {
+  const stored = readStoredRequestId()
+  if (stored) {
+    memoryRequestId = stored
+    return stored
+  }
+  if (memoryRequestId) return memoryRequestId
+
+  return persistRequestId(newRequestId())
+}
+
+/** Genera una clave nueva. Usar cuando el contenido cambió tras un intento previo. */
+export function rotateSituationCaptureRequestId(): string {
+  return persistRequestId(newRequestId())
+}
+
+function readStoredRequestId(): string | null {
+  const storage = getStorage()
+  if (!storage) return null
+
+  try {
+    const raw = storage.getItem(REQUEST_ID_KEY)
+    return raw && UUID_V4_PATTERN.test(raw) ? raw : null
+  } catch {
+    return null
+  }
+}
+
+function persistRequestId(requestId: string): string {
+  memoryRequestId = requestId
+  const storage = getStorage()
+  try {
+    storage?.setItem(REQUEST_ID_KEY, requestId)
+  } catch {
+    // Sin almacenamiento, la clave vive solo en memoria durante la sesión.
+  }
+  return requestId
+}
+
+function newRequestId(): string {
+  if (typeof globalThis.crypto?.randomUUID === 'function') {
+    return globalThis.crypto.randomUUID()
+  }
+  // randomUUID exige contexto seguro (HTTPS o localhost); este respaldo cubre el resto.
+  const bytes = globalThis.crypto.getRandomValues(new Uint8Array(16))
+  bytes[6] = (bytes[6] & 0x0f) | 0x40
+  bytes[8] = (bytes[8] & 0x3f) | 0x80
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
 }

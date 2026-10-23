@@ -14,7 +14,12 @@ import {
   WizardStepRail,
   type WizardStepId,
 } from '@/modules/operational-events/components/WizardStepRail'
-import { registerSituationWithAnalysis } from '@/modules/services/situationRegistration.service'
+import {
+  describeRegistrationError,
+  registerSituationWithAnalysis,
+  uploadCaptureEvidences,
+} from '@/modules/services/situationRegistration.service'
+import { ApiError } from '@/shared/api/http'
 import { fetchCoordinationsRequest } from '@/modules/situations/services/coordinations.service'
 import { fetchIncidentCategoriesRequest } from '@/modules/situations/services/situations.service'
 import type { SituationCaptureDraft } from '@/modules/situations/types/situation-capture.types'
@@ -25,8 +30,10 @@ import type {
 } from '@/modules/situations/types/situation.types'
 import {
   clearSituationCapturePersistence,
+  readOrCreateSituationCaptureRequestId,
   readSituationCaptureDraft,
   readSituationCaptureWizardStep,
+  rotateSituationCaptureRequestId,
   writeSituationCaptureDraft,
   writeSituationCaptureWizardStep,
 } from '@/modules/operational-events/utils/situationCaptureDraftStorage'
@@ -155,6 +162,17 @@ export function OperationalEventWizard() {
   >(resumableSituationId)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+  /** Notas no guardadas tras un registro exitoso; se reintentan sobre la misma situación. */
+  const [evidenceRetry, setEvidenceRetry] = useState<{
+    situationId: string
+    draft: SituationCaptureDraft
+    coordinations: CoordinationSummary[]
+    failedTitles: string[]
+  } | null>(null)
+  const [retryingEvidences, setRetryingEvidences] = useState(false)
+  /** Con notas pendientes, el análisis completado no navega: el aviso queda visible. */
+  const keepAfterAnalysisRef = useRef(false)
   const submissionInFlightRef = useRef(false)
 
   const selectableCategories = useMemo(
@@ -297,13 +315,37 @@ export function OperationalEventWizard() {
     }
   }, [analystMode, coordinatorMode, prefillCoordinationCode, user?.coordinationId])
 
+  async function handleRetryEvidences() {
+    if (!evidenceRetry) return
+    setRetryingEvidences(true)
+    try {
+      const failedTitles = await uploadCaptureEvidences(
+        evidenceRetry.situationId,
+        evidenceRetry.draft,
+        evidenceRetry.coordinations,
+      )
+      setEvidenceRetry(
+        failedTitles.length > 0
+          ? { ...evidenceRetry, failedTitles }
+          : null,
+      )
+    } catch (retryError) {
+      setError(getErrorMessage(retryError))
+    } finally {
+      setRetryingEvidences(false)
+    }
+  }
+
   function startFreshCapture() {
     skipRecoveryRef.current = true
+    keepAfterAnalysisRef.current = false
+    setEvidenceRetry(null)
     clearOnboardingSituation(user?.id)
     clearSituationCapturePersistence()
     setRegisteredSituationId(null)
     setSituation(null)
     setError(null)
+    setNotice(null)
     setDraft(
       createEmptyDraft(
         coordinatorMode && user?.coordinationId ? user.coordinationId : '',
@@ -316,6 +358,7 @@ export function OperationalEventWizard() {
     // Conservar el ID de onboarding para que el tour pueda reabrir /gestion
     // con la misma situación en pasos posteriores (historial → gestión).
     clearSituationCapturePersistence()
+    if (keepAfterAnalysisRef.current) return
     navigate(`/gestion?situation=${encodeURIComponent(situationId)}`, {
       replace: true,
     })
@@ -340,24 +383,54 @@ export function OperationalEventWizard() {
 
     submissionInFlightRef.current = true
     setSubmitting(true)
+    setNotice(null)
     registrationStartedAtRef.current = Date.now()
     setStep(3)
 
     try {
-      const created = await registerSituationWithAnalysis({
+      // La misma clave en reintentos y recargas: el servidor no duplica el registro.
+      const {
+        situation: created,
+        replayed,
+        failedEvidenceTitles,
+      } = await registerSituationWithAnalysis({
         draft,
         coordinations: coordinationCatalog,
         categories,
         allowUnassignedCoordination: analystMode,
+        idempotencyKey: readOrCreateSituationCaptureRequestId(),
       })
       rememberOnboardingSituation(user?.id, created.id)
       clearSituationCapturePersistence()
       setSituation(created)
       setRegisteredSituationId(created.id)
+      if (replayed) {
+        setNotice(
+          'Este registro ya estaba confirmado; se muestra el resultado existente.',
+        )
+      }
+      keepAfterAnalysisRef.current = failedEvidenceTitles.length > 0
+      setEvidenceRetry(
+        failedEvidenceTitles.length > 0
+          ? {
+              situationId: created.id,
+              draft,
+              coordinations: coordinationCatalog,
+              failedTitles: failedEvidenceTitles,
+            }
+          : null,
+      )
       setStep(3)
     } catch (submitError) {
+      if (
+        submitError instanceof ApiError &&
+        submitError.code === 'IDEMPOTENCY_KEY_REUSED'
+      ) {
+        // El contenido cambió: el siguiente envío debe ser un registro nuevo.
+        rotateSituationCaptureRequestId()
+      }
       setStep(2)
-      setError(getErrorMessage(submitError))
+      setError(describeRegistrationError(submitError))
       if (onboardingActive && onboardingStepId === 'analysis') {
         // El hito de análisis aparece mientras se envía el expediente. Si el
         // alta falla, devolver también el tutorial a revisión evita bloquearlo
@@ -455,6 +528,37 @@ export function OperationalEventWizard() {
                   onClick={startFreshCapture}
                 >
                   Registrar otra situación
+                </button>
+              </div>
+            ) : null}
+            {notice ? (
+              <p role="status" className="px-1 text-sm text-slate-200">
+                {notice}
+              </p>
+            ) : null}
+            {evidenceRetry ? (
+              <div role="alert" className="flex flex-wrap items-center gap-3 px-1 text-sm text-amber-200">
+                <span>
+                  No se guardaron algunas notas de captura (
+                  {evidenceRetry.failedTitles.join(', ')}). La situación sí quedó
+                  registrada.
+                </span>
+                <button
+                  type="button"
+                  className="font-semibold underline-offset-2 hover:underline"
+                  disabled={retryingEvidences}
+                  onClick={() => {
+                    void handleRetryEvidences()
+                  }}
+                >
+                  {retryingEvidences ? 'Reintentando…' : 'Reintentar notas'}
+                </button>
+                <button
+                  type="button"
+                  className="font-semibold underline-offset-2 hover:underline"
+                  onClick={() => handleViewDossier(evidenceRetry.situationId)}
+                >
+                  Abrir expediente
                 </button>
               </div>
             ) : null}

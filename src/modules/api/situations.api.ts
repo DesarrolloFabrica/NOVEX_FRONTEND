@@ -50,16 +50,24 @@ export async function fetchSituations(
 export interface CreateSituationWithAnalysisResponse {
   situation: SituationResponse
   analysis: ExecuteAIAnalysisResponse
+  /** true cuando el servidor reconoció la clave y devolvió un registro ya completado. */
+  replayed: boolean
 }
+
+/** Mayor que el tope de análisis IA del backend (60 s) y menor que el de Cloud Run (300 s). */
+const REGISTRATION_TIMEOUT_MS = 120_000
 
 export async function createSituationWithAnalysis(
   payload: CreateSituationPayload,
+  idempotencyKey: string,
 ): Promise<CreateSituationWithAnalysisResponse> {
   return apiRequest<CreateSituationWithAnalysisResponse>(
     '/situations/register-with-analysis',
     {
       method: 'POST',
+      headers: { 'Idempotency-Key': idempotencyKey },
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(REGISTRATION_TIMEOUT_MS),
     },
   )
 }
