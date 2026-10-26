@@ -53,6 +53,10 @@ const env = {
   GEMINI_TIMEOUT_MS: '60000',
   GEMINI_STUB_PORT: '4010',
   GEMINI_THROTTLE_LIMIT: '1000',
+  // El frontend usa SIEMPRE el proxy local de Vite hacia 127.0.0.1:3001: estos
+  // valores vacíos prevalecen sobre cualquier .env que apunte a otro backend.
+  VITE_API_BASE_URL: '',
+  VITE_API_URL: '',
 }
 
 function run(command, args, options = {}) {
