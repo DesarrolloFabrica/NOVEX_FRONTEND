@@ -212,6 +212,28 @@ describe('useOperationalOverview: alta idempotente', () => {
     expect(ctrl.current.reportDrafts[DRAFT_KEY]).toBeUndefined()
   })
 
+  it('un borrador y una clave restaurados NUNCA se envían solos al montar', async () => {
+    createSituationWithAnalysis.mockRejectedValueOnce(
+      new ApiError('sin red', 0, { code: 'NETWORK_ERROR' }),
+    )
+    let ctrl = mount('user-1')
+    act(() => ctrl.current.setReportDraft(DRAFT_KEY, draft('Pendiente de confirmar')))
+    await act(async () => {
+      await ctrl.current.submitReport(submitInput('Pendiente de confirmar'))
+    })
+    unmount()
+    createSituationWithAnalysis.mockClear()
+
+    ctrl = mount('user-1')
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    })
+
+    // El texto vuelve, pero el alta solo ocurre si el usuario confirma.
+    expect(ctrl.current.reportDrafts[DRAFT_KEY]?.title).toBe('Pendiente de confirmar')
+    expect(createSituationWithAnalysis).not.toHaveBeenCalled()
+  })
+
   it('los borradores de un usuario no aparecen en la sesión de otro', () => {
     let ctrl = mount('user-1')
     act(() => ctrl.current.setReportDraft(DRAFT_KEY, draft('Privado')))
