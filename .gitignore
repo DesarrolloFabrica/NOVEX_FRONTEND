@@ -30,3 +30,7 @@ playwright-report/
 *.njsproj
 *.sln
 *.sw?
+
+# Capturas y salidas de QA visual (se regeneran con los specs de e2e/)
+e2e/artifacts/
+tmp-panel-shots/
