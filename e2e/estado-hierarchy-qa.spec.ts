@@ -404,9 +404,9 @@ test.describe('QA ESTADO visualización-first v3', () => {
         await expect(panel.getByText('de severidad crítica')).toHaveCount(0)
         await expect(panel.getByText('Composición actual')).toHaveCount(0)
 
-        // Severidad | Atención viven en la lámina 2 del carrusel de ESTADO.
-        await panel.getByTestId('director-estado-carousel-next').click()
-        await expect(panel.getByTestId('director-estado-carousel')).toHaveAttribute('data-page', '1')
+        // Lectura continua: Severidad y Atención están debajo de Movimiento.
+        await expect(panel.getByTestId('director-estado-carousel')).toHaveCount(0)
+        await panel.getByTestId('director-kpi-severity').scrollIntoViewIfNeeded()
         await settle(page)
 
         const severityChart = panel.getByTestId('director-estado-severity-chart')
@@ -457,9 +457,8 @@ test.describe('QA ESTADO visualización-first v3', () => {
         await expect(panel.getByTestId('director-estado-comp-cut')).toBeVisible()
         await expect(panel.getByTestId('director-corte-total')).toHaveText(String(attTotal))
 
-        // Vuelta a la lámina 1 (Carga | Movimiento).
-        await panel.getByTestId('director-estado-carousel-prev').click()
-        await expect(panel.getByTestId('director-estado-carousel')).toHaveAttribute('data-page', '0')
+        // Vuelta arriba (Carga | Movimiento).
+        await panel.getByTestId('director-carga').scrollIntoViewIfNeeded()
         await settle(page)
 
         const chart = panel.getByTestId('director-flujo-chart')
@@ -467,15 +466,28 @@ test.describe('QA ESTADO visualización-first v3', () => {
 
         const body = panel.getByTestId('director-reading-body')
         await expect(body).toBeVisible()
-        // ESTADO cabe entero (carrusel de láminas): sin scroll vertical real.
-        const scrollProbe = await body.evaluate((node) => ({
-          scrollHeight: node.scrollHeight,
-          clientHeight: node.clientHeight,
-          scrollTop: node.scrollTop,
-        }))
-        expect(scrollProbe.scrollHeight).toBeLessThanOrEqual(scrollProbe.clientHeight + 2)
-        expect(scrollProbe.scrollTop).toBe(0)
-        await expect(panel).toHaveAttribute('data-scroll-more', 'false')
+        // ESTADO es una lectura continua: el cuerpo es la ÚNICA zona de scroll
+        // (hay más contenido que alto) y ningún módulo se desplaza por dentro.
+        const scrollProbe = await body.evaluate((node) => {
+          const inner = Array.from(
+            node.querySelectorAll<HTMLElement>('[data-testid="director-estado-lectura"] *'),
+          ).filter((el) => {
+            const style = getComputedStyle(el)
+            return (
+              /(auto|scroll)/.test(style.overflowY) && el.scrollHeight > el.clientHeight + 1
+            )
+          })
+          return {
+            scrollHeight: node.scrollHeight,
+            clientHeight: node.clientHeight,
+            overflowY: getComputedStyle(node).overflowY,
+            innerScrollers: inner.map((el) => el.className),
+          }
+        })
+        expect(scrollProbe.overflowY).toBe('auto')
+        expect(scrollProbe.scrollHeight).toBeGreaterThan(scrollProbe.clientHeight)
+        expect(scrollProbe.innerScrollers).toEqual([])
+        await expect(panel).toHaveAttribute('data-scroll-more', 'true')
 
         // Cabecera/tabs fijos.
         await expect(panel.getByText(/Lectura de coordinación/i)).toBeVisible()
@@ -502,9 +514,10 @@ test.describe('QA ESTADO visualización-first v3', () => {
         expect(chartMetrics.width).toBeGreaterThan(120)
         expect(chartMetrics.height).toBeGreaterThan(160)
         // Alto CONTENIDO (no estirado al panel) y proporción apaisada a todo
-        // el ancho de la lectura: ≈ 194 px a 1440×900, 232 px a 1920×1080.
-        expect(chartMetrics.frameHeight).toBeGreaterThanOrEqual(150)
-        expect(chartMetrics.frameHeight).toBeLessThanOrEqual(240)
+        // el ancho de la lectura: clamp(190px, 25vh, 250px) en la lectura
+        // continua → 225 px a 1440×900, 250 px a 1920×1080.
+        expect(chartMetrics.frameHeight).toBeGreaterThanOrEqual(190)
+        expect(chartMetrics.frameHeight).toBeLessThanOrEqual(250)
         expect(chartMetrics.width / chartMetrics.height).toBeGreaterThanOrEqual(2.4)
         expect(chartMetrics.clippedBottom).toBe(false)
 

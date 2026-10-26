@@ -100,21 +100,20 @@ export function DirectorReadingPanel({
     [],
   )
   /**
-   * Lámina del carrusel de ESTADO. Vive aquí (no en ESTADO) para sobrevivir
-   * a cambios de tab, de coordinación y de periodo: permite comparar la misma
-   * dimensión entre coordinaciones sin volver a navegar. No es un filtro.
+   * Lámina del carrusel de INTERNOS (Recurrencia | Afectaciones). Vive aquí
+   * para sobrevivir a cambios de tab, de coordinación y de periodo. No es un
+   * filtro. ESTADO ya no tiene láminas: es una lectura continua.
    */
-  const [estadoPage, setEstadoPage] = useState(0)
-  /** Lámina de INTERNOS (Recurrencia | Afectaciones): misma regla que ESTADO. */
   const [internosPage, setInternosPage] = useState(0)
   const [canScrollMore, setCanScrollMore] = useState(false)
   const bodyRef = useRef<HTMLDivElement | null>(null)
 
   const selected = selectedCoordination !== null
   const coordinationKey = selectedCoordination?.id ?? null
-  // ESTADO e INTERNOS de coordinación caben enteros (carrusel): sin scroll ni
-  // pista de «hay más abajo». Los demás modos conservan su scroll.
-  const fixedHeight = (mode === 'state' || mode === 'internos') && selected
+  // INTERNOS de coordinación cabe entero (carrusel): sin scroll ni pista de
+  // «hay más abajo». ESTADO es una lectura continua y, como los demás modos,
+  // se recorre con el scroll de este cuerpo (única zona desplazable).
+  const fixedHeight = mode === 'internos' && selected
 
   // «Actual / en curso» caduca si la app queda abierta al cambiar de día.
   // Se revalida al volver a la pestaña (sin polling); el picker también
@@ -262,8 +261,6 @@ export function DirectorReadingPanel({
             analysisPeriod={analysisPeriod}
             onAnalysisPeriodChange={setAnalysisPeriod}
             onOpenDependencias={() => setMode('dependencias')}
-            carouselPage={estadoPage}
-            onCarouselPageChange={setEstadoPage}
           />
         ) : null}
 

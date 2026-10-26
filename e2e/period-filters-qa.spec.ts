@@ -9,7 +9,7 @@ import { installResponsiveCentro, ESPE, B2B } from './responsive-centro.fixture'
  * Ciclo · Mes · Semana sobre el MISMO AnalysisPeriod que flechas y gráficas.
  * Comprueba niveles, vuelta a «Todo el mes / Todo el ciclo», sincronía con el
  * drill-down, una consulta por cambio, futuros deshabilitados, error, carga,
- * coordinación/pestaña/lámina, teclado y redimensionado de ECharts.
+ * coordinación/pestaña y recorrido de la lectura, teclado y redimensionado de ECharts.
  * Capturas en test-results/period-filters/ (no versionado).
  */
 const OUT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'test-results', 'period-filters')
@@ -151,7 +151,7 @@ for (const size of SIZES) {
     await expect(cycle).toHaveValue('2026-2')
     await expect(tid(page, 'director-analysis-period-go-current')).toHaveCount(0)
 
-    // 8. Coordinación, pestaña y lámina conservan el mismo periodo.
+    // 8. Coordinación, pestaña y recorrido de la lectura conservan el mismo periodo.
     await month.selectOption('8')
     await tid(page, 'shell-stage').locator(`[data-testid="coordination-card"][data-code="${B2B}"]`).click()
     await settle(page)
@@ -159,9 +159,9 @@ for (const size of SIZES) {
     await tid(page, 'director-reading-mode-internos').click()
     await expect(month).toHaveValue('8')
     await tid(page, 'director-reading-mode-state').click()
-    await tid(page, 'director-estado-carousel-dot-1').click()
+    await tid(page, 'director-kpi-severity').scrollIntoViewIfNeeded()
     await expect(month).toHaveValue('8')
-    await tid(page, 'director-estado-carousel-dot-0').click()
+    await tid(page, 'director-carga').scrollIntoViewIfNeeded()
 
     // 9. Teclado: Tab llega al selector y las flechas cambian el valor.
     await month.focus()

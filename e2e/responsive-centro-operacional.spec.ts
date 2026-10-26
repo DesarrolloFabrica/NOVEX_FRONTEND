@@ -710,7 +710,7 @@ async function runDeckRole(
 
     // Tooltip de Severidad: sobre la barra del extremo derecho, que es donde un
     // tooltip sin `confine` se saldría de la celda.
-    await page.getByTestId('director-estado-carousel-dot-1').click()
+    await page.getByTestId('director-kpi-severity').scrollIntoViewIfNeeded()
     const severity = page.getByTestId('director-kpi-severity').locator('.novex-chart__canvas')
     await expect(severity).toBeVisible({ timeout: 20_000 })
     await settle(page)
@@ -726,7 +726,7 @@ async function runDeckRole(
       expect.soft(inside(tip, chart, 4), 'severidad: tooltip dentro de su gráfica').toBe(true)
     }
     await page.mouse.move(0, 0)
-    await page.getByTestId('director-estado-carousel-dot-0').click()
+    await page.getByTestId('director-carga').scrollIntoViewIfNeeded()
   }
 
   // Apertura de un problema.

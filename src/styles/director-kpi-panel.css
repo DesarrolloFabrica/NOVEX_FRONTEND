@@ -3275,11 +3275,11 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
- * ESTADO (coordinación) · CARRUSEL DE LÁMINAS, sin scroll vertical.
- * La cadena body → estado → carrusel → página → gráfica es flex con
- * min-height: 0: el contenido CABE (no se recorta escondiendo la barra).
- * Solo con data-fixed-height (ESTADO + coordinación): INTERNOS,
- * DEPENDENCIAS, APRENDIZAJES y la lectura de Dirección conservan su scroll.
+ * CARRUSEL DE LÁMINAS, sin scroll vertical (hoy solo INTERNOS de una
+ * coordinación: ESTADO pasó a lectura continua, ver `.director-estado-lectura`).
+ * La cadena body → carrusel → página → gráfica es flex con min-height: 0: el
+ * contenido CABE (no se recorta escondiendo la barra). Solo con
+ * data-fixed-height; el resto de pestañas conserva el scroll del cuerpo.
  * ───────────────────────────────────────────────────────────────────────── */
 
 .director-reading__body[data-fixed-height='true'] {
@@ -3292,19 +3292,6 @@
   padding-bottom: 4px;
   padding-right: 0;
   scrollbar-gutter: auto;
-}
-
-/*
- * Solo ESTADO con coordinación: menos aire entre el selector temporal y la
- * lámina (14 → 8 px). INTERNOS y el resto de pestañas conservan el suyo.
- */
-.director-reading__body[data-fixed-height='true'][data-mode='state'] {
-  margin-top: 8px;
-}
-
-.director-reading__body[data-fixed-height='true'] > .director-estado {
-  flex: 1 1 auto;
-  min-height: 0;
 }
 
 .director-estado-carousel {
@@ -3343,13 +3330,6 @@
   flex-direction: column;
   /* Nada de una lámina asoma en la vecina durante o tras el desplazamiento. */
   overflow: hidden;
-}
-
-/* Títulos de la lámina 1 algo más compactos: caben con su «?» en 1440. */
-.director-estado-carousel .director-flujo .director-flujo__chart-title {
-  font-size: 13px;
-  letter-spacing: 0.035em;
-  gap: 6px;
 }
 
 /*
@@ -3425,89 +3405,20 @@
   outline-offset: 2px;
 }
 
-/*
- * Lámina 1 · Carga y movimiento: resumen + dos gráficas de alto CONTENIDO
- * (`.director-flujo__frame`), apiladas. Ya no se estiran al alto restante:
- * en pantallas altas sobra aire abajo en vez de alargar las gráficas. Si el
- * contenido no cabe (p. ej. los botones de teclado al recibir foco), la
- * lámina hace scroll interno: la página del carrusel sigue recortando para
- * que nada asome en la vecina.
- */
-.director-estado-carousel .director-flujo {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  margin-top: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgb(35 25 16 / 0.35) transparent;
-}
-
-.director-estado-carousel .director-flujo__col {
-  min-height: 0;
-}
-
-/* El host de ECharts trae un min-height en línea: aquí manda el frame. */
+/* El host de ECharts trae un min-height en línea: en las láminas de INTERNOS
+   manda el frame. */
 .director-estado-carousel .novex-chart__canvas {
   min-height: 0 !important;
 }
 
-/* Lámina 2 · Severidad | Atención, mismo alto que la lámina 1. */
-.director-estado-carousel .director-estado-comp {
-  flex: 1 1 auto;
-  min-height: 0;
-  gap: 6px;
-}
-
-.director-estado-carousel .director-estado-comp__charts {
-  flex: 1 1 auto;
-  min-height: 0;
-  grid-template-columns: minmax(0, 58fr) minmax(0, 42fr);
-  column-gap: clamp(12px, 1.4vw, 22px);
-  align-items: stretch;
-}
-
-.director-estado-carousel .director-estado-comp__chart {
-  min-height: 0;
-}
-
-/* Regla vertical tenue entre las dos, como en la lámina 1 (sin tarjetas). */
-.director-estado-carousel .director-estado-comp__chart--attention {
-  padding-left: clamp(12px, 1.4vw, 22px);
-  background: repeating-linear-gradient(
-      180deg,
-      rgb(35 25 16 / 0.13) 0 4px,
-      transparent 4px 10px
-    )
-    left top / 1px 100% no-repeat;
-}
-
-.director-estado-carousel .director-estado-comp__chart .novex-chart--composition {
-  flex: 1 1 auto;
-  height: auto;
-  min-height: 0;
-}
-
-.director-estado-carousel .director-estado-comp__chart .novex-chart__canvas {
-  height: 100% !important;
-  min-height: 0 !important;
-}
-
 /* ─────────────────────────────────────────────────────────────────────────
- * Lámina 2 · composición POR CORTE (`.director-corte`, scope coordinación).
+ * Composición POR CORTE (`.director-corte`, scope coordinación).
  * Cabecera → Severidad (filas) → Atención (dona + leyenda) → Relaciones.
- * Alturas ajustadas al contenido: nada se estira para llenar la lámina; si
- * no cabe, scroll interno de la lámina (la página del carrusel sigue
- * recortando). La lectura de Dirección (live) no usa estas clases.
+ * Alturas ajustadas al contenido; nada se estira. La lectura de Dirección
+ * (live) no usa estas clases.
  * ───────────────────────────────────────────────────────────────────────── */
-.director-estado-carousel .director-corte {
+.director-corte {
   gap: 10px;
-  overflow-x: hidden;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgb(35 25 16 / 0.35) transparent;
 }
 
 /* 1 · Cabecera: cifra + «activos al corte» + fecha (+ «Valores actuales»). */
@@ -3746,11 +3657,16 @@
 }
 
 /*
- * Sin scroll, las gráficas llegan a las esquinas inferiores del ticket:
- * datos > decoración, los ornamentos de abajo se retiran solo en ESTADO
- * (los de arriba siguen; INTERNOS/DEPENDENCIAS/APRENDIZAJES sin cambios).
+ * Las gráficas llegan a las esquinas inferiores del ticket: datos >
+ * decoración, los ornamentos de abajo se retiran con alto fijo (INTERNOS) y
+ * en la lectura continua de ESTADO, cuyo contenido pasa por debajo de esas
+ * esquinas al desplazarse. Los de arriba siguen.
  */
 .operational-shell__region--director-reading:has(.director-reading[data-fixed-height='true'])
+  :is(.ticket-panel__ornament--bl, .ticket-panel__ornament--br),
+.operational-shell__region--director-reading:has(
+    .director-reading[data-mode='state'][data-scope='coordination']
+  )
   :is(.ticket-panel__ornament--bl, .ticket-panel__ornament--br) {
   display: none;
 }
@@ -4002,4 +3918,186 @@
 .director-estado-attention__facts li[data-kind='unclassified']
   .director-estado-attention__swatch {
   background: #e2d9c6;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * ESTADO (coordinación) · LECTURA CONTINUA en una sola columna.
+ *
+ * Sustituye al carrusel de cuatro láminas. Pestañas y filtros quedan fijos en
+ * la cabecera de la lectura; este contenido se recorre con el scroll de
+ * `.director-reading__body`, la ÚNICA zona desplazable (ninguna gráfica ni
+ * grupo tiene scroll propio). Cada gráfica es un módulo a todo el ancho con
+ * un alto según su contenido: nada usa `flex: 1` para llenar la pantalla y la
+ * colección no tiene alto total fijo. Los módulos se separan con aire,
+ * títulos y reglas punteadas suaves, sin marcos propios: el marco es el del
+ * ticket de NOVEX.
+ * ───────────────────────────────────────────────────────────────────────── */
+.director-estado-lectura {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  /* Aire final: el último módulo nunca queda pegado al borde inferior. */
+  padding: 2px 0 12px;
+}
+
+/* Grupos (flujo · corte · antigüedad · resolución), separados por una regla. */
+.director-estado-lectura__group {
+  min-width: 0;
+  padding: 22px 0;
+  border-top: 1.2px dashed rgb(35 25 16 / 0.22);
+}
+
+.director-estado-lectura__group:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.director-estado-lectura__group:last-child {
+  padding-bottom: 0;
+}
+
+/* Los grupos ya no llevan margen superior propio de lámina. */
+.director-estado-lectura .director-flujo,
+.director-estado-lectura .director-antiguedad,
+.director-estado-lectura .director-resolucion {
+  margin-top: 0;
+}
+
+/* ── Flujo: resumen + Carga + Movimiento, anchas y de alto contenido ── */
+.director-estado-lectura .director-flujo__pair {
+  gap: 18px;
+}
+
+.director-estado-lectura .director-flujo__col + .director-flujo__col {
+  padding-top: 18px;
+}
+
+.director-estado-lectura .director-flujo__frame {
+  height: clamp(190px, 25vh, 250px);
+}
+
+/* ── Corte: Severidad · Atención · Relaciones, cada una un módulo ── */
+.director-estado-lectura .director-corte {
+  gap: 22px;
+}
+
+.director-estado-lectura .director-corte__block + .director-corte__block {
+  padding-top: 18px;
+  border-top: 1px dashed rgb(35 25 16 / 0.16);
+}
+
+.director-estado-lectura .director-corte__relations {
+  margin-top: 0;
+  padding-top: 18px;
+  border-top-width: 1px;
+  border-top-color: rgb(35 25 16 / 0.16);
+}
+
+/*
+ * ── Antigüedad y Resolución: cada gráfica a todo el ancho ──
+ * Las parejas (ranking | distribución, tendencia | distribución) se apilan.
+ * La especificidad supera a la regla de contenedor que las ponía lado a lado
+ * en paneles anchos: en ESTADO nunca hay dos columnas.
+ */
+.director-estado-lectura .director-antiguedad__pair,
+.director-estado-lectura .director-resolucion__pair {
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: 0;
+}
+
+.director-estado-lectura .director-antiguedad__pair > .director-antiguedad__divider,
+.director-estado-lectura .director-resolucion__pair > .director-antiguedad__divider {
+  display: none;
+}
+
+.director-estado-lectura .director-antiguedad__col + .director-antiguedad__divider + .director-antiguedad__col {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px dashed rgb(35 25 16 / 0.16);
+}
+
+/* Sin columna vecina que igualar: la cabecera mide lo que su texto. */
+.director-estado-lectura .director-antiguedad__col-head {
+  min-height: 0;
+  margin-bottom: 4px;
+}
+
+.director-estado-lectura .director-antiguedad .director-flujo__chart-title,
+.director-estado-lectura .director-resolucion .director-flujo__chart-title {
+  white-space: nowrap;
+}
+
+/* Ranking: filas según el número de problemas, con todo el ancho para el título. */
+.director-estado-lectura .director-antiguedad__frame {
+  height: calc(var(--aging-rows, 5) * 48px + 56px);
+}
+
+/* Distribuciones y tendencia: anchas, de alto contenido y sin estirarse. */
+.director-estado-lectura .director-antiguedad__frame--dist {
+  height: clamp(200px, 26vh, 250px);
+}
+
+.director-estado-lectura .director-resolucion__frame {
+  height: clamp(210px, 27vh, 260px);
+}
+
+/* Títulos completos del ranking a demanda (teclado y lector incluidos). */
+.director-antiguedad__details {
+  margin-top: 6px;
+  font-size: 11.5px;
+}
+
+.director-antiguedad__details-summary {
+  display: inline-block;
+  padding: 2px 0;
+  font-style: italic;
+  font-weight: 700;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  opacity: 0.78;
+}
+
+.director-antiguedad__details-summary:hover {
+  opacity: 1;
+}
+
+.director-antiguedad__details-summary:focus-visible {
+  outline: 2px solid #231910;
+  outline-offset: 2px;
+  opacity: 1;
+}
+
+.director-antiguedad__list {
+  width: 100%;
+  margin-top: 6px;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.director-antiguedad__list th,
+.director-antiguedad__list td {
+  padding: 4px 8px 4px 0;
+  border-bottom: 1px dashed rgb(35 25 16 / 0.16);
+  text-align: left;
+  vertical-align: top;
+}
+
+.director-antiguedad__list thead th {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.director-antiguedad__list tbody th {
+  font-weight: 700;
+  /* El título completo, sin abreviar: aquí puede ocupar varias líneas. */
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.director-antiguedad__list td {
+  white-space: nowrap;
 }

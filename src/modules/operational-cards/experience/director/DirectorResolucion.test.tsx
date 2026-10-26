@@ -50,8 +50,8 @@ const render = (props: Partial<Parameters<typeof DirectorResolucion>[0]> = {}) =
     />,
   )
 
-describe('DirectorResolucion · lámina', () => {
-  it('RESOLUCIÓN: tiempo de resolución | tiempo hasta solución, lado a lado', () => {
+describe('DirectorResolucion · grupo de ESTADO', () => {
+  it('RESOLUCIÓN: tiempo de resolución y tiempo hasta el cierre, en ese orden', () => {
     const html = render()
     expect(html).toMatch(/<h3 class="director-antiguedad__eyebrow">Resolución<\/h3>/)
     const trend = html.indexOf('data-testid="director-resolucion-tendencia"')
@@ -59,7 +59,7 @@ describe('DirectorResolucion · lámina', () => {
     expect(trend).toBeGreaterThan(-1)
     expect(dist).toBeGreaterThan(trend)
     expect(html).toContain('Tiempo de resolución')
-    expect(html).toContain('Tiempo hasta solución')
+    expect(html).toContain('Tiempo hasta el cierre')
     expect(html).toContain('data-testid="director-resolucion-trend-chart"')
     expect(html).toContain('data-testid="director-tiempo-solucion-chart"')
     expect(html).toContain('data-level="month"')
@@ -71,24 +71,24 @@ describe('DirectorResolucion · lámina', () => {
     expect(html).not.toMatch(/AL CIERRE|>HOY</)
   })
 
-  it('subtítulos: mediana del periodo y «N solucionados en el periodo»', () => {
+  it('subtítulos: mediana del periodo y «N cerrados en el periodo»', () => {
     const text = (html: string) => html.replace(/<!-- -->/g, '')
     const html = text(render())
     expect(html).toContain('data-testid="director-resolucion-median"')
     expect(html).toMatch(/Mediana del periodo · [\d,]+ (días|h)/)
-    expect(html).toMatch(/director-resolucion-count"[^>]*>17 solucionados en el periodo</)
+    expect(html).toMatch(/director-resolucion-count"[^>]*>17 cerrados en el periodo</)
     const one = [flow('2026-07-01', 1), flow('2026-08-01', 0)]
     expect(text(render({ flowBuckets: one, resolution: resolutionFixture(one) }))).toMatch(
-      />1 solucionado en el periodo</,
+      />1 cerrado en el periodo</,
     )
   })
 
-  it('ayuda de la línea: mediana desde el registro hasta la solución', () => {
+  it('ayuda de la línea: mediana desde el registro hasta el cierre', () => {
     const html = render()
     expect(html).toContain(
-      'Mediana del tiempo transcurrido desde el registro hasta la solución de los problemas cerrados en cada periodo.',
+      'Mediana del tiempo desde el registro hasta el cierre de los problemas cerrados en cada tramo.',
     )
-    expect(html).toContain('Son los mismos que Movimiento cuenta como Solucionados.')
+    expect(html).toContain('Son los mismos que Movimiento cuenta como Cerrados.')
     expect(html).not.toMatch(/SLA/)
   })
 
@@ -103,11 +103,11 @@ describe('DirectorResolucion · lámina', () => {
     expect(html).toMatch(/director-tiempo-solucion-row-lt-1d"><th scope="row">&lt; 1 día<\/th><td>\d+<\/td><td>\d+ %<\/td>/)
   })
 
-  it('sin cierres en el periodo: UN mensaje para toda la lámina, sin línea ni barras', () => {
+  it('sin cierres en el periodo: UN mensaje para todo el grupo, sin línea ni barras', () => {
     const empty = FLOW.map((b) => (b.future ? b : flow(b.start, 0)))
     const html = render({ flowBuckets: empty, resolution: resolutionFixture(empty) })
     expect(html).toContain('data-empty="true"')
-    expect(html).toMatch(/director-resolucion-empty"[^>]*>Sin problemas solucionados en este periodo</)
+    expect(html).toMatch(/director-resolucion-empty"[^>]*>Sin problemas cerrados en este periodo</)
     expect(html).not.toContain('director-resolucion-trend-chart')
     expect(html).not.toContain('director-tiempo-solucion-chart')
   })

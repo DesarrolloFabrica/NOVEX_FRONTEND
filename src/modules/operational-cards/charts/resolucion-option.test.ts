@@ -175,12 +175,12 @@ describe('TIEMPO DE RESOLUCIÓN · línea de la mediana', () => {
 describe('Tooltip de la línea', () => {
   const at = (i: number): OperationalKpiResolutionBucket => RESOLUTION.buckets[i]
 
-  it('mediana + solucionados; P75 redactado solo con n ≥ 4', () => {
+  it('mediana + cerrados; P75 redactado solo con n ≥ 4', () => {
     expect(resolucionTooltipLines('Septiembre 2026', at(2))).toEqual({
       title: 'SEPTIEMBRE 2026',
       rows: [
         ['Mediana', '21 días'],
-        ['Solucionados', '7'],
+        ['Cerrados', '7'],
         ['75 % en menos de', '24 días'],
       ],
       note: null,
@@ -191,7 +191,7 @@ describe('Tooltip de la línea', () => {
 
   it('n < 4 sin P75; n < 3 con nota discreta de pocos cierres', () => {
     const jul = resolucionTooltipLines('Julio 2026', at(0))
-    expect(jul.rows.map(([label]) => label)).toEqual(['Mediana', 'Solucionados'])
+    expect(jul.rows.map(([label]) => label)).toEqual(['Mediana', 'Cerrados'])
     expect(jul.note).toBe('Pocos cierres en este periodo')
     const three = resolucionTooltipLines('x', { start: 'x', closedCount: 3, medianDays: 2, p75Days: 3 })
     expect(three.rows).toHaveLength(2)
@@ -201,7 +201,7 @@ describe('Tooltip de la línea', () => {
   it('bucket sin cierres: lo dice, sin «0 días»', () => {
     const ago = resolucionTooltipLines('Agosto 2026', at(1))
     expect(ago.rows).toEqual([])
-    expect(ago.note).toBe('Sin problemas solucionados en este periodo')
+    expect(ago.note).toBe('Sin problemas cerrados en este periodo')
   })
 
   it('futuro sin tooltip', () => {
@@ -213,7 +213,7 @@ describe('Tooltip de la línea', () => {
   })
 })
 
-describe('TIEMPO HASTA SOLUCIÓN · distribución', () => {
+describe('TIEMPO HASTA EL CIERRE · distribución', () => {
   const option = buildTiempoSolucionOption(RESOLUTION) as {
     yAxis: { data: string[] }
     series: Array<{ data: Array<{ value: number; itemStyle: { color: string } }> }>
@@ -239,13 +239,13 @@ describe('TIEMPO HASTA SOLUCIÓN · distribución', () => {
     expect(NOVEX_RESOLUTION_TOKENS.base).not.toBe(NOVEX_AGING_TOKENS.ink)
   })
 
-  it('tooltip: título, problemas solucionados y % de los cierres (sin SLA)', () => {
+  it('tooltip: título, problemas cerrados y % de los cierres (sin SLA)', () => {
     expect(tiempoSolucionTooltipLines(4, RESOLUTION)).toEqual([
       '14–30 DÍAS',
-      '5 problemas solucionados',
+      '5 problemas cerrados',
       '36 % de los cierres',
     ])
-    expect(tiempoSolucionTooltipLines(5, RESOLUTION)[1]).toBe('1 problema solucionado')
+    expect(tiempoSolucionTooltipLines(5, RESOLUTION)[1]).toBe('1 problema cerrado')
     expect(JSON.stringify(tiempoSolucionTooltipLines(2, RESOLUTION))).not.toMatch(/SLA/i)
   })
 

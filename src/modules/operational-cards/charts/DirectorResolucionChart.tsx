@@ -53,11 +53,11 @@ export function ResolucionTrendChart({
   )
 }
 
-/** TIEMPO HASTA SOLUCIÓN: cierres del periodo por rango de duración. */
+/** TIEMPO HASTA EL CIERRE: cierres del periodo por rango de duración. */
 export function TiempoSolucionChart({ resolution }: { resolution: OperationalKpiResolution }) {
   const option = useMemo(() => buildTiempoSolucionOption(resolution), [resolution])
   const counts = resolutionBandCounts(resolution)
-  const aria = `Tiempo hasta solución: ${RESOLUTION_BANDS.map(
+  const aria = `Tiempo hasta el cierre: ${RESOLUTION_BANDS.map(
     (meta, index) =>
       `${meta.label}, ${counts[index]} (${resolutionBandPercent(counts[index], resolution.closedCount)} %)`,
   ).join('; ')}.`

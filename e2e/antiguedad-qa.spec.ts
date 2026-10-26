@@ -4,9 +4,11 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { flowStateResponse, type AgingProfile, type FlowQuery } from './flujo-state.fixture'
 import { operationalOverviewFixture } from './operational-overview.fixture'
+import { expectSingleScrollZone, expectStackedFullWidth } from './estado-lectura.helpers'
 
 /**
- * QA visual · ESTADO lámina 3 · ANTIGÜEDAD (SNAPSHOT AT CUT · scope COORDINATION).
+ * QA visual · ESTADO · grupo ANTIGÜEDAD (SNAPSHOT AT CUT · scope COORDINATION),
+ * dentro de la lectura continua (sin carrusel: se llega desplazando el cuerpo).
  * Viaja en /operational-kpis/state: misma población y corte que Carga,
  * Severidad y Atención de la carta seleccionada. Cada coordinación envejece
  * distinto (seed del fixture). Reloj fijo: martes 6 oct 2026 (Bogotá).
@@ -200,10 +202,11 @@ async function openCoordination(page: Page, code: string) {
   await page.waitForTimeout(400)
 }
 
+/** Lectura continua: Antigüedad se alcanza desplazando el cuerpo de la lectura. */
 async function goToAntiguedad(page: Page) {
-  await tid(page, 'director-estado-carousel-dot-2').click()
-  await expect(tid(page, 'director-estado-carousel')).toHaveAttribute('data-page', '2')
-  await expect(tid(page, 'director-estado-carousel')).toHaveAttribute('data-pages', '4')
+  await expect(tid(page, 'director-estado-carousel')).toHaveCount(0)
+  await tid(page, 'director-antiguedad').scrollIntoViewIfNeeded()
+  await expect(tid(page, 'director-antiguedad')).toBeInViewport()
   await page.waitForTimeout(600)
 }
 
@@ -254,35 +257,6 @@ async function tooltipText(page: Page, chartId: string) {
   )
 }
 
-async function expectNoVerticalScroll(page: Page) {
-  const probe = await tid(page, 'director-reading-body').evaluate((node) => ({
-    scrollHeight: node.scrollHeight,
-    clientHeight: node.clientHeight,
-  }))
-  expect(probe.scrollHeight).toBeLessThanOrEqual(probe.clientHeight + 2)
-}
-
-/** Ranking más ancho (≈ 60 %) que la distribución; lado a lado, sin columna única. */
-async function expectPairLayout(page: Page) {
-  const ranking = await tid(page, 'director-antiguedad-ranking').boundingBox()
-  const dist = await tid(page, 'director-antiguedad-distribucion').boundingBox()
-  expect(ranking && dist).toBeTruthy()
-  expect(Math.abs(ranking!.y - dist!.y)).toBeLessThanOrEqual(2)
-  expect(dist!.x).toBeGreaterThan(ranking!.x + ranking!.width)
-  const share = ranking!.width / (ranking!.width + dist!.width)
-  expect(share).toBeGreaterThan(0.56)
-  expect(share).toBeLessThan(0.64)
-  // Ambas gráficas completas dentro de la lectura.
-  const bodyBottom = await tid(page, 'director-reading-body').evaluate(
-    (node) => node.getBoundingClientRect().bottom,
-  )
-  for (const id of [RANKING, DISTRIBUCION]) {
-    const box = await tid(page, id).boundingBox()
-    expect(box!.height).toBeGreaterThan(180)
-    expect(box!.y + box!.height).toBeLessThanOrEqual(bodyBottom + 1)
-  }
-}
-
 /** Valores de la distribución en orden (0–7 → 31+), desde la tabla accesible. */
 async function bandValues(page: Page) {
   return tid(page, 'director-distribucion-table')
@@ -300,7 +274,7 @@ async function shootAsIs(page: Page, name: string) {
   await tid(page, 'director-reading-panel').screenshot({ path: path.join(OUT, `${name}.png`) })
 }
 
-/** Lo que la lámina de Antigüedad muestra (para comparar entre cartas / periodos). */
+/** Lo que el grupo de Antigüedad muestra (para comparar entre cartas / periodos). */
 async function agingView(page: Page) {
   return {
     cut: await tid(page, 'director-antiguedad-cut').textContent(),
@@ -331,7 +305,7 @@ async function expectSquared(page: Page, response: Served) {
   return values
 }
 
-/** Selecciona otra carta SIN salir de la lámina actual del carrusel. */
+/** Selecciona otra carta sin cambiar de pestaña ni de periodo. */
 async function selectCard(page: Page, code: string) {
   await page.locator(`${CARD}[data-code="${code}"]`).first().click()
   await page.waitForTimeout(900)
@@ -375,8 +349,8 @@ test.describe('QA ESTADO · ANTIGÜEDAD · scope COORDINACIÓN', () => {
         `+ ${response.aging.activeCount - 5} activos fuera del Top 5`,
       )
 
-      await expectPairLayout(page)
-      await expectNoVerticalScroll(page)
+      await expectStackedFullWidth(page, 'director-antiguedad-ranking', 'director-antiguedad-distribucion', [RANKING, DISTRIBUCION])
+      await expectSingleScrollZone(page)
       await shoot(page, `${short}-${size}-hoy`)
 
       // Tooltip INTER: compromiso y a quién afecta; nunca «Responsable».
@@ -407,7 +381,7 @@ test.describe('QA ESTADO · ANTIGÜEDAD · scope COORDINACIÓN', () => {
     const OA = meta('coord-operaciones-academicas').id
     const ING = meta('coord-ingenierias').id
 
-    // 1 · Operación Académica, lámina 3.
+    // 1 · Operación Académica, grupo Antigüedad.
     await openCoordination(page, 'coord-operaciones-academicas')
     await goToAntiguedad(page)
     const oa = await agingView(page)
@@ -415,9 +389,9 @@ test.describe('QA ESTADO · ANTIGÜEDAD · scope COORDINACIÓN', () => {
     await expectSquared(page, served.at(-1)!)
     await shoot(page, 'secuencia-1-operacion-academica-h2')
 
-    // 2 · Ingenierías (hija visible en el mazo abierto): misma lámina y periodo, OTRA lectura.
+    // 2 · Ingenierías (hija visible en el mazo abierto): mismo periodo, OTRA lectura.
     await selectCard(page, 'coord-ingenierias')
-    await expect(tid(page, 'director-estado-carousel')).toHaveAttribute('data-page', '2')
+    await goToAntiguedad(page)
     await expect(tid(page, 'director-analysis-period-range')).toHaveText('1 JUL — 31 DIC 2026')
     await expect(tid(page, 'director-antiguedad-cut')).toHaveText('HOY')
     expect(served.at(-1)!.scope.coordinationId).toBe(ING)
@@ -429,12 +403,12 @@ test.describe('QA ESTADO · ANTIGÜEDAD · scope COORDINACIÓN', () => {
 
     // 3 · Volver a Operación Académica: vuelve su propia lectura.
     await selectCard(page, 'coord-operaciones-academicas')
-    await expect(tid(page, 'director-estado-carousel')).toHaveAttribute('data-page', '2')
+    await goToAntiguedad(page)
     expect(served.at(-1)!.scope.coordinationId).toBe(OA)
     expect(await agingView(page)).toEqual(oa)
 
-    // 4 · H2 → SEP (drill-down en Carga) → lámina 3: misma carta, otro corte.
-    await tid(page, 'director-estado-carousel-dot-0').click()
+    // 4 · H2 → SEP (drill-down en Carga) → Antigüedad: misma carta, otro corte.
+    await tid(page, 'director-carga').scrollIntoViewIfNeeded()
     await page.waitForTimeout(400)
     await tid(page, 'director-flujo-drill-2026-09-01').focus()
     await page.keyboard.press('Enter')
@@ -466,7 +440,7 @@ test.describe('QA ESTADO · ANTIGÜEDAD · scope COORDINACIÓN', () => {
     const response = served.at(-1)!
     expect(response.aging.at).toBe('2026-09-13')
     await expectSquared(page, response)
-    await expectNoVerticalScroll(page)
+    await expectSingleScrollZone(page)
     await shoot(page, 'b2b-1440x900-semana-7-13-sep')
 
     await hoverRanking(page, ageLabel(response.aging.oldest[1].ageDays))
@@ -487,8 +461,8 @@ test.describe('QA ESTADO · ANTIGÜEDAD · scope COORDINACIÓN', () => {
     await goToAntiguedad(page)
     const values = await expectSquared(page, served.at(-1)!)
     expect(values[3]).toBeGreaterThan(values[0] + values[1] + values[2])
-    await expectPairLayout(page)
-    await expectNoVerticalScroll(page)
+    await expectStackedFullWidth(page, 'director-antiguedad-ranking', 'director-antiguedad-distribucion', [RANKING, DISTRIBUCION])
+    await expectSingleScrollZone(page)
     await shoot(page, 'operacion-academica-1440x900-envejecida')
   })
 
@@ -505,7 +479,7 @@ test.describe('QA ESTADO · ANTIGÜEDAD · scope COORDINACIÓN', () => {
       'Sin problemas activos en este corte',
     )
     await expect(tid(page, RANKING)).toHaveCount(0)
-    await expectNoVerticalScroll(page)
+    await expectSingleScrollZone(page)
     await shoot(page, 'saber-pro-1440x900-sin-activos')
   })
 })

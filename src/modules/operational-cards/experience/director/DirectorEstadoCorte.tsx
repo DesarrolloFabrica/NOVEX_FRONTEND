@@ -191,7 +191,7 @@ export function EstadoCorteComposicion({
         <>
           {/* 2 · Severidad: filas horizontales, ceros visibles. */}
           <Block
-            title="Severidad"
+            title="Severidad de la carga"
             testId="director-kpi-severity"
             help={
               cut ? (

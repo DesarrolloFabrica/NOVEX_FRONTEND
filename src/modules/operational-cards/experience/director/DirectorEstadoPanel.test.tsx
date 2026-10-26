@@ -187,16 +187,13 @@ describe('DirectorEstadoPanel periodo jerárquico', () => {
     expect(html).not.toContain('>Evolución<')
     expect(html).not.toContain('data-testid="director-estado-period-week"')
     expect(html).not.toContain('data-testid="director-history-period-week"')
-    // Página 3 · ANTIGÜEDAD: mismo payload /state, sin periodo propio.
-    expect(html).toContain('data-pages="4"')
-    expect(html).toContain('data-testid="director-estado-page-antiguedad"')
-    expect(html).toContain('aria-label="Antigüedad (3 de 4)"')
-    expect(html).toContain('data-testid="director-estado-carousel-dot-2"')
+    // ANTIGÜEDAD: mismo payload /state, sin periodo propio, en la misma lectura.
+    expect(html).toContain('data-testid="director-estado-lectura"')
     expect(html).toContain('Problemas más antiguos')
     expect(html).toMatch(/data-testid="director-antiguedad-cut"[^>]*>HOY</)
   })
 
-  it('conserva la página 3 controlada por la lectura', () => {
+  it('lectura continua: una columna con los módulos en orden y sin carrusel', () => {
     const period = buildCurrentWeekPeriod(new Date('2026-10-01T12:00:00-05:00'))
     const html = renderToStaticMarkup(
       <DirectorEstadoPanel
@@ -212,14 +209,31 @@ describe('DirectorEstadoPanel periodo jerárquico', () => {
         coordinationError={null}
         analysisPeriod={period}
         onAnalysisPeriodChange={() => undefined}
-        carouselPage={2}
-        onCarouselPageChange={() => undefined}
       />,
     )
-    expect(html).toContain('data-page="2"')
-    expect(html).toMatch(/data-testid="director-estado-page-antiguedad" data-active="true"/)
-    // Antigüedad ya no es la última lámina: queda Resolución.
-    expect(html).not.toContain('data-testid="director-estado-carousel-next" aria-label="Gráficas siguientes" disabled=""')
+    // Sin láminas: ni carrusel, ni flechas, ni puntos, ni «N de 4».
+    expect(html).not.toContain('director-estado-carousel')
+    expect(html).not.toContain('director-estado-page-')
+    expect(html).not.toContain('aria-roledescription')
+    expect(html).not.toMatch(/\(\d de \d\)/)
+    // Orden de lectura: resumen → Carga → Movimiento → Severidad → Atención →
+    // Relaciones → más antiguos → antigüedad de la carga.
+    const order = [
+      'director-flujo-summary',
+      'director-carga',
+      'director-movimiento',
+      'director-kpi-severity',
+      'director-kpi-status-split',
+      'director-estado-relations-line',
+      'director-antiguedad-ranking',
+      'director-antiguedad-distribucion',
+    ].map((testId) => html.indexOf(`data-testid="${testId}"`))
+    expect(order.every((index) => index > -1)).toBe(true)
+    expect([...order].sort((a, b) => a - b)).toEqual(order)
+    // Resolución cierra la lectura (aquí sin cierres: su mensaje, al final).
+    expect(html.indexOf('data-testid="director-resolucion"')).toBeGreaterThan(
+      order[order.length - 1],
+    )
   })
 })
 

@@ -693,9 +693,10 @@ describe('DirectorReadingPanel · INTERNOS: 2 láminas sobre el AnalysisPeriod g
     await click('director-reading-mode-dependencias')
     await click('director-reading-mode-internos')
     expect(internosPage()).toBe('1')
-    // ESTADO conserva su propia lámina, independiente.
+    // ESTADO no tiene láminas: vuelve como lectura continua, sin carrusel.
     await click('director-reading-mode-state')
-    expect(byTestId('director-estado-carousel').dataset.page).toBe('0')
+    expect(query('director-estado-lectura')).not.toBeNull()
+    expect(query('director-estado-carousel')).toBeNull()
   })
 
   it('cambiar de coordinación conserva el periodo en INTERNOS', async () => {
@@ -736,94 +737,103 @@ describe('PERIODO · el encabezado refleja el AnalysisPeriod REAL', () => {
     expect(range()).toBe('1 JUL — 31 DIC 2026')
   })
 
-  it('el mismo contexto en todas las láminas: el corte de ANTIGÜEDAD es el del header', async () => {
+  it('el mismo contexto en todos los módulos: el corte de ANTIGÜEDAD es el del header', async () => {
     await render(B2B)
     await drillSeptember()
-    await click('director-estado-carousel-dot-2')
     expect(range()).toBe('1 — 30 SEP 2026')
     expect(byTestId('director-antiguedad-cut').textContent).toBe('AL CIERRE DEL 30 SEP 2026')
   })
 })
 
-describe('ESTADO · carrusel de láminas frente a periodo, coordinación y tab', () => {
-  const carouselPage = () => byTestId('director-estado-carousel').dataset.page
+/*
+ * ESTADO es una LECTURA CONTINUA (sustituye al carrusel de cuatro láminas):
+ * todos los módulos montados en una columna, recorridos con el scroll del
+ * cuerpo de la lectura. No hay página activa que conservar.
+ */
+describe('ESTADO · lectura continua frente a periodo, coordinación y tab', () => {
+  const ORDER = [
+    'director-flujo-summary',
+    'director-carga',
+    'director-movimiento',
+    'director-kpi-severity',
+    'director-kpi-status-split',
+    'director-estado-relations-line',
+    'director-antiguedad-ranking',
+    'director-antiguedad-distribucion',
+    'director-resolucion-tendencia',
+    'director-resolucion-distribucion',
+  ]
+  /** Posición de cada módulo en el orden del documento (-1 si falta). */
+  const positions = () => {
+    const all = Array.from(container.querySelectorAll<HTMLElement>('[data-testid]'))
+    return ORDER.map((testId) => all.findIndex((node) => node.dataset.testid === testId))
+  }
+  const expectAllInOrder = () => {
+    const found = positions()
+    expect(found.every((index) => index > -1)).toBe(true)
+    expect([...found].sort((a, b) => a - b)).toEqual(found)
+  }
 
-  it('lámina 3 (Antigüedad) se conserva al cambiar periodo, hacer drill-down, coordinación y tab', async () => {
+  it('una sola columna con los diez módulos en orden y sin controles de carrusel', async () => {
     await render(B2B)
-    await click('director-estado-carousel-dot-2')
-    expect(carouselPage()).toBe('2')
+    expectAllInOrder()
+    const lectura = byTestId('director-estado-lectura')
+    // Cuatro grupos (flujo · corte · antigüedad · resolución), sin páginas.
+    expect(
+      Array.from(lectura.children).map((node) => (node as HTMLElement).dataset.group),
+    ).toEqual(['flujo', 'corte', 'antiguedad', 'resolucion'])
+    expect(query('director-estado-carousel')).toBeNull()
+    expect(query('director-estado-carousel-prev')).toBeNull()
+    expect(query('director-estado-carousel-next')).toBeNull()
+    expect(container.querySelector('[data-testid^="director-estado-carousel-dot-"]')).toBeNull()
+    expect(container.querySelector('[aria-roledescription]')).toBeNull()
+    expect(container.querySelector('[inert]')).toBeNull()
+  })
+
+  it('los módulos siguen todos visibles al cambiar periodo, drill-down, coordinación y tab', async () => {
+    await render(B2B)
     await drillSeptember()
-    expect(carouselPage()).toBe('2')
+    expectAllInOrder()
     await click('director-flujo-drill-2026-09-07')
-    expect(carouselPage()).toBe('2')
+    expect(lastState()).toMatchObject({ kind: 'week', from: '2026-09-07' })
+    expectAllInOrder()
     await render(ESPE)
-    expect(carouselPage()).toBe('2')
+    expectAllInOrder()
     await click('director-reading-mode-internos')
+    expect(query('director-estado-lectura')).toBeNull()
     await click('director-reading-mode-state')
-    expect(carouselPage()).toBe('2')
-    expect(byTestId('director-estado-page-antiguedad').dataset.active).toBe('true')
+    expectAllInOrder()
     await click('director-analysis-period-prev')
     expect(lastState()).toMatchObject({ kind: 'week', from: '2026-08-31' })
-    expect(carouselPage()).toBe('2')
+    expectAllInOrder()
   })
 
-  it('lámina 1 por defecto: Carga | Movimiento; lámina 2: Severidad | Atención', async () => {
-    await render(B2B)
-    expect(carouselPage()).toBe('0')
-    expect(byTestId('director-estado-page-operacion').dataset.active).toBe('true')
-    expect(query('director-estado-page-operacion')?.querySelector('[data-testid="director-flujo"]')).not.toBeNull()
-    await click('director-estado-carousel-next')
-    expect(carouselPage()).toBe('1')
-    const second = byTestId('director-estado-page-composicion')
-    expect(second.dataset.active).toBe('true')
-    expect(second.querySelector('[data-testid="director-kpi-severity"]')).not.toBeNull()
-    expect(second.querySelector('[data-testid="director-kpi-status-split"]')).not.toBeNull()
-  })
-
-  it('navegar el carrusel NO cambia el AnalysisPeriod ni vuelve a consultar', async () => {
+  it('recorrer la lectura no cambia el AnalysisPeriod ni vuelve a consultar', async () => {
     await render(B2B)
     await drillSeptember()
     const calls = vi.mocked(fetchOperationalKpiState).mock.calls.length
-    await click('director-estado-carousel-next')
-    await click('director-estado-carousel-prev')
-    await click('director-estado-carousel-next')
+    // Abrir los títulos completos del ranking es lectura, no un filtro.
+    const details = byTestId('director-antiguedad-details') as HTMLDetailsElement
+    await act(async () => {
+      details.querySelector('summary')!.click()
+    })
+    expect(details.open).toBe(true)
     expect(vi.mocked(fetchOperationalKpiState).mock.calls.length).toBe(calls)
     expect(lastState()).toMatchObject({ kind: 'month', ...SEPTEMBER })
     expect(byTestId('director-estado-panel').dataset.periodFrom).toBe('2026-09-01')
-    await click('director-estado-carousel-prev')
     expect(byTestId('director-flujo').dataset.level).toBe('week')
     expect(crumb()).toEqual(['H2 2026', 'SEPTIEMBRE'])
   })
 
-  it('cambiar el periodo conserva la lámina 2', async () => {
+  it('ESTADO es una zona de scroll; solo INTERNOS conserva alto fijo', async () => {
     await render(B2B)
-    await click('director-estado-carousel-next')
-    await drillSeptember()
-    expect(lastState()).toMatchObject({ kind: 'month', ...SEPTEMBER })
-    expect(carouselPage()).toBe('1')
-  })
-
-  it('cambiar de coordinación conserva la lámina 2 (comparar la misma dimensión)', async () => {
-    await render(B2B)
-    await click('director-estado-carousel-next')
-    await render(ESPE)
-    expect(carouselPage()).toBe('1')
-    expect(byTestId('director-estado-page-composicion').dataset.active).toBe('true')
-  })
-
-  it('ESTADO → INTERNOS → ESTADO conserva la lámina 2', async () => {
-    await render(B2B)
-    await click('director-estado-carousel-next')
-    await click('director-reading-mode-internos')
-    expect(query('director-estado-carousel')).toBeNull()
-    await click('director-reading-mode-state')
-    expect(carouselPage()).toBe('1')
-  })
-
-  it('ESTADO e INTERNOS con coordinación son de alto fijo; los demás modos conservan scroll', async () => {
-    await render(B2B)
-    expect(byTestId('director-reading-body').dataset.fixedHeight).toBe('true')
-    expect(byTestId('director-reading-panel').dataset.scrollMore).toBe('false')
+    expect(byTestId('director-reading-body').dataset.fixedHeight).toBe('false')
+    expect(byTestId('director-reading-body').dataset.mode).toBe('state')
+    // Pestañas y filtros viven en la cabecera, FUERA del cuerpo desplazable.
+    const body = byTestId('director-reading-body')
+    expect(body.contains(byTestId('director-reading-period'))).toBe(false)
+    expect(body.contains(byTestId('director-reading-mode-state'))).toBe(false)
+    expect(body.contains(byTestId('director-estado-lectura'))).toBe(true)
     await click('director-reading-mode-internos')
     expect(byTestId('director-reading-body').dataset.fixedHeight).toBe('true')
     for (const mode of ['dependencias', 'aprendizajes']) {
@@ -833,13 +843,12 @@ describe('ESTADO · carrusel de láminas frente a periodo, coordinación y tab',
     await render(null)
     await click('director-reading-mode-state')
     expect(byTestId('director-reading-body').dataset.fixedHeight).toBe('false')
-    expect(query('director-estado-carousel')).toBeNull()
+    expect(query('director-estado-lectura')).toBeNull()
   })
 })
 
-describe('ESTADO · AnalysisPeriod como ÚNICA fuente temporal de TODAS las láminas', () => {
-  const page = () => byTestId('director-estado-carousel').dataset.page
-  /** Lo que la lámina 2 dice de la severidad (descripción accesible de la gráfica). */
+describe('ESTADO · AnalysisPeriod como ÚNICA fuente temporal de TODOS los módulos', () => {
+  /** Lo que el módulo de Severidad dice (descripción accesible de la gráfica). */
   const severityText = () =>
     byTestId('director-estado-severity-chart').getAttribute('aria-label') ?? ''
   /** Leyenda de Atención: «Abiertos{n}{pct} %» por fila (texto visible y accesible). */
@@ -861,25 +870,21 @@ describe('ESTADO · AnalysisPeriod como ÚNICA fuente temporal de TODAS las lám
   })
 
 
-  it('H2 → click SEP en Carga: Severidad (lámina 2) y Antigüedad (lámina 3) pasan a SEPTIEMBRE', async () => {
+  it('H2 → click SEP en Carga: Severidad y Antigüedad pasan a SEPTIEMBRE', async () => {
     await render(B2B)
-    await click('director-estado-carousel-dot-1')
     const h2Severity = severityText()
     expect(cutText()).toContain('Corte 6 oct · en curso')
     expect(query('director-corte-current-values')).toBeNull()
 
-    await click('director-estado-carousel-dot-0')
     await drillSeptember()
     expect(lastState()).toMatchObject({ kind: 'month', ...SEPTEMBER })
 
-    await click('director-estado-carousel-dot-1')
     expect(severityText()).not.toBe(h2Severity)
     // Corte histórico: fecha completa + «Valores actuales» (explicado en su ayuda).
     expect(cutText()).toContain('Corte 30 sep 2026')
     expect(cutText()).not.toContain('en curso')
     expect(byTestId('director-corte-current-values').textContent).toContain('Valores actuales')
 
-    await click('director-estado-carousel-dot-2')
     expect(agingCut()).toBe('AL CIERRE DEL 30 SEP 2026')
   })
 
@@ -904,28 +909,23 @@ describe('ESTADO · AnalysisPeriod como ÚNICA fuente temporal de TODAS las lám
     }
   })
 
-  it('› en SEPTIEMBRE va a OCTUBRE: la lámina actual se conserva y todas cambian a OCT', async () => {
+  it('› en SEPTIEMBRE va a OCTUBRE: todos los módulos cambian a OCT', async () => {
     await render(B2B)
     await drillSeptember()
-    await click('director-estado-carousel-dot-1')
     const sepSeverity = severityText()
     await click('director-analysis-period-next')
     expect(lastState()).toMatchObject({ kind: 'month', from: '2026-10-01', to: TODAY })
-    expect(page()).toBe('1')
     expect(byTestId('director-analysis-period-range').textContent).toBe('1 — 31 OCT 2026')
     expect(severityText()).not.toBe(sepSeverity)
     expect(cutText()).toContain('Corte 6 oct · en curso')
-    await click('director-estado-carousel-dot-2')
     expect(agingCut()).toBe('HOY')
   })
 
-  it('SEP + lámina 3: cambiar de carta CAMBIA Antigüedad (otra población), mismo periodo y lámina', async () => {
+  it('SEP: cambiar de carta CAMBIA Antigüedad (otra población), mismo periodo', async () => {
     await render(B2B)
     await drillSeptember()
-    await click('director-estado-carousel-dot-2')
     const b2b = agingSnapshot()
     await render(ESPE)
-    expect(page()).toBe('2')
     expect(lastState()).toMatchObject({ coordinationId: ESPE_ID, kind: 'month', ...SEPTEMBER })
     expect(byTestId('director-analysis-period-range').textContent).toBe('1 — 30 SEP 2026')
     const espe = agingSnapshot()
@@ -941,7 +941,6 @@ describe('ESTADO · AnalysisPeriod como ÚNICA fuente temporal de TODAS las lám
   it('Especializaciones SEP → semana: Antigüedad vuelve a cambiar (misma carta)', async () => {
     await render(ESPE)
     await drillSeptember()
-    await click('director-estado-carousel-dot-2')
     const sep = agingSnapshot()
     await click('director-flujo-drill-2026-09-07')
     expect(lastState()).toMatchObject({ coordinationId: ESPE_ID, kind: 'week', from: '2026-09-07' })
@@ -953,7 +952,6 @@ describe('ESTADO · AnalysisPeriod como ÚNICA fuente temporal de TODAS las lám
   it('cambiar de PERIODO cambia Antigüedad (SEP → OCT) en la misma carta', async () => {
     await render(B2B)
     await drillSeptember()
-    await click('director-estado-carousel-dot-2')
     const sep = agingSnapshot()
     await click('director-analysis-period-next')
     expect(lastState()).toMatchObject({ coordinationId: B2B_ID, kind: 'month', from: '2026-10-01' })
@@ -962,25 +960,22 @@ describe('ESTADO · AnalysisPeriod como ÚNICA fuente temporal de TODAS las lám
     expect(oct).not.toEqual(sep)
   })
 
-  it('mientras llega el periodo nuevo NINGUNA lámina muestra la foto anterior', async () => {
+  it('mientras llega el periodo nuevo NINGÚN módulo muestra la foto anterior', async () => {
     await render(B2B)
     let resolve: (value: unknown) => void = () => undefined
     vi.mocked(fetchOperationalKpiState).mockImplementationOnce(
       () => new Promise((r) => (resolve = r as (value: unknown) => void)) as never,
     )
     await drillSeptember()
-    // Pendiente: lámina 2 en «Actualizando…», lámina 3 sin ranking del ciclo.
-    await click('director-estado-carousel-dot-1')
+    // Pendiente: Severidad/Atención en «Actualizando…», Antigüedad sin ranking del ciclo.
     expect(query('director-estado-severity-chart')).toBeNull()
     expect(query('director-estado-comp-cut')).toBeNull()
     // Antigüedad viaja en la misma respuesta: tampoco muestra la foto anterior.
-    await click('director-estado-carousel-dot-2')
     expect(query('director-antiguedad-cut')).toBeNull()
     await act(async () => {
       resolve(stateResponse({ coordinationId: B2B_ID, kind: 'month', ...SEPTEMBER, calendarEnd: '2026-09-30' }))
     })
     expect(agingCut()).toBe('AL CIERRE DEL 30 SEP 2026')
-    await click('director-estado-carousel-dot-1')
     expect(cutText()).toContain('Corte 30 sep 2026')
   })
 
@@ -988,16 +983,14 @@ describe('ESTADO · AnalysisPeriod como ÚNICA fuente temporal de TODAS las lám
     await render(B2B)
     vi.mocked(fetchOperationalKpiState).mockRejectedValueOnce(new Error('HTTP 500'))
     await drillSeptember()
-    await click('director-estado-carousel-dot-1')
     expect(byTestId('director-estado-comp-error').textContent).toContain('HTTP 500')
     expect(query('director-estado-severity-chart')).toBeNull()
     // Antigüedad viaja en la misma respuesta /state: comparte su error.
-    await click('director-estado-carousel-dot-2')
     expect(query('director-antiguedad-cut')).toBeNull()
     expect(byTestId('director-antiguedad-error').textContent).toContain('HTTP 500')
   })
 
-  /** Lo que la lámina 4 dice (tablas accesibles de ambas gráficas + subtítulos). */
+  /** Lo que Resolución dice (tablas accesibles de ambas gráficas + subtítulos). */
   const resolucionSnapshot = () => ({
     trend: byTestId('director-resolucion-table').textContent,
     bands: byTestId('director-tiempo-solucion-table').textContent,
@@ -1005,37 +998,34 @@ describe('ESTADO · AnalysisPeriod como ÚNICA fuente temporal de TODAS las lám
     count: byTestId('director-resolucion-count').textContent,
   })
 
-  it('lámina 4 · RESOLUCIÓN: cuarto indicador del carrusel; mismos cierres que Movimiento', async () => {
+  it('RESOLUCIÓN: último grupo de la lectura; mismos cierres que Movimiento', async () => {
     await render(B2B)
     await drillSeptember()
-    expect(byTestId('director-estado-carousel').dataset.pages).toBe('4')
-    await click('director-estado-carousel-dot-3')
-    expect(page()).toBe('3')
+    expect(query('director-estado-carousel')).toBeNull()
+    expect(byTestId('director-estado-lectura').querySelector('[data-group="resolucion"] [data-testid="director-resolucion"]')).not.toBeNull()
     const response = await lastResponse()
     const solved = response.evolution.buckets.map((b) => (b.solved ? b.solved.total : null))
     expect(response.resolution.buckets.map((b) => b.closedCount)).toEqual(solved)
     const total = solved.reduce<number>((a, b) => a + (b ?? 0), 0)
     expect(response.resolution.closedCount).toBe(total)
     expect(byTestId('director-resolucion-count').textContent).toBe(
-      `${total} solucionados en el periodo`,
+      `${total} cerrados en el periodo`,
     )
     // Una fila accesible por bucket con dato (los futuros no se dibujan).
     expect(
       container.querySelectorAll('[data-testid^="director-resolucion-row-"]').length,
     ).toBe(solved.filter((v) => v !== null).length)
-    // Métrica de intervalo: sin chip de corte dentro de la lámina 4.
+    // Métrica de intervalo: sin chip de corte dentro de Resolución.
     expect(
       byTestId('director-resolucion').querySelector('[data-testid$="-cut"]'),
     ).toBeNull()
   })
 
-  it('SEP + lámina 4: cambiar de carta CAMBIA Resolución; mismo periodo y lámina', async () => {
+  it('SEP: cambiar de carta CAMBIA Resolución; mismo periodo', async () => {
     await render(B2B)
     await drillSeptember()
-    await click('director-estado-carousel-dot-3')
     const b2b = resolucionSnapshot()
     await render(ESPE)
-    expect(page()).toBe('3')
     expect(lastState()).toMatchObject({ coordinationId: ESPE_ID, kind: 'month', ...SEPTEMBER })
     expect(byTestId('director-analysis-period-range').textContent).toBe('1 — 30 SEP 2026')
     const espe = resolucionSnapshot()
@@ -1043,22 +1033,19 @@ describe('ESTADO · AnalysisPeriod como ÚNICA fuente temporal de TODAS las lám
     expect((await lastResponse()).scope.coordinationId).toBe(ESPE_ID)
   })
 
-  it('lámina 4 reacciona al periodo: SEP (semanas) → semana 7–13 SEP (días) en la misma carta', async () => {
+  it('Resolución reacciona al periodo: SEP (semanas) → semana 7–13 SEP (días) en la misma carta', async () => {
     await render(B2B)
     await drillSeptember()
-    await click('director-estado-carousel-dot-3')
     const sep = resolucionSnapshot()
     expect(byTestId('director-resolucion').dataset.level).toBe('week')
     await click('director-flujo-drill-2026-09-07')
     expect(lastState()).toMatchObject({ coordinationId: B2B_ID, kind: 'week', from: '2026-09-07' })
-    expect(page()).toBe('3')
     expect(byTestId('director-resolucion').dataset.level).toBe('day')
     expect(resolucionSnapshot()).not.toEqual(sep)
   })
 
-  it('mientras llega el periodo nuevo la lámina 4 no muestra la resolución anterior', async () => {
+  it('mientras llega el periodo nuevo Resolución no muestra la anterior', async () => {
     await render(B2B)
-    await click('director-estado-carousel-dot-3')
     expect(query('director-resolucion-table')).not.toBeNull()
     let resolve: (value: OperationalKpiStateResponse) => void = () => undefined
     vi.mocked(fetchOperationalKpiState).mockImplementationOnce(

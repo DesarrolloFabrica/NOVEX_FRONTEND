@@ -21,9 +21,9 @@ type ChartKey = 'tendencia' | 'distribucion'
 
 const HELP: Record<ChartKey, string> = {
   tendencia:
-    'Mediana del tiempo transcurrido desde el registro hasta la solución de los problemas cerrados en cada periodo. Un punto hueco indica pocos cierres; un tramo vacío, que no hubo cierres.',
+    'Mediana del tiempo desde el registro hasta el cierre de los problemas cerrados en cada tramo. Un punto hueco indica pocos cierres; un tramo vacío, que no hubo cierres.',
   distribucion:
-    'Los problemas solucionados en el periodo, repartidos por el tiempo que tardaron desde su registro en NOVEX hasta su solución. Son los mismos que Movimiento cuenta como Solucionados.',
+    'Los problemas cerrados en el periodo, repartidos por el tiempo que tardaron desde su registro en NOVEX hasta su cierre. Son los mismos que Movimiento cuenta como Cerrados.',
 }
 
 /** Nivel de la línea = lo que se ve dentro del periodo (igual que Carga). */
@@ -60,12 +60,15 @@ function ChartTitle({ chart, children }: { chart: ChartKey; children: string }) 
 }
 
 /**
- * Lámina RESOLUCIÓN · FLOW OUTCOME / TIME SERIES · scope COORDINATION.
+ * Grupo RESOLUCIÓN de ESTADO · FLOW OUTCOME / TIME SERIES · scope COORDINATION.
  * Los problemas atribuidos HOY a la coordinación seleccionada que se
- * solucionaron dentro del AnalysisPeriod: EXACTAMENTE los «Solucionados» de
+ * cerraron dentro del AnalysisPeriod: EXACTAMENTE los «Cerrados» de
  * Movimiento (el parser lo exige bucket a bucket).
  *   · TIEMPO DE RESOLUCIÓN — ¿cuánto tardamos normalmente? ¿más o menos que antes?
- *   · TIEMPO HASTA SOLUCIÓN — ¿la mayoría se resuelve rápido o hay cierres largos?
+ *   · TIEMPO HASTA EL CIERRE — ¿la mayoría se cierra rápido o hay cierres largos?
+ * («Cerrados» y no «Solucionados»: el contrato exige buckets[i].closedCount =
+ * evolution.buckets[i].solved.total, que Movimiento ya rotula «Cerrados».)
+ * En la lectura continua cada gráfica es un módulo a todo el ancho (CSS).
  * Métrica de INTERVALO (no foto al corte): el periodo ya está arriba, sin chip
  * de corte. Reacciona al AnalysisPeriod; no lo cambia (sin drill-down).
  */
@@ -113,7 +116,7 @@ export function DirectorResolucion({
 
       {empty ? (
         <p className="director-antiguedad__empty" data-testid="director-resolucion-empty">
-          Sin problemas solucionados en este periodo
+          Sin problemas cerrados en este periodo
         </p>
       ) : null}
 
@@ -137,14 +140,14 @@ export function DirectorResolucion({
             </div>
             <table className="visually-hidden" data-testid="director-resolucion-table">
               <caption>
-                Mediana del tiempo desde el registro hasta la solución de los problemas
+                Mediana del tiempo desde el registro hasta el cierre de los problemas
                 cerrados en cada tramo del periodo.
               </caption>
               <thead>
                 <tr>
                   <th scope="col">Tramo</th>
                   <th scope="col">Mediana</th>
-                  <th scope="col">Solucionados</th>
+                  <th scope="col">Cerrados</th>
                 </tr>
               </thead>
               <tbody>
@@ -175,10 +178,10 @@ export function DirectorResolucion({
             data-testid="director-resolucion-distribucion"
           >
             <div className="director-antiguedad__col-head">
-              <ChartTitle chart="distribucion">Tiempo hasta solución</ChartTitle>
+              <ChartTitle chart="distribucion">Tiempo hasta el cierre</ChartTitle>
               <p className="director-antiguedad__sub" data-testid="director-resolucion-count">
                 {resolution.closedCount}{' '}
-                {resolution.closedCount === 1 ? 'solucionado' : 'solucionados'} en el periodo
+                {resolution.closedCount === 1 ? 'cerrado' : 'cerrados'} en el periodo
               </p>
             </div>
             <div className="director-resolucion__frame">
@@ -186,8 +189,8 @@ export function DirectorResolucion({
             </div>
             <table className="visually-hidden" data-testid="director-tiempo-solucion-table">
               <caption>
-                {resolution.closedCount} problemas solucionados en el periodo, por tiempo
-                desde su registro hasta su solución.
+                {resolution.closedCount} problemas cerrados en el periodo, por tiempo
+                desde su registro hasta su cierre.
               </caption>
               <thead>
                 <tr>

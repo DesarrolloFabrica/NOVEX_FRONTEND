@@ -4,10 +4,12 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { flowStateResponse, type AgingProfile, type FlowQuery } from './flujo-state.fixture'
 import { operationalOverviewFixture } from './operational-overview.fixture'
+import { expectSingleScrollZone, expectStackedFullWidth } from './estado-lectura.helpers'
 
 /**
- * QA visual · ESTADO lámina 4 · RESOLUCIÓN (FLOW OUTCOME · scope COORDINATION).
- * Viaja en /operational-kpis/state: los MISMOS cierres que «Solucionados» de
+ * QA visual · ESTADO · grupo RESOLUCIÓN (FLOW OUTCOME · scope COORDINATION),
+ * último de la lectura continua (sin carrusel: se llega desplazando el cuerpo).
+ * Viaja en /operational-kpis/state: los MISMOS cierres que «Cerrados» de
  * Movimiento (el fixture la deriva de los buckets). Cada coordinación tiene
  * otras duraciones (seed). Reloj fijo: martes 6 oct 2026 (Bogotá).
  * Capturas en e2e/artifacts/resolucion/.
@@ -201,9 +203,9 @@ const TREND = 'director-resolucion-trend-chart'
 const DIST = 'director-tiempo-solucion-chart'
 
 async function goToResolucion(page: Page) {
-  await tid(page, 'director-estado-carousel-dot-3').click()
-  await expect(tid(page, 'director-estado-carousel')).toHaveAttribute('data-page', '3')
-  await expect(tid(page, 'director-estado-carousel')).toHaveAttribute('data-pages', '4')
+  await expect(tid(page, 'director-estado-carousel')).toHaveCount(0)
+  await tid(page, 'director-resolucion').scrollIntoViewIfNeeded()
+  await expect(tid(page, 'director-resolucion')).toBeInViewport()
   await page.waitForTimeout(600)
 }
 
@@ -217,35 +219,7 @@ async function shootAsIs(page: Page, name: string) {
   await tid(page, 'director-reading-panel').screenshot({ path: path.join(OUT, `${name}.png`) })
 }
 
-async function expectNoVerticalScroll(page: Page) {
-  const probe = await tid(page, 'director-reading-body').evaluate((node) => ({
-    scrollHeight: node.scrollHeight,
-    clientHeight: node.clientHeight,
-  }))
-  expect(probe.scrollHeight).toBeLessThanOrEqual(probe.clientHeight + 2)
-}
-
-/** Línea ≈ 58 % | distribución ≈ 42 %, lado a lado y completas en la lectura. */
-async function expectPairLayout(page: Page) {
-  const trend = await tid(page, 'director-resolucion-tendencia').boundingBox()
-  const dist = await tid(page, 'director-resolucion-distribucion').boundingBox()
-  expect(trend && dist).toBeTruthy()
-  expect(Math.abs(trend!.y - dist!.y)).toBeLessThanOrEqual(2)
-  expect(dist!.x).toBeGreaterThan(trend!.x + trend!.width)
-  const share = trend!.width / (trend!.width + dist!.width)
-  expect(share).toBeGreaterThan(0.54)
-  expect(share).toBeLessThan(0.62)
-  const bodyBottom = await tid(page, 'director-reading-body').evaluate(
-    (node) => node.getBoundingClientRect().bottom,
-  )
-  for (const id of [TREND, DIST]) {
-    const box = await tid(page, id).boundingBox()
-    expect(box!.height).toBeGreaterThan(180)
-    expect(box!.y + box!.height).toBeLessThanOrEqual(bodyBottom + 1)
-  }
-}
-
-/** Lo que la lámina dice (tablas accesibles + subtítulos). */
+/** Lo que Resolución dice (tablas accesibles + subtítulos). */
 async function resolucionView(page: Page) {
   return {
     trend: await tid(page, 'director-resolucion-table').textContent(),
@@ -255,7 +229,7 @@ async function resolucionView(page: Page) {
   }
 }
 
-/** Cuadratura en pantalla: Σ rangos = Σ buckets = Σ Solucionados del periodo. */
+/** Cuadratura en pantalla: Σ rangos = Σ buckets = Σ Cerrados del periodo. */
 async function expectSquared(page: Page, response: Served) {
   const solved = response.evolution.buckets.map((b) => (b.solved ? b.solved.total : null))
   expect(response.resolution.buckets.map((b) => b.closedCount)).toEqual(solved)
@@ -267,7 +241,7 @@ async function expectSquared(page: Page, response: Served) {
   expect(values).toHaveLength(6)
   expect(values.reduce((a, b) => a + b, 0)).toBe(total)
   await expect(tid(page, 'director-resolucion-count')).toHaveText(
-    `${total} ${total === 1 ? 'solucionado' : 'solucionados'} en el periodo`,
+    `${total} ${total === 1 ? 'cerrado' : 'cerrados'} en el periodo`,
   )
 }
 
@@ -292,7 +266,7 @@ async function tooltipText(page: Page, chartId: string) {
   )
 }
 
-/** Selecciona otra carta SIN salir de la lámina actual del carrusel. */
+/** Selecciona otra carta sin cambiar de pestaña ni de periodo. */
 async function selectCard(page: Page, code: string) {
   await page.locator(`${CARD}[data-code="${code}"]`).first().click()
   await page.waitForTimeout(900)
@@ -321,22 +295,22 @@ test.describe('QA ESTADO · RESOLUCIÓN · scope COORDINACIÓN', () => {
       await expect(tid(page, DIST).locator('svg')).toBeVisible()
       await expect(tid(page, 'director-resolucion')).toHaveAttribute('data-level', 'month')
       await expectSquared(page, response)
-      await expectPairLayout(page)
-      await expectNoVerticalScroll(page)
+      await expectStackedFullWidth(page, 'director-resolucion-tendencia', 'director-resolucion-distribucion', [TREND, DIST], 180)
+      await expectSingleScrollZone(page)
       await shoot(page, `b2b-${size}-h2`)
 
-      // Tooltip de la línea en un mes con cierres: mediana + solucionados.
+      // Tooltip de la línea en un mes con cierres: mediana + cerrados.
       const index = response.resolution.buckets.findIndex((b) => (b.closedCount ?? 0) > 0)
       await hoverColumn(page, index, response.resolution.buckets.length)
       const tip = await tooltipText(page, TREND)
       expect(tip).toMatch(/Mediana/)
-      expect(tip).toMatch(/Solucionados/)
+      expect(tip).toMatch(/Cerrados/)
       expect(tip).not.toMatch(/P75|SLA/)
       await shootAsIs(page, `b2b-${size}-h2-tooltip-linea`)
     })
   }
 
-  test('principal · Op. Académica SEP → Ingenierías CAMBIA; misma lámina y periodo', async ({ page }) => {
+  test('principal · Op. Académica SEP → Ingenierías CAMBIA; mismo periodo', async ({ page }) => {
     test.slow()
     const served: Served[] = []
     await page.setViewportSize({ width: 1440, height: 900 })
@@ -355,7 +329,7 @@ test.describe('QA ESTADO · RESOLUCIÓN · scope COORDINACIÓN', () => {
     await shoot(page, 'secuencia-1-operacion-academica-sep')
 
     await selectCard(page, 'coord-ingenierias')
-    await expect(tid(page, 'director-estado-carousel')).toHaveAttribute('data-page', '3')
+    await goToResolucion(page)
     await expect(tid(page, 'director-analysis-period-range')).toHaveText('1 — 30 SEP 2026')
     expect(served.at(-1)!.scope.coordinationId).toBe(ING)
     const ing = await resolucionView(page)
@@ -378,7 +352,7 @@ test.describe('QA ESTADO · RESOLUCIÓN · scope COORDINACIÓN', () => {
     await goToResolucion(page)
     await expect(tid(page, 'director-resolucion')).toHaveAttribute('data-level', 'day')
     await expectSquared(page, served.at(-1)!)
-    await expectNoVerticalScroll(page)
+    await expectSingleScrollZone(page)
     await shoot(page, 'b2b-1440x900-semana-7-13-sep')
   })
 
@@ -391,11 +365,11 @@ test.describe('QA ESTADO · RESOLUCIÓN · scope COORDINACIÓN', () => {
     await goToResolucion(page)
     expect(served.at(-1)!.resolution.closedCount).toBe(0)
     await expect(tid(page, 'director-resolucion-empty')).toHaveText(
-      'Sin problemas solucionados en este periodo',
+      'Sin problemas cerrados en este periodo',
     )
     await expect(tid(page, TREND)).toHaveCount(0)
     await expect(tid(page, DIST)).toHaveCount(0)
-    await expectNoVerticalScroll(page)
+    await expectSingleScrollZone(page)
     await shoot(page, 'saber-pro-1440x900-sin-cierres')
   })
 })

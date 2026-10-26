@@ -91,7 +91,7 @@ function escapeHtml(text: string): string {
 
 /**
  * Tooltip de un bucket de la línea: [título, filas etiqueta/valor, nota].
- * Mediana + Solucionados siempre; P75 redactado («75 % en menos de …») solo
+ * Mediana + Cerrados siempre (mismos cierres que Movimiento); P75 redactado («75 % en menos de …») solo
  * con n ≥ 4; «Pocos cierres» con n < 3. Sin cierres: lo dice, sin «0 días».
  */
 export function resolucionTooltipLines(
@@ -100,11 +100,11 @@ export function resolucionTooltipLines(
 ): { title: string; rows: Array<[string, string]>; note: string | null } {
   const n = bucket.closedCount ?? 0
   if (n === 0 || bucket.medianDays === null) {
-    return { title: title.toUpperCase(), rows: [], note: 'Sin problemas solucionados en este periodo' }
+    return { title: title.toUpperCase(), rows: [], note: 'Sin problemas cerrados en este periodo' }
   }
   const rows: Array<[string, string]> = [
     ['Mediana', formatResolutionDuration(bucket.medianDays, { long: true })],
-    ['Solucionados', String(n)],
+    ['Cerrados', String(n)],
   ]
   if (n >= RESOLUTION_P75_MIN_COUNT && bucket.p75Days !== null) {
     rows.push(['75 % en menos de', formatResolutionDuration(bucket.p75Days, { long: true })])
@@ -249,7 +249,7 @@ export function buildResolucionTrendOption(
   }
 }
 
-/** Tooltip de un rango: «3–7 DÍAS · 7 problemas solucionados · 35 % de los cierres». */
+/** Tooltip de un rango: «3–7 DÍAS · 7 problemas cerrados · 35 % de los cierres». */
 export function tiempoSolucionTooltipLines(
   bandIndex: number,
   resolution: Pick<OperationalKpiResolution, 'closedCount' | 'distribution'>,
@@ -258,7 +258,7 @@ export function tiempoSolucionTooltipLines(
   const count = resolutionBandCounts(resolution)[bandIndex] ?? 0
   return [
     meta.label.toUpperCase(),
-    `${count} ${count === 1 ? 'problema solucionado' : 'problemas solucionados'}`,
+    `${count} ${count === 1 ? 'problema cerrado' : 'problemas cerrados'}`,
     `${resolutionBandPercent(count, resolution.closedCount)} % de los cierres`,
   ]
 }
@@ -302,7 +302,7 @@ export function buildTiempoSolucionOption(
       min: 0,
       max,
       interval,
-      name: 'problemas solucionados',
+      name: 'problemas cerrados',
       nameLocation: 'middle',
       nameGap: 18,
       nameTextStyle: { color: 'rgb(35 25 16 / 0.45)', fontSize: 9, fontWeight: 700 },
@@ -319,7 +319,7 @@ export function buildTiempoSolucionOption(
     series: [
       {
         type: 'bar',
-        name: 'Problemas solucionados',
+        name: 'Problemas cerrados',
         data: counts.map((value, index) => ({
           value,
           itemStyle: {

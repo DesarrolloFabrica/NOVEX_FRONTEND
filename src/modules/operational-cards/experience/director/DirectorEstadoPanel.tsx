@@ -1,6 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { DirectorAntiguedad } from '@/modules/operational-cards/experience/director/DirectorAntiguedad'
-import { DirectorEstadoCarousel } from '@/modules/operational-cards/experience/director/DirectorEstadoCarousel'
 import { DirectorEstadoComposicion } from '@/modules/operational-cards/experience/director/DirectorEstadoComposicion'
 import { DirectorFlujoProblemas } from '@/modules/operational-cards/experience/director/DirectorFlujoProblemas'
 import { DirectorResolucion } from '@/modules/operational-cards/experience/director/DirectorResolucion'
@@ -16,14 +15,16 @@ import type { CoordinationOverview } from '@/modules/operational-cards/types/ope
 import '@/styles/director-kpi-panel.css'
 
 /**
- * Modo ESTADO de una coordinación: CARRUSEL de láminas, sin scroll vertical.
- *   1 · Carga | Movimiento (¿cuánto tengo? ¿cuánto entra y sale?)
- *   2 · Severidad | Atención (+ línea de relaciones)
- *   3 · Antigüedad (¿qué lleva más tiempo activo al corte?)
- *   4 · Resolución (¿cuánto tardamos en solucionar lo que sale?)
- * El AnalysisPeriod es el del DirectorReadingPanel. El flujo además lo
- * modifica (drill-down ciclo → mes → semana): no hay selección local.
- * La página del carrusel NO es un filtro: no toca el periodo.
+ * Modo ESTADO de una coordinación: LECTURA CONTINUA en una sola columna. Los
+ * módulos se apilan a todo el ancho y se recorren con el scroll del cuerpo de
+ * la lectura (pestañas y filtros quedan fijos arriba, fuera de él):
+ *   Flujo      · resumen · Carga · Movimiento   (¿cuánto tengo? ¿qué entra y sale?)
+ *   Corte      · Severidad · Atención · Relaciones del periodo
+ *   Antigüedad · Problemas más antiguos · Antigüedad de la carga
+ *   Resolución · Tiempo de resolución · Tiempo hasta el cierre
+ * Sustituye al carrusel de cuatro láminas: no hay página activa ni estado que
+ * dependa de ella. El AnalysisPeriod es el del DirectorReadingPanel; el flujo
+ * además lo modifica (drill-down ciclo → mes → semana): no hay selección local.
  * Lectura de Dirección (sin coordinación) mantiene su columna con scroll.
  *
  * REGLA DE ARQUITECTURA (DIRECTOR · ESTADO): el AnalysisPeriod del
@@ -57,8 +58,6 @@ export function DirectorEstadoPanel({
   analysisPeriod,
   onAnalysisPeriodChange,
   onOpenDependencias,
-  carouselPage,
-  onCarouselPageChange,
 }: {
   selected: boolean
   selectedCoordination: CoordinationOverview | null
@@ -73,14 +72,7 @@ export function DirectorEstadoPanel({
   analysisPeriod: AnalysisPeriod
   onAnalysisPeriodChange: (period: AnalysisPeriod) => void
   onOpenDependencias?: () => void
-  /** Página del carrusel (controlada por la lectura para que persista). */
-  carouselPage?: number
-  onCarouselPageChange?: (page: number) => void
 }) {
-  const [localPage, setLocalPage] = useState(0)
-  const page = carouselPage ?? localPage
-  const setPage = onCarouselPageChange ?? setLocalPage
-
   const snapshotLoading = selected
     ? coordinationStatus === 'loading'
     : directionStatus === 'loading'
@@ -111,6 +103,28 @@ export function DirectorEstadoPanel({
       ? state.data
       : null
   const stateFailed = selected && state.status === 'error'
+
+  /*
+   * ALTO ESTABLE durante el cambio de periodo. Sin datos válidos los módulos
+   * no pintan cifras (ni las del periodo anterior) y la columna se encogería:
+   * el scroll saltaría y se perdería el contexto del clic en la gráfica. Se
+   * reserva el último alto medido CON datos hasta que llega la respuesta.
+   */
+  const hasPeriodData = periodData !== null
+  const lecturaRef = useRef<HTMLDivElement | null>(null)
+  const hasDataRef = useRef(hasPeriodData)
+  hasDataRef.current = hasPeriodData
+  const [reservedHeight, setReservedHeight] = useState<number | null>(null)
+  const showsLectura = selected && coordination !== null
+  useEffect(() => {
+    const el = lecturaRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(() => {
+      if (hasDataRef.current) setReservedHeight(el.offsetHeight)
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [showsLectura])
 
   return (
     <div
@@ -143,94 +157,93 @@ export function DirectorEstadoPanel({
          * las vidas viven en el personaje. La lectura abre directamente con
          * el flujo, navegador temporal principal, bajo el periodo.
          */
-        <DirectorEstadoCarousel
-          page={page}
-          onPageChange={setPage}
-          pages={[
-            {
-              id: 'operacion',
-              label: 'Carga y movimiento',
-              content: (
-                <DirectorFlujoProblemas
-                  period={analysisPeriod}
-                  buckets={periodData?.evolution.buckets ?? null}
-                  loading={stateLoading}
-                  error={stateFailed ? state.error : null}
-                  onPeriodChange={onAnalysisPeriodChange}
-                  // Los filtros de la cabecera ya muestran ciclo › mes › semana
-                  // y permiten subir de nivel: la ruta repetiría lo mismo.
-                  showTrail={false}
-                />
-              ),
-            },
-            {
-              id: 'composicion',
-              label: 'Severidad y atención',
-              content: (
-                <DirectorEstadoComposicion
-                  severity={
-                    periodData?.snapshot.severity ?? {
-                      critical: 0,
-                      high: 0,
-                      medium: 0,
-                      low: 0,
-                    }
-                  }
-                  status={
-                    periodData?.snapshot.attention ?? {
-                      open: 0,
-                      inProgress: 0,
-                      closedAfterCut: 0,
-                      unclassified: 0,
-                    }
-                  }
-                  incoming={periodData?.relations.dependencies ?? 0}
-                  outgoing={periodData?.relations.commitments ?? 0}
-                  loading={stateLoading}
-                  hasCachedData={periodData !== null}
-                  scope="period"
-                  cut={
-                    periodData
-                      ? { at: periodData.snapshot.at, isNow: periodData.snapshot.isNow }
-                      : null
-                  }
-                  // Relaciones = INTER creados en [from, dataTo] (mismo intervalo que la consulta).
-                  relationsPeriod={
-                    periodData
-                      ? { from: periodData.period.from, to: periodData.period.dataTo }
-                      : null
-                  }
-                  error={stateFailed ? state.error : null}
-                  onOpenDependencias={onOpenDependencias}
-                />
-              ),
-            },
-            {
-              id: 'antiguedad',
-              label: 'Antigüedad',
-              content: (
-                <DirectorAntiguedad
-                  aging={periodData?.aging ?? null}
-                  loading={stateLoading}
-                  error={stateFailed ? state.error : null}
-                />
-              ),
-            },
-            {
-              id: 'resolucion',
-              label: 'Resolución',
-              content: (
-                <DirectorResolucion
-                  period={analysisPeriod}
-                  flowBuckets={periodData?.evolution.buckets ?? null}
-                  resolution={periodData?.resolution ?? null}
-                  loading={stateLoading}
-                  error={stateFailed ? state.error : null}
-                />
-              ),
-            },
-          ]}
-        />
+        <div
+          ref={lecturaRef}
+          className="director-estado-lectura"
+          data-testid="director-estado-lectura"
+          data-loading={stateLoading ? 'true' : 'false'}
+          style={
+            // Solo mientras se espera la respuesta (no tras un error: ahí
+            // queda el aviso, sin hueco reservado).
+            !hasPeriodData && !stateFailed && reservedHeight !== null
+              ? { minHeight: reservedHeight }
+              : undefined
+          }
+        >
+          {/* Resumen · Carga · Movimiento (series del periodo; el clic profundiza). */}
+          <div className="director-estado-lectura__group" data-group="flujo">
+            <DirectorFlujoProblemas
+              period={analysisPeriod}
+              buckets={periodData?.evolution.buckets ?? null}
+              loading={stateLoading}
+              error={stateFailed ? state.error : null}
+              onPeriodChange={onAnalysisPeriodChange}
+              // Los filtros de la cabecera ya muestran ciclo › mes › semana
+              // y permiten subir de nivel: la ruta repetiría lo mismo.
+              showTrail={false}
+            />
+          </div>
+
+          {/* Severidad · Atención (foto al corte) · Relaciones (flujo del periodo). */}
+          <div className="director-estado-lectura__group" data-group="corte">
+            <DirectorEstadoComposicion
+              severity={
+                periodData?.snapshot.severity ?? {
+                  critical: 0,
+                  high: 0,
+                  medium: 0,
+                  low: 0,
+                }
+              }
+              status={
+                periodData?.snapshot.attention ?? {
+                  open: 0,
+                  inProgress: 0,
+                  closedAfterCut: 0,
+                  unclassified: 0,
+                }
+              }
+              incoming={periodData?.relations.dependencies ?? 0}
+              outgoing={periodData?.relations.commitments ?? 0}
+              loading={stateLoading}
+              hasCachedData={periodData !== null}
+              scope="period"
+              cut={
+                periodData
+                  ? { at: periodData.snapshot.at, isNow: periodData.snapshot.isNow }
+                  : null
+              }
+              // Relaciones = INTER creados en [from, dataTo] (mismo intervalo que la consulta).
+              relationsPeriod={
+                periodData
+                  ? { from: periodData.period.from, to: periodData.period.dataTo }
+                  : null
+              }
+              error={stateFailed ? state.error : null}
+              onOpenDependencias={onOpenDependencias}
+            />
+          </div>
+
+          {/* Problemas más antiguos · Antigüedad de la carga (activos al corte). */}
+          <div className="director-estado-lectura__group" data-group="antiguedad">
+            <DirectorAntiguedad
+              aging={periodData?.aging ?? null}
+              loading={stateLoading}
+              error={stateFailed ? state.error : null}
+            />
+          </div>
+
+          {/* Tiempo de resolución · Tiempo hasta el cierre (cerrados en el periodo). */}
+          <div className="director-estado-lectura__group" data-group="resolucion">
+            <DirectorResolucion
+              period={analysisPeriod}
+              flowBuckets={periodData?.evolution.buckets ?? null}
+              resolution={periodData?.resolution ?? null}
+              loading={stateLoading}
+              error={stateFailed ? state.error : null}
+            />
+          </div>
+        </div>
       ) : null}
 
       {!selected && direction ? (

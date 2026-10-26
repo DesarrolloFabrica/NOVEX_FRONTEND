@@ -4,6 +4,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { flowStateResponse, type FlowQuery } from './flujo-state.fixture'
 import { operationalOverviewFixture } from './operational-overview.fixture'
+import { expectSingleScrollZone, scrollToModule } from './estado-lectura.helpers'
 
 /**
  * QA visual: ESTADO = CARGA | MOVIMIENTO lado a lado como navegador temporal.
@@ -319,31 +320,6 @@ async function shootFull(page: Page, name: string) {
  * esquinas del área de barras) el elemento superior debe pertenecer a la
  * gráfica, nunca a un ornamento del ticket.
  */
-/** ESTADO cabe entero: el body de la lectura no tiene scroll real. */
-async function expectNoVerticalScroll(page: Page) {
-  const probe = await tid(page, 'director-reading-body').evaluate((node) => ({
-    scrollHeight: node.scrollHeight,
-    clientHeight: node.clientHeight,
-    overflowY: getComputedStyle(node).overflowY,
-  }))
-  expect(probe.scrollHeight).toBeLessThanOrEqual(probe.clientHeight + 2)
-  await expect(tid(page, 'director-reading-panel')).toHaveAttribute('data-scroll-more', 'false')
-}
-
-/** Lámina visible del carrusel (el track se desplaza con transform). */
-async function expectCarouselPage(page: Page, index: number) {
-  await expect(tid(page, 'director-estado-carousel')).toHaveAttribute('data-page', String(index))
-  // Espera a que termine el desplazamiento (≈220 ms) antes de medir/capturar.
-  await page.waitForTimeout(400)
-  const viewport = await tid(page, 'director-estado-carousel')
-    .locator('.director-estado-carousel__viewport')
-    .boundingBox()
-  const active = await tid(page, 'director-estado-carousel')
-    .locator('.director-estado-carousel__page[data-active="true"]')
-    .boundingBox()
-  expect(viewport && active).toBeTruthy()
-  expect(Math.abs(active!.x - viewport!.x)).toBeLessThanOrEqual(2)
-}
 
 async function expectNoOrnamentOverChart(page: Page, chartId = CARGA) {
   const chart = tid(page, chartId)
@@ -388,7 +364,7 @@ test.describe('QA ESTADO · Carga | Movimiento · drill-down ciclo → mes → s
         : (['coord-b2b', 'coord-especializaciones'] as const)
     for (const code of codes) {
       test(`${code} @ ${size}`, async ({ page }) => {
-        // Recorrido completo de las cuatro láminas (con drill-down): más que test.slow().
+        // Recorrido completo de la lectura continua (con drill-down): más que test.slow().
         test.setTimeout(180_000)
         const states: FlowQuery[] = []
         await page.setViewportSize(viewport)
@@ -409,19 +385,21 @@ test.describe('QA ESTADO · Carga | Movimiento · drill-down ciclo → mes → s
         await expect(header).not.toContainText(meta(code).shortName)
         await expect(header).not.toContainText(/activos?/)
         await expect(tid(page, 'director-estado-operativo')).toHaveCount(0)
-        // Al entrar: tabs → periodo → resumen → CARGA y MOVIMIENTO completas, sin scroll.
+        // Al entrar: tabs → periodo → resumen → CARGA, completas; Movimiento
+        // continúa debajo en la MISMA zona de scroll.
         const bodyBox = await tid(page, 'director-reading-body').boundingBox()
         const cargaBox = await tid(page, CARGA).boundingBox()
         const movBox = await tid(page, MOVIMIENTO).boundingBox()
         const summaryBox = await tid(page, 'director-flujo-summary').boundingBox()
         expect(bodyBox && cargaBox && movBox && summaryBox).toBeTruthy()
+        expect(summaryBox!.y).toBeGreaterThanOrEqual(bodyBox!.y - 1)
+        expect(cargaBox!.y + cargaBox!.height).toBeLessThanOrEqual(bodyBox!.y + bodyBox!.height + 1)
         for (const box of [cargaBox!, movBox!]) {
-          expect(box.y + box.height).toBeLessThanOrEqual(bodyBox!.y + bodyBox!.height + 1)
-          // Alto CONTENIDO y apaisado (≈ 194 px a 1440×900, 232 px a 1920×1080):
-          // legible, sin estirarse al alto del panel.
-          expect(box.height).toBeGreaterThanOrEqual(150)
-          expect(box.height).toBeLessThanOrEqual(240)
-          expect(box.width / box.height).toBeGreaterThanOrEqual(2.4)
+          // Alto CONTENIDO y apaisado: clamp(190px, 25vh, 250px) → 225 px a
+          // 1440×900 y 250 px a 1920×1080; legible, sin estirarse al panel.
+          expect(box.height).toBeGreaterThanOrEqual(190)
+          expect(box.height).toBeLessThanOrEqual(250)
+          expect(box.width / box.height).toBeGreaterThanOrEqual(2.2)
         }
         // Apiladas a todo el ancho: resumen → Carga → Movimiento, mismo x y ancho.
         expect(cargaBox!.y).toBeGreaterThan(summaryBox!.y + summaryBox!.height)
@@ -435,34 +413,28 @@ test.describe('QA ESTADO · Carga | Movimiento · drill-down ciclo → mes → s
         await expectNoOrnamentOverChart(page, MOVIMIENTO)
         await expect(tid(page, 'director-analysis-period-range')).toHaveText('1 JUL — 31 DIC 2026')
         expect(states.at(-1)).toMatchObject({ kind: 'cycle', from: '2026-07-01', calendarEnd: '2026-12-31' })
+        await scrollToModule(page, 'director-flujo-summary')
         await shoot(page, `${short}-1-ciclo-${size}`)
         await shootFull(page, `${short}-0-centro-ciclo-${size}`)
 
-        // CARRUSEL: sin scroll vertical; lámina 1 por defecto.
-        await expectNoVerticalScroll(page)
-        await expectCarouselPage(page, 0)
-        await expect(tid(page, 'director-estado-carousel-prev')).toBeDisabled()
-        await expect(tid(page, 'director-estado-carousel-next')).toBeEnabled()
+        // LECTURA CONTINUA: una sola zona de scroll, sin carrusel; el periodo
+        // no se mueve al recorrerla.
+        await expectSingleScrollZone(page)
+        // Consultas de ESTA carta: la selección por defecto de Coordinación General
+        // (useOperationalShellModel) puede aplicarse tarde bajo carga y no es de ESTADO.
+        const ownStates = () => states.filter((s) => s.coordinationId === meta(code).id).length
+        const calls = ownStates()
 
-        // → Lámina 2: Severidad | Atención, mismo periodo, sin scroll.
-        await tid(page, 'director-estado-carousel-next').click()
-        await expectCarouselPage(page, 1)
+        // ↓ Severidad · Atención · Relaciones, mismo periodo.
+        await scrollToModule(page, 'director-kpi-severity')
         await expect(tid(page, 'director-estado-severity-chart').locator('svg')).toBeVisible()
+        await scrollToModule(page, 'director-kpi-status-split')
         await expect(tid(page, 'director-estado-attention-chart').locator('svg')).toBeVisible()
-        // Lámina 3 (Antigüedad) existe a la derecha: «siguiente» sigue activo.
-        await expect(tid(page, 'director-estado-carousel-next')).toBeEnabled()
         await expect(tid(page, 'director-analysis-period-range')).toHaveText('1 JUL — 31 DIC 2026')
-        await expectNoVerticalScroll(page)
         const severityBox = await tid(page, 'director-estado-severity-chart').boundingBox()
         const attentionBox = await tid(page, 'director-estado-attention-chart').boundingBox()
-        const bodyBottom = await tid(page, 'director-reading-body').evaluate(
-          (node) => node.getBoundingClientRect().bottom,
-        )
-        for (const box of [severityBox!, attentionBox!]) {
-          expect(box.y + box.height).toBeLessThanOrEqual(bodyBottom + 1)
-        }
         // Alturas ajustadas al contenido: cuatro filas de severidad (≈ 146 px)
-        // y una dona compacta (≈ 132 px), no estiradas al alto de la lámina.
+        // y una dona compacta (≈ 132 px), no estiradas.
         expect(severityBox!.height).toBeGreaterThanOrEqual(120)
         expect(severityBox!.height).toBeLessThanOrEqual(170)
         expect(attentionBox!.height).toBeLessThanOrEqual(150)
@@ -475,29 +447,38 @@ test.describe('QA ESTADO · Carga | Movimiento · drill-down ciclo → mes → s
         expect(legendBox!.x - (attentionBox!.x + attentionBox!.width)).toBeLessThanOrEqual(40)
         await expectNoOrnamentOverChart(page, 'director-estado-severity-chart')
         await expectNoOrnamentOverChart(page, 'director-estado-attention-chart')
-        await shootFull(page, `${short}-0-centro-pagina2-${size}`)
+        await scrollToModule(page, 'director-estado-relations-line')
+        await shootFull(page, `${short}-0-centro-medio-${size}`)
 
-        // → Lámina 3: Antigüedad; mismo periodo, sin scroll.
-        await tid(page, 'director-estado-carousel-next').click()
-        await expectCarouselPage(page, 2)
+        // ↓ Antigüedad (ranking y distribución, apilados), mismo periodo.
+        await scrollToModule(page, 'director-antiguedad-ranking')
         await expect(tid(page, 'director-antiguedad-chart').locator('svg')).toBeVisible()
+        await scrollToModule(page, 'director-antiguedad-distribucion')
+        await expect(tid(page, 'director-distribucion-chart').locator('svg')).toBeVisible()
         await expect(tid(page, 'director-analysis-period-range')).toHaveText('1 JUL — 31 DIC 2026')
-        await expectNoVerticalScroll(page)
 
-        // → Lámina 4: Resolución, última; mismo periodo, sin scroll.
-        await tid(page, 'director-estado-carousel-next').click()
-        await expectCarouselPage(page, 3)
+        // ↓ Resolución, último grupo: accesible entero y con aire al final.
+        await scrollToModule(page, 'director-resolucion-tendencia')
         await expect(tid(page, 'director-resolucion-trend-chart').locator('svg')).toBeVisible()
+        await scrollToModule(page, 'director-resolucion-distribucion')
         await expect(tid(page, 'director-tiempo-solucion-chart').locator('svg')).toBeVisible()
-        await expect(tid(page, 'director-estado-carousel-next')).toBeDisabled()
+        await tid(page, 'director-reading-body').evaluate((node) => {
+          node.scrollTop = node.scrollHeight
+        })
+        await page.waitForTimeout(200)
+        const tail = await tid(page, 'director-reading-body').evaluate((node) => {
+          const last = node.querySelector('[data-testid="director-resolucion-distribucion"]')!
+          return node.getBoundingClientRect().bottom - last.getBoundingClientRect().bottom
+        })
+        expect(tail).toBeGreaterThanOrEqual(8)
         await expect(tid(page, 'director-analysis-period-range')).toHaveText('1 JUL — 31 DIC 2026')
-        await expectNoVerticalScroll(page)
-        await shootFull(page, `${short}-0-centro-pagina4-${size}`)
+        await expectSingleScrollZone(page)
+        await shootFull(page, `${short}-0-centro-final-${size}`)
 
-        // ← Lámina 1 de nuevo: el periodo no se movió.
-        await tid(page, 'director-estado-carousel-dot-0').click()
-        await expectCarouselPage(page, 0)
+        // ↑ Arriba de nuevo: recorrer la lectura no movió el periodo ni consultó.
+        await scrollToModule(page, 'director-flujo-summary')
         await expect(tid(page, 'director-analysis-period-range')).toHaveText('1 JUL — 31 DIC 2026')
+        expect(ownStates()).toBe(calls)
         expect(states.at(-1)).toMatchObject({ kind: 'cycle', from: '2026-07-01' })
 
         // Ayuda «?» de cada gráfica (hover).
@@ -575,8 +556,7 @@ test.describe('QA ESTADO · Carga | Movimiento · drill-down ciclo → mes → s
         await expectNoOrnamentOverChart(page, MOVIMIENTO)
         await shoot(page, `${short}-2-mes-octubre-${size}`)
         await shootFull(page, `${short}-0-centro-octubre-${size}`)
-        await expectNoVerticalScroll(page)
-        await expectCarouselPage(page, 0)
+        await expectSingleScrollZone(page)
 
         // Click en la banda «5–11» (Carga) → semana; días como último nivel.
         const week = await clickBand(page, '5–11')

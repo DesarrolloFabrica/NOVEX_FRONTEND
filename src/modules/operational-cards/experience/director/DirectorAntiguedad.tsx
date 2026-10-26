@@ -52,7 +52,9 @@ function ChartTitle({ chart, children }: { chart: ChartKey; children: string }) 
 }
 
 /**
- * Lámina ANTIGÜEDAD · SNAPSHOT AT CUT · scope COORDINATION.
+ * Grupo ANTIGÜEDAD de ESTADO · SNAPSHOT AT CUT · scope COORDINATION.
+ * En la lectura continua cada gráfica es un módulo a todo el ancho (ranking
+ * arriba, distribución debajo); la pareja se apila por CSS.
  * La coordinación seleccionada × AnalysisPeriod: la MISMA población que Carga,
  * Severidad y Atención. Una sola fotografía (`aging.at`) leída de dos formas.
  *   · PROBLEMAS MÁS ANTIGUOS — ¿cuáles son los casos extremos? (top 5)
@@ -135,31 +137,44 @@ export function DirectorAntiguedad({
                 {remainder}
               </p>
             ) : null}
-            <table className="visually-hidden" data-testid="director-antiguedad-table">
-              <caption>
-                Problemas activos más antiguos de la coordinación{' '}
-                {aging.isNow ? 'hoy' : `al cierre del ${aging.at}`}, en días desde su
-                registro en NOVEX.
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Problema</th>
-                  <th scope="col">Días</th>
-                  <th scope="col">Registrado</th>
-                  <th scope="col">Tipo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {aging.oldest.map((item) => (
-                  <tr key={item.id} data-testid={`director-antiguedad-row-${item.id}`}>
-                    <th scope="row">{item.title}</th>
-                    <td>{formatAgeLabel(item.ageDays)}</td>
-                    <td>{formatBogotaDate(item.createdAt)}</td>
-                    <td>{agingKindLine(item)}</td>
+            {/*
+              Títulos completos a demanda: la gráfica abrevia los títulos largos
+              al ancho disponible y su tooltip solo llega con el puntero. Un
+              <details> nativo los ofrece también por teclado y lector.
+            */}
+            <details
+              className="director-antiguedad__details"
+              data-testid="director-antiguedad-details"
+            >
+              <summary className="director-antiguedad__details-summary">
+                Ver títulos completos
+              </summary>
+              <table className="director-antiguedad__list" data-testid="director-antiguedad-table">
+                <caption className="visually-hidden">
+                  Problemas activos más antiguos de la coordinación{' '}
+                  {aging.isNow ? 'hoy' : `al cierre del ${aging.at}`}, en días desde su
+                  registro en NOVEX.
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Problema</th>
+                    <th scope="col">Días</th>
+                    <th scope="col">Registrado</th>
+                    <th scope="col">Tipo</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {aging.oldest.map((item) => (
+                    <tr key={item.id} data-testid={`director-antiguedad-row-${item.id}`}>
+                      <th scope="row">{item.title}</th>
+                      <td>{formatAgeLabel(item.ageDays)}</td>
+                      <td>{formatBogotaDate(item.createdAt)}</td>
+                      <td>{agingKindLine(item)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </details>
           </div>
 
           <span className="director-antiguedad__divider" aria-hidden="true" />
