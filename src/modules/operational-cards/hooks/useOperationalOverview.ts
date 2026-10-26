@@ -23,7 +23,17 @@ import {
 import { fetchMyReports } from '@/modules/operational-cards/services/my-reports.service'
 import { fetchClosedProblemHistory } from '@/modules/operational-cards/services/problem-history.service'
 import type { ProblemHistoryPeriod } from '@/modules/operational-cards/types/problem-history.types'
-import { submitProblemReport } from '@/modules/operational-cards/services/report-submission.service'
+import {
+  describeReportSubmissionError,
+  submitProblemReport,
+} from '@/modules/operational-cards/services/report-submission.service'
+import {
+  clearReportRequestId,
+  persistReportDrafts,
+  readOrCreateReportRequestId,
+  readPersistedReportDrafts,
+  rotateReportRequestId,
+} from '@/modules/operational-cards/services/report-persistence'
 import { submitProblemResolution } from '@/modules/operational-cards/services/problem-resolution.service'
 import { submitProblemStatusAdvance } from '@/modules/operational-cards/services/problem-status-advance.service'
 import {
@@ -117,11 +127,47 @@ const SECTION_LOADERS: Record<
   timeline: fetchProblemTimeline,
 }
 
-export function useOperationalOverview(): OperationalCardsController {
+export function useOperationalOverview(
+  options: {
+    /**
+     * Ámbito de persistencia del reporte en curso (el id del usuario). Con
+     * `null` el borrador vive solo en memoria y la clave de idempotencia no
+     * sobrevive a una recarga.
+     */
+    persistenceScope?: string | null
+  } = {},
+): OperationalCardsController {
+  const persistenceScope = options.persistenceScope ?? null
   const [state, dispatch] = useReducer(
     operationalCardsReducer,
-    initialOperationalCardsState,
+    persistenceScope,
+    (scope): OperationalCardsState => ({
+      ...initialOperationalCardsState,
+      reportDrafts: readPersistedReportDrafts(scope),
+    }),
   )
+
+  /*
+   * BORRADORES PERSISTIDOS. El estado es la fuente de verdad y el
+   * almacenamiento lo refleja. Si cambia el usuario sin desmontar, primero se
+   * cargan SUS borradores y solo después se vuelve a escribir: nunca se guardan
+   * los borradores de una sesión bajo el ámbito de otra.
+   */
+  const persistenceScopeRef = useRef(persistenceScope)
+  const hydratedScopeRef = useRef(persistenceScope)
+  persistenceScopeRef.current = persistenceScope
+  useEffect(() => {
+    if (hydratedScopeRef.current !== persistenceScope) {
+      hydratedScopeRef.current = persistenceScope
+      dispatch({
+        type: 'HYDRATE_REPORT_DRAFTS',
+        drafts: readPersistedReportDrafts(persistenceScope),
+      })
+      return
+    }
+    persistReportDrafts(persistenceScope, state.reportDrafts)
+  }, [persistenceScope, state.reportDrafts])
+
   const overviewRequestRef = useRef<Promise<OperationalOverview> | null>(null)
 
   /**
@@ -554,14 +600,29 @@ export function useOperationalOverview(): OperationalCardsController {
 
       dispatch({ type: 'SUBMIT_REPORT', targetKey })
 
-      try {
-        const situation = await submitProblemReport({
-          draft: input.draft,
-          reportKind: input.reportKind,
-          selectedCoordinationId: input.selectedCoordinationId,
-          selectedCoordinationCode: input.selectedCoordinationCode,
-        })
+      /*
+       * CLAVE DEL INTENTO LÓGICO. La misma para todos los reintentos de este
+       * borrador —también tras recargar—: si una respuesta anterior se perdió
+       * pero el servidor sí guardó el problema, este envío lo recupera
+       * (`replayed`) en lugar de crear otro.
+       */
+      const scope = persistenceScopeRef.current
+      const idempotencyKey = readOrCreateReportRequestId(scope, targetKey)
 
+      try {
+        const { situation } = await submitProblemReport(
+          {
+            draft: input.draft,
+            reportKind: input.reportKind,
+            selectedCoordinationId: input.selectedCoordinationId,
+            selectedCoordinationCode: input.selectedCoordinationCode,
+          },
+          idempotencyKey,
+        )
+
+        // Confirmado (nuevo o `replayed`): el siguiente reporte de esta carta
+        // es un problema distinto y obtendrá otra clave.
+        clearReportRequestId(scope, targetKey)
         dispatch({
           type: 'SUBMIT_REPORT_SUCCESS',
           targetKey,
@@ -571,9 +632,15 @@ export function useOperationalOverview(): OperationalCardsController {
         })
         return true
       } catch (error: unknown) {
+        if (error instanceof ApiError && error.code === 'IDEMPOTENCY_KEY_REUSED') {
+          // El contenido cambió tras un intento que SÍ se guardó: si el usuario
+          // confirma de nuevo, será un registro nuevo (se le avisa en el mensaje).
+          rotateReportRequestId(scope, targetKey)
+        }
+        // Cualquier otro fallo conserva la clave: el reintento es el mismo intento.
         dispatch({
           type: 'SUBMIT_REPORT_ERROR',
-          message: getErrorMessage(error),
+          message: describeReportSubmissionError(error),
         })
         return false
       } finally {

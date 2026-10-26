@@ -14,6 +14,9 @@ const { emptyReportDraft } = await import(
   '@/modules/operational-cards/state/operationalCards.reducer'
 )
 
+/** Clave de idempotencia del intento: el servicio la reenvía tal cual. */
+const KEY = '11111111-2222-4333-8444-555555555555'
+
 describe('submitProblemReport INTER con responsable elegida', () => {
   beforeEach(() => {
     createSituationWithAnalysis.mockReset()
@@ -42,7 +45,7 @@ describe('submitProblemReport INTER con responsable elegida', () => {
       reportKind: 'INTER_COORDINATION',
       selectedCoordinationId: 'uuid-afectada',
       selectedCoordinationCode: 'coord-saber-pro',
-    })
+    }, KEY)
 
     expect(createSituationWithAnalysis).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -52,6 +55,7 @@ describe('submitProblemReport INTER con responsable elegida', () => {
         affectedProcess: 'Certificación',
         pendingDelivery: 'Guiones',
       }),
+      KEY,
     )
     expect(createSituationWithAnalysis.mock.calls[0][0].categoryId).toBeUndefined()
   })

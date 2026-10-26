@@ -14,6 +14,9 @@ const { emptyReportDraft } = await import(
   '@/modules/operational-cards/state/operationalCards.reducer'
 )
 
+/** Clave de idempotencia del intento: el servicio la reenvía tal cual. */
+const KEY = '11111111-2222-4333-8444-555555555555'
+
 const baseDraft = () => ({
   ...emptyReportDraft('2026-10-07T08:30'),
   title: 'Internet intermitente',
@@ -37,7 +40,7 @@ describe('submitProblemReport INTERNAL (única puerta de creación)', () => {
       reportKind: 'INTERNAL',
       selectedCoordinationId: 'uuid-fabrica',
       selectedCoordinationCode: 'coord-fabrica-contenidos',
-    })
+    }, KEY)
 
     const payload = createSituationWithAnalysis.mock.calls[0][0]
     expect(payload).toEqual(
@@ -59,7 +62,7 @@ describe('submitProblemReport INTERNAL (única puerta de creación)', () => {
       reportKind: 'INTERNAL',
       selectedCoordinationId: 'uuid-fabrica',
       selectedCoordinationCode: 'coord-fabrica-contenidos',
-    })
+    }, KEY)
     expect(createSituationWithAnalysis.mock.calls[0][0].severity).toBe('CRITICAL')
   })
 
@@ -72,7 +75,7 @@ describe('submitProblemReport INTERNAL (única puerta de creación)', () => {
       reportKind: 'INTERNAL',
       selectedCoordinationId: 'uuid-fabrica',
       selectedCoordinationCode: 'coord-fabrica-contenidos',
-    })
+    }, KEY)
     expect(createSituationWithAnalysis.mock.calls[0][0].initialConsequence).toEqual({
       description: 'Se retrasó la entrega de dos contenidos.',
     })
@@ -84,7 +87,7 @@ describe('submitProblemReport INTERNAL (única puerta de creación)', () => {
       reportKind: 'INTERNAL',
       selectedCoordinationId: 'uuid-fabrica',
       selectedCoordinationCode: 'coord-fabrica-contenidos',
-    })
+    }, KEY)
     expect(createSituationWithAnalysis.mock.calls[0][0]).not.toHaveProperty(
       'initialConsequence',
     )
@@ -97,7 +100,7 @@ describe('submitProblemReport INTERNAL (única puerta de creación)', () => {
         reportKind: 'INTERNAL',
         selectedCoordinationId: null,
         selectedCoordinationCode: null,
-      }),
+      }, KEY),
     ).rejects.toThrow(/Seleccione una coordinación/)
     expect(createSituationWithAnalysis).not.toHaveBeenCalled()
   })

@@ -10,9 +10,13 @@ import {
   type DetectionMethod,
   type SituationCaptureDraft,
 } from '@/modules/situations/types/situation-capture.types'
+import { createUuidV4, isUuidV4 } from '@/shared/utils/uuid'
 
 const DRAFT_KEY = 'novex.situationCapture.draft.v1'
 const STEP_KEY = 'novex.situationCapture.step.v1'
+const REQUEST_ID_KEY = 'novex.situationCapture.requestId.v1'
+/** Respaldo de la clave cuando el almacenamiento del navegador no está disponible. */
+let memoryRequestId: string | null = null
 /** Claves legacy del rebrand Cunmark -> NOVEX. */
 const LEGACY_DRAFT_KEYS = ['cunmark.situationCapture.draft.v1'] as const
 const LEGACY_STEP_KEYS = ['cunmark.situationCapture.step.v1'] as const
@@ -187,15 +191,65 @@ export function writeSituationCaptureWizardStep(step: WizardStepId): void {
 }
 
 export function clearSituationCapturePersistence(): void {
+  memoryRequestId = null
   const storage = getStorage()
   if (!storage) return
 
   try {
     storage.removeItem(DRAFT_KEY)
     storage.removeItem(STEP_KEY)
+    storage.removeItem(REQUEST_ID_KEY)
     clearLegacyDraftKeys(storage)
     clearLegacyStepKeys(storage)
   } catch {
     // Ignorar.
   }
+}
+
+/**
+ * Clave de idempotencia del intento lógico de registro en curso. Se reutiliza
+ * tras recargas o errores de resultado incierto, para que el servidor reconozca
+ * el mismo registro. Solo cambia al terminar con éxito o al iniciar un registro nuevo.
+ */
+export function readOrCreateSituationCaptureRequestId(): string {
+  const stored = readStoredRequestId()
+  if (stored) {
+    memoryRequestId = stored
+    return stored
+  }
+  if (memoryRequestId) return memoryRequestId
+
+  return persistRequestId(newRequestId())
+}
+
+/** Genera una clave nueva. Usar cuando el contenido cambió tras un intento previo. */
+export function rotateSituationCaptureRequestId(): string {
+  return persistRequestId(newRequestId())
+}
+
+function readStoredRequestId(): string | null {
+  const storage = getStorage()
+  if (!storage) return null
+
+  try {
+    const raw = storage.getItem(REQUEST_ID_KEY)
+    return isUuidV4(raw) ? raw : null
+  } catch {
+    return null
+  }
+}
+
+function persistRequestId(requestId: string): string {
+  memoryRequestId = requestId
+  const storage = getStorage()
+  try {
+    storage?.setItem(REQUEST_ID_KEY, requestId)
+  } catch {
+    // Sin almacenamiento, la clave vive solo en memoria durante la sesión.
+  }
+  return requestId
+}
+
+function newRequestId(): string {
+  return createUuidV4()
 }

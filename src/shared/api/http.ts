@@ -6,14 +6,31 @@ type UnauthorizedHandler = () => void
 
 let unauthorizedHandler: UnauthorizedHandler | null = null
 
+interface ApiErrorOptions extends ErrorOptions {
+  /** Código estable devuelto por el backend (p. ej. REGISTRATION_IN_PROGRESS). */
+  code?: string
+  /** Identificador de la petición en el servidor, para soporte. */
+  requestId?: string
+}
+
 export class ApiError extends Error {
   status: number
+  code?: string
+  requestId?: string
 
-  constructor(message: string, status: number, options?: ErrorOptions) {
+  constructor(message: string, status: number, options?: ApiErrorOptions) {
     super(message, options)
     this.name = 'ApiError'
     this.status = status
+    this.code = options?.code
+    this.requestId = options?.requestId
   }
+}
+
+interface ErrorBody {
+  message?: string | string[]
+  code?: string
+  requestId?: string
 }
 
 export function setUnauthorizedHandler(handler: UnauthorizedHandler | null): void {
@@ -42,6 +59,18 @@ function shouldHandleUnauthorized(path: string, status: number): boolean {
   return !path.startsWith('/auth/google') && !path.startsWith('/auth/email')
 }
 
+function isTimeoutError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'TimeoutError'
+}
+
+async function readErrorBody(response: Response): Promise<ErrorBody> {
+  try {
+    return (await response.json()) as ErrorBody
+  } catch {
+    return {}
+  }
+}
+
 export async function apiRequest<T>(
   path: string,
   init?: RequestInit,
@@ -61,35 +90,46 @@ export async function apiRequest<T>(
       },
     })
   } catch (cause) {
+    if (isTimeoutError(cause)) {
+      throw new ApiError(
+        'La conexión tardó demasiado en responder. Verifique su red antes de volver a confirmar.',
+        0,
+        { cause, code: 'TIMEOUT' },
+      )
+    }
     throw new ApiError(
       import.meta.env.DEV
         ? 'No se pudo conectar con la API local. Inicie NOVEX_BACKEND en el puerto 3001 y vuelva a intentar.'
         : 'No se pudo conectar con la API. Verifique la disponibilidad del backend y su configuración CORS.',
       0,
-      { cause },
+      { cause, code: 'NETWORK_ERROR' },
     )
   }
 
   if (!response.ok) {
+    const body = await readErrorBody(response)
+
     let message =
       import.meta.env.DEV &&
       apiBaseUrl === LOCAL_API_BASE &&
       response.status >= 500
         ? 'La API local no está disponible. Inicie NOVEX_BACKEND en el puerto 3001 y vuelva a intentar.'
         : `Error HTTP ${response.status}`
-    try {
-      const body = (await response.json()) as { message?: string | string[] }
-      if (typeof body.message === 'string') message = body.message
-      else if (Array.isArray(body.message)) message = body.message.join(', ')
-    } catch {
-      // ignore parse errors
+    if (typeof body.message === 'string') message = body.message
+    else if (Array.isArray(body.message)) message = body.message.join(', ')
+
+    if (response.status >= 500 && body.requestId) {
+      message = `${message} (Ref: ${body.requestId})`
     }
 
     if (shouldHandleUnauthorized(path, response.status)) {
       unauthorizedHandler?.()
     }
 
-    throw new ApiError(message, response.status)
+    throw new ApiError(message, response.status, {
+      code: body.code,
+      requestId: body.requestId,
+    })
   }
 
   if (response.status === 204) {

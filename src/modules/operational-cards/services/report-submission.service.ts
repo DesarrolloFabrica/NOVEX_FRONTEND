@@ -1,4 +1,6 @@
 import { createSituationWithAnalysis } from '@/modules/api/situations.api'
+import { ApiError } from '@/shared/api/http'
+import { getErrorMessage } from '@/shared/utils/error'
 import type {
   SituationReportKind,
   SituationResponse,
@@ -99,9 +101,21 @@ export function nowAsLocalInput(now: Date = new Date()): string {
   return new Date(now.getTime() - offset).toISOString().slice(0, 16)
 }
 
+export interface ReportSubmissionResult {
+  situation: SituationResponse
+  /** true: el servidor reconoció la clave y devolvió el registro ya existente. */
+  replayed: boolean
+}
+
+/**
+ * Envía el reporte con su clave de idempotencia. La clave la decide quien
+ * llama (ver report-persistence.ts): la misma en todos los reintentos del
+ * mismo reporte, de modo que el servidor nunca cree dos problemas.
+ */
 export async function submitProblemReport(
   input: ReportSubmissionInput,
-): Promise<SituationResponse> {
+  idempotencyKey: string,
+): Promise<ReportSubmissionResult> {
   const validation = validateReportDraft(input.draft, input.reportKind)
   if (!validation.valid) {
     throw new Error(validation.problemas.join(' '))
@@ -119,18 +133,21 @@ export async function submitProblemReport(
       )
     }
 
-    const { situation } = await createSituationWithAnalysis({
-      title: input.draft.title.trim(),
-      description: input.draft.description.trim(),
-      reportKind: 'INTER_COORDINATION',
-      coordinationId: input.draft.responsibleCoordinationId,
-      affectedCoordinationId: input.selectedCoordinationId,
-      severity: input.draft.severity,
-      occurredAt: localInputToIso(input.draft.occurredAt),
-      affectedProcess: input.draft.affectedProcess.trim(),
-      pendingDelivery: input.draft.pendingDelivery.trim(),
-    })
-    return situation
+    const { situation, replayed } = await createSituationWithAnalysis(
+      {
+        title: input.draft.title.trim(),
+        description: input.draft.description.trim(),
+        reportKind: 'INTER_COORDINATION',
+        coordinationId: input.draft.responsibleCoordinationId,
+        affectedCoordinationId: input.selectedCoordinationId,
+        severity: input.draft.severity,
+        occurredAt: localInputToIso(input.draft.occurredAt),
+        affectedProcess: input.draft.affectedProcess.trim(),
+        pendingDelivery: input.draft.pendingDelivery.trim(),
+      },
+      idempotencyKey,
+    )
+    return { situation, replayed }
   }
 
   // INTERNAL ocurre en la carta. Para un COORDINADOR la carta está fijada a su
@@ -142,20 +159,51 @@ export async function submitProblemReport(
 
   const initialConsequence = input.draft.initialConsequence.trim()
 
-  const { situation } = await createSituationWithAnalysis({
-    title: input.draft.title.trim(),
-    description: input.draft.description.trim(),
-    reportKind: 'INTERNAL',
-    coordinationId,
-    affectedCoordinationId: coordinationId,
-    categoryId: input.draft.categoryId,
-    severity: input.draft.severity,
-    occurredAt: localInputToIso(input.draft.occurredAt),
-    // Opcional: vacía = el problema nace sin afectaciones (no se envía).
-    ...(initialConsequence
-      ? { initialConsequence: { description: initialConsequence } }
-      : {}),
-  })
+  const { situation, replayed } = await createSituationWithAnalysis(
+    {
+      title: input.draft.title.trim(),
+      description: input.draft.description.trim(),
+      reportKind: 'INTERNAL',
+      coordinationId,
+      affectedCoordinationId: coordinationId,
+      categoryId: input.draft.categoryId,
+      severity: input.draft.severity,
+      occurredAt: localInputToIso(input.draft.occurredAt),
+      // Opcional: vacía = el problema nace sin afectaciones (no se envía).
+      // Viaja dentro del alta: el servidor la crea en la misma transacción,
+      // así que un reintento con la misma clave tampoco la duplica.
+      ...(initialConsequence
+        ? { initialConsequence: { description: initialConsequence } }
+        : {}),
+    },
+    idempotencyKey,
+  )
 
-  return situation
+  return { situation, replayed }
+}
+
+/**
+ * Mensaje para el usuario según la causa del fallo del alta. Los códigos los
+ * fija el backend (ai-orchestrator.service.ts); el resto conserva el mensaje
+ * del servidor (permisos, validaciones).
+ */
+export function describeReportSubmissionError(error: unknown): string {
+  if (error instanceof ApiError) {
+    switch (error.code) {
+      case 'REGISTRATION_IN_PROGRESS':
+        return 'El registro sigue procesándose en el servidor. Espere unos segundos y confirme de nuevo: no se creará un duplicado.'
+      case 'IDEMPOTENCY_KEY_REUSED':
+        return 'El intento anterior ya quedó registrado con otros datos. Revise «Mis reportes»: si confirma de nuevo se creará un registro nuevo.'
+      case 'TIMEOUT':
+      case 'NETWORK_ERROR':
+        return 'No fue posible confirmar el resultado por un problema de conexión. Confirme de nuevo: si el registro ya se guardó, el sistema lo reconocerá y no lo duplicará.'
+      default:
+        if (error.status === 429) {
+          return 'Demasiados intentos en poco tiempo. Espere un minuto antes de confirmar de nuevo.'
+        }
+        return error.message
+    }
+  }
+
+  return getErrorMessage(error)
 }

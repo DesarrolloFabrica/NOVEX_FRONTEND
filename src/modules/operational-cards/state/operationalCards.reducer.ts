@@ -130,6 +130,8 @@ export type OperationalCardsAction =
     }
   // ---- Borradores ----
   | { type: 'SET_REPORT_DRAFT'; key: string; draft: Partial<ReportDraft> }
+  /** Borradores guardados del usuario actual (al cambiar de sesión). */
+  | { type: 'HYDRATE_REPORT_DRAFTS'; drafts: Record<string, ReportDraft> }
   | { type: 'SET_LEARNING_DRAFT'; problemId: string; learning: string }
   // ---- Escrituras ----
   | { type: 'SUBMIT_REPORT'; targetKey: string }
@@ -906,6 +908,10 @@ export function operationalCardsReducer(
         },
       }
     }
+
+    case 'HYDRATE_REPORT_DRAFTS':
+      // Sustituye, no mezcla: los borradores de otra sesión no se arrastran.
+      return { ...state, reportDrafts: action.drafts }
 
     case 'SET_LEARNING_DRAFT':
       return {

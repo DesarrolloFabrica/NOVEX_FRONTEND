@@ -57,7 +57,8 @@ export function useOperationalShellModel(
   const canViewHistory = hasPermission(user, 'SITUATIONS_VIEW')
   const assignedCoordinationId = user?.coordinationId?.trim() || null
 
-  const controller = useOperationalOverview()
+  // El borrador y la clave de idempotencia del reporte se guardan por usuario.
+  const controller = useOperationalOverview({ persistenceScope: user?.id ?? null })
   const { level0, overview, selectedCoordinationCode, hoveredCoordinationCode } =
     controller
 

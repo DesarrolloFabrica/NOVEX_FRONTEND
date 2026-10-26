@@ -77,16 +77,29 @@ export interface CreateSituationWithAnalysisResponse {
   situation: SituationResponse
   /** Nulo mientras el análisis en el registro esté desactivado en backend. */
   analysis: ExecuteAIAnalysisResponse | null
+  /** true cuando el servidor reconoció la clave y devolvió un registro ya completado. */
+  replayed: boolean
 }
+
+/**
+ * Tope del alta. Sin análisis IA en el registro la respuesta es rápida, pero se
+ * conserva el margen de main (menor que el tope de Cloud Run, 300 s) para cubrir
+ * arranques en frío. Si vence, el reintento reutiliza la misma clave y el
+ * servidor no duplica el registro.
+ */
+const REGISTRATION_TIMEOUT_MS = 120_000
 
 export async function createSituationWithAnalysis(
   payload: CreateSituationPayload,
+  idempotencyKey: string,
 ): Promise<CreateSituationWithAnalysisResponse> {
   return apiRequest<CreateSituationWithAnalysisResponse>(
     '/situations/register-with-analysis',
     {
       method: 'POST',
+      headers: { 'Idempotency-Key': idempotencyKey },
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(REGISTRATION_TIMEOUT_MS),
     },
   )
 }
