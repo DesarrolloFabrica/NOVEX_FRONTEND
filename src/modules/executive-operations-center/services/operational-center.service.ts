@@ -158,9 +158,10 @@ async function enrichSituation(
       coordinationId: source.coordinationId ?? 'analyst-registry',
       coordinationCode: situationOwnerCode(source),
       coordinationName: situationOwnerLabel(source),
-      categoryId: source.categoryId,
-      categoryCode: source.categoryCode,
-      categoryName: source.categoryName,
+      // Reportes INTER sin categoría: etiqueta solo de presentación, no se guarda.
+      categoryId: source.categoryId ?? 'uncategorized',
+      categoryCode: source.categoryCode ?? '',
+      categoryName: source.categoryName ?? 'Sin categoría',
       status: source.status,
       severity: source.severity,
       occurredAt: source.occurredAt,

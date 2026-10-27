@@ -1,7 +1,6 @@
 import { memo, useMemo, type CSSProperties } from 'react'
 import type { ImpactIncident } from '@/modules/impact-network/types/impact-network.types'
 import { ProblemCategoryGlyph } from '@/modules/impact-network/components/executive/ProblemCategoryGlyph'
-import { INCIDENT_CATEGORY_ICON_LABEL } from '@/modules/situations/data/incident-category-visual'
 import { buildSituationLayouts } from '@/modules/impact-network/components/coordination-situation-layout'
 import {
   EVENT_STATUS_LABEL,
@@ -94,9 +93,8 @@ function CoordinationSituationNodesView({
         const riskLabel = RISK_LEVEL_LABEL[risk]
         const statusLabel = EVENT_STATUS_LABEL[incident.status]
         const categoryIcon = incident.categoryIcon ?? 'other'
-        const categoryLabel =
-          incident.categoryName?.trim() ||
-          INCIDENT_CATEGORY_ICON_LABEL[categoryIcon]
+        // Sin interpretación IA no hay categoría real: no se muestra la de «otro».
+        const categoryLabel = incident.categoryName?.trim() || 'Sin categoría'
 
         return (
           <button

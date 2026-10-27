@@ -12,7 +12,11 @@ import type { IncidentCategoryIcon } from '@/modules/situations/data/incident-ca
 
 export type OperationalStatus = 'normal' | 'attention' | 'high' | 'critical'
 
-export type ProblemCategoryId = IncidentCategoryIcon
+/**
+ * `uncategorized`: solo para presentación. Un reporte INTER no tiene categoría en
+ * BD; nunca se envía al backend ni se guarda como categoría real.
+ */
+export type ProblemCategoryId = IncidentCategoryIcon | 'uncategorized'
 
 export interface OperationalOverviewMetrics {
   coordinations: number

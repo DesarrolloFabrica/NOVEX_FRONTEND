@@ -34,8 +34,14 @@ const SEVERITY_STATUS: Readonly<
   CRITICAL: 'critical',
 }
 
-const CATEGORY_LABEL = INCIDENT_CATEGORY_ICON_LABEL
-const CATEGORY_DESCRIPTION = INCIDENT_CATEGORY_ICON_DESCRIPTION
+const CATEGORY_LABEL: Readonly<Record<ProblemCategoryId, string>> = {
+  ...INCIDENT_CATEGORY_ICON_LABEL,
+  uncategorized: 'Sin categoría',
+}
+const CATEGORY_DESCRIPTION: Readonly<Record<ProblemCategoryId, string>> = {
+  ...INCIDENT_CATEGORY_ICON_DESCRIPTION,
+  uncategorized: 'Reporte entre coordinaciones (INTER) registrado sin categoría.',
+}
 
 export const EXECUTIVE_STATUS_ORDER: readonly OperationalStatus[] = [
   'critical',
@@ -276,11 +282,14 @@ export function buildExecutiveOverviewModel(
 
     const operationalStatus = resolveSituationOperationalStatus(situation)
     if (!operationalStatus) continue
-    const categoryId = resolveProblemCategoryId(
-      situation.categoryCode,
-      situation.categoryName,
-      situation.categoryIcon,
-    )
+    // Sin categoría (INTER de la release): no se deduce ninguna categoría ficticia.
+    const categoryId: ProblemCategoryId = situation.categoryId
+      ? resolveProblemCategoryId(
+          situation.categoryCode ?? '',
+          situation.categoryName ?? '',
+          situation.categoryIcon,
+        )
+      : 'uncategorized'
     const relatedCoordinationIds = resolveRelatedCoordinationIds(
       situation,
       availableIds,

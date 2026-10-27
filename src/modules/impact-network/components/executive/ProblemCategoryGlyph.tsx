@@ -5,7 +5,8 @@ export function ProblemCategoryGlyph({
   categoryId,
   size = 14,
 }: {
-  categoryId: IncidentCategoryIcon
+  /** `uncategorized` usa la rama genérica (reportes INTER sin categoría). */
+  categoryId: IncidentCategoryIcon | 'uncategorized'
   size?: number
 }) {
   const common = {
