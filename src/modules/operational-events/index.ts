@@ -28,7 +28,6 @@ export {
   OperationalEventsContext,
 } from '@/modules/operational-events/context/OperationalEventsContext'
 export { useOperationalEvents } from '@/modules/operational-events/hooks/useOperationalEvents'
-export { OperationalEventWizard } from '@/modules/operational-events/components/OperationalEventWizard'
 export { OperationalEventsCenter } from '@/modules/operational-events/components/OperationalEventsCenter'
 export { OperationalIntelligenceDashboard } from '@/modules/operational-events/components/OperationalIntelligenceDashboard'
 

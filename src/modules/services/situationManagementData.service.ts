@@ -2,7 +2,7 @@ import { fetchAnalysisHistory, tryFetchSituationAnalysis } from '@/modules/api/a
 import { fetchSituationEvidences } from '@/modules/api/evidences.api'
 import { fetchSituationAffectedCoordinations, fetchSituationImpact } from '@/modules/api/impact.api'
 import { fetchSituationRecommendations } from '@/modules/api/recommendations.api'
-import { fetchSituation, fetchSituations, updateSituation } from '@/modules/api/situations.api'
+import { fetchSituation, fetchSituations, resolveSituation, updateSituation } from '@/modules/api/situations.api'
 import { fetchSituationTimeline } from '@/modules/api/timeline.api'
 import type {
   SituationDossier,
@@ -15,6 +15,7 @@ import {
   situationOwnerLabel,
 } from '@/modules/situations/utils/situationOwner'
 import type { UpdateSituationStatusInput } from '@/modules/monitoring/utils/situation-lifecycle'
+import { assertResolutionLearning } from '@/modules/situations/data/assertResolutionLearning'
 
 function mapSituationToListItem(situation: SituationResponse): SituationListItem {
   return {
@@ -134,9 +135,21 @@ export async function updateSituationStatus(
   situationId: string,
   input: UpdateSituationStatusInput,
 ): Promise<SituationResponse> {
+  if (input.status === 'CLOSED') {
+    throw new Error(
+      'El cierre se registra con POST /situations/:id/resolution e incluye el aprendizaje.',
+    )
+  }
   return updateSituation(situationId, {
     status: input.status,
     statusComment: input.statusComment,
     evidenceIds: input.evidenceIds,
   })
+}
+
+export async function resolveSituationWithLearning(
+  situationId: string,
+  learning: string,
+): Promise<SituationResponse> {
+  return resolveSituation(situationId, assertResolutionLearning(learning))
 }

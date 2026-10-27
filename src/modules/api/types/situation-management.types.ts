@@ -28,7 +28,8 @@ export interface SituationListItem {
   title: string
   coordinationName: string
   coordinationCode: string
-  categoryName: string
+  /** `null` en un reporte entre coordinaciones, que no lleva categoría. */
+  categoryName: string | null
   severity: SituationResponse['severity']
   status: SituationResponse['status']
   createdAt: string

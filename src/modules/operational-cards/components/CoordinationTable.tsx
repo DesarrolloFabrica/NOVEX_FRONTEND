@@ -1,0 +1,256 @@
+import type { CSSProperties } from 'react'
+import { CoordinationDeckFan } from '@/modules/operational-cards/components/CoordinationDeckFan'
+import { CoordinationDeckStack } from '@/modules/operational-cards/components/CoordinationDeckStack'
+import {
+  resolveTableYield,
+  type TableLayout,
+} from '@/modules/operational-cards/data/tableLayout'
+import type { ProductTableNode } from '@/modules/operational-cards/data/productHierarchy'
+import type { OperationalCompositionMode } from '@/modules/operational-cards/data/compositionMode'
+import { resolveDeckOrigin } from '@/modules/operational-cards/data/deckOrigin'
+
+/**
+ * Mesa operacional: los nueve nodos de producto, en un solo arco.
+ *
+ * Cada nodo es un mazo (`CoordinationDeckStack`), tenga o no subordinaciones:
+ * uno plano es sencillamente un mazo de cero hijas. Las subordinaciones NO
+ * aparecen como nodos principales; solo existen asomando dentro de su padre.
+ *
+ * Este componente NO calcula geometría: solo traduce el layout a variables CSS.
+ * Toda la posición viene de `buildTableLayout`, y el único transform de
+ * posición del nodo es el de `.operational-table__slot`. El mazo y la carta
+ * aplican los suyos en nodos interiores, así que las capas no compiten.
+ *
+ * El orden del DOM es el orden de PRODUCTO aunque la geometría sea curva: el
+ * tabulador recorre los nueve nodos como los enumera el organigrama.
+ *
+ * MODO SELECCIONADO. La mesa no se desmonta ni se sustituye por otra escena:
+ * es la MISMA mesa con un nodo bajo observación. La carta seleccionada no viaja
+ * a ninguna parte —se queda en su slot y se transforma ahí— y las otras ocho
+ * siguen dibujadas, reconocibles y clickeables, solo que atenuadas. Cambiar de
+ * coordinación es por tanto un clic directo sobre la vecina, sin volver al
+ * estado global por el camino.
+ */
+
+export interface CoordinationTableProps {
+  layout: TableLayout
+  /** Nodos de producto, indexados por el `code` de su fila técnica. */
+  nodesByCode: Readonly<Record<string, ProductTableNode>>
+  /**
+   * Composición vigente, ya resuelta por la experiencia.
+   *
+   * La mesa NO la vuelve a deducir. Podría —tiene `nodesByCode` y
+   * `selectedCode` delante—, y ahí está justamente el riesgo: dos capas
+   * resolviendo el mismo modo por su cuenta acaban discrepando en cuanto una de
+   * las dos reciba un caso nuevo. Se resuelve una vez, arriba, y baja como
+   * dato.
+   *
+   * Hoy es puramente SEMÁNTICA: ninguna de las tres composiciones cambia
+   * todavía la geometría de la mesa. Lo que aporta es que el DOM diga qué está
+   * compuesto, de modo que las fases de layout tengan de dónde colgarse y las
+   * pruebas puedan vigilarlo sin leer píxeles.
+   */
+  compositionMode: OperationalCompositionMode
+  /**
+   * Code del nodo principal cuyo mazo está abierto, o `null`.
+   *
+   * Llega resuelto desde arriba y NO se deduce aquí, por la misma razón que el
+   * modo: con una hija observada el origen del mazo sigue siendo el padre, y
+   * eso solo lo sabe quien consultó la jerarquía.
+   */
+  deckParentCode?: string | null
+  /**
+   * Coordinación bajo el puntero o el foco. Solo se usa para que la mesa CEDA
+   * cuando la señalada tiene subordinaciones: la apertura de la subbaraja en sí
+   * la resuelve el CSS, sin estado.
+   */
+  hoveredCode?: string | null
+  /**
+   * Coordinación bajo observación, o `null` en estado global.
+   *
+   * Cambia la PRESENTACIÓN de la mesa, nunca su geometría: ni el orden, ni la
+   * x, ni la rotación, ni el reparto de slots dependen de quién esté
+   * seleccionado. La memoria espacial es regla congelada, y una selección es
+   * exactamente el momento en que más se necesita.
+   */
+  selectedCode?: string | null
+  onSelect: (code: string) => void
+  onHoverChange: (code: string | null) => void
+}
+
+export function CoordinationTable({
+  layout,
+  nodesByCode,
+  compositionMode,
+  deckParentCode,
+  hoveredCode,
+  selectedCode,
+  onSelect,
+  onHoverChange,
+}: CoordinationTableProps) {
+  const selectedMode = Boolean(selectedCode)
+  const deckMode = compositionMode === 'DECK_SELECTED'
+
+  /*
+   * Geometría del mazo origen. Se resuelve una vez por render y solo cuando hay
+   * mazo: en los demás modos la mesa no la necesita para nada.
+   */
+  const deckOrigin = deckMode
+    ? resolveDeckOrigin({ stageHeight: layout.stageHeight })
+    : null
+
+  /*
+   * El ORIGEN es el padre del mazo, no lo observado. Con una hija seleccionada
+   * la carta que sigue haciendo de mazo es la suya, no la hija.
+   */
+  const deckNode = deckParentCode ? nodesByCode[deckParentCode] : null
+  const isDeckOrigin = (code: string) => code === deckParentCode
+
+  /*
+   * La mesa solo cede ante un mazo que se abre. Señalar una coordinación plana
+   * —B2B, Saber Pro, Servicio— no mueve nada: no hay nada que necesite sitio.
+   *
+   * Y con una coordinación seleccionada no cede NUNCA. Con LEVEL 1 abierto, el
+   * hueco sobre la mesa lo ocupa la lectura de la coordinación observada; una
+   * subbaraja subiendo a ese mismo hueco compite con ella y, además, empujaría
+   * hacia abajo la carta seleccionada, que es justo la que debe quedarse
+   * quieta. El mazo sigue viéndose cerrado —§7: la noción de mazo se mantiene—,
+   * solo que no se despliega. Se reactiva al volver al estado global.
+   */
+  const openIndex =
+    !selectedMode &&
+    hoveredCode &&
+    (nodesByCode[hoveredCode]?.children.length ?? 0) > 0
+      ? layout.slots.findIndex((slot) => slot.coordination.code === hoveredCode)
+      : -1
+
+  return (
+    <div
+      className="operational-table"
+      data-testid="coordination-table"
+      data-count={layout.slots.length}
+      data-overlap={layout.overlap}
+      /*
+       * DOS ATRIBUTOS, DOS LECTURAS, y conviene no fundirlos todavía.
+       *
+       * `data-mode` es binario y lo consume la hoja de estilos: es la
+       * condición de la que dependen las reglas que abren la subbaraja solo
+       * fuera de la selección. `data-composition-mode` es la lectura de
+       * producto de tres valores, y hoy no la consume ningún estilo.
+       *
+       * Fundirlos ahora obligaría a reescribir esas reglas de apertura en la
+       * misma fase que introduce la semántica, y cualquier error ahí se vería
+       * como un cambio visual. Se unificarán cuando el layout de cada modo
+       * exista de verdad y la geometría deje de ser común.
+       */
+      data-mode={selectedMode ? 'selected' : 'resting'}
+      data-composition-mode={compositionMode}
+      data-selected={selectedCode ?? ''}
+      style={
+        {
+          '--table-stage-h': layout.stageHeight,
+          '--table-stage-w': layout.stageWidth,
+        } as CSSProperties
+      }
+    >
+      {layout.slots.map((slot, index) => {
+        const node = nodesByCode[slot.coordination.code]
+        if (!node) return null
+
+        // Cesión contextual: solo eje Y, y solo mientras dura el hover. Ni la
+        // x, ni la rotación, ni el orden se tocan nunca.
+        const yieldPx =
+          openIndex >= 0 && index !== openIndex
+            ? resolveTableYield(Math.abs(index - openIndex))
+            : 0
+
+        /*
+         * PAPEL EN EL MAZO. Con un mazo escogido, la mesa deja de tener nueve
+         * nodos equivalentes: uno es el origen del mazo y los otros ocho se
+         * retiran. En los demás modos no hay papeles y el atributo no existe.
+         */
+        const deckRole =
+          deckMode && isDeckOrigin(slot.coordination.code)
+            ? 'origin'
+            : deckMode
+              ? 'retired'
+              : undefined
+
+        /*
+         * El padre cambia de SITIO, no de autoridad: recibe otra geometría por
+         * las mismas variables que usa el arco. Así el modo mazo no añade una
+         * segunda capa que empuje la carta desde fuera.
+         */
+        const geometry =
+          deckRole === 'origin' && deckOrigin
+            ? { x: deckOrigin.x, y: deckOrigin.y, rotation: deckOrigin.rotation }
+            : { x: slot.x, y: slot.y, rotation: slot.rotation }
+
+        return (
+          <div
+            key={slot.coordination.code}
+            className="operational-table__slot"
+            data-testid="coordination-table-slot"
+            data-arc={slot.arc}
+            data-arc-index={slot.indexInArc}
+            data-deck-role={deckRole}
+            /*
+             * Las ocho retiradas salen del alcance del teclado y del árbol de
+             * accesibilidad en el mismo instante en que dejan de estar en
+             * escena. Se quedan montadas —volver a la mesa las devuelve sin
+             * reconstruirlas— pero una carta que no se ve no puede seguir
+             * siendo una parada del tabulador ni anunciarse a un lector.
+             */
+            inert={deckRole === 'retired' ? true : undefined}
+            // La presentación del slot: quién está bajo observación y quién
+            // acompaña atenuado. Ninguno de los dos toca la geometría.
+            data-state={
+              !selectedMode
+                ? 'resting'
+                : slot.coordination.code === selectedCode
+                  ? 'selected'
+                  : 'dimmed'
+            }
+            // El z va como variable, no como `zIndex` en línea: un estilo en
+            // línea gana siempre a la hoja, y la regla que eleva la carta
+            // enfocada no podría sobrescribirlo sin recurrir a `!important`.
+            style={
+              {
+                '--x': geometry.x,
+                '--y': geometry.y,
+                '--rot': geometry.rotation,
+                '--z': slot.zIndex,
+                '--yield': yieldPx,
+              } as CSSProperties
+            }
+            data-yield={yieldPx}
+          >
+            <CoordinationDeckStack
+              coordination={node.coordination}
+              label={node.label}
+              artCode={node.artCode}
+              subordinations={node.children}
+              selected={slot.coordination.code === selectedCode}
+              onSelect={onSelect}
+              onHoverChange={onHoverChange}
+            />
+          </div>
+        )
+      })}
+
+      {/* La MANO. Solo existe con un mazo abierto, y sus cartas son controles
+          reales: no son los cantos decorativos de la mesa global. */}
+      {deckMode && deckNode && (
+        <CoordinationDeckFan
+          subordinations={deckNode.children}
+          stageHeight={layout.stageHeight}
+          selectedCode={selectedCode}
+          childObserved={Boolean(
+            selectedCode && selectedCode !== deckParentCode,
+          )}
+          onSelect={onSelect}
+        />
+      )}
+    </div>
+  )
+}

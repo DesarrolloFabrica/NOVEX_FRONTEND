@@ -77,6 +77,12 @@ export function buildImpactE2ESituations(count: number) {
 }
 
 export async function installImpactNetworkApiMocks(page: Page): Promise<void> {
+  // Corta las fuentes externas: `index.html` enlaza Google Fonts y en este
+  // entorno sin salida a internet esa petición se queda colgada, así que el
+  // evento `load` de `page.goto` no se dispara y el test muere por timeout.
+  // Solo estabiliza el entorno: no toca aserciones ni selectores.
+  await page.route(/fonts\.(googleapis|gstatic)\.com/, (route) => route.abort())
+
   await page.route('**/api/v1/**', async (route) => {
     const url = new URL(route.request().url())
     const path = url.pathname

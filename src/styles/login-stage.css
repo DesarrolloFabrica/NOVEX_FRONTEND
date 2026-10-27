@@ -1,0 +1,1048 @@
+/* Acceso Novex — escena teatral (Fase 1A: fondo escénico).
+ * Hoja aislada: todo cuelga de .novex-login-stage para no heredar las reglas
+ * .novex-login* de login.css, index.css y novex-os.css.
+ *
+ * Capas (z-index dentro del stacking context de .novex-login-stage):
+ *   0  __background   imagen del escenario (con sus cortinas pintadas)
+ *   1  __overlay      viñeta + degradados de legibilidad
+ *   2  __content      branding, personaje y panel
+ *
+ * Las cortinas delanteras (.novex-login-curtains) NO viven aquí: las monta
+ * RootLayout (PostLoginCurtainTransition) para sobrevivir al cambio de ruta, y
+ * se apilan por encima de toda la app con --curtain-layer.
+ */
+
+.novex-login-stage {
+  --stage-ink: #f4ead8;
+  --stage-ink-muted: rgb(232 214 186 / 0.72);
+  --stage-gold: #e2b866;
+  --stage-gold-soft: rgb(226 184 102 / 0.32);
+  --stage-night: #0b070c;
+  --stage-display-font: 'Abril Fatface', Georgia, 'Times New Roman', serif;
+  --stage-body-font: 'IBM Plex Sans', Inter, 'Segoe UI', sans-serif;
+  /* Composición vertical: márgenes de la escena y separaciones entre zonas.
+     El aro se ancla abajo (cerca del panel); el aire sobrante va hacia el branding. */
+  --stage-pad-top: clamp(1rem, 3vh, 2.5rem);
+  --stage-pad-bottom: clamp(0.75rem, 2.4vh, 2rem);
+  --stage-gap-brand-character: clamp(0.5rem, 1.6vh, 1.25rem);
+  --stage-gap-character-panel: clamp(0.375rem, 1.1vh, 0.75rem);
+  /* Zona central: alto mínimo del aro y diámetro máximo. */
+  --stage-character-size: clamp(8rem, 24vh, 14rem);
+  --stage-marquee-max: 26rem;
+  /* Caja del personaje respecto al diámetro del aro. */
+  --stage-character-width-ratio: 0.84;
+  --stage-character-height-ratio: 0.9;
+
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  width: 100%;
+  overflow-x: hidden;
+  color: var(--stage-ink);
+  font-family: var(--stage-body-font);
+  background: var(--stage-night);
+}
+
+.novex-login-stage *,
+.novex-login-stage *::before,
+.novex-login-stage *::after {
+  box-sizing: border-box;
+}
+
+/* ------------------------------------------------------------------ fondo */
+
+.novex-login-stage__background,
+.novex-login-stage__overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.novex-login-stage__background {
+  z-index: 0;
+  background: url('/assets/login/login-stage-background.png') center 42% / cover no-repeat;
+  animation: novex-login-stage-lights 1.6s ease-out both;
+}
+
+/* El centro (foco y emblema) conserva protagonismo; los bordes se apagan. */
+.novex-login-stage__overlay {
+  z-index: 1;
+  background:
+    radial-gradient(ellipse 58% 62% at 50% 46%, transparent 0 46%, rgb(8 4 8 / 0.42) 78%, rgb(6 3 6 / 0.78) 100%),
+    linear-gradient(180deg, rgb(8 4 8 / 0.62) 0%, transparent 22%, transparent 58%, rgb(10 5 6 / 0.7) 100%);
+}
+
+/* Calidez extra bajo el foco para "anclar" el personaje en el escenario. */
+.novex-login-stage__overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 34% 22% at 50% 72%, rgb(255 186 96 / 0.14), transparent 70%);
+  mix-blend-mode: screen;
+}
+
+/* -------------------------------------------------------- cortinas frontales */
+
+/* Primer plano: por delante de todo el contenido.
+ * Cada cortina mide el alto del viewport y su ancho sale de la proporción del
+ * asset, así no se deforma ni deja hueco contra el borde.
+ *
+ * Encuadre abierto: la parte más ancha de cada tela (arriba) nunca entra más de
+ * --curtain-reach en pantalla; el sobrante se esconde tras el borde con un
+ * margen negativo (estático). El movimiento usa SOLO `transform`.
+ *
+ * Cierre: cada lado lleva un telón liso (`__drape`) que entra desde fuera y
+ * cubre su mitad + --curtain-overlap; la cortina con borla se desplaza hasta que
+ * su vuelo superior llega al centro. Los assets caen en diagonal y cerca del
+ * suelo solo cubren el 9–14 % de su ancho: sin el telón quedaría un triángulo
+ * abierto abajo. Los desplazamientos salen del tamaño real de cada asset, no
+ * del ancho visible, por eso móvil cierra igual que desktop.
+ */
+.novex-login-curtains {
+  --curtain-height: 100dvh;
+  --curtain-reach: 26vw;
+  /* Proporción de cada asset y fracción de su ancho que ocupa la tela arriba. */
+  --curtain-left-aspect: calc(1086 / 1448);
+  --curtain-right-aspect: calc(1024 / 1536);
+  --curtain-left-top-reach: 0.578;
+  --curtain-right-top-reach: 0.711;
+  /* Cada mitad invade el otro lado este tanto: margen para redondeos y DPR. */
+  --curtain-overlap: max(2vw, 1rem);
+  /* Movimiento: arranque pesado (inercia de la tela) y llegada suave, sin rebote. */
+  --curtain-close-ms: 800ms;
+  --curtain-open-ms: 700ms;
+  --curtain-close-ease: cubic-bezier(0.68, 0, 0.24, 1);
+  --curtain-open-ease: cubic-bezier(0.5, 0, 0.2, 1);
+  /* Sin desfase: medido a 1440 px, 40 ms dejaban la derecha ~120 px por detrás en
+     el tramo rápido de la curva y se leía como una cortina retrasada. */
+  --curtain-stagger-ms: 0ms;
+  /* Terciopelo del telón, muestreado del propio asset. */
+  /* Pliegue que funde el borde recto del asset con el telón (solo al cerrar). */
+  --curtain-seam: clamp(2.5rem, 5vw, 5rem);
+  --curtain-velvet-base: #56070f;
+  /* Pliegues en tres escalas de periodos no múltiplos: no se aprecia repetición. */
+  --curtain-fold-a: clamp(3.4rem, 5.3vw, 6.4rem);
+  --curtain-fold-b: clamp(2.1rem, 3.1vw, 3.9rem);
+  --curtain-fold-c: clamp(6.6rem, 11.7vw, 14rem);
+
+  /* Mismo hueco que ocupaba el splash post-login: sobre modales (1000), bajo el
+     recorrido de onboarding (5000+), que solo arranca al terminar la transición. */
+  --curtain-layer: 1200;
+
+  position: fixed;
+  inset: 0;
+  z-index: var(--curtain-layer);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Durante la transición, o cerradas, tapan también la interacción. */
+.novex-login-curtains[data-state='closed'],
+.novex-login-curtains[data-blocking='true'] {
+  pointer-events: auto;
+}
+
+/* ---- piezas móviles: duración y curva según el estado de destino ---- */
+
+.novex-login-curtains__drape,
+.novex-login-curtains__side {
+  transition: transform var(--curtain-open-ms) var(--curtain-open-ease);
+  will-change: transform;
+}
+
+.novex-login-curtains[data-state='closed'] :is(.novex-login-curtains__drape, .novex-login-curtains__side) {
+  transition-duration: var(--curtain-close-ms);
+  transition-timing-function: var(--curtain-close-ease);
+}
+
+.novex-login-curtains :is(.novex-login-curtains__drape--right, .novex-login-curtains__side--right) {
+  transition-delay: var(--curtain-stagger-ms);
+}
+
+/* ---- telón ---- */
+
+/* Terciopelo de relleno: debe pasar desapercibido detrás de los assets.
+ * Capas (de arriba abajo): penumbra de cabeza y pie, brillo irregular del pelo,
+ * tres escalas de pliegue con bordes suaves (sin cortes de color) y la base. */
+.novex-login-curtains__drape {
+  position: absolute;
+  top: 0;
+  width: calc(50vw + var(--curtain-overlap));
+  height: var(--curtain-height);
+  background:
+    /* luz: cabeza y pie en penumbra, como bajo la bambalina */
+    linear-gradient(
+      180deg,
+      rgb(8 0 2 / 0.55) 0%,
+      rgb(8 0 2 / 0.16) 13%,
+      transparent 30%,
+      transparent 68%,
+      rgb(8 0 2 / 0.3) 90%,
+      rgb(8 0 2 / 0.5) 100%
+    ),
+    /* brillo irregular del terciopelo: manchas muy tenues, sin patrón */
+    radial-gradient(ellipse 22% 60% at 18% 38%, rgb(133 25 30 / 0.16), transparent 70%),
+    radial-gradient(ellipse 16% 70% at 63% 46%, rgb(106 10 21 / 0.18), transparent 72%),
+    radial-gradient(ellipse 28% 55% at 88% 30%, rgb(133 25 30 / 0.1), transparent 70%),
+    /* pliegue ancho: valles profundos */
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      rgb(10 0 3 / 0.24) calc(var(--curtain-fold-c) * 0.55),
+      transparent var(--curtain-fold-c)
+    ),
+    /* pliegue medio: cresta en rojo profundo */
+    repeating-linear-gradient(
+      90deg,
+      rgb(10 0 3 / 0.28) 0,
+      rgb(106 10 21 / 0.36) calc(var(--curtain-fold-a) * 0.42),
+      rgb(44 2 8 / 0.12) calc(var(--curtain-fold-a) * 0.7),
+      rgb(10 0 3 / 0.28) var(--curtain-fold-a)
+    ),
+    /* pliegue fino: rompe la regularidad del medio */
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      rgb(133 25 30 / 0.1) calc(var(--curtain-fold-b) * 0.5),
+      transparent var(--curtain-fold-b)
+    ),
+    var(--curtain-velvet-base);
+  /* sombra interior: el telón no es una superficie plana */
+  box-shadow: inset 0 0 3rem rgb(8 0 2 / 0.45);
+  filter: brightness(0.86);
+}
+
+.novex-login-curtains__drape--left {
+  left: 0;
+  transform: translateX(calc(-100% - 2rem));
+}
+
+/* Junta central: la derecha monta sobre la izquierda. Su canto se curva hacia
+   dentro (pliegue de borde) y proyecta una sombra larga y tenue; queda un punto
+   más cerca de la luz. Sin línea dura ni brillo en el canto. */
+.novex-login-curtains__drape--right {
+  right: 0;
+  transform: translateX(calc(100% + 2rem));
+  box-shadow:
+    inset 0 0 3rem rgb(8 0 2 / 0.45),
+    -0.6rem 0 1.6rem rgb(8 0 2 / 0.34);
+  filter: brightness(0.9);
+}
+
+.novex-login-curtains__drape--right::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: clamp(1.5rem, 2.6vw, 3rem);
+  background: linear-gradient(
+    90deg,
+    rgb(8 0 2 / 0.3) 0%,
+    rgb(106 10 21 / 0.14) 38%,
+    transparent 100%
+  );
+}
+
+.novex-login-curtains[data-state='closed'] .novex-login-curtains__drape {
+  transform: translateX(0);
+}
+
+/* ---- cortinas con borla ---- */
+
+.novex-login-curtains__side {
+  --curtain-width: calc(var(--curtain-height) * var(--curtain-aspect));
+  --curtain-offset: min(0px, var(--curtain-reach) - var(--curtain-width) * var(--curtain-top-reach));
+  /* Recorrido de cierre: hasta que el vuelo superior de la tela cruza el centro. */
+  --curtain-travel: calc(
+    50vw + var(--curtain-overlap) - var(--curtain-offset) - var(--curtain-width) * var(--curtain-top-reach)
+  );
+
+  position: absolute;
+  top: 0;
+  width: var(--curtain-width);
+  height: var(--curtain-height);
+  /* Más cerca del espectador: fuera del foco, con sombra hacia el escenario. */
+  filter: brightness(0.86) drop-shadow(0 0 1.5rem rgb(0 0 0 / 0.6));
+}
+
+.novex-login-curtains__art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  user-select: none;
+}
+
+/* Pliegue sobre el borde exterior del asset: invisible abierto, aparece al cerrar. */
+.novex-login-curtains__side::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--curtain-seam);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(20 1 5 / 0.82) 45%,
+    rgb(20 1 5 / 0.82) 55%,
+    transparent
+  );
+  opacity: 0;
+  transition: opacity var(--curtain-open-ms) var(--curtain-open-ease);
+}
+
+.novex-login-curtains__side--left::after {
+  left: calc(var(--curtain-seam) * -0.5);
+}
+
+.novex-login-curtains__side--right::after {
+  right: calc(var(--curtain-seam) * -0.5);
+}
+
+.novex-login-curtains[data-state='closed'] .novex-login-curtains__side::after {
+  opacity: 1;
+  transition-duration: var(--curtain-close-ms);
+  transition-timing-function: var(--curtain-close-ease);
+}
+
+.novex-login-curtains__side--left {
+  --curtain-aspect: var(--curtain-left-aspect);
+  --curtain-top-reach: var(--curtain-left-top-reach);
+
+  left: 0;
+  margin-left: var(--curtain-offset);
+}
+
+.novex-login-curtains__side--right {
+  --curtain-aspect: var(--curtain-right-aspect);
+  --curtain-top-reach: var(--curtain-right-top-reach);
+
+  right: 0;
+  margin-right: var(--curtain-offset);
+}
+
+.novex-login-curtains[data-state='closed'] .novex-login-curtains__side--left {
+  transform: translateX(var(--curtain-travel));
+}
+
+.novex-login-curtains[data-state='closed'] .novex-login-curtains__side--right {
+  transform: translateX(calc(var(--curtain-travel) * -1));
+}
+
+/* Retiradas: salida en la pantalla destino, del todo fuera de vista (sin marco). */
+.novex-login-curtains[data-state='retracted'] .novex-login-curtains__side--left {
+  transform: translateX(calc(-100% - 2rem));
+}
+
+.novex-login-curtains[data-state='retracted'] .novex-login-curtains__side--right {
+  transform: translateX(calc(100% + 2rem));
+}
+
+/* Reduced motion: el cambio de estado ocurre casi de inmediato. 1 ms (no 0) para
+   que el navegador siga emitiendo transitionend y la secuencia avance. */
+@media (prefers-reduced-motion: reduce) {
+  .novex-login-curtains__drape,
+  .novex-login-curtains__side,
+  .novex-login-curtains__side::after {
+    transition-duration: 1ms !important;
+    transition-delay: 0s !important;
+  }
+}
+
+/* -------------------------------------------------------------- composición */
+
+.novex-login-stage__content {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  justify-items: center;
+  width: min(100%, 72rem);
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: var(--stage-pad-top) 1rem var(--stage-pad-bottom);
+}
+
+/* Zona superior: branding */
+
+.novex-login-stage__brand {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  text-align: center;
+  animation: novex-login-stage-rise 900ms 200ms ease-out both;
+}
+
+.novex-login-stage__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  color: var(--stage-gold);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.novex-login-stage__eyebrow > span {
+  width: 1.75rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--stage-gold));
+}
+
+.novex-login-stage__eyebrow > span:last-child {
+  background: linear-gradient(90deg, var(--stage-gold), transparent);
+}
+
+.novex-login-stage__title {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.novex-login-stage__title h1 {
+  margin: 0;
+  color: var(--stage-ink);
+  font-family: var(--stage-display-font);
+  font-size: clamp(2.6rem, 7vw, 4.6rem);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-shadow:
+    0 2px 0 rgb(90 20 28 / 0.9),
+    0 0 28px rgb(255 190 110 / 0.28);
+}
+
+.novex-login-stage__title .novex-beta-mark {
+  margin-top: 0.5rem;
+  border-color: var(--stage-gold-soft);
+  color: var(--stage-gold);
+  font-size: 0.55rem;
+}
+
+.novex-login-stage__tagline {
+  margin: 0;
+  color: var(--stage-ink-muted);
+  font-size: 0.82rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* Zona central: marquesina + personaje.
+ *
+ * El slot es un contenedor de tamaño: el aro toma el diámetro que le deja la
+ * fila (sin empujar el panel) y nunca supera --stage-marquee-max. Todo lo demás
+ * (filete, bombillos, personaje) se deriva de --marquee-size.
+ */
+
+.novex-login-stage__character-slot {
+  position: relative;
+  justify-self: stretch;
+  width: 100%;
+  height: 100%;
+  min-height: calc(
+    var(--stage-character-size) + var(--stage-gap-brand-character) + var(--stage-gap-character-panel)
+  );
+  /* Las separaciones con branding y panel son el padding: cqh mide solo el hueco útil. */
+  padding-block: var(--stage-gap-brand-character) var(--stage-gap-character-panel);
+  container-type: size;
+}
+
+.novex-login-stage__spotlight {
+  /* Diámetro del aro y proporciones derivadas. */
+  --marquee-size: min(100cqh, 100cqw, var(--stage-marquee-max));
+  --marquee-band: calc(var(--marquee-size) * 0.075);
+  --marquee-fillet: calc(var(--marquee-size) * 0.03);
+  --marquee-bulb: calc(var(--marquee-size) * 0.044);
+  /* Radio del carril de bombillos (centro de la banda dorada). */
+  --marquee-track: calc(var(--marquee-size) / 2 - var(--marquee-band) / 2);
+  /* Centro del aro medido desde abajo: el aro se apoya sobre el panel. */
+  --marquee-center-y: calc(var(--marquee-size) / 2);
+
+  position: absolute;
+  inset: var(--stage-gap-brand-character) 0 var(--stage-gap-character-panel);
+  isolation: isolate;
+}
+
+/* ---- aro ---- */
+
+.novex-login-stage__marquee {
+  position: absolute;
+  bottom: calc(var(--marquee-center-y) - var(--marquee-size) / 2);
+  left: 50%;
+  width: var(--marquee-size);
+  height: var(--marquee-size);
+  border-radius: 50%;
+  translate: -50% 0;
+  /* Decorativo: el click debe llegar al personaje, también bajo el arco frontal. */
+  pointer-events: none;
+}
+
+.novex-login-stage__marquee--back {
+  z-index: 1;
+  /* Halo cálido muy contenido, por fuera y por dentro del aro. */
+  box-shadow:
+    0 0 calc(var(--marquee-size) * 0.12) rgb(255 176 92 / 0.16),
+    inset 0 0 calc(var(--marquee-size) * 0.1) rgb(255 176 92 / 0.1);
+}
+
+/* Copia del arco inferior por delante del busto: oculta el corte de la figura. */
+.novex-login-stage__marquee--front {
+  z-index: 3;
+  clip-path: inset(58% -10% -10% -10%);
+}
+
+/* Banda exterior: dorado envejecido, con vetas irregulares. */
+.novex-login-stage__marquee::before,
+.novex-login-stage__marquee::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+}
+
+.novex-login-stage__marquee::before {
+  inset: 0;
+  background:
+    repeating-conic-gradient(rgb(58 30 10 / 0.14) 0 1.5deg, transparent 1.5deg 6deg),
+    conic-gradient(from 25deg, #b48540, #e3bd76, #8d672d, #d6ad62, #a57a34, #e0b970, #9a7031, #b48540);
+  mask: radial-gradient(
+    closest-side,
+    transparent calc(100% - var(--marquee-band)),
+    #000 calc(100% - var(--marquee-band) + 0.5px)
+  );
+}
+
+/* Filete interior vino, con un hilo dorado en el borde de dentro. Interior transparente. */
+.novex-login-stage__marquee::after {
+  inset: var(--marquee-band);
+  background: radial-gradient(
+    closest-side,
+    transparent calc(100% - var(--marquee-fillet)),
+    rgb(226 184 102 / 0.6) calc(100% - var(--marquee-fillet)),
+    rgb(226 184 102 / 0.6) calc(100% - var(--marquee-fillet) + 1px),
+    #4a0f19 calc(100% - var(--marquee-fillet) + 1.5px),
+    #26060d 100%
+  );
+}
+
+/* ---- bombillos ---- */
+
+.novex-login-stage__bulb {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  width: var(--marquee-bulb);
+  height: var(--marquee-bulb);
+  margin: calc(var(--marquee-bulb) / -2) 0 0 calc(var(--marquee-bulb) / -2);
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 34%, #fff4dc 0 12%, #f1d29a 34%, #d69a4e 70%, #85561f 100%);
+  box-shadow:
+    0 0 0 1px rgb(52 26 10 / 0.85),
+    0 0 calc(var(--marquee-bulb) * 0.9) rgb(255 182 96 / 0.34);
+  transform: rotate(calc(360deg / var(--bulb-count) * var(--bulb-index)))
+    translateY(calc(var(--marquee-track) * -1));
+}
+
+/* Envejecimiento: algunos bombillos más tenues o tostados, sin patrón evidente. */
+.novex-login-stage__bulb:nth-child(7n + 3) {
+  filter: brightness(0.76) saturate(0.85);
+}
+
+.novex-login-stage__bulb:nth-child(11n + 5) {
+  filter: brightness(0.9) sepia(0.3);
+}
+
+/* ---- personaje ---- */
+
+.novex-login-stage__character {
+  /* Proporciones del busto respecto al aro. */
+  --character-width: calc(var(--marquee-size) * var(--stage-character-width-ratio));
+  --character-height: calc(var(--marquee-size) * var(--stage-character-height-ratio));
+  /* Distancia del borde inferior de la caja al centro del aro. */
+  --character-center: calc(var(--marquee-track));
+
+  position: absolute;
+  z-index: 2;
+  /* La base del busto queda bajo la banda inferior (tapada por el arco frontal). */
+  bottom: calc(var(--marquee-center-y) - var(--marquee-track));
+  left: 50%;
+  width: var(--character-width);
+  height: var(--character-height);
+  translate: -50% 0;
+  /* Por encima del centro del aro la figura es libre (pluma y cabeza respiran y
+     cruzan el filete); por debajo se recorta al círculo del carril. */
+  mask:
+    radial-gradient(
+        circle var(--marquee-track) at 50% calc(100% - var(--character-center)),
+        #000 99.5%,
+        transparent 100%
+      )
+      no-repeat,
+    linear-gradient(#000, #000) top / 100% calc(100% - var(--character-center)) no-repeat;
+}
+
+.novex-login-stage__character-canvas {
+  width: 100%;
+  height: 100%;
+  /* Separa el primer plano del aro. */
+  filter: drop-shadow(0 calc(var(--marquee-size) * 0.02) calc(var(--marquee-size) * 0.035) rgb(0 0 0 / 0.5));
+}
+
+/* Zona inferior: panel de acceso — ticket crema.
+ *
+ * Mismo material que el ticket del Centro Operacional (papel, desgaste de tinta,
+ * remates), más ligero: filetes finos, sin marca de agua ni adornos, y un talón
+ * perforado sobre el pie. Capas (atrás → delante): papel → filetes → remates →
+ * contenido. Los tokens --login-ticket-* son propios del login.
+ */
+
+.novex-login-stage__panel {
+  /* Material */
+  --login-ticket-paper: url('/assets/tickets/common/ticket-paper-cream.png');
+  --login-ticket-ink-wear: url('/assets/tickets/fabrica/ticket-ink-wear.svg');
+  --login-ticket-cream: #dbc69d;
+  --login-ticket-field: #f8f0de;
+  /* Tinta */
+  --login-ticket-ink: #2a2118;
+  --login-ticket-ink-soft: #5c4a38;
+  --login-ticket-placeholder: #77634d;
+  --login-ticket-ochre: #a8782f;
+  --login-ticket-ochre-deep: #6e4c1e;
+  --login-ticket-line: rgb(110 76 30 / 0.34);
+  --login-ticket-wine: #7d2b23;
+  --login-ticket-wine-deep: #5f1f19;
+  --login-ticket-wine-edge: #4a1712;
+  --login-ticket-on-wine: #f6ecd6;
+  --login-ticket-disabled: #dccdae;
+  --login-ticket-on-disabled: #7d6b52;
+  --login-ticket-error: #7b1f18;
+  --login-ticket-serif: Georgia, 'Times New Roman', Times, serif;
+  /* Geometría */
+  --login-ticket-radius: 0.75rem;
+  --login-ticket-field-radius: 0.5rem;
+  --login-ticket-band-inset: 5px;
+  --login-ticket-band-width: 2px;
+  --login-ticket-fillet-gap: 2px;
+  --login-ticket-corner-inset: 11px;
+  --login-ticket-notch: 7px;
+  --panel-pad-top: 1.5rem;
+  --panel-pad-x: 1.5rem;
+  --panel-pad-bottom: 1.15rem;
+  --panel-footer-gap: 1.1rem;
+  --panel-footer-pad: 0.85rem;
+  --panel-footer-line: 1rem;
+  /* Altura de la perforación medida desde abajo: coincide con el borde del pie. */
+  --login-ticket-stub: calc(var(--panel-pad-bottom) + var(--panel-footer-line) + var(--panel-footer-pad));
+
+  position: relative;
+  isolation: isolate;
+  width: min(100%, 25rem);
+  padding: var(--panel-pad-top) var(--panel-pad-x) var(--panel-pad-bottom);
+  color: var(--login-ticket-ink);
+  /* La sombra sigue la silueta recortada (muescas incluidas). */
+  filter:
+    drop-shadow(0 16px 30px rgb(0 0 0 / 0.5))
+    drop-shadow(0 2px 4px rgb(0 0 0 / 0.32));
+  animation: novex-login-stage-rise 900ms 380ms ease-out both;
+}
+
+.novex-login-stage__panel > :not(.novex-login-ticket) {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- marco del ticket ---- */
+
+.novex-login-ticket {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* Muescas del talón a ambos lados de la perforación. */
+  mask:
+    radial-gradient(
+        circle var(--login-ticket-notch) at 0 calc(100% - var(--login-ticket-stub)),
+        transparent calc(var(--login-ticket-notch) - 0.5px),
+        #000 var(--login-ticket-notch)
+      )
+      left / 51% 100% no-repeat,
+    radial-gradient(
+        circle var(--login-ticket-notch) at 100% calc(100% - var(--login-ticket-stub)),
+        transparent calc(var(--login-ticket-notch) - 0.5px),
+        #000 var(--login-ticket-notch)
+      )
+      right / 51% 100% no-repeat;
+}
+
+/* Papel: base crema, grano real y velo claro en el centro para la lectura. */
+.novex-login-ticket__paper {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--login-ticket-radius);
+  background:
+    radial-gradient(
+      ellipse 80% 72% at 50% 42%,
+      rgb(244 234 212 / 0.5) 0%,
+      rgb(236 220 188 / 0.18) 52%,
+      transparent 80%
+    ),
+    var(--login-ticket-paper) center / cover no-repeat,
+    var(--login-ticket-cream);
+  /* Bordes tostados: el papel se integra con la penumbra del escenario. */
+  box-shadow: inset 0 0 28px rgb(104 70 32 / 0.38);
+}
+
+/* Doble filete: banda ocre oscura + hilo ocre, con pérdida de tinta. */
+.novex-login-ticket__frame {
+  position: absolute;
+  inset: var(--login-ticket-band-inset);
+  border: var(--login-ticket-band-width) solid var(--login-ticket-ochre-deep);
+  border-radius: calc(var(--login-ticket-radius) - var(--login-ticket-band-inset));
+  opacity: 0.85;
+  mask: var(--login-ticket-ink-wear) 0 0 / 100px 100px repeat;
+}
+
+.novex-login-ticket__frame::after {
+  content: '';
+  position: absolute;
+  inset: var(--login-ticket-fillet-gap);
+  border: 1px solid var(--login-ticket-ochre);
+  border-radius: calc(
+    var(--login-ticket-radius) - var(--login-ticket-band-inset) - var(--login-ticket-band-width) -
+      var(--login-ticket-fillet-gap)
+  );
+}
+
+/* Remates: tamaño fijo, anclados por dentro del hilo. */
+.novex-login-ticket__corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: var(--login-ticket-ochre-deep);
+  stroke-linecap: round;
+  opacity: 0.85;
+}
+
+.novex-login-ticket__corner--tl {
+  top: var(--login-ticket-corner-inset);
+  left: var(--login-ticket-corner-inset);
+}
+
+.novex-login-ticket__corner--tr {
+  top: var(--login-ticket-corner-inset);
+  right: var(--login-ticket-corner-inset);
+  scale: -1 1;
+}
+
+.novex-login-ticket__corner--bl {
+  bottom: var(--login-ticket-corner-inset);
+  left: var(--login-ticket-corner-inset);
+  scale: 1 -1;
+}
+
+.novex-login-ticket__corner--br {
+  right: var(--login-ticket-corner-inset);
+  bottom: var(--login-ticket-corner-inset);
+  scale: -1 -1;
+}
+
+/* ---- contenido ---- */
+
+.novex-login-stage__panel-header {
+  text-align: center;
+}
+
+.novex-login-stage__panel-header h2 {
+  margin: 0;
+  color: var(--login-ticket-ink);
+  font-family: var(--login-ticket-serif);
+  font-size: 1.32rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.novex-login-stage__panel-header strong {
+  color: var(--login-ticket-wine);
+  font-weight: 700;
+}
+
+.novex-login-stage__panel-lead {
+  margin: 0.35rem 0 0;
+  color: var(--login-ticket-ink-soft);
+  font-size: 0.86rem;
+}
+
+.novex-login-stage__error {
+  margin: 1rem 0 0;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid rgb(154 58 50 / 0.42);
+  border-radius: var(--login-ticket-field-radius);
+  color: var(--login-ticket-error);
+  font-size: 0.82rem;
+  background: rgb(154 58 50 / 0.09);
+}
+
+.novex-login-stage__auth-stack {
+  display: flex;
+  flex-direction: column;
+  margin-top: 1.1rem;
+}
+
+.novex-login-stage__google {
+  display: flex;
+  width: 100%;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--login-ticket-field-radius);
+}
+
+.novex-login-stage__google[data-loading='true'] {
+  pointer-events: none;
+  opacity: 0.72;
+}
+
+.novex-login-stage__google > div {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center;
+}
+
+.novex-login-stage__google iframe {
+  margin: 0 !important;
+}
+
+.novex-login-stage__separator {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  color: var(--login-ticket-ink-soft);
+  font-size: 0.85rem;
+}
+
+.novex-login-stage__separator > span {
+  flex: 1;
+  height: 1px;
+  background: var(--login-ticket-line);
+}
+
+.novex-login-stage__separator > b {
+  font-family: var(--login-ticket-serif);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.novex-login-stage__email-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.novex-login-stage__field-label {
+  color: var(--login-ticket-ink-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.novex-login-stage__input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.novex-login-stage__input-wrap > svg {
+  position: absolute;
+  left: 0.8rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--login-ticket-ochre-deep);
+  pointer-events: none;
+}
+
+.novex-login-stage__input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0 0.9rem 0 2.5rem;
+  border: 1px solid rgb(138 104 52 / 0.45);
+  border-radius: var(--login-ticket-field-radius);
+  color: var(--login-ticket-ink);
+  background: var(--login-ticket-field);
+  box-shadow: inset 0 1px 2px rgb(92 74 56 / 0.12);
+  outline: none;
+  transition: border-color 200ms ease-out, box-shadow 200ms ease-out;
+}
+
+.novex-login-stage__input::placeholder {
+  color: var(--login-ticket-placeholder);
+}
+
+.novex-login-stage__input:focus-visible {
+  border-color: var(--login-ticket-ochre);
+  box-shadow:
+    inset 0 1px 2px rgb(92 74 56 / 0.12),
+    0 0 0 3px rgb(168 120 47 / 0.25);
+}
+
+.novex-login-stage__input:disabled {
+  opacity: 0.6;
+}
+
+.novex-login-stage__primary-action {
+  display: flex;
+  width: 100%;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+  border: 1px solid var(--login-ticket-wine-edge);
+  border-radius: var(--login-ticket-field-radius);
+  color: var(--login-ticket-on-wine);
+  font-weight: 600;
+  background: linear-gradient(180deg, var(--login-ticket-wine), var(--login-ticket-wine-deep));
+  box-shadow: inset 0 1px 0 rgb(255 220 180 / 0.16);
+  cursor: pointer;
+  transition: filter 200ms ease-out, transform 200ms ease-out;
+}
+
+.novex-login-stage__primary-action > svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.novex-login-stage__primary-action:hover:not(:disabled) {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
+.novex-login-stage__primary-action:focus-visible {
+  outline: 2px solid var(--login-ticket-ochre);
+  outline-offset: 2px;
+}
+
+/* Deshabilitado: sin vino, papel apagado; se lee como "aún no". */
+.novex-login-stage__primary-action:disabled {
+  border-color: rgb(110 76 30 / 0.28);
+  color: var(--login-ticket-on-disabled);
+  background: var(--login-ticket-disabled);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* Pie: talón perforado, discreto. */
+.novex-login-stage__panel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: var(--panel-footer-gap);
+  padding-top: var(--panel-footer-pad);
+  border-top: 1px dashed var(--login-ticket-line);
+  color: var(--login-ticket-ink-soft);
+  opacity: 0.82;
+}
+
+.novex-login-stage__panel-footer > svg {
+  width: var(--panel-footer-line);
+  height: var(--panel-footer-line);
+  color: var(--login-ticket-ochre-deep);
+}
+
+.novex-login-stage__security-copy {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: var(--panel-footer-line);
+  letter-spacing: 0.02em;
+}
+
+/* ------------------------------------------------------------- animaciones */
+
+@keyframes novex-login-stage-lights {
+  from {
+    opacity: 0;
+    filter: brightness(0.4);
+  }
+  to {
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+@keyframes novex-login-stage-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ------------------------------------------------------------- responsive */
+
+@media (max-width: 640px) {
+  .novex-login-stage {
+    --stage-character-size: clamp(7rem, 22vh, 11rem);
+    --stage-marquee-max: 18rem;
+    --stage-gap-brand-character: 0.75rem;
+    --stage-gap-character-panel: 0.5rem;
+  }
+
+  .novex-login-stage__background {
+    background-position: 50% 40%;
+  }
+
+  /* Móvil: solo asoman las esquinas superiores de las telas. */
+  .novex-login-curtains {
+    --curtain-reach: 11vw;
+  }
+
+  .novex-login-stage__panel {
+    --panel-pad-top: 1.25rem;
+    --panel-pad-x: 1.1rem;
+    --panel-pad-bottom: 1rem;
+  }
+}
+
+/* Pantallas bajas (portátiles 768px): el personaje cede espacio al panel. */
+@media (max-height: 800px) {
+  .novex-login-stage {
+    --stage-character-size: clamp(6rem, 18vh, 9rem);
+    --stage-pad-top: 0.625rem;
+    --stage-pad-bottom: 0.5rem;
+    --stage-gap-brand-character: 0.375rem;
+    --stage-gap-character-panel: 0.25rem;
+  }
+
+  .novex-login-stage__panel {
+    --panel-pad-top: 1.15rem;
+    --panel-pad-x: 1.25rem;
+    --panel-pad-bottom: 0.9rem;
+    --panel-footer-gap: 0.8rem;
+    --panel-footer-pad: 0.65rem;
+  }
+
+  .novex-login-stage__auth-stack {
+    margin-top: 0.85rem;
+  }
+
+  .novex-login-stage__separator {
+    margin: 0.7rem 0;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .novex-login-stage *,
+  .novex-login-stage *::before,
+  .novex-login-stage *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -13,4 +13,9 @@ describe('resolveIncidentCategoryIcon', () => {
       'diplomas',
     )
   })
+
+  it('tolera categoría nula (dependencias INTER sin categoría)', () => {
+    expect(resolveIncidentCategoryIcon(null, null)).toBe('other')
+    expect(resolveIncidentCategoryIcon(undefined, undefined)).toBe('other')
+  })
 })

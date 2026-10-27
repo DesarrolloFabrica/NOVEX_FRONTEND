@@ -31,6 +31,28 @@ interface OnboardingContextValue {
 
 const OnboardingContext = createContext<OnboardingContextValue | null>(null)
 
+/**
+ * RECORRIDO SUSPENDIDO (fase 1 de retiro del shell legacy).
+ *
+ * Los pasos actuales apuntan a objetivos que ya no existen: el del DIRECTOR
+ * vive en `/dashboard` (retirado) y los de ANALISTA/COORDINADOR buscan
+ * `data-tour` que el Centro Operacional no tiene. Mostrarlo llevaba al usuario
+ * fuera del circo o lo dejaba en «objetivo no encontrado».
+ *
+ * Mientras esté en `true`:
+ * - no hay arranque automático ni overlay, para ningún rol;
+ * - el menú de usuario no ofrece el tutorial (`steps` se expone vacío);
+ * - NO se escribe nada: ni `PATCH /users/me/onboarding` ni localStorage.
+ *   El estado persistido (`onboardingStep`, `onboardingCompleted`) queda
+ *   intacto para cuando exista un recorrido nuevo sobre el escenario.
+ *
+ * Ojo: no basta con vaciar los pasos. Un rol sin pasos se trata como ADMIN y
+ * se marca como completado en backend; por eso el arranque se corta antes.
+ */
+const ONBOARDING_TOUR_SUSPENDED = true
+
+const NO_STEPS: ReturnType<typeof getOnboardingSteps> = []
+
 export function OnboardingProvider({ children }: { children: ReactNode }) {
   const {
     user,
@@ -42,7 +64,10 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const location = useLocation()
   const navigate = useNavigate()
   const role = normalizeRoleCode(user?.roleCode)
-  const steps = useMemo(() => getOnboardingSteps(role), [role])
+  const steps = useMemo(
+    () => (ONBOARDING_TOUR_SUSPENDED ? NO_STEPS : getOnboardingSteps(role)),
+    [role],
+  )
   const storageKey = `novex.onboarding.v2.${user?.id ?? 'anonymous'}`
   const [active, setActive] = useState(false)
   const [stepIndex, setStepIndex] = useState(() =>
@@ -158,6 +183,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   }, [isAuthenticated])
 
   useEffect(() => {
+    if (ONBOARDING_TOUR_SUSPENDED) return
     if (
       !isAuthenticated ||
       !user ||

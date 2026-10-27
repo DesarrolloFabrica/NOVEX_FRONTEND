@@ -1,0 +1,4392 @@
+/*
+ * FASE 3-4 — marco ticket compartido para las regiones con
+ * .operational-shell[data-ticket-theme] (solo temas registrados).
+ *
+ * Contenedor: .ticket-panel (+ --character|reports|problems|action).
+ * Region: .operational-shell__region--ticket-panel.
+ *
+ * Capas (atras -> delante), pointer-events: none:
+ *   paper (base + grain + veil) -> frame -> corners -> watermark -> ornaments
+ *
+ * Fase 3.1: grano atenuado en el centro (mascara radial + velo crema);
+ * watermarks mas pequenos/tenues en esquina inferior.
+ * Fase 4: tokens de tinta/seal por tema; papel y geometria compartidos.
+ */
+
+/* Tokens estructurales compartidos (papel, tipografia, inset). */
+.operational-shell[data-ticket-theme] {
+  --ticket-pilot-ink: #2a2118;
+  --ticket-pilot-ink-soft: #5c4a38;
+  --ticket-pilot-cream: #f0e2c4;
+  --ticket-pilot-paper-fringe: 3px;
+  --ticket-pilot-band: 5px;
+  --ticket-pilot-content-inset: calc(
+    var(--ticket-pilot-paper-fringe) + var(--ticket-pilot-band) + 10px
+  );
+  --ticket-pilot-ink-wear: url('/assets/tickets/fabrica/ticket-ink-wear.svg');
+  --ticket-pilot-paper: url('/assets/tickets/common/ticket-paper-cream.png');
+  --ticket-pilot-serif: Georgia, 'Times New Roman', Times, serif;
+
+  /* Accent: cada tema los redefine. */
+  --ticket-accent: #5c5e2c;
+  --ticket-accent-deep: #2d3325;
+  --ticket-pilot-teal: var(--ticket-accent);
+  --ticket-pilot-teal-deep: var(--ticket-accent-deep);
+  --ticket-pilot-seal: none;
+
+  --ticket-teal: var(--ticket-accent);
+  --ticket-teal-deep: var(--ticket-accent-deep);
+  --ticket-teal-soft: color-mix(in srgb, var(--ticket-accent) 16%, transparent);
+  --ticket-cream: var(--ticket-pilot-cream);
+  --ticket-ink: var(--ticket-pilot-ink);
+  --ticket-ink-soft: var(--ticket-pilot-ink-soft);
+  --ticket-line: #9a3a32;
+}
+
+/* Identidad Fabrica (fase 3.1): turquesa + foca. */
+.operational-shell[data-ticket-theme='fabrica'] {
+  --ticket-accent: #1a9aa6;
+  --ticket-accent-deep: #0c5f68;
+  --ticket-pilot-teal: var(--ticket-accent);
+  --ticket-pilot-teal-deep: var(--ticket-accent-deep);
+  --ticket-pilot-seal: url('/assets/tickets/fabrica/cut/watermark-seal.png');
+  --ticket-teal: var(--ticket-accent);
+  --ticket-teal-deep: var(--ticket-accent-deep);
+  --ticket-teal-soft: rgb(26 154 166 / 0.16);
+}
+
+/* Identidad Saber Pro (fase 4.1): oliva mate + suricata. */
+.operational-shell[data-ticket-theme='saber-pro'] {
+  --ticket-accent: #5c5e2c;
+  --ticket-accent-deep: #2d3325;
+  --ticket-pilot-teal: var(--ticket-accent);
+  --ticket-pilot-teal-deep: var(--ticket-accent-deep);
+  --ticket-pilot-seal: url('/assets/tickets/saber-pro/cut/watermark-meerkat.png');
+  --ticket-teal: var(--ticket-accent);
+  --ticket-teal-deep: var(--ticket-accent-deep);
+  --ticket-teal-soft: rgb(92 94 44 / 0.16);
+}
+
+/* Identidad Especializaciones: granate de carta, no el canónico #FF626A ni CRÍTICO. */
+.operational-shell[data-ticket-theme='especializaciones'] {
+  --ticket-accent: #7b110d;
+  --ticket-accent-deep: #3a0c0a;
+  --ticket-pilot-teal: var(--ticket-accent);
+  --ticket-pilot-teal-deep: var(--ticket-accent-deep);
+  --ticket-pilot-seal: url('/assets/tickets/especializaciones/cut/watermark-falcon.png');
+  --ticket-teal: var(--ticket-accent);
+  --ticket-teal-deep: var(--ticket-accent-deep);
+  --ticket-teal-soft: rgb(123 17 13 / 0.14);
+}
+
+/* Identidad Desarrollo Profesional: púrpura marco/CTA, no el canónico #B267FF. */
+.operational-shell[data-ticket-theme='desarrollo-profesional'] {
+  --ticket-accent: #5c2e58;
+  --ticket-accent-deep: #3a1c35;
+  --ticket-pilot-teal: var(--ticket-accent);
+  --ticket-pilot-teal-deep: var(--ticket-accent-deep);
+  --ticket-pilot-seal: url('/assets/tickets/desarrollo-profesional/cut/watermark-butterfly.png');
+  --ticket-teal: var(--ticket-accent);
+  --ticket-teal-deep: var(--ticket-accent-deep);
+  --ticket-teal-soft: rgb(92 46 88 / 0.16);
+}
+
+/* Identidad B2B: caoba de carta, no el canónico #FF5F66 ni el logo #AA0919. */
+.operational-shell[data-ticket-theme='b2b'] {
+  --ticket-accent: #551c19;
+  --ticket-accent-deep: #2e0c0b;
+  --ticket-pilot-teal: var(--ticket-accent);
+  --ticket-pilot-teal-deep: var(--ticket-accent-deep);
+  --ticket-pilot-seal: url('/assets/tickets/b2b/cut/watermark-woodpecker.png');
+  --ticket-teal: var(--ticket-accent);
+  --ticket-teal-deep: var(--ticket-accent-deep);
+  --ticket-teal-soft: rgb(85 28 25 / 0.16);
+}
+
+/* Identidad General: ocre marco/CTA, no el logo #EC9B07 ni ALERTA ni #28C8F4. */
+.operational-shell[data-ticket-theme='general'] {
+  --ticket-accent: #7a5708;
+  --ticket-accent-deep: #3c2a05;
+  --ticket-pilot-teal: var(--ticket-accent);
+  --ticket-pilot-teal-deep: var(--ticket-accent-deep);
+  --ticket-pilot-seal: url('/assets/tickets/general/cut/watermark-giraffe.png');
+  --ticket-teal: var(--ticket-accent);
+  --ticket-teal-deep: var(--ticket-accent-deep);
+  --ticket-teal-soft: rgb(122 87 8 / 0.14);
+}
+
+/* Identidad Proyección Social: bosque marco/CTA, no logo #006633 ni ESTABLE. */
+.operational-shell[data-ticket-theme='proyeccion-social'] {
+  --ticket-accent: #17492f;
+  --ticket-accent-deep: #0a2e1c;
+  --ticket-pilot-teal: var(--ticket-accent);
+  --ticket-pilot-teal-deep: var(--ticket-accent-deep);
+  --ticket-pilot-seal: url('/assets/tickets/proyeccion-social/cut/watermark-hummingbird.png');
+  --ticket-teal: var(--ticket-accent);
+  --ticket-teal-deep: var(--ticket-accent-deep);
+  --ticket-teal-soft: rgb(23 73 47 / 0.14);
+}
+
+.operational-shell[data-ticket-theme='servicio'] {
+  --ticket-accent: #681030;
+  --ticket-accent-deep: #3a0a22;
+  --ticket-soft-fill: rgb(104 16 48 / 0.14);
+  --ticket-action-text: #f7f4ea;
+  --ticket-pilot-teal: var(--ticket-accent);
+  --ticket-pilot-teal-deep: var(--ticket-accent-deep);
+  --ticket-pilot-seal: url('/assets/tickets/servicio/cut/watermark-flamingo.png');
+  --ticket-teal: var(--ticket-accent);
+  --ticket-teal-deep: var(--ticket-accent-deep);
+  --ticket-teal-soft: var(--ticket-soft-fill);
+}
+
+.operational-shell[data-ticket-theme='operacion-academica'] {
+  --ticket-accent: #1a2946;
+  --ticket-accent-deep: #0f1a2e;
+  --ticket-soft-fill: rgb(26 41 70 / 0.14);
+  --ticket-action-text: #f7f4ea;
+  --ticket-pilot-teal: var(--ticket-accent);
+  --ticket-pilot-teal-deep: var(--ticket-accent-deep);
+  --ticket-pilot-seal: url('/assets/tickets/operacion-academica/cut/watermark-wolf.png');
+  --ticket-teal: var(--ticket-accent);
+  --ticket-teal-deep: var(--ticket-accent-deep);
+  --ticket-teal-soft: var(--ticket-soft-fill);
+}
+
+.operational-shell[data-ticket-theme='bellas-artes'] {
+  --ticket-accent: #4a2868;
+  --ticket-accent-deep: #2a1740;
+  --ticket-soft-fill: rgb(74 40 104 / 0.14);
+  --ticket-action-text: #f7f4ea;
+  --ticket-pilot-teal: var(--ticket-accent);
+  --ticket-pilot-teal-deep: var(--ticket-accent-deep);
+  --ticket-pilot-seal: url('/assets/tickets/bellas-artes/cut/watermark-horse.png');
+  --ticket-teal: var(--ticket-accent);
+  --ticket-teal-deep: var(--ticket-accent-deep);
+  --ticket-teal-soft: var(--ticket-soft-fill);
+}
+
+.operational-shell[data-ticket-theme='transformacion-empresarial'] {
+  --ticket-accent: #3a1858;
+  --ticket-accent-deep: #1a0830;
+  --ticket-soft-fill: rgb(58 24 88 / 0.14);
+  --ticket-action-text: #f7f4ea;
+  --ticket-pilot-teal: var(--ticket-accent);
+  --ticket-pilot-teal-deep: var(--ticket-accent-deep);
+  --ticket-pilot-seal: url('/assets/tickets/transformacion-empresarial/cut/watermark-orca.png');
+  --ticket-teal: var(--ticket-accent);
+  --ticket-teal-deep: var(--ticket-accent-deep);
+  --ticket-teal-soft: var(--ticket-soft-fill);
+}
+
+.operational-shell[data-ticket-theme='ingenierias'] {
+  --ticket-accent: #5a2e10;
+  --ticket-accent-deep: #3d1c08;
+  --ticket-soft-fill: rgb(90 46 16 / 0.14);
+  --ticket-action-text: #f7f4ea;
+  --ticket-pilot-teal: var(--ticket-accent);
+  --ticket-pilot-teal-deep: var(--ticket-accent-deep);
+  --ticket-pilot-seal: url('/assets/tickets/ingenierias/cut/watermark-beaver.png');
+  --ticket-teal: var(--ticket-accent);
+  --ticket-teal-deep: var(--ticket-accent-deep);
+  --ticket-teal-soft: var(--ticket-soft-fill);
+}
+
+.operational-shell[data-ticket-theme='transversales'] {
+  --ticket-accent: #6b3a0c;
+  --ticket-accent-deep: #3f2208;
+  --ticket-soft-fill: rgb(107 58 12 / 0.14);
+  --ticket-action-text: #f7f4ea;
+  --ticket-pilot-teal: var(--ticket-accent);
+  --ticket-pilot-teal-deep: var(--ticket-accent-deep);
+  --ticket-pilot-seal: url('/assets/tickets/transversales/cut/watermark-bee.png');
+  --ticket-teal: var(--ticket-accent);
+  --ticket-teal-deep: var(--ticket-accent-deep);
+  --ticket-teal-soft: var(--ticket-soft-fill);
+}
+
+.operational-shell[data-ticket-theme='negocios'] {
+  --ticket-accent: #6b2410;
+  --ticket-accent-deep: #2e1008;
+  --ticket-soft-fill: rgb(107 36 16 / 0.14);
+  --ticket-action-text: #f7f4ea;
+  --ticket-pilot-teal: var(--ticket-accent);
+  --ticket-pilot-teal-deep: var(--ticket-accent-deep);
+  --ticket-pilot-seal: url('/assets/tickets/negocios/cut/watermark-fox.png');
+  --ticket-teal: var(--ticket-accent);
+  --ticket-teal-deep: var(--ticket-accent-deep);
+  --ticket-teal-soft: var(--ticket-soft-fill);
+}
+
+/* ---------- Region con marco v2 ---------- */
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel {
+  --shell-line: transparent;
+  --shell-surface: transparent;
+
+  container-type: inline-size;
+  container-name: ticket-panel;
+  position: relative;
+  isolation: isolate;
+  padding: var(--ticket-pilot-content-inset);
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--ticket-pilot-ink);
+  overflow: clip;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel::before,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* ---------- Capas del marco ---------- */
+
+.ticket-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+.ticket-panel__paper {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  /*
+   * Sombra exterior del panel (no de la textura). La opacidad del conjunto
+   * permanece plena: solo se modula el grano, no el panel.
+   */
+  box-shadow:
+    0 10px 28px rgb(0 8 20 / 0.34),
+    0 2px 6px rgb(0 8 20 / 0.18);
+}
+
+/* Base opaca: el escenario no atraviesa el interior. */
+.ticket-panel__paper-base {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  background-color: var(--ticket-pilot-cream);
+}
+
+/*
+ * Grano de ticket-paper-cream: máscara radial — centro tenue, perímetro más
+ * presente (manchas/desgaste junto al marco).
+ */
+.ticket-panel__paper-grain {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  background-image: var(--ticket-pilot-paper);
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-size: cover;
+  opacity: 0.78;
+  -webkit-mask-image: radial-gradient(
+    ellipse 82% 78% at 50% 42%,
+    rgb(0 0 0 / 0.12) 0%,
+    rgb(0 0 0 / 0.28) 42%,
+    rgb(0 0 0 / 0.7) 72%,
+    #000 100%
+  );
+  mask-image: radial-gradient(
+    ellipse 82% 78% at 50% 42%,
+    rgb(0 0 0 / 0.12) 0%,
+    rgb(0 0 0 / 0.28) 42%,
+    rgb(0 0 0 / 0.7) 72%,
+    #000 100%
+  );
+}
+
+/*
+ * Velo crema independiente entre textura y contenido: mejora legibilidad de
+ * textos pequeños y campos sin bajar la opacidad del panel.
+ */
+.ticket-panel__paper-veil {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  background: radial-gradient(
+    ellipse 78% 70% at 50% 40%,
+    rgb(245 236 214 / 0.78) 0%,
+    rgb(240 226 196 / 0.42) 48%,
+    transparent 76%
+  );
+}
+
+.ticket-panel__frame {
+  color: var(--ticket-accent-deep);
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  -webkit-mask-image: var(--ticket-pilot-ink-wear);
+  -webkit-mask-size: 100px 100px;
+  -webkit-mask-repeat: repeat;
+  mask-image: var(--ticket-pilot-ink-wear);
+  mask-size: 100px 100px;
+  mask-repeat: repeat;
+}
+
+.ticket-panel__frame-band,
+.ticket-panel__frame-fillet {
+  vector-effect: non-scaling-stroke;
+}
+
+.ticket-panel__frame-fillet {
+  color: var(--ticket-accent);
+  opacity: 0.9;
+}
+
+/* Remates: tamaño fijo en px, anclados a esquinas (no estiran con el panel). */
+.ticket-panel__corners {
+  color: var(--ticket-accent-deep);
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  -webkit-mask-image: var(--ticket-pilot-ink-wear);
+  -webkit-mask-size: 90px 90px;
+  -webkit-mask-repeat: repeat;
+  mask-image: var(--ticket-pilot-ink-wear);
+  mask-size: 90px 90px;
+  mask-repeat: repeat;
+}
+
+.ticket-panel__corner {
+  color: var(--ticket-accent-deep);
+  position: absolute;
+  display: block;
+  overflow: visible;
+  opacity: 0.9;
+}
+
+.ticket-panel__corner--tl {
+  top: 7px;
+  left: 7px;
+  transform-origin: top left;
+}
+
+.ticket-panel__corner--tr {
+  top: 7px;
+  right: 7px;
+  transform-origin: top right;
+}
+
+.ticket-panel__corner--bl {
+  bottom: 7px;
+  left: 7px;
+  transform-origin: bottom left;
+}
+
+.ticket-panel__corner--br {
+  right: 7px;
+  bottom: 7px;
+  transform-origin: bottom right;
+}
+
+.ticket-panel__watermark {
+  position: absolute;
+  z-index: 1;
+  background-image: var(--ticket-pilot-seal);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  mix-blend-mode: normal;
+  aspect-ratio: 1;
+  /* Fija respecto al panel: no se mueve con el scroll del contenido. */
+  pointer-events: none;
+}
+
+/*
+ * Watermarks fase 3.1: más pequeños/tenues, anclados a esquina inferior,
+ * fuera del bloque principal de texto/campos cuando hay aire libre.
+ */
+.ticket-panel--character .ticket-panel__watermark {
+  right: 6%;
+  bottom: 5%;
+  width: clamp(36px, 28%, 52px);
+  opacity: 0.032;
+}
+
+.ticket-panel--reports .ticket-panel__watermark {
+  right: 5%;
+  bottom: 6%;
+  width: clamp(52px, 18%, 78px);
+  opacity: 0.04;
+}
+
+.ticket-panel--problems .ticket-panel__watermark {
+  right: 5%;
+  bottom: 5%;
+  width: clamp(64px, 20%, 96px);
+  opacity: 0.04;
+}
+
+.ticket-panel--action .ticket-panel__watermark {
+  right: 6%;
+  bottom: 5%;
+  /* ~90–120 px de dibujo visible en el panel alto. */
+  width: clamp(90px, 28%, 118px);
+  opacity: 0.038;
+}
+
+.ticket-panel__ornaments {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  -webkit-mask-image: var(--ticket-pilot-ink-wear);
+  -webkit-mask-size: 80px 80px;
+  -webkit-mask-repeat: repeat;
+  -webkit-mask-position: 8px 6px;
+  mask-image: var(--ticket-pilot-ink-wear);
+  mask-size: 80px 80px;
+  mask-repeat: repeat;
+  mask-position: 8px 6px;
+}
+
+.ticket-panel__ornament {
+  position: absolute;
+  display: block;
+  width: auto;
+  max-width: none;
+  /* Altura visible ~25–40 px; el ancho sigue la proporción del PNG. */
+  height: clamp(25px, 7cqi, 40px);
+  object-fit: contain;
+  mix-blend-mode: normal;
+  opacity: 1;
+}
+
+.ticket-panel__ornament--bl {
+  bottom: 4px;
+  left: 4px;
+}
+
+.ticket-panel__ornament--br {
+  right: 4px;
+  bottom: 4px;
+}
+
+.ticket-panel__ornament--tl {
+  top: 6px;
+  left: 6px;
+}
+
+.ticket-panel__ornament--tr {
+  top: 6px;
+  right: 6px;
+  height: clamp(22px, 6cqi, 34px);
+}
+
+.ticket-panel--character .ticket-panel__ornament {
+  height: clamp(22px, 14cqi, 32px);
+}
+
+/* Contenido por encima del marco. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  > :not(.ticket-panel) {
+  position: relative;
+  z-index: 2;
+}
+
+/* Compat: alias del piloto v2 (problemas) → mismo contenedor de capas. */
+.ticket-pilot-fabrica {
+  /* Si quedara algún nodo legado, no se pinta. */
+  display: none !important;
+}
+
+/* ---------- Contenido · Problemas (piloto v2 tipografía) ---------- */
+
+.coordination-panel--ticket-pilot {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0;
+  padding: 0 2px 2px;
+  background: transparent;
+  opacity: 1;
+}
+
+.coordination-panel--ticket-pilot::after {
+  content: none;
+  display: none;
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__stub {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-start;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  /*
+   * Solo el título: sin nombre del área, recuento ni badge, la franja ya no
+   * reserva alto mínimo ni el hueco derecho del badge. Sube 3 px hacia el
+   * filete del marco, que sigue quedando por encima.
+   */
+  min-height: 0;
+  margin-top: -3px;
+  padding: 0 4px;
+  overflow: visible;
+  text-align: left;
+}
+
+/*
+ * Lista de la coordinación: filtros pegados al título y lista a 5 px.
+ *
+ * Abajo se reserva la banda de los ornamentos del ticket, en `cqi` como ellos
+ * (su alto también escala con el ancho del panel): lo que cruza esa banda es
+ * solo la franja que se desvanece, y al final del scroll la última ficha queda
+ * por encima del ornamento.
+ */
+.coordination-panel--ticket-pilot .coordination-panel__stub + .coordination-panel__body {
+  gap: 5px;
+  padding-top: 4px;
+  padding-bottom: clamp(24px, 7cqi, 40px);
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__header {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  position: static;
+  padding: 0;
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__heading {
+  display: flex;
+  max-width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__name--circus {
+  max-width: 100%;
+  margin: 0;
+  color: var(--ticket-pilot-ink);
+  font-family: var(--ticket-pilot-serif);
+  font-size: clamp(17px, 1.6cqi + 14px, 20px);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  text-wrap: balance;
+  white-space: normal;
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__eyebrow {
+  margin: 0;
+  color: var(--ticket-pilot-ink-soft);
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 550;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__summary {
+  margin: 1px 0 0;
+  color: var(--ticket-pilot-ink-soft);
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  font-size: 10.5px;
+  line-height: 1.3;
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__status {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 2;
+  max-width: 88px;
+  border: 1px solid rgb(var(--status-rgb) / 0.42);
+  border-radius: 999px;
+  background: rgb(255 250 238 / 0.92);
+  color: rgb(var(--status-rgb) / 0.95);
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__body {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 6px;
+  /* Margen de seguridad sobre EXPANDIR; el resto del alto es de la lista. */
+  padding: 4px 2px 8px;
+  overflow: hidden;
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__problems {
+  min-height: 0;
+  flex: 1 1 auto;
+  gap: 0;
+  padding-right: 2px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+/*
+ * LA LISTA SE PIERDE SOBRE EL PAPEL.
+ *
+ * Máscara solo sobre el viewport desplazable (no hay capa encima: el ratón y
+ * el teclado siguen llegando a las fichas). La franja mide `--problems-fade`,
+ * proporcional al alto real del viewport. Un espaciador final del mismo alto
+ * deja que la última ficha suba por encima de la franja al llegar al fondo, y
+ * `scroll-padding-bottom` hace lo mismo con el foco por teclado.
+ */
+.coordination-panel--ticket-pilot .coordination-panel__problems,
+.coordination-panel--ticket-pilot .coordinator-problems__groups {
+  --problems-fade: min(72px, 32%);
+
+  scroll-padding-bottom: var(--problems-fade);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - var(--problems-fade)),
+    rgb(0 0 0 / 0.72) calc(100% - var(--problems-fade) * 0.62),
+    rgb(0 0 0 / 0.3) calc(100% - var(--problems-fade) * 0.3),
+    rgb(0 0 0 / 0.04) 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - var(--problems-fade)),
+    rgb(0 0 0 / 0.72) calc(100% - var(--problems-fade) * 0.62),
+    rgb(0 0 0 / 0.3) calc(100% - var(--problems-fade) * 0.3),
+    rgb(0 0 0 / 0.04) 100%
+  );
+}
+
+/*
+ * «Problemas de la coordinación»: franja DISCRETA. Opaca en el ~88 % superior
+ * del viewport y transición solo en el último ~12 %, entre 14 y 40 px, para
+ * que nunca haya varias fichas desvaneciéndose a la vez. El espaciador final
+ * mide lo mismo: no deja un hueco permanente mayor que la propia franja.
+ */
+.coordination-panel--ticket-pilot .coordination-panel__problems {
+  --problems-fade: clamp(14px, 12%, 40px);
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__problems::after,
+.coordination-panel--ticket-pilot .coordinator-problems__groups::after {
+  content: '';
+  flex: 0 0 var(--problems-fade);
+}
+
+/* Expandido (solo el panel del coordinador): franja más contenida. */
+.coordination-panel--ticket-pilot[data-expanded='true']
+  .coordinator-problems__groups {
+  --problems-fade: min(56px, 18%);
+}
+
+/*
+ * Filtros sobre papel: crema, trazo de tinta y sombra desplazada (dibujo
+ * animado de los años 30), sin el control nativo oscuro. `color-scheme: light`
+ * mantiene clara también la lista desplegable del sistema.
+ */
+.coordination-panel--ticket-pilot .coordination-panel__filters {
+  margin: 0;
+  padding: 0 4px 0 0;
+  gap: 8px;
+}
+
+/* `!important` por la misma razón que el formulario de reporte (novex-os). */
+.coordination-panel.coordination-panel--ticket-pilot .coordination-panel__filter-select {
+  --filter-select-bg: rgb(255 250 238 / 0.94);
+
+  border: 1.5px solid color-mix(in srgb, var(--ticket-pilot-ink) 62%, transparent) !important;
+  border-radius: 7px !important;
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--ticket-pilot-ink) 24%, transparent) !important;
+  color: var(--ticket-pilot-ink) !important;
+  color-scheme: light;
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  font-weight: 600;
+}
+
+.coordination-panel.coordination-panel--ticket-pilot .coordination-panel__filter-select:hover {
+  --filter-select-bg: #fffaf0;
+
+  border-color: var(--ticket-accent-deep) !important;
+}
+
+.coordination-panel.coordination-panel--ticket-pilot
+  .coordination-panel__filter-select:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ticket-accent-deep) 55%, transparent) !important;
+  outline-offset: 1px;
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__filter-select option {
+  background: #fffaf0;
+  color: #2a2118;
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__list-note,
+.coordination-panel--ticket-pilot .coordination-panel__load-more {
+  color: var(--ticket-pilot-ink-soft);
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__load-more {
+  border-color: color-mix(in srgb, var(--ticket-pilot-ink) 34%, transparent);
+  background: rgb(255 250 238 / 0.6);
+}
+
+/* Una sola ficha: no hay nada que desvanecer. */
+.coordination-panel--ticket-pilot
+  .coordination-panel__problems:not(:has(> :nth-child(2))) {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.coordination-panel--ticket-pilot
+  .coordination-panel__problems:not(:has(> :nth-child(2)))::after {
+  content: none;
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__empty {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 16px 12px;
+  border: 0;
+  background: transparent;
+  text-align: center;
+}
+
+.coordination-panel--ticket-pilot .problem-row {
+  border: 0;
+  border-bottom: 1px solid rgb(42 33 24 / 0.16);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--ticket-pilot-ink);
+}
+
+.coordination-panel--ticket-pilot .problem-row:hover,
+.coordination-panel--ticket-pilot .problem-row:focus-visible {
+  border-bottom-color: rgb(12 95 104 / 0.45);
+  background: rgb(12 95 104 / 0.07);
+  outline: none;
+}
+
+.coordination-panel--ticket-pilot .problem-row:focus-visible {
+  box-shadow: inset 0 0 0 2px rgb(12 95 104 / 0.55);
+}
+
+.coordination-panel--ticket-pilot .problem-row[data-selected='true'] {
+  border-bottom-color: var(--ticket-pilot-teal);
+  background: rgb(26 154 166 / 0.12);
+  box-shadow: inset 3px 0 0 var(--ticket-pilot-teal-deep);
+}
+
+.coordination-panel--ticket-pilot .problem-row__title {
+  color: var(--ticket-pilot-ink);
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+}
+
+/* Fichas dossier: papel translúcido integrado al ticket (sin bloques blancos). */
+.coordination-panel--ticket-pilot .problem-dossier.problem-row,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-dossier.my-reports__row {
+  --dossier-paper: rgb(255 250 240 / 0.38);
+  --dossier-paper-hover: rgb(255 252 245 / 0.58);
+  --dossier-paper-selected: rgb(255 248 236 / 0.86);
+  --dossier-ink: var(--ticket-pilot-ink);
+  --dossier-ink-soft: var(--ticket-pilot-ink-soft);
+  --dossier-edge: rgb(42 33 24 / 0.28);
+  --dossier-edge-strong: color-mix(
+    in srgb,
+    var(--ticket-accent-deep) 42%,
+    transparent
+  );
+  --dossier-stub: color-mix(in srgb, var(--report-field-bg-solid, #fffaf0) 55%, #e8dcc8 45%);
+  --dossier-folio: color-mix(in srgb, var(--ticket-pilot-ink-soft) 85%, #2a2118);
+  /* Coordinación en la ficha compacta: marrón oscuro velado, legible sobre
+     crema sin competir con el título. */
+  --dossier-context-ink: color-mix(in srgb, var(--ticket-pilot-ink) 74%, transparent);
+  --dossier-context-opacity: 1;
+
+  --sev-critical-ink: #7a2a24;
+  --sev-critical-fill: rgb(154 58 50 / 0.12);
+  --sev-critical-edge: rgb(154 58 50 / 0.42);
+  --sev-high-ink: #8a4a18;
+  --sev-high-fill: rgb(180 110 40 / 0.12);
+  --sev-high-edge: rgb(180 110 40 / 0.38);
+  --sev-medium-ink: #5c4a38;
+  --sev-medium-fill: rgb(92 74 56 / 0.08);
+  --sev-medium-edge: rgb(92 74 56 / 0.28);
+  --sev-low-ink: #6e5e4c;
+  --sev-low-fill: rgb(110 94 76 / 0.06);
+  --sev-low-edge: rgb(110 94 76 / 0.22);
+
+  --st-open-ink: #5c4a38;
+  --st-open-fill: rgb(92 74 56 / 0.07);
+  --st-open-edge: rgb(92 74 56 / 0.25);
+  --st-progress-ink: var(--ticket-accent-deep);
+  --st-progress-fill: color-mix(in srgb, var(--ticket-accent) 16%, transparent);
+  --st-progress-edge: color-mix(in srgb, var(--ticket-accent-deep) 42%, transparent);
+  --st-closed-ink: #6e5e4c;
+  --st-closed-fill: rgb(110 94 76 / 0.07);
+  --st-closed-edge: rgb(110 94 76 / 0.22);
+
+  --sla-risk-ink: #8a4a18;
+  --sla-risk-fill: rgb(180 110 40 / 0.12);
+  --sla-overdue-ink: #7a2a24;
+  --sla-overdue-fill: rgb(154 58 50 / 0.12);
+
+  --dossier-dash: 7px;
+  --dossier-dash-gap: 5px;
+  --dossier-dash-thickness: 1.5px;
+  --dossier-dash-ink: var(--dossier-edge);
+
+  border: var(--dossier-dash-thickness) solid transparent;
+  border-radius: 6px;
+  background: var(--dossier-paper);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22);
+  color: var(--dossier-ink);
+}
+
+.coordination-panel--ticket-pilot .problem-dossier.problem-row:hover,
+.coordination-panel--ticket-pilot .problem-dossier.problem-row:focus-visible,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-dossier.my-reports__row:hover,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-dossier.my-reports__row:focus-visible {
+  --dossier-dash-ink: var(--dossier-edge-strong);
+  background: var(--dossier-paper-hover);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.32);
+  outline: none;
+}
+
+.coordination-panel--ticket-pilot .problem-dossier.problem-row:focus-visible,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-dossier.my-reports__row:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ticket-accent-deep) 45%, transparent);
+  outline-offset: 1px;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.32);
+}
+
+.coordination-panel--ticket-pilot .problem-dossier.problem-row[data-selected='true'],
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-dossier.my-reports__row[aria-current='true'],
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-dossier.my-reports__row[data-selected='true'] {
+  --dossier-dash-ink: color-mix(in srgb, var(--ticket-accent-deep) 48%, transparent);
+  background: var(--dossier-paper-selected);
+  box-shadow:
+    inset 3px 0 0 var(--ticket-accent-deep),
+    inset 0 1px 0 rgb(255 255 255 / 0.4);
+}
+
+.coordination-panel--ticket-pilot .problem-dossier .problem-dossier__title,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-dossier
+  .problem-dossier__title {
+  color: var(--ticket-pilot-ink);
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+}
+
+.coordination-panel--ticket-pilot .problem-dossier .problem-dossier__origin,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-dossier
+  .problem-dossier__origin,
+.coordination-panel--ticket-pilot .problem-dossier .problem-dossier__folio,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-dossier
+  .problem-dossier__folio {
+  color: inherit;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-dossier
+  .problem-dossier__origin {
+  color: var(--ticket-pilot-ink-soft);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-dossier
+  .problem-dossier__type,
+.coordination-panel--ticket-pilot .problem-dossier .problem-dossier__type {
+  border-color: rgb(42 33 24 / 0.22);
+  background: rgb(255 250 240 / 0.42);
+  color: var(--ticket-pilot-ink-soft);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-dossier
+  .problem-dossier__type[data-dossier-type='dependency'],
+.coordination-panel--ticket-pilot
+  .problem-dossier
+  .problem-dossier__type[data-dossier-type='dependency'] {
+  border-style: dashed;
+  border-color: rgb(42 33 24 / 0.34);
+}
+
+.coordination-panel--ticket-pilot .problem-dossier .problem-dossier__stub,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-dossier
+  .problem-dossier__stub {
+  border-right-color: rgb(42 33 24 / 0.16);
+}
+
+.coordination-panel--ticket-pilot
+  .problem-dossier[data-stub-colored='true']
+  .problem-dossier__stub,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-dossier[data-stub-colored='true']
+  .problem-dossier__stub {
+  background: color-mix(
+    in srgb,
+    var(--dossier-stub-bg) 72%,
+    transparent
+  );
+  border-right-color: rgb(26 20 16 / 0.22);
+}
+
+.coordination-panel--ticket-pilot .problem-dossier .problem-dossier__perforation,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-dossier
+  .problem-dossier__perforation {
+  background: color-mix(in srgb, currentColor 28%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 45%, transparent);
+}
+
+.coordination-panel--ticket-pilot .problem-row__title {
+  color: var(--ticket-pilot-ink);
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__empty,
+.coordination-panel--ticket-pilot .coordination-panel__notice {
+  color: var(--ticket-pilot-ink-soft);
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__scope-note {
+  margin: 0 0 4px;
+  padding: 6px 8px;
+  border: 1px solid rgb(154 58 50 / 0.38);
+  border-radius: 6px;
+  background: rgb(154 58 50 / 0.09);
+  color: #8a342c;
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  font-size: 11px;
+  line-height: 1.35;
+  flex: 0 0 auto;
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__retry {
+  border-color: var(--ticket-pilot-teal-deep);
+  background: rgb(26 154 166 / 0.12);
+  color: var(--ticket-pilot-teal-deep);
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__skeleton,
+.coordination-panel--ticket-pilot .coordination-panel__notice {
+  flex: 1 1 auto;
+}
+
+/* ---------- Personaje sobre crema ---------- */
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--character.operational-shell__region--ticket-panel {
+  /* Espacio para marco + Rive + estado sin recorte. */
+  padding: calc(var(--ticket-pilot-content-inset) + 2px)
+    var(--ticket-pilot-content-inset)
+    calc(var(--ticket-pilot-content-inset) + 6px);
+  gap: 6px;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .direction-character {
+  /* Reutiliza el canal de color del personaje para la pastilla de estado. */
+  --status-rgb: var(--dc-rgb);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .direction-character__status {
+  border: 1px solid rgb(var(--status-rgb, 132 150 176) / 0.45);
+  border-radius: 999px;
+  background: rgb(255 250 238 / 0.92);
+  color: rgb(var(--status-rgb, 132 150 176) / 0.98);
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+}
+
+/* ---------- Mis reportes ---------- */
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--my-reports.operational-shell__region--ticket-panel
+  .my-reports {
+  min-height: 0;
+  gap: 6px;
+  padding-bottom: 4px;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__heading {
+  margin: 0;
+  color: var(--ticket-pilot-ink);
+  font-family: var(--ticket-pilot-serif);
+  font-size: clamp(16px, 1.4cqi + 13px, 19px);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__count {
+  color: var(--ticket-pilot-ink-soft);
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  font-size: 11px;
+}
+
+/*
+ * CTAs compactos de «Reportar o consultar» (idle): columna en zona segura,
+ * sin invadir el adorno superior derecho.
+ */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__idle {
+  padding: 8px 8px 10px;
+  grid-template-columns: minmax(0, 1fr) minmax(110px, 46%);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__idle-heading {
+  text-align: left;
+  font-size: clamp(15px, 1.1cqi + 13px, 18px);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__cta-safe {
+  width: 100%;
+  max-width: 200px;
+  gap: 6px;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__cta {
+  width: 100%;
+  flex: none;
+  min-width: 0;
+  border: 1px solid var(--ticket-accent-deep);
+  border-radius: 7px;
+  padding: 6px 10px;
+  background: var(--ticket-accent);
+  color: #f7f4ea;
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__cta--secondary {
+  background: transparent;
+  border-color: var(--ticket-accent-deep);
+  border-width: 1.5px;
+  color: var(--ticket-accent-deep);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__cta--history {
+  background: color-mix(in srgb, var(--ticket-accent) 14%, transparent);
+  border-color: color-mix(in srgb, var(--ticket-accent-deep) 70%, #5a4a32);
+  color: var(--ticket-accent-deep);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__cta:hover,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__cta:focus-visible {
+  background: var(--ticket-accent-deep);
+  color: #f7f4ea;
+  outline: 2px solid color-mix(in srgb, var(--ticket-accent-deep) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__cta--secondary:hover,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__cta--secondary:focus-visible {
+  background: color-mix(in srgb, var(--ticket-accent) 18%, transparent);
+  color: var(--ticket-accent-deep);
+  outline-color: color-mix(in srgb, var(--ticket-accent-deep) 45%, transparent);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__cta--history:hover,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__cta--history:focus-visible {
+  background: color-mix(in srgb, var(--ticket-accent) 28%, transparent);
+  color: var(--ticket-accent-deep);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__cta:disabled {
+  background: color-mix(in srgb, var(--ticket-accent) 45%, #c4b89a);
+  border-color: color-mix(in srgb, var(--ticket-accent-deep) 40%, transparent);
+  color: rgb(247 244 234 / 0.72);
+  cursor: not-allowed;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__cta--secondary:disabled {
+  background: transparent;
+  color: color-mix(in srgb, var(--ticket-accent-deep) 45%, transparent);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__cta-note,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__idle-text {
+  color: var(--ticket-pilot-ink-soft);
+  text-align: left;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__back,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__detail-back,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-history__back,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-history__more,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .history-period-picker__trigger,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .history-period-picker__nav,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .history-period-picker__tab,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .history-period-picker__option {
+  border-color: rgb(42 33 24 / 0.28);
+  background: rgb(255 250 240 / 0.72);
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .history-period-picker__trigger:focus-visible,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .history-period-picker__nav:focus-visible,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .history-period-picker__tab:focus-visible,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .history-period-picker__option:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ticket-accent-deep) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .history-period-picker__panel {
+  border-color: rgb(42 33 24 / 0.28);
+  background: rgb(255 248 236 / 0.98);
+  box-shadow: 0 12px 28px rgb(42 33 24 / 0.18);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .history-period-picker__label,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .history-period-picker__option-range {
+  color: var(--ticket-pilot-ink-soft);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .history-period-picker__year,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .history-period-picker__month-label,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .history-period-picker__option-title,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-history__summary,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-history__empty-title {
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .history-period-picker__tab[data-active='true'],
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .history-period-picker__option[data-selected='true'] {
+  background: color-mix(in srgb, var(--ticket-accent) 22%, #fff8ec);
+  border-color: var(--ticket-accent-deep);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-history__heading {
+  color: var(--ticket-pilot-ink);
+  font-family: var(--ticket-pilot-serif);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-history__note,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-history__meta,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-history__learning,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-history__empty-hint {
+  color: var(--ticket-pilot-ink-soft);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-history__empty {
+  border-color: color-mix(in srgb, var(--ticket-accent-deep) 35%, transparent);
+  background: color-mix(in srgb, var(--ticket-accent) 8%, transparent);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__cta--consult {
+  background: var(--ticket-accent);
+  border-color: var(--ticket-accent-deep);
+  color: #f7f4ea;
+}
+
+/*
+ * CTAs duales legado en Mis reportes (por si alguna superficie residual).
+ */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__cta-group {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__cta {
+  flex: 1 1 0;
+  min-width: 0;
+  border: 1px solid var(--ticket-accent-deep);
+  border-radius: 8px;
+  padding: 8px 6px;
+  background: var(--ticket-accent);
+  color: #f7f4ea;
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__cta--secondary {
+  background: transparent;
+  border-color: var(--ticket-accent-deep);
+  border-width: 1.5px;
+  color: var(--ticket-accent-deep);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__cta:hover,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__cta:focus-visible {
+  background: var(--ticket-accent-deep);
+  color: #f7f4ea;
+  outline: 2px solid color-mix(in srgb, var(--ticket-accent-deep) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__cta--secondary:hover,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__cta--secondary:focus-visible {
+  background: color-mix(in srgb, var(--ticket-accent) 18%, transparent);
+  color: var(--ticket-accent-deep);
+  outline-color: color-mix(in srgb, var(--ticket-accent-deep) 45%, transparent);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__cta:disabled {
+  background: color-mix(in srgb, var(--ticket-accent) 45%, #c4b89a);
+  border-color: color-mix(in srgb, var(--ticket-accent-deep) 40%, transparent);
+  color: rgb(247 244 234 / 0.72);
+  cursor: not-allowed;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__cta--secondary:disabled {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--ticket-accent-deep) 32%, transparent);
+  color: color-mix(in srgb, var(--ticket-accent-deep) 48%, #8a7a68);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__list {
+  gap: 8px;
+  padding-bottom: 4px;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__row:not(.problem-dossier) {
+  border: 0;
+  border-bottom: 1px solid rgb(42 33 24 / 0.16);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__row:not(.problem-dossier):hover,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__row:not(.problem-dossier):focus-visible {
+  background: rgb(12 95 104 / 0.07);
+  outline: none;
+  box-shadow: inset 0 0 0 2px rgb(12 95 104 / 0.45);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__row:not(.problem-dossier)[aria-current='true'] {
+  background: rgb(26 154 166 / 0.12);
+  box-shadow: inset 3px 0 0 var(--ticket-pilot-teal-deep);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__title {
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__origin,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__status,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__note {
+  color: var(--ticket-pilot-ink-soft);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__severity {
+  border: 1px solid rgb(42 33 24 / 0.22);
+  background: rgb(255 250 238 / 0.95);
+  color: var(--ticket-pilot-ink);
+  font-weight: 650;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__severity[data-severity='CRITICAL'],
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .my-reports__severity[data-severity='HIGH'] {
+  border-color: rgb(154 58 50 / 0.45);
+  color: #8a342c;
+  background: rgb(154 58 50 / 0.1);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .panel-expand-toggle {
+  align-self: center;
+  width: 60%;
+  max-width: 60%;
+  border: 1px solid var(--ticket-accent-deep);
+  border-radius: 8px;
+  background: var(--ticket-accent);
+  color: #f7f4ea;
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .panel-expand-toggle:hover {
+  background: var(--ticket-accent-deep);
+  border-color: var(--ticket-accent-deep);
+  color: #f7f4ea;
+}
+
+.operational-shell[data-ticket-theme] .coordination-panel--ticket-pilot {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.operational-shell[data-ticket-theme]
+  .coordination-panel--ticket-pilot
+  .panel-expand-toggle {
+  margin: 0 auto 4px;
+}
+
+/* ---------- Panel derecho (alto): formulario / detalle ---------- */
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__action.operational-shell__region--ticket-panel
+  .action-panel {
+  min-height: 0;
+  padding-bottom: 12px;
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__idle-heading,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__heading,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__heading,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail__title {
+  color: var(--ticket-pilot-ink);
+  font-family: var(--ticket-pilot-serif);
+  font-size: clamp(16px, 1.2cqi + 14px, 20px);
+  font-weight: 500;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__block-title {
+  color: var(--ticket-pilot-ink);
+  font-family: var(--ticket-pilot-serif);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__idle-text,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__destination,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__field label,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__severity legend,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__label,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail__context,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail__description-text,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-section__hint {
+  color: var(--ticket-pilot-ink-soft);
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__field input,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__field textarea,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__field select,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__form textarea,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions textarea {
+  border: 1px solid rgb(12 95 104 / 0.35);
+  border-radius: 8px;
+  background: rgb(255 250 238 / 0.98);
+  color: var(--ticket-pilot-ink);
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__field input:focus-visible,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__field textarea:focus-visible,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__field select:focus-visible,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__form textarea:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ticket-accent-deep) 55%, transparent);
+  outline-offset: 1px;
+  border-color: var(--ticket-accent-deep);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__severity-option {
+  border: 1px solid rgb(42 33 24 / 0.2);
+  background: rgb(255 248 230 / 0.7);
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__severity-option[data-selected='true'] {
+  border-color: var(--ticket-accent-deep);
+  background: var(--ticket-teal-soft);
+}
+
+/* ==========================================================================
+ * FORMULARIO DE REPORTE SOBRE PAPEL (solo dentro del ticket).
+ *
+ * Por qué hace falta este bloque y por qué lleva `!important`:
+ *
+ * 1. `novex-os.css` viste TODOS los `input`, `textarea` y `select` de la app
+ *    (`.novex-os :is(input, textarea, select)`) con fondo oscuro, borde verde
+ *    y texto claro, y lo hace con `!important` —también en :hover, :focus y
+ *    ::placeholder—. Una regla sin `!important` no puede ganarle, por mucha
+ *    especificidad que tenga: por eso las reglas del ticket de arriba no
+ *    llegaban a pintarse. Aquí se responde con `!important` y MÁS
+ *    especificidad, acotado a este formulario dentro del ticket, para no
+ *    tocar ningún otro formulario ni el tema oscuro sin ticket.
+ * 2. `:root { color-scheme: dark }` hace que el navegador dibuje oscuros los
+ *    controles nativos (radios, selector de fecha, lista del `select`,
+ *    autocompletado). `color-scheme: light` en el formulario los devuelve al
+ *    papel.
+ * 3. `.novex-os select option` fija las opciones en azul noche.
+ *
+ * El color de la coordinación sigue llegando por `--ticket-accent-deep`: no se
+ * redefine ningún token del tema.
+ * ======================================================================== */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form {
+  /*
+   * Papel TRANSLÚCIDO: el campo se aclara sin tapar la textura del ticket.
+   * Las dos superficies que el navegador pinta por su cuenta —la lista
+   * desplegable del `select` (ventana nativa, no admite transparencia) y el
+   * fondo del autocompletado (su azul se colaría)— usan la variante sólida.
+   */
+  --report-field-bg: rgb(255 250 240 / 0.55);
+  --report-field-bg-solid: #fffaf0;
+  --report-field-bg-disabled: rgb(226 214 190 / 0.5);
+  --report-field-border: rgb(42 33 24 / 0.38);
+  /* ≥ 4,5:1 sobre el campo ya mezclado con el papel; más claro que la tinta. */
+  --report-field-placeholder: #6e5e4c;
+  --report-field-error: #8a342c;
+
+  color-scheme: light;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form
+  :is(input:not([type='radio']), textarea, select) {
+  border: 1px solid var(--report-field-border) !important;
+  border-radius: 8px !important;
+  background: var(--report-field-bg) !important;
+  color: var(--ticket-pilot-ink) !important;
+  box-shadow: inset 0 1px 2px rgb(42 33 24 / 0.08) !important;
+  caret-color: var(--ticket-accent-deep);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form
+  :is(input:not([type='radio']), textarea, select):hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--ticket-accent-deep) 55%, transparent) !important;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form
+  :is(input:not([type='radio']), textarea, select):focus-visible {
+  border-color: var(--ticket-accent-deep) !important;
+  /* `!important` frente al anillo verde global (`.novex-os :focus-visible`). */
+  outline: 2px solid color-mix(in srgb, var(--ticket-accent-deep) 45%, transparent) !important;
+  outline-offset: 1px;
+  box-shadow: inset 0 1px 2px rgb(42 33 24 / 0.08) !important;
+}
+
+/* Error de campo: solo tras interactuar (`:user-invalid`), nunca al abrir. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form
+  :is(input:not([type='radio']), textarea, select):user-invalid {
+  border-color: var(--report-field-error) !important;
+  box-shadow: inset 0 0 0 1px var(--report-field-error) !important;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form
+  :is(input:not([type='radio']), textarea, select):disabled {
+  background: var(--report-field-bg-disabled) !important;
+  color: var(--ticket-pilot-ink-soft) !important;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form
+  :is(input, textarea)::placeholder {
+  color: var(--report-field-placeholder) !important;
+  opacity: 1;
+}
+
+/*
+ * Autocompletado de Chromium: pinta su propio fondo por encima de
+ * `background`. La sombra interior de 1000 px lo tapa con el papel y
+ * `-webkit-text-fill-color` mantiene la tinta.
+ */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form
+  :is(input, textarea, select):-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--report-field-bg-solid) inset !important;
+  -webkit-text-fill-color: var(--ticket-pilot-ink);
+}
+
+/* Lista desplegable del `select`: tinta sobre papel, no azul noche. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form
+  option {
+  background: var(--report-field-bg-solid);
+  color: var(--ticket-pilot-ink);
+}
+
+/* Icono nativo del selector de fecha: legible sobre papel. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form
+  input::-webkit-calendar-picker-indicator {
+  opacity: 0.75;
+  cursor: pointer;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__destination
+  strong {
+  color: var(--ticket-accent-deep);
+}
+
+/*
+ * RADIOS DE SEVERIDAD. La regla global también los alcanza (fondo, borde y
+ * radio de caja de texto con `!important`); se devuelven a un radio nativo
+ * claro con el acento de la coordinación.
+ */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form
+  input[type='radio'] {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: none !important;
+  box-shadow: none !important;
+  accent-color: var(--ticket-accent-deep);
+  cursor: pointer;
+}
+
+/* Opciones de severidad: tinta legible, elegida o no. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__severity-option {
+  align-items: center;
+  column-gap: 6px;
+  border: 1px solid rgb(42 33 24 / 0.26);
+  background: rgb(255 250 240 / 0.5);
+  cursor: pointer;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__severity-label {
+  color: var(--ticket-pilot-ink);
+  font-weight: 600;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__severity-hint {
+  color: var(--ticket-pilot-ink-soft);
+}
+
+/*
+ * La elegida se distingue por FORMA además de color: radio marcado, borde de
+ * 2 px con sombra interior en el acento de la coordinación y etiqueta en
+ * negrita. El padding se reduce 1 px para que el borde grueso no mueva la
+ * rejilla.
+ */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__severity-option[data-selected='true'] {
+  padding: 4px 6px;
+  border: 2px solid var(--ticket-accent-deep);
+  background: var(--ticket-teal-soft);
+  box-shadow: inset 0 0 0 1px rgb(255 250 240 / 0.6);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__severity-option[data-selected='true']
+  .report-form__severity-label {
+  color: var(--ticket-accent-deep);
+  font-weight: 700;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__severity-option[data-selected='true']
+  .report-form__severity-hint {
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__severity-option:has(input:focus-visible) {
+  outline: 2px solid color-mix(in srgb, var(--ticket-accent-deep) 55%, transparent);
+  outline-offset: 1px;
+}
+
+/* El foco lo anuncia la opción entera; el radio no repite el anillo verde global. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form
+  input[type='radio']:focus-visible {
+  outline: none !important;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__severity-option:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__submit,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__submit {
+  border: 1px solid var(--ticket-accent-deep);
+  border-radius: 8px;
+  background: var(--ticket-accent);
+  color: #f7f4ea;
+  font-weight: 600;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__submit:hover,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__submit:focus-visible,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__submit:hover,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__submit:focus-visible {
+  background: var(--ticket-accent-deep);
+  outline: 2px solid color-mix(in srgb, var(--ticket-accent-deep) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__advance-button {
+  border: 1px solid color-mix(in srgb, var(--ticket-ink) 28%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ticket-paper) 88%, #f7f4ea);
+  color: var(--ticket-ink);
+  font-weight: 600;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__advance-button:hover,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__advance-button:focus-visible {
+  border-color: var(--ticket-accent-deep);
+  outline: 2px solid color-mix(in srgb, var(--ticket-accent) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__retry button,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__secondary,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__secondary {
+  border: 1px solid var(--ticket-accent-deep);
+  background: var(--ticket-teal-soft);
+  color: var(--ticket-accent-deep);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-section {
+  border: 1px solid rgb(42 33 24 / 0.18);
+  background: rgb(255 248 230 / 0.55);
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-section__toggle,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-section__title {
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-section__toggle:hover,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-section__toggle:focus-visible {
+  background: rgb(26 154 166 / 0.1);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-section__chevron {
+  border-left-color: var(--ticket-pilot-teal-deep);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions {
+  border: 1px solid rgb(42 33 24 / 0.18);
+  background: rgb(255 248 230 / 0.45);
+  color: var(--ticket-pilot-ink);
+  gap: 8px;
+  margin-top: 2px;
+  padding: 12px 10px 10px;
+  border-radius: 10px;
+  position: relative;
+  z-index: 0;
+  flex: 0 0 auto;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__block--resolution {
+  border-top: 1px dashed rgb(42 33 24 / 0.22);
+  padding-top: 8px;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__block-title {
+  color: var(--ticket-pilot-ink);
+  font-family: var(--ticket-pilot-serif);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__block-hint {
+  color: var(--ticket-pilot-ink-soft);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__field-help {
+  color: var(--ticket-pilot-ink-soft);
+}
+
+/* Formulario de cierre: misma lucha contra novex-os !important que el reporte. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__form {
+  --resolve-field-bg: rgb(255 250 240 / 0.55);
+  --resolve-field-bg-disabled: rgb(226 214 190 / 0.5);
+  --resolve-field-border: rgb(42 33 24 / 0.38);
+  --resolve-field-placeholder: #6e5e4c;
+  --resolve-field-error: #8a342c;
+  color-scheme: light;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__form
+  textarea {
+  border: 1px solid var(--resolve-field-border) !important;
+  border-radius: 8px !important;
+  background: var(--resolve-field-bg) !important;
+  color: var(--ticket-pilot-ink) !important;
+  box-shadow: inset 0 1px 2px rgb(42 33 24 / 0.08) !important;
+  caret-color: var(--ticket-accent-deep);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__form
+  textarea:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--ticket-accent-deep) 55%, transparent) !important;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__form
+  textarea:focus-visible {
+  border-color: var(--ticket-accent-deep) !important;
+  outline: 2px solid color-mix(in srgb, var(--ticket-accent-deep) 45%, transparent) !important;
+  outline-offset: 1px;
+  box-shadow: inset 0 1px 2px rgb(42 33 24 / 0.08) !important;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__form
+  textarea:disabled {
+  background: var(--resolve-field-bg-disabled) !important;
+  color: var(--ticket-pilot-ink-soft) !important;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__form
+  textarea::placeholder {
+  color: var(--resolve-field-placeholder) !important;
+  opacity: 1;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__submit:disabled {
+  border-color: rgb(42 33 24 / 0.18) !important;
+  background: rgb(226 214 190 / 0.55) !important;
+  color: rgb(42 33 24 / 0.45) !important;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__status {
+  border-color: rgb(42 33 24 / 0.22);
+  background: color-mix(in srgb, var(--ticket-paper) 82%, #f7f4ea);
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__status[data-status='OPEN'] {
+  border-color: rgb(42 33 24 / 0.2);
+  color: var(--ticket-pilot-ink-soft);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__status[data-status='IN_PROGRESS'],
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__status[data-status='RESOLVED'] {
+  border-color: color-mix(in srgb, var(--ticket-accent) 45%, transparent);
+  color: var(--ticket-accent-deep);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__learning {
+  border-color: rgb(12 95 104 / 0.35);
+  background: rgb(255 250 238 / 0.98);
+  color: var(--ticket-pilot-ink);
+}
+
+/*
+ * Detalle LEVEL 2: anula restos del look oscuro (deck-text / superficies
+ * navy) para lectura sobre crema. Solo contraste visual; mismo contrato.
+ */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail {
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail__title {
+  color: var(--ticket-pilot-ink);
+  font-family: var(--ticket-pilot-serif);
+  font-size: clamp(16px, 1.2cqi + 13px, 19px);
+  font-weight: 500;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail__description-text,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-section__text {
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail__context,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-section__note,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__byline,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__note {
+  color: var(--ticket-pilot-ink-soft);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-section {
+  background: rgb(255 248 230 / 0.62);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-section__toggle {
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-section__toggle:hover,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-section__toggle:focus-visible {
+  background: rgb(26 154 166 / 0.1);
+  outline-color: rgb(12 95 104 / 0.55);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail__badge {
+  background: rgb(255 250 238 / 0.95);
+}
+
+/* Folio, rótulos de bloque y contexto: tinta suave sobre crema. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail__folio,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail__block-title,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail__context dt {
+  color: var(--ticket-pilot-ink-soft);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail__context dd {
+  color: var(--ticket-pilot-ink);
+}
+
+/* Entradas de notas, evidencias y cronología: tinta sobre papel, filete sepia. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-entry {
+  border-top-color: rgb(42 33 24 / 0.2);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-entry:first-child {
+  border-top: 0;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-entry__title,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-entry__content,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-entry__transition,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-entry__facts dd {
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-entry__kind,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-entry__byline,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-entry__facts dt {
+  color: var(--ticket-pilot-ink-soft);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-retry__button {
+  border-color: var(--ticket-pilot-teal-deep);
+  color: var(--ticket-pilot-teal-deep);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-retry__button:focus-visible {
+  outline-color: rgb(12 95 104 / 0.55);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail__notice,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail__skeleton span {
+  color: var(--ticket-pilot-ink-soft);
+  background: rgb(255 248 230 / 0.7);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__severity-hint,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__note {
+  color: var(--ticket-pilot-ink-soft);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__hint--error,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__note--error,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .detail-section__note--error,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__note--error {
+  color: #8a342c;
+}
+
+/* Selector visual de responsable: papel crema, sin overlay absoluto. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__label,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__search-label {
+  color: var(--ticket-pilot-ink-soft);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__trigger,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__change,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__dismiss,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__search,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__option {
+  border-color: var(--report-field-border);
+  background: var(--report-field-bg);
+  color: var(--ticket-pilot-ink);
+  box-shadow: inset 0 1px 2px rgb(42 33 24 / 0.08);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__trigger:hover:not(:disabled),
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__change:hover:not(:disabled),
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__option:hover,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__option[data-active='true'] {
+  border-color: color-mix(in srgb, var(--ticket-accent-deep) 55%, transparent);
+  background: color-mix(in srgb, var(--report-field-bg-solid) 88%, var(--ticket-accent) 12%);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__trigger:focus-visible,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__change:focus-visible,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__search:focus-visible,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__option:focus-visible {
+  border-color: var(--ticket-accent-deep);
+  outline: 2px solid color-mix(in srgb, var(--ticket-accent-deep) 45%, transparent);
+  outline-offset: 1px;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker[data-invalid='true'] .responsible-picker__trigger {
+  border-color: var(--report-field-error);
+  box-shadow: inset 0 0 0 1px var(--report-field-error);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__error {
+  color: var(--report-field-error);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__summary,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__panel {
+  border-color: var(--report-field-border);
+  background: color-mix(in srgb, var(--report-field-bg-solid) 82%, transparent);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__summary-text,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__option-label {
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__option[aria-selected='true'] {
+  border-color: var(--ticket-accent-deep);
+  background: color-mix(in srgb, var(--report-field-bg-solid) 75%, var(--ticket-accent) 25%);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__mark {
+  border: 1px solid rgb(42 33 24 / 0.2);
+  background: #fffaf0;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__mark[data-mark='neutral'] {
+  background: color-mix(in srgb, var(--ticket-accent) 25%, #fffaf0);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__empty {
+  color: var(--ticket-pilot-ink-soft);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .responsible-picker__list {
+  max-height: min(180px, 32vh);
+  scrollbar-color: color-mix(in srgb, var(--ticket-accent-deep) 45%, transparent)
+    transparent;
+}
+
+
+/* ---------- Saber Pro fase 4.2: escala por dibujo visible (no canvas PNG) ----------
+ * Margenes transparentes medidos: checklist fillH~89%, seal~61%, laurel~81%/fillW~93%, meerkat~84%.
+ * CSS = objetivo_visible / fillRatio; object-fit contain; sin estirar PNG.
+ */
+.operational-shell[data-ticket-theme='saber-pro'] .ticket-panel__ornament {
+  opacity: 0.94;
+  filter: none;
+}
+
+/* Personaje: laurel 18-25 px visibles -> CSS ~22-30 px (fillH ~81%). */
+.operational-shell[data-ticket-theme='saber-pro']
+  .ticket-panel--character
+  .ticket-panel__ornament {
+  height: clamp(22px, 11cqi, 30px);
+  width: auto;
+  opacity: 0.96;
+}
+
+/* Reports BL = checklist: 40-50 px visibles -> CSS ~45-56 px. */
+.operational-shell[data-ticket-theme='saber-pro']
+  .ticket-panel--reports
+  .ticket-panel__ornament--bl {
+  height: clamp(48px, 13cqi, 56px);
+  width: auto;
+  max-width: 44%;
+}
+
+/* Reports BR = sello: 40-50 px visibles -> CSS ~66-82 px (fillH ~61%). */
+.operational-shell[data-ticket-theme='saber-pro']
+  .ticket-panel--reports
+  .ticket-panel__ornament--br {
+  height: clamp(66px, 16cqi, 80px);
+  width: auto;
+  max-width: 40%;
+}
+
+/* Problems BL = sello (misma escala). */
+.operational-shell[data-ticket-theme='saber-pro']
+  .ticket-panel--problems
+  .ticket-panel__ornament--bl {
+  height: clamp(66px, 16cqi, 80px);
+  width: auto;
+  max-width: 40%;
+}
+
+/* Problems BR = laurel contenido, no invade filas. */
+.operational-shell[data-ticket-theme='saber-pro']
+  .ticket-panel--problems
+  .ticket-panel__ornament--br {
+  height: clamp(28px, 8cqi, 36px);
+  width: auto;
+  max-width: 42%;
+}
+
+/* Action TR = laurel 150-180 px ancho visible -> CSS ~161-194 (fillW ~93%). */
+.operational-shell[data-ticket-theme='saber-pro']
+  .ticket-panel--action
+  .ticket-panel__ornament--tr {
+  width: clamp(162px, 48%, 190px);
+  height: auto;
+  max-height: 72px;
+  top: 8px;
+  right: 10px;
+}
+
+/* Action BL = checklist 60-75 px visibles -> CSS ~67-84 px. */
+.operational-shell[data-ticket-theme='saber-pro']
+  .ticket-panel--action
+  .ticket-panel__ornament--bl {
+  height: clamp(68px, 12cqi, 84px);
+  width: auto;
+  max-width: 46%;
+  bottom: 8px;
+  left: 8px;
+}
+
+/* Watermarks: action 130-150 px dibujo (caja ~155-178), opacity 0.055; demas contenidas. */
+.operational-shell[data-ticket-theme='saber-pro']
+  .ticket-panel--character
+  .ticket-panel__watermark {
+  width: clamp(36px, 28%, 52px);
+  opacity: 0.034;
+}
+
+.operational-shell[data-ticket-theme='saber-pro']
+  .ticket-panel--reports
+  .ticket-panel__watermark,
+.operational-shell[data-ticket-theme='saber-pro']
+  .ticket-panel--problems
+  .ticket-panel__watermark {
+  width: clamp(48px, 16%, 72px);
+  opacity: 0.034;
+}
+
+.operational-shell[data-ticket-theme='saber-pro']
+  .ticket-panel--action
+  .ticket-panel__watermark {
+  width: clamp(155px, 34%, 178px);
+  height: auto;
+  aspect-ratio: 1;
+  opacity: 0.055;
+  right: 4%;
+  bottom: 4%;
+}
+/* ---------- Especializaciones: escala por dibujo visible ----------
+ * Fill aproximados: books~66%, chart~71%, globe~84%, mortarboard~68%/85%W, falcon~80%.
+ * PNG ya en tinta #7B110D: sin filter de recolor.
+ */
+.operational-shell[data-ticket-theme='especializaciones'] .ticket-panel__ornament {
+  opacity: 0.95;
+  filter: none;
+}
+
+/* Character: birrete 22-28 px visibles; falcon WM 48-52 px. */
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--character
+  .ticket-panel__ornament {
+  height: clamp(28px, 12cqi, 38px);
+  width: auto;
+  max-width: 48%;
+  opacity: 0.96;
+}
+
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--character
+  .ticket-panel__watermark {
+  width: clamp(48px, 30%, 52px);
+  opacity: 0.04;
+  right: 6%;
+  bottom: 5%;
+}
+
+/* Reports: books BL 44-52 visibles (~CSS 68-78); ribbon BR 38-46 (~CSS 46-56). */
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--reports
+  .ticket-panel__ornament--bl {
+  height: clamp(68px, 15cqi, 78px);
+  width: auto;
+  max-width: 46%;
+}
+
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--reports
+  .ticket-panel__ornament--br {
+  height: clamp(46px, 12cqi, 56px);
+  width: auto;
+  max-width: 38%;
+}
+
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--reports
+  .ticket-panel__watermark,
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--problems
+  .ticket-panel__watermark {
+  width: clamp(52px, 18%, 78px);
+  opacity: 0.038;
+  right: 5%;
+  bottom: 5%;
+}
+
+/* Problems: chart BL 42-50; globe BR 42-50. */
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--problems
+  .ticket-panel__ornament--bl {
+  height: clamp(60px, 14cqi, 72px);
+  width: auto;
+  max-width: 42%;
+}
+
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--problems
+  .ticket-panel__ornament--br {
+  height: clamp(50px, 13cqi, 60px);
+  width: auto;
+  max-width: 40%;
+}
+
+/* Action: mortarboard TR 150-180 ancho visible; books BL 65-75; chart BR 48-56. */
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--action
+  .ticket-panel__ornament--tr {
+  width: clamp(176px, 50%, 210px);
+  height: auto;
+  max-height: 88px;
+  top: 8px;
+  right: 10px;
+}
+
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--action
+  .ticket-panel__ornament--bl {
+  height: clamp(96px, 15cqi, 112px);
+  width: auto;
+  max-width: 48%;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--action
+  .ticket-panel__ornament--br {
+  height: clamp(68px, 12cqi, 80px);
+  width: auto;
+  max-width: 36%;
+  bottom: 8px;
+  right: 10px;
+}
+
+/* Falcon action: 140-155 visibles (caja ~175-194, fillH~80%), opacity 0.05-0.06. */
+.operational-shell[data-ticket-theme='especializaciones']
+  .ticket-panel--action
+  .ticket-panel__watermark {
+  width: clamp(175px, 38%, 194px);
+  height: auto;
+  aspect-ratio: 1;
+  opacity: 0.055;
+  right: 4%;
+  bottom: 4%;
+}
+
+/* ---------- Desarrollo Profesional: escala por dibujo visible ----------
+ * Fill aprox: butterfly H~95%/W~70%, climber~76%, sun-rays~86%,
+ * stepped-arrow~67%, corner-star~72%. PNG ya en tinta #5C2E58: sin filter.
+ */
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel__ornament {
+  opacity: 0.95;
+  filter: none;
+}
+
+/* Character: corner-star 18-26 visibles; butterfly WM 48-52. */
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel--character
+  .ticket-panel__ornament {
+  height: clamp(25px, 10cqi, 36px);
+  width: auto;
+  max-width: 42%;
+  opacity: 0.96;
+}
+
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel--character
+  .ticket-panel__watermark {
+  /* Landscape 3:2: width≈76-82 → alto caja ≈51-55 → visible ≈48-52 (fillH~0.95). */
+  width: clamp(76px, 32%, 82px);
+  height: auto;
+  aspect-ratio: 3 / 2;
+  opacity: 0.04;
+  right: 5%;
+  bottom: 5%;
+}
+
+/* Reports: climber BL 44-52; sun-rays BR 38-46; butterfly 54-66. */
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel--reports
+  .ticket-panel__ornament--bl {
+  height: clamp(58px, 14cqi, 68px);
+  width: auto;
+  max-width: 44%;
+}
+
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel--reports
+  .ticket-panel__ornament--br {
+  height: clamp(44px, 12cqi, 54px);
+  width: auto;
+  max-width: 38%;
+}
+
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel--reports
+  .ticket-panel__watermark,
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel--problems
+  .ticket-panel__watermark {
+  /* width 85-104 → alto caja 57-69 → visible ≈54-66. */
+  width: clamp(85px, 22%, 104px);
+  height: auto;
+  aspect-ratio: 3 / 2;
+  opacity: 0.04;
+  right: 5%;
+  bottom: 5%;
+}
+
+/* Problems: stepped-arrow BL 44-52; corner-star BR 22-30. */
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel--problems
+  .ticket-panel__ornament--bl {
+  height: clamp(66px, 14cqi, 78px);
+  width: auto;
+  max-width: 44%;
+}
+
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel--problems
+  .ticket-panel__ornament--br {
+  height: clamp(31px, 10cqi, 42px);
+  width: auto;
+  max-width: 32%;
+}
+
+/* Action: sun-rays TR contenido (~70-90 visibles); climber BL 65-75; butterfly 150-170. */
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel--action
+  .ticket-panel__ornament--tr {
+  width: clamp(82px, 22%, 104px);
+  height: auto;
+  max-height: 104px;
+  top: 10px;
+  right: 12px;
+}
+
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel--action
+  .ticket-panel__ornament--bl {
+  height: clamp(86px, 14cqi, 99px);
+  width: auto;
+  max-width: 46%;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='desarrollo-profesional']
+  .ticket-panel--action
+  .ticket-panel__watermark {
+  /* Alto caja 158-179 → visible 150-170 (fillH~0.95); width = h * 1.5. */
+  width: clamp(237px, 42%, 268px);
+  height: auto;
+  aspect-ratio: 3 / 2;
+  opacity: 0.055;
+  right: 3%;
+  bottom: 3%;
+}
+
+/* ---------- B2B: escala por dibujo visible ----------
+ * Fill aprox: woodpecker~80%, star H~67%, globe~74%,
+ * quotes canvas ancho fillH~33%, speech H~51%, rule-dot H~55%/W~52%.
+ * PNG de adornos en caoba: sin filter. Watermark conserva su tinta de archivo.
+ */
+.operational-shell[data-ticket-theme='b2b'] .ticket-panel__ornament {
+  opacity: 0.95;
+  filter: none;
+}
+
+/* Character: star 18-26 visibles; woodpecker 48-52 (caja / 0.80). */
+.operational-shell[data-ticket-theme='b2b']
+  .ticket-panel--character
+  .ticket-panel__ornament {
+  height: clamp(27px, 10cqi, 39px);
+  width: auto;
+  max-width: 42%;
+  opacity: 0.96;
+}
+
+.operational-shell[data-ticket-theme='b2b']
+  .ticket-panel--character
+  .ticket-panel__watermark {
+  width: clamp(60px, 26%, 65px);
+  height: auto;
+  aspect-ratio: 1;
+  opacity: 0.04;
+  right: 6%;
+  bottom: 5%;
+}
+
+/* Reports: quotes BL 28-40 visibles; globe BR 38-52; WM 54-70. */
+.operational-shell[data-ticket-theme='b2b']
+  .ticket-panel--reports
+  .ticket-panel__ornament--bl {
+  /* Canvas 3:1, fillH~0.33 → alto de caja ~85-121 para 28-40 visibles. */
+  height: clamp(85px, 22cqi, 110px);
+  width: auto;
+  max-width: 46%;
+}
+
+.operational-shell[data-ticket-theme='b2b']
+  .ticket-panel--reports
+  .ticket-panel__ornament--br {
+  height: clamp(51px, 13cqi, 70px);
+  width: auto;
+  max-width: 40%;
+}
+
+.operational-shell[data-ticket-theme='b2b']
+  .ticket-panel--reports
+  .ticket-panel__watermark,
+.operational-shell[data-ticket-theme='b2b']
+  .ticket-panel--problems
+  .ticket-panel__watermark {
+  width: clamp(68px, 20%, 88px);
+  height: auto;
+  aspect-ratio: 1;
+  opacity: 0.04;
+  right: 5%;
+  bottom: 5%;
+}
+
+/* Problems: speech BL 36-48; star BR 22-28. */
+.operational-shell[data-ticket-theme='b2b']
+  .ticket-panel--problems
+  .ticket-panel__ornament--bl {
+  height: clamp(71px, 16cqi, 94px);
+  width: auto;
+  max-width: 48%;
+}
+
+.operational-shell[data-ticket-theme='b2b']
+  .ticket-panel--problems
+  .ticket-panel__ornament--br {
+  height: clamp(33px, 10cqi, 42px);
+  width: auto;
+  max-width: 32%;
+}
+
+/* Action: globe BL 65-80; rule TR ancho visible 140-170; WM 150-170. */
+.operational-shell[data-ticket-theme='b2b']
+  .ticket-panel--action
+  .ticket-panel__ornament--bl {
+  height: clamp(88px, 14cqi, 108px);
+  width: auto;
+  max-width: 36%;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='b2b']
+  .ticket-panel--action
+  .ticket-panel__ornament--tr {
+  /* Comillas (rule-dot): adorno de esquina, no encabezado. */
+  width: clamp(72px, 16%, 92px);
+  height: auto;
+  max-height: 64px;
+  top: 10px;
+  right: 12px;
+}
+
+.operational-shell[data-ticket-theme='b2b']
+  .ticket-panel--action
+  .ticket-panel__watermark {
+  width: clamp(188px, 34%, 213px);
+  height: auto;
+  aspect-ratio: 1;
+  opacity: 0.055;
+  right: 3%;
+  bottom: 3%;
+}
+
+/* ---------- General: escala por dibujo visible ----------
+ * Fill aprox: giraffe H~90%/W~88%, team~60%, target~61%,
+ * org~66%, route~60%, star~77%. PNG en #EC9B07: sin filter.
+ */
+.operational-shell[data-ticket-theme='general'] .ticket-panel__ornament {
+  opacity: 0.95;
+  filter: none;
+}
+
+/* Character: star 18-26; giraffe caja 60-68 → visible ~54-61 (fillH~0.90). */
+.operational-shell[data-ticket-theme='general']
+  .ticket-panel--character
+  .ticket-panel__ornament {
+  height: clamp(23px, 10cqi, 34px);
+  width: auto;
+  max-width: 42%;
+  opacity: 0.96;
+}
+
+.operational-shell[data-ticket-theme='general']
+  .ticket-panel--character
+  .ticket-panel__watermark {
+  width: clamp(60px, 28%, 68px);
+  height: auto;
+  aspect-ratio: 1352 / 1638;
+  opacity: 0.04;
+  right: 6%;
+  bottom: 5%;
+}
+
+/* Reports: team BL 42-54; target BR 40-52; WM 54-70. */
+.operational-shell[data-ticket-theme='general']
+  .ticket-panel--reports
+  .ticket-panel__ornament--bl {
+  height: clamp(70px, 15cqi, 90px);
+  width: auto;
+  max-width: 44%;
+}
+
+.operational-shell[data-ticket-theme='general']
+  .ticket-panel--reports
+  .ticket-panel__ornament--br {
+  height: clamp(66px, 14cqi, 85px);
+  width: auto;
+  max-width: 40%;
+}
+
+.operational-shell[data-ticket-theme='general']
+  .ticket-panel--reports
+  .ticket-panel__watermark,
+.operational-shell[data-ticket-theme='general']
+  .ticket-panel--problems
+  .ticket-panel__watermark {
+  width: clamp(60px, 20%, 78px);
+  height: auto;
+  aspect-ratio: 1352 / 1638;
+  opacity: 0.04;
+  right: 5%;
+  bottom: 5%;
+}
+
+/* Problems: org BL 42-54; route BR 45-60. */
+.operational-shell[data-ticket-theme='general']
+  .ticket-panel--problems
+  .ticket-panel__ornament--bl {
+  height: clamp(64px, 14cqi, 82px);
+  width: auto;
+  max-width: 44%;
+}
+
+.operational-shell[data-ticket-theme='general']
+  .ticket-panel--problems
+  .ticket-panel__ornament--br {
+  height: clamp(75px, 15cqi, 100px);
+  width: auto;
+  max-width: 42%;
+}
+
+/* Action: route BL 65-80; star TR 30-42; giraffe 150-170 (caja ~190-225). */
+.operational-shell[data-ticket-theme='general']
+  .ticket-panel--action
+  .ticket-panel__ornament--bl {
+  height: clamp(108px, 16cqi, 133px);
+  width: auto;
+  max-width: 40%;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='general']
+  .ticket-panel--action
+  .ticket-panel__ornament--tr {
+  height: clamp(39px, 10cqi, 55px);
+  width: auto;
+  max-width: 28%;
+  top: 10px;
+  right: 12px;
+}
+
+.operational-shell[data-ticket-theme='general']
+  .ticket-panel--action
+  .ticket-panel__watermark {
+  width: clamp(157px, 30%, 186px);
+  height: auto;
+  aspect-ratio: 1352 / 1638;
+  opacity: 0.055;
+  right: 3%;
+  bottom: 3%;
+}
+
+/* ---------- Proyección Social: escala por dibujo visible ----------
+ * Fill aprox: hummingbird~86%, star~76%, leaf-vine W~92%/H~69%,
+ * heart~62%, people-leaf~70%, social-globe~74%. PNG #006633: sin filter.
+ */
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel__ornament {
+  opacity: 0.95;
+  filter: none;
+}
+
+/* Character: star 18-26; hummingbird caja 60-64 → visible ~52 (fillH~0.86). */
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel--character
+  .ticket-panel__ornament {
+  height: clamp(24px, 10cqi, 34px);
+  width: auto;
+  max-width: 42%;
+  opacity: 0.96;
+}
+
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel--character
+  .ticket-panel__watermark {
+  width: clamp(60px, 28%, 64px);
+  height: auto;
+  aspect-ratio: 1130 / 1039;
+  opacity: 0.04;
+  right: 6%;
+  bottom: 5%;
+}
+
+/* Reports: leaf BL ancho 90-130; heart BR 32-44; WM 54-70. */
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel--reports
+  .ticket-panel__ornament--bl {
+  width: clamp(98px, 28%, 141px);
+  height: auto;
+  max-height: 72px;
+  max-width: 48%;
+}
+
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel--reports
+  .ticket-panel__ornament--br {
+  height: clamp(52px, 12cqi, 71px);
+  width: auto;
+  max-width: 36%;
+}
+
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel--reports
+  .ticket-panel__watermark,
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel--problems
+  .ticket-panel__watermark {
+  width: clamp(63px, 20%, 81px);
+  height: auto;
+  aspect-ratio: 1130 / 1039;
+  opacity: 0.04;
+  right: 5%;
+  bottom: 5%;
+}
+
+/* Problems: people-leaf BL 42-54; social-globe BR 40-54. */
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel--problems
+  .ticket-panel__ornament--bl {
+  height: clamp(60px, 14cqi, 77px);
+  width: auto;
+  max-width: 44%;
+}
+
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel--problems
+  .ticket-panel__ornament--br {
+  height: clamp(54px, 13cqi, 73px);
+  width: auto;
+  max-width: 40%;
+}
+
+/* Action: people BL 65-80; star TR 30-42; hummingbird 140-170 (ancho ~180-195). */
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel--action
+  .ticket-panel__ornament--bl {
+  height: clamp(93px, 15cqi, 114px);
+  width: auto;
+  max-width: 42%;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel--action
+  .ticket-panel__ornament--tr {
+  height: clamp(39px, 10cqi, 55px);
+  width: auto;
+  max-width: 28%;
+  top: 10px;
+  right: 12px;
+}
+
+.operational-shell[data-ticket-theme='proyeccion-social']
+  .ticket-panel--action
+  .ticket-panel__watermark {
+  width: clamp(180px, 34%, 195px);
+  height: auto;
+  aspect-ratio: 1130 / 1039;
+  object-fit: contain;
+  opacity: 0.055;
+  right: 3%;
+  bottom: 3%;
+}
+
+/* ---------- Servicio: escala por dibujo visible ----------
+ * Fill aprox: flamingo H~90%/W~86%, star~78%, open-hand H~58%,
+ * pin~64%, care-heart~80%, handshake~78%. PNG #C11B76: sin filter.
+ * Flamenco con pico a la izquierda (sin scaleX).
+ */
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel__ornament {
+  opacity: 0.95;
+  filter: none;
+}
+
+/* Character: star 18-26; flamingo caja ~53-58 → visible ~48-52 (fillH~0.90). */
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel--character
+  .ticket-panel__ornament {
+  height: clamp(23px, 10cqi, 33px);
+  width: auto;
+  max-width: 42%;
+  opacity: 0.96;
+}
+
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel--character
+  .ticket-panel__watermark {
+  height: clamp(53px, 24%, 58px);
+  width: auto;
+  aspect-ratio: 692 / 1006;
+  object-fit: contain;
+  opacity: 0.04;
+  right: 6%;
+  bottom: 5%;
+}
+
+/* Reports: open-hand BL 36-48; pin BR 32-44; WM 54-70. */
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel--reports
+  .ticket-panel__ornament--bl {
+  height: clamp(62px, 14cqi, 83px);
+  width: auto;
+  max-width: 46%;
+  max-height: 88px;
+}
+
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel--reports
+  .ticket-panel__ornament--br {
+  height: clamp(50px, 12cqi, 69px);
+  width: auto;
+  max-width: 36%;
+}
+
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel--reports
+  .ticket-panel__watermark,
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel--problems
+  .ticket-panel__watermark {
+  height: clamp(60px, 18%, 78px);
+  width: auto;
+  aspect-ratio: 692 / 1006;
+  object-fit: contain;
+  opacity: 0.04;
+  right: 5%;
+  bottom: 5%;
+}
+
+/* Problems: care-heart BL 42-54; handshake BR 40-52. */
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel--problems
+  .ticket-panel__ornament--bl {
+  height: clamp(53px, 14cqi, 68px);
+  width: auto;
+  max-width: 44%;
+}
+
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel--problems
+  .ticket-panel__ornament--br {
+  height: clamp(51px, 13cqi, 67px);
+  width: auto;
+  max-width: 42%;
+}
+
+/* Action: handshake BL 65-80; star TR 30-42; flamingo 140-170 (≤175 @1920). */
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel--action
+  .ticket-panel__ornament--bl {
+  height: clamp(83px, 15cqi, 103px);
+  width: auto;
+  max-width: 42%;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel--action
+  .ticket-panel__ornament--tr {
+  height: clamp(38px, 10cqi, 54px);
+  width: auto;
+  max-width: 28%;
+  top: 10px;
+  right: 12px;
+}
+
+.operational-shell[data-ticket-theme='servicio']
+  .ticket-panel--action
+  .ticket-panel__watermark {
+  width: clamp(107px, 20%, 130px);
+  height: auto;
+  aspect-ratio: 692 / 1006;
+  object-fit: contain;
+  opacity: 0.055;
+  right: 3%;
+  bottom: 3%;
+}
+
+/* ---------- Operación Académica: núcleo de cinco escuelas ----------
+ * Fill aprox: wolf H~90%/W~87%, hub~85%, chain W~93%/H~42%,
+ * fan~76%/79%, rosette~79%/75%. PNG #283063: sin filter. Sin scaleX.
+ */
+.operational-shell[data-ticket-theme='operacion-academica']
+  .ticket-panel__ornament {
+  opacity: 0.95;
+  filter: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Character: fan BL ancho visible 32-44; wolf BR caja ~53-58 → ~48-52. */
+.operational-shell[data-ticket-theme='operacion-academica']
+  .ticket-panel--character
+  .ticket-panel__ornament {
+  width: clamp(42px, 18%, 58px);
+  height: auto;
+  max-width: 48%;
+  opacity: 0.96;
+}
+
+.operational-shell[data-ticket-theme='operacion-academica']
+  .ticket-panel--character
+  .ticket-panel__watermark {
+  height: clamp(53px, 24%, 58px);
+  width: auto;
+  aspect-ratio: 794 / 1066;
+  object-fit: contain;
+  opacity: 0.04;
+  right: 6%;
+  bottom: 5%;
+  left: auto;
+}
+
+/* Reports: hub BL ancho visible 80-105; wolf 54-70. */
+.operational-shell[data-ticket-theme='operacion-academica']
+  .ticket-panel--reports
+  .ticket-panel__ornament--bl {
+  width: clamp(94px, 28%, 124px);
+  height: auto;
+  max-width: 48%;
+  max-height: 92px;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='operacion-academica']
+  .ticket-panel--reports
+  .ticket-panel__watermark,
+.operational-shell[data-ticket-theme='operacion-academica']
+  .ticket-panel--problems
+  .ticket-panel__watermark {
+  height: clamp(60px, 18%, 78px);
+  width: auto;
+  aspect-ratio: 794 / 1066;
+  object-fit: contain;
+  opacity: 0.04;
+  right: 5%;
+  bottom: 5%;
+  left: auto;
+}
+
+/* Problems: chain inferior centrada~izq 150-210; rosette BR 38-50. */
+.operational-shell[data-ticket-theme='operacion-academica']
+  .ticket-panel--problems
+  .ticket-panel__ornament--bl {
+  width: clamp(161px, 52%, 226px);
+  height: auto;
+  max-width: 72%;
+  left: 42%;
+  right: auto;
+  bottom: 6px;
+  transform: translateX(-50%);
+}
+
+.operational-shell[data-ticket-theme='operacion-academica']
+  .ticket-panel--problems
+  .ticket-panel__ornament--br {
+  height: clamp(51px, 12cqi, 67px);
+  width: auto;
+  max-width: 28%;
+  bottom: 6px;
+  right: 6px;
+}
+
+/* Action: hub TR 110-130 visibles; rosette BR 50-70; wolf BL 140-170 (≤175). */
+.operational-shell[data-ticket-theme='operacion-academica']
+  .ticket-panel--action
+  .ticket-panel__ornament--tr {
+  width: clamp(129px, 22%, 153px);
+  height: auto;
+  max-width: 34%;
+  top: 10px;
+  right: 10px;
+  opacity: 0.95;
+}
+
+.operational-shell[data-ticket-theme='operacion-academica']
+  .ticket-panel--action
+  .ticket-panel__ornament--br {
+  height: clamp(67px, 12cqi, 93px);
+  width: auto;
+  max-width: 26%;
+  bottom: 10px;
+  right: 10px;
+  opacity: 0.95;
+}
+
+.operational-shell[data-ticket-theme='operacion-academica']
+  .ticket-panel--action
+  .ticket-panel__watermark {
+  width: clamp(116px, 18%, 141px);
+  height: auto;
+  aspect-ratio: 794 / 1066;
+  object-fit: contain;
+  opacity: 0.055;
+  left: 3%;
+  right: auto;
+  bottom: 3%;
+}
+
+/* ---------- Bellas Artes: danza / música / expresión ----------
+ * Fill aprox: horse H~69%/W~90%, shoes~71%, notes H~55%, ballerina~93%,
+ * star~66%. PNG #623A80: sin filter. Caballo a la derecha (sin scaleX).
+ */
+.operational-shell[data-ticket-theme='bellas-artes']
+  .ticket-panel__ornament {
+  opacity: 0.95;
+  filter: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Character: star 18-24; horse caja ~70-75 → visible ~48-52 (fillH~0.69). */
+.operational-shell[data-ticket-theme='bellas-artes']
+  .ticket-panel--character
+  .ticket-panel__ornament {
+  height: clamp(27px, 10cqi, 36px);
+  width: auto;
+  max-width: 42%;
+  opacity: 0.96;
+}
+
+.operational-shell[data-ticket-theme='bellas-artes']
+  .ticket-panel--character
+  .ticket-panel__watermark {
+  height: clamp(70px, 28%, 75px);
+  width: auto;
+  aspect-ratio: 1298 / 1257;
+  object-fit: contain;
+  opacity: 0.04;
+  right: 5%;
+  bottom: 4%;
+  left: auto;
+}
+
+/* Reports: shoes BL 38-48; notes BR 32-44; horse 54-70. */
+.operational-shell[data-ticket-theme='bellas-artes']
+  .ticket-panel--reports
+  .ticket-panel__ornament--bl {
+  height: clamp(54px, 13cqi, 68px);
+  width: auto;
+  max-width: 42%;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='bellas-artes']
+  .ticket-panel--reports
+  .ticket-panel__ornament--br {
+  height: clamp(58px, 12cqi, 80px);
+  width: auto;
+  max-width: 34%;
+  bottom: 8px;
+  right: 8px;
+}
+
+.operational-shell[data-ticket-theme='bellas-artes']
+  .ticket-panel--reports
+  .ticket-panel__watermark,
+.operational-shell[data-ticket-theme='bellas-artes']
+  .ticket-panel--problems
+  .ticket-panel__watermark {
+  height: clamp(78px, 20%, 101px);
+  width: auto;
+  aspect-ratio: 1298 / 1257;
+  object-fit: contain;
+  opacity: 0.04;
+  right: 4%;
+  bottom: 4%;
+  left: auto;
+}
+
+/* Problems: ballerina BL 44-58; star BR 24-32. */
+.operational-shell[data-ticket-theme='bellas-artes']
+  .ticket-panel--problems
+  .ticket-panel__ornament--bl {
+  height: clamp(47px, 13cqi, 62px);
+  width: auto;
+  max-width: 36%;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='bellas-artes']
+  .ticket-panel--problems
+  .ticket-panel__ornament--br {
+  height: clamp(36px, 10cqi, 48px);
+  width: auto;
+  max-width: 28%;
+  bottom: 8px;
+  right: 8px;
+}
+
+/* Action: ballerina TR 105-130; star BR 30-42; horse BL 150-175. */
+.operational-shell[data-ticket-theme='bellas-artes']
+  .ticket-panel--action
+  .ticket-panel__ornament--tr {
+  height: clamp(113px, 16cqi, 140px);
+  width: auto;
+  max-width: 28%;
+  top: 12px;
+  right: 12px;
+  opacity: 0.95;
+}
+
+.operational-shell[data-ticket-theme='bellas-artes']
+  .ticket-panel--action
+  .ticket-panel__ornament--br {
+  height: clamp(45px, 10cqi, 64px);
+  width: auto;
+  max-width: 22%;
+  bottom: 10px;
+  right: 12px;
+  opacity: 0.95;
+}
+
+.operational-shell[data-ticket-theme='bellas-artes']
+  .ticket-panel--action
+  .ticket-panel__watermark {
+  width: clamp(224px, 28%, 262px);
+  height: auto;
+  aspect-ratio: 1298 / 1257;
+  object-fit: contain;
+  opacity: 0.055;
+  left: 2%;
+  right: auto;
+  bottom: 2%;
+}
+
+/* ---------- Transformación Empresarial: orca / ciclo / engranaje ----------
+ * Fill aprox: orca H~87%/W~81%, cycle~77%, gear~63%, split~88%, star~87%.
+ * PNG #540077: sin filter. Orca a la derecha (sin scaleX).
+ */
+.operational-shell[data-ticket-theme='transformacion-empresarial']
+  .ticket-panel__ornament {
+  opacity: 0.95;
+  filter: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Character: star 18-24; orca caja ~55-60 → visible ~48-52 (fillH~0.87). */
+.operational-shell[data-ticket-theme='transformacion-empresarial']
+  .ticket-panel--character
+  .ticket-panel__ornament {
+  height: clamp(21px, 10cqi, 28px);
+  width: auto;
+  max-width: 42%;
+  opacity: 0.96;
+}
+
+.operational-shell[data-ticket-theme='transformacion-empresarial']
+  .ticket-panel--character
+  .ticket-panel__watermark {
+  height: clamp(55px, 24%, 60px);
+  width: auto;
+  aspect-ratio: 1080 / 1081;
+  object-fit: contain;
+  opacity: 0.04;
+  right: 5%;
+  bottom: 4%;
+  left: auto;
+}
+
+/* Reports: cycle BL 38-50; gear BR 38-50; orca 54-70. */
+.operational-shell[data-ticket-theme='transformacion-empresarial']
+  .ticket-panel--reports
+  .ticket-panel__ornament--bl {
+  height: clamp(49px, 13cqi, 65px);
+  width: auto;
+  max-width: 42%;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='transformacion-empresarial']
+  .ticket-panel--reports
+  .ticket-panel__ornament--br {
+  height: clamp(60px, 13cqi, 79px);
+  width: auto;
+  max-width: 34%;
+  bottom: 8px;
+  right: 8px;
+}
+
+.operational-shell[data-ticket-theme='transformacion-empresarial']
+  .ticket-panel--reports
+  .ticket-panel__watermark,
+.operational-shell[data-ticket-theme='transformacion-empresarial']
+  .ticket-panel--problems
+  .ticket-panel__watermark {
+  height: clamp(62px, 18%, 80px);
+  width: auto;
+  aspect-ratio: 1080 / 1081;
+  object-fit: contain;
+  opacity: 0.04;
+  right: 4%;
+  bottom: 4%;
+  left: auto;
+}
+
+/* Problems: split BL 42-54; star BR 24-32. */
+.operational-shell[data-ticket-theme='transformacion-empresarial']
+  .ticket-panel--problems
+  .ticket-panel__ornament--bl {
+  height: clamp(48px, 13cqi, 61px);
+  width: auto;
+  max-width: 36%;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='transformacion-empresarial']
+  .ticket-panel--problems
+  .ticket-panel__ornament--br {
+  height: clamp(28px, 10cqi, 37px);
+  width: auto;
+  max-width: 28%;
+  bottom: 8px;
+  right: 8px;
+}
+
+/* Action: cycle BL 65-80; gear TR 32-48; orca BR 140-170 (≤175). */
+.operational-shell[data-ticket-theme='transformacion-empresarial']
+  .ticket-panel--action
+  .ticket-panel__ornament--bl {
+  height: clamp(84px, 14cqi, 104px);
+  width: auto;
+  max-width: 36%;
+  bottom: 10px;
+  left: 10px;
+  opacity: 0.95;
+}
+
+.operational-shell[data-ticket-theme='transformacion-empresarial']
+  .ticket-panel--action
+  .ticket-panel__ornament--tr {
+  height: clamp(51px, 10cqi, 63px);
+  width: auto;
+  max-width: 22%;
+  top: 12px;
+  right: 12px;
+  opacity: 0.95;
+}
+
+.operational-shell[data-ticket-theme='transformacion-empresarial']
+  .ticket-panel--action
+  .ticket-panel__watermark {
+  height: clamp(161px, 22%, 195px);
+  width: auto;
+  aspect-ratio: 1080 / 1081;
+  object-fit: contain;
+  opacity: 0.055;
+  right: 2%;
+  left: auto;
+  bottom: 2%;
+}
+
+/* ---------- Ingenierías: castor / compás / escuadra / perno ----------
+ * Fill aprox: beaver H~75%/W~74%, compass~90%, set-square~74%, bolt H~40%/W~75%,
+ * star~83%. PNG #BC4C00: sin filter. Castor a la derecha (sin scaleX).
+ * Action WM en BL para mirar al centro sin espejo.
+ */
+.operational-shell[data-ticket-theme='ingenierias']
+  .ticket-panel__ornament {
+  opacity: 0.95;
+  filter: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Character: star 18-24; beaver caja ~64-69 → visible ~48-52 (fillH~0.75). */
+.operational-shell[data-ticket-theme='ingenierias']
+  .ticket-panel--character
+  .ticket-panel__ornament {
+  height: clamp(22px, 10cqi, 29px);
+  width: auto;
+  max-width: 42%;
+  opacity: 0.96;
+}
+
+.operational-shell[data-ticket-theme='ingenierias']
+  .ticket-panel--character
+  .ticket-panel__watermark {
+  height: clamp(64px, 26%, 69px);
+  width: auto;
+  aspect-ratio: 1081 / 1081;
+  object-fit: contain;
+  opacity: 0.04;
+  right: 5%;
+  bottom: 4%;
+  left: auto;
+}
+
+/* Reports: hex-bolt BL (fillH~0.40, landscape); compass BR 36-52; beaver 54-70. */
+.operational-shell[data-ticket-theme='ingenierias']
+  .ticket-panel--reports
+  .ticket-panel__ornament--bl {
+  width: clamp(100px, 28%, 130px);
+  height: auto;
+  max-width: 52%;
+  max-height: 96px;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='ingenierias']
+  .ticket-panel--reports
+  .ticket-panel__ornament--br {
+  height: clamp(40px, 12cqi, 58px);
+  width: auto;
+  max-width: 28%;
+  bottom: 8px;
+  right: 8px;
+}
+
+.operational-shell[data-ticket-theme='ingenierias']
+  .ticket-panel--reports
+  .ticket-panel__watermark,
+.operational-shell[data-ticket-theme='ingenierias']
+  .ticket-panel--problems
+  .ticket-panel__watermark {
+  height: clamp(72px, 20%, 93px);
+  width: auto;
+  aspect-ratio: 1081 / 1081;
+  object-fit: contain;
+  opacity: 0.04;
+  right: 4%;
+  bottom: 4%;
+  left: auto;
+}
+
+/* Problems: set-square BL 36-52; star BR 24-32. */
+.operational-shell[data-ticket-theme='ingenierias']
+  .ticket-panel--problems
+  .ticket-panel__ornament--bl {
+  height: clamp(49px, 13cqi, 70px);
+  width: auto;
+  max-width: 40%;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='ingenierias']
+  .ticket-panel--problems
+  .ticket-panel__ornament--br {
+  height: clamp(29px, 10cqi, 39px);
+  width: auto;
+  max-width: 28%;
+  bottom: 8px;
+  right: 8px;
+}
+
+/* Action: set-square BR 65-80; compass TR 30-48; beaver BL 140-170 (≤175). */
+.operational-shell[data-ticket-theme='ingenierias']
+  .ticket-panel--action
+  .ticket-panel__ornament--br {
+  height: clamp(88px, 14cqi, 108px);
+  width: auto;
+  max-width: 32%;
+  bottom: 10px;
+  right: 10px;
+  opacity: 0.95;
+}
+
+.operational-shell[data-ticket-theme='ingenierias']
+  .ticket-panel--action
+  .ticket-panel__ornament--tr {
+  height: clamp(33px, 10cqi, 53px);
+  width: auto;
+  max-width: 22%;
+  top: 12px;
+  right: 12px;
+  opacity: 0.95;
+}
+
+.operational-shell[data-ticket-theme='ingenierias']
+  .ticket-panel--action
+  .ticket-panel__watermark {
+  height: clamp(187px, 24%, 227px);
+  width: auto;
+  aspect-ratio: 1081 / 1081;
+  object-fit: contain;
+  opacity: 0.055;
+  left: 2%;
+  right: auto;
+  bottom: 2%;
+}
+
+/* ---------- Transversales: abeja / puente / nodos / enlace ----------
+ * Fill aprox: bee H~85%/W~86%, bridge H~51%/W~87%, nodes~64%/78%,
+ * synergy H~45%/W~73%, star~73%. PNG #C08020: sin filter. Abeja a la derecha.
+ * Action WM en BL para mirar al centro sin espejo.
+ */
+.operational-shell[data-ticket-theme='transversales']
+  .ticket-panel__ornament {
+  opacity: 0.95;
+  filter: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Character: star 18-22; bee caja ~56-61 → visible ~48-52 (fillH~0.85). */
+.operational-shell[data-ticket-theme='transversales']
+  .ticket-panel--character
+  .ticket-panel__ornament {
+  height: clamp(25px, 10cqi, 30px);
+  width: auto;
+  max-width: 42%;
+  opacity: 0.96;
+}
+
+.operational-shell[data-ticket-theme='transversales']
+  .ticket-panel--character
+  .ticket-panel__watermark {
+  height: clamp(56px, 24%, 61px);
+  width: auto;
+  aspect-ratio: 968 / 884;
+  object-fit: contain;
+  opacity: 0.04;
+  right: 5%;
+  bottom: 4%;
+  left: auto;
+}
+
+/* Reports: bridge BL ancho 80-105; nodes BR 36-48; bee 54-70. */
+.operational-shell[data-ticket-theme='transversales']
+  .ticket-panel--reports
+  .ticket-panel__ornament--bl {
+  width: clamp(92px, 28%, 121px);
+  height: auto;
+  max-width: 52%;
+  max-height: 72px;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='transversales']
+  .ticket-panel--reports
+  .ticket-panel__ornament--br {
+  height: clamp(56px, 12cqi, 75px);
+  width: auto;
+  max-width: 36%;
+  bottom: 8px;
+  right: 8px;
+}
+
+.operational-shell[data-ticket-theme='transversales']
+  .ticket-panel--reports
+  .ticket-panel__watermark,
+.operational-shell[data-ticket-theme='transversales']
+  .ticket-panel--problems
+  .ticket-panel__watermark {
+  height: clamp(64px, 18%, 82px);
+  width: auto;
+  aspect-ratio: 968 / 884;
+  object-fit: contain;
+  opacity: 0.04;
+  right: 4%;
+  bottom: 4%;
+  left: auto;
+}
+
+/* Problems: nodes BL 36-48; star BR 22-30. */
+.operational-shell[data-ticket-theme='transversales']
+  .ticket-panel--problems
+  .ticket-panel__ornament--bl {
+  height: clamp(56px, 12cqi, 75px);
+  width: auto;
+  max-width: 40%;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='transversales']
+  .ticket-panel--problems
+  .ticket-panel__ornament--br {
+  height: clamp(30px, 10cqi, 41px);
+  width: auto;
+  max-width: 28%;
+  bottom: 8px;
+  right: 8px;
+}
+
+/* Action: bridge BR 110-145 ancho; synergy TR 42-58; bee BL 145-170. */
+.operational-shell[data-ticket-theme='transversales']
+  .ticket-panel--action
+  .ticket-panel__ornament--br {
+  width: clamp(126px, 32%, 167px);
+  height: auto;
+  max-width: 42%;
+  max-height: 96px;
+  bottom: 10px;
+  right: 10px;
+  opacity: 0.95;
+}
+
+.operational-shell[data-ticket-theme='transversales']
+  .ticket-panel--action
+  .ticket-panel__ornament--tr {
+  width: clamp(58px, 14%, 80px);
+  height: auto;
+  max-width: 26%;
+  max-height: 56px;
+  top: 12px;
+  right: 12px;
+  opacity: 0.95;
+}
+
+.operational-shell[data-ticket-theme='transversales']
+  .ticket-panel--action
+  .ticket-panel__watermark {
+  height: clamp(171px, 22%, 200px);
+  width: auto;
+  aspect-ratio: 968 / 884;
+  object-fit: contain;
+  opacity: 0.055;
+  left: 2%;
+  right: auto;
+  bottom: 2%;
+}
+
+/* ---------- Negocios: zorro / caballo / portafolio / llave / estrella ----------
+ * Fill aprox: fox H~92%/W~91%, knight~89%/85%, briefcase~84%/88%,
+ * key~81%/92%, star~86%. PNG #BD533B: sin filter. Zorro mira a la derecha.
+ * Action WM en BL para mirar al centro sin espejo.
+ * Activador: coord-negocios → negocios.
+ */
+.operational-shell[data-ticket-theme='negocios']
+  .ticket-panel__ornament {
+  opacity: 0.95;
+  filter: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Character: star 18-22; fox caja ~52-57 → visible ~48-52 (fillH~0.92); TL. */
+.operational-shell[data-ticket-theme='negocios']
+  .ticket-panel--character
+  .ticket-panel__ornament {
+  height: clamp(21px, 10cqi, 26px);
+  width: auto;
+  max-width: 42%;
+  opacity: 0.96;
+}
+
+.operational-shell[data-ticket-theme='negocios']
+  .ticket-panel--character
+  .ticket-panel__watermark {
+  height: clamp(52px, 22%, 57px);
+  width: auto;
+  aspect-ratio: 1540 / 1828;
+  object-fit: contain;
+  opacity: 0.04;
+  left: 4%;
+  top: 6%;
+  right: auto;
+  bottom: auto;
+}
+
+/* Reports: knight BL 40-52; briefcase BR 40-52; fox 54-70. */
+.operational-shell[data-ticket-theme='negocios']
+  .ticket-panel--reports
+  .ticket-panel__ornament--bl {
+  height: clamp(45px, 12cqi, 58px);
+  width: auto;
+  max-width: 36%;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='negocios']
+  .ticket-panel--reports
+  .ticket-panel__ornament--br {
+  height: clamp(48px, 12cqi, 62px);
+  width: auto;
+  max-width: 38%;
+  bottom: 8px;
+  right: 8px;
+}
+
+.operational-shell[data-ticket-theme='negocios']
+  .ticket-panel--reports
+  .ticket-panel__watermark {
+  height: clamp(59px, 18%, 76px);
+  width: auto;
+  aspect-ratio: 1540 / 1828;
+  object-fit: contain;
+  opacity: 0.04;
+  right: 4%;
+  bottom: 4%;
+  left: auto;
+}
+
+/* Problems: key BL alto 42-55 (caja ~52-68); briefcase BR 40-52; fox 54-70. */
+.operational-shell[data-ticket-theme='negocios']
+  .ticket-panel--problems
+  .ticket-panel__ornament--bl {
+  height: clamp(52px, 14cqi, 68px);
+  width: auto;
+  max-width: 48%;
+  max-height: 72px;
+  bottom: 8px;
+  left: 8px;
+}
+
+.operational-shell[data-ticket-theme='negocios']
+  .ticket-panel--problems
+  .ticket-panel__ornament--br {
+  height: clamp(48px, 12cqi, 62px);
+  width: auto;
+  max-width: 36%;
+  bottom: 8px;
+  right: 8px;
+}
+
+.operational-shell[data-ticket-theme='negocios']
+  .ticket-panel--problems
+  .ticket-panel__watermark {
+  height: clamp(59px, 18%, 76px);
+  width: auto;
+  aspect-ratio: 1540 / 1828;
+  object-fit: contain;
+  opacity: 0.04;
+  right: 4%;
+  bottom: 4%;
+  left: auto;
+}
+
+/* Action: star TR 30-42; knight bajo la estrella 55-70; briefcase BR 65-80;
+ * fox BL 140-170 (caja ~152-185, fillH~0.92). En viewport estrecho bajar
+ * primero caballo y portafolio — el centro funcional queda libre. */
+.operational-shell[data-ticket-theme='negocios']
+  .ticket-panel--action
+  .ticket-panel__ornament--tr[src*='corner-star'] {
+  height: clamp(35px, 10cqi, 49px);
+  width: auto;
+  max-width: 18%;
+  top: 10px;
+  right: 12px;
+  opacity: 0.95;
+}
+
+.operational-shell[data-ticket-theme='negocios']
+  .ticket-panel--action
+  .ticket-panel__ornament--tr[src*='strategy-knight'] {
+  height: clamp(62px, 12cqi, 79px);
+  width: auto;
+  max-width: 22%;
+  top: 46px;
+  right: 10px;
+  opacity: 0.95;
+}
+
+.operational-shell[data-ticket-theme='negocios']
+  .ticket-panel--action
+  .ticket-panel__ornament--br {
+  height: clamp(77px, 14cqi, 95px);
+  width: auto;
+  max-width: 28%;
+  bottom: 10px;
+  right: 10px;
+  opacity: 0.95;
+}
+
+.operational-shell[data-ticket-theme='negocios']
+  .ticket-panel--action
+  .ticket-panel__watermark {
+  height: clamp(152px, 22%, 185px);
+  width: auto;
+  aspect-ratio: 1540 / 1828;
+  object-fit: contain;
+  opacity: 0.055;
+  left: 2%;
+  right: auto;
+  bottom: 2%;
+}
+
+@media (max-width: 1100px) {
+  .operational-shell[data-ticket-theme='negocios']
+    .ticket-panel--action
+    .ticket-panel__ornament--tr[src*='strategy-knight'] {
+    height: clamp(48px, 10cqi, 62px);
+    max-width: 18%;
+  }
+
+  .operational-shell[data-ticket-theme='negocios']
+    .ticket-panel--action
+    .ticket-panel__ornament--br {
+    height: clamp(55px, 11cqi, 72px);
+    max-width: 22%;
+  }
+}
+
+/*
+ * INTERNAL VIVO sobre papel: rastro de severidad y afectaciones con la misma
+ * tinta que el resto del detalle. Sin estos ajustes heredaban los tonos del
+ * panel oscuro y se perdían sobre la crema.
+ */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .severity-trail__summary,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .severity-trail__reason,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__count,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__frozen {
+  color: var(--ticket-pilot-ink-soft);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .severity-trail__steps {
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .severity-trail__toggle {
+  color: var(--ticket-pilot-teal-deep);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .severity-trail__toggle:focus-visible {
+  outline-color: color-mix(in srgb, var(--ticket-accent-deep) 55%, transparent);
+}
+
+/*
+ * AGREGAR AFECTACIÓN sobre papel: una franja del mismo ticket. Filete superior
+ * con el acento de la coordinación, crema algo más cálido que el papel y un
+ * marco interior en tinta tenue. Sin sombra: no es una tarjeta aparte.
+ */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__composer {
+  border-color: rgb(42 33 24 / 0.22);
+  border-top: 2px solid var(--ticket-accent-deep);
+  background: rgb(255 244 222 / 0.7);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__composer-title {
+  color: var(--ticket-pilot-ink);
+  font-family: var(--ticket-pilot-serif);
+  font-size: 12.5px;
+  letter-spacing: 0.1em;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__composer-help,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__date-label {
+  color: var(--ticket-pilot-ink-soft);
+}
+
+/* CTA en contorno con el acento: claro, pero por debajo de «Cerrar problema». */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__submit {
+  border-color: var(--ticket-accent-deep);
+  background: rgb(255 250 240 / 0.75);
+  color: var(--ticket-accent-deep);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__submit:hover:not(:disabled),
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__submit:focus-visible {
+  background: color-mix(in srgb, var(--ticket-accent) 14%, #fffaf0);
+  outline-color: color-mix(in srgb, var(--ticket-accent-deep) 55%, transparent);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__submit:disabled {
+  border-color: rgb(42 33 24 / 0.2);
+  background: transparent;
+  color: rgb(42 33 24 / 0.42);
+}
+
+/* Fecha de la afectación: mismo campo de papel que el formulario de reporte. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__datetime {
+  border: 1px solid rgb(42 33 24 / 0.38) !important;
+  border-radius: 8px !important;
+  background: rgb(255 250 240 / 0.55) !important;
+  color: var(--ticket-pilot-ink) !important;
+  box-shadow: inset 0 1px 2px rgb(42 33 24 / 0.08) !important;
+  color-scheme: light;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-consequences__datetime:focus-visible {
+  border-color: var(--ticket-accent-deep) !important;
+  outline: 2px solid color-mix(in srgb, var(--ticket-accent-deep) 45%, transparent) !important;
+  outline-offset: 1px;
+}
+
+/* ==========================================================================
+ * EXPEDIENTE DEL PROBLEMA SOBRE PAPEL (detalle LEVEL 2 dentro del ticket).
+ *
+ * Mismo prefijo que los ajustes de detalle de arriba + `.problem-detail`: gana
+ * por especificidad y por orden sin `!important`. Solo presentación; el
+ * contrato, los testids y la interacción no cambian.
+ * ========================================================================== */
+
+/* Primera línea: unos píxeles por debajo del filete interior del marco. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__topline {
+  padding-top: 10px;
+}
+
+/* Regreso: tecla cuadrada de tinta con sombra desplazada (dibujo de los 30). */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__back {
+  border: 1.5px solid color-mix(in srgb, var(--ticket-pilot-ink) 70%, transparent);
+  background: rgb(255 250 238 / 0.96);
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--ticket-pilot-ink) 30%, transparent);
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__back:hover {
+  border-color: var(--ticket-accent-deep);
+  background: #fffaf0;
+  color: var(--ticket-accent-deep);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__back:focus-visible {
+  /* `!important` frente al anillo verde global (`.novex-os :focus-visible`). */
+  outline: 2px solid color-mix(in srgb, var(--ticket-accent-deep) 55%, transparent) !important;
+  outline-offset: 2px;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__back:active {
+  box-shadow: 0 0 0 color-mix(in srgb, var(--ticket-pilot-ink) 30%, transparent);
+  transform: translateY(2px);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__folio {
+  color: var(--ticket-pilot-ink-soft);
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__type {
+  border-color: rgb(42 33 24 / 0.34);
+  background: rgb(255 250 240 / 0.6);
+  color: var(--ticket-pilot-ink-soft);
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+}
+
+/* Título: el elemento principal del expediente. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__title {
+  color: var(--ticket-pilot-ink);
+  font-family: var(--ticket-pilot-serif);
+  font-size: clamp(18px, 1.3cqi + 14px, 22px);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* Franja de estado: tintas oscuras con velo del mismo tono sobre crema. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__badge {
+  --badge-rgb: 92 74 56;
+
+  border-color: rgb(var(--badge-rgb) / 0.42);
+  background: rgb(var(--badge-rgb) / 0.1);
+  color: rgb(var(--badge-rgb));
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__badge:is([data-severity='CRITICAL'], [data-sla='overdue']) {
+  --badge-rgb: 154 52 44;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__badge:is([data-severity='HIGH'], [data-sla='at_risk']) {
+  --badge-rgb: 150 84 26;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__badge[data-severity='MEDIUM'] {
+  --badge-rgb: 120 94 36;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__badge:is([data-severity='LOW'], [data-sla='closed']) {
+  --badge-rgb: 110 94 76;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__badge--status:is([data-status='IN_PROGRESS'], [data-status='RESOLVED']) {
+  --badge-rgb: 12 95 104;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__badge--status[data-status='CLOSED'] {
+  --badge-rgb: 58 104 66;
+}
+
+/* Coordinación: crema algo más clara que el papel, filete de identidad. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__coordination {
+  border: 1px solid rgb(42 33 24 / 0.12);
+  background: rgb(255 251 242 / 0.72);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__context-row[data-coordination='true'] {
+  border-left-color: var(--coord-accent, rgb(42 33 24 / 0.3));
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__context dt,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__viewpoint {
+  color: var(--ticket-pilot-ink-soft);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__context dd {
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__coord-mark {
+  border-color: rgb(42 33 24 / 0.28);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .problem-detail__coord-mark[data-mark='neutral'] {
+  border-color: rgb(42 33 24 / 0.45);
+}
+
+/* Secciones: filete sepia fino; sin cajas. */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  :is(.problem-detail__description, .problem-consequences, .detail-section) {
+  border-top-color: rgb(42 33 24 / 0.18);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .detail-section {
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 0;
+  background: transparent;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  :is(.problem-detail__block-title, .detail-section__title) {
+  color: var(--ticket-pilot-ink-soft);
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .detail-section__toggle:hover {
+  background: rgb(42 33 24 / 0.05);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .detail-section__toggle:focus-visible {
+  background: rgb(42 33 24 / 0.05);
+  outline: 2px solid color-mix(in srgb, var(--ticket-accent-deep) 55%, transparent) !important;
+  outline-offset: -2px;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-detail
+  .detail-section__chevron {
+  border-left-color: var(--ticket-pilot-ink-soft);
+}
+
+/*
+ * Contenedores del expediente dentro del ticket: margen interior para no
+ * tocar el filete del marco y, abajo, la banda de los ornamentos (en `cqi`,
+ * como ellos) para que el final del contenido quede por encima al desplazar.
+ */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .director-problem-panel {
+  padding: 0 8px clamp(24px, 7cqi, 40px);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel[data-mode='detail'] {
+  padding-bottom: clamp(24px, 7cqi, 40px);
+}

@@ -5,6 +5,7 @@ import { FOCUS_VISIBLE } from '@/modules/monitoring/constants/monitoringTheme'
 import { NovexIcon } from '@/shared/components/NovexIcon'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { canCreateSituations } from '@/modules/auth/utils/permissions'
+import { buildInternalReportUrl } from '@/modules/operational-cards/experience/reportIntent'
 
 interface PrioritySituationsListProps {
   situations: PrioritySituationCard[]
@@ -94,7 +95,7 @@ export function PrioritySituationsList({
           No hay situaciones registradas todavía.{' '}
           {canCreateSituations(user) ? (
             <Link
-              to="/situaciones/nueva"
+              to={buildInternalReportUrl()}
               viewTransition
               className={`font-semibold text-emerald-300 hover:text-emerald-200 ${FOCUS_VISIBLE}`}
             >

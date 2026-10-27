@@ -10,12 +10,11 @@ import {
   type DetectionMethod,
   type SituationCaptureDraft,
 } from '@/modules/situations/types/situation-capture.types'
+import { createUuidV4, isUuidV4 } from '@/shared/utils/uuid'
 
 const DRAFT_KEY = 'novex.situationCapture.draft.v1'
 const STEP_KEY = 'novex.situationCapture.step.v1'
 const REQUEST_ID_KEY = 'novex.situationCapture.requestId.v1'
-const UUID_V4_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 /** Respaldo de la clave cuando el almacenamiento del navegador no está disponible. */
 let memoryRequestId: string | null = null
 /** Claves legacy del rebrand Cunmark -> NOVEX. */
@@ -234,7 +233,7 @@ function readStoredRequestId(): string | null {
 
   try {
     const raw = storage.getItem(REQUEST_ID_KEY)
-    return raw && UUID_V4_PATTERN.test(raw) ? raw : null
+    return isUuidV4(raw) ? raw : null
   } catch {
     return null
   }
@@ -252,13 +251,5 @@ function persistRequestId(requestId: string): string {
 }
 
 function newRequestId(): string {
-  if (typeof globalThis.crypto?.randomUUID === 'function') {
-    return globalThis.crypto.randomUUID()
-  }
-  // randomUUID exige contexto seguro (HTTPS o localhost); este respaldo cubre el resto.
-  const bytes = globalThis.crypto.getRandomValues(new Uint8Array(16))
-  bytes[6] = (bytes[6] & 0x0f) | 0x40
-  bytes[8] = (bytes[8] & 0x3f) | 0x80
-  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
+  return createUuidV4()
 }

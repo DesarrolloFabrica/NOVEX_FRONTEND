@@ -20,6 +20,7 @@ import {
   loadSituationDossier,
   loadSituationManagementList,
   updateSituationStatus as persistSituationStatus,
+  resolveSituationWithLearning as persistSituationResolution,
 } from '@/modules/services/situationManagementData.service'
 import { getErrorMessage } from '@/shared/utils/error'
 
@@ -37,9 +38,11 @@ interface UseSituationManagementResult {
   loadingList: boolean
   loadingDossier: boolean
   updatingStatus: boolean
+  resolvingSituation: boolean
   listError: string | null
   dossierError: string | null
   updateError: string | null
+  resolveError: string | null
   selectSituation: (situationId: string) => void
   setQueueSearch: (search: string) => void
   setQueueStatus: (status: SituationQueueStatusFilter) => void
@@ -50,6 +53,7 @@ interface UseSituationManagementResult {
   applySummaryFilter: (filter: SituationQueueStatusFilter | 'CRITICAL') => void
   refresh: () => Promise<void>
   updateStatus: (input: UpdateSituationStatusInput) => Promise<void>
+  resolveSituation: (learning: string) => Promise<void>
 }
 
 const EMPTY_SUMMARY: SituationManagementSummary = {
@@ -83,9 +87,11 @@ export function useSituationManagement(): UseSituationManagementResult {
   const [loadingList, setLoadingList] = useState(true)
   const [loadingDossier, setLoadingDossier] = useState(false)
   const [updatingStatus, setUpdatingStatus] = useState(false)
+  const [resolvingSituation, setResolvingSituation] = useState(false)
   const [listError, setListError] = useState<string | null>(null)
   const [dossierError, setDossierError] = useState<string | null>(null)
   const [updateError, setUpdateError] = useState<string | null>(null)
+  const [resolveError, setResolveError] = useState<string | null>(null)
 
   const filteredSituations = useMemo(
     () => sortSituationsForQueue(filterSituationsForQueue(situations, queueQuery)),
@@ -101,6 +107,7 @@ export function useSituationManagement(): UseSituationManagementResult {
     (situationId: string) => {
       setSelectedSituationId(situationId)
       setUpdateError(null)
+      setResolveError(null)
       setSearchParams(
         (current) => {
           const next = new URLSearchParams(current)
@@ -233,6 +240,32 @@ export function useSituationManagement(): UseSituationManagementResult {
     [refresh, selectedSituationId],
   )
 
+  const resolveSituation = useCallback(
+    async (learning: string) => {
+      if (!selectedSituationId) {
+        throw new Error('Seleccione una situación antes de cerrarla.')
+      }
+      setResolvingSituation(true)
+      setResolveError(null)
+      try {
+        await persistSituationResolution(selectedSituationId, learning)
+        await refresh()
+        const nextDossier = await loadSituationDossier(selectedSituationId)
+        setDossier(nextDossier)
+      } catch (error) {
+        const message = getErrorMessage(
+          error,
+          'No fue posible cerrar el problema con su aprendizaje.',
+        )
+        setResolveError(message)
+        throw error instanceof Error ? error : new Error(message)
+      } finally {
+        setResolvingSituation(false)
+      }
+    },
+    [refresh, selectedSituationId],
+  )
+
   const setQueueSearch = useCallback((search: string) => {
     setQueueQuery((current) => ({ ...current, search, page: 1 }))
   }, [])
@@ -292,9 +325,11 @@ export function useSituationManagement(): UseSituationManagementResult {
     loadingList,
     loadingDossier,
     updatingStatus,
+    resolvingSituation,
     listError,
     dossierError,
     updateError,
+    resolveError,
     selectSituation,
     setQueueSearch,
     setQueueStatus,
@@ -305,5 +340,6 @@ export function useSituationManagement(): UseSituationManagementResult {
     applySummaryFilter,
     refresh,
     updateStatus,
+    resolveSituation,
   }
 }

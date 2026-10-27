@@ -1,0 +1,731 @@
+/*
+ * DIRECTOR > INTERNOS · dos láminas analíticas en el carrusel de lectura.
+ *
+ * Ancho REAL del carril: ≈ 600 px (1440×900) · ≈ 840 px (1920×1080). Las dos
+ * láminas son APILADAS (una gráfica arriba, otra abajo) y caben en el alto
+ * fijo del cuerpo, como ESTADO: sin scroll vertical ni horizontal.
+ * Tinta y papel del ticket; un solo tono para la intensidad; sin rejilla
+ * SaaS.
+ */
+
+.director-internos {
+  --int-ink: #231910;
+  --int-ink-rgb: 35 25 16;
+  --int-paper: rgb(250 244 232 / 0.97);
+  position: relative;
+  min-width: 0;
+}
+
+/* Alto fijo (como ESTADO): el carrusel ocupa el cuerpo entero. */
+.director-reading__body[data-fixed-height='true'] > .director-internos {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.director-reading__body[data-fixed-height='true'] > .director-internos > .director-estado-carousel {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.director-internos__demo {
+  /* En la línea de los puntos del carrusel: fuera del contenido desplazable. */
+  position: absolute;
+  bottom: 0;
+  left: 22px;
+  z-index: 2;
+  padding: 1px 6px;
+  border: 1px dashed rgb(var(--int-ink-rgb) / 0.35);
+  border-radius: 2px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ───────────── Lámina ───────────── */
+
+.director-internos-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  /* Alto natural: si no cabe, la región de scroll de la lámina lo recorre. */
+  min-width: 0;
+  padding: 2px 2px 0;
+  color: var(--int-ink);
+}
+
+.director-internos-sheet__sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  margin: -2px 0 4px;
+  font-size: 10.5px;
+  opacity: 0.78;
+}
+
+.director-internos-sheet__sub .director-flujo__crumb {
+  margin: 0;
+}
+
+.director-internos-sheet__period {
+  font-weight: 700;
+}
+
+.director-internos-block__note {
+  margin: 2px 0 0;
+  font-size: 10.5px;
+  font-style: italic;
+  opacity: 0.75;
+}
+
+/* ───────────── Heatmap categoría × tiempo ───────────── */
+
+.director-internos-heatmap {
+  display: grid;
+  column-gap: 3px;
+  row-gap: 3px;
+  align-items: stretch;
+  min-width: 0;
+  transition: opacity 140ms ease-out;
+}
+
+.director-internos-heatmap[data-loading='true'] {
+  opacity: 0.55;
+}
+
+.director-internos-heatmap__row {
+  display: contents;
+}
+
+.director-internos-heatmap__col {
+  appearance: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+  padding: 2px 0 3px;
+  border: 0;
+  border-bottom: 1.5px solid rgb(var(--int-ink-rgb) / 0.45);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: default;
+}
+
+button.director-internos-heatmap__col {
+  cursor: pointer;
+}
+
+button.director-internos-heatmap__col:hover,
+button.director-internos-heatmap__col:focus-visible {
+  background: rgb(var(--int-ink-rgb) / 0.06);
+}
+
+.director-internos-heatmap__col[data-current='true'] .director-internos-heatmap__col-label {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.director-internos-heatmap__col[data-future='true'] {
+  opacity: 0.4;
+}
+
+.director-internos-heatmap__col-label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.director-internos-heatmap__col-total {
+  min-height: 12px;
+  font-size: 9.5px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.6;
+}
+
+.director-internos-heatmap__name {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.director-internos-heatmap__cell {
+  --heat: 0;
+  appearance: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid rgb(var(--int-ink-rgb) / 0.1);
+  border-radius: 2px;
+  /* Un solo tono de tinta: la intensidad es relativa al máximo visible. */
+  background: rgb(var(--int-ink-rgb) / calc(0.04 + var(--heat) * 0.62));
+  color: var(--int-ink);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.director-internos-heatmap__cell[data-strong='true'] {
+  color: #fbf6ea;
+}
+
+.director-internos-heatmap__cell[data-state='zero'] {
+  background: transparent;
+  border-style: dashed;
+}
+
+.director-internos-heatmap__cell[data-state='zero'] .director-internos-heatmap__value {
+  font-weight: 400;
+  opacity: 0.35;
+}
+
+.director-internos-heatmap__cell[data-terminal='true'] {
+  cursor: default;
+}
+
+/* Futuro: sin número, sin cero falso. */
+.director-internos-heatmap__cell[data-state='future'] {
+  border-style: dotted;
+  border-color: rgb(var(--int-ink-rgb) / 0.12);
+  background: repeating-linear-gradient(
+    135deg,
+    rgb(var(--int-ink-rgb) / 0.07) 0 3px,
+    transparent 3px 7px
+  );
+  cursor: default;
+}
+
+button.director-internos-heatmap__cell:hover,
+.director-internos-heatmap__cell:focus-visible {
+  outline: 2px solid rgb(var(--int-ink-rgb) / 0.55);
+  outline-offset: 0;
+  z-index: 3;
+}
+
+.director-internos-heatmap__tip {
+  display: none;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 9px;
+  border: 2px solid rgb(var(--int-ink-rgb) / 0.35);
+  background: var(--int-paper);
+  box-shadow: 2px 2px 0 rgb(var(--int-ink-rgb) / 0.12);
+  color: var(--int-ink);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.3;
+  text-align: left;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.director-internos-heatmap__tip {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  z-index: 6;
+  transform: translateX(-50%);
+}
+
+.director-internos-heatmap__tip[data-edge='end'] {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.director-internos-heatmap__tip strong {
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.director-internos-heatmap__cell:hover .director-internos-heatmap__tip,
+.director-internos-heatmap__cell:focus-visible .director-internos-heatmap__tip {
+  display: flex;
+}
+
+/* ───────────── Más recurrentes ───────────── */
+
+.director-internos-ranking {
+  min-width: 0;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed rgb(var(--int-ink-rgb) / 0.22);
+}
+
+.director-internos-ranking__list {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+  /* Una sola rejilla: todas las pistas miden lo mismo. */
+  display: grid;
+  grid-template-columns: minmax(84px, 22%) minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: 3px 8px;
+  font-size: 11px;
+}
+
+.director-internos-ranking__item {
+  display: contents;
+}
+
+.director-internos-ranking__item > * {
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.director-internos-ranking__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.director-internos-ranking__track {
+  min-height: 8px !important;
+  height: 8px;
+  background: rgb(var(--int-ink-rgb) / 0.08);
+}
+
+.director-internos-ranking__fill {
+  display: block;
+  height: 100%;
+  background: rgb(var(--int-ink-rgb) / 0.72);
+}
+
+.director-internos-ranking__facts {
+  white-space: nowrap;
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ───────────── Tiempo activo y afectaciones (línea de vida) ─────────────
+ * Tres capas, como un gráfico impreso:
+ *   1. FONDO: los tramos de la escala (crema apenas distinto + separador
+ *      punteado) y la línea común del corte.
+ *   2. FILAS: dos niveles (identidad · resumen / pista) con filete perforado.
+ *   3. PISTAS: línea en tinta neutra y ● con halo de papel.
+ * Sin zebra de filas, sin cajas ni colores de severidad.
+ */
+
+.director-internos-timeline {
+  --tl-left: 50px;
+  --tl-right: 12px;
+  position: relative;
+  min-width: 0;
+  margin-top: 4px;
+}
+
+/* Banda superior separada del primer problema. */
+.director-internos-timeline__header {
+  /* Fija al recorrer las filas: el eje no se pierde con el scroll. */
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #f4ecdc;
+  box-shadow: 0 3px 3px -3px rgb(var(--int-ink-rgb) / 0.25);
+  height: 40px;
+  margin-bottom: 2px;
+  border-bottom: 1.5px solid rgb(var(--int-ink-rgb) / 0.5);
+}
+
+.director-internos-timeline__segment-head {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 1px;
+  padding: 0 0 4px;
+  border-left: 1px dotted rgb(var(--int-ink-rgb) / 0.35);
+  overflow: hidden;
+}
+
+.director-internos-timeline__segment-label {
+  align-self: center;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+/* La fecha da contexto: secundaria, en la frontera antigua del tramo. */
+.director-internos-timeline__segment-date {
+  padding-left: 3px;
+  font-size: 8.5px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  opacity: 0.5;
+}
+
+/* Punto final común de todas las líneas: en la fila de fechas, sobre la
+   línea del corte (no compite con el rótulo del tramo 0–7 D). */
+.director-internos-timeline__end {
+  position: absolute;
+  right: 0;
+  bottom: 3px;
+  padding: 0 0 0 4px;
+  background: var(--int-paper);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.director-internos-timeline__body {
+  position: relative;
+}
+
+.director-internos-timeline__bands {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.director-internos-timeline__band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px dotted rgb(var(--int-ink-rgb) / 0.28);
+}
+
+.director-internos-timeline__band[data-tone='b'] {
+  background: rgb(var(--int-ink-rgb) / 0.028);
+}
+
+.director-internos-timeline__now {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 1.5px solid rgb(var(--int-ink-rgb) / 0.32);
+}
+
+.director-internos-timeline__rows {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Visual principal de la lámina: cada problema respira (~86 px). */
+.director-internos-timeline__row {
+  min-width: 0;
+  padding: 14px 0 12px;
+}
+
+.director-internos-timeline__row + .director-internos-timeline__row {
+  /* Filete perforado del ticket entre problemas. */
+  background-image: linear-gradient(
+    to right,
+    rgb(var(--int-ink-rgb) / 0.22) 0 4px,
+    transparent 4px 8px
+  );
+  background-size: 8px 1px;
+  background-repeat: repeat-x;
+  background-position: top left;
+}
+
+.director-internos-timeline__row[data-selected='true'] .director-internos-timeline__title {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Nivel 1 · identidad (título) y resumen (una sola lectura secundaria). */
+.director-internos-timeline__head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+  padding: 0 var(--tl-right) 0 2px;
+}
+
+.director-internos-timeline__title {
+  appearance: none;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--int-ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.director-internos-timeline__title:disabled {
+  cursor: default;
+}
+
+.director-internos-timeline__title:not(:disabled):hover,
+.director-internos-timeline__title:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.director-internos-timeline__meta {
+  flex: none;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  color: rgb(var(--int-ink-rgb) / 0.82);
+}
+
+.director-internos-timeline__severity {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.director-internos-timeline__dot {
+  opacity: 0.5;
+}
+
+.director-internos-timeline__facts {
+  font-weight: 700;
+}
+
+/* Nivel 2 · pista. */
+.director-internos-timeline__lane {
+  display: block;
+  max-width: 100%;
+  margin-top: 6px;
+  overflow: visible;
+}
+
+.director-internos-timeline__start {
+  fill: var(--int-ink);
+  font-size: 9.5px;
+  font-weight: 700;
+  opacity: 0.62;
+}
+
+.director-internos-timeline__life {
+  stroke: rgb(var(--int-ink-rgb) / 0.7);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.director-internos-timeline__cap {
+  stroke: rgb(var(--int-ink-rgb) / 0.7);
+  stroke-width: 1.5;
+}
+
+.director-internos-timeline__stem {
+  stroke: rgb(var(--int-ink-rgb) / 0.45);
+  stroke-width: 1;
+}
+
+.director-internos-timeline__hit {
+  fill: transparent;
+  cursor: pointer;
+}
+
+/* ● con halo de papel: no se pierde sobre la línea. */
+.director-internos-timeline__mark {
+  fill: var(--int-ink);
+  stroke: #fbf6ea;
+  stroke-width: 2.5;
+  paint-order: stroke;
+  cursor: pointer;
+  outline: none;
+}
+
+.director-internos-timeline__mark:hover,
+.director-internos-timeline__mark:focus-visible {
+  stroke: var(--int-ink);
+  stroke-width: 2;
+}
+
+.director-internos-timeline__count {
+  fill: var(--int-ink);
+  font-size: 9.5px;
+  font-weight: 800;
+}
+
+.director-internos-timeline__tip {
+  position: absolute;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  /* Ancho propio: cerca del borde no se encoge a una columna estrecha. */
+  width: max-content;
+  max-width: 300px;
+  padding: 6px 9px;
+  border: 2px solid rgb(var(--int-ink-rgb) / 0.35);
+  background: var(--int-paper);
+  box-shadow: 2px 2px 0 rgb(var(--int-ink-rgb) / 0.12);
+  color: var(--int-ink);
+  font-size: 11px;
+  line-height: 1.3;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 8px));
+}
+
+.director-internos-timeline__tip[data-edge='end'] {
+  transform: translate(calc(-100% + 10px), calc(-100% - 8px));
+}
+
+.director-internos-timeline__tip[data-edge='start'] {
+  transform: translate(-10px, calc(-100% - 8px));
+}
+
+.director-internos-timeline__tip[data-place='below'] {
+  transform: translate(-50%, 8px);
+}
+
+.director-internos-timeline__tip[data-place='below'][data-edge='end'] {
+  transform: translate(calc(-100% + 10px), 8px);
+}
+
+.director-internos-timeline__tip[data-place='below'][data-edge='start'] {
+  transform: translate(-10px, 8px);
+}
+
+.director-internos-timeline__tip strong {
+  font-weight: 800;
+}
+
+/*
+ * Datos > decoración (como ESTADO): con las láminas, los ornamentos
+ * inferiores del ticket no se montan sobre las gráficas.
+ */
+.operational-shell__region--director-reading:has([data-testid='director-internos-carousel'])
+  :is(.ticket-panel__ornament--bl, .ticket-panel__ornament--br) {
+  display: none;
+}
+
+
+/* El nombre conserva la elipsis (bloque, no flex). */
+.director-internos-ranking__item > .director-internos-ranking__name,
+.director-internos-ranking__item > .director-internos-ranking__facts {
+  display: block;
+  line-height: 20px;
+}
+
+/* ───────────── Scroll vertical SOLO de INTERNOS ─────────────
+ * Cada lámina tiene su propia región: el carrusel compartido (y ESTADO) no
+ * cambia. Flechas y puntos quedan fuera de la región → siempre accesibles.
+ * Sin scroll horizontal. Scrollbar fina en tinta del ticket.
+ */
+.director-internos .director-internos-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--int-ink-rgb) / 0.32) transparent;
+}
+
+.director-internos .director-internos-scroll:focus-visible {
+  outline: 2px solid rgb(var(--int-ink-rgb) / 0.35);
+  outline-offset: -2px;
+}
+
+.director-internos .director-internos-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.director-internos .director-internos-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.director-internos .director-internos-scroll::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: rgb(var(--int-ink-rgb) / 0.28);
+}
+
+.director-internos .director-internos-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--int-ink-rgb) / 0.45);
+}
+
+/* Aire al final: el eje X y la nota legacy no rozan los puntos del carrusel. */
+.director-internos .director-internos-scroll > .director-internos-sheet {
+  padding-bottom: 10px;
+}
+
+/* Queda contenido debajo: fade muy discreto en el borde inferior. */
+.director-internos .director-internos-scroll[data-more='true'] {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 18px), rgb(0 0 0 / 0.35));
+}
+
+/* La marca de demo flota sobre el contenido desplazable: con su papel. */
+.director-internos .director-internos__demo {
+  background: rgb(246 240 230 / 0.92);
+}
+
+.director-internos-timeline__scale-note {
+  margin: 4px 0 0;
+  font-size: 10px;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+/* Lámina 2 = una sola visual: encabezado algo más presente. */
+.director-internos-sheet--timeline .director-internos-sheet__title {
+  font-size: 13.5px;
+}
+
+.director-internos-sheet--timeline .director-internos-sheet__sub {
+  margin-bottom: 8px;
+}
+
+/* Sin afectaciones: siguen visibles, pero no compiten con los que tienen historia. */
+.director-internos-timeline__row[data-empty=true] .director-internos-timeline__title {
+  font-weight: 600;
+  color: rgb(var(--int-ink-rgb) / 0.72);
+}
+
+.director-internos-timeline__row[data-empty=true] .director-internos-timeline__meta {
+  color: rgb(var(--int-ink-rgb) / 0.58);
+}
+
+.director-internos-timeline__row[data-empty=true] .director-internos-timeline__life,
+.director-internos-timeline__row[data-empty=true] .director-internos-timeline__cap {
+  stroke: rgb(var(--int-ink-rgb) / 0.38);
+  stroke-width: 1.5;
+}
+
+.director-internos-timeline__row[data-empty=true] .director-internos-timeline__start {
+  opacity: 0.45;
+}
+
+/* El texto de la afectación encabeza el tooltip y puede ocupar dos líneas. */
+.director-internos-timeline__tip strong {
+  white-space: normal;
+}

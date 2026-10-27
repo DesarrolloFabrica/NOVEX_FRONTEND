@@ -81,6 +81,16 @@ textarea {
     linear-gradient(145deg, #030711 0%, #040915 45%, #02050b 100%);
 }
 
+/*
+ * Sala sin carril (R2). Una sola columna: el override del grid es lo único que
+ * distingue las dos geometrías, así que no hay una segunda estructura de layout
+ * que mantener en paralelo. El carril tampoco está en el DOM —`NovexRoom` no lo
+ * renderiza—, de modo que esta regla no oculta nada: solo reparte el ancho.
+ */
+.novex-os[data-rail='none'] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .novex-os[data-scene='events'] {
   --os-scene-image: url('/assests/scenes/novex-city-events.jpg');
   --os-scene-position: 50% 51%;
@@ -4014,6 +4024,16 @@ textarea {
     overflow: hidden;
   }
 
+  /*
+   * La fila de 70px es para el carril móvil. Una sala sin carril
+   * (`data-rail='none'`, p. ej. el Centro Operacional) no la necesita: sin esta
+   * regla quedaba una franja vacía bajo el menú. El atributo sube la
+   * especificidad, así que no depende del orden de los imports.
+   */
+  .novex-os[data-rail='none'] {
+    grid-template-rows: minmax(0, 1fr);
+  }
+
   .novex-os__backdrop::before,
   .novex-orbital-hero__visual img {
     will-change: auto;
@@ -4943,6 +4963,7 @@ textarea {
 }
 
 .novex-user-menu__items button,
+.novex-user-menu__items a,
 .novex-user-menu__logout {
   display: flex;
   width: 100%;
@@ -4959,13 +4980,25 @@ textarea {
   transition: color 160ms ease, background-color 160ms ease;
 }
 
-.novex-user-menu__items button:hover {
+.novex-user-menu__items button:hover,
+.novex-user-menu__items a:hover {
   color: #e7f6e2;
   background: rgb(47 158 58 / 0.1);
 }
 
 .novex-user-menu__items svg {
   color: #8bc778;
+}
+
+/* Destinos de plataforma (fase 1): `NovexPlatformIcon` no fija tamaño. */
+.novex-user-menu__items a {
+  text-decoration: none;
+}
+
+.novex-user-menu__items a svg {
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
 }
 
 .novex-user-menu__mock {
@@ -15339,6 +15372,35 @@ textarea {
   gap: 24px;
   align-items: center;
   margin-top: 12px;
+}
+
+.novex-os[data-scene='commitments'] .novex-ops-state__learning {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid rgb(140 168 210 / 0.28);
+  border-radius: 12px;
+  background: rgb(14 24 42 / 0.55);
+}
+
+.novex-os[data-scene='commitments'] .novex-ops-state__learning small {
+  display: block;
+  color: #9eb4d4;
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.novex-os[data-scene='commitments'] .novex-ops-state__learning p {
+  margin: 6px 0 4px;
+  color: #e8f0fb;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.novex-os[data-scene='commitments'] .novex-ops-state__learning span {
+  color: #8fa6c4;
+  font-size: 0.72rem;
 }
 
 .novex-os[data-scene='commitments'] .novex-ops-lifecycle {

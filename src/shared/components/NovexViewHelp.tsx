@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { NovexIcon } from '@/shared/components/NovexIcon'
 
 interface NovexViewHelpProps {
   title?: string
   children: ReactNode
+  triggerLabel?: string
+  variant?: 'icon' | 'panel'
 }
 
 /**
@@ -13,9 +15,12 @@ interface NovexViewHelpProps {
 export function NovexViewHelp({
   title = 'Información sobre esta vista',
   children,
+  triggerLabel,
+  variant = 'icon',
 }: NovexViewHelpProps) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
+  const popoverId = `novex-view-help-${useId().replace(/:/g, '')}`
 
   useEffect(() => {
     if (!open) return
@@ -37,20 +42,24 @@ export function NovexViewHelp({
   }, [open])
 
   return (
-    <div className="novex-help-menu" ref={rootRef}>
+    <div
+      className={`novex-help-menu novex-help-menu--${variant}`}
+      ref={rootRef}
+    >
       <button
         type="button"
         className="novex-help-menu__trigger"
         aria-label={title}
         aria-expanded={open}
-        aria-controls="novex-view-help"
+        aria-controls={popoverId}
         onClick={() => setOpen((value) => !value)}
       >
         <NovexIcon name="help" size={14} strokeWidth={1.5} />
+        {triggerLabel ? <span>{triggerLabel}</span> : null}
       </button>
       {open ? (
         <aside
-          id="novex-view-help"
+          id={popoverId}
           className="novex-help-menu__popover"
           aria-label={title}
         >

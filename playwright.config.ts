@@ -10,10 +10,23 @@ export default defineConfig({
   outputDir: 'test-results/playwright',
   reporter: [['list']],
   use: {
-    baseURL: 'http://127.0.0.1:4173',
+    // Permite apuntar a un servidor de desarrollo ya levantado en otro puerto.
+    // Sin esto, `reuseExistingServer` reutiliza lo que haya en 4173 aunque sea
+    // una build de `vite preview` anterior a los cambios que se están probando.
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:4173',
     browserName: 'chromium',
     colorScheme: 'dark',
-    reducedMotion: 'reduce',
+    /*
+     * `reducedMotion` NO es una opción de primer nivel de `use` (a diferencia
+     * de `colorScheme`): escrita ahí, Playwright la ignora sin aviso y
+     * `matchMedia('(prefers-reduced-motion: reduce)')` da false. Este archivo
+     * no entra en ningún tsconfig, así que el error de tipos (TS2769) no salía.
+     * La vía documentada es `contextOptions`. Un test que necesite movimiento
+     * lo pide con `test.use({ contextOptions: { reducedMotion: 'no-preference' } })`.
+     */
+    contextOptions: {
+      reducedMotion: 'reduce',
+    },
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
     video: 'off',

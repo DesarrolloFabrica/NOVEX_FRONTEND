@@ -2,28 +2,51 @@ import type {
   ExecuteAIAnalysisResponse,
 } from '@/modules/api/types/analysis.types'
 import type {
+  CreateSituationConsequencePayload,
   CreateSituationPayload,
   IncidentCategorySummary,
+  SituationConsequenceResponse,
   SituationResponse,
 } from '@/modules/situations/types/situation.types'
 import { apiRequest } from '@/shared/api/http'
 
 export interface SituationsListQuery {
+  /**
+   * «Mis reportes». Interruptor booleano, NO un identificador de autor: la
+   * identidad la resuelve el backend con el usuario autenticado. Enviar aquí un
+   * id de autor permitiría leer los reportes de otra persona.
+   */
+  mine?: boolean
   status?: string
   severity?: string
   coordinationId?: string
   categoryId?: string
   occurredFrom?: string
   occurredTo?: string
+  /** Inicio inclusivo del intervalo de cierre (`closedAt`). */
+  closedFrom?: string
+  /** Fin inclusivo del intervalo de cierre (`closedAt`). */
+  closedTo?: string
   page?: number
   limit?: number
 }
+
+/**
+ * Con qué alcance resolvió el servidor la consulta.
+ *
+ *   complete  El filtro se aplicó tal cual: esto es todo lo que hay.
+ *   own-only  El actor no puede leer los problemas de esa coordinación y solo
+ *             se le devolvieron los que él reportó. `total` cuenta ese
+ *             subconjunto, NUNCA los problemas del área.
+ */
+export type SituationsListScope = 'complete' | 'own-only'
 
 export interface SituationsListResponse {
   items: SituationResponse[]
   total: number
   page: number
   limit: number
+  scope?: SituationsListScope
 }
 
 export async function fetchIncidentCategories(): Promise<IncidentCategorySummary[]> {
@@ -34,12 +57,15 @@ export async function fetchSituations(
   query: SituationsListQuery = {},
 ): Promise<SituationsListResponse> {
   const params = new URLSearchParams()
+  if (query.mine) params.set('mine', 'true')
   if (query.status) params.set('status', query.status)
   if (query.severity) params.set('severity', query.severity)
   if (query.coordinationId) params.set('coordinationId', query.coordinationId)
   if (query.categoryId) params.set('categoryId', query.categoryId)
   if (query.occurredFrom) params.set('occurredFrom', query.occurredFrom)
   if (query.occurredTo) params.set('occurredTo', query.occurredTo)
+  if (query.closedFrom) params.set('closedFrom', query.closedFrom)
+  if (query.closedTo) params.set('closedTo', query.closedTo)
   if (query.page) params.set('page', String(query.page))
   if (query.limit) params.set('limit', String(query.limit))
 
@@ -49,12 +75,18 @@ export async function fetchSituations(
 
 export interface CreateSituationWithAnalysisResponse {
   situation: SituationResponse
-  analysis: ExecuteAIAnalysisResponse
+  /** Nulo mientras el análisis en el registro esté desactivado en backend. */
+  analysis: ExecuteAIAnalysisResponse | null
   /** true cuando el servidor reconoció la clave y devolvió un registro ya completado. */
   replayed: boolean
 }
 
-/** Mayor que el tope de análisis IA del backend (60 s) y menor que el de Cloud Run (300 s). */
+/**
+ * Tope del alta. Sin análisis IA en el registro la respuesta es rápida, pero se
+ * conserva el margen de main (menor que el tope de Cloud Run, 300 s) para cubrir
+ * arranques en frío. Si vence, el reintento reutiliza la misma clave y el
+ * servidor no duplica el registro.
+ */
 const REGISTRATION_TIMEOUT_MS = 120_000
 
 export async function createSituationWithAnalysis(
@@ -78,17 +110,70 @@ export async function fetchSituation(
   return apiRequest<SituationResponse>(`/situations/${situationId}`)
 }
 
+/**
+ * PATCH de una situación. `categoryId` y `severity` ya no existen: la
+ * categoría es inmutable y la severidad solo la cambia el sistema.
+ */
 export interface UpdateSituationPayload {
   title?: string
   description?: string
   coordinationId?: string
-  categoryId?: string
-  severity?: SituationResponse['severity']
   status?: SituationResponse['status']
   statusComment?: string
   /** Estructura preparada para evidencias futuras. */
   evidenceIds?: string[]
   occurredAt?: string
+}
+
+/**
+ * Aprendizaje registrado al solucionar un problema. `null` tanto en los
+ * problemas activos como en los cerrados ANTES de existir esta capacidad.
+ */
+export interface SituationResolutionResponse {
+  learning: string
+  resolvedByUserId: string
+  resolvedByUserName: string
+  resolvedAt: string | null
+  recordedAt: string
+}
+
+/**
+ * SOLUCIONAR un problema: cierre y aprendizaje en UNA sola petición atómica.
+ *
+ * Deliberadamente NO se usa `updateSituation` (el PATCH genérico): el backend
+ * dejó de admitir `CLOSED` por esa vía, porque autoriza por autoría o por área
+ * y eso es más amplio que la regla de resolución. El paso intermedio
+ * «En atención» (OPEN → IN_PROGRESS) SÍ usa el PATCH; este helper solo cierra.
+ *
+ * El cuerpo lleva SOLO el aprendizaje. La coordinación responsable no se envía:
+ * el servidor autoriza contra la que tiene persistida.
+ */
+export async function resolveSituation(
+  situationId: string,
+  learning: string,
+): Promise<SituationResponse> {
+  return apiRequest<SituationResponse>(`/situations/${situationId}/resolution`, {
+    method: 'POST',
+    body: JSON.stringify({ learning }),
+  })
+}
+
+/**
+ * AGREGAR UNA AFECTACIÓN a un problema INTERNAL activo. Append-only: no hay
+ * edición ni borrado. El servidor decide quién puede (`canAddConsequence`) y
+ * responde 409 si el problema ya se cerró.
+ */
+export async function addSituationConsequence(
+  situationId: string,
+  payload: CreateSituationConsequencePayload,
+): Promise<SituationConsequenceResponse> {
+  return apiRequest<SituationConsequenceResponse>(
+    `/situations/${situationId}/consequences`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+  )
 }
 
 export async function updateSituation(

@@ -17,20 +17,23 @@ export function normalizeRoleCode(
 }
 
 export const EXECUTIVE_OPERATIONS_HOME = '/centro-operacional'
-export const EXECUTIVE_ROLE_LANDING_PATH = '/red-impacto'
 
+/**
+ * LANDING ÚNICO: los cuatro roles entran al Centro Operacional.
+ *
+ * Fase 1 de retiro del shell legacy. Antes ADMIN, DIRECTOR y ANALISTA
+ * aterrizaban en `/red-impacto`; ahora cada rol entra a su propio shell del
+ * Centro (`OperationalCenterHome` elige DIRECTOR / ANALISTA / COORDINADOR /
+ * ADMIN). La ruta del Centro admite los cuatro roles, así que este destino
+ * nunca puede devolver a una guarda que lo rechace.
+ *
+ * Se conserva la firma con `user` para no tocar a los llamadores (login,
+ * cortinas, guardas) y porque el destino podría volver a depender del rol.
+ */
 export function getRoleLandingPath(
-  user: Pick<User, 'roleCode' | 'selectedAreaId'> | null | undefined,
+  _user?: Pick<User, 'roleCode' | 'selectedAreaId'> | null,
 ): string {
-  const role = normalizeRoleCode(user?.roleCode)
-  if (role === 'ADMIN' || role === 'ANALISTA' || role === 'DIRECTOR') {
-    return EXECUTIVE_ROLE_LANDING_PATH
-  }
-
-  const coordination = user?.selectedAreaId?.trim()
-  return coordination
-    ? `/red-impacto?coordination=${encodeURIComponent(coordination)}`
-    : '/red-impacto'
+  return EXECUTIVE_OPERATIONS_HOME
 }
 
 export function getEffectiveDashboardRole(

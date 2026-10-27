@@ -1,5 +1,10 @@
 import { expect, test, type Page } from 'playwright/test'
 
+// Fase 1 de retiro del shell legacy: el recorrido de onboarding está suspendido (ONBOARDING_TOUR_SUSPENDED).
+// El estado persistido y el contrato con backend se conservan, pero el
+// overlay no se muestra a ningún rol. Reactivar con el nuevo recorrido.
+test.skip(true, 'Fase 1: el recorrido de onboarding está suspendido (ONBOARDING_TOUR_SUSPENDED)')
+
 type TutorialRole = 'DIRECTOR' | 'ADMIN'
 
 const AUTH_SESSION_KEY = 'novex.auth.session.v1'
@@ -209,8 +214,10 @@ test('serializa reinicio y omisión para no reabrir un tutorial completado', asy
   await page.goto('/')
 
   await expect(page).toHaveURL(/\/centro-operacional$/)
-  await page.locator('[data-tour="user-menu"] > button').click()
-  await page.getByRole('menuitem', { name: 'Ver tutorial nuevamente' }).click()
+  // Fase 1.5: el Centro no tiene cabecera; el tutorial se reabre desde la
+  // hamburguesa flotante.
+  await page.getByTestId('shell-menu-trigger').click()
+  await page.getByTestId('shell-menu-tutorial').click()
   await expect(
     page.getByRole('heading', { name: 'Su espacio de trabajo está listo' }),
   ).toBeVisible()

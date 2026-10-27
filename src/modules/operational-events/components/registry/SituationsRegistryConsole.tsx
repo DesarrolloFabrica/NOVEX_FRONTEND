@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { SituationRegistryRow } from '@/modules/api/types/situation-registry.types'
+import { buildInternalReportUrl } from '@/modules/operational-cards/experience/reportIntent'
 import type {
   SituationRegistryCategoryOption,
   SituationRegistryIndicators,
@@ -384,7 +385,7 @@ export function SituationsRegistryConsole({
           <p className="novex-events-table__notice" data-state="empty">
             Aún no hay situaciones registradas.{' '}
             <Link
-              to="/situaciones/nueva"
+              to={buildInternalReportUrl()}
               viewTransition
               className={`font-semibold text-emerald-300 hover:text-emerald-200 ${FOCUS_VISIBLE}`}
             >

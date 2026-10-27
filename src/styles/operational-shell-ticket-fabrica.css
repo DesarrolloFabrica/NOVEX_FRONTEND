@@ -1,0 +1,11 @@
+/*
+ * Estilos de CONTENIDO residual sobre crema (fases 3–4).
+ *
+ * El marco (papel, banda, remates, adornos, watermark) vive en
+ * `operational-shell-ticket-fabrica-pilot.css` vía `.ticket-panel`.
+ *
+ * Activación: `.operational-shell[data-ticket-theme]` con temas registrados
+ * (`fabrica`, `saber-pro`). Sin tema, esta hoja no aporta superficies.
+ */
+
+/* Sin reglas de superficie provisional: el marco compartido las sustituye. */

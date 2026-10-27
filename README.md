@@ -313,6 +313,7 @@ npm run build
 | Login falla | Client ID alineado FE/BE; usuario ACTIVE en backend |
 | Ruta redirige | Permisos/rol del JWT vs guards de la ruta |
 | Centro operacional oculto | Esperado para `COORDINADOR` |
+| Pantallas sin datos | Base local sin semillas: en NOVEX_BACKEND `npm run migration:run`, `npm run seed:operaciones`, `npm run seed:situations:mock` |
 
 ---
 

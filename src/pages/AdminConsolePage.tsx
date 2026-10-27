@@ -108,7 +108,9 @@ export function AdminConsolePage() {
   ).length
 
   return (
-    <NovexRoom environment="healthy" scene="admin">
+    // Fase 1: sin carril legacy. El ADMIN vuelve al Centro Operacional desde
+    // el menú de usuario del encabezado.
+    <NovexRoom environment="healthy" scene="admin" rail={false}>
       <NovexFrame environment="healthy">
         <MainScreen environment="healthy">
           <ScreenDeck

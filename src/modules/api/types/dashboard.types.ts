@@ -18,7 +18,8 @@ export interface PrioritySituationCard {
   title: string
   coordinationName: string
   coordinationCode: string
-  categoryName: string
+  /** `null` en un reporte entre coordinaciones: la lista omite el segmento. */
+  categoryName: string | null
   severity: SituationSeverity
   status: string
   riskScore: number | null

@@ -29,6 +29,7 @@ const analyst: User = {
   roleCode: 'ANALISTA',
   roleName: 'Analista',
   permissions: ['SITUATIONS_VIEW', 'SITUATIONS_UPDATE'],
+  coordinationId: undefined,
 }
 
 const coordinator: User = {
@@ -64,7 +65,7 @@ describe('permissions utils', () => {
     expect(canCreateCoordinationSituations(analystWithCreate)).toBe(false)
   })
 
-  it('oculta el registro incluso si un admin conserva un permiso anterior', () => {
+  it('oculta el registro si un JWT antiguo aún trajera SITUATIONS_CREATE', () => {
     const adminWithStalePermission: User = {
       ...director,
       roleCode: 'ADMIN',
@@ -76,11 +77,28 @@ describe('permissions utils', () => {
     expect(canCreateCoordinationSituations(adminWithStalePermission)).toBe(false)
   })
 
-  it('deja actualizar el estado a la coordinación dueña del caso', () => {
+  it('el permiso de catálogo vigente no basta: DIRECTOR/ADMIN no registran en UI', () => {
+    expect(
+      canCreateSituations({
+        ...director,
+        permissions: ['SITUATIONS_VIEW'],
+      }),
+    ).toBe(false)
+    expect(
+      canCreateSituations({
+        ...director,
+        roleCode: 'ADMIN',
+        permissions: ['SITUATIONS_VIEW', 'USERS_VIEW'],
+      }),
+    ).toBe(false)
+  })
+
+  it('deja avanzar al coordinador responsable', () => {
     expect(
       canUpdateSituationStatus(coordinator, {
         createdByUserId: 'otro-usuario',
         coordinationId: 'coord-b2b',
+        coordinationCode: 'coord-b2b',
       }),
     ).toBe(true)
   })
@@ -90,23 +108,45 @@ describe('permissions utils', () => {
       canUpdateSituationStatus(coordinator, {
         createdByUserId: 'otro-usuario',
         coordinationId: 'coord-ingenierias',
+        coordinationCode: 'coord-ingenierias',
       }),
     ).toBe(false)
   })
 
-  it('limita al analista a los casos que registró', () => {
+  it('ANALISTA avanza solo si General es responsable (no por autoría)', () => {
     expect(
       canUpdateSituationStatus(analyst, {
         createdByUserId: analyst.id,
-        coordinationId: 'coord-b2b',
+        coordinationId: 'uuid-general',
+        coordinationCode: 'coord-general',
       }),
     ).toBe(true)
     expect(
       canUpdateSituationStatus(analyst, {
-        createdByUserId: 'otro-usuario',
+        createdByUserId: analyst.id,
         coordinationId: 'coord-b2b',
+        coordinationCode: 'coord-b2b',
       }),
     ).toBe(false)
+  })
+
+  it('obedece canAdvanceToInProgress del backend cuando viene en la respuesta', () => {
+    expect(
+      canUpdateSituationStatus(analyst, {
+        createdByUserId: analyst.id,
+        coordinationId: 'coord-b2b',
+        coordinationCode: 'coord-b2b',
+        canAdvanceToInProgress: false,
+      }),
+    ).toBe(false)
+    expect(
+      canUpdateSituationStatus(analyst, {
+        createdByUserId: 'otro',
+        coordinationId: 'uuid-general',
+        coordinationCode: 'coord-general',
+        canAdvanceToInProgress: true,
+      }),
+    ).toBe(true)
   })
 
   it('mantiene informativo al director aunque conserve un permiso anterior', () => {
@@ -119,6 +159,7 @@ describe('permissions utils', () => {
       canUpdateSituationStatus(directorWithStalePermission, {
         createdByUserId: 'otro-usuario',
         coordinationId: 'coord-b2b',
+        coordinationCode: 'coord-b2b',
       }),
     ).toBe(false)
   })

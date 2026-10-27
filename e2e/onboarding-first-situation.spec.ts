@@ -139,7 +139,9 @@ const analysisResponse = {
   updatedAt: '2026-08-04T13:06:00.000Z',
 }
 
-test('auto-inicia el recorrido después de completar el splash de login', async ({
+// Fase 1: el recorrido está suspendido (ONBOARDING_TOUR_SUSPENDED); no
+// auto-inicia para ningún rol. Reactivar con el nuevo recorrido.
+test.skip('auto-inicia el recorrido después de completar el splash de login', async ({
   page,
 }) => {
   const coordinatorSession = {
@@ -189,7 +191,13 @@ test('auto-inicia el recorrido después de completar el splash de login', async 
   await page.locator('#login-email').fill(coordinatorSession.email)
   await page.getByRole('button', { name: 'Continuar con correo' }).click()
 
-  await expect(page).toHaveURL(/\/red-impacto\?coordination=coord-general/)
+  /*
+   * VERDAD NUEVA (fase 2.1): tras el splash, el coordinador aterriza en el
+   * Centro Operacional, que es su puesto de trabajo y el primer paso de su
+   * recorrido. Lo que esta prueba protege —que el tutorial arranque SOLO tras
+   * el splash— no cambia; cambia el destino.
+   */
+  await expect(page).toHaveURL(/\/centro-operacional/)
   await expect(
     page.getByRole('heading', { name: 'Su espacio de trabajo está listo' }),
   ).toBeVisible()
@@ -202,22 +210,33 @@ test('auto-inicia el recorrido después de completar el splash de login', async 
     )
     .toBeNull()
 
+  /*
+   * VERDAD NUEVA (fase 2.1): el recorrido del coordinador dejó de pasear por la
+   * red de impacto y el asistente de captura. Sus pasos ocurren en el Centro
+   * Operacional y señalan las regiones actuales. Se conserva lo que esta prueba
+   * protegía: que el tutorial arranque solo tras el splash, avance con
+   * «Siguiente» y pueda pausarse.
+   */
   for (const expectedTitle of [
-    'Entienda el alcance antes de actuar',
-    'Registre una situación desde cualquier vista',
-    'Registre ahora su primera situación',
+    'Su jornada ocurre en esta pantalla',
+    'Cada carta es una coordinación',
+    'Lo que ocurre en la coordinación observada',
+    'Lo que usted ha reportado, esté donde esté',
   ]) {
     await page.getByRole('button', { name: 'Siguiente', exact: true }).click()
     await expect(
       page.getByRole('heading', { name: expectedTitle }),
     ).toBeVisible()
   }
-  await expect(page).toHaveURL(/\/situaciones\/nueva$/)
-  await expect(page.locator('[data-tour="capture-form"]')).toBeVisible()
+
+  // Ni un solo paso lo saca de su pantalla, y ninguno exige crear nada real.
+  await expect(page).toHaveURL(/\/centro-operacional$/)
+  await expect(page.locator('[data-tour="my-reports"]')).toBeVisible()
   await page.getByRole('button', { name: 'Pausar tutorial' }).click()
 })
 
-test('acompaña una primera situación real hasta informe, historial y estado', async ({
+// INTERNAL vivo: el tour del analista ya no pasa por el asistente retirado.
+test.skip('acompaña una primera situación real hasta informe, historial y estado', async ({
   page,
 }) => {
   let registered = false

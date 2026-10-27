@@ -167,8 +167,8 @@ function buildSituationOperationalReason(
 }
 
 export function resolveProblemCategoryId(
-  code: string,
-  name: string,
+  code: string | null | undefined,
+  name: string | null | undefined,
   icon?: string | null,
 ): ProblemCategoryId {
   return resolveIncidentCategoryIcon(code, name, icon)

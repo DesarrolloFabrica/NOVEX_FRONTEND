@@ -1,0 +1,2731 @@
+/*
+ * SHELL del Centro Operacional: dos zonas y un menú flotante.
+ *
+ * Solo reparto de espacio y superficies discretas. El refinamiento visual de
+ * cada región llega con su contenido, no antes: pintar ahora un sistema visual
+ * para placeholders sería trabajo a tirar.
+ */
+
+/*
+ * DIRECTOR (analítica visual primero): DATOS → PATRONES → PROBLEMAS.
+ * - Lectura ≈ 42 % del ancho: mantiene una superficie analítica amplia.
+ * - Personaje ≈ 21 % y Problemas ≈ 37 % del total (fila superior del main).
+ * - Baraja ≈ 25 % del alto del main (antes ≈ 33 %): selector de coordinación,
+ *   no contenido principal. Cartas con techo propio más bajo.
+ * Todo scoped a data-shell-layout='director': no toca ANALISTA/ADMIN/COORDINADOR.
+ */
+.operational-shell[data-shell-layout='director'] {
+  /* 46 % en escritorio (≥1280 px): ver «Lectura más ancha» al final del archivo. */
+  --shell-action-w: 42%;
+}
+
+/*
+ * Banda de la baraja: nunca más baja que lo que mide la mesa.
+ *
+ * El alto de la mesa sale del ANCHO (cartas ≈ ancho/7,2 y mesa ≈ 1,345 altos
+ * de carta), mientras que una fila `1fr` solo daba ~1/3,35 del alto. En
+ * proporciones anchas la mesa no cabía y el `clip` de la banda se comía hasta
+ * 34 px de las cartas y de la pila de subcartas (medido a 1366×768; 22 px a
+ * 1920×1080). Con `max-content` como mínimo la banda crece EXACTAMENTE lo que
+ * la mesa necesita y la banda superior cede solo eso; cuando la mesa cabe
+ * (p. ej. vertical) se conserva el reparto de siempre, sin suelo extra.
+ *
+ * La banda superior puede ceder sin encoger al personaje: su figura está
+ * limitada por el ANCHO (Contain, 800×900), así que el alto que se le quita
+ * era aire sobre la ilustración.
+ */
+.operational-shell[data-shell-layout='director'] .operational-shell__main {
+  /*
+   * Las dos ramas llegaron a esta misma regla (ver arriba). No es circular: el
+   * tamaño de carta sale del ANCHO de la mesa (`cqw`) y su alto, en altos de
+   * carta, del layout; nada de eso depende del alto de esta fila.
+   */
+  grid-template-rows: minmax(300px, 2.35fr) minmax(max-content, 1fr);
+}
+
+.operational-shell[data-shell-layout='director'] .operational-shell__top {
+  grid-template-columns: minmax(0, 0.365fr) minmax(0, 0.635fr);
+}
+
+/*
+ * El ancho de carta lo limita el ancho de la baraja (arco en unidades de
+ * carta): el techo solo evita que crezca de más en pantallas anchas.
+ * La carta seleccionada sobresale algo más que en la mesa compartida.
+ */
+.operational-shell[data-shell-layout='director'] .operational-table {
+  --card-width-max: clamp(120px, 9.2vw, 184px);
+  --selected-scale: 1.08;
+  --selected-lift: -22px;
+}
+
+/* Lectura: algo menos de marco interno, sin pegar las gráficas al borde. */
+.operational-shell[data-shell-layout='director'] .director-reading {
+  padding: 16px 22px 10px;
+}
+
+/* Problemas (DIRECTOR): consulta rápida y densa. */
+.operational-shell[data-shell-layout='director']
+  .operational-shell__region--coordination-problems
+  .coordination-panel {
+  gap: 5px;
+  padding: 8px 9px 9px;
+}
+
+.operational-shell[data-shell-layout='director']
+  .operational-shell__region--coordination-problems
+  .coordination-panel__problems {
+  gap: 3px;
+}
+
+.operational-shell[data-shell-layout='director']
+  .operational-shell__region--coordination-problems
+  .problem-dossier__body {
+  row-gap: 1px;
+  padding: 3px 6px 3px 5px;
+}
+
+.operational-shell[data-shell-layout='director']
+  .operational-shell__region--coordination-problems
+  .problem-dossier__title {
+  font-size: 12px;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
+
+.operational-shell[data-shell-layout='director']
+  .operational-shell__region--coordination-problems
+  .problem-dossier__meta {
+  max-width: 6.2rem;
+}
+
+.operational-shell__region--director-kpi,
+.operational-shell__region--director-reading {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.operational-shell__region--director-reading > .director-reading {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+.operational-shell[data-shell-layout='director-direction'] {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'main';
+}
+
+.operational-shell[data-shell-layout='director-direction'] .operational-shell__main {
+  grid-template-rows: minmax(0, 1fr);
+  padding: 8px 10px 0;
+}
+
+.operational-shell {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  /*
+   * DOS ZONAS con significados distintos: a la izquierda se opera, a la derecha
+   * se lee el estado. El carril cruza las dos filas de la izquierda —no es una
+   * cuarta tarjeta de la fila superior—. El menú flota fuera de esta rejilla.
+   */
+  grid-template-columns: minmax(0, 1fr) var(--shell-action-w);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: 'main action';
+  height: 100%;
+  min-height: 0;
+  gap: var(--shell-gap);
+  /*
+   * Contiene la capa del escenario: sin scroll extra ni desbordes del arte.
+   * El fondo del shell queda transparente para que el escenario se lea en los
+   * huecos entre regiones; los paneles siguen con su superficie propia.
+   */
+  overflow: clip;
+  background: transparent;
+
+  /*
+   * Reparto base, medido en la prueba espacial y sujeto a calibración cuando
+   * cada región tenga su contenido real. Están juntos para poder moverlos sin
+   * tocar la rejilla.
+   */
+  /*
+   * El panel derecho deja de mostrar cifras y pasa a contener formularios y el
+   * detalle completo con sus acciones, así que necesita más ancho que el carril
+   * al que sustituye: un campo de texto y un botón no caben con la holgura de
+   * una columna de números. 24% daban 333 px a 1440; 30% dan 424 px, que es
+   * donde el formulario deja de apretarse. En esta fase baja a 28 %: la acción
+   * conserva ancho funcional y la baraja gana presencia sin rehacer la tableta.
+   */
+  --shell-action-w: 28%;
+  /*
+   * La banda superior dejó de ser un presupuesto: el personaje ya vive en
+   * ella, y su alto sale de MEDIRLO, no de estimarlo.
+   *
+   * La figura es un SVG que ocupa el ancho de su columna —158 px en la de
+   * 0.18fr— y conserva su proporción, así que su alto natural es 150 px. Por
+   * debajo de ahí la banda la recorta: medido, 224 px de banda la dejaban en
+   * 106 y 256 px en 138. A 268 px la figura llega a su tamaño natural, el
+   * rótulo de estado cabe entero, y nada se derrama sobre la baraja —con los
+   * 200 px del presupuesto inicial, la lectura caía 47 px dentro de la mesa—.
+   * Subir más solo dejaría aire muerto: la figura no puede crecer sin una
+   * columna más ancha.
+   *
+   * La baraja recibe además la fila que antes consumía el control inferior; su
+   * tamaño sigue saliendo del ancho y ahora dispone de alto para no recortarse.
+   */
+  --shell-top-h: 268px;
+  --shell-gap: 10px;
+
+  --shell-line: rgb(150 196 255 / 0.28);
+  --shell-surface: rgb(14 24 42 / 0.55);
+}
+
+/*
+ * Capa del escenario circense (fase 1).
+ *
+ * Absoluta y sin eventos: vive detrás del grid operativo. El encuadre prioriza
+ * el suelo de madera bajo la banda de la baraja y deja los telones como fondo
+ * de profundidad detrás de las regiones superiores y el panel de acción.
+ */
+.operational-shell__scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.operational-shell__scene-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /*
+   * 36 % vertical: sube un poco el arte para que el suelo (≈40 % inferior del
+   * PNG) quede alineado con `.operational-shell__stage`, sin perder los
+   * telones laterales que enmarcan la escena a 1440 y 1920.
+   */
+  object-position: center 36%;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* ---------- Zona operativa ---------- */
+
+.operational-shell__main {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  grid-area: main;
+  grid-template-rows: var(--shell-top-h) minmax(0, 1fr);
+  gap: var(--shell-gap);
+}
+
+/*
+ * Tres lecturas de anchos distintos. El personaje es el que menos pide, porque
+ * es una figura; las dos listas se reparten el resto casi a partes iguales:
+ * «Mis reportes» necesita algo menos porque sus filas son más compactas, y la
+ * lista de la coordinación algo más porque muestra la cabecera del área.
+ */
+.operational-shell__top {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 0.2fr)
+    minmax(0, 0.38fr)
+    minmax(0, 0.42fr);
+  min-height: 0;
+  gap: var(--shell-gap);
+  /*
+   * Fila acotada. Sin esto la fila implícita se dimensiona por contenido y la
+   * región más alta empuja a las tres fuera de la banda, hacia la baraja:
+   * medido, la región del personaje se estiraba a 268 px dentro de una banda
+   * de 200 y su frase caía sobre las cartas.
+   */
+  grid-template-rows: minmax(0, 1fr);
+}
+
+/*
+ * LA BANDA DE LA BARAJA, y la referencia de la que sale el tamaño de carta.
+ *
+ * `min-height: 0` para que ceda de verdad ante la fila superior en lugar de
+ * empujarla, y `overflow: hidden` porque la experiencia todavía mete aquí
+ * piezas que no le corresponden —su miga y su carril de panel—: mientras se
+ * mudan, lo que sobre se recorta contra esta banda en vez de desplazar la
+ * pantalla y sacar de vista las lecturas permanentes de arriba. Es contención,
+ * no maquillaje: la geometría de las cartas se resuelve para caber.
+ */
+.operational-shell__stage {
+  position: relative;
+  z-index: 1;
+  /*
+   * La banda de la baraja no lleva velo opaco propio: el suelo del escenario
+   * debe leerse detrás de las cartas. Los velos de selección/atenuación viven
+   * en cada carta (`.coordination-card__veil`), no aquí.
+   */
+  background: transparent;
+  min-width: 0;
+  min-height: 0;
+  /*
+   * MARGEN EXTERIOR MÍNIMO, no reserva para el mazo.
+   *
+   * Aquí se reservaban 36 px porque los cantos de los mazos (la pila de
+   * Operación Académica) se escalonan por debajo de la última carta y la banda
+   * —que recorta con `clip`— se los comía. Ese aire era un número en px para
+   * un desborde que escala con la carta, y además convivía con el botón
+   * «Volver a la mesa», que ya no existe.
+   *
+   * La reserva vive ahora en la propia mesa (`margin-bottom` de
+   * `--table-motion-reserve` altos de carta, operational-cards.css), que es
+   * quien sabe cuánto mide su carta. Aquí queda solo el respiro exterior: así
+   * el borde inferior de la baraja cae a ~4 px del borde inferior del panel
+   * de lectura.
+   */
+  padding-bottom: 4px;
+  /*
+   * `clip` y no `hidden`: son el mismo recorte, pero `hidden` deja un
+   * contenedor DESPLAZABLE. Medido: al cerrar la isla del problema, el
+   * navegador devolvía el foco a la carta y desplazaba esta banda 16 px para
+   * traerla a la vista; como no hay barra que lo revele ni nada que lo
+   * devuelva, la mesa se quedaba 16 px más arriba para siempre. `clip` no
+   * crea contenedor de desplazamiento, así que ese ajuste no puede ocurrir.
+   */
+  overflow: clip;
+}
+
+/* ---------- Región del personaje ---------- */
+
+/*
+ * El personaje deja de medirse en vh y pasa a medirse EN SU REGIÓN.
+ *
+ * Su alto se expresaba en `clamp(..., 20vh, ...)` porque no tenía contenedor
+ * con alto definido: compartía columna con la mesa y solo el viewport podía
+ * darle una referencia. Aquí sí lo tiene —la banda superior del shell—, así
+ * que toma el aire que le queda a la región y se acabaron los altos por
+ * composición: no hay ningún estado en el que tenga que ceder alto a la
+ * baraja, porque ya no comparten espacio.
+ */
+.operational-shell__region--character {
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 6px 8px 10px;
+}
+
+.operational-shell__region--character .direction-character {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+/* El SVG conserva su proporción por `preserveAspectRatio`, así que darle el
+   alto libre no lo deforma: lo escala. */
+.operational-shell__region--character .direction-character__figure {
+  min-height: 0;
+  height: auto;
+  flex: 1 1 auto;
+}
+
+/* ---------- Región de problemas ---------- */
+
+/*
+ * La lista toma el alto de la región y se desplaza por dentro.
+ *
+ * La banda superior no crece: es la condición que impide que una coordinación
+ * con treinta problemas empuje la baraja fuera de la pantalla o abra un scroll
+ * de ruta. Lo que cede es el contenido de la lista, que ya nació con scroll
+ * propio cuando vivía en el carril.
+ */
+.operational-shell__region--my-reports,
+.operational-shell__region--coordination-problems {
+  padding: 10px 12px;
+  position: relative;
+  z-index: 1;
+}
+
+/*
+ * Expansión hacia la baraja: la región crece hacia abajo y tapa las cartas.
+ * Los padres aflojan el clip solo mientras hay un panel expandido.
+ */
+.operational-shell:has([data-expanded='true']) {
+  overflow: visible;
+}
+
+.operational-shell__main:has([data-expanded='true']) {
+  overflow: visible;
+  z-index: 4;
+}
+
+.operational-shell__top:has([data-expanded='true']) {
+  overflow: visible;
+  z-index: 5;
+}
+
+.operational-shell__region--my-reports:has([data-expanded='true']),
+.operational-shell__region--coordination-problems:has([data-expanded='true']) {
+  z-index: 40;
+  height: calc(var(--shell-top-h) + min(42vh, 360px));
+  max-height: none;
+  overflow: visible;
+  align-self: start;
+}
+
+.operational-shell__region--my-reports:has([data-expanded='true']).operational-shell__region--ticket-panel,
+.operational-shell__region--coordination-problems:has([data-expanded='true']).operational-shell__region--ticket-panel {
+  overflow: visible;
+}
+
+.my-reports[data-expanded='true'],
+.coordination-panel[data-expanded='true'] {
+  min-height: 100%;
+  height: 100%;
+}
+
+.operational-shell__region--coordination-problems .coordination-panel {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+/*
+ * ALCANCE DE LECTURA declarado. Una lista parcial nunca debe leerse como la
+ * lista completa del área, así que el aviso va ANTES de la lista y no como una
+ * nota al pie que se pierda al desplazar.
+ */
+/* Reintento de la lista: acompaña al aviso de error, dentro de la región. */
+.coordination-panel__retry {
+  margin-top: 6px;
+  border: 1px solid rgb(150 196 255 / 0.3);
+  border-radius: 6px;
+  padding: 4px 10px;
+  background: rgb(20 34 58 / 0.7);
+  color: #cfe0f6;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.operational-shell__scope-note {
+  margin: 0 0 8px;
+  padding: 6px 8px;
+  border: 1px solid rgb(240 176 84 / 0.35);
+  border-radius: 6px;
+  background: rgb(240 176 84 / 0.08);
+  color: #f0b054;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+/* Misma lectura parcial, ahora anclada al panel de problemas. */
+.coordination-panel__scope-note {
+  margin: 0 0 8px;
+  padding: 6px 8px;
+  border: 1px solid rgb(240 176 84 / 0.35);
+  border-radius: 6px;
+  background: rgb(240 176 84 / 0.08);
+  color: #f0b054;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+/* ---------- Panel derecho: reportar o resolver ---------- */
+
+/*
+ * Sustituye al carril de indicadores y hereda su caja: cruza las dos filas de
+ * la zona operativa, de modo que el formulario y el detalle disponen de toda la
+ * altura de la escena y no solo de la banda superior.
+ */
+.operational-shell__action {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  grid-area: action;
+  padding: 10px 12px;
+}
+
+/*
+ * PANEL DERECHO. Columna única y desplazable por dentro.
+ *
+ * Hereda del carril lo que seguía siendo correcto —overflow-y auto con
+ * scrollbar-gutter estable, para que aparecer o desaparecer la barra no
+ * recoloque el contenido— y cambia lo demás: aquí ya no hay cifras cortas en
+ * dos columnas, sino un formulario y un detalle que necesitan el ancho entero.
+ */
+.action-panel {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-gutter: stable;
+}
+
+/* En detalle: el expediente y las acciones son bloques distintos en el scroll. */
+.action-panel[data-mode='detail'] {
+  gap: 16px;
+  padding-bottom: 8px;
+}
+
+.action-panel__detail-nav {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 4px;
+}
+
+.action-panel__detail-back {
+  flex: 0 0 auto;
+  border: 1px solid rgb(150 196 255 / 0.3);
+  border-radius: 6px;
+  padding: 4px 10px;
+  background: rgb(20 34 58 / 0.7);
+  color: #cfe0f6;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.action-panel__idle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(96px, 44%);
+  align-content: start;
+  gap: 10px 0;
+  margin: 0;
+  padding: 6px 6px 8px;
+  color: var(--os-muted, #8b9cb6);
+  text-align: left;
+}
+
+.action-panel__idle > * {
+  grid-column: 1;
+  max-width: 100%;
+}
+
+.action-panel__idle-heading {
+  margin: 0;
+  color: #cfe0f6;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  line-height: 1.3;
+}
+
+.action-panel__idle-text {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: left;
+  text-wrap: balance;
+}
+
+.action-panel__cta-safe {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  margin: 0;
+  width: 100%;
+  max-width: 200px;
+}
+
+.action-panel__cta-pair {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+}
+
+.action-panel__cta {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgb(122 196 138 / 0.45);
+  border-radius: 7px;
+  padding: 6px 10px;
+  background: rgb(122 196 138 / 0.16);
+  color: #a9e3b8;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
+  white-space: normal;
+}
+
+.action-panel__cta--secondary {
+  border-color: rgb(122 196 138 / 0.55);
+  background: transparent;
+  color: #a9e3b8;
+}
+
+.action-panel__cta--history {
+  border-color: rgb(150 196 255 / 0.4);
+  background: rgb(150 196 255 / 0.1);
+  color: #cfe0f6;
+}
+
+.action-panel__cta:hover:not(:disabled) {
+  background: rgb(122 196 138 / 0.28);
+}
+
+.action-panel__cta--secondary:hover:not(:disabled) {
+  background: rgb(122 196 138 / 0.12);
+}
+
+.action-panel__cta--history:hover:not(:disabled) {
+  background: rgb(150 196 255 / 0.2);
+}
+
+.action-panel__cta:focus-visible {
+  outline: 2px solid rgb(150 196 255 / 0.65);
+  outline-offset: 2px;
+}
+
+.action-panel__cta:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.action-panel__cta-note {
+  margin: 0;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 11px;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.action-panel__retry {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-panel__retry button,
+.action-panel__secondary,
+.problem-actions__secondary {
+  border: 1px solid rgb(150 196 255 / 0.3);
+  border-radius: 6px;
+  padding: 6px 12px;
+  background: rgb(20 34 58 / 0.7);
+  color: #cfe0f6;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/* ---------- Mis reportes ---------- */
+
+.my-reports {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.my-reports__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.my-reports__heading {
+  margin: 0;
+  color: #cfe0f6;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.my-reports__count {
+  color: var(--os-muted, #8b9cb6);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Estilos residuales: los CTAs de creación ya no viven en Mis reportes. */
+.my-reports__cta-group {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.my-reports__cta {
+  flex: 1 1 0;
+  min-width: 0;
+  border: 1px solid rgb(122 196 138 / 0.45);
+  border-radius: 6px;
+  padding: 7px 8px;
+  background: rgb(122 196 138 / 0.12);
+  color: #a9e3b8;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.my-reports__cta--secondary {
+  border-color: rgb(122 196 138 / 0.55);
+  background: transparent;
+  color: #a9e3b8;
+}
+
+.my-reports__cta:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.my-reports__cta:hover:not(:disabled) {
+  background: rgb(122 196 138 / 0.2);
+}
+
+.my-reports__cta--secondary:hover:not(:disabled) {
+  background: rgb(122 196 138 / 0.1);
+}
+
+.my-reports__cta-group .my-reports__note {
+  flex: 1 1 100%;
+}
+
+/* Toggle expandir / contraer al pie de Mis reportes y Problemas. */
+.panel-expand-toggle {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 60%;
+  max-width: 60%;
+  margin-top: auto;
+  border: 1px solid rgb(150 196 255 / 0.35);
+  border-radius: 6px;
+  padding: 5px 8px;
+  background: rgb(20 34 58 / 0.55);
+  color: #cfe0f6;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.panel-expand-toggle:hover {
+  background: rgb(30 52 88 / 0.85);
+  border-color: rgb(150 196 255 / 0.55);
+}
+
+.action-panel__cta-pair,
+.problem-actions__cta-pair {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 0;
+}
+
+/* ---------- Historial de cerrados ---------- */
+
+.problem-history {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: clamp(40px, 16%, 72px);
+}
+
+.problem-history__header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.problem-history__heading {
+  margin: 0;
+  color: #cfe0f6;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.problem-history__back {
+  flex: 0 0 auto;
+  border: 1px solid rgb(150 196 255 / 0.3);
+  border-radius: 6px;
+  padding: 4px 10px;
+  background: rgb(20 34 58 / 0.7);
+  color: #cfe0f6;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.problem-history__period,
+.problem-history__summary {
+  margin: 0;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.problem-history__summary {
+  font-weight: 600;
+  color: #cfe0f6;
+}
+
+.history-period-picker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: min(100%, 280px);
+}
+
+.history-period-picker__label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b5b45;
+}
+
+.history-period-picker__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  border: 1px solid rgb(42 33 24 / 0.28);
+  border-radius: 7px;
+  padding: 7px 10px;
+  background: rgb(255 250 240 / 0.92);
+  color: #2a2118;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.history-period-picker__trigger:focus-visible {
+  outline: 2px solid rgb(122 90 48 / 0.55);
+  outline-offset: 2px;
+}
+
+.history-period-picker__value {
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.history-period-picker__chevron {
+  flex: 0 0 auto;
+  opacity: 0.75;
+}
+
+.history-period-picker__panel {
+  position: absolute;
+  z-index: 8;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  min-width: min(100%, 280px);
+  max-height: min(52vh, 340px);
+  overflow: auto;
+  border: 1px solid rgb(42 33 24 / 0.28);
+  border-radius: 8px;
+  padding: 8px;
+  background: rgb(255 248 236 / 0.98);
+  box-shadow: 0 12px 28px rgb(42 33 24 / 0.18);
+}
+
+.history-period-picker__year-row,
+.history-period-picker__month-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.history-period-picker__year,
+.history-period-picker__month-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2a2118;
+  text-align: center;
+}
+
+.history-period-picker__nav {
+  border: 1px solid rgb(42 33 24 / 0.28);
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  background: rgb(255 250 240 / 0.9);
+  color: #2a2118;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.history-period-picker__nav:focus-visible,
+.history-period-picker__tab:focus-visible,
+.history-period-picker__option:focus-visible {
+  outline: 2px solid rgb(122 90 48 / 0.55);
+  outline-offset: 1px;
+}
+
+.history-period-picker__tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.history-period-picker__tab {
+  border: 1px solid rgb(42 33 24 / 0.22);
+  border-radius: 6px;
+  padding: 5px 4px;
+  background: transparent;
+  color: #6b5b45;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.history-period-picker__tab[data-active='true'] {
+  background: rgb(196 160 96 / 0.22);
+  color: #2a2118;
+  border-color: rgb(122 90 48 / 0.45);
+}
+
+.history-period-picker__options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history-period-picker__options--grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.history-period-picker__option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: rgb(255 250 240 / 0.7);
+  color: #2a2118;
+  cursor: pointer;
+  text-align: left;
+}
+
+.history-period-picker__option[data-selected='true'] {
+  border-color: rgb(122 90 48 / 0.45);
+  background: rgb(196 160 96 / 0.2);
+}
+
+.history-period-picker__option-title {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.history-period-picker__option-range {
+  font-size: 10px;
+  color: #6b5b45;
+}
+
+.problem-history__more,
+.problem-history__error button {
+  border: 1px solid rgb(150 196 255 / 0.3);
+  border-radius: 6px;
+  padding: 5px 10px;
+  background: rgb(20 34 58 / 0.7);
+  color: #cfe0f6;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.problem-history__note,
+.problem-history__error p,
+.problem-history__empty-title,
+.problem-history__empty-hint {
+  margin: 0;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.problem-history__empty {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0 8px;
+  padding: 12px 10px;
+  max-width: min(100%, 280px);
+  border: 1px dashed rgb(150 196 255 / 0.22);
+  border-radius: 8px;
+}
+
+.problem-history__empty-title {
+  color: #cfe0f6;
+  font-weight: 600;
+}
+
+.problem-history__error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.action-panel__idle--consult {
+  gap: 12px;
+}
+
+.action-panel__cta--consult {
+  max-width: 220px;
+}
+
+.problem-history__list {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.problem-history__list > li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.problem-history__meta,
+.problem-history__learning {
+  margin: 0;
+  padding: 0 2px;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.problem-history__learning {
+  font-style: italic;
+}
+
+
+/*
+ * MARCA LATERAL de las filas de problema: logo de la coordinación representada
+ * en una ficha circular clara, legible sobre la superficie oscura y sobre el
+ * papel del ticket. Decorativa: el origen también va en texto visible.
+ *
+ * EL TAMAÑO LO DECIDE EL ANCHO DE LA LISTA, NO EL DE LA VENTANA. La misma
+ * ventana da listas muy distintas —a 1024 px la de la mesa mide ≈ 220 px y la
+ * de COORDINADOR ≈ 450 px—, así que cada lista es un contenedor
+ * (`problem-rows`) y la marca escala por pasos según su ancho real:
+ *
+ *   lista < 280 px        30 px, separación 8 px   (mesa a 1024–1100)
+ *   280 – 299 px          34 px, separación 10 px  («Mis reportes» de mesa a 1280)
+ *   300 – 419 px          36 px, separación 10 px  (1440, en las tres superficies)
+ *   ≥ 420 px              40 px, separación 12 px  (1920; COORDINADOR a 1024)
+ *
+ * Cada paso deja al título al menos ≈ 80 px de columna, que con dos líneas
+ * sigue leyéndose; la severidad y el estado viven en su propia columna y no
+ * compiten con la marca.
+ */
+.my-reports__list,
+.coordination-panel__problems,
+.coordinator-problems__groups {
+  container: problem-rows / inline-size;
+}
+
+.problem-row,
+.my-reports__row {
+  --row-mark-size: 30px;
+  --row-mark-gap: 8px;
+}
+
+@container problem-rows (min-width: 280px) {
+  .problem-row,
+  .my-reports__row {
+    --row-mark-size: 34px;
+    --row-mark-gap: 10px;
+  }
+}
+
+@container problem-rows (min-width: 300px) {
+  .problem-row,
+  .my-reports__row {
+    --row-mark-size: 36px;
+  }
+}
+
+@container problem-rows (min-width: 420px) {
+  .problem-row,
+  .my-reports__row {
+    --row-mark-size: 40px;
+    --row-mark-gap: 12px;
+  }
+}
+
+.problem-row__mark,
+.my-reports__mark {
+  display: block;
+  box-sizing: border-box;
+  width: var(--row-mark-size);
+  height: var(--row-mark-size);
+  align-self: center;
+  overflow: hidden;
+  border: 1px solid rgb(150 196 255 / 0.35);
+  border-radius: 50%;
+  background: #fbf8f1;
+}
+
+/*
+ * LOS LOGOS TRAEN MARGEN PROPIO. Medido sobre los 15 archivos de 512 px, el
+ * dibujo ocupa entre el 51 % y el 91 % del lienzo (transparente en los PNG,
+ * blanco en los JPG). Por eso la imagen llena la ficha sin padding y se amplía
+ * un 8 %: con eso el emblema gana tamaño visible y los que caben en el círculo
+ * (radio ≤ 0,46 del lado, la mayoría) siguen enteros. Los pocos que ya
+ * rebasaban el círculo (Fábrica, Proyección Social, Desarrollo Profesional)
+ * solo pierden algo más de sus esquinas, que ya se recortaban.
+ */
+.problem-row__mark img,
+.my-reports__mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scale(1.08);
+}
+
+/*
+ * Sin coordinación resoluble: nunca el logo de otra. Mismo diámetro que las
+ * fichas con logo y un trazo algo más grueso con un velo suave, para que no se
+ * lea como una marca más pequeña ni como un hueco.
+ */
+.problem-row__mark[data-mark='neutral'],
+.my-reports__mark[data-mark='neutral'] {
+  border: 1.5px dashed rgb(150 196 255 / 0.55);
+  background: rgb(150 196 255 / 0.08);
+}
+
+.operational-shell__region--ticket-panel .problem-row__mark,
+.operational-shell__region--ticket-panel .my-reports__mark,
+.coordination-panel--ticket-pilot .problem-row__mark {
+  border-color: rgb(42 33 24 / 0.28);
+}
+
+.operational-shell__region--ticket-panel .problem-row__mark[data-mark='neutral'],
+.operational-shell__region--ticket-panel .my-reports__mark[data-mark='neutral'],
+.coordination-panel--ticket-pilot .problem-row__mark[data-mark='neutral'] {
+  border-color: rgb(42 33 24 / 0.45);
+  background: rgb(42 33 24 / 0.05);
+}
+
+.problem-detail__kind {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--os-muted, #8b9cb6);
+  margin-bottom: 2px;
+}
+
+.my-reports__list {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  scrollbar-gutter: stable;
+}
+
+/*
+ * MARCA LATERAL + CUERPO DE DOS LÍNEAS, igual que la fila de problemas:
+ *
+ *   [marca] [título…………………………] [severidad]
+ *   [marca] [tipo · responsable…] [estado]
+ *
+ * Todo con columna y fila EXPLÍCITAS: sin ellas la colocación automática
+ * mandaba piezas a una tercera fila o delante del título.
+ */
+.my-reports__row {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 2px var(--row-mark-gap, 8px);
+  grid-template-columns: var(--row-mark-size, 24px) minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: rgb(20 34 58 / 0.5);
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.my-reports__row:hover {
+  border-color: rgb(150 196 255 / 0.3);
+}
+
+.my-reports__row[aria-current='true'] {
+  border-color: rgb(150 196 255 / 0.65);
+  background: rgb(30 52 88 / 0.85);
+}
+
+.my-reports__mark {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+
+/* Hasta dos líneas: un título largo usa el ancho disponible. */
+.my-reports__title {
+  display: -webkit-box;
+  min-width: 0;
+  grid-column: 2;
+  grid-row: 1;
+  overflow: hidden;
+  color: #dce9fb;
+  font-size: 12px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+/*
+ * Tipo y coordinación responsable: visible, hasta dos líneas antes de recortar
+ * para que «Coordinación responsable» se lea también en la columna de 1024 px.
+ */
+.my-reports__origin {
+  display: -webkit-box;
+  min-width: 0;
+  grid-column: 2;
+  grid-row: 2;
+  overflow: hidden;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 10px;
+  line-height: 1.3;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.my-reports__status {
+  grid-column: 3;
+  grid-row: 2;
+  justify-self: end;
+  align-self: start;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 10px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+/* La severidad lleva SIEMPRE su etiqueta: el color solo acompaña. */
+.my-reports__severity {
+  border-radius: 999px;
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+  align-self: end;
+}
+
+.my-reports__severity[data-severity='CRITICAL'] {
+  background: rgb(244 96 104 / 0.18);
+  color: #f46068;
+}
+
+.my-reports__severity[data-severity='HIGH'] {
+  background: rgb(240 176 84 / 0.18);
+  color: #f0b054;
+}
+
+.my-reports__severity[data-severity='MEDIUM'] {
+  background: rgb(132 150 176 / 0.18);
+  color: #a9bcd6;
+}
+
+.my-reports__severity[data-severity='LOW'] {
+  background: rgb(122 196 138 / 0.15);
+  color: #7ac48a;
+}
+
+.my-reports__note {
+  margin: 0;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 11px;
+}
+
+.my-reports__note--error {
+  color: #f46068;
+}
+
+.my-reports__more {
+  border: 1px solid rgb(150 196 255 / 0.25);
+  border-radius: 6px;
+  padding: 5px 8px;
+  background: transparent;
+  color: #a9bcd6;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+/* ---------- Formulario de reporte ---------- */
+
+.report-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.report-form__heading {
+  margin: 0;
+  color: #cfe0f6;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.report-form__header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.report-form__back {
+  flex: 0 0 auto;
+  border: 1px solid rgb(150 196 255 / 0.3);
+  border-radius: 6px;
+  padding: 4px 10px;
+  background: rgb(20 34 58 / 0.7);
+  color: #cfe0f6;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.report-form__back:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.report-form__destination {
+  margin: 4px 0 0;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 11px;
+}
+
+.report-form__destination strong {
+  color: #9ad0ff;
+}
+
+.report-form__destination--missing {
+  color: #f0b054;
+}
+
+.report-form__field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.report-form__field label,
+.report-form__severity legend {
+  color: #a9bcd6;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.report-form__field input,
+.report-form__field select,
+.report-form__field textarea,
+.problem-actions__form textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgb(150 196 255 / 0.28);
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: rgb(12 22 40 / 0.8);
+  color: #dce9fb;
+  font: inherit;
+  font-size: 12px;
+}
+
+.report-form__field textarea,
+.problem-actions__form textarea {
+  resize: vertical;
+}
+
+.report-form__field input:focus-visible,
+.report-form__field select:focus-visible,
+.report-form__field textarea:focus-visible,
+.problem-actions__form textarea:focus-visible {
+  outline: 2px solid #9ad0ff;
+  outline-offset: 1px;
+}
+
+.report-form__severity {
+  min-width: 0;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.report-form__severity-options {
+  display: grid;
+  gap: 4px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 4px;
+}
+
+.report-form__severity-option {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 5px;
+  flex-wrap: wrap;
+  border: 1px solid rgb(150 196 255 / 0.22);
+  border-radius: 6px;
+  padding: 5px 7px;
+  cursor: pointer;
+}
+
+.report-form__severity-option[data-selected='true'] {
+  border-color: rgb(150 196 255 / 0.65);
+  background: rgb(30 52 88 / 0.7);
+}
+
+.report-form__severity-label {
+  color: #dce9fb;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.report-form__severity-hint {
+  width: 100%;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 10px;
+}
+
+.report-form__hint {
+  margin: 0;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 10px;
+}
+
+/* ---------- Selector visual de coordinación responsable (INTER) ---------- */
+
+.responsible-picker {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.responsible-picker__label {
+  color: #a9bcd6;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.responsible-picker__trigger,
+.responsible-picker__change,
+.responsible-picker__dismiss {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgb(150 196 255 / 0.28);
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: rgb(12 22 40 / 0.8);
+  color: #dce9fb;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.responsible-picker__dismiss {
+  width: auto;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.responsible-picker__panel-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.responsible-picker__trigger:hover:not(:disabled),
+.responsible-picker__change:hover:not(:disabled) {
+  border-color: rgb(150 196 255 / 0.55);
+}
+
+.responsible-picker__trigger:focus-visible,
+.responsible-picker__change:focus-visible,
+.responsible-picker__search:focus-visible,
+.responsible-picker__option:focus-visible {
+  outline: 2px solid #9ad0ff;
+  outline-offset: 1px;
+}
+
+.responsible-picker__trigger:disabled,
+.responsible-picker__change:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.responsible-picker[data-invalid='true'] .responsible-picker__trigger {
+  border-color: #f0b054;
+  box-shadow: inset 0 0 0 1px rgb(240 176 84 / 0.45);
+}
+
+.responsible-picker__error {
+  margin: 0;
+  color: #f0b054;
+  font-size: 11px;
+}
+
+.responsible-picker__summary {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid rgb(150 196 255 / 0.35);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: rgb(18 32 56 / 0.85);
+}
+
+.responsible-picker__summary-main {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.responsible-picker__summary-text {
+  margin: 0;
+  min-width: 0;
+  color: #dce9fb;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.responsible-picker__mark {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: rgb(255 255 255 / 0.08);
+}
+
+.responsible-picker__mark[data-mark='neutral'] {
+  background:
+    linear-gradient(135deg, rgb(150 196 255 / 0.35), rgb(150 196 255 / 0.08));
+}
+
+.responsible-picker__mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.responsible-picker__panel {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid rgb(150 196 255 / 0.28);
+  border-radius: 8px;
+  padding: 8px;
+  background: rgb(10 18 34 / 0.92);
+}
+
+.responsible-picker__search-label {
+  color: #a9bcd6;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.responsible-picker__search {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgb(150 196 255 / 0.28);
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: rgb(12 22 40 / 0.8);
+  color: #dce9fb;
+  font: inherit;
+  font-size: 12px;
+}
+
+.responsible-picker__list {
+  display: flex;
+  max-height: 180px;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 0;
+  list-style: none;
+  overscroll-behavior: contain;
+}
+
+.responsible-picker__option {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: transparent;
+  color: #dce9fb;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.responsible-picker__option:hover,
+.responsible-picker__option[data-active='true'] {
+  border-color: rgb(150 196 255 / 0.35);
+  background: rgb(30 52 88 / 0.7);
+}
+
+.responsible-picker__option[aria-selected='true'] {
+  border-color: rgb(150 196 255 / 0.65);
+  background: rgb(36 64 108 / 0.85);
+}
+
+.responsible-picker__option-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.responsible-picker__empty {
+  margin: 0;
+  padding: 10px 8px;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.report-form__note,
+.problem-actions__note {
+  margin: 0;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.report-form__note--error,
+.problem-actions__note--error,
+.report-form__hint--error {
+  color: #f46068;
+}
+
+.report-form__submit,
+.problem-actions__submit {
+  border: 1px solid rgb(122 196 138 / 0.5);
+  border-radius: 6px;
+  padding: 8px 12px;
+  background: rgb(122 196 138 / 0.16);
+  color: #b6e8c4;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.report-form__submit:disabled,
+.problem-actions__submit:disabled {
+  border-color: rgb(150 196 255 / 0.2);
+  background: rgb(20 34 58 / 0.6);
+  color: #6c7d95;
+  cursor: not-allowed;
+}
+
+/* ---------- Acciones sobre el problema ---------- */
+
+.problem-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+  border-top: 1px solid rgb(150 196 255 / 0.2);
+  padding-top: 14px;
+  /* Flujo normal del scroll del panel: no fijar ni tapar acordeones. */
+  position: relative;
+  z-index: 0;
+}
+
+.problem-actions__heading {
+  margin: 0;
+  color: #b6e8c4;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.problem-actions__block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.problem-actions__block--resolution {
+  padding-top: 8px;
+  border-top: 1px dashed rgb(150 196 255 / 0.28);
+}
+
+.problem-actions__block-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 10px;
+}
+
+.problem-actions__block-title {
+  margin: 0;
+  color: #cfe0f6;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.problem-actions__block-hint {
+  margin: 0;
+  color: #8b9cb6;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.problem-actions__field-help {
+  margin: 0;
+  color: #8b9cb6;
+  font-size: 10.5px;
+  line-height: 1.4;
+}
+
+.problem-actions__status {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgb(150 196 255 / 0.28);
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: rgb(18 36 64 / 0.45);
+  color: #dce9fb;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.problem-actions__status[data-status='OPEN'] {
+  border-color: rgb(132 150 176 / 0.45);
+  color: #c5d0e0;
+}
+
+.problem-actions__status[data-status='IN_PROGRESS'],
+.problem-actions__status[data-status='RESOLVED'] {
+  border-color: rgb(240 176 84 / 0.45);
+  color: #f0d2a0;
+}
+
+.problem-actions__form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.problem-actions__advance {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.problem-actions__advance-button {
+  align-self: flex-start;
+  border: 1px solid rgb(150 196 255 / 0.35);
+  border-radius: 8px;
+  background: rgb(18 36 64 / 0.55);
+  color: #dce9fb;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 11px;
+  cursor: pointer;
+}
+
+.problem-actions__advance-button:hover,
+.problem-actions__advance-button:focus-visible {
+  border-color: rgb(180 214 255 / 0.55);
+  outline: 2px solid rgb(150 196 255 / 0.45);
+  outline-offset: 2px;
+}
+
+.problem-actions__advance-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.problem-actions__label {
+  color: #a9bcd6;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.problem-actions__learning {
+  margin: 0;
+  color: #dce9fb;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.problem-actions__byline {
+  margin: 0;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 10px;
+}
+
+.problem-actions__note--readonly {
+  margin: 0;
+}
+
+
+/* ---------- Regiones ---------- */
+
+.operational-shell__region {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--shell-line);
+  border-radius: 14px;
+  background: var(--shell-surface);
+  /* Una región contiene lo suyo: lo que no quepa se recorta contra su borde
+     en lugar de dibujarse encima de la banda vecina. `clip` por el mismo
+     motivo que la banda de la baraja: recorta sin volverse desplazable. */
+  overflow: clip;
+}
+
+.operational-shell__region-title {
+  margin: 0;
+  color: var(--os-text, #edf5ff);
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.operational-shell__region-hint {
+  margin: 0;
+  color: var(--os-muted, #8b9cb6);
+  font-size: 12px;
+}
+
+/* ---------- Menú flotante ---------- */
+
+.operational-shell__menu-anchor {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 50;
+  display: block;
+  width: 44px;
+  height: 44px;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  /*
+   * El ancla no pinta ninguna franja: solo posiciona el botón flotante y deja
+   * que todo el alto pertenezca al escenario.
+   */
+  background: transparent;
+  pointer-events: none;
+}
+
+.operational-shell__menu-trigger {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgb(91 61 29 / 0.66);
+  border-radius: 11px;
+  color: #4c3520;
+  background:
+    linear-gradient(rgb(250 241 216 / 0.94), rgb(232 211 169 / 0.94)),
+    url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
+  box-shadow:
+    0 7px 18px rgb(2 5 12 / 0.42),
+    inset 0 0 0 2px rgb(255 250 230 / 0.54);
+  cursor: pointer;
+  font: inherit;
+  pointer-events: auto;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.operational-shell__menu-trigger:hover,
+.operational-shell__menu-trigger[aria-expanded='true'] {
+  color: #26190f;
+  background:
+    linear-gradient(rgb(255 247 221 / 0.98), rgb(239 218 173 / 0.98)),
+    url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
+  box-shadow:
+    0 9px 22px rgb(2 5 12 / 0.48),
+    inset 0 0 0 2px rgb(255 250 230 / 0.68);
+}
+
+.operational-shell__menu-trigger:focus-visible {
+  outline: 2px solid var(--os-focus, #a3ff5c);
+  outline-offset: 2px;
+}
+
+.operational-shell__menu-hamburger {
+  display: grid;
+  width: 20px;
+  gap: 4px;
+}
+
+.operational-shell__menu-hamburger > span {
+  display: block;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  transition:
+    transform 160ms ease,
+    opacity 160ms ease;
+}
+
+.operational-shell__menu-trigger[aria-expanded='true']
+  .operational-shell__menu-hamburger > span:first-child {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.operational-shell__menu-trigger[aria-expanded='true']
+  .operational-shell__menu-hamburger > span:nth-child(2) {
+  opacity: 0;
+}
+
+.operational-shell__menu-trigger[aria-expanded='true']
+  .operational-shell__menu-hamburger > span:last-child {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/*
+ * Panel no modal: queda dentro del stacking context del shell (por encima de
+ * listas expandidas, z=40), pero no compite con overlays globales. Al estar
+ * anclado de forma absoluta al botón, abrirlo no participa en la rejilla ni
+ * cambia un solo rectángulo operacional.
+ */
+.operational-shell__menu-panel {
+  --menu-ink: #342719;
+  --menu-muted: #74634f;
+  --menu-line: rgb(91 61 29 / 0.25);
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  display: flex;
+  width: min(320px, calc(100vw - 24px));
+  max-height: calc(100dvh - 80px);
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 2px solid rgb(73 48 25 / 0.76);
+  border-radius: 13px;
+  color: var(--menu-ink);
+  background:
+    linear-gradient(rgb(250 241 216 / 0.9), rgb(238 222 184 / 0.91)),
+    url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
+  box-shadow:
+    0 18px 42px rgb(2 5 12 / 0.68),
+    inset 0 0 0 3px rgb(255 250 230 / 0.55),
+    inset 0 0 0 5px rgb(91 61 29 / 0.16);
+  scrollbar-gutter: stable;
+  animation: operational-shell-menu-in 180ms ease-out both;
+  overscroll-behavior: contain;
+  pointer-events: auto;
+}
+
+.operational-shell__menu-panel::before,
+.operational-shell__menu-panel::after {
+  position: absolute;
+  top: 8px;
+  color: rgb(118 76 34 / 0.5);
+  content: '◆';
+  font-size: 9px;
+}
+
+.operational-shell__menu-panel::before {
+  left: 10px;
+}
+
+.operational-shell__menu-panel::after {
+  right: 10px;
+}
+
+.operational-shell__menu-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 1px 3px 9px;
+  border-bottom: 1px solid var(--menu-line);
+}
+
+.operational-shell__menu-sr-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.operational-shell__menu-user {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.operational-shell__menu-user > span {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgb(91 61 29 / 0.35);
+  border-radius: 50%;
+  color: #f7edcf;
+  background: #614223;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+}
+
+.operational-shell__menu-user div,
+.operational-shell__menu-user strong,
+.operational-shell__menu-user small {
+  display: block;
+  min-width: 0;
+}
+
+.operational-shell__menu-user strong {
+  overflow: hidden;
+  color: var(--menu-ink);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.operational-shell__menu-user small {
+  margin-top: 2px;
+  color: var(--menu-muted);
+  font-size: 10px;
+}
+
+.operational-shell__menu-navigation,
+.operational-shell__menu-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.operational-shell__menu-option,
+.operational-shell .operational-shell__menu-register,
+.operational-shell__menu-logout,
+.operational-shell__menu-panel .novex-help-menu__trigger {
+  display: flex;
+  min-width: 0;
+  min-height: 44px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 7px 10px;
+  border: 1px solid var(--menu-line);
+  border-radius: 9px;
+  color: var(--menu-ink);
+  background: rgb(255 251 235 / 0.5);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.72);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    transform 150ms ease;
+}
+
+.operational-shell__menu-option:hover,
+.operational-shell .operational-shell__menu-register:hover,
+.operational-shell__menu-logout:hover,
+.operational-shell__menu-panel .novex-help-menu__trigger:hover,
+.operational-shell__menu-panel .novex-help-menu__trigger[aria-expanded='true'] {
+  border-color: rgb(91 61 29 / 0.52);
+  color: #24190f;
+  background: rgb(255 248 220 / 0.9);
+  transform: translateY(-1px);
+}
+
+.operational-shell__menu-option:focus-visible,
+.operational-shell__menu-logout:focus-visible,
+.operational-shell__menu-panel .novex-help-menu__trigger:focus-visible {
+  outline: 3px solid rgb(61 112 48 / 0.72);
+  outline-offset: 1px;
+}
+
+.operational-shell__menu-option.is-active {
+  border-color: rgb(61 112 48 / 0.48);
+  background: rgb(204 222 169 / 0.55);
+}
+
+.operational-shell__menu-option-icon,
+.operational-shell__menu-panel .novex-help-menu__trigger > svg,
+.operational-shell__menu-logout > svg {
+  display: grid;
+  width: 21px;
+  height: 21px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #76512b;
+}
+
+.operational-shell__menu-option-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.operational-shell__menu-option > span:last-child,
+.operational-shell__menu-logout > span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.operational-shell__menu-option strong,
+.operational-shell__menu-logout strong {
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.operational-shell__menu-option small,
+.operational-shell__menu-logout small {
+  margin-top: 2px;
+  color: var(--menu-muted);
+  font-size: 9px;
+}
+
+.operational-shell .operational-shell__menu-register {
+  min-height: 44px;
+  padding: 7px 10px;
+  white-space: normal;
+}
+
+.operational-shell__menu-register::before {
+  display: grid;
+  width: 21px;
+  height: 21px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #76512b;
+  content: '+';
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.operational-shell__menu-register .novex-register-cta__label {
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.operational-shell__menu-panel .novex-help-menu {
+  position: relative;
+  z-index: auto;
+  display: block;
+  min-width: 0;
+}
+
+.operational-shell__menu-panel .novex-help-menu__trigger {
+  width: 100%;
+  height: auto;
+}
+
+.operational-shell__menu-panel .novex-help-menu__trigger > span {
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.operational-shell__menu-panel .novex-help-menu__popover {
+  position: static;
+  width: auto;
+  margin-top: 7px;
+  padding: 12px 13px;
+  border: 1px solid var(--menu-line);
+  border-radius: 9px;
+  color: var(--menu-muted);
+  background: rgb(255 249 226 / 0.76);
+  box-shadow: inset 0 1px 7px rgb(91 61 29 / 0.08);
+  animation: operational-shell-help-in 150ms ease-out both;
+}
+
+.operational-shell__menu-panel .novex-help-menu__popover strong {
+  color: var(--menu-ink);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 12px;
+}
+
+.operational-shell__menu-panel .novex-help-menu__popover p {
+  color: var(--menu-muted);
+  font-size: 10px;
+}
+
+.operational-shell__menu-logout {
+  width: 100%;
+  border-color: rgb(132 49 36 / 0.3);
+  color: #702e25;
+  background: rgb(171 64 48 / 0.07);
+}
+
+.operational-shell__menu-logout > svg {
+  color: #8b3d32;
+}
+
+@keyframes operational-shell-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes operational-shell-help-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 820px) {
+  .operational-shell__menu-panel {
+    width: min(310px, calc(100vw - 24px));
+  }
+}
+
+@media (max-width: 640px) {
+  .operational-shell__menu-anchor {
+    top: 8px;
+    right: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .operational-shell__menu-trigger,
+  .operational-shell__menu-hamburger > span,
+  .operational-shell__menu-option,
+  .operational-shell__menu-logout,
+  .operational-shell__menu-panel .novex-help-menu__trigger {
+    transition-duration: 0ms;
+  }
+
+  .operational-shell__menu-panel,
+  .operational-shell__menu-panel .novex-help-menu__popover {
+    animation: none;
+  }
+}
+
+/*
+ * Miga de la baraja: tipografía clara sobre madera/telón. Sin fondo de caja;
+ * la sombra evita perder legibilidad al cambiar el velo del stage.
+ */
+.operational-shell .operational-breadcrumb {
+  text-shadow: 0 1px 3px rgb(2 6 16 / 0.72);
+}
+
+/* ---------- Alto definido para la home ---------- */
+
+/*
+ * La envoltura de sección del Centro tiene alto AUTOMÁTICO, así que un
+ * `height: 100%` dentro de ella resuelve a `auto` y la escena se dimensiona por
+ * su contenido: así es como la mesa acababa dejando un hueco muerto debajo.
+ *
+ * Un shell de bandas necesita un alto que repartir, de modo que la home —y solo
+ * la home— lo declara. La variante va en una clase propia, no en la envoltura
+ * compartida: Panorama, Inteligencia IA y Auditoría siguen con su alto
+ * automático y su scroll de siempre.
+ */
+.eoc-embedded--shell {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.novex-os[data-scene='intelligence']
+  .eoc-deck.eoc-deck--home
+  > .novex-os-deck__content {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  grid-row: 2;
+  /* Sin scroll de ruta: la escena se reparte, no se desplaza. Si algo no cabe
+     tiene que verse en la medición, no esconderse detrás de un scroll que
+     además sacaría de vista las lecturas permanentes. La mayor especificidad
+     evita depender del orden de carga frente a `novex-os.css`. */
+  overflow-x: hidden;
+  overflow-y: hidden;
+  scrollbar-gutter: auto;
+  /* El margen exterior pasa al shell (abajo) para que el escenario sangre. */
+  padding: 0;
+}
+
+/*
+ * ESCENARIO A SANGRE. El telón y el suelo deben llenar la pantalla, no quedar
+ * enmarcados por el padding del stage de la sala y de la ruta (≈24/22/32 px de
+ * franja oscura). La escena no puede salir del shell —el contenido de la ruta
+ * conserva un `transform` de su animación de entrada, que atrapa incluso a un
+ * `position: fixed`, y recorta con `overflow`—, así que es el margen el que
+ * entra: la sala y la ruta pierden su padding solo en la home del Centro y el
+ * shell lo recupera como padding propio. Las regiones quedan exactamente donde
+ * estaban; la escena (`inset: 0`) cubre ahora también ese margen.
+ *
+ * Selector por atributos, sin `:has()`: escena «intelligence» sin carril solo
+ * la monta `ExecutiveOperationsLayout` (el Centro; sus otras secciones
+ * redirigen a la home). Un `:has(.eoc-deck--home)` en el stage obligaba a
+ * reevaluar estilos en cada mutación del subárbol y, medido, congelaba el
+ * renderer en tablet vertical durante capturas e interacciones.
+ */
+.novex-os[data-scene='intelligence'][data-rail='none'] .novex-os__stage {
+  padding: 0;
+}
+
+.eoc-embedded--shell > .operational-shell {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 24px 22px 32px;
+}
+
+@media (max-width: 1120px) {
+  .eoc-embedded--shell > .operational-shell {
+    padding-inline: 16px;
+  }
+}
+
+@media (max-width: 820px) {
+  .eoc-embedded--shell > .operational-shell {
+    padding: 22px 14px 24px;
+  }
+}
+
+/* ---------- Composici�n COORDINADOR (4 columnas, sin baraja) ---------- */
+
+.operational-shell--coordinator {
+  --shell-action-w: minmax(0, 1fr);
+  /*
+   * Columna del personaje ≈ la de ANALISTA/ADMIN (0.2fr del main ≈ 158–210 px).
+   * Las tres columnas de contenido se reparten el resto a partes iguales.
+   */
+  grid-template-columns:
+    minmax(158px, 210px)
+    minmax(0, 1fr)
+    minmax(0, 1fr)
+    minmax(0, 1fr);
+  grid-template-areas: 'rail reports problems action';
+  gap: var(--shell-gap);
+  /* Mismos tokens de carta que `.operational-deck` (baraja de otros roles). */
+  --card-width-max: clamp(152px, 13.1vw, 252px);
+  --card-width: var(--card-width-max);
+  --card-aspect: 1.324;
+  --card-height: calc(var(--card-width) * var(--card-aspect));
+  --deck-text: var(--os-text, #edf5ff);
+  --deck-muted: var(--os-muted, #8b9cb6);
+  --deck-line: rgb(126 168 224 / 0.16);
+  --deck-line-strong: rgb(150 196 255 / 0.34);
+  --deck-surface: linear-gradient(
+    180deg,
+    rgb(20 32 52 / 0.92) 0%,
+    rgb(10 18 34 / 0.94) 100%
+  );
+  --status-stable-rgb: 122 196 138;
+  --status-alert-rgb: 240 176 84;
+  --status-critical-rgb: 244 96 104;
+  --status-unknown-rgb: 132 150 176;
+}
+
+.operational-shell--coordinator .operational-shell__rail-stack {
+  grid-area: rail;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  /* Misma banda superior que ANALISTA/ADMIN para el personaje. */
+  grid-template-rows: var(--shell-top-h) minmax(0, 1fr);
+  gap: var(--shell-gap);
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.operational-shell--coordinator .operational-shell__region--coordinator-character {
+  /* Misma caja que `.operational-shell__region--character` en otros roles. */
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 6px 8px 10px;
+  overflow: clip;
+}
+
+.operational-shell--coordinator .operational-shell__region--coordinator-character .direction-character {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.operational-shell--coordinator .operational-shell__region--coordinator-character .direction-character__figure {
+  min-height: 0;
+  height: auto;
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+.operational-shell--coordinator .operational-shell__own-card {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 4px 0 0;
+  border: none;
+  background: transparent;
+  overflow: visible;
+  /*
+   * La carta se mide contra el hueco REAL que le deja el rail, no solo contra
+   * el viewport: sin esto el token `clamp(…vw…)` la hacía más ancha que la
+   * columna (1920) o más alta que su fila (2×2 ≤1100), y acababa debajo del
+   * panel de problemas. Misma técnica que `.operational-table`: el alto se
+   * rehace aquí porque `--card-height` se sustituye donde se declara.
+   */
+  container-type: size;
+  --card-width: min(
+    var(--card-width-max),
+    100cqw,
+    calc(100cqh / var(--card-aspect))
+  );
+  --card-height: calc(var(--card-width) * var(--card-aspect));
+}
+
+.operational-shell--coordinator .operational-shell__own-card .coordination-card {
+  /* Mismo tamaño que en la baraja: tokens --card-width / --card-height. */
+  width: var(--card-width);
+  min-height: var(--card-height);
+  max-height: none;
+  aspect-ratio: unset;
+  pointer-events: none;
+}
+
+.operational-shell--coordinator .operational-shell__region--my-reports {
+  grid-area: reports;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.operational-shell--coordinator .operational-shell__region--coordination-problems {
+  grid-area: problems;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.operational-shell--coordinator .operational-shell__action {
+  grid-area: action;
+  min-height: 0;
+}
+
+.operational-shell__assignment-error {
+  position: relative;
+  z-index: 1;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 24px;
+  padding: 28px 32px;
+  border: 1px solid rgb(240 120 100 / 0.45);
+  border-radius: 10px;
+  background: rgb(28 16 18 / 0.82);
+  color: #f6d7d0;
+  text-align: center;
+}
+
+.operational-shell__assignment-error h1 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 650;
+}
+
+.operational-shell__assignment-error p {
+  margin: 0;
+  max-width: 42rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: #e8c4bc;
+}
+
+.coordinator-problems__groups {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  padding-right: 2px;
+  scrollbar-gutter: stable;
+}
+
+.coordinator-problems__group-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 6px;
+  color: #d7e6f8;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.coordinator-problems__group-count {
+  color: #9bb4d0;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.coordinator-problems__group-empty {
+  margin: 0;
+  padding: 8px 6px;
+  color: #9bb4d0;
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+
+.coordination-panel--ticket-pilot .coordinator-problems__group-title {
+  color: var(--ticket-pilot-ink, #2a2118);
+}
+
+.coordination-panel--ticket-pilot .coordinator-problems__group-count,
+.coordination-panel--ticket-pilot .coordinator-problems__group-empty {
+  color: var(--ticket-pilot-ink-soft, #5c4a38);
+}
+
+.coordination-panel--ticket-pilot .problem-row__origin,
+.coordination-panel--ticket-pilot .problem-row__status {
+  color: var(--ticket-pilot-ink-soft, #5c4a38);
+}
+
+.coordinator-problems__group-list {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+}
+
+/* Estado bajo la severidad, en la columna fija de la derecha. */
+.problem-row__status {
+  grid-column: 3;
+  grid-row: 2;
+  justify-self: end;
+  align-self: start;
+  color: #9bb4d0;
+  font-size: 10px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+@media (max-width: 1280px) {
+  .operational-shell--coordinator {
+    grid-template-columns:
+      minmax(152px, 190px)
+      minmax(0, 1fr)
+      minmax(0, 1fr)
+      minmax(0, 0.95fr);
+    --shell-gap: 8px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .operational-shell--coordinator {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    grid-template-areas:
+      'rail reports'
+      'problems action';
+  }
+
+  /*
+   * En 2×2 la celda del rail mide lo que da su fila (~266px a 1024×768), no la
+   * banda fija de 268px más la carta. Personaje y carta se reparten esa celda;
+   * la carta se ajusta a su mitad con el `min()` de `__own-card`.
+   */
+  .operational-shell--coordinator .operational-shell__rail-stack {
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+/* ==========================================================================
+   LECTURA MÁS ANCHA EN ESCRITORIO (DIRECTOR)
+   ==========================================================================
+
+   42 % → 46 % (≈+56 px a 1440 y ≈+75 px a 1920) para que pestañas, filtros
+   temporales y las cuatro láminas respiren: a 1440 el título «Movimiento de
+   problemas» se cortaba. Las gráficas ganan ancho, no alto. El personaje está
+   limitado por el ancho y pierde ≈8 %, la baraja ≈7 %; problemas sigue por
+   encima de 400 px. Por debajo de 1280 px (tablet horizontal) se conserva el
+   42 %; en vertical el shell es de una columna y esta variable no aplica.
+*/
+@media (min-width: 1280px) {
+  .operational-shell[data-shell-layout='director'] {
+    --shell-action-w: 46%;
+  }
+}
+
+/* ==========================================================================
+   FASE 2A — TABLET VERTICAL: reorganización por filas
+   ==========================================================================
+
+   En vertical el escritorio comprimido dejaba columnas de 200–300 px: un
+   personaje de 65–124 px, cartas de 57–76 px, botones partidos palabra por
+   palabra y 300–600 px de suelo sin uso. Aquí el ancho completo pasa a cada
+   fila. Sin `:has()` (en contenedores exteriores congelaba el renderer) y sin
+   shells nuevos: solo se reordenan las mismas regiones.
+*/
+@media (orientation: portrait) and (max-width: 1100px) {
+  /*
+   * DIRECTOR y ADMIN/ANALISTA: la zona operativa arriba (alto de su contenido)
+   * y la lectura o las acciones debajo, con el alto restante.
+   */
+  .operational-shell[data-shell-layout='director'],
+  .operational-shell[data-shell-layout='deck'] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas:
+      'main'
+      'action';
+  }
+
+  /*
+   * DIRECTOR. Fila 1: personaje + problemas (≈28 % del alto, acotado); fila 2:
+   * la baraja a ancho completo con exactamente el alto de su mesa (misma regla
+   * `max-content` que evita recortes en escritorio); fila 3: la lectura.
+   * 260 px dejan ≥160 px de personaje dibujado y ≥3 filas de problemas.
+   */
+  .operational-shell[data-shell-layout='director'] .operational-shell__main {
+    grid-template-rows: clamp(260px, 28dvh, 340px) max-content;
+  }
+
+  /*
+   * ADMIN/ANALISTA. La banda superior deja de ser 268 px fijos: crece con el
+   * alto para que la lista muestre filas, y el personaje recibe una columna
+   * más ancha (≈28 %) para superar los 160 px dibujados. Con 740–790 px no
+   * caben a la vez personaje ≥160, problemas ≥300 y «Mis reportes» legible:
+   * se prioriza el personaje y se deja el reparto de las listas documentado.
+   */
+  .operational-shell[data-shell-layout='deck'] {
+    --shell-top-h: clamp(290px, 28dvh, 340px);
+  }
+
+  .operational-shell[data-shell-layout='deck'] .operational-shell__main {
+    grid-template-rows: var(--shell-top-h) max-content;
+  }
+
+  .operational-shell[data-shell-layout='deck'] .operational-shell__top {
+    grid-template-columns:
+      minmax(0, 0.28fr)
+      minmax(0, 0.33fr)
+      minmax(0, 0.39fr);
+  }
+
+  /*
+   * COORDINADOR conserva su 2×2, pero en vertical la celda del rail es más
+   * ancha que alta: personaje y carta propia van LADO A LADO en vez de
+   * apilados, así el personaje tiene todo el alto de la celda. La carta sigue
+   * midiéndose contra su hueco real (`min()` de `__own-card`).
+   */
+  .operational-shell--coordinator .operational-shell__rail-stack {
+    /* El personaje está limitado por el ancho: se le da la columna mayor. */
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .operational-shell--coordinator .operational-shell__own-card {
+    align-items: center;
+    padding: 0;
+  }
+}
