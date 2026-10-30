@@ -31,6 +31,7 @@ export function DirectorOperationalLayout({
       data-surface="operational-shell"
       data-shell-layout="director"
       data-shell-experience="director"
+      data-tour="operational-shell"
       data-ticket-theme={ticketTheme}
       data-selected-coordination={selectedCoordination?.code ?? ''}
     >
@@ -59,6 +60,7 @@ export function DirectorOperationalLayout({
             showTitle={!selectedCoordination && !controller.level2.problemId}
             ticketTheme={ticketTheme}
             ticketPanel={ticketTheme ? 'problems' : undefined}
+            tourId="coordination-problems"
           >
             <DirectorProblemPanel model={model} direction={kpi.direction} />
           </ShellRegion>
@@ -68,6 +70,7 @@ export function DirectorOperationalLayout({
           className="operational-shell__stage"
           data-testid="shell-stage"
           data-surface="operational-deck"
+          data-tour="operational-deck"
         >
           <OperationalCardExperience controller={controller} />
         </div>
@@ -80,6 +83,7 @@ export function DirectorOperationalLayout({
         showTitle={false}
         ticketTheme={ticketTheme}
         ticketPanel={ticketTheme ? 'action' : undefined}
+        tourId="director-reading"
       >
         <DirectorReadingPanel
           selectedCoordination={selectedCoordination}

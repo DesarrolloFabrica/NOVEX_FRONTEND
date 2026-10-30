@@ -18,6 +18,7 @@ export function ShellRegion({
   showTitle = true,
   ticketTheme,
   ticketPanel,
+  tourId,
   children,
 }: {
   region: string
@@ -27,6 +28,8 @@ export function ShellRegion({
   showTitle?: boolean
   ticketTheme?: TicketThemeId
   ticketPanel?: TicketPanelVariant
+  /** Ancla `data-tour` estable para el recorrido guiado. Pasiva: no altera nada. */
+  tourId?: string
   children?: ReactNode
 }) {
   return (
@@ -34,6 +37,7 @@ export function ShellRegion({
       className={`operational-shell__region ${className}`.trim()}
       data-testid={`shell-region-${region}`}
       data-region={region}
+      data-tour={tourId}
       aria-label={title}
     >
       {ticketTheme && ticketPanel ? (

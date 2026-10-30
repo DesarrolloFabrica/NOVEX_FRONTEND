@@ -29,6 +29,7 @@ export function CoordinationProblemFilters({
     <div
       className="coordination-panel__filters"
       data-testid="coordination-problem-filters"
+      data-tour="problem-filters"
       role="group"
       aria-label="Filtrar problemas"
     >

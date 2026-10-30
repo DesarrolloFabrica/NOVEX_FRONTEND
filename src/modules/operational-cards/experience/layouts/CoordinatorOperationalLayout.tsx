@@ -70,6 +70,7 @@ export function CoordinatorOperationalLayout({
       data-surface="operational-shell"
       data-shell-layout="coordinator"
       data-shell-experience="coordinator"
+      data-tour="operational-shell"
       data-ticket-theme={ticketTheme}
       data-assigned-code={own?.code ?? undefined}
     >
@@ -95,6 +96,7 @@ export function CoordinatorOperationalLayout({
             className="operational-shell__own-card"
             data-testid="coordinator-own-card"
             data-region="own-card"
+            data-tour="own-coordination"
             aria-label="Mi coordinación"
           >
             <CoordinationCard
@@ -114,6 +116,7 @@ export function CoordinatorOperationalLayout({
         showTitle={false}
         ticketTheme={ticketTheme}
         ticketPanel={ticketTheme ? 'reports' : undefined}
+        tourId="my-reports"
       >
         <MyReportsPanel
           myReports={controller.myReports}
@@ -138,6 +141,7 @@ export function CoordinatorOperationalLayout({
         showTitle={false}
         ticketTheme={ticketTheme}
         ticketPanel={ticketTheme ? 'problems' : undefined}
+        tourId="coordination-problems"
       >
         {own && ownIdentity ? (
           <CoordinatorProblemPanel
@@ -161,6 +165,7 @@ export function CoordinatorOperationalLayout({
         showTitle={false}
         ticketTheme={ticketTheme}
         ticketPanel={ticketTheme ? 'action' : undefined}
+        tourId="action-panel"
       >
         {actionPanel}
       </ShellRegion>

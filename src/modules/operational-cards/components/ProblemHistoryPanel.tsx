@@ -137,6 +137,7 @@ export function ProblemHistoryPanel({
     <div
       className="problem-history"
       data-testid="problem-history"
+      data-tour="problem-history"
       data-surface="problem-history"
       data-status={status}
     >
