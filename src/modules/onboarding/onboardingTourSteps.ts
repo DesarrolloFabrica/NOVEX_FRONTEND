@@ -1,6 +1,23 @@
 import type { NovexRoleCode } from '@/modules/auth/utils/roleExperience'
 import { EXECUTIVE_OPERATIONS_HOME } from '@/modules/auth/utils/roleExperience'
 import type { TourStepRequirements } from './engine/tourPlan'
+import type { TourPredicate } from './engine/tourPredicates'
+
+/**
+ * Condición previa de un paso. Mientras `when` se cumple, el globo no explica el
+ * paso: pide al usuario volver a una vista donde tenga sentido y resalta el
+ * control real para hacerlo. El motor nunca pulsa ese control.
+ */
+export interface TourStepGate {
+  when: TourPredicate
+  /** Control que el usuario debe usar; puede listar alternativas separadas por coma. */
+  target: string
+  eyebrow: string
+  title: string
+  description: string
+  expectation: string
+  waitingLabel: string
+}
 
 export interface OnboardingTourStep extends TourStepRequirements {
   id: string
@@ -17,6 +34,19 @@ export interface OnboardingTourStep extends TourStepRequirements {
   waitingLabel?: string
   /** Explicación del estado vacío cuando el elemento del paso no aparece. */
   missingNotice?: string
+  /**
+   * Dónde actúa el usuario para que el elemento aparezca (por ejemplo, la lista
+   * donde se elige un problema). Con el elemento ausente se resalta esta zona y
+   * el globo se coloca junto a ella, sin taparla.
+   */
+  missingTarget?: string
+  /**
+   * Contexto respecto al que se coloca el globo cuando lo resaltado es una
+   * parte pequeña de él (la etiqueta de una carta): el globo no tapa el
+   * contexto y la flecha sigue apuntando a lo resaltado.
+   */
+  placementTarget?: string
+  gate?: TourStepGate
   lockNavigation?: boolean
   placement?: 'auto' | 'center' | 'left'
   highlightTarget?: boolean

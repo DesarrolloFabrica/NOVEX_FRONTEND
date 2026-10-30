@@ -60,7 +60,7 @@ async function mockOperationalOverview(page: Page) {
 
 async function startFromInvitation(page: Page) {
   await page.getByTestId('pilot-invitation-start').click()
-  await expect(page.locator('.novex-tour__count')).toHaveText('Paso 1 de 10')
+  await expect(page.locator('.novex-tour__count')).toHaveText('Paso 1 de 11')
 }
 
 /** Fracción del área del ancla que la tarjeta del globo tapa. */
@@ -111,7 +111,7 @@ test.describe('invitación al piloto · escritorio', () => {
     await expect(page.getByTestId('pilot-invitation')).toHaveCount(0)
   })
 
-  test('«Iniciar tutorial» empieza en el paso 1, con globo visible; Escape pausa y el menú lo reinicia', async ({
+  test('«Iniciar recorrido» empieza en el paso 1, con globo visible; Escape pausa y el menú lo reinicia', async ({
     page,
   }) => {
     mkdirSync(SCREENSHOT_DIR, { recursive: true })
@@ -129,7 +129,7 @@ test.describe('invitación al piloto · escritorio', () => {
 
     await page.getByTestId('shell-menu-trigger').click()
     await page.getByTestId('shell-menu-pilot').click()
-    await expect(page.locator('.novex-tour__count')).toHaveText('Paso 1 de 10')
+    await expect(page.locator('.novex-tour__count')).toHaveText('Paso 1 de 11')
   })
 })
 
@@ -148,14 +148,14 @@ test.describe('invitación al piloto · móvil', () => {
     await page.screenshot({ path: join(SCREENSHOT_DIR, 'invitacion-movil.png') })
 
     await startFromInvitation(page)
-    for (let n = 1; n < 5; n++) {
+    for (let n = 1; n < 6; n++) {
       await page.getByRole('button', { name: 'Siguiente' }).click()
     }
-    await expect(page.locator('.novex-tour__count')).toHaveText('Paso 5 de 10')
+    await expect(page.locator('.novex-tour__count')).toHaveText('Paso 6 de 11')
     await expect
       .poll(() => coveredFraction(page, '[data-tour="coordination-problems"]'), { timeout: 4_000 })
       .toBeLessThanOrEqual(0.1)
-    await page.screenshot({ path: join(SCREENSHOT_DIR, 'paso-5-movil.png') })
+    await page.screenshot({ path: join(SCREENSHOT_DIR, 'paso-6-movil.png') })
   })
 })
 

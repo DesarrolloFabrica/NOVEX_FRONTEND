@@ -17,6 +17,7 @@ import {
   type TourCardSize,
   type TourRect,
 } from './engine/tourGeometry'
+import { composeMissingNotice } from './engine/tourCopy'
 import type { OnboardingTourStep } from './onboardingTourSteps'
 import '@/styles/tour-engine.css'
 
@@ -28,10 +29,21 @@ const ADVANCE_DELAY_MS = 220
 const SETTLE_DELAY_MS = 320
 const DEFAULT_CARD_SIZE: TourCardSize = { width: 370, height: 340 }
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
-const DEFAULT_MISSING_NOTICE =
-  'No encontramos esta parte de la pantalla todavía. Ábrala y pulse «Reintentar»'
 
 type TargetPhase = 'locating' | 'ready' | 'missing'
+/**
+ * Qué resalta el overlay: el ancla del paso, el control para cumplir la
+ * condición previa (`gate`) o la zona donde el usuario hace aparecer un ancla
+ * ausente (`recovery`).
+ */
+type FocusMode = 'target' | 'gate' | 'recovery'
+
+/** Las mutaciones del propio overlay no cambian el escenario. */
+function touchesStage(records: MutationRecord[]): boolean {
+  return records.some(
+    (record) => !(record.target instanceof Element) || !record.target.closest('.novex-tour'),
+  )
+}
 
 export interface TourOverlayProps {
   active: boolean
@@ -91,7 +103,9 @@ export function TourOverlay({
   const [phase, setPhase] = useState<TargetPhase>('locating')
   const [attempt, setAttempt] = useState(0)
   const [rect, setRect] = useState<TourRect | null>(null)
+  const [placementRect, setPlacementRect] = useState<TourRect | null>(null)
   const [satisfied, setSatisfied] = useState(false)
+  const [gated, setGated] = useState(false)
   const [cardSize, setCardSize] = useState<TourCardSize>(DEFAULT_CARD_SIZE)
   const targetRef = useRef<HTMLElement | null>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -119,6 +133,30 @@ export function TourOverlay({
       if (returnTo?.isConnected) returnTo.focus()
     }
   }, [active])
+
+  // Condición previa del paso. Se evalúa antes de pintar para no mostrar ni un
+  // instante la explicación sobre una vista equivocada, y se sigue observando:
+  // si el usuario vuelve a abrir la vista, el paso vuelve a pedir el regreso.
+  useLayoutEffect(() => {
+    const gate = active ? step?.gate : undefined
+    if (!gate) {
+      setGated(false)
+      return
+    }
+    let current = evaluateTourPredicate(gate.when)
+    setGated(current)
+    const observer = new MutationObserver((records) => {
+      if (!touchesStage(records)) return
+      const next = evaluateTourPredicate(gate.when)
+      if (next === current) return
+      current = next
+      setGated(next)
+      // Al cumplirse la condición el ancla del paso suele aparecer de nuevo.
+      if (!next) setAttempt((value) => value + 1)
+    })
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true })
+    return () => observer.disconnect()
+  }, [active, step])
 
   // Localizar el ancla. Si aparece, se usa; si no, tras el plazo se ofrece una
   // alternativa. Nunca avanza solo.
@@ -159,15 +197,26 @@ export function TourOverlay({
     return cleanup
   }, [active, step, attempt])
 
-  // Medir y seguir el ancla mientras el paso está activo. Todas las mediciones
-  // parten de eventos y se agrupan en un solo frame.
+  const focusMode: FocusMode | null = gated
+    ? 'gate'
+    : phase === 'ready'
+      ? 'target'
+      : phase === 'missing' && step?.missingTarget
+        ? 'recovery'
+        : null
+
+  // Medir y seguir lo que se resalta mientras el paso está activo. Todas las
+  // mediciones parten de eventos y se agrupan en un solo frame.
   useEffect(() => {
-    if (!active || !step || phase !== 'ready') return
-    const target = targetRef.current
-    if (!target) return
+    if (!active || !step || !focusMode) {
+      setRect(null)
+      setPlacementRect(null)
+      return
+    }
 
     let frame = 0
     let disposed = false
+    let observed: HTMLElement | null = null
     const timers: number[] = []
 
     const checkPredicate = () => {
@@ -180,47 +229,75 @@ export function TourOverlay({
       }
     }
 
+    /** El elemento de este modo. El ancla se vuelve a buscar si React la sustituyó. */
+    const resolve = (): HTMLElement | null => {
+      if (focusMode === 'target') {
+        const current = targetRef.current
+        if (current?.isConnected) return current
+        const replacement = document.querySelector<HTMLElement>(step.target)
+        targetRef.current = replacement
+        return replacement
+      }
+      const selector = focusMode === 'gate' ? step.gate?.target : step.missingTarget
+      return selector ? document.querySelector<HTMLElement>(selector) : null
+    }
+
+    const resizeObserver =
+      typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => schedule())
+
     const measure = () => {
       frame = 0
       if (disposed) return
-      if (!target.isConnected) {
+      const element = resolve()
+      if (!element) {
         setRect(null)
-        setPhase('missing')
+        if (focusMode === 'target') setPhase('missing')
         return
       }
-      const measured = isElementVisible(target)
-        ? toHighlightRect(target.getBoundingClientRect(), {
+      if (element !== observed) {
+        resizeObserver?.disconnect()
+        resizeObserver?.observe(element)
+        observed = element
+        revealInScrollContainers(element, reduceMotion)
+        // Un cambio de posición tras una transición CSS no emite evento: se mide
+        // de nuevo una vez al terminar el asentamiento.
+        timers.push(window.setTimeout(schedule, SETTLE_DELAY_MS))
+      }
+      const measured = isElementVisible(element)
+        ? toHighlightRect(element.getBoundingClientRect(), {
             width: window.innerWidth,
             height: window.innerHeight,
           })
         : null
       // Solo se actualiza si cambió: evita re-renders que alimentarían al propio observador.
       setRect((previous) => (sameRect(previous, measured) ? previous : measured))
-      checkPredicate()
+
+      // Contexto de colocación: solo para el ancla del paso, nunca para la
+      // condición previa ni la zona de recuperación.
+      const context =
+        focusMode === 'target' && step.placementTarget
+          ? document.querySelector(step.placementTarget)
+          : null
+      const contextRect =
+        context && isElementVisible(context)
+          ? toHighlightRect(context.getBoundingClientRect(), {
+              width: window.innerWidth,
+              height: window.innerHeight,
+            })
+          : null
+      setPlacementRect((previous) => (sameRect(previous, contextRect) ? previous : contextRect))
+
+      if (focusMode === 'target') checkPredicate()
     }
 
-    const schedule = () => {
+    function schedule() {
       if (frame || disposed) return
       frame = window.requestAnimationFrame(measure)
     }
 
-    revealInScrollContainers(target, reduceMotion)
     schedule()
-    // Un cambio de posición tras una transición CSS no emite evento: se mide
-    // de nuevo una vez al terminar el asentamiento.
-    timers.push(window.setTimeout(schedule, SETTLE_DELAY_MS))
-
-    const resizeObserver =
-      typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(schedule)
-    resizeObserver?.observe(target)
     const mutationObserver = new MutationObserver((records) => {
-      // Las mutaciones del propio overlay no cambian el escenario: se ignoran.
-      const outside = records.some(
-        (record) =>
-          !(record.target instanceof Element) ||
-          !record.target.closest('.novex-tour'),
-      )
-      if (outside) schedule()
+      if (touchesStage(records)) schedule()
     })
     mutationObserver.observe(document.body, {
       childList: true,
@@ -239,7 +316,7 @@ export function TourOverlay({
       window.removeEventListener('resize', schedule)
       window.removeEventListener('scroll', schedule, { capture: true })
     }
-  }, [active, step, phase, predicate, kind, reduceMotion])
+  }, [active, step, focusMode, predicate, kind, reduceMotion])
 
   // Teclado global del recorrido: Escape pausa, flechas navegan.
   useEffect(() => {
@@ -250,6 +327,7 @@ export function TourOverlay({
       if (
         event.key === 'ArrowRight' &&
         !waitsForAction &&
+        !gated &&
         phase === 'ready' &&
         !step?.lockNavigation
       )
@@ -259,7 +337,7 @@ export function TourOverlay({
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [active, kind, onNext, onPause, onPrevious, phase, predicate, satisfied, step, stepIndex])
+  }, [active, gated, kind, onNext, onPause, onPrevious, phase, predicate, satisfied, step, stepIndex])
 
   // Medir la tarjeta real para colocar la flecha con precisión.
   useLayoutEffect(() => {
@@ -273,7 +351,7 @@ export function TourOverlay({
     }
     // cardSize no entra en dependencias: solo se mide tras cambios de paso o estado.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, stepIndex, phase, rect, satisfied])
+  }, [active, stepIndex, phase, rect, satisfied, gated])
 
   // Atrapar Tab dentro del globo, salvo en pasos que requieren interactuar fuera.
   const onCardKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -299,25 +377,28 @@ export function TourOverlay({
 
   const navigationLocked = Boolean(step.lockNavigation)
   const recoveryRequired = navigationLocked && phase === 'missing' && Boolean(onRecover)
+  const gate = gated ? step.gate : undefined
   const waitsForState = Boolean(predicate) && kind === 'action' && !satisfied && phase === 'ready'
-  const passthrough = step.interaction === 'external' && phase === 'ready' && rect !== null
+  const passthrough = step.interaction === 'external' && focusMode === 'target' && rect !== null
   const shadeClass = `novex-tour__shade${passthrough ? ' novex-tour__shade--passthrough' : ''}`
+  // Con el ancla ausente, o esperando la condición previa, el globo pide actuar
+  // en la página: si no hay zona que resaltar, el velo completo no bloquea.
+  const missingPassthrough = (phase === 'missing' || gated) && !navigationLocked
 
+  // Con contexto, el globo se aparta de él y la flecha apunta a lo resaltado.
+  const contextRect = rect && focusMode === 'target' ? placementRect : null
   const placement = planCardPlacement(
-    rect,
+    contextRect ?? rect,
     { width: window.innerWidth, height: window.innerHeight },
     cardSize,
     step.placement === 'center' ? 'center' : step.placement === 'left' ? 'left' : 'auto',
+    contextRect && rect ? rect : undefined,
   )
 
   const notice =
-    phase === 'missing' ? (
-      <>
-        {step.missingNotice ?? DEFAULT_MISSING_NOTICE}
-        {step.optional ? ', o continúe sin este paso.' : '.'} El recorrido no
-        avanzará hasta que usted lo decida.
-      </>
-    ) : null
+    phase === 'missing' && !gate
+      ? composeMissingNotice(step.missingNotice, Boolean(step.optional))
+      : null
 
   const footer = (
     <>
@@ -332,7 +413,12 @@ export function TourOverlay({
             Anterior
           </button>
         ) : null}
-        {phase === 'locating' ? (
+        {gate ? (
+          <span className="novex-tour__waiting" role="status">
+            <i />
+            {gate.waitingLabel}
+          </span>
+        ) : phase === 'locating' ? (
           <span className="novex-tour__waiting" role="status">
             <i />
             Buscando esta parte de la pantalla…
@@ -403,20 +489,22 @@ export function TourOverlay({
           <span className="novex-tour__spotlight" style={rect} />
         </>
       ) : (
-        <span className="novex-tour__shade novex-tour__shade--full" />
+        <span
+          className={`novex-tour__shade novex-tour__shade--full${
+            missingPassthrough ? ' novex-tour__shade--passthrough' : ''
+          }`}
+        />
       )}
       <TourBubble
         ref={dialogRef}
         placement={placement}
-        eyebrow={step.eyebrow}
-        title={step.title}
-        description={step.description}
-        expectation={step.expectation}
-        expectationOverride={
-          phase === 'missing'
-            ? 'Puede continuar cuando este elemento esté disponible.'
-            : undefined
-        }
+        eyebrow={gate?.eyebrow ?? step.eyebrow}
+        title={gate?.title ?? step.title}
+        description={gate?.description ?? step.description}
+        expectation={gate?.expectation ?? step.expectation}
+        // Con el elemento ausente el aviso ya dice qué hacer; repetirlo alarga
+        // el globo y en móvil lo hace tapar la zona donde se actúa.
+        expectationOverride={phase === 'missing' && !gate ? '' : undefined}
         stepNumber={stepIndex + 1}
         stepTotal={steps.length}
         onPause={onPause}

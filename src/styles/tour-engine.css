@@ -14,7 +14,9 @@
   white-space: nowrap;
 }
 
-.novex-tour__shade--passthrough {
+/* Doble clase: `.novex-tour__shade` (pointer-events: auto) se carga después en
+   operational-experience.css y, con la misma especificidad, ganaba. */
+.novex-tour__shade.novex-tour__shade--passthrough {
   pointer-events: none;
 }
 
@@ -80,7 +82,8 @@
 }
 
 .pilot-invitation__actions button {
-  min-height: 36px;
+  /* Área táctil mínima recomendada: la invitación se pulsa sobre todo en móvil. */
+  min-height: 44px;
   padding: 0 14px;
   border-radius: 10px;
   font-weight: 650;
@@ -208,7 +211,11 @@
   color: #9a3412;
 }
 
+/* Área táctil de 44 px; el margen negativo evita que la cabecera crezca. */
 .novex-tour .novex-tour__card header button {
+  width: 44px;
+  height: 44px;
+  margin: -7px -7px -7px 0;
   color: #3a2412;
 }
 
@@ -248,6 +255,8 @@
 }
 
 .novex-tour .novex-tour__card footer button {
+  /* Área táctil mínima recomendada, igual que la invitación. */
+  min-height: 44px;
   border: 1px solid #8b5a2b;
   background: #f3e2bd;
   color: #3a2412;
@@ -305,7 +314,8 @@
     transition: none;
   }
 
-  .novex-tour .novex-tour__card {
+  .novex-tour .novex-tour__card,
+  .pilot-invitation {
     animation: none;
   }
 }

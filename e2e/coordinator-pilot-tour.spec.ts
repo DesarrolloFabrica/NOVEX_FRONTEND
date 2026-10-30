@@ -73,23 +73,28 @@ const WALK: Array<{
   capture?: boolean
 }> = [
   { n: 1, target: null, capture: true },
-  { n: 2, target: '[data-tour="own-coordination"]', capture: true },
+  { n: 2, target: '[data-tour="own-coordination"] [data-testid="coordination-card"]', capture: true },
   { n: 3, target: '[data-tour="own-coordination"] [data-testid="coordination-card-status"]' },
-  { n: 4, target: '[data-tour="my-reports"]' },
-  { n: 5, target: '[data-tour="coordination-problems"]', capture: true },
   {
-    n: 6,
+    n: 4,
+    target: '[data-tour="operational-shell"] [data-testid="direction-character"]',
+    capture: true,
+  },
+  { n: 5, target: '[data-tour="my-reports"] [data-testid="my-reports"]' },
+  { n: 6, target: '[data-tour="coordination-problems"]', capture: true },
+  {
+    n: 7,
     target: '[data-tour="problem-detail"]',
     missing: 'Todavía no hay un problema seleccionado',
   },
   {
-    n: 7,
+    n: 8,
     target: '[data-tour="problem-actions"]',
     missing: 'Estas acciones aparecen al abrir un problema',
   },
-  { n: 8, target: '[data-tour="action-panel"]', capture: true },
-  { n: 9, target: '[data-tour="history-open"]' },
-  { n: 10, target: '[data-tour="center-menu"]', capture: true },
+  { n: 9, target: '[data-tour="action-panel"]', capture: true },
+  { n: 10, target: '[data-tour="history-open"]' },
+  { n: 11, target: '[data-tour="center-menu"]', capture: true },
 ]
 
 async function mockOperationalOverview(page: Page) {
@@ -111,7 +116,7 @@ function trackWrites(page: Page): string[] {
 async function openPilot(page: Page) {
   await page.getByTestId('shell-menu-trigger').click()
   await page.getByTestId('shell-menu-pilot').click()
-  await expect(page.locator('.novex-tour__count')).toHaveText('Paso 1 de 10')
+  await expect(page.locator('.novex-tour__count')).toHaveText('Paso 1 de 11')
 }
 
 /** Diferencia máxima entre el resaltado y el ancla, con las mismas reglas de recorte del motor. */
@@ -166,7 +171,7 @@ for (const viewport of VIEWPORTS) {
   test.describe(`piloto del COORDINADOR · ${viewport.name}`, () => {
     test.use({ viewport: { width: viewport.width, height: viewport.height } })
 
-    test('recorre los diez pasos con resaltado alineado, globos visibles y sin escrituras', async ({
+    test('recorre los once pasos con resaltado alineado, globos visibles y sin escrituras', async ({
       page,
     }) => {
       mkdirSync(SCREENSHOT_DIR, { recursive: true })
@@ -178,14 +183,14 @@ for (const viewport of VIEWPORTS) {
       await openPilot(page)
 
       for (const item of WALK) {
-        await expect(page.locator('.novex-tour__count')).toHaveText(`Paso ${item.n} de 10`)
+        await expect(page.locator('.novex-tour__count')).toHaveText(`Paso ${item.n} de 11`)
 
         if (item.missing) {
           // Sin problemas no hay detalle: el paso explica el estado vacío y espera al usuario.
           await expect(page.locator('.novex-tour__notice')).toContainText(item.missing, {
             timeout: 12_000,
           })
-          await expect(page.locator('.novex-tour__count')).toHaveText(`Paso ${item.n} de 10`)
+          await expect(page.locator('.novex-tour__count')).toHaveText(`Paso ${item.n} de 11`)
           await page.getByRole('button', { name: 'Continuar sin este paso' }).click()
           continue
         }
@@ -209,7 +214,7 @@ for (const viewport of VIEWPORTS) {
           })
         }
 
-        if (item.n < 10) {
+        if (item.n < 11) {
           await page.getByRole('button', { name: 'Siguiente' }).click()
         } else {
           await page.getByRole('button', { name: 'Finalizar' }).click()
@@ -221,7 +226,7 @@ for (const viewport of VIEWPORTS) {
         (key) => JSON.parse(localStorage.getItem(key) ?? 'null'),
         PILOT_STATUS_KEY,
       )
-      expect(stored).toMatchObject({ status: 'completed', stepIndex: 9 })
+      expect(stored).toMatchObject({ status: 'completed', stepIndex: 10 })
       expect(writes, 'el piloto no debe escribir en el backend').toEqual([])
     })
   })
@@ -238,9 +243,9 @@ test.describe('piloto del COORDINADOR · controles', () => {
 
     await page.getByRole('button', { name: 'Siguiente' }).click()
     await page.getByRole('button', { name: 'Siguiente' }).click()
-    await expect(page.locator('.novex-tour__count')).toHaveText('Paso 3 de 10')
+    await expect(page.locator('.novex-tour__count')).toHaveText('Paso 3 de 11')
     await page.getByRole('button', { name: 'Anterior' }).click()
-    await expect(page.locator('.novex-tour__count')).toHaveText('Paso 2 de 10')
+    await expect(page.locator('.novex-tour__count')).toHaveText('Paso 2 de 11')
 
     await page.keyboard.press('Escape')
     await expect(page.locator('.novex-tour')).toHaveCount(0)
@@ -265,7 +270,7 @@ test.describe('piloto del COORDINADOR · controles', () => {
     await expect(page.locator('.novex-tour')).toHaveCount(0)
 
     await openPilot(page)
-    await expect(page.locator('.novex-tour__count')).toHaveText('Paso 1 de 10')
+    await expect(page.locator('.novex-tour__count')).toHaveText('Paso 1 de 11')
     expect(writes).toEqual([])
   })
 
@@ -277,9 +282,9 @@ test.describe('piloto del COORDINADOR · controles', () => {
     await openPilot(page)
 
     await page.keyboard.press('ArrowRight')
-    await expect(page.locator('.novex-tour__count')).toHaveText('Paso 2 de 10')
+    await expect(page.locator('.novex-tour__count')).toHaveText('Paso 2 de 11')
     await page.keyboard.press('ArrowLeft')
-    await expect(page.locator('.novex-tour__count')).toHaveText('Paso 1 de 10')
+    await expect(page.locator('.novex-tour__count')).toHaveText('Paso 1 de 11')
     expect(writes).toEqual([])
   })
 })

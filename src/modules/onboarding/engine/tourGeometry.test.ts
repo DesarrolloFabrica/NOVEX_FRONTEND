@@ -90,6 +90,18 @@ describe('planCardPlacement', () => {
     expect(placement.top).toBe(rect.top + rect.height + 16)
   })
 
+  it('con un contexto mayor se coloca junto al contexto y la flecha apunta a lo resaltado', () => {
+    // Una carta (contexto) con su etiqueta (resaltada) en la parte baja.
+    const cardRect = { top: 300, left: 30, width: 200, height: 260 }
+    const label = { top: 510, left: 80, width: 100, height: 30 }
+    const placement = planCardPlacement(cardRect, DESKTOP, CARD, 'auto', label)
+    expect(placement.arrow?.side).toBe('left')
+    // Fuera de la carta entera, no solo de la etiqueta.
+    expect(placement.left).toBe(30 + 200 + 16)
+    // La flecha apunta al centro vertical de la etiqueta.
+    expect((placement.top ?? 0) + (placement.arrow?.offset ?? 0)).toBe(label.top + label.height / 2)
+  })
+
   it('la flecha queda dentro de los bordes de la tarjeta', () => {
     const rect = { top: 2000, left: 900, width: 300, height: 80 }
     const placement = planCardPlacement(rect, DESKTOP, CARD)

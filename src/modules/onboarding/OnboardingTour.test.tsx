@@ -215,6 +215,35 @@ describe('OnboardingTour · elemento ausente', () => {
     expect(buttonWithText('Continuar sin este paso')).toBeUndefined()
   })
 
+  it('el velo deja pasar clics mientras falta el ancla, y vuelve a bloquear al buscar', () => {
+    vi.useFakeTimers()
+    ctx.stepIndex = 2
+    mount()
+    const fullShade = () => document.querySelector('.novex-tour__shade--full')
+
+    expect(fullShade()?.classList.contains('novex-tour__shade--passthrough')).toBe(false)
+    act(() => {
+      vi.advanceTimersByTime(6100)
+    })
+    expect(fullShade()?.classList.contains('novex-tour__shade--passthrough')).toBe(true)
+
+    act(() => buttonWithText('Reintentar')?.click())
+    expect(fullShade()?.classList.contains('novex-tour__shade--passthrough')).toBe(false)
+  })
+
+  it('el aviso de ausencia se lee sin puntuación duplicada', () => {
+    vi.useFakeTimers()
+    ctx.stepIndex = 0
+    ctx.steps = [{ ...OPTIONAL, missingNotice: 'El acceso no está visible en este momento.' }]
+    mount()
+    act(() => {
+      vi.advanceTimersByTime(6100)
+    })
+    const notice = document.querySelector('.novex-tour__notice')?.textContent ?? ''
+    expect(notice).toContain('El acceso no está visible en este momento. Si lo prefiere, continúe sin este paso.')
+    expect(notice).not.toMatch(/\.\s*[,.]/)
+  })
+
   it('un paso no opcional no ofrece continuar sin él', () => {
     vi.useFakeTimers()
     ctx.stepIndex = 0
@@ -226,6 +255,73 @@ describe('OnboardingTour · elemento ausente', () => {
 
     expect(buttonWithText('Reintentar')).toBeDefined()
     expect(buttonWithText('Continuar sin este paso')).toBeUndefined()
+  })
+})
+
+describe('OnboardingTour · condición previa', () => {
+  const GATED: OnboardingTourStep = {
+    ...INFO,
+    id: 'gated',
+    gate: {
+      when: { type: 'present', selector: '[data-mode="detail"]' },
+      target: '[data-tour="anchor-back"]',
+      eyebrow: 'Volver',
+      title: 'Regrese a la vista',
+      description: 'Cierre la vista abierta.',
+      expectation: 'Luego seguimos.',
+      waitingLabel: 'Esperando que cierre la vista',
+    },
+  }
+
+  async function settle() {
+    await act(async () => {
+      await sleep(0)
+    })
+  }
+
+  it('mientras se cumple, pide volver y no explica el paso ni ofrece Siguiente', () => {
+    ctx.steps = [GATED]
+    addAnchor({}, 'anchor-info')
+    addAnchor({ 'data-mode': 'detail' }, 'anchor-back')
+    mount()
+
+    expect(document.body.textContent).toContain('Regrese a la vista')
+    expect(document.body.textContent).toContain('Esperando que cierre la vista')
+    expect(document.body.textContent).not.toContain('Paso informativo')
+    expect(buttonWithText('Finalizar')).toBeUndefined()
+    expect(buttonWithText('Siguiente')).toBeUndefined()
+    expect(buttonWithText('Anterior')).toBeDefined()
+
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }))
+    })
+    expect(ctx.next).not.toHaveBeenCalled()
+  })
+
+  it('cuando el usuario cierra la vista explica el paso, y vuelve a pedirlo si la reabre', async () => {
+    ctx.steps = [GATED]
+    addAnchor({}, 'anchor-info')
+    const view = addAnchor({ 'data-mode': 'detail' }, 'anchor-back')
+    mount()
+
+    view.setAttribute('data-mode', 'idle')
+    await settle()
+    expect(document.body.textContent).toContain('Paso informativo')
+    // Paso único: el botón de avance es «Finalizar».
+    expect(buttonWithText('Finalizar')).toBeDefined()
+
+    view.setAttribute('data-mode', 'detail')
+    await settle()
+    expect(document.body.textContent).toContain('Regrese a la vista')
+    expect(ctx.next).not.toHaveBeenCalled()
+  })
+
+  it('sin la condición, el paso se explica directamente', () => {
+    ctx.steps = [GATED]
+    addAnchor({}, 'anchor-info')
+    mount()
+    expect(document.body.textContent).toContain('Paso informativo')
+    expect(document.body.textContent).not.toContain('Regrese a la vista')
   })
 })
 

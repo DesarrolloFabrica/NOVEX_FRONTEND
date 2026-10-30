@@ -53,24 +53,14 @@ export function CoordinatorPilotInvitation({ onStart }: CoordinatorPilotInvitati
     >
       <p className="pilot-invitation__eyebrow">Tutorial · solo desarrollo</p>
       <h2 id="pilot-invitation-title" className="pilot-invitation__title">
-        ¿Quiere un recorrido por su puesto de trabajo?
+        ¿Quiere conocer su Centro Operacional?
       </h2>
       <p className="pilot-invitation__text">
-        Diez pasos por su coordinación, sus reportes y sus problemas. No cambia ningún dato.
+        Le mostraremos cómo consultar los problemas de su coordinación, realizar
+        seguimiento y utilizar las herramientas disponibles.
       </p>
+      {/* La acción principal va al final, donde termina la lectura. */}
       <div className="pilot-invitation__actions">
-        <button
-          type="button"
-          className="pilot-invitation__start"
-          data-testid="pilot-invitation-start"
-          onClick={() => {
-            rememberDismissed(userId)
-            setDismissed(true)
-            onStart()
-          }}
-        >
-          Iniciar tutorial
-        </button>
         <button
           type="button"
           className="pilot-invitation__later"
@@ -81,6 +71,18 @@ export function CoordinatorPilotInvitation({ onStart }: CoordinatorPilotInvitati
           }}
         >
           Ahora no
+        </button>
+        <button
+          type="button"
+          className="pilot-invitation__start"
+          data-testid="pilot-invitation-start"
+          onClick={() => {
+            rememberDismissed(userId)
+            setDismissed(true)
+            onStart()
+          }}
+        >
+          Iniciar recorrido
         </button>
       </div>
     </section>,

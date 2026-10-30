@@ -18,7 +18,10 @@ export interface TourBubbleProps {
   footer: ReactNode
   /** Mensaje de espera o de incidencia, mostrado sobre el pie. */
   notice?: ReactNode
-  /** Texto de qué esperar; reemplaza al de la definición del paso si hay incidencia. */
+  /**
+   * Texto de qué esperar; reemplaza al de la definición del paso si hay
+   * incidencia. Vacío oculta el bloque (el aviso ya lo explica).
+   */
   expectationOverride?: string
 }
 
@@ -110,13 +113,15 @@ export const TourBubble = forwardRef<HTMLDivElement, TourBubbleProps>(
         </div>
         <h2 id="novex-tour-title">{title}</h2>
         <p id="novex-tour-description">{description}</p>
-        <div className="novex-tour__expectation">
-          <NovexIcon name="sparkles" />
-          <span>
-            <strong>Qué esperar</strong>
-            {expectationOverride ?? expectation}
-          </span>
-        </div>
+        {(expectationOverride ?? expectation) ? (
+          <div className="novex-tour__expectation">
+            <NovexIcon name="sparkles" />
+            <span>
+              <strong>Qué esperar</strong>
+              {expectationOverride ?? expectation}
+            </span>
+          </div>
+        ) : null}
         {notice ? <div className="novex-tour__notice">{notice}</div> : null}
         <footer>{footer}</footer>
       </div>

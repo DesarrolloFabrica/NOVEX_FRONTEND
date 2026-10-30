@@ -79,12 +79,17 @@ export function isSmallViewport(viewport: TourViewport): boolean {
 /**
  * Coloca el globo junto al ancla. Prueba izquierda, derecha, debajo y encima.
  * Si ninguna cabe, lo centra sin flecha. En pantallas pequeñas usa hoja inferior.
+ *
+ * `pointAt`: cuando el globo se coloca respecto a un contexto mayor que lo
+ * resaltado (una carta entera para explicar su etiqueta), la flecha apunta a
+ * este rectángulo en lugar de al centro de `rect`.
  */
 export function planCardPlacement(
   rect: TourRect | null,
   viewport: TourViewport,
   card: TourCardSize,
   preference: 'auto' | 'center' | 'left' = 'auto',
+  pointAt?: TourRect,
 ): TourPlacement {
   if (!rect || preference === 'center') return { mode: 'center' }
   if (isSmallViewport(viewport)) {
@@ -106,8 +111,9 @@ export function planCardPlacement(
   )
   const targetRight = rect.left + rect.width
   const targetBottom = rect.top + rect.height
-  const targetCenterY = rect.top + rect.height / 2
-  const targetCenterX = rect.left + rect.width / 2
+  const pointed = pointAt ?? rect
+  const targetCenterY = pointed.top + pointed.height / 2
+  const targetCenterX = pointed.left + pointed.width / 2
   const sideTop = clamp(rect.top, TOUR_VIEWPORT_MARGIN, maxTop)
   const arrowOffsetY = clamp(
     targetCenterY - sideTop,
