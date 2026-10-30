@@ -1,0 +1,311 @@
+/*
+ * Complementos del motor de recorridos. Las reglas base del overlay siguen en
+ * operational-experience.css; este archivo solo añade flecha, hoja inferior,
+ * velo que deja pasar clics, contador y movimiento reducido.
+ */
+
+.novex-tour__count {
+  margin-left: auto;
+  margin-right: 8px;
+  color: rgb(234 243 255 / 0.62);
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.novex-tour__shade--passthrough {
+  pointer-events: none;
+}
+
+/* Invitación no bloqueante al piloto: pergamino, sin velo, abajo al centro. */
+.pilot-invitation {
+  position: fixed;
+  z-index: 4500;
+  bottom: 16px;
+  left: 0;
+  right: 0;
+  /* Centrado sin transform: una animación con transform anularía el centrado. */
+  margin: 0 auto;
+  width: min(380px, calc(100vw - 24px));
+  padding: 16px 18px;
+  border: 2px solid #8b5a2b;
+  border-radius: 16px;
+  color: #3a2412;
+  background: linear-gradient(160deg, #f8eccf 0%, #ead5a6 100%);
+  box-shadow:
+    0 14px 36px rgb(0 0 0 / 0.4),
+    inset 0 0 0 4px #f8eccf,
+    inset 0 0 0 5px #b07a3a;
+  font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+  animation: pilot-invitation-fade 200ms ease-out both;
+}
+
+@keyframes pilot-invitation-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.pilot-invitation__eyebrow {
+  margin: 0 0 4px;
+  color: #9a3412;
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.pilot-invitation__title {
+  margin: 0 0 6px;
+  color: #2e1a0b;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.1rem;
+}
+
+.pilot-invitation__text {
+  margin: 0 0 12px;
+  color: #4a321c;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.pilot-invitation__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.pilot-invitation__actions button {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.pilot-invitation__start {
+  border: 1px solid #3a2412;
+  background: #5b3416;
+  color: #fbeccb;
+}
+
+.pilot-invitation__later {
+  border: 1px solid #8b5a2b;
+  background: #f3e2bd;
+  color: #3a2412;
+}
+
+.pilot-invitation__actions button:focus-visible {
+  outline: 2px solid #b45309;
+  outline-offset: 2px;
+}
+
+.novex-tour__notice {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgb(255 214 102 / 0.4);
+  border-radius: 10px;
+  color: #ffe9a8;
+  background: rgb(255 214 102 / 0.08);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.novex-tour__arrow {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: rgb(10 20 38 / 0.98);
+  border: 1px solid rgb(119 187 255 / 0.24);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+
+.novex-tour__arrow--left {
+  top: var(--tour-arrow-offset, 40px);
+  left: -8px;
+  margin-top: -7px;
+  border-right: 0;
+  border-top: 0;
+}
+
+.novex-tour__arrow--right {
+  top: var(--tour-arrow-offset, 40px);
+  right: -8px;
+  margin-top: -7px;
+  border-left: 0;
+  border-bottom: 0;
+}
+
+.novex-tour__arrow--top {
+  left: var(--tour-arrow-offset, 40px);
+  top: -8px;
+  margin-left: -7px;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.novex-tour__arrow--bottom {
+  left: var(--tour-arrow-offset, 40px);
+  bottom: -8px;
+  margin-left: -7px;
+  border-left: 0;
+  border-top: 0;
+}
+
+.novex-tour__card--sheet {
+  top: auto;
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+  width: auto;
+  max-height: 46vh;
+  transform: none;
+}
+
+/*
+ * La base fija `bottom` con !important en pantallas pequeñas; esta regla gana con
+ * más especificidad, solo para la hoja que debe ir arriba.
+ */
+.novex-tour .novex-tour__card.novex-tour__card--sheet-top {
+  top: 12px !important;
+  bottom: auto !important;
+}
+
+/*
+ * Identidad del circo: globo de pergamino con borde de madera, como las cartas.
+ * Selectores con `.novex-tour` delante para ganar a las reglas base.
+ */
+.novex-tour .novex-tour__card {
+  overflow: visible;
+  color: #3a2412;
+  border: 2px solid #8b5a2b;
+  border-radius: 16px;
+  background: linear-gradient(160deg, #f8eccf 0%, #ead5a6 100%);
+  box-shadow:
+    0 18px 46px rgb(0 0 0 / 0.45),
+    inset 0 0 0 4px #f8eccf,
+    inset 0 0 0 5px #b07a3a;
+  animation: novex-tour-enter 220ms ease-out both;
+}
+
+@keyframes novex-tour-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.novex-tour .novex-tour__card header span {
+  color: #9a3412;
+}
+
+.novex-tour .novex-tour__card header button {
+  color: #3a2412;
+}
+
+.novex-tour .novex-tour__count {
+  color: #6b4a2a;
+}
+
+.novex-tour .novex-tour__card h2 {
+  color: #2e1a0b;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.novex-tour .novex-tour__card > p {
+  color: #4a321c;
+}
+
+.novex-tour .novex-tour__progress {
+  background: rgb(122 74 30 / 0.22);
+}
+
+.novex-tour .novex-tour__progress i {
+  background: linear-gradient(90deg, #b45309, #d97706);
+}
+
+.novex-tour .novex-tour__expectation {
+  border: 1px solid rgb(122 74 30 / 0.3);
+  background: rgb(122 74 30 / 0.08);
+  color: #4a321c;
+}
+
+.novex-tour .novex-tour__expectation span {
+  color: #4a321c;
+}
+
+.novex-tour .novex-tour__expectation strong {
+  color: #7a3b10;
+}
+
+.novex-tour .novex-tour__card footer button {
+  border: 1px solid #8b5a2b;
+  background: #f3e2bd;
+  color: #3a2412;
+}
+
+.novex-tour .novex-tour__card footer button:disabled {
+  opacity: 0.45;
+}
+
+.novex-tour .novex-tour__card footer .novex-tour__next {
+  background: #5b3416;
+  border-color: #3a2412;
+  color: #fbeccb;
+}
+
+.novex-tour .novex-tour__card footer .novex-tour__skip {
+  color: #7a4a1e;
+  border-color: transparent;
+  background: transparent;
+  text-decoration: underline;
+}
+
+.novex-tour .novex-tour__waiting {
+  color: #7a3b10;
+}
+
+.novex-tour .novex-tour__notice {
+  color: #7c2d12;
+  border-color: rgb(180 83 9 / 0.45);
+  background: rgb(180 83 9 / 0.12);
+}
+
+.novex-tour .novex-tour__arrow {
+  background: #efdcae;
+  border-color: #8b5a2b;
+}
+
+.novex-tour .novex-tour__card:focus-visible {
+  outline-color: #b45309;
+}
+
+.novex-tour__card:focus-visible {
+  outline: 2px solid #a3ff5c;
+  outline-offset: 2px;
+}
+
+.novex-tour--reduced-motion .novex-tour__spotlight,
+.novex-tour--reduced-motion .novex-tour__progress i {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .novex-tour__spotlight,
+  .novex-tour__progress i {
+    transition: none;
+  }
+
+  .novex-tour .novex-tour__card {
+    animation: none;
+  }
+}

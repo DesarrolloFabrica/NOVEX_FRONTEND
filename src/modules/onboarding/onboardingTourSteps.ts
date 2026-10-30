@@ -1,7 +1,8 @@
 import type { NovexRoleCode } from '@/modules/auth/utils/roleExperience'
 import { EXECUTIVE_OPERATIONS_HOME } from '@/modules/auth/utils/roleExperience'
+import type { TourStepRequirements } from './engine/tourPlan'
 
-export interface OnboardingTourStep {
+export interface OnboardingTourStep extends TourStepRequirements {
   id: string
   route: string
   target: string
@@ -14,6 +15,8 @@ export interface OnboardingTourStep {
   advanceOnVisibleTarget?: string
   visibilityRoot?: string
   waitingLabel?: string
+  /** Explicación del estado vacío cuando el elemento del paso no aparece. */
+  missingNotice?: string
   lockNavigation?: boolean
   placement?: 'auto' | 'center' | 'left'
   highlightTarget?: boolean

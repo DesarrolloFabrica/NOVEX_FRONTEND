@@ -16,6 +16,13 @@ import {
   readOnboardingSituation,
 } from './onboardingFirstSituation'
 import { getOnboardingSteps } from './onboardingTourSteps'
+import { planTourSteps } from './engine/tourPlan'
+import { evaluateTourPredicate, legacyAdvancePredicate } from './engine/tourPredicates'
+import {
+  decideTourStart,
+  writeTourProgress,
+  type TourOutcome,
+} from './engine/tourProgress'
 
 interface OnboardingContextValue {
   active: boolean
@@ -64,11 +71,15 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const location = useLocation()
   const navigate = useNavigate()
   const role = normalizeRoleCode(user?.roleCode)
+  const permissions = user?.permissions
+  // Filtra por rol y permisos: un paso no autorizado nunca llega al motor.
   const steps = useMemo(
-    () => (ONBOARDING_TOUR_SUSPENDED ? NO_STEPS : getOnboardingSteps(role)),
-    [role],
+    () =>
+      ONBOARDING_TOUR_SUSPENDED
+        ? NO_STEPS
+        : planTourSteps(getOnboardingSteps(role), { permissions: permissions ?? [] }, role),
+    [permissions, role],
   )
-  const storageKey = `novex.onboarding.v2.${user?.id ?? 'anonymous'}`
   const [active, setActive] = useState(false)
   const [stepIndex, setStepIndex] = useState(() =>
     Math.max(0, user?.onboardingStep ?? 0),
@@ -81,11 +92,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       const bounded = Math.max(0, Math.min(steps.length - 1, index))
       setStepIndex(bounded)
       if (persist) {
-        try {
-          localStorage.setItem(storageKey, String(bounded))
-        } catch {
-          /* privado */
-        }
+        if (user?.id) writeTourProgress(user.id, 'in-progress', bounded)
         void saveOnboardingProgress(bounded)
       }
       const route = steps[bounded]?.route
@@ -106,32 +113,36 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       navigate,
       saveOnboardingProgress,
       steps,
-      storageKey,
       user?.id,
     ],
   )
 
-  const finish = useCallback(() => {
-    setActive(false)
-    void (async () => {
-      try {
-        await completeOnboarding()
+  /**
+   * Cierre del recorrido. La omisión y la finalización se registran por
+   * separado en localStorage (versión v3). El backend solo distingue
+   * «completado», así que ambas llaman a `completeOnboarding`.
+   */
+  const finish = useCallback(
+    (outcome: Extract<TourOutcome, 'completed' | 'skipped'>, index: number) => {
+      setActive(false)
+      void (async () => {
         try {
-          localStorage.setItem(storageKey, 'completed')
+          await completeOnboarding()
+          if (user?.id) writeTourProgress(user.id, outcome, index)
+          clearOnboardingSituation(user?.id)
         } catch {
-          /* privado */
+          // Sin confirmación del backend el progreso queda en curso: el
+          // recorrido podrá reanudarse y no se pierde el gate institucional.
+          if (user?.id) writeTourProgress(user.id, 'in-progress', index)
         }
-        clearOnboardingSituation(user?.id)
-      } catch {
-        // Si falla el backend, no marcar como completado en local:
-        // el tour podrá reanudarse y no se pierde el gate institucional.
-      }
-    })()
-  }, [completeOnboarding, storageKey, user?.id])
+      })()
+    },
+    [completeOnboarding, user?.id],
+  )
 
   const next = useCallback(() => {
     if (stepIndex >= steps.length - 1) {
-      finish()
+      finish('completed', stepIndex)
       return
     }
     goTo(stepIndex + 1)
@@ -139,16 +150,20 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
   const previous = useCallback(() => goTo(stepIndex - 1), [goTo, stepIndex])
   const pause = useCallback(() => setActive(false), [])
-  const skip = finish
+  const skip = useCallback(
+    () => finish('skipped', stepIndex),
+    [finish, stepIndex],
+  )
   const resume = useCallback(() => {
     if (steps.length === 0) return
     if (user?.id) autoStartedForUserRef.current = user.id
     setActive(true)
     const currentStep = steps[stepIndex]
-    if (
-      currentStep?.advanceOnTarget &&
-      document.querySelector(currentStep.advanceOnTarget)
-    ) {
+    // Un paso cuyo estado ya se cumple se da por realizado; se comprueba el
+    // estado, no la mera existencia del ancla.
+    const condition =
+      currentStep?.advanceWhen ?? legacyAdvancePredicate(currentStep ?? {})
+    if (condition && evaluateTourPredicate(condition)) {
       goTo(stepIndex + 1)
       return
     }
@@ -159,11 +174,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     if (user?.id) autoStartedForUserRef.current = user.id
     setActive(true)
     setStepIndex(0)
-    try {
-      localStorage.setItem(storageKey, '0')
-    } catch {
-      /* privado */
-    }
+    if (user?.id) writeTourProgress(user.id, 'in-progress', 0)
     void saveOnboardingProgress(0, false)
     const firstRoute = steps[0]?.route ?? '/'
     if (location.pathname !== firstRoute) navigate(firstRoute)
@@ -172,7 +183,6 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     navigate,
     saveOnboardingProgress,
     steps,
-    storageKey,
     user?.id,
   ])
 
@@ -187,7 +197,6 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     if (
       !isAuthenticated ||
       !user ||
-      user.onboardingCompleted ||
       bootSplashActive ||
       active
     )
@@ -201,11 +210,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       void (async () => {
         try {
           await completeOnboarding()
-          try {
-            localStorage.setItem(storageKey, 'completed')
-          } catch {
-            /* privado */
-          }
+          writeTourProgress(user.id, 'completed', 0)
         } catch {
           /* reintentará en la próxima sesión */
         }
@@ -213,25 +218,12 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    let local: string | null = null
-    try {
-      local = localStorage.getItem(storageKey)
-    } catch {
-      /* privado */
-    }
-    // Solo el backend es fuente de verdad para omitir el tour.
-    // Si local dice completed pero el usuario aún no completó en servidor,
-    // limpiamos el espejo local y reanudamos el recorrido.
-    if (local === 'completed') {
-      try {
-        localStorage.removeItem(storageKey)
-      } catch {
-        /* privado */
-      }
-      local = null
-    }
-    const saved =
-      local && /^\d+$/.test(local) ? Number(local) : user.onboardingStep
+    // Decisión por versión. El registro de la versión actual manda; quien
+    // completó el tutorial anterior recibe el renovado. La clave v2 no se lee
+    // para decidir ni se borra: queda como historial.
+    const decision = decideTourStart(user.id)
+    if (!decision.shouldPresent) return
+    const saved = decision.stepIndex
     const timer = window.setTimeout(() => {
       if (autoStartTimerRef.current !== timer) return
       autoStartTimerRef.current = null
@@ -257,7 +249,6 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     goTo,
     isAuthenticated,
     steps.length,
-    storageKey,
     user,
   ])
 
