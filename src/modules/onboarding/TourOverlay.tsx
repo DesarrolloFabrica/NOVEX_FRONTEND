@@ -11,9 +11,14 @@ import { TourBubble } from './TourBubble'
 import { evaluateTourPredicate, legacyAdvancePredicate, type TourPredicate } from './engine/tourPredicates'
 import {
   isElementVisible,
+  isSmallViewport,
+  nearestScrollFrame,
+  pickSheetEdge,
   planCardPlacement,
   revealInScrollContainers,
+  sheetFreeBand,
   toHighlightRect,
+  type TourBand,
   type TourCardSize,
   type TourRect,
 } from './engine/tourGeometry'
@@ -109,6 +114,8 @@ export function TourOverlay({
   const [cardSize, setCardSize] = useState<TourCardSize>(DEFAULT_CARD_SIZE)
   const targetRef = useRef<HTMLElement | null>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
+  /** Borde de la hoja elegido para el objetivo actual; lo fija la medición al cambiar de ancla. */
+  const sheetEdgeRef = useRef<'top' | 'bottom' | undefined>(undefined)
   const advancedRef = useRef(false)
   // Los callbacks del padre se leen por referencia: que cambien de identidad
   // no debe reiniciar la medición del ancla.
@@ -258,7 +265,24 @@ export function TourOverlay({
         resizeObserver?.disconnect()
         resizeObserver?.observe(element)
         observed = element
-        revealInScrollContainers(element, reduceMotion)
+        // En la hoja, el objetivo se lleva a la franja que ella deja libre, en el
+        // borde donde esa franja cae dentro de su contenedor. Así su inicio
+        // (título, bloque de avance) queda visible y no bajo el globo.
+        const viewport = { width: window.innerWidth, height: window.innerHeight }
+        let band: TourBand | null = null
+        sheetEdgeRef.current = undefined
+        if (isSmallViewport(viewport)) {
+          const cardHeight = dialogRef.current?.getBoundingClientRect().height ?? cardSize.height
+          const edge = pickSheetEdge(
+            element.getBoundingClientRect(),
+            viewport,
+            cardHeight,
+            nearestScrollFrame(element),
+          )
+          sheetEdgeRef.current = edge
+          band = sheetFreeBand(viewport, cardHeight, edge)
+        }
+        revealInScrollContainers(element, reduceMotion, band)
         // Un cambio de posición tras una transición CSS no emite evento: se mide
         // de nuevo una vez al terminar el asentamiento.
         timers.push(window.setTimeout(schedule, SETTLE_DELAY_MS))
@@ -393,6 +417,7 @@ export function TourOverlay({
     cardSize,
     step.placement === 'center' ? 'center' : step.placement === 'left' ? 'left' : 'auto',
     contextRect && rect ? rect : undefined,
+    sheetEdgeRef.current,
   )
 
   const notice =

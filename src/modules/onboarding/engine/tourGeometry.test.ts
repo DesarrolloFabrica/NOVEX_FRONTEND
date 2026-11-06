@@ -2,7 +2,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   planCardPlacement,
+  pickSheetEdge,
   revealInScrollContainers,
+  sheetFreeBand,
   toHighlightRect,
   TOUR_PADDING,
 } from './tourGeometry'
@@ -159,6 +161,79 @@ describe('revealInScrollContainers', () => {
 
     revealInScrollContainers(child, true)
     expect(container.scrollTop).toBeGreaterThan(0)
+    container.remove()
+  })
+})
+
+describe('franja libre de la hoja', () => {
+  const PHONE = { width: 360, height: 740 }
+
+  it('con la hoja arriba, la franja empieza bajo ella y termina con el margen', () => {
+    expect(sheetFreeBand(PHONE, 358, 'top')).toEqual({ top: 16 + 358 + 16, bottom: 724 })
+  })
+
+  it('con la hoja abajo, la franja termina sobre ella', () => {
+    expect(sheetFreeBand(PHONE, 358, 'bottom')).toEqual({ top: 16, bottom: 740 - 16 - 358 - 16 })
+  })
+
+  it('elige el borde cuya franja cae dentro del contenedor con scroll del objetivo', () => {
+    // Panel en la mitad inferior: solo la franja superior queda dentro de él.
+    const frame = { top: 357, left: 0, width: 360, height: 383 }
+    const tall = { top: 900, left: 202, width: 112, height: 560 }
+    expect(pickSheetEdge(tall, PHONE, 358, frame)).toBe('top')
+  })
+
+  it('sin contenedor con scroll usa el borde que menos tapa el ancla', () => {
+    const tall = { top: 248, left: 202, width: 112, height: 560 }
+    expect(pickSheetEdge(tall, PHONE, 358, null)).toBe('top')
+  })
+})
+
+describe('revealInScrollContainers con franja', () => {
+  function layout(element: HTMLElement, box: Partial<DOMRect>) {
+    element.getBoundingClientRect = () =>
+      ({ top: 0, bottom: 0, left: 0, right: 0, width: 100, height: 40, ...box }) as DOMRect
+  }
+
+  function column() {
+    const container = document.createElement('div')
+    container.style.overflowY = 'auto'
+    const child = document.createElement('section')
+    container.appendChild(child)
+    document.body.appendChild(container)
+    Object.defineProperty(container, 'scrollHeight', { value: 2000, configurable: true })
+    Object.defineProperty(container, 'clientHeight', { value: 700, configurable: true })
+    container.scrollTop = 0
+    layout(container, { top: 0, bottom: 700, height: 700 })
+    return { container, child }
+  }
+
+  const BAND = { top: 386, bottom: 724 }
+
+  it('no mueve el contenedor si el objetivo ya empieza dentro de la franja', () => {
+    const { container, child } = column()
+    layout(child, { top: 420, bottom: 900, height: 480 })
+    revealInScrollContainers(child, true, BAND)
+    expect(container.scrollTop).toBe(0)
+    container.remove()
+  })
+
+  // Objetivos por debajo de la franja: el caso real en móvil, con el contenido
+  // del panel bajo el globo. Solo se puede desplazar hacia abajo desde 0.
+  it('alinea arriba el inicio de un objetivo más alto que la franja', () => {
+    const { container, child } = column()
+    layout(child, { top: 900, bottom: 1527, height: 627 })
+    revealInScrollContainers(child, true, BAND)
+    expect(container.scrollTop).toBe(900 - BAND.top)
+    container.remove()
+  })
+
+  it('centra un objetivo que cabe en la franja', () => {
+    const { container, child } = column()
+    layout(child, { top: 900, bottom: 1040, height: 140 })
+    revealInScrollContainers(child, true, BAND)
+    const desiredTop = BAND.top + (BAND.bottom - BAND.top - 140) / 2
+    expect(container.scrollTop).toBe(900 - desiredTop)
     container.remove()
   })
 })

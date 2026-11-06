@@ -115,18 +115,20 @@ export const COORDINATOR_PILOT_STEPS: OnboardingTourStep[] = [
     eyebrow: 'Problemas',
     title: 'Problemas de su coordinación',
     description:
-      'La lista ordena los problemas por prioridad. Si hay muchos, despliegue la lista para verlos todos.',
-    expectation: 'El botón «Expandir» muestra todos los problemas del área.',
+      'Aquí están los problemas activos: «Debo resolver» son los de su coordinación y «Afectan mi coordinación», los de otras áreas.',
+    expectation:
+      'Elija una situación para continuar. Si no hay activas, aparecerán al registrarse.',
   },
   {
     id: 'detalle',
     route: ROUTE,
     target: '[data-tour="problem-detail"]',
-    eyebrow: 'Detalle',
-    title: 'El expediente de un problema',
+    eyebrow: 'Expediente',
+    title: 'Conozca los detalles de una situación',
     description:
-      'Al elegir un problema se abre su expediente: quién lo reportó, qué ocurrió y las afectaciones registradas.',
-    expectation: 'Este paso se muestra cuando hay un problema seleccionado.',
+      'El expediente reúne la descripción, la gravedad, las coordinaciones y la cronología del problema.',
+    expectation:
+      'Revise la información antes de seguir.',
     optional: true,
     missingNotice:
       'Todavía no hay un problema seleccionado. Si su lista tiene problemas, elija uno y pulse «Reintentar».',
@@ -137,10 +139,11 @@ export const COORDINATOR_PILOT_STEPS: OnboardingTourStep[] = [
     route: ROUTE,
     target: '[data-tour="problem-actions"]',
     eyebrow: 'Seguimiento',
-    title: 'Avance y resolución',
+    title: 'Seguimiento y resolución',
     description:
-      'Desde el expediente se avanza el estado del problema. Si su coordinación es la responsable, también puede cerrarlo registrando el aprendizaje.',
-    expectation: 'Este recorrido no avanza ni cierra ningún problema.',
+      'Aquí verá el estado del problema y, si su coordinación es la responsable, las acciones para pasarlo a En atención o cerrarlo con aprendizaje.',
+    expectation:
+      'Consultar estas acciones no cambia el problema. Si no aparecen, depende del estado o de la coordinación responsable.',
     requires: ['SITUATIONS_UPDATE'],
     optional: true,
     missingNotice:
@@ -150,12 +153,13 @@ export const COORDINATOR_PILOT_STEPS: OnboardingTourStep[] = [
   {
     id: 'reportar',
     route: ROUTE,
-    target: '[data-tour="action-panel"]',
+    // Solo el bloque de reposo: encabezado, botones y acceso al historial.
+    target: '[data-testid="action-panel-idle"]',
     eyebrow: 'Reportar',
-    title: 'Reportar o consultar',
+    title: 'Reporte situaciones y consulte su historial',
     description:
-      'Use «Problema interno» para su coordinación o «Dependencia de otra coordinación» cuando otra área deba resolverlo. No se abre ningún formulario.',
-    expectation: 'Al entrar, su coordinación ya está seleccionada.',
+      '«Problema interno» registra una situación que su coordinación debe resolver. «Dependencia de otra coordinación» pide a otra área resolverla; la afectada es la suya.',
+    expectation: 'Su coordinación ya está seleccionada. Durante el recorrido no se envía ningún reporte.',
     requires: ['SITUATIONS_CREATE'],
     gate: returnToPanelGate(['detail', 'history', 'report'], 'las opciones de reporte'),
   },

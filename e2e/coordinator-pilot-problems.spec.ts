@@ -23,7 +23,7 @@ const VIEWPORTS = [
 const LIST = '[data-tour="coordination-problems"]'
 const DETAIL = '[data-tour="problem-detail"]'
 const ACTIONS = '[data-tour="problem-actions"]'
-const PANEL = '[data-tour="action-panel"]'
+const IDLE = '[data-testid="action-panel-idle"]'
 const HISTORY_OPEN = '[data-tour="history-open"]'
 
 const count = (page: Page) => page.locator('.novex-tour__count')
@@ -119,8 +119,8 @@ async function capture(page: Page, name: string) {
 /** Paso 9 sobre la vista principal: opciones reales, sin abrir formularios. */
 async function expectReportOptions(page: Page, label: string) {
   await expect(count(page)).toHaveText('Paso 9 de 11')
-  await expect(title(page)).toHaveText('Reportar o consultar')
-  await expectAligned(page, PANEL)
+  await expect(title(page)).toHaveText('Reporte situaciones y consulte su historial')
+  await expectAligned(page, IDLE)
   const panel = page.getByTestId('action-panel')
   await expect(panel).toHaveAttribute('data-mode', 'idle')
   await expect(panel).toHaveAttribute('data-can-create', 'true')

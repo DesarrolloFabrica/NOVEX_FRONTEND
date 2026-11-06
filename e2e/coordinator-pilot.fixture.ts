@@ -90,7 +90,7 @@ function base64Url(value: string): string {
   return Buffer.from(value).toString('base64url')
 }
 
-function accessToken(): string {
+function accessToken(permissions: readonly string[] = PERMISSIONS): string {
   return `${base64Url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))}.${base64Url(
     JSON.stringify({
       sub: session.id,
@@ -98,7 +98,7 @@ function accessToken(): string {
       roleId: 'role-coord',
       roleCode: 'COORDINADOR',
       coordinationId: B2B.id,
-      permissions: PERMISSIONS,
+      permissions,
       status: 'ACTIVE',
     }),
   )}.e2e`
@@ -346,9 +346,11 @@ export function overviewFor(scenario: PilotScenario) {
 
 export async function install(
   page: Page,
-  { scenario = 'CRITICO' }: { scenario?: PilotScenario } = {},
+  { scenario = 'CRITICO', permissions }: { scenario?: PilotScenario; permissions?: readonly string[] } = {},
 ): Promise<string[]> {
   const writes: string[] = []
+  // Permisos por defecto: los del piloto. Un test puede restringirlos sin tocar la autorización real.
+  const current = { ...session, permissions: [...(permissions ?? PERMISSIONS)] }
   const overview = overviewFor(scenario)
   const situations = SCENARIOS[scenario].situations
 
@@ -358,7 +360,7 @@ export async function install(
       localStorage.setItem('novex.auth.accessToken.v1', token)
       localStorage.setItem('novex.auth.session.v1', JSON.stringify(sessionPayload))
     },
-    { token: accessToken(), sessionPayload: session },
+    { token: accessToken(current.permissions), sessionPayload: current },
   )
 
   await page.route('**/api/v1/**', async (route) => {
@@ -375,7 +377,7 @@ export async function install(
     }
 
     if (path.endsWith('/auth/me')) {
-      await route.fulfill({ json: { user: { ...session, fullName: session.name } } })
+      await route.fulfill({ json: { user: { ...current, fullName: session.name } } })
       return
     }
 

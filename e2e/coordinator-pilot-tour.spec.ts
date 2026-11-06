@@ -92,7 +92,7 @@ const WALK: Array<{
     target: '[data-tour="problem-actions"]',
     missing: 'Estas acciones aparecen al abrir un problema',
   },
-  { n: 9, target: '[data-tour="action-panel"]', capture: true },
+  { n: 9, target: '[data-testid="action-panel-idle"]', capture: true },
   { n: 10, target: '[data-tour="history-open"]' },
   { n: 11, target: '[data-tour="center-menu"]', capture: true },
 ]

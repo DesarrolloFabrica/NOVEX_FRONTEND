@@ -166,8 +166,18 @@
   bottom: 12px;
   left: 12px;
   width: auto;
-  max-height: 46vh;
+  max-height: 50vh;
   transform: none;
+}
+
+/*
+ * La hoja nunca supera su altura máxima: si el contenido no cabe, se desplaza
+ * dentro de ella y el pie con los botones sigue siendo alcanzable. Gana a
+ * `overflow: visible` de la identidad del globo por especificidad.
+ */
+.novex-tour .novex-tour__card.novex-tour__card--sheet {
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 /*
