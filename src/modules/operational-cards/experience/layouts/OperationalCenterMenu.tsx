@@ -2,7 +2,10 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { getRoleDisplayName } from '@/modules/auth/utils/roleDisplay'
+import { normalizeRoleCode } from '@/modules/auth/utils/roleExperience'
 import { useOnboarding } from '@/modules/onboarding/OnboardingContext'
+import { CoordinatorPilotInvitation } from '@/modules/onboarding/tours/CoordinatorPilotInvitation'
+import { CoordinatorPilotTour } from '@/modules/onboarding/tours/CoordinatorPilotTour'
 import { NovexIcon } from '@/shared/components/NovexIcon'
 import { NovexPlatformIcon } from '@/shared/components/NovexPlatformIcon'
 import { NovexViewHelp } from '@/shared/components/NovexViewHelp'
@@ -20,6 +23,7 @@ export function OperationalCenterMenu() {
   const { user, logout } = useAuth()
   const { restart, resume, steps } = useOnboarding()
   const [open, setOpen] = useState(false)
+  const [pilotOpen, setPilotOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLElement>(null)
@@ -27,6 +31,10 @@ export function OperationalCenterMenu() {
   const titleId = `${panelId}-title`
   const destinations = resolvePlatformNavItems(user?.roleCode)
   const tutorialAvailable = steps.length > 0
+  // Piloto manual: solo en desarrollo (Vite lo fija en false en producción) y solo
+  // para el COORDINADOR. No inicia nada automáticamente.
+  const pilotAvailable =
+    import.meta.env.DEV && normalizeRoleCode(user?.roleCode) === 'COORDINADOR'
 
   useEffect(() => {
     if (!open) return
@@ -93,6 +101,7 @@ export function OperationalCenterMenu() {
         type="button"
         className="operational-shell__menu-trigger"
         data-testid="shell-menu-trigger"
+        data-tour="center-menu"
         aria-expanded={open}
         aria-controls={panelId}
         aria-label={open ? 'Cerrar el menú' : 'Abrir el menú'}
@@ -111,6 +120,7 @@ export function OperationalCenterMenu() {
           id={panelId}
           className="operational-shell__menu-panel"
           data-testid="shell-menu-panel"
+          data-tour="center-menu-panel"
           aria-labelledby={titleId}
           ref={panelRef}
         >
@@ -205,6 +215,26 @@ export function OperationalCenterMenu() {
             ) : null}
           </div>
 
+          {pilotAvailable ? (
+            <button
+              type="button"
+              className="operational-shell__menu-option"
+              data-testid="shell-menu-pilot"
+              onClick={() => {
+                closeWithoutRestoringFocus()
+                setPilotOpen(true)
+              }}
+            >
+              <span className="operational-shell__menu-option-icon">
+                <NovexIcon name="sparkles" />
+              </span>
+              <span>
+                <strong>Piloto del tutorial</strong>
+                <small>Coordinador · solo en desarrollo</small>
+              </span>
+            </button>
+          ) : null}
+
           <button
             type="button"
             className="operational-shell__menu-logout"
@@ -218,6 +248,20 @@ export function OperationalCenterMenu() {
             </span>
           </button>
         </section>
+      ) : null}
+
+      {pilotAvailable && !pilotOpen ? (
+        <CoordinatorPilotInvitation onStart={() => setPilotOpen(true)} />
+      ) : null}
+
+      {pilotOpen ? (
+        <CoordinatorPilotTour
+          onClose={() => {
+            setPilotOpen(false)
+            // El menú puede estar cerrado: el foco vuelve a su disparador.
+            triggerRef.current?.focus()
+          }}
+        />
       ) : null}
     </div>
   )

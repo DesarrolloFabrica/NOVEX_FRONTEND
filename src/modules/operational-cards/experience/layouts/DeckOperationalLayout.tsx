@@ -40,6 +40,7 @@ export function DeckOperationalLayout({
       className="operational-shell"
       data-testid="operational-shell"
       data-surface="operational-shell"
+      data-tour="operational-shell"
       data-shell-layout="deck"
       data-shell-experience={experience}
       data-ticket-theme={ticketTheme}
@@ -66,6 +67,7 @@ export function DeckOperationalLayout({
             showTitle={false}
             ticketTheme={ticketTheme}
             ticketPanel={ticketTheme ? 'reports' : undefined}
+            tourId="my-reports"
           >
             <MyReportsPanel
               myReports={controller.myReports}
@@ -92,6 +94,7 @@ export function DeckOperationalLayout({
             showTitle={!selectedCoordination}
             ticketTheme={ticketTheme}
             ticketPanel={ticketTheme ? 'problems' : undefined}
+            tourId="coordination-problems"
           >
             {selectedCoordination && (
               <CoordinationProblemList
@@ -115,6 +118,7 @@ export function DeckOperationalLayout({
           className="operational-shell__stage"
           data-testid="shell-stage"
           data-surface="operational-deck"
+          data-tour="operational-deck"
         >
           <OperationalCardExperience controller={controller} />
         </div>
@@ -127,6 +131,7 @@ export function DeckOperationalLayout({
         showTitle={false}
         ticketTheme={ticketTheme}
         ticketPanel={ticketTheme ? 'action' : undefined}
+        tourId="action-panel"
       >
         {actionPanel}
       </ShellRegion>

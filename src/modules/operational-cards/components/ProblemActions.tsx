@@ -91,6 +91,7 @@ export function ProblemActions({
     <section
       className="problem-actions"
       data-testid="problem-actions"
+      data-tour="problem-actions"
       data-surface="problem-actions"
       data-can-resolve={detail.canResolve ? 'true' : 'false'}
       data-can-advance={detail.canAdvanceToInProgress ? 'true' : 'false'}

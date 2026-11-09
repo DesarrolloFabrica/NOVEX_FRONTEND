@@ -202,6 +202,7 @@ export function DirectorReadingPanel({
               type="button"
               className="director-reading__mode"
               data-testid={`director-reading-mode-${item.id}`}
+              data-tour={`director-mode-${item.id}`}
               data-active={mode === item.id ? 'true' : 'false'}
               aria-pressed={mode === item.id}
               onClick={() => setMode(item.id)}
@@ -228,6 +229,7 @@ export function DirectorReadingPanel({
           <div
             className="director-reading__period"
             data-testid="director-reading-period"
+            data-tour="director-period"
           >
             {/* Ciclo · Mes · Semana visibles; mismo AnalysisPeriod que los
                 clics de las gráficas y las flechas. */}

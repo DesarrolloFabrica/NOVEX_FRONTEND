@@ -109,6 +109,7 @@ export function OperationalActionPanel({
         data-surface="action-panel"
         data-mode="report"
         data-report-kind={reportFormKind}
+        data-tour="report-form"
       >
         <ReportProblemForm
           {...reportForm}
@@ -237,6 +238,7 @@ export function OperationalActionPanel({
                 type="button"
                 className="action-panel__cta action-panel__cta--history action-panel__cta--consult"
                 data-testid="history-open-button"
+                data-tour="history-open"
                 data-surface="history-open"
                 onClick={onOpenHistory}
               >
@@ -253,6 +255,7 @@ export function OperationalActionPanel({
                     type="button"
                     className="action-panel__cta"
                     data-testid="report-internal-button"
+                    data-tour="report-internal"
                     data-surface="report-internal"
                     onClick={onReportInternal}
                     disabled={!hasCoordination}
@@ -263,6 +266,7 @@ export function OperationalActionPanel({
                     type="button"
                     className="action-panel__cta action-panel__cta--secondary"
                     data-testid="report-dependency-button"
+                    data-tour="report-dependency"
                     data-surface="report-dependency"
                     onClick={onReportDependency}
                     disabled={!hasCoordination}
@@ -277,6 +281,7 @@ export function OperationalActionPanel({
                   type="button"
                   className="action-panel__cta action-panel__cta--history"
                   data-testid="history-open-button"
+                  data-tour="history-open"
                   data-surface="history-open"
                   onClick={onOpenHistory}
                 >

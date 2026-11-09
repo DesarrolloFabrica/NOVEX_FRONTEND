@@ -312,6 +312,7 @@ export function ProblemDetail({
     <section
       className="problem-detail"
       data-testid="problem-detail"
+      data-tour="problem-detail"
       data-level2={status}
       data-problem={level2.problemId ?? ''}
       data-report-kind={detail?.reportKind ?? undefined}
