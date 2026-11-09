@@ -1,6 +1,6 @@
 # Continuidad NOVEX Frontend
 
-Rama: `refactor/novex-consolidacion` · tip de sincronización: `e38bca1`.
+Rama: `refactor/novex-consolidacion` · tip de sincronización: `e144454` (código 01B.2 en `e38bca1`).
 
 La documentación completa de fases (00, 01A, 01B.1, 01B.2), migraciones, roles PostgreSQL y procedimiento de pruebas está en el backend:
 
