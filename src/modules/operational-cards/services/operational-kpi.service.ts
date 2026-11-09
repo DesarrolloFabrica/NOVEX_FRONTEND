@@ -12,6 +12,8 @@ import type {
   OperationalKpiDependencies,
   OperationalKpiDirectionResponse,
   OperationalKpiDirectionSnapshot,
+  DirectionIntegrityExplanation,
+  DirectionIntegrityRule,
   OperationalKpiFlowBucket,
   OperationalKpiHistoryPoint,
   OperationalKpiHistoryQuery,
@@ -223,6 +225,43 @@ function parseMetricVersions(
   }
 }
 
+const DIRECTION_INTEGRITY_RULES: readonly DirectionIntegrityRule[] = [
+  'NO_COORDINATIONS',
+  'MULTIPLE_CRITICAL_SIGNALS',
+  'UNKNOWN_SIGNAL',
+  'SINGLE_CRITICAL_SIGNAL',
+  'ALERT_THRESHOLD_REACHED',
+  'BELOW_ALERT_THRESHOLD',
+]
+
+/** Opcional y aditivo: ausente → null (sin explicación inventada). */
+function parseDirectionIntegrity(
+  source: Record<string, unknown>,
+): DirectionIntegrityExplanation | null {
+  if (source.directionIntegrity === undefined || source.directionIntegrity === null) {
+    return null
+  }
+  const value = readSection(source, 'directionIntegrity', 'direction')
+  const path = 'direction.directionIntegrity'
+  const rule = readText(value, 'rule', path)
+  if (!(DIRECTION_INTEGRITY_RULES as readonly string[]).includes(rule)) {
+    throw new OperationalKpiContractError(`${path}.rule no reconocida`)
+  }
+  return {
+    policyCode: readText(value, 'policyCode', path),
+    rule: rule as DirectionIntegrityRule,
+    totalCoordinations: readCount(value, 'totalCoordinations', path),
+    criticalSignals: readCount(value, 'criticalSignals', path),
+    alertSignals: readCount(value, 'alertSignals', path),
+    alertThreshold: readCount(value, 'alertThreshold', path),
+    criticalSignalsThreshold: readCount(value, 'criticalSignalsThreshold', path),
+    unknownCoordinations: readCount(value, 'unknownCoordinations', path),
+    analystRegistryStatus: parseOperationalIntegrityStatus(
+      value.analystRegistryStatus,
+    ),
+  }
+}
+
 function parseDirectionSnapshot(
   source: Record<string, unknown>,
 ): OperationalKpiDirectionSnapshot {
@@ -235,6 +274,7 @@ function parseDirectionSnapshot(
   }
   return {
     directionStatus: parseOperationalIntegrityStatus(direction.directionStatus),
+    directionIntegrity: parseDirectionIntegrity(direction),
     problems: parseProblems(direction, 'direction'),
     dependencies: parseDependencies(direction, 'direction'),
     coordinationStatusTotals: parseStatusTotals(direction, 'direction'),

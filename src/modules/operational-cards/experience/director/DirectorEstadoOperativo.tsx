@@ -4,6 +4,7 @@ import {
   buildIntegrityExplanation,
   formatIntegrityWhy,
   type IntegrityExplainInput,
+  type IntegrityExplanation,
 } from '@/modules/operational-cards/domain/integrity-policy'
 import { DirectorStatusBadge } from '@/modules/operational-cards/experience/director/DirectorStatusBadge'
 import '@/styles/director-kpi-panel.css'
@@ -16,6 +17,7 @@ import '@/styles/director-kpi-panel.css'
 export function DirectorEstadoOperativo({
   integrityStatus,
   explainInput,
+  explanation: providedExplanation,
   integritySource = 'live',
   testId = 'director-estado-operativo',
 }: {
@@ -23,7 +25,13 @@ export function DirectorEstadoOperativo({
   /** Conservado por compatibilidad; la síntesis de activos vive en cabecera. */
   activeCount?: number
   criticalSeverityCount?: number
-  explainInput: IntegrityExplainInput
+  /** Reglas de COORDINACIÓN: solo para una coordinación seleccionada. */
+  explainInput?: IntegrityExplainInput
+  /**
+   * Explicación ya resuelta (p. ej. Dirección, desde la regla del backend).
+   * Tiene prioridad sobre `explainInput`.
+   */
+  explanation?: IntegrityExplanation
   /**
    * 'live' = evaluateCoordinationIntegrity actual.
    * 'period-close' reservado para snapshots históricos.
@@ -31,7 +39,18 @@ export function DirectorEstadoOperativo({
   integritySource?: IntegritySnapshotSource
   testId?: string
 }) {
-  const explanation = buildIntegrityExplanation(integrityStatus, explainInput)
+  const explanation =
+    providedExplanation ??
+    buildIntegrityExplanation(
+      integrityStatus,
+      explainInput ?? {
+        activeCount: 0,
+        criticalCount: 0,
+        highCount: 0,
+        mediumCount: 0,
+        lowCount: 0,
+      },
+    )
   const why = formatIntegrityWhy(explanation)
   const title =
     integritySource === 'period-close'

@@ -5,6 +5,7 @@ import { DirectorFlujoProblemas } from '@/modules/operational-cards/experience/d
 import { DirectorResolucion } from '@/modules/operational-cards/experience/director/DirectorResolucion'
 import { DirectorEstadoOperativo } from '@/modules/operational-cards/experience/director/DirectorEstadoOperativo'
 import type { AnalysisPeriod } from '@/modules/operational-cards/domain/analysis-period'
+import { buildDirectionIntegrityExplanation } from '@/modules/operational-cards/domain/integrity-policy'
 import { useDirectorEstadoState } from '@/modules/operational-cards/hooks/useDirectorEstadoState'
 import type { DirectorKpiLoadStatus } from '@/modules/operational-cards/hooks/useDirectorKpi'
 import type {
@@ -251,14 +252,10 @@ export function DirectorEstadoPanel({
           <DirectorEstadoOperativo
             integrityStatus={direction.directionStatus}
             integritySource="live"
-            explainInput={{
-              activeCount: direction.problems.activeCount,
-              criticalCount: direction.problems.severity.critical,
-              highCount: direction.problems.severity.high,
-              mediumCount: direction.problems.severity.medium,
-              lowCount: direction.problems.severity.low,
-              incomingDependencyCount: direction.dependencies.incoming,
-            }}
+            explanation={buildDirectionIntegrityExplanation(
+              direction.directionStatus,
+              direction.directionIntegrity,
+            )}
             testId="director-estado-operativo-direction"
           />
           <DirectorEstadoComposicion

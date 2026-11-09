@@ -70,6 +70,17 @@ export function kpiDirectionSnapshotFixture(
   )
   return {
     directionStatus: 'ESTABLE',
+    directionIntegrity: {
+      policyCode: 'direction-mvp-v1',
+      rule: 'BELOW_ALERT_THRESHOLD',
+      totalCoordinations: 15,
+      criticalSignals: 0,
+      alertSignals: 0,
+      alertThreshold: 5,
+      criticalSignalsThreshold: 2,
+      unknownCoordinations: 0,
+      analystRegistryStatus: 'ESTABLE',
+    },
     problems: problems(),
     dependencies: { incoming: 0, outgoing: 0 },
     coordinationStatusTotals: {

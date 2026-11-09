@@ -189,6 +189,104 @@ export function buildIntegrityExplanation(
   }
 }
 
+function plural(count: number, singular: string, pluralForm: string): string {
+  return `${count} ${count === 1 ? singular : pluralForm}`
+}
+
+/**
+ * Explicación del estado de la DIRECCIÓN (Fase 01B.2, K-01). Solo traduce la
+ * regla que el backend declara haber aplicado (direction-mvp-v1); no aplica
+ * reglas de coordinación sobre totales de la Dirección. Sin regla del backend
+ * no se inventa una causa.
+ */
+export function buildDirectionIntegrityExplanation(
+  integrityStatus: 'ESTABLE' | 'ALERTA' | 'CRITICO' | 'DESCONOCIDO',
+  direction: DirectionIntegrityExplanationInput | null,
+): IntegrityExplanation {
+  const base = {
+    extraCount: 0,
+    policyCode: direction?.policyCode ?? 'direction-mvp-v1',
+    triggeredRules: [] as CoordinationCriticalRule[],
+  }
+  const headline = {
+    CRITICO: 'Estado crítico',
+    ALERTA: 'Estado en alerta',
+    ESTABLE: 'Estado estable',
+    DESCONOCIDO: 'Estado desconocido',
+  }[integrityStatus]
+
+  if (!direction) {
+    return {
+      ...base,
+      headline,
+      detail: 'el estado lo calcula el servidor; no hay detalle de la regla aplicada.',
+    }
+  }
+
+  const registryNote =
+    direction.analystRegistryStatus === 'CRITICO' ||
+    direction.analystRegistryStatus === 'ALERTA'
+      ? ' Incluye la señal del Registro de analista.'
+      : ''
+
+  switch (direction.rule) {
+    case 'NO_COORDINATIONS':
+      return { ...base, headline, detail: 'no hay coordinaciones visibles para evaluar la Dirección.' }
+    case 'MULTIPLE_CRITICAL_SIGNALS':
+      return {
+        ...base,
+        headline,
+        detail: `${plural(direction.criticalSignals, 'señal crítica', 'señales críticas')} entre coordinaciones (umbral: ${direction.criticalSignalsThreshold}).${registryNote}`,
+      }
+    case 'UNKNOWN_SIGNAL':
+      return {
+        ...base,
+        headline,
+        detail:
+          direction.unknownCoordinations > 0
+            ? `${plural(direction.unknownCoordinations, 'coordinación no tiene', 'coordinaciones no tienen')} datos suficientes para calcular su estado.`
+            : 'el Registro de analista no tiene datos suficientes para calcular su estado.',
+      }
+    case 'SINGLE_CRITICAL_SIGNAL':
+      return {
+        ...base,
+        headline,
+        detail: `hay 1 señal crítica; la Dirección pasa a crítica desde ${direction.criticalSignalsThreshold}.${registryNote}`,
+      }
+    case 'ALERT_THRESHOLD_REACHED':
+      return {
+        ...base,
+        headline,
+        detail: `${plural(direction.alertSignals, 'señal de alerta', 'señales de alerta')} de ${direction.totalCoordinations} coordinaciones (umbral: ${direction.alertThreshold}).${registryNote}`,
+      }
+    case 'BELOW_ALERT_THRESHOLD':
+      return {
+        ...base,
+        headline,
+        detail: `${plural(direction.alertSignals, 'señal de alerta', 'señales de alerta')} y ninguna crítica; la alerta empieza en ${direction.alertThreshold}.`,
+      }
+  }
+}
+
+/** Forma mínima de la explicación del backend (evita importar tipos de servicio). */
+export interface DirectionIntegrityExplanationInput {
+  policyCode: string
+  rule:
+    | 'NO_COORDINATIONS'
+    | 'MULTIPLE_CRITICAL_SIGNALS'
+    | 'UNKNOWN_SIGNAL'
+    | 'SINGLE_CRITICAL_SIGNAL'
+    | 'ALERT_THRESHOLD_REACHED'
+    | 'BELOW_ALERT_THRESHOLD'
+  totalCoordinations: number
+  criticalSignals: number
+  alertSignals: number
+  alertThreshold: number
+  criticalSignalsThreshold: number
+  unknownCoordinations: number
+  analystRegistryStatus: 'ESTABLE' | 'ALERTA' | 'CRITICO' | 'DESCONOCIDO'
+}
+
 export function formatIntegrityWhy(explanation: IntegrityExplanation): string {
   const base = `${explanation.headline}: ${explanation.detail}`
   if (explanation.extraCount <= 0) return base

@@ -72,8 +72,31 @@ export interface OperationalKpiAnalystRegistry {
   problems: OperationalKpiProblemCounts
 }
 
+/** Regla de la política de Dirección que decidió el estado (backend, K-01). */
+export type DirectionIntegrityRule =
+  | 'NO_COORDINATIONS'
+  | 'MULTIPLE_CRITICAL_SIGNALS'
+  | 'UNKNOWN_SIGNAL'
+  | 'SINGLE_CRITICAL_SIGNAL'
+  | 'ALERT_THRESHOLD_REACHED'
+  | 'BELOW_ALERT_THRESHOLD'
+
+export interface DirectionIntegrityExplanation {
+  policyCode: string
+  rule: DirectionIntegrityRule
+  totalCoordinations: number
+  criticalSignals: number
+  alertSignals: number
+  alertThreshold: number
+  criticalSignalsThreshold: number
+  unknownCoordinations: number
+  analystRegistryStatus: OperationalIntegrityStatus
+}
+
 export interface OperationalKpiDirectionSnapshot {
   directionStatus: OperationalIntegrityStatus
+  /** null si el backend no la envía: la UI no inventa una explicación. */
+  directionIntegrity: DirectionIntegrityExplanation | null
   problems: OperationalKpiProblemCounts
   dependencies: OperationalKpiDependencies
   coordinationStatusTotals: OperationalKpiCoordinationStatusTotals
