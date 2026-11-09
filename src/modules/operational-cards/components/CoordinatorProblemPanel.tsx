@@ -114,18 +114,18 @@ export function CoordinatorProblemPanel({
       ? classifyCoordinatorProblems(level1.problems, coordination.code)
       : { toResolve: [], affecting: [] }
 
+  /*
+   * Fase 01B.2 (K-03): la cabecera usa SIEMPRE los conteos oficiales del
+   * backend (los mismos de la carta y de la integridad). Antes sumaba «debo
+   * resolver + afectan mi coordinación» y contaba críticos sobre la lista, que
+   * mezcla dos poblaciones y puede ser parcial (alcance own-only). Las
+   * dependencias que afectan al área se nombran aparte, sin sumarse.
+   */
   const summary = buildCoordinationSummary({
-    activeProblemsCount:
-      level1.status === 'ready'
-        ? groups.toResolve.length + groups.affecting.length
-        : coordination.activeProblemsCount,
-    criticalCount:
-      level1.status === 'ready'
-        ? [...groups.toResolve, ...groups.affecting].filter(
-            (p) => p.severity === 'CRITICAL',
-          ).length
-        : coordination.criticalCount,
+    activeProblemsCount: coordination.activeProblemsCount,
+    criticalCount: coordination.criticalCount,
     affectedCoordinationCount: coordination.affectedCoordinationCount,
+    incomingDependencyCount: coordination.incomingDependencyCount ?? 0,
   })
 
   const bodyContent = (

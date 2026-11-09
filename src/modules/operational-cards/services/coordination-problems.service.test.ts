@@ -227,3 +227,68 @@ describe('buildCoordinationSummary', () => {
     ).toBe('4 problemas activos · 2 críticos')
   })
 })
+
+describe('Fase 01B.2 · K-03: sin conteos parciales por paginación', () => {
+  it('recorre todas las páginas que anuncia total, por estado', async () => {
+    fetchSituations.mockImplementation(
+      (query: { status: string; page?: number }) => {
+        if (query.status === 'IN_PROGRESS') return Promise.resolve(page([]))
+        const pageNumber = query.page ?? 1
+        const items = Array.from({ length: pageNumber < 3 ? 100 : 30 }, (_u, i) =>
+          situation({ id: `open-${pageNumber}-${i}` }),
+        )
+        return Promise.resolve({ items, total: 230, page: pageNumber, limit: 100 })
+      },
+    )
+
+    const result = await fetchCoordinationProblems(COORDINATION_UUID)
+
+    expect(result.problems).toHaveLength(230)
+    const openPages = fetchSituations.mock.calls
+      .map((call) => call[0] as { status: string; page?: number })
+      .filter((query) => query.status === 'OPEN')
+      .map((query) => query.page)
+    expect(openPages.sort()).toEqual([1, 2, 3])
+  })
+
+  it('un caso repetido entre páginas no se cuenta dos veces', async () => {
+    fetchSituations.mockImplementation(
+      (query: { status: string; page?: number }) => {
+        if (query.status === 'IN_PROGRESS') return Promise.resolve(page([]))
+        const items =
+          (query.page ?? 1) === 1
+            ? Array.from({ length: 100 }, (_u, i) => situation({ id: `s-${i}` }))
+            : [situation({ id: 's-99' }), situation({ id: 's-100' })]
+        return Promise.resolve({ items, total: 102, page: query.page ?? 1, limit: 100 })
+      },
+    )
+
+    const result = await fetchCoordinationProblems(COORDINATION_UUID)
+
+    expect(result.problems).toHaveLength(101)
+  })
+})
+
+describe('Fase 01B.2 · K-03: buildCoordinationSummary separa poblaciones', () => {
+  it('las dependencias que afectan al área van aparte y no se suman', () => {
+    expect(
+      buildCoordinationSummary({
+        activeProblemsCount: 2,
+        criticalCount: 0,
+        affectedCoordinationCount: 0,
+        incomingDependencyCount: 3,
+      }),
+    ).toBe('2 problemas activos · 3 dependencias externas afectan mi área')
+  })
+
+  it('sin problemas propios pero con dependencias entrantes, lo dice', () => {
+    expect(
+      buildCoordinationSummary({
+        activeProblemsCount: 0,
+        criticalCount: 0,
+        affectedCoordinationCount: 0,
+        incomingDependencyCount: 1,
+      }),
+    ).toBe('1 dependencia externa afecta mi área')
+  })
+})

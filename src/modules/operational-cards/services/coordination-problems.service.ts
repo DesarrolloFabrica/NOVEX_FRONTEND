@@ -25,8 +25,45 @@ import type {
 
 const ACTIVE_STATUSES: readonly ActiveSituationStatus[] = ['OPEN', 'IN_PROGRESS']
 
-/** Tope defensivo: una coordinación con más de esto es una anomalía, no una vista. */
+/** Máximo que acepta el API por página (PAGINATION_MAX_LIMIT). */
 const PAGE_LIMIT = 100
+
+/**
+ * Fase 01B.2 (K-03): se recorren TODAS las páginas que anuncia `total`, para
+ * que los grupos del panel no sean una primera página presentada como el
+ * universo. Tope defensivo por estado: más de esto es una anomalía, no una
+ * vista (y los conteos de cabecera vienen igualmente del backend).
+ */
+const MAX_PAGES_PER_STATUS = 20
+
+async function fetchAllPagesForStatus(
+  coordinationUuid: string,
+  status: ActiveSituationStatus,
+) {
+  const first = await fetchSituations({
+    coordinationId: coordinationUuid,
+    status,
+    page: 1,
+    limit: PAGE_LIMIT,
+  })
+  const pageCount = Math.min(
+    Math.ceil((first.total ?? first.items.length) / PAGE_LIMIT),
+    MAX_PAGES_PER_STATUS,
+  )
+  if (pageCount <= 1) return [first]
+
+  const rest = await Promise.all(
+    Array.from({ length: pageCount - 1 }, (_unused, index) =>
+      fetchSituations({
+        coordinationId: coordinationUuid,
+        status,
+        page: index + 2,
+        limit: PAGE_LIMIT,
+      }),
+    ),
+  )
+  return [first, ...rest]
+}
 
 function isActiveStatus(status: string): status is ActiveSituationStatus {
   return (ACTIVE_STATUSES as readonly string[]).includes(status)
@@ -76,20 +113,25 @@ export interface CoordinationProblemsResult {
 export async function fetchCoordinationProblems(
   coordinationUuid: string,
 ): Promise<CoordinationProblemsResult> {
-  const pages = await Promise.all(
-    ACTIVE_STATUSES.map((status) =>
-      fetchSituations({
-        coordinationId: coordinationUuid,
-        status,
-        limit: PAGE_LIMIT,
-      }),
-    ),
-  )
+  const pages = (
+    await Promise.all(
+      ACTIVE_STATUSES.map((status) =>
+        fetchAllPagesForStatus(coordinationUuid, status),
+      ),
+    )
+  ).flat()
 
+  const seen = new Set<string>()
   const problems = pages
     .flatMap((page) => page.items)
     .map(toProblem)
     .filter((problem): problem is CoordinationProblem => problem !== null)
+    // Un caso que cambia de página entre peticiones no se cuenta dos veces.
+    .filter((problem) => {
+      if (seen.has(problem.id)) return false
+      seen.add(problem.id)
+      return true
+    })
 
   /*
    * Las dos peticiones (OPEN e IN_PROGRESS) comparten actor y coordinación, así
@@ -174,8 +216,22 @@ export function buildCoordinationSummary(input: {
   activeProblemsCount: number
   criticalCount: number
   affectedCoordinationCount: number
+  /**
+   * Fase 01B.2 (K-03): dependencias INTER activas que AFECTAN a esta área
+   * (conteo oficial del backend). Población distinta de los problemas que
+   * debe resolver: se muestra aparte y NUNCA se suma a activeProblemsCount.
+   */
+  incomingDependencyCount?: number
 }): string | null {
-  if (input.activeProblemsCount === 0) return null
+  const incoming = input.incomingDependencyCount ?? 0
+  if (input.activeProblemsCount === 0 && incoming === 0) return null
+
+  const incomingPart =
+    incoming === 1
+      ? '1 dependencia externa afecta mi área'
+      : `${incoming} dependencias externas afectan mi área`
+
+  if (input.activeProblemsCount === 0) return incomingPart
 
   const parts = [
     input.activeProblemsCount === 1
@@ -196,6 +252,8 @@ export function buildCoordinationSummary(input: {
         : `afecta ${input.affectedCoordinationCount} áreas`,
     )
   }
+
+  if (incoming > 0) parts.push(incomingPart)
 
   return parts.join(' · ')
 }
