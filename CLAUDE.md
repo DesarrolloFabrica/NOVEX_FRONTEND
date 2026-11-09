@@ -1,7 +1,8 @@
 # CLAUDE.md — NOVEX_FRONTEND
 
 Instrucciones para asistentes y desarrolladores.  
-**Documentación vigente (monorepo):** [`../docs/README.md`](../docs/README.md) · [`../docs/EMPALME-NOVEX.md`](../docs/EMPALME-NOVEX.md) · roles: [`../docs/funcional-y-roles.md`](../docs/funcional-y-roles.md).
+**Documentación vigente:** [`docs/CONTINUIDAD.md`](docs/CONTINUIDAD.md) (puntero) · canónica en backend: [`../NOVEX_BACKEND/docs/proyecto/README.md`](../NOVEX_BACKEND/docs/proyecto/README.md) · retomar: [`../NOVEX_BACKEND/docs/proyecto/CONTINUIDAD.md`](../NOVEX_BACKEND/docs/proyecto/CONTINUIDAD.md).  
+Si el monorepo local está presente, también `../docs/`.
 
 ## Qué es este repo
 
