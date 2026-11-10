@@ -86,6 +86,11 @@ function detail(over: Partial<ProblemDetailData> = {}): ProblemDetailData {
     canResolve: true,
     canAdvanceToInProgress: false,
     canUpdate: true,
+    coordinationId: null,
+    affectedCoordinationId: null,
+    canCancel: false,
+    canTransfer: false,
+    cancellation: null,
     resolution: null,
     ...over,
   }

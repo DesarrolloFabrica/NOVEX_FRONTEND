@@ -65,6 +65,11 @@ const DETALLE_CERRADO = {
   canResolve: false,
   canAdvanceToInProgress: false,
   canUpdate: false,
+  coordinationId: null,
+  affectedCoordinationId: null,
+  canCancel: false,
+  canTransfer: false,
+  cancellation: null,
   resolution: {
     learning: 'Lo aprendido',
     resolvedByUserName: 'Coordinadora',

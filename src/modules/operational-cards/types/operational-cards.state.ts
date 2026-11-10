@@ -128,8 +128,17 @@ export interface ReportDraft {
  * coordinación en un reporte, el `problemId` en una resolución—, de modo que la
  * respuesta actualice ese destino aunque el usuario ya esté mirando otro.
  */
+export type OperationalSubmissionKind =
+  | 'report'
+  | 'resolution'
+  | 'status-advance'
+  | 'consequence'
+  | 'cancellation'
+  | 'coordination-transfer'
+  | null
+
 export interface OperationalSubmissionState {
-  kind: 'report' | 'resolution' | 'status-advance' | 'consequence' | null
+  kind: OperationalSubmissionKind
   status: 'idle' | 'sending' | 'error'
   targetKey: string | null
   errorMessage: string | null

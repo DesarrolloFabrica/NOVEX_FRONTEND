@@ -26,9 +26,11 @@ import {
   stripReportIntent,
 } from '@/modules/operational-cards/experience/reportIntent'
 import {
+  experienceAllowsAdministration,
   experienceAllowsOperation,
   type OperationalCenterExperienceId,
 } from '@/modules/operational-cards/experience/resolveOperationalCenterExperience'
+import type { SituationAdministrationHandlers } from '@/modules/operational-cards/components/ProblemActions'
 import type { OperationalIntegrityStatus } from '@/modules/operational-cards/types/operational-status.types'
 import {
   GENERAL_COORDINATION_ID,
@@ -52,6 +54,7 @@ export function useOperationalShellModel(
   const navigate = useNavigate()
   const isCoordinator = experience === 'coordinator'
   const canOperate = experienceAllowsOperation(experience)
+  const canAdminister = experienceAllowsAdministration(experience)
   const canCreate = canOperate && canCreateSituations(user)
   const allowLifecycleActions = canOperate
   const canViewHistory = hasPermission(user, 'SITUATIONS_VIEW')
@@ -315,6 +318,29 @@ export function useOperationalShellModel(
 
   const noop = () => {}
 
+  const administration: SituationAdministrationHandlers | null = canAdminister
+    ? {
+        allow: true,
+        onCancel: (reason: string) => {
+          const detail = controller.level2.detail
+          if (!detail || detail.canCancel !== true) return
+          void controller.submitCancellation(detail.id, reason)
+        },
+        onTransfer: (input) => {
+          const detail = controller.level2.detail
+          if (!detail || detail.canTransfer !== true) return
+          const originCode =
+            (detail.coordinationCode as CoordinationId | null) ?? null
+          void controller.submitCoordinationTransfer(detail.id, {
+            toCoordinationId: input.toCoordinationId,
+            reason: input.reason,
+            expectedCurrentCoordinationId: detail.coordinationId,
+            invalidateCoordinationCodes: [originCode],
+          })
+        },
+      }
+    : null
+
   const actionPanelProps: OperationalActionPanelProps = {
     mode: panelMode,
     reportFormKind: controller.reportFormKind,
@@ -373,6 +399,7 @@ export function useOperationalShellModel(
     canCreate,
     canViewHistory,
     allowLifecycleActions,
+    administration,
     labelByCode: rowLabelByCode,
     colorByCode,
     idleHint: isCoordinator
@@ -426,6 +453,7 @@ export function useOperationalShellModel(
     controller,
     canCreate,
     allowLifecycleActions,
+    canAdminister,
     coordinatorAssignmentError,
     assignedCoordination,
     selectedCoordination,

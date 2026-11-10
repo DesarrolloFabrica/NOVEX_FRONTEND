@@ -32,6 +32,11 @@ const base: ProblemDetail = {
   canResolve: true,
   canAdvanceToInProgress: true,
   canUpdate: true,
+  coordinationId: null,
+  affectedCoordinationId: null,
+  canCancel: false,
+  canTransfer: false,
+  cancellation: null,
   resolution: {
     learning: LONG_LEARNING,
     resolvedByUserName: 'Coordinadora Fábrica',

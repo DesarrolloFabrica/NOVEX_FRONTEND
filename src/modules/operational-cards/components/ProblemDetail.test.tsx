@@ -41,6 +41,11 @@ const DETAIL: ProblemDetailData = {
   canResolve: false,
   canAdvanceToInProgress: false,
   canUpdate: false,
+  coordinationId: null,
+  affectedCoordinationId: null,
+  canCancel: false,
+  canTransfer: false,
+  cancellation: null,
   resolution: null,
 }
 

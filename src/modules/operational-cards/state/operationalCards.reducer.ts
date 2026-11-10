@@ -171,6 +171,22 @@ export type OperationalCardsAction =
       detail: ProblemDetail
     }
   | { type: 'SUBMIT_CONSEQUENCE_ERROR'; message: string }
+  | { type: 'SUBMIT_CANCELLATION'; problemId: string }
+  | {
+      type: 'SUBMIT_CANCELLATION_SUCCESS'
+      problemId: string
+      detail: ProblemDetail
+    }
+  | { type: 'SUBMIT_CANCELLATION_ERROR'; message: string }
+  | { type: 'SUBMIT_COORDINATION_TRANSFER'; problemId: string }
+  | {
+      type: 'SUBMIT_COORDINATION_TRANSFER_SUCCESS'
+      problemId: string
+      detail: ProblemDetail
+      /** Codes LEVEL 1 a invalidar (origen + destino si aplica). */
+      invalidateCoordinationCodes: readonly (CoordinationId | null)[]
+    }
+  | { type: 'SUBMIT_COORDINATION_TRANSFER_ERROR'; message: string }
   | { type: 'CONSUME_CHARACTER_REACTION'; id: number }
 
 export const initialOperationalCardsState: OperationalCardsState = {
@@ -1378,6 +1394,183 @@ export function operationalCardsReducer(
         ...state,
         submission: {
           kind: 'consequence',
+          status: 'error',
+          targetKey: state.submission.targetKey,
+          errorMessage: action.message,
+          confirmedButStale: false,
+        },
+      }
+
+    case 'SUBMIT_CANCELLATION':
+      if (state.submission.status === 'sending') return state
+      return {
+        ...state,
+        submission: {
+          kind: 'cancellation',
+          status: 'sending',
+          targetKey: action.problemId,
+          errorMessage: null,
+          confirmedButStale: false,
+        },
+      }
+
+    case 'SUBMIT_CANCELLATION_SUCCESS': {
+      /*
+       * Anulación confirmada. El caso sale del mazo activo (como una
+       * resolución) pero el detalle se conserva con status CANCELLED para que
+       * el administrador vea el resultado. Sube dataGeneration → overview.
+       */
+      const generation = state.dataGeneration + 1
+      const code = action.detail.coordinationCode as CoordinationId | null
+      const previousSections =
+        state.detailByProblem[action.problemId]?.sections ??
+        state.level2.sections
+      const sections = {
+        ...previousSections,
+        timeline: {
+          status: 'idle' as const,
+          items: [],
+          errorMessage: null,
+        },
+      }
+
+      const problemsByCoordination = Object.fromEntries(
+        Object.entries(state.problemsByCoordination).filter(
+          ([key]) => key !== code,
+        ),
+      )
+
+      return {
+        ...state,
+        dataGeneration: generation,
+        problemsByCoordination,
+        level1:
+          code !== null
+            ? {
+                status: 'idle',
+                coordinationCode: code,
+                problems: [],
+                errorMessage: null,
+                scope: state.level1.scope,
+              }
+            : state.level1,
+        detailByProblem: {
+          ...state.detailByProblem,
+          [action.problemId]: { detail: action.detail, sections },
+        },
+        level2:
+          state.selectedProblemId === action.problemId
+            ? {
+                ...state.level2,
+                status: 'ready',
+                detail: action.detail,
+                sections,
+                errorMessage: null,
+              }
+            : state.level2,
+        myReports: { ...state.myReports, status: 'idle', page: 0 },
+        submission: initialOperationalCardsState.submission,
+        pendingCharacterReaction: null,
+      }
+    }
+
+    case 'SUBMIT_CANCELLATION_ERROR':
+      return {
+        ...state,
+        submission: {
+          kind: 'cancellation',
+          status: 'error',
+          targetKey: state.submission.targetKey,
+          errorMessage: action.message,
+          confirmedButStale: false,
+        },
+      }
+
+    case 'SUBMIT_COORDINATION_TRANSFER':
+      if (state.submission.status === 'sending') return state
+      return {
+        ...state,
+        submission: {
+          kind: 'coordination-transfer',
+          status: 'sending',
+          targetKey: action.problemId,
+          errorMessage: null,
+          confirmedButStale: false,
+        },
+      }
+
+    case 'SUBMIT_COORDINATION_TRANSFER_SUCCESS': {
+      /*
+       * Traslado confirmado. El caso puede salir del mazo de origen y entrar
+       * en el de destino: se invalidan ambas listas y se refresca overview.
+       * Si estaba IN_PROGRESS, el BE lo reabre a OPEN (detalle actualizado).
+       */
+      const generation = state.dataGeneration + 1
+      const invalidate = new Set(
+        action.invalidateCoordinationCodes.filter(
+          (code): code is CoordinationId => Boolean(code),
+        ),
+      )
+      const previousSections =
+        state.detailByProblem[action.problemId]?.sections ??
+        state.level2.sections
+      const sections = {
+        ...previousSections,
+        timeline: {
+          status: 'idle' as const,
+          items: [],
+          errorMessage: null,
+        },
+      }
+
+      const problemsByCoordination = Object.fromEntries(
+        Object.entries(state.problemsByCoordination).filter(
+          ([key]) => !invalidate.has(key as CoordinationId),
+        ),
+      )
+
+      const selectedCode = state.level1.coordinationCode
+      const level1NeedsReload =
+        selectedCode !== null && invalidate.has(selectedCode)
+
+      return {
+        ...state,
+        dataGeneration: generation,
+        problemsByCoordination,
+        level1: level1NeedsReload
+          ? {
+              status: 'idle',
+              coordinationCode: selectedCode,
+              problems: [],
+              errorMessage: null,
+              scope: state.level1.scope,
+            }
+          : state.level1,
+        detailByProblem: {
+          ...state.detailByProblem,
+          [action.problemId]: { detail: action.detail, sections },
+        },
+        level2:
+          state.selectedProblemId === action.problemId
+            ? {
+                ...state.level2,
+                status: 'ready',
+                detail: action.detail,
+                sections,
+                errorMessage: null,
+              }
+            : state.level2,
+        myReports: { ...state.myReports, status: 'idle', page: 0 },
+        submission: initialOperationalCardsState.submission,
+        pendingCharacterReaction: null,
+      }
+    }
+
+    case 'SUBMIT_COORDINATION_TRANSFER_ERROR':
+      return {
+        ...state,
+        submission: {
+          kind: 'coordination-transfer',
           status: 'error',
           targetKey: state.submission.targetKey,
           errorMessage: action.message,

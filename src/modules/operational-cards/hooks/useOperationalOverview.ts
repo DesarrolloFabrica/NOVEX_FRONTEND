@@ -40,6 +40,9 @@ import {
   submitProblemConsequence,
   type ConsequenceDraft,
 } from '@/modules/operational-cards/services/problem-consequence.service'
+import { submitProblemCancellation } from '@/modules/operational-cards/services/problem-cancellation.service'
+import { submitProblemCoordinationTransfer } from '@/modules/operational-cards/services/problem-coordination-transfer.service'
+import { describeSituationAdministrationError } from '@/modules/operational-cards/services/situation-administration-errors'
 import type { ReportDraft } from '@/modules/operational-cards/types/operational-cards.state'
 
 /**
@@ -113,6 +116,18 @@ export interface OperationalCardsController extends OperationalCardsState {
   submitConsequence: (
     problemId: string,
     draft: ConsequenceDraft,
+  ) => Promise<boolean>
+  /** Anulación administrativa (ADMIN + canCancel). */
+  submitCancellation: (problemId: string, reason: string) => Promise<boolean>
+  /** Traslado administrativo de coordinación (ADMIN + canTransfer). */
+  submitCoordinationTransfer: (
+    problemId: string,
+    input: {
+      toCoordinationId: string
+      reason: string
+      expectedCurrentCoordinationId?: string | null
+      invalidateCoordinationCodes?: readonly (CoordinationId | null)[]
+    },
   ) => Promise<boolean>
   /** El personaje avisa de que ya representó la reacción. */
   consumeCharacterReaction: (id: number) => void
@@ -742,6 +757,78 @@ export function useOperationalOverview(
     [],
   )
 
+  const submitCancellation = useCallback(
+    async (problemId: string, reason: string): Promise<boolean> => {
+      if (sendingRef.current) return false
+      sendingRef.current = true
+
+      dispatch({ type: 'SUBMIT_CANCELLATION', problemId })
+
+      try {
+        const detail = await submitProblemCancellation(problemId, reason)
+        dispatch({ type: 'SUBMIT_CANCELLATION_SUCCESS', problemId, detail })
+        return true
+      } catch (error: unknown) {
+        dispatch({
+          type: 'SUBMIT_CANCELLATION_ERROR',
+          message: describeSituationAdministrationError(error),
+        })
+        return false
+      } finally {
+        sendingRef.current = false
+      }
+    },
+    [],
+  )
+
+  const submitCoordinationTransfer = useCallback(
+    async (
+      problemId: string,
+      input: {
+        toCoordinationId: string
+        reason: string
+        expectedCurrentCoordinationId?: string | null
+        /** Codes a invalidar además del destino del detalle (p. ej. origen). */
+        invalidateCoordinationCodes?: readonly (CoordinationId | null)[]
+      },
+    ): Promise<boolean> => {
+      if (sendingRef.current) return false
+      sendingRef.current = true
+
+      dispatch({ type: 'SUBMIT_COORDINATION_TRANSFER', problemId })
+
+      try {
+        const detail = await submitProblemCoordinationTransfer(problemId, {
+          toCoordinationId: input.toCoordinationId,
+          reason: input.reason,
+          expectedCurrentCoordinationId: input.expectedCurrentCoordinationId,
+        })
+        const invalidateCoordinationCodes = Array.from(
+          new Set([
+            ...(input.invalidateCoordinationCodes ?? []),
+            detail.coordinationCode as CoordinationId | null,
+          ]),
+        )
+        dispatch({
+          type: 'SUBMIT_COORDINATION_TRANSFER_SUCCESS',
+          problemId,
+          detail,
+          invalidateCoordinationCodes,
+        })
+        return true
+      } catch (error: unknown) {
+        dispatch({
+          type: 'SUBMIT_COORDINATION_TRANSFER_ERROR',
+          message: describeSituationAdministrationError(error),
+        })
+        return false
+      } finally {
+        sendingRef.current = false
+      }
+    },
+    [],
+  )
+
   /*
    * El resumen operacional se vuelve a pedir tras cada escritura confirmada: es
    * la fuente del aura de las cartas y del estado del personaje, y crear o
@@ -787,6 +874,8 @@ export function useOperationalOverview(
     submitResolution,
     submitStatusAdvance,
     submitConsequence,
+    submitCancellation,
+    submitCoordinationTransfer,
     consumeCharacterReaction,
   }
 }

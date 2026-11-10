@@ -1,5 +1,8 @@
 import { ProblemDetail } from '@/modules/operational-cards/components/ProblemDetail'
-import { ProblemActions } from '@/modules/operational-cards/components/ProblemActions'
+import {
+  ProblemActions,
+  type SituationAdministrationHandlers,
+} from '@/modules/operational-cards/components/ProblemActions'
 import { ReportProblemForm } from '@/modules/operational-cards/components/ReportProblemForm'
 import type { ReportProblemFormProps } from '@/modules/operational-cards/components/ReportProblemForm'
 import { ProblemHistoryPanel } from '@/modules/operational-cards/components/ProblemHistoryPanel'
@@ -60,6 +63,11 @@ export interface OperationalActionPanelProps {
    * (DIRECTOR / ADMIN) aunque el API enviara flags de escritura.
    */
   allowLifecycleActions?: boolean
+  /**
+   * Anulación / traslado administrativo. Independiente del ciclo de vida
+   * operativo; solo el shell ADMIN lo cablea.
+   */
+  administration?: SituationAdministrationHandlers | null
   /** Quien puede consultar situaciones ve el acceso al historial. */
   canViewHistory?: boolean
   idleHint?: string | null
@@ -96,6 +104,7 @@ export function OperationalActionPanel({
   reportForm,
   canCreate = false,
   allowLifecycleActions = true,
+  administration = null,
   canViewHistory = false,
   idleHint = null,
   labelByCode,
@@ -190,6 +199,7 @@ export function OperationalActionPanel({
             onResolve={onResolve}
             onAdvanceToInProgress={onAdvanceToInProgress}
             allowLifecycleActions={allowLifecycleActions}
+            administration={administration}
           />
         )}
       </div>

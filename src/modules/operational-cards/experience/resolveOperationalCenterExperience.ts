@@ -40,3 +40,15 @@ export function experienceAllowsOperation(
 ): boolean {
   return experience === 'analyst' || experience === 'coordinator'
 }
+
+/**
+ * ¿Este shell puede cablear anulación / traslado administrativo?
+ *
+ * Solo ADMIN. Las pistas `canCancel` / `canTransfer` del detalle siguen siendo
+ * la condición de oferta en UI; esto solo evita montar handlers en otros shells.
+ */
+export function experienceAllowsAdministration(
+  experience: OperationalCenterExperienceId,
+): boolean {
+  return experience === 'admin'
+}

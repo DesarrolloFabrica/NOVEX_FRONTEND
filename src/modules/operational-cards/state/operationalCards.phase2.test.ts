@@ -75,6 +75,11 @@ const DETAIL = {
   canResolve: true,
   canAdvanceToInProgress: true,
   canUpdate: true,
+  coordinationId: null,
+  affectedCoordinationId: null,
+  canCancel: false,
+  canTransfer: false,
+  cancellation: null,
   resolution: null,
 } as ProblemDetail
 
@@ -84,6 +89,11 @@ const DETAIL_RESUELTO = {
   canResolve: false,
   canAdvanceToInProgress: false,
   canUpdate: false,
+  coordinationId: null,
+  affectedCoordinationId: null,
+  canCancel: false,
+  canTransfer: false,
+  cancellation: null,
   resolution: {
     learning: 'Faltó un plan de reversión',
     resolvedByUserName: 'Coordinadora',

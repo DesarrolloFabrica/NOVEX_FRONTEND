@@ -2,25 +2,44 @@ import { useId, type FormEvent } from 'react'
 import type { ProblemDetail } from '@/modules/operational-cards/types/problem-detail.types'
 import type { OperationalSubmissionState } from '@/modules/operational-cards/types/operational-cards.state'
 import { DOSSIER_HISTORY_STATUS_LABEL } from '@/modules/operational-cards/data/problemDossier'
+import { resolveSituationAdminActionAvailability } from '@/modules/operational-cards/data/situationAdminActions'
 import { resolveResolutionCopy } from '@/modules/situations/data/resolutionCopy'
 import { ProblemResolutionRecord } from '@/modules/operational-cards/components/ProblemResolutionRecord'
 
 /**
  * ACCIONES sobre el problema, bajo su detalle y en el mismo panel.
  *
- * Dos bloques de presentación (misma lógica de permisos que antes):
+ * Bloques de presentación:
  *   Seguimiento   Estado actual + «Pasar a En atención» si OPEN y
  *                 canAdvanceToInProgress.
  *   Cierre        Aprendizaje obligatorio si canResolve (OPEN o IN_PROGRESS).
+ *   Administración  Host para anulación/traslado (Antigravity monta UI).
  *
  * El endpoint de cierre solo acepta `learning`. No hay campo «solución» aparte.
  * Las vías de CREACIÓN de reportes viven en el modo idle del panel, no aquí.
  */
 
-const CERRADO = new Set(['CLOSED'])
+const TERMINAL = new Set(['CLOSED', 'CANCELLED'])
 
 function statusLabel(status: string): string {
   return DOSSIER_HISTORY_STATUS_LABEL[status] ?? status
+}
+
+/**
+ * Cableado técnico de anulación/traslado. La UI visual (botones + modal) la
+ * añade Antigravity sobre este contrato; no se inventa un flujo paralelo.
+ */
+export interface SituationAdministrationHandlers {
+  /**
+   * True solo en shell ADMIN. Las pistas `canCancel`/`canTransfer` del detalle
+   * siguen siendo la condición de oferta.
+   */
+  allow: boolean
+  onCancel: (reason: string) => void
+  onTransfer: (input: {
+    toCoordinationId: string
+    reason: string
+  }) => void
 }
 
 export interface ProblemActionsProps {
@@ -36,6 +55,8 @@ export interface ProblemActionsProps {
    * Shells de consulta (DIRECTOR / ADMIN).
    */
   allowLifecycleActions?: boolean
+  /** Anulación / traslado. Independiente de `allowLifecycleActions`. */
+  administration?: SituationAdministrationHandlers | null
 }
 
 export function ProblemActions({
@@ -46,9 +67,11 @@ export function ProblemActions({
   onResolve,
   onAdvanceToInProgress,
   allowLifecycleActions = true,
+  administration = null,
 }: ProblemActionsProps) {
   const idPrefijo = useId()
   const copy = resolveResolutionCopy(detail.reportKind)
+  const adminAvailability = resolveSituationAdminActionAvailability(detail)
   const enviandoResolucion =
     submission.status === 'sending' &&
     submission.kind === 'resolution' &&
@@ -71,15 +94,46 @@ export function ProblemActions({
       ? submission.errorMessage
       : null
 
-  const ocupado = enviandoResolucion || enviandoAvance
-  const yaCerrado = CERRADO.has(detail.status)
+  const enviandoAnulacion =
+    submission.status === 'sending' &&
+    submission.kind === 'cancellation' &&
+    submission.targetKey === detail.id
+  const errorAnulacion =
+    submission.status === 'error' &&
+    submission.kind === 'cancellation' &&
+    submission.targetKey === detail.id
+      ? submission.errorMessage
+      : null
+
+  const enviandoTraslado =
+    submission.status === 'sending' &&
+    submission.kind === 'coordination-transfer' &&
+    submission.targetKey === detail.id
+  const errorTraslado =
+    submission.status === 'error' &&
+    submission.kind === 'coordination-transfer' &&
+    submission.targetKey === detail.id
+      ? submission.errorMessage
+      : null
+
+  const ocupado =
+    enviandoResolucion ||
+    enviandoAvance ||
+    enviandoAnulacion ||
+    enviandoTraslado
+  const terminal = TERMINAL.has(detail.status)
+  const yaCerrado = detail.status === 'CLOSED'
+  const anulada = detail.status === 'CANCELLED'
   const puedeAvanzar =
     allowLifecycleActions &&
-    !yaCerrado &&
+    !terminal &&
     detail.status === 'OPEN' &&
     detail.canAdvanceToInProgress === true
-  const muestraSeguimiento = !yaCerrado
+  const muestraSeguimiento = !terminal
   const sinTexto = learningDraft.trim().length === 0
+  const muestraAdminHost =
+    Boolean(administration?.allow) &&
+    (adminAvailability.canCancel || adminAvailability.canTransfer)
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
@@ -96,10 +150,16 @@ export function ProblemActions({
       data-can-resolve={detail.canResolve ? 'true' : 'false'}
       data-can-advance={detail.canAdvanceToInProgress ? 'true' : 'false'}
       data-can-update={detail.canUpdate ? 'true' : 'false'}
+      data-can-cancel={adminAvailability.canCancel ? 'true' : 'false'}
+      data-can-transfer={adminAvailability.canTransfer ? 'true' : 'false'}
       data-allow-lifecycle={allowLifecycleActions ? 'true' : 'false'}
+      data-allow-administration={administration?.allow ? 'true' : 'false'}
       data-resolved={yaCerrado ? 'true' : undefined}
+      data-cancelled={anulada ? 'true' : undefined}
       data-report-kind={detail.reportKind ?? 'INTERNAL'}
       data-status={detail.status}
+      data-coordination-id={detail.coordinationId ?? undefined}
+      data-affected-coordination-id={detail.affectedCoordinationId ?? undefined}
       aria-label="Acciones sobre el problema"
     >
       {yaCerrado && (
@@ -107,6 +167,17 @@ export function ProblemActions({
           resolution={detail.resolution}
           reportKind={detail.reportKind}
         />
+      )}
+
+      {anulada && detail.cancellation && (
+        <p
+          className="problem-actions__note"
+          data-testid="cancellation-record"
+          data-surface="problem-cancellation"
+        >
+          Anulado por {detail.cancellation.cancelledByUserName}:{' '}
+          {detail.cancellation.reason}
+        </p>
       )}
 
       {muestraSeguimiento && (
@@ -168,7 +239,7 @@ export function ProblemActions({
         </div>
       )}
 
-      {!yaCerrado && allowLifecycleActions && detail.canResolve && (
+      {!terminal && allowLifecycleActions && detail.canResolve && (
         <div
           className="problem-actions__block problem-actions__block--resolution"
           data-surface="problem-resolution"
@@ -232,7 +303,7 @@ export function ProblemActions({
         </div>
       )}
 
-      {!yaCerrado && allowLifecycleActions && !detail.canResolve && (
+      {!terminal && allowLifecycleActions && !detail.canResolve && (
         <p
           className="problem-actions__note problem-actions__note--readonly"
           data-testid="resolve-not-allowed"
@@ -241,6 +312,66 @@ export function ProblemActions({
           Un analista solo puede cerrar cuando Coordinación General es la
           responsable del problema.
         </p>
+      )}
+
+      {muestraAdminHost && administration && (
+        <div
+          className="problem-actions__block problem-actions__block--administration"
+          data-testid="situation-admin-actions"
+          data-surface="situation-admin"
+          data-busy={ocupado ? 'true' : 'false'}
+          data-can-cancel={adminAvailability.canCancel ? 'true' : 'false'}
+          data-can-transfer={adminAvailability.canTransfer ? 'true' : 'false'}
+          data-coordination-id={detail.coordinationId ?? undefined}
+          data-affected-coordination-id={
+            detail.affectedCoordinationId ?? undefined
+          }
+          /*
+           * Antigravity: montar aquí «Anular situación», «Trasladar
+           * coordinación», modal de motivo y selector de destino. Handlers:
+           * administration.onCancel(reason) /
+           * administration.onTransfer({ toCoordinationId, reason }).
+           * No crear un segundo flujo fuera de este host.
+           */
+          aria-label="Acciones administrativas"
+        >
+          {enviandoAnulacion && (
+            <p
+              className="problem-actions__note"
+              data-testid="cancellation-sending"
+              role="status"
+            >
+              Anulando la situación…
+            </p>
+          )}
+          {errorAnulacion && (
+            <p
+              className="problem-actions__note problem-actions__note--error"
+              data-testid="cancellation-error"
+              role="alert"
+            >
+              {errorAnulacion}
+            </p>
+          )}
+          {enviandoTraslado && (
+            <p
+              className="problem-actions__note"
+              data-testid="coordination-transfer-sending"
+              role="status"
+            >
+              Trasladando la coordinación…
+            </p>
+          )}
+          {errorTraslado && (
+            <p
+              className="problem-actions__note problem-actions__note--error"
+              data-testid="coordination-transfer-error"
+              role="alert"
+            >
+              {errorTraslado}
+            </p>
+          )}
+        </div>
       )}
     </section>
   )

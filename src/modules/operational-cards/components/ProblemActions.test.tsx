@@ -37,6 +37,11 @@ function detail(over: Partial<ProblemDetail> = {}): ProblemDetail {
     canResolve: true,
     canAdvanceToInProgress: true,
     canUpdate: true,
+    coordinationId: null,
+    affectedCoordinationId: null,
+    canCancel: false,
+    canTransfer: false,
+    cancellation: null,
     resolution: null,
     ...over,
   }
@@ -262,3 +267,78 @@ describe('ProblemActions · Pasar a En atención', () => {
     expect(html).not.toContain('Dependencia de otra coordinación')
   })
 })
+
+describe('ProblemActions · administración (host Antigravity)', () => {
+  it('expone pistas canCancel/canTransfer sin ofrecer botones aún', () => {
+    const html = renderToStaticMarkup(
+      <ProblemActions
+        detail={detail({ canCancel: true, canTransfer: true })}
+        learningDraft=""
+        submission={idleSubmission}
+        onLearningChange={() => undefined}
+        onResolve={() => undefined}
+        onAdvanceToInProgress={() => undefined}
+        allowLifecycleActions={false}
+        administration={{
+          allow: true,
+          onCancel: () => undefined,
+          onTransfer: () => undefined,
+        }}
+      />,
+    )
+    expect(html).toContain('data-can-cancel="true"')
+    expect(html).toContain('data-can-transfer="true"')
+    expect(html).toContain('data-testid="situation-admin-actions"')
+    expect(html).not.toContain('Anular situación')
+    expect(html).not.toContain('Trasladar coordinación')
+  })
+
+  it('no monta el host admin sin pistas del backend', () => {
+    const html = renderToStaticMarkup(
+      <ProblemActions
+        detail={detail({ canCancel: false, canTransfer: false })}
+        learningDraft=""
+        submission={idleSubmission}
+        onLearningChange={() => undefined}
+        onResolve={() => undefined}
+        onAdvanceToInProgress={() => undefined}
+        allowLifecycleActions={false}
+        administration={{
+          allow: true,
+          onCancel: () => undefined,
+          onTransfer: () => undefined,
+        }}
+      />,
+    )
+    expect(html).toContain('data-can-cancel="false"')
+    expect(html).not.toContain('data-testid="situation-admin-actions"')
+  })
+
+  it('muestra error de anulación reutilizando submission', () => {
+    const html = renderToStaticMarkup(
+      <ProblemActions
+        detail={detail({ canCancel: true })}
+        learningDraft=""
+        submission={{
+          kind: 'cancellation',
+          status: 'error',
+          targetKey: 'p1',
+          errorMessage: 'No tiene permiso para esta acción administrativa.',
+          confirmedButStale: false,
+        }}
+        onLearningChange={() => undefined}
+        onResolve={() => undefined}
+        onAdvanceToInProgress={() => undefined}
+        allowLifecycleActions={false}
+        administration={{
+          allow: true,
+          onCancel: () => undefined,
+          onTransfer: () => undefined,
+        }}
+      />,
+    )
+    expect(html).toContain('data-testid="cancellation-error"')
+    expect(html).toContain('No tiene permiso para esta acción administrativa.')
+  })
+})
+
