@@ -1565,6 +1565,9 @@
   .report-form__field label,
 .operational-shell[data-ticket-theme]
   .operational-shell__region--ticket-panel
+  .report-form__kind legend,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
   .report-form__severity legend,
 .operational-shell[data-ticket-theme]
   .operational-shell__region--ticket-panel
@@ -1623,6 +1626,9 @@
 
 .operational-shell[data-ticket-theme]
   .operational-shell__region--ticket-panel
+  .report-form__kind-option,
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
   .report-form__severity-option {
   border: 1px solid rgb(42 33 24 / 0.2);
   background: rgb(255 248 230 / 0.7);
@@ -1631,9 +1637,25 @@
 
 .operational-shell[data-ticket-theme]
   .operational-shell__region--ticket-panel
+  .report-form__kind-option[data-selected='true'],
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
   .report-form__severity-option[data-selected='true'] {
   border-color: var(--ticket-accent-deep);
   background: var(--ticket-teal-soft);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__kind-label {
+  color: var(--ticket-pilot-ink);
+  font-weight: 600;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .report-form__kind-hint {
+  color: var(--ticket-pilot-ink-soft);
 }
 
 /* ==========================================================================

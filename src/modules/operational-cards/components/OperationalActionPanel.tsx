@@ -46,8 +46,8 @@ export interface OperationalActionPanelProps {
   onAdvanceToInProgress: () => void
   /** Registra una afectación del problema abierto; true si se confirmó. */
   onAddConsequence?: (draft: ConsequenceDraft) => Promise<boolean>
-  onReportInternal: () => void
-  onReportDependency: () => void
+  /** Abre el formulario unificado de registro. */
+  onReportSituation: () => void
   onCancelReport: () => void
   onCloseDetail: () => void
   onRetryDetail: () => void
@@ -109,8 +109,7 @@ export function OperationalActionPanel({
   onResolve,
   onAdvanceToInProgress,
   onAddConsequence,
-  onReportInternal,
-  onReportDependency,
+  onReportSituation,
   onCancelReport,
   onCloseDetail,
   onRetryDetail,
@@ -294,30 +293,17 @@ export function OperationalActionPanel({
           <>
             <div className="action-panel__cta-safe" data-testid="report-cta-group">
               {canCreate ? (
-                <>
-                  <button
-                    type="button"
-                    className="action-panel__cta"
-                    data-testid="report-internal-button"
-                    data-tour="report-internal"
-                    data-surface="report-internal"
-                    onClick={onReportInternal}
-                    disabled={!hasCoordination}
-                  >
-                    Problema interno
-                  </button>
-                  <button
-                    type="button"
-                    className="action-panel__cta action-panel__cta--secondary"
-                    data-testid="report-dependency-button"
-                    data-tour="report-dependency"
-                    data-surface="report-dependency"
-                    onClick={onReportDependency}
-                    disabled={!hasCoordination}
-                  >
-                    Dependencia de otra coordinación
-                  </button>
-                </>
+                <button
+                  type="button"
+                  className="action-panel__cta"
+                  data-testid="report-situation-button"
+                  data-tour="report-situation"
+                  data-surface="report-situation"
+                  onClick={onReportSituation}
+                  disabled={!hasCoordination}
+                >
+                  Registrar situación
+                </button>
               ) : null}
 
               {canViewHistory ? (

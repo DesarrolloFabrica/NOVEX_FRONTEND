@@ -123,6 +123,24 @@ function isReportDraft(value: unknown): value is ReportDraft {
   )
 }
 
+/**
+ * Migra claves pre-02F (`:INTERNAL` / `:INTER_COORDINATION`) a `:unified`
+ * por coordinación, conservando el primer borrador válido encontrado.
+ */
+function normalizeUnifiedDraftKeys(
+  drafts: Record<string, ReportDraft>,
+): Record<string, ReportDraft> {
+  const normalized: Record<string, ReportDraft> = {}
+  for (const [draftKey, value] of Object.entries(drafts)) {
+    const legacy = draftKey.match(
+      /^(.*):(INTERNAL|INTER_COORDINATION)$/,
+    )
+    const key = legacy ? `${legacy[1]}:unified` : draftKey
+    if (!(key in normalized)) normalized[key] = value
+  }
+  return normalized
+}
+
 /** Borradores guardados del usuario; los corruptos se ignoran. */
 export function readPersistedReportDrafts(
   scope: string | null,
@@ -132,7 +150,7 @@ export function readPersistedReportDrafts(
   for (const [draftKey, value] of Object.entries(readRecord(draftsKey(scope)))) {
     if (isReportDraft(value)) drafts[draftKey] = value
   }
-  return drafts
+  return normalizeUnifiedDraftKeys(drafts)
 }
 
 /** Guarda el mapa completo de borradores del usuario (refleja el estado). */

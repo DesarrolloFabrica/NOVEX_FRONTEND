@@ -34,9 +34,33 @@ export function resolveSituationViewpointLabel(input: {
   return 'Dependencia entre coordinaciones'
 }
 
+/**
+ * Clave de borrador unificado por coordinación.
+ * INTERNAL e INTER comparten el mismo texto común; el tipo vive en
+ * `reportFormKind` y no fragmenta el borrador.
+ */
 export function reportDraftKey(
   code: CoordinationId | null,
-  kind: SituationReportKind = 'INTERNAL',
+  _kind?: SituationReportKind,
 ): string {
-  return `${code ?? 'none'}:${kind}`
+  return `${code ?? 'none'}:unified`
+}
+
+/**
+ * Clave de idempotencia: incluye el tipo para no reutilizar un intento
+ * INTERNAL como INTER (o al revés) con la misma huella.
+ */
+export function reportRequestKey(
+  code: CoordinationId | null,
+  kind: SituationReportKind,
+): string {
+  return `${reportDraftKey(code)}:${kind}`
+}
+
+/** Claves legadas pre-02F (`:INTERNAL` / `:INTER_COORDINATION`). */
+export function legacyReportDraftKeys(
+  code: CoordinationId | null,
+): readonly string[] {
+  const base = code ?? 'none'
+  return [`${base}:INTERNAL`, `${base}:INTER_COORDINATION`] as const
 }

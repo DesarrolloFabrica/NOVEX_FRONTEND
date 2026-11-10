@@ -135,6 +135,8 @@ export type OperationalCardsAction =
   | { type: 'LOAD_HISTORY_ERROR'; message: string }
   // ---- Panel derecho ----
   | { type: 'OPEN_REPORT_FORM'; kind: 'INTERNAL' | 'INTER_COORDINATION' }
+  /** Cambia el tipo en el formulario unificado sin tocar el borrador. */
+  | { type: 'SET_REPORT_FORM_KIND'; kind: 'INTERNAL' | 'INTER_COORDINATION' }
   | { type: 'CLOSE_REPORT_FORM' }
   | {
       /**
@@ -1033,6 +1035,20 @@ export function operationalCardsReducer(
         // Un error de envío anterior no debe recibir al usuario en el formulario.
         submission:
           state.submission.status === 'error'
+            ? initialOperationalCardsState.submission
+            : state.submission,
+      }
+
+    case 'SET_REPORT_FORM_KIND':
+      if (state.panelMode !== 'report') return state
+      if (state.reportFormKind === action.kind) return state
+      return {
+        ...state,
+        reportFormKind: action.kind,
+        // Un error de envío del tipo anterior no debe bloquear el otro.
+        submission:
+          state.submission.status === 'error' &&
+          state.submission.kind === 'report'
             ? initialOperationalCardsState.submission
             : state.submission,
       }

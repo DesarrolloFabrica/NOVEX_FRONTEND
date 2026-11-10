@@ -19,6 +19,7 @@ import {
 import { buildProductTable } from '@/modules/operational-cards/data/productHierarchy'
 import { buildTableLayout } from '@/modules/operational-cards/data/tableLayout'
 import { useOperationalOverview } from '@/modules/operational-cards/hooks/useOperationalOverview'
+import { reportRequestKey } from '@/modules/operational-cards/data/situationViewpoint'
 import {
   emptyReportDraft,
   reportDraftKey,
@@ -261,7 +262,7 @@ export function useOperationalShellModel(
   }, [pending, reaccionVisible, controller])
 
   const reportKind = controller.reportFormKind ?? 'INTERNAL'
-  const draftKey = reportDraftKey(selectedCoordinationCode, reportKind)
+  const draftKey = reportDraftKey(selectedCoordinationCode)
   const draft =
     controller.reportDrafts[draftKey] ?? emptyReportDraft(nowAsLocalInput())
 
@@ -391,11 +392,8 @@ export function useOperationalShellModel(
       if (!allowLifecycleActions || !detail) return Promise.resolve(false)
       return controller.submitConsequence(detail.id, consequenceDraft)
     },
-    onReportInternal: canCreate
+    onReportSituation: canCreate
       ? () => controller.openReportForm('INTERNAL')
-      : noop,
-    onReportDependency: canCreate
-      ? () => controller.openReportForm('INTER_COORDINATION')
       : noop,
     onCancelReport: () => controller.closeReportForm(),
     onCloseDetail: () => controller.closeProblem(),
@@ -466,10 +464,14 @@ export function useOperationalShellModel(
       maxOccurredAt: nowAsLocalInput(),
       onDraftChange: (patch: Partial<typeof draft>) =>
         controller.setReportDraft(draftKey, { ...draft, ...patch }),
+      onReportKindChange: canCreate
+        ? (kind) => controller.setReportFormKind(kind)
+        : undefined,
       onSubmit: () => {
         if (!canCreate) return
         void controller.submitReport({
           draftKey,
+          requestKey: reportRequestKey(selectedCoordinationCode, reportKind),
           reportKind,
           selectedCoordinationCode,
           selectedCoordinationId: selectedCoordination?.id ?? null,

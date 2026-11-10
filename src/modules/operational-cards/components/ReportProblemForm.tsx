@@ -9,17 +9,15 @@ import type { SituationSeverity } from '@/modules/situations/types/situation.typ
 import { ResponsibleCoordinationPicker } from '@/modules/operational-cards/components/ResponsibleCoordinationPicker'
 
 /**
- * FORMULARIO DE REPORTE, en el panel derecho. Única puerta de creación de
- * problemas internos.
+ * FORMULARIO UNIFICADO DE REGISTRO, en el panel derecho.
  *
- *   INTERNAL  Coordinación = carta seleccionada (la propia, para un
- *             COORDINADOR); categorías vigentes del catálogo; severidad
- *             inicial; afectación inicial opcional.
- *   INTER     Afectada fija (carta); selector de responsable externa;
- *             proceso afectado y entrega pendiente.
+ * Un solo flujo con selector de tipo:
+ *   INTERNAL  En mi coordinación (carta seleccionada).
+ *   INTER     Dependo de otra coordinación (afectada = carta; responsable
+ *             externa; proceso y entrega pendiente).
  *
- * Descripción = QUÉ está fallando. Afectación = QUÉ CONSECUENCIA produjo. No
- * se mezclan: la afectación vive en su propia colección.
+ * Los campos comunes se conservan al cambiar de tipo; los específicos solo
+ * se muestran (y validan/envían) cuando corresponden.
  */
 
 const SEVERITY_OPTIONS: ReadonlyArray<{
@@ -51,6 +49,8 @@ export interface ReportProblemFormProps {
   draft: ReportDraft
   submission: OperationalSubmissionState
   onDraftChange: (patch: Partial<ReportDraft>) => void
+  /** Cambia el tipo sin reiniciar el borrador común. */
+  onReportKindChange?: (kind: ReportFormKind) => void
   onSubmit: () => void
   /** Vuelve al panel idle sin enviar. */
   onCancel?: () => void
@@ -66,6 +66,7 @@ export function ReportProblemForm({
   draft,
   submission,
   onDraftChange,
+  onReportKindChange,
   onSubmit,
   onCancel,
   maxOccurredAt,
@@ -127,11 +128,7 @@ export function ReportProblemForm({
     >
       <header className="report-form__header">
         <div className="report-form__header-row">
-          <h2 className="report-form__heading">
-            {esInter
-              ? 'Dependencia de otra coordinación'
-              : 'Problema interno'}
-          </h2>
+          <h2 className="report-form__heading">Registrar situación</h2>
           {onCancel ? (
             <button
               type="button"
@@ -170,6 +167,61 @@ export function ReportProblemForm({
           </p>
         )}
       </header>
+
+      <fieldset
+        className="report-form__field report-form__kind"
+        data-testid="report-kind-fieldset"
+      >
+        <legend>Tipo de situación</legend>
+        <div
+          className="report-form__kind-options"
+          role="radiogroup"
+          aria-label="Tipo de situación"
+        >
+          <label
+            className="report-form__kind-option"
+            data-selected={reportKind === 'INTERNAL' ? 'true' : undefined}
+          >
+            <input
+              type="radio"
+              name={`${idPrefijo}-kind`}
+              value="INTERNAL"
+              data-testid="report-kind-internal"
+              checked={reportKind === 'INTERNAL'}
+              disabled={enviando || !onReportKindChange}
+              onChange={() => onReportKindChange?.('INTERNAL')}
+            />
+            <span className="report-form__kind-label">
+              En mi coordinación
+            </span>
+            <span className="report-form__kind-hint">
+              Situación interna del área seleccionada
+            </span>
+          </label>
+          <label
+            className="report-form__kind-option"
+            data-selected={
+              reportKind === 'INTER_COORDINATION' ? 'true' : undefined
+            }
+          >
+            <input
+              type="radio"
+              name={`${idPrefijo}-kind`}
+              value="INTER_COORDINATION"
+              data-testid="report-kind-inter"
+              checked={reportKind === 'INTER_COORDINATION'}
+              disabled={enviando || !onReportKindChange}
+              onChange={() => onReportKindChange?.('INTER_COORDINATION')}
+            />
+            <span className="report-form__kind-label">
+              Dependo de otra coordinación
+            </span>
+            <span className="report-form__kind-hint">
+              Otra área debe resolver algo que nos afecta
+            </span>
+          </label>
+        </div>
+      </fieldset>
 
       {esInter && (
         <div className="report-form__field">
@@ -373,7 +425,7 @@ export function ReportProblemForm({
           (esInter && !draft.responsibleCoordinationId)
         }
       >
-        {enviando ? 'Registrando…' : 'Registrar problema'}
+        {enviando ? 'Registrando…' : 'Registrar situación'}
       </button>
     </form>
   )

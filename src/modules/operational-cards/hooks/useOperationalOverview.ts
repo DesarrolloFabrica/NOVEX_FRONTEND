@@ -92,7 +92,7 @@ export interface OperationalCardsController extends OperationalCardsState {
   /** Siguiente página de «Mis reportes». Carga incremental, no recarga. */
   loadMoreMyReports: () => void
   /** Pasa el panel derecho al formulario de reporte del kind indicado. */
-  openReportForm: (kind: 'INTERNAL' | 'INTER_COORDINATION') => void
+  openReportForm: (kind?: 'INTERNAL' | 'INTER_COORDINATION') => void
   /** Cierra el formulario y vuelve al idle del panel derecho. */
   closeReportForm: () => void
   /** Abre el historial de problemas cerrados. */
@@ -110,6 +110,8 @@ export interface OperationalCardsController extends OperationalCardsState {
   /** Envía el reporte. Devuelve true si el servidor lo confirmó. */
   submitReport: (input: {
     draftKey: string
+    /** Clave de idempotencia (incluye tipo; distinta de draftKey unificado). */
+    requestKey: string
     reportKind: 'INTERNAL' | 'INTER_COORDINATION'
     selectedCoordinationCode: CoordinationId | null
     selectedCoordinationId: string | null
@@ -117,6 +119,8 @@ export interface OperationalCardsController extends OperationalCardsState {
     responsibleCoordinationCode: CoordinationId | null
     draft: ReportDraft
   }) => Promise<boolean>
+  /** Cambia el tipo dentro del formulario unificado sin perder el borrador. */
+  setReportFormKind: (kind: 'INTERNAL' | 'INTER_COORDINATION') => void
   /** Envía la resolución con su aprendizaje. */
   submitResolution: (problemId: string, learning: string) => Promise<boolean>
   /** OPEN → IN_PROGRESS. No cierra ni dispara reacción de alivio. */
@@ -658,8 +662,15 @@ export function useOperationalOverview(
   )
 
   const openReportForm = useCallback(
-    (kind: 'INTERNAL' | 'INTER_COORDINATION') => {
+    (kind: 'INTERNAL' | 'INTER_COORDINATION' = 'INTERNAL') => {
       dispatch({ type: 'OPEN_REPORT_FORM', kind })
+    },
+    [],
+  )
+
+  const setReportFormKind = useCallback(
+    (kind: 'INTERNAL' | 'INTER_COORDINATION') => {
+      dispatch({ type: 'SET_REPORT_FORM_KIND', kind })
     },
     [],
   )
@@ -695,6 +706,7 @@ export function useOperationalOverview(
   const submitReport = useCallback(
     async (input: {
       draftKey: string
+      requestKey: string
       reportKind: 'INTERNAL' | 'INTER_COORDINATION'
       selectedCoordinationCode: CoordinationId | null
       selectedCoordinationId: string | null
@@ -708,8 +720,12 @@ export function useOperationalOverview(
        * DESTINO CAPTURADO AL ENVIAR. Si el usuario cambia de carta mientras la
        * petición viaja, la respuesta actualiza ESTAS coordinaciones y no la que
        * esté mirando al volver, y no se le devuelve por la fuerza aquí.
+       *
+       * `draftKey` limpia el borrador unificado; `requestKey` aísla la
+       * idempotencia por tipo (INTERNAL vs INTER).
        */
       const targetKey = input.draftKey
+      const requestKey = input.requestKey
       const reactionCode = input.selectedCoordinationCode
       const invalidateCodes = Array.from(
         new Set(
@@ -728,7 +744,7 @@ export function useOperationalOverview(
        * (`replayed`) en lugar de crear otro.
        */
       const scope = persistenceScopeRef.current
-      const idempotencyKey = readOrCreateReportRequestId(scope, targetKey)
+      const idempotencyKey = readOrCreateReportRequestId(scope, requestKey)
 
       try {
         const { situation } = await submitProblemReport(
@@ -743,7 +759,7 @@ export function useOperationalOverview(
 
         // Confirmado (nuevo o `replayed`): el siguiente reporte de esta carta
         // es un problema distinto y obtendrá otra clave.
-        clearReportRequestId(scope, targetKey)
+        clearReportRequestId(scope, requestKey)
         dispatch({
           type: 'SUBMIT_REPORT_SUCCESS',
           targetKey,
@@ -756,7 +772,7 @@ export function useOperationalOverview(
         if (error instanceof ApiError && error.code === 'IDEMPOTENCY_KEY_REUSED') {
           // El contenido cambió tras un intento que SÍ se guardó: si el usuario
           // confirma de nuevo, será un registro nuevo (se le avisa en el mensaje).
-          rotateReportRequestId(scope, targetKey)
+          rotateReportRequestId(scope, requestKey)
         }
         // Cualquier otro fallo conserva la clave: el reintento es el mismo intento.
         dispatch({
@@ -1032,6 +1048,7 @@ export function useOperationalOverview(
     openMyReport,
     loadMoreMyReports,
     openReportForm,
+    setReportFormKind,
     closeReportForm,
     openHistory,
     closeHistory,
