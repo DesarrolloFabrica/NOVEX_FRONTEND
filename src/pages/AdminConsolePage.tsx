@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { NavLink } from 'react-router-dom'
 import {
   fetchAdminOverview,
   updateAdminUserStatus,
@@ -7,8 +8,9 @@ import {
 } from '@/modules/api/admin.api'
 import { MainScreen, NovexFrame, NovexRoom } from '@/modules/room'
 import { ScreenDeck } from '@/modules/monitoring/components/ScreenDeck'
-import { NovexProductHeader } from '@/shared/components/NovexProductHeader'
+import { NovexUserMenu } from '@/shared/components/NovexUserMenu'
 import { NovexIcon, type NovexIconName } from '@/shared/components/NovexIcon'
+import { CircusScene } from '@/modules/operational-cards/experience/layouts/OperationalCenterChrome'
 import { getErrorMessage } from '@/shared/utils/error'
 
 type AdminSection =
@@ -108,28 +110,43 @@ export function AdminConsolePage() {
   ).length
 
   return (
-    // Fase 1: sin carril legacy. El ADMIN vuelve al Centro Operacional desde
-    // el menú de usuario del encabezado.
-    <NovexRoom environment="healthy" scene="admin" rail={false}>
-      <NovexFrame environment="healthy">
-        <MainScreen environment="healthy">
-          <ScreenDeck
-            environment="healthy"
-            className="novex-admin-deck"
-            header={
-              <NovexProductHeader
-                eyebrow="Administración de plataforma"
-                title="Control del sistema"
-                context="Usuarios, acceso, catálogos y configuración institucional"
-                help={
-                  <p>
-                    Administre el acceso y consulte la configuración efectiva de
-                    NOVEX.
-                  </p>
-                }
-              />
-            }
-          >
+    <div className="novex-admin-circus-wrapper">
+      <CircusScene />
+      <NovexRoom environment="healthy" scene="admin" rail={false}>
+        <NovexFrame environment="healthy">
+          <MainScreen environment="healthy">
+            <ScreenDeck
+              environment="healthy"
+              className="novex-admin-deck"
+              header={
+                <header className="novex-admin-topbar" data-testid="admin-topbar">
+                  <div className="novex-admin-topbar__left">
+                    <NavLink
+                      to="/centro-operacional"
+                      className="novex-admin-topbar__back-link"
+                      data-testid="admin-back-to-stage"
+                      title="Volver al Centro Operacional"
+                    >
+                      <NovexIcon name="chevron-left" />
+                      <span>Volver al Centro Operacional</span>
+                    </NavLink>
+                  </div>
+
+                  <div className="novex-admin-topbar__center">
+                    <span className="novex-admin-topbar__wordmark">NOVEX</span>
+                    <span className="novex-admin-topbar__sep">·</span>
+                    <h1 className="novex-admin-topbar__title">Consola de Administración</h1>
+                    <span className="novex-admin-topbar__subtitle">
+                      Control del Sistema
+                    </span>
+                  </div>
+
+                  <div className="novex-admin-topbar__right">
+                    <NovexUserMenu />
+                  </div>
+                </header>
+              }
+            >
             <main className="novex-admin" data-tour="admin-console">
               <section
                 className="novex-admin__summary"
@@ -387,6 +404,7 @@ export function AdminConsolePage() {
         </MainScreen>
       </NovexFrame>
     </NovexRoom>
+  </div>
   )
 }
 

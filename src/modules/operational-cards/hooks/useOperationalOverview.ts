@@ -95,8 +95,12 @@ export interface OperationalCardsController extends OperationalCardsState {
   openReportForm: (kind?: 'INTERNAL' | 'INTER_COORDINATION') => void
   /** Cierra el formulario y vuelve al idle del panel derecho. */
   closeReportForm: () => void
-  /** Abre el historial de problemas cerrados. */
-  openHistory: () => void
+  /**
+   * Abre el historial de problemas cerrados. Por defecto se limita a la
+   * coordinación observada; `allCoordinations` lo abre para toda la Dirección
+   * (consulta global del ADMIN) hasta que se vuelva a abrir sin la opción.
+   */
+  openHistory: (options?: { allCoordinations?: boolean }) => void
   /** Cierra el historial y vuelve a idle. */
   closeHistory: () => void
   /** Cambia el periodo de cierre y recarga la primera página. */
@@ -263,6 +267,30 @@ export function useOperationalOverview(
       active = false
     }
   }, [])
+
+  // Precarga en segundo plano de problemas (LEVEL 1) para que cambiar de carta
+  // sea instantáneo y sin parpadeos ni skeletons.
+  useEffect(() => {
+    const coords = state.overview?.coordinations
+    if (!coords || coords.length === 0) return
+
+    for (const coord of coords) {
+      if (state.problemsByCoordination[coord.code]) continue
+      void fetchCoordinationProblems(coord.id)
+        .then(({ problems, scope }) => {
+          dispatch({
+            type: 'LOAD_PROBLEMS_SUCCESS',
+            code: coord.code as CoordinationId,
+            problems,
+            scope,
+            generation: generationRef.current,
+          })
+        })
+        .catch(() => {
+          // Ignorado en prefetch; se pedirá bajo demanda si el usuario la selecciona.
+        })
+    }
+  }, [state.overview])
 
   const selectedCode = state.selectedCoordinationCode
   const level1Status = state.level1.status
@@ -540,7 +568,10 @@ export function useOperationalOverview(
   const historyPeriod = state.history.period
   const panelMode = state.panelMode
 
+  const historyAllCoordinationsRef = useRef(false)
+
   const resolveHistoryCoordinationId = useCallback((): string | null => {
+    if (historyAllCoordinationsRef.current) return null
     const code = selectedCode
     if (!code || !state.overview) return null
     return (
@@ -589,9 +620,13 @@ export function useOperationalOverview(
     resolveHistoryCoordinationId,
   ])
 
-  const openHistory = useCallback(() => {
-    dispatch({ type: 'OPEN_HISTORY' })
-  }, [])
+  const openHistory = useCallback(
+    (options?: { allCoordinations?: boolean }) => {
+      historyAllCoordinationsRef.current = options?.allCoordinations === true
+      dispatch({ type: 'OPEN_HISTORY' })
+    },
+    [],
+  )
 
   const closeHistory = useCallback(() => {
     dispatch({ type: 'CLOSE_HISTORY' })

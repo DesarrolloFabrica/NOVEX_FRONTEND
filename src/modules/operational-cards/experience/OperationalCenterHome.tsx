@@ -10,6 +10,7 @@ import '@/styles/operational-shell.css'
 import '@/styles/operational-shell-ticket-fabrica.css'
 import '@/styles/operational-shell-ticket-fabrica-pilot.css'
 import '@/styles/operational-problem-dossier.css'
+import '@/styles/operational-shell-admin.css'
 
 /**
  * Punto de entrada del Centro Operacional: elige el shell por rol.

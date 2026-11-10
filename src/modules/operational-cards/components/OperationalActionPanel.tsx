@@ -1,3 +1,14 @@
+import type { ReactNode } from 'react'
+import {
+  IconBarChart,
+  IconBook,
+  IconChevronRight,
+  IconClipboard,
+  IconCrown,
+  IconGear,
+  IconPen,
+  IconSearch,
+} from '@/modules/operational-cards/components/OperationalIcons'
 import { ProblemDetail } from '@/modules/operational-cards/components/ProblemDetail'
 import {
   ProblemActions,
@@ -89,6 +100,17 @@ export interface OperationalActionPanelProps {
   > | null
   /** Quien puede consultar situaciones ve el acceso al historial. */
   canViewHistory?: boolean
+  /**
+   * Accesos opcionales del menú en reposo. Sin ellos, las tarjetas guía son
+   * texto; con ellos, se vuelven botones (vista de consulta del ADMIN).
+   */
+  onOpenOperations?: () => void
+  onOpenLearnings?: () => void
+  onOpenAdminActions?: () => void
+  /** Destino del botón principal cuando el rol solo consulta. */
+  onPrimaryConsult?: () => void
+  /** Acceso a los indicadores (KPI). Solo se muestra si se pasa. */
+  onOpenKpis?: () => void
   idleHint?: string | null
   labelByCode?: Readonly<Record<string, string>>
   colorByCode?: Readonly<Record<string, string>>
@@ -127,6 +149,11 @@ export function OperationalActionPanel({
   draftScope = null,
   analysisActions = null,
   canViewHistory = false,
+  onOpenOperations,
+  onOpenLearnings,
+  onOpenAdminActions,
+  onPrimaryConsult,
+  onOpenKpis,
   idleHint = null,
   labelByCode,
   colorByCode,
@@ -268,111 +295,218 @@ export function OperationalActionPanel({
         }
         data-testid="action-panel-idle"
       >
-        <h2 className="action-panel__idle-heading">Reportar o consultar</h2>
-
-        {consultOnly ? (
-          <>
-            <p className="action-panel__idle-text" data-testid="consult-idle-copy">
-              {idleHint ??
-                'Consulte problemas ya cerrados por período (semana, mes o ciclo) y revise el aprendizaje registrado.'}
+        <div className="action-panel__hero-cta">
+          <div className="action-panel__search-icon-wrap" aria-hidden="true">
+            <IconSearch size={26} strokeWidth={2.2} />
+          </div>
+          <div className="action-panel__hero-info">
+            <h2 className="action-panel__idle-heading">Reportar o consultar</h2>
+            <p className="action-panel__idle-subtext" data-testid="consult-idle-copy">
+              Registra un nuevo problema o consulta situaciones existentes y su estado.
             </p>
-            <div className="action-panel__cta-safe" data-testid="report-cta-group">
-              <button
-                type="button"
-                className="action-panel__cta action-panel__cta--history action-panel__cta--consult"
-                data-testid="history-open-button"
-                data-tour="history-open"
-                data-surface="history-open"
-                onClick={onOpenHistory}
-              >
-                Historial de problemas
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="action-panel__cta-safe" data-testid="report-cta-group">
-              {canCreate ? (
-                <button
-                  type="button"
-                  className="action-panel__cta"
-                  data-testid="report-situation-button"
-                  data-tour="report-situation"
-                  data-surface="report-situation"
-                  onClick={onReportSituation}
-                  disabled={!hasCoordination}
-                >
-                  Registrar situación
-                </button>
-              ) : null}
+          </div>
+        </div>
 
-              {canViewHistory ? (
-                <button
-                  type="button"
-                  className="action-panel__cta action-panel__cta--history"
-                  data-testid="history-open-button"
-                  data-tour="history-open"
-                  data-surface="history-open"
-                  onClick={onOpenHistory}
-                >
-                  Historial de problemas
-                </button>
-              ) : null}
+        <div className="action-panel__cta-safe" data-testid="report-cta-group">
+          {canCreate ? (
+            <button
+              type="button"
+              className="action-panel__cta action-panel__cta--prominent"
+              data-testid="report-situation-button"
+              data-tour="report-situation"
+              data-surface="report-situation"
+              onClick={onReportSituation}
+              disabled={!hasCoordination}
+            >
+              <span className="action-panel__cta-icon" aria-hidden="true"><IconPen size={17} /></span>
+              <span>Reportar o consultar</span>
+              <span className="coordination-panel__sr-only"> Registrar situación</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="action-panel__cta action-panel__cta--prominent"
+              data-testid="history-open-button"
+              data-tour="history-open"
+              data-surface="history-open"
+              onClick={onPrimaryConsult ?? onOpenHistory}
+            >
+              <span className="action-panel__cta-icon" aria-hidden="true"><IconPen size={17} /></span>
+              <span>Reportar o consultar</span>
+            </button>
+          )}
 
-              {canCreate && !hasCoordination ? (
-                <p
-                  className="action-panel__cta-note"
-                  data-testid="report-cta-need-card"
-                >
-                  Seleccione una coordinación en las cartas para reportar.
-                </p>
-              ) : null}
-            </div>
+          {onOpenKpis ? (
+            <button
+              type="button"
+              className="action-panel__cta action-panel__cta--kpis"
+              data-testid="kpis-open-button"
+              onClick={onOpenKpis}
+            >
+              <span className="action-panel__cta-icon" aria-hidden="true">
+                <IconBarChart size={17} />
+              </span>
+              <span>Indicadores</span>
+            </button>
+          ) : null}
 
-            <p className="action-panel__idle-text">{idleHint ?? defaultHint}</p>
-          </>
-        )}
+          {canCreate && canViewHistory ? (
+            <button
+              type="button"
+              className="action-panel__cta action-panel__cta--history coordination-panel__sr-only"
+              data-testid="history-open-button"
+              data-tour="history-open"
+              data-surface="history-open"
+              onClick={onOpenHistory}
+            >
+              Historial de problemas
+            </button>
+          ) : null}
+
+          {canCreate && !hasCoordination ? (
+            <p
+              className="action-panel__cta-note"
+              data-testid="report-cta-need-card"
+            >
+              Seleccione una coordinación en las cartas para reportar.
+            </p>
+          ) : null}
+        </div>
 
         <div
           className="action-panel__guidance"
           data-testid="action-panel-guidance"
         >
-          <div className="action-panel__guidance-card">
-            <h3 className="action-panel__guidance-title">
-              Gestión de Situaciones Operativas
-            </h3>
-            <p className="action-panel__guidance-text">
-              {canCreate
-                ? 'Registre incidencias internas de su área o dependencias causadas por otras coordinaciones. Cada caso contará con seguimiento de SLA y trazabilidad de resolución.'
-                : 'Consulte las situaciones operativas y su estado de avance. El detalle muestra la cronología completa de eventos y evidencias.'}
-            </p>
-          </div>
-
-          <div className="action-panel__guidance-card">
-            <h3 className="action-panel__guidance-title">
-              Historial y Aprendizajes
-            </h3>
-            <p className="action-panel__guidance-text">
-              Revise situaciones cerradas organizadas por semana, mes o ciclo
-              académico para analizar causas raíz y lecciones aprendidas
-              institucionales.
-            </p>
-          </div>
-
-          {administration && (
-            <div className="action-panel__guidance-card action-panel__guidance-card--admin">
-              <h3 className="action-panel__guidance-title">
-                Acciones Administrativas
-              </h3>
-              <p className="action-panel__guidance-text">
-                Como Administrador, dispone de herramientas excepcionales en el
-                detalle de cada situación para anular casos o trasladar la
-                coordinación responsable.
-              </p>
+          {/* Card 1: Historial de problemas */}
+          <button
+            type="button"
+            className="action-panel__guidance-card action-panel__guidance-card--clickable"
+            onClick={onOpenHistory}
+            title="Abrir historial de problemas"
+          >
+            <div className="action-panel__guidance-row">
+              <span className="action-panel__guidance-icon" aria-hidden="true"><IconClipboard size={24} /></span>
+              <div className="action-panel__guidance-body">
+                <h3 className="action-panel__guidance-title">
+                  Historial de problemas
+                </h3>
+                <p className="action-panel__guidance-text">
+                  Consulta los problemas ya cerrados por período (semana, mes o ciclo) y revisa el aprendizaje registrado.
+                </p>
+              </div>
+              <span className="action-panel__guidance-chevron" aria-hidden="true"><IconChevronRight size={18} /></span>
             </div>
+          </button>
+
+          {/* Card 2: Gestión de Situaciones Operativas */}
+          <GuidanceCard
+            onClick={onOpenOperations}
+            title="Abrir gestión de situaciones operativas"
+            testId="guidance-operations"
+          >
+            <div className="action-panel__guidance-row">
+              <span className="action-panel__guidance-icon" aria-hidden="true"><IconGear size={24} /></span>
+              <div className="action-panel__guidance-body">
+                <h3 className="action-panel__guidance-title">
+                  Gestión de Situaciones Operativas
+                </h3>
+                <p className="action-panel__guidance-text">
+                  {canCreate
+                    ? 'Registre incidencias internas de su área o dependencias causadas por otras coordinaciones. Cada caso contará con seguimiento de SLA y trazabilidad de resolución.'
+                    : 'Consulte las situaciones operativas y su estado de avance. El detalle muestra la cronología completa de eventos y evidencias.'}
+                </p>
+              </div>
+              <span className="action-panel__guidance-chevron" aria-hidden="true"><IconChevronRight size={18} /></span>
+            </div>
+          </GuidanceCard>
+
+          {/* Card 3: Historial y Aprendizajes */}
+          <GuidanceCard
+            onClick={onOpenLearnings}
+            title="Abrir historial y aprendizajes"
+            testId="guidance-learnings"
+          >
+            <div className="action-panel__guidance-row">
+              <span className="action-panel__guidance-icon" aria-hidden="true"><IconBook size={24} /></span>
+              <div className="action-panel__guidance-body">
+                <h3 className="action-panel__guidance-title">
+                  Historial y Aprendizajes
+                </h3>
+                <p className="action-panel__guidance-text">
+                  Revise situaciones cerradas organizadas por semana, mes o ciclo
+                  académico para analizar causas raíz y lecciones aprendidas
+                  institucionales.
+                </p>
+              </div>
+              <span className="action-panel__guidance-chevron" aria-hidden="true"><IconChevronRight size={18} /></span>
+            </div>
+          </GuidanceCard>
+
+          {/* Card 4: Acciones Administrativas */}
+          {administration && (
+            <GuidanceCard
+              onClick={onOpenAdminActions}
+              title="Abrir acciones administrativas"
+              testId="guidance-admin-actions"
+              variant="admin"
+            >
+              <div className="action-panel__guidance-row">
+                <span className="action-panel__guidance-icon action-panel__guidance-icon--admin" aria-hidden="true"><IconCrown size={24} /></span>
+                <div className="action-panel__guidance-body">
+                  <h3 className="action-panel__guidance-title">
+                    Acciones Administrativas
+                  </h3>
+                  <p className="action-panel__guidance-text">
+                    Como Administrador, dispone de herramientas excepcionales en el
+                    detalle de cada situación para anular casos o trasladar la
+                    coordinación responsable.
+                  </p>
+                </div>
+                <span className="action-panel__guidance-chevron" aria-hidden="true"><IconChevronRight size={18} /></span>
+              </div>
+            </GuidanceCard>
           )}
         </div>
       </div>
     </div>
+  )
+}
+
+/**
+ * Tarjeta guía del menú en reposo: botón cuando hay destino, texto si no.
+ */
+function GuidanceCard({
+  onClick,
+  title,
+  testId,
+  variant,
+  children,
+}: {
+  onClick?: () => void
+  title: string
+  testId: string
+  variant?: 'admin'
+  children: ReactNode
+}) {
+  const className = [
+    'action-panel__guidance-card',
+    variant === 'admin' ? 'action-panel__guidance-card--admin' : '',
+    onClick ? 'action-panel__guidance-card--clickable' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  if (!onClick) return <div className={className}>{children}</div>
+
+  return (
+    <button
+      type="button"
+      className={className}
+      onClick={onClick}
+      title={title}
+      data-testid={testId}
+    >
+      {children}
+    </button>
   )
 }

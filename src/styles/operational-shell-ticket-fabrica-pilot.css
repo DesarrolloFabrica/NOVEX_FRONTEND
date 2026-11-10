@@ -532,14 +532,9 @@
   align-items: flex-start;
   justify-content: flex-start;
   box-sizing: border-box;
-  /*
-   * Solo el título: sin nombre del área, recuento ni badge, la franja ya no
-   * reserva alto mínimo ni el hueco derecho del badge. Sube 3 px hacia el
-   * filete del marco, que sigue quedando por encima.
-   */
   min-height: 0;
-  margin-top: -3px;
-  padding: 0 4px;
+  margin-top: 0;
+  padding: 2px 6px 4px 6px;
   overflow: visible;
   text-align: left;
 }
@@ -553,9 +548,9 @@
  * por encima del ornamento.
  */
 .coordination-panel--ticket-pilot .coordination-panel__stub + .coordination-panel__body {
-  gap: 5px;
-  padding-top: 4px;
-  padding-bottom: clamp(24px, 7cqi, 40px);
+  gap: 6px;
+  padding-top: 2px;
+  padding-bottom: clamp(16px, 5cqi, 32px);
 }
 
 .coordination-panel--ticket-pilot .coordination-panel__header {
@@ -579,12 +574,13 @@
 .coordination-panel--ticket-pilot .coordination-panel__name--circus {
   max-width: 100%;
   margin: 0;
-  color: var(--ticket-pilot-ink);
-  font-family: var(--ticket-pilot-serif);
-  font-size: clamp(17px, 1.6cqi + 14px, 20px);
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  line-height: 1.2;
+  color: #6b4d2e;
+  font-family: 'Cinzel', var(--ticket-pilot-serif), serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.25;
+  text-transform: uppercase;
   text-wrap: balance;
   white-space: normal;
 }
@@ -703,7 +699,7 @@
  */
 .coordination-panel--ticket-pilot .coordination-panel__filters {
   margin: 0;
-  padding: 0 4px 0 0;
+  padding: 0 6px;
   gap: 8px;
 }
 
@@ -766,8 +762,10 @@
   flex: 1 1 auto;
   align-items: center;
   justify-content: center;
-  margin: 0;
-  padding: 16px 12px;
+  margin: 6px auto !important;
+  width: 100%;
+  max-width: 440px;
+  padding: 8px 12px;
   border: 0;
   background: transparent;
   text-align: center;
@@ -1016,7 +1014,39 @@
   color: var(--ticket-pilot-teal-deep);
 }
 
-.coordination-panel--ticket-pilot .coordination-panel__skeleton,
+.coordination-panel--ticket-pilot .coordination-panel__skeleton {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.coordination-panel--ticket-pilot .coordination-panel__skeleton span {
+  height: 38px;
+  border: 1px dashed rgba(138, 96, 45, 0.22);
+  border-radius: 9px;
+  background: linear-gradient(
+    90deg,
+    rgba(240, 230, 210, 0.45) 0%,
+    rgba(255, 250, 238, 0.85) 50%,
+    rgba(240, 230, 210, 0.45) 100%
+  );
+  background-size: 200% 100%;
+  animation: ticketSkeletonPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes ticketSkeletonPulse {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
 .coordination-panel--ticket-pilot .coordination-panel__notice {
   flex: 1 1 auto;
 }
@@ -1091,23 +1121,33 @@
 .operational-shell[data-ticket-theme]
   .operational-shell__region--ticket-panel
   .action-panel__idle {
-  padding: 8px 8px 10px;
-  grid-template-columns: minmax(0, 1fr) minmax(110px, 46%);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 6px 12px 6px;
+  gap: 12px;
 }
 
 .operational-shell[data-ticket-theme]
   .operational-shell__region--ticket-panel
   .action-panel__idle-heading {
   text-align: left;
-  font-size: clamp(15px, 1.1cqi + 13px, 18px);
+  font-family: 'Cinzel', var(--ticket-pilot-serif), serif;
+  font-size: clamp(16px, 1.2cqi + 14px, 19px);
+  font-weight: 700;
+  color: var(--ticket-pilot-ink);
+  letter-spacing: 0.02em;
+  padding-right: 36px;
+  margin: 0;
 }
 
 .operational-shell[data-ticket-theme]
   .operational-shell__region--ticket-panel
   .action-panel__cta-safe {
   width: 100%;
-  max-width: 200px;
-  gap: 6px;
+  max-width: 100%;
+  gap: 8px;
 }
 
 .operational-shell[data-ticket-theme]
@@ -1117,15 +1157,18 @@
   flex: none;
   min-width: 0;
   border: 1px solid var(--ticket-accent-deep);
-  border-radius: 7px;
-  padding: 6px 10px;
+  border-radius: 9999px;
+  padding: 8px 14px;
   background: var(--ticket-accent);
   color: #f7f4ea;
   font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 11.5px;
+  font-weight: 700;
   line-height: 1.3;
   text-align: center;
+  letter-spacing: 0.03em;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  transition: all 160ms ease;
 }
 
 .operational-shell[data-ticket-theme]
@@ -1140,9 +1183,24 @@
 .operational-shell[data-ticket-theme]
   .operational-shell__region--ticket-panel
   .action-panel__cta--history {
-  background: color-mix(in srgb, var(--ticket-accent) 14%, transparent);
-  border-color: color-mix(in srgb, var(--ticket-accent-deep) 70%, #5a4a32);
-  color: var(--ticket-accent-deep);
+  background: linear-gradient(180deg, #6b2326 0%, #4a1417 100%);
+  border-color: #d4af37;
+  color: #fff6e0;
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 235, 170, 0.2);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .action-panel__cta--history:hover {
+  background: linear-gradient(180deg, #7e2b2e 0%, #58181b 100%);
+  border-color: #f5d485;
+  color: #ffffff;
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.25),
+    0 0 10px rgba(212, 175, 55, 0.35);
+  transform: translateY(-1px);
 }
 
 .operational-shell[data-ticket-theme]
@@ -1170,12 +1228,9 @@
 
 .operational-shell[data-ticket-theme]
   .operational-shell__region--ticket-panel
-  .action-panel__cta--history:hover,
-.operational-shell[data-ticket-theme]
-  .operational-shell__region--ticket-panel
   .action-panel__cta--history:focus-visible {
-  background: color-mix(in srgb, var(--ticket-accent) 28%, transparent);
-  color: var(--ticket-accent-deep);
+  outline: 2px solid #f5d485;
+  outline-offset: 2px;
 }
 
 .operational-shell[data-ticket-theme]
@@ -4504,4 +4559,18 @@
   .operational-shell__region--ticket-panel
   .action-panel[data-mode='detail'] {
   padding-bottom: clamp(24px, 7cqi, 40px);
+}
+
+/* ==========================================================================
+   REFINAMIENTO VISUAL: ORNAMENTOS EN PAPEL (GRABADOS VINTAGE)
+   Atenuación armónica con textura de papel para evitar parches negros sólidos
+   ========================================================================== */
+.ticket-panel__ornaments .ticket-panel__ornament {
+  opacity: 0.30 !important;
+  mix-blend-mode: multiply !important;
+}
+
+.ticket-panel--character .ticket-panel__ornaments .ticket-panel__ornament {
+  opacity: 0.38 !important;
+  mix-blend-mode: multiply !important;
 }

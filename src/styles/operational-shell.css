@@ -138,6 +138,8 @@
   height: 100%;
   min-height: 0;
   gap: var(--shell-gap);
+  padding: 60px 16px 12px 16px;
+  box-sizing: border-box;
   /*
    * Contiene la capa del escenario: sin scroll extra ni desbordes del arte.
    * El fondo del shell queda transparente para que el escenario se lea en los
@@ -179,8 +181,8 @@
   --shell-top-h: 268px;
   --shell-gap: 10px;
 
-  --shell-line: rgb(150 196 255 / 0.28);
-  --shell-surface: rgb(14 24 42 / 0.55);
+  --shell-line: rgba(212, 175, 55, 0.35);
+  --shell-surface: rgba(28, 14, 22, 0.78);
 }
 
 /*
@@ -488,25 +490,27 @@
 }
 
 .action-panel__idle {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(96px, 44%);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
   align-content: start;
-  gap: 10px 0;
+  gap: 12px;
   margin: 0;
-  padding: 6px 6px 8px;
+  padding: 6px 6px 12px;
   color: var(--os-muted, #8b9cb6);
   text-align: left;
 }
 
 .action-panel__idle > * {
-  grid-column: 1;
+  width: 100%;
   max-width: 100%;
 }
 
 .action-panel__idle-heading {
   margin: 0;
   color: #cfe0f6;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   text-align: left;
   line-height: 1.3;
@@ -515,9 +519,9 @@
 .action-panel__idle-text {
   margin: 0;
   font-size: 12px;
-  line-height: 1.45;
+  line-height: 1.48;
   text-align: left;
-  text-wrap: balance;
+  max-width: 100%;
 }
 
 .action-panel__cta-safe {
@@ -527,7 +531,6 @@
   gap: 6px;
   margin: 0;
   width: 100%;
-  max-width: 200px;
 }
 
 .action-panel__cta-pair {
@@ -997,7 +1000,7 @@
 }
 
 .action-panel__cta--consult {
-  max-width: 220px;
+  width: 100%;
 }
 
 .problem-history__list {
@@ -2071,61 +2074,61 @@
 
 .operational-shell__menu-anchor {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 10px;
+  right: 16px;
   z-index: 50;
   display: block;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   overflow: visible;
   border: 0;
   border-radius: 0;
-  /*
-   * El ancla no pinta ninguna franja: solo posiciona el botón flotante y deja
-   * que todo el alto pertenezca al escenario.
-   */
   background: transparent;
   pointer-events: none;
 }
 
 .operational-shell__menu-trigger {
   display: inline-flex;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: 1px solid rgb(91 61 29 / 0.66);
-  border-radius: 11px;
-  color: #4c3520;
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  border-radius: 9999px;
+  color: #f5d485;
   background:
-    linear-gradient(rgb(250 241 216 / 0.94), rgb(232 211 169 / 0.94)),
+    linear-gradient(180deg, rgba(32, 16, 24, 0.96) 0%, rgba(20, 10, 16, 0.94) 100%),
     url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
   box-shadow:
-    0 7px 18px rgb(2 5 12 / 0.42),
-    inset 0 0 0 2px rgb(255 250 230 / 0.54);
+    0 4px 16px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 230, 160, 0.2);
   cursor: pointer;
   font: inherit;
   pointer-events: auto;
   transition:
     color 160ms ease,
-    background-color 160ms ease,
-    box-shadow 160ms ease;
+    background 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
 .operational-shell__menu-trigger:hover,
 .operational-shell__menu-trigger[aria-expanded='true'] {
-  color: #26190f;
+  color: #fff5d6;
+  border-color: #f5d485;
   background:
-    linear-gradient(rgb(255 247 221 / 0.98), rgb(239 218 173 / 0.98)),
+    linear-gradient(180deg, rgba(46, 24, 36, 0.98) 0%, rgba(28, 14, 22, 0.96) 100%),
     url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
   box-shadow:
-    0 9px 22px rgb(2 5 12 / 0.48),
-    inset 0 0 0 2px rgb(255 250 230 / 0.68);
+    0 6px 20px rgba(0, 0, 0, 0.5),
+    0 0 12px rgba(245, 212, 133, 0.35);
+  transform: translateY(-1px);
 }
 
 .operational-shell__menu-trigger:focus-visible {
-  outline: 2px solid var(--os-focus, #a3ff5c);
+  outline: 2px solid #f5d485;
   outline-offset: 2px;
 }
 
@@ -2933,25 +2936,29 @@
 
 .operational-role-header {
   position: absolute;
-  top: 8px;
-  left: 22px;
-  right: 68px;
-  height: 38px;
+  top: 10px;
+  left: 16px;
+  right: 66px;
+  height: 42px;
   z-index: 30;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   padding: 0 16px;
   background:
-    linear-gradient(90deg, rgba(14, 24, 42, 0.92) 0%, rgba(20, 32, 52, 0.86) 100%),
+    linear-gradient(180deg, rgba(28, 14, 22, 0.98) 0%, rgba(16, 8, 12, 0.96) 100%),
     url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(150, 196, 255, 0.24);
+  backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(212, 175, 55, 0.55);
   border-radius: 9999px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 230, 160, 0.25);
   font-family: var(--font-body, system-ui, sans-serif);
-  color: var(--os-text, #edf5ff);
+  color: #edf5ff;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .operational-role-header__brand {
@@ -2960,82 +2967,148 @@
   gap: 8px;
   font-size: 13px;
   white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.operational-role-header__star {
+  color: #f5d485;
+  font-size: 11px;
+  opacity: 0.9;
+  display: inline-block;
+  text-shadow: 0 0 6px rgba(245, 212, 133, 0.6);
+}
+
+.operational-role-header__star--right {
+  margin-right: 4px;
+}
+
+.operational-role-header__pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2ecc71;
+  box-shadow: 0 0 6px #2ecc71;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.operational-role-header__right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.operational-role-header__user-caret {
+  font-size: 10px;
+  color: #f5d485;
+  margin-left: 2px;
+  line-height: 1;
+}
+
+.operational-role-header__menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 6px;
+  color: #f5d485;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 160ms ease;
+  flex-shrink: 0;
+}
+
+.operational-role-header__menu-btn:hover {
+  background: rgba(212, 175, 55, 0.22);
+  border-color: #f5d485;
+  color: #ffffff;
 }
 
 .operational-role-header__logo {
   font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   color: #f5d485;
-  text-shadow: 0 0 12px rgba(245, 212, 133, 0.3);
+  text-shadow: 0 0 10px rgba(245, 212, 133, 0.35);
+  font-size: 14px;
 }
 
 .operational-role-header__sep {
-  color: rgba(150, 196, 255, 0.4);
+  color: rgba(212, 175, 55, 0.45);
+  font-weight: bold;
 }
 
 .operational-role-header__venue {
   font-size: 12px;
   font-weight: 500;
-  color: rgba(237, 245, 255, 0.85);
-  letter-spacing: 0.04em;
+  color: #f5edd6;
+  letter-spacing: 0.02em;
 }
 
 .operational-role-header__center {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   flex: 1 1 auto;
   justify-content: center;
+  min-width: 0;
 }
 
 .operational-role-header__role-group {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: nowrap;
 }
 
 .operational-role-header__badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 3px 10px;
-  background: rgba(150, 196, 255, 0.12);
-  border: 1px solid rgba(150, 196, 255, 0.28);
-  border-radius: 9999px;
-  font-size: 11.5px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 11px;
   font-weight: 600;
-  color: #d8e8fc;
+  white-space: nowrap;
+  box-sizing: border-box;
   letter-spacing: 0.02em;
+  flex-shrink: 0;
 }
 
 .operational-role-header__badge svg {
-  width: 14px;
-  height: 14px;
-  color: #f5d485;
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
 }
 
 .operational-role-header__badge--admin {
-  background: rgba(163, 114, 255, 0.14);
-  border-color: rgba(163, 114, 255, 0.38);
+  background: rgba(138, 43, 226, 0.16);
+  border: 1px solid rgba(186, 138, 255, 0.35);
   color: #ebd8ff;
 }
 
 .operational-role-header__badge--director {
-  background: rgba(245, 212, 133, 0.14);
-  border-color: rgba(245, 212, 133, 0.38);
+  background: rgba(245, 212, 133, 0.16);
+  border: 1px solid rgba(245, 212, 133, 0.38);
   color: #fff1c7;
 }
 
 .operational-role-header__badge--analyst {
-  background: rgba(84, 182, 240, 0.14);
-  border-color: rgba(84, 182, 240, 0.38);
+  background: rgba(84, 182, 240, 0.16);
+  border: 1px solid rgba(84, 182, 240, 0.38);
   color: #cce9ff;
 }
 
 .operational-role-header__badge--coordinator {
-  background: rgba(122, 196, 138, 0.14);
-  border-color: rgba(122, 196, 138, 0.38);
+  background: rgba(122, 196, 138, 0.16);
+  border: 1px solid rgba(122, 196, 138, 0.38);
   color: #d6f5df;
 }
 
@@ -3043,12 +3116,16 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 2px 9px;
-  border-radius: 9999px;
-  font-size: 11px;
+  height: 26px;
+  padding: 0 9px;
+  border-radius: 6px;
+  font-size: 10.5px;
   font-weight: 500;
+  white-space: nowrap;
+  box-sizing: border-box;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
 }
 
 .operational-role-header__health-pill strong {
@@ -3056,38 +3133,45 @@
 }
 
 .operational-role-header__health-pill--estable {
-  background: rgba(122, 196, 138, 0.18);
-  border-color: rgba(122, 196, 138, 0.5);
+  background: rgba(46, 204, 113, 0.18);
+  border-color: rgba(46, 204, 113, 0.5);
   color: #8be5a0;
 }
 
 .operational-role-header__health-pill--alerta {
-  background: rgba(240, 176, 84, 0.18);
-  border-color: rgba(240, 176, 84, 0.5);
+  background: rgba(243, 156, 18, 0.18);
+  border-color: rgba(243, 156, 18, 0.5);
   color: #f7ca79;
 }
 
 .operational-role-header__health-pill--critico {
-  background: rgba(244, 96, 104, 0.2);
-  border-color: rgba(244, 96, 104, 0.55);
+  background: rgba(231, 76, 60, 0.2);
+  border-color: rgba(231, 76, 60, 0.55);
   color: #ff9196;
 }
 
 .operational-role-header__metric-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 9px;
-  font-size: 11.5px;
-  color: rgba(237, 245, 255, 0.85);
-  background: rgba(0, 0, 0, 0.25);
+  gap: 5px;
+  height: 26px;
+  padding: 0 9px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #f5edd6;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(212, 175, 55, 0.25);
   border-radius: 6px;
+  white-space: nowrap;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .operational-role-header__metric-chip svg {
-  width: 13px;
-  height: 13px;
-  color: rgba(150, 196, 255, 0.7);
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  color: #2ecc71;
 }
 
 .operational-role-header__metric-chip .is-critical {
@@ -3099,57 +3183,76 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 3px 11px;
-  background: linear-gradient(135deg, rgba(84, 182, 240, 0.25) 0%, rgba(56, 110, 180, 0.35) 100%);
-  border: 1px solid rgba(138, 202, 255, 0.45);
-  border-radius: 9999px;
-  color: #edf5ff;
-  font-size: 11.5px;
+  height: 26px;
+  padding: 0 10px;
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.16) 0%, rgba(160, 115, 25, 0.24) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.38);
+  border-radius: 6px;
+  color: #fceec5;
+  font-size: 11px;
   font-weight: 600;
   text-decoration: none;
-  transition: all 180ms ease-out;
+  white-space: nowrap;
+  box-sizing: border-box;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: all 160ms ease;
+  flex-shrink: 0;
 }
 
 .operational-role-header__admin-link:hover {
-  background: linear-gradient(135deg, rgba(84, 182, 240, 0.4) 0%, rgba(56, 110, 180, 0.5) 100%);
-  border-color: #8acaff;
-  box-shadow: 0 0 10px rgba(84, 182, 240, 0.35);
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.28) 0%, rgba(180, 130, 30, 0.38) 100%);
+  border-color: #f5d485;
   color: #ffffff;
+  box-shadow: 0 0 10px rgba(245, 212, 133, 0.35);
+  transform: translateY(-1px);
+}
+
+.operational-role-header__admin-link svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  color: #f5d485;
 }
 
 .operational-role-header__quick-cta {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 11px;
-  background: linear-gradient(135deg, #2b6d7a 0%, #1c4b54 100%);
-  border: 1px solid rgba(120, 214, 219, 0.5);
-  border-radius: 9999px;
-  color: #ffffff;
-  font-size: 11.5px;
+  height: 26px;
+  padding: 0 10px;
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.22) 0%, rgba(170, 120, 25, 0.32) 100%);
+  border: 1px solid rgba(245, 212, 133, 0.45);
+  border-radius: 6px;
+  color: #fff9e6;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 180ms ease-out;
+  white-space: nowrap;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  transition: all 160ms ease;
 }
 
 .operational-role-header__quick-cta:hover {
-  background: linear-gradient(135deg, #378696 0%, #225a65 100%);
-  border-color: #92e7ec;
-  box-shadow: 0 0 10px rgba(120, 214, 219, 0.4);
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.38) 0%, rgba(190, 140, 35, 0.48) 100%);
+  border-color: #f5d485;
+  box-shadow: 0 0 10px rgba(245, 212, 133, 0.35);
 }
 
 .operational-role-header__quick-cta svg {
-  width: 13px;
-  height: 13px;
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
 }
 
 .operational-role-header__user {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   font-size: 12px;
-  color: rgba(237, 245, 255, 0.9);
+  color: rgba(237, 245, 255, 0.95);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .operational-role-header__user-avatar {
@@ -3159,15 +3262,18 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #f5d485 0%, #d4a742 100%);
-  color: #1e1307;
-  font-weight: 700;
+  background: linear-gradient(135deg, #f5d485 0%, #c8962c 100%);
+  color: #241406;
+  font-weight: 800;
   font-size: 11px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 240, 180, 0.5);
+  flex-shrink: 0;
 }
 
 .operational-role-header__user-name {
-  font-weight: 500;
+  font-weight: 600;
+  color: #fff8eb;
   max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3257,28 +3363,31 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  margin: 12px auto;
-  padding: 24px 20px;
-  max-width: 380px;
+  gap: 6px;
+  margin: 8px auto !important;
+  padding: 16px 20px;
+  width: 100%;
+  max-width: 420px;
+  box-sizing: border-box;
   text-align: center;
   background:
-    linear-gradient(135deg, rgba(255, 247, 221, 0.7) 0%, rgba(239, 218, 173, 0.5) 100%),
+    linear-gradient(180deg, rgba(255, 252, 245, 0.88) 0%, rgba(246, 238, 222, 0.78) 100%),
     url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
-  border: 1px solid rgba(120, 86, 52, 0.28);
+  border: 1px dashed rgba(120, 86, 52, 0.35);
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(42, 33, 24, 0.05);
 }
 
 .coordination-panel__empty-emblem {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: rgba(122, 196, 138, 0.18);
+  background: rgba(122, 196, 138, 0.22);
   color: #2b7a42;
+  margin-bottom: 2px;
 }
 
 .coordination-panel__empty-title {
@@ -3292,7 +3401,8 @@
   margin: 0;
   font-size: 11.5px;
   color: #5c4a38;
-  line-height: 1.4;
+  line-height: 1.45;
+  max-width: 340px;
 }
 
 /* ==========================================================================
@@ -3474,51 +3584,740 @@
 }
 
 /* ==========================================================================
-   FASE 03A: GUÍA CONTEXTUAL EN EL PANEL DE ACCIÓN (IDLE)
+   FASE 03A: HERO Y GUÍA CONTEXTUAL EN EL PANEL DE ACCIÓN (IDLE)
    ========================================================================== */
+
+.action-panel__hero-cta {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.action-panel__search-icon-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.16);
+  border: 1.5px solid rgba(212, 175, 55, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8a602d;
+  flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.action-panel__hero-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.action-panel__hero-info .action-panel__idle-heading {
+  margin: 0 0 2px 0;
+  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #241508;
+  letter-spacing: 0.02em;
+}
+
+.action-panel__idle-subtext {
+  margin: 0;
+  font-size: 11px;
+  color: #5c4734;
+  line-height: 1.35;
+}
+
+.action-panel__cta--prominent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 34px;
+  background: linear-gradient(180deg, #c9933d 0%, #9c6c22 100%);
+  border: 1px solid rgba(255, 230, 160, 0.5);
+  border-radius: 7px;
+  color: #ffffff;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  box-shadow: 0 2px 6px rgba(100, 60, 15, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 160ms ease;
+  margin: 4px 0 10px 0;
+}
+
+.action-panel__cta--prominent:hover {
+  background: linear-gradient(180deg, #d8a54e 0%, #ab792b 100%);
+  box-shadow: 0 3px 10px rgba(100, 60, 15, 0.45);
+  transform: translateY(-1px);
+}
+
+.action-panel__cta-icon {
+  font-size: 12px;
+}
 
 .action-panel__guidance {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-top: 14px;
+  margin-top: 4px;
+  width: 100%;
 }
 
 .action-panel__guidance-card {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 10px 12px;
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  box-sizing: border-box;
   background:
-    linear-gradient(135deg, rgba(255, 247, 221, 0.55) 0%, rgba(239, 218, 173, 0.4) 100%),
+    linear-gradient(180deg, rgba(255, 253, 248, 0.94) 0%, rgba(247, 240, 226, 0.88) 100%),
     url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
-  border: 1px solid rgba(120, 86, 52, 0.22);
+  border: 1px solid rgba(138, 96, 45, 0.22);
+  border-left: 3.5px solid #8a602d;
   border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(42, 33, 24, 0.06);
+  cursor: pointer;
+  transition: all 160ms ease;
+}
+
+.action-panel__guidance-card:hover {
+  background: #ffffff;
+  border-color: rgba(138, 96, 45, 0.45);
+  box-shadow: 0 2px 8px rgba(42, 33, 24, 0.12);
+  transform: translateY(-1px);
 }
 
 .action-panel__guidance-card--admin {
   background:
-    linear-gradient(135deg, rgba(240, 230, 255, 0.6) 0%, rgba(225, 210, 248, 0.45) 100%),
+    linear-gradient(180deg, rgba(250, 245, 255, 0.94) 0%, rgba(242, 232, 252, 0.88) 100%),
     url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
-  border-color: rgba(140, 90, 200, 0.3);
+  border-color: rgba(138, 77, 204, 0.3);
+  border-left: 3.5px solid #7c3aed;
+  box-shadow: 0 1px 4px rgba(138, 77, 204, 0.08);
+}
+
+.action-panel__guidance-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.action-panel__guidance-icon {
+  font-size: 15px;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.action-panel__guidance-body {
+  flex: 1;
+  min-width: 0;
 }
 
 .action-panel__guidance-title {
-  margin: 0;
+  margin: 0 0 2px 0;
+  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
   font-size: 11.5px;
   font-weight: 700;
-  color: #2a2118;
-  letter-spacing: 0.01em;
+  color: #382414;
+  letter-spacing: 0.02em;
 }
 
 .action-panel__guidance-card--admin .action-panel__guidance-title {
-  color: #3f1e6b;
+  color: #4a1d7c;
 }
 
 .action-panel__guidance-text {
   margin: 0;
-  font-size: 11px;
-  color: #5c4a38;
+  font-size: 10.5px;
+  color: #5c4734;
   line-height: 1.35;
+  font-weight: 400;
+}
+
+.action-panel__guidance-chevron {
+  font-size: 16px;
+  font-weight: bold;
+  color: #8a602d;
+  align-self: center;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+/* ==========================================================================
+   FASE 03B: BANNER DE FOCO Y SUPERVISIÓN DE COORDINACIÓN ACTIVA
+   ========================================================================== */
+
+.coordination-problems-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: 2px 6px 6px 6px;
+  box-sizing: border-box;
+}
+
+.coordination-focus-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 4px 8px 4px;
+  border-bottom: 1px solid rgba(138, 96, 45, 0.22);
+  margin-bottom: 4px;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.coordination-focus-banner__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.coordination-focus-banner__dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+}
+
+.coordination-focus-banner__label {
+  display: block;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: #7d5a38;
+  line-height: 1.1;
+}
+
+.coordination-focus-banner__title {
+  margin: 1px 0 0;
+  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #241508;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.coordination-focus-banner__right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.coordination-focus-banner__health {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.coordination-focus-banner__health--estable {
+  background: rgba(46, 204, 113, 0.16);
+  border: 1px solid rgba(46, 204, 113, 0.45);
+  color: #1a6632;
+}
+
+.coordination-focus-banner__health--alerta {
+  background: rgba(243, 156, 18, 0.18);
+  border: 1px solid rgba(243, 156, 18, 0.5);
+  color: #8c5305;
+}
+
+.coordination-focus-banner__health--critico {
+  background: rgba(231, 76, 60, 0.18);
+  border: 1px solid rgba(231, 76, 60, 0.5);
+  color: #931b1b;
+}
+
+.coordination-focus-banner__clear-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(244, 234, 214, 0.88) 100%);
+  border: 1px solid rgba(138, 96, 45, 0.38);
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #4a3118;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: all 160ms ease;
+}
+
+.coordination-focus-banner__clear-btn:hover {
+  background: linear-gradient(180deg, #ffffff 0%, #faecd0 100%);
+  border-color: #8a602d;
+  color: #1a0c04;
+  box-shadow: 0 2px 6px rgba(138, 96, 45, 0.22);
+  transform: translateY(-1px);
+}
+
+.coordination-empty-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: 100%;
+  padding: 24px 16px;
+  color: var(--ticket-pilot-ink-soft, #5c4a38);
+}
+
+.coordination-empty-prompt__icon {
+  font-size: 26px;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+}
+
+.coordination-empty-prompt__title {
+  margin: 0 0 6px 0;
+  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #2a2118;
+  letter-spacing: 0.02em;
+}
+
+.coordination-empty-prompt__text {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.45;
+  max-width: 380px;
+  color: #5c4a38;
+}
+
+/* ==========================================================================
+   FASE 03C: PROPORCIONES DEL ESCENARIO PARA ROL ADMIN (REF ESTILO CIRCO)
+   ========================================================================== */
+
+.operational-shell[data-shell-experience='admin'] {
+  padding: 66px 16px 12px 16px;
+  --shell-action-w: 28.5%;
+}
+
+.operational-shell[data-shell-experience='admin'] .operational-shell__top {
+  grid-template-columns: minmax(0, 0.32fr) minmax(0, 0.68fr);
+  gap: 12px;
+}
+
+.operational-shell[data-shell-experience='admin'][data-has-coordination='true'] .operational-shell__top {
+  grid-template-columns: minmax(0, 0.32fr) minmax(0, 0.68fr);
+}
+
+.operational-shell[data-shell-experience='admin'] .operational-breadcrumb {
+  display: none !important;
+}
+
+/* ---------- TICKET IZQUIERDO UNIFICADO (ADMIN) ---------- */
+
+.admin-left-ticket-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 2px 2px 6px 2px;
+}
+
+.admin-left-ticket-wrapper .direction-character {
+  padding-bottom: 2px;
+  border-bottom: 1px dashed rgba(138, 96, 45, 0.25);
+}
+
+.admin-ticket-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-ticket-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  background: linear-gradient(180deg, #2a1810 0%, #1c0e08 100%);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 4px;
+  color: #f5edd6;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.admin-ticket-tab__icon {
+  font-size: 11px;
+}
+
+.admin-ticket-tab__title {
+  color: #f5edd6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.admin-general-summary {
+  list-style: none;
+  margin: 0;
+  padding: 5px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(138, 96, 45, 0.2);
+  border-radius: 6px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.admin-general-summary__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #382414;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.admin-general-summary__icon {
+  font-size: 12px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.admin-general-summary__text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-my-reports-stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(138, 96, 45, 0.25);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 160ms ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.admin-my-reports-stat:hover {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: #8a602d;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(138, 96, 45, 0.15);
+}
+
+.admin-my-reports-stat__count {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: #241508;
+}
+
+.admin-my-reports-stat__label {
+  font-size: 11px;
+  color: #5c4734;
+  flex: 1;
+  margin-left: 10px;
+  font-weight: 600;
+}
+
+.admin-my-reports-stat__chevron {
+  font-size: 16px;
+  font-weight: bold;
+  color: #8a602d;
+}
+
+/* ---------- FILTROS DE COORDINACIÓN CON RÓTULOS ---------- */
+
+.coordination-panel__filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 6px 0 10px 0;
+  width: 100%;
+}
+
+.coordination-panel__filter {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.coordination-panel__filter-label {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #7d5a38;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+  margin-bottom: 1px;
+}
+
+.coordination-panel__filter-select {
+  width: 100%;
+  height: 28px;
+  padding: 0 22px 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #241508;
+  background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%236B5138' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E") no-repeat right 8px center;
+  border: 1px solid rgba(138, 96, 45, 0.35);
+  border-radius: 6px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  transition: border-color 140ms ease;
+}
+
+.coordination-panel__filter-select:hover,
+.coordination-panel__filter-select:focus {
+  border-color: #8a602d;
+}
+
+/* ---------- ESTADO VACÍO CIRCO DE ALTO IMPACTO (REF FOTO) ---------- */
+
+.coordination-panel__empty--circus {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 16px 12px 14px 12px;
+  margin: auto 0;
+  background: transparent;
+  border: none;
+  overflow: visible;
+}
+
+.coordination-panel__empty-sunburst {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 220px;
+  height: 170px;
+  background: radial-gradient(ellipse at center, rgba(245, 212, 133, 0.42) 0%, rgba(245, 212, 133, 0.15) 50%, rgba(245, 212, 133, 0) 75%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.coordination-panel__empty-emblem {
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 4px 10px rgba(212, 175, 55, 0.35));
+  margin-bottom: 6px;
+}
+
+.coordination-panel__empty-ribbon {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #8f171d 0%, #680e14 100%);
+  color: #fff9e6;
+  padding: 4px 20px;
+  border-radius: 3px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  margin-bottom: 8px;
+}
+
+.coordination-panel__empty-ribbon-tail {
+  position: absolute;
+  top: 2px;
+  width: 12px;
+  height: calc(100% - 4px);
+  background: #550a0f;
+  z-index: -1;
+}
+
+.coordination-panel__empty-ribbon-tail.left {
+  left: -10px;
+  clip-path: polygon(100% 0, 0 50%, 100% 100%);
+  box-shadow: -1px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.coordination-panel__empty-ribbon-tail.right {
+  right: -10px;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.coordination-panel__empty-title {
+  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff9e6;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  margin: 0;
+}
+
+.coordination-panel__empty-desc {
+  font-size: 11.5px;
+  color: #5c4734;
+  line-height: 1.45;
+  margin: 0;
+  max-width: 360px;
+  font-weight: 500;
+}
+
+/* ---------- CINTA SUPERIOR DEL ESCENARIO DE COORDINACIONES ---------- */
+
+.operational-deck__header-ribbon {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto 8px auto;
+  padding: 4px 14px;
+  background:
+    linear-gradient(180deg, rgba(28, 14, 22, 0.94) 0%, rgba(16, 8, 12, 0.92) 100%),
+    url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
+  border: 1.5px solid rgba(212, 175, 55, 0.45);
+  border-radius: 9999px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.45);
+  box-sizing: border-box;
+  backdrop-filter: blur(8px);
+  flex-shrink: 0;
+}
+
+.operational-deck__ribbon-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  background: rgba(212, 175, 55, 0.16);
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  border-radius: 9999px;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #fceec5;
+}
+
+.operational-deck__ribbon-desc {
+  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 11px;
+  color: rgba(252, 238, 197, 0.85);
+  letter-spacing: 0.03em;
+  text-align: center;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.operational-deck__ribbon-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.operational-deck__ribbon-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(160, 115, 25, 0.35) 100%);
+  border: 1px solid rgba(245, 212, 133, 0.6);
+  color: #fff8eb;
+  font-size: 13px;
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 160ms ease;
+  line-height: 1;
+}
+
+.operational-deck__ribbon-btn:hover {
+  background: rgba(212, 175, 55, 0.5);
+  transform: scale(1.08);
+}
+
+/* ==========================================================================
+   FASE 03D: MEDALLÓN DE RETORNO Y BREADCRUMB EN EL ESCENARIO
+   ========================================================================== */
+
+.operational-shell .operational-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 14px 4px 6px;
+  background:
+    linear-gradient(180deg, rgba(32, 16, 24, 0.92) 0%, rgba(20, 10, 16, 0.88) 100%),
+    url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  border-radius: 9999px;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 230, 160, 0.2);
+  backdrop-filter: blur(10px);
+  margin-left: 12px;
+  margin-top: 4px;
+}
+
+.operational-shell .operational-breadcrumb__back {
+  width: 26px;
+  height: 26px;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.35) 0%, rgba(160, 115, 25, 0.45) 100%);
+  border: 1px solid rgba(245, 212, 133, 0.65);
+  border-radius: 9999px;
+  color: #fff8eb;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  transition: all 160ms ease;
+}
+
+.operational-shell .operational-breadcrumb__back:hover {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.6) 0%, rgba(190, 140, 35, 0.7) 100%);
+  border-color: #f5d485;
+  box-shadow: 0 0 12px rgba(245, 212, 133, 0.55);
+  transform: scale(1.06);
+}
+
+.operational-shell .operational-breadcrumb__current {
+  color: #fceec5;
+  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 

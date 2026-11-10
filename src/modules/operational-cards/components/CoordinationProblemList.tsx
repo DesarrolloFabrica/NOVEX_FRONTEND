@@ -293,32 +293,65 @@ export function CoordinationProblemList({
           </p>
         ) : (
           <div
-            className="coordination-panel__empty coordination-panel__empty--card"
+            className="coordination-panel__empty coordination-panel__empty--card coordination-panel__empty--circus"
             data-testid="coordination-panel-empty"
           >
+            <div className="coordination-panel__empty-sunburst" aria-hidden="true" />
             <div
               className="coordination-panel__empty-emblem"
               aria-hidden="true"
             >
               <svg
-                viewBox="0 0 24 24"
-                width="28"
-                height="28"
+                viewBox="0 0 160 132"
+                width="150"
+                height="124"
                 fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
+                className="coordination-panel__empty-clipboard"
               >
-                <circle cx="12" cy="12" r="10" strokeOpacity="0.4" />
-                <path
-                  d="M8 12l2.5 2.5L16 9"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+                <defs>
+                  <linearGradient id="novexEmptyPaper" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stopColor="#fffdf6" />
+                    <stop offset="1" stopColor="#f3e6c8" />
+                  </linearGradient>
+                  <linearGradient id="novexEmptyClip" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stopColor="#d9b25c" />
+                    <stop offset="1" stopColor="#8c6023" />
+                  </linearGradient>
+                </defs>
+                {/* destellos */}
+                <path d="M18 70 l2.4 6 6 2.4 -6 2.4 -2.4 6 -2.4 -6 -6 -2.4 6 -2.4z" fill="#d4a94a" opacity="0.75" />
+                <path d="M138 34 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#d4a94a" opacity="0.8" />
+                <path d="M146 84 l1.6 4 4 1.6 -4 1.6 -1.6 4 -1.6 -4 -4 -1.6 4 -1.6z" fill="#d4a94a" opacity="0.6" />
+                <path d="M36 26 l1.4 3.6 3.6 1.4 -3.6 1.4 -1.4 3.6 -1.4 -3.6 -3.6 -1.4 3.6 -1.4z" fill="#d4a94a" opacity="0.55" />
+                {/* sombra */}
+                <ellipse cx="82" cy="124" rx="44" ry="5" fill="#8c6023" opacity="0.14" />
+                {/* tabla */}
+                <rect x="46" y="14" width="70" height="104" rx="7" fill="url(#novexEmptyClip)" />
+                <rect x="51" y="20" width="60" height="93" rx="4" fill="url(#novexEmptyPaper)" stroke="#b98a3a" strokeWidth="1.2" />
+                {/* pinza */}
+                <path d="M68 8 h26 a4 4 0 0 1 4 4 v10 h-34 v-10 a4 4 0 0 1 4 -4z" fill="#5b3d16" stroke="#d9b25c" strokeWidth="1.4" />
+                <circle cx="81" cy="13" r="2.6" fill="#f5d485" />
+                {/* checklist */}
+                <path d="M58 40 l3 3 5.5 -6" stroke="#2e7d32" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                <line x1="72" y1="40" x2="102" y2="40" stroke="#c9b48c" strokeWidth="2.6" strokeLinecap="round" />
+                <path d="M58 56 l3 3 5.5 -6" stroke="#2e7d32" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                <line x1="72" y1="56" x2="98" y2="56" stroke="#c9b48c" strokeWidth="2.6" strokeLinecap="round" />
+                <path d="M58 72 l3 3 5.5 -6" stroke="#2e7d32" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                <line x1="72" y1="72" x2="94" y2="72" stroke="#c9b48c" strokeWidth="2.6" strokeLinecap="round" />
+                <line x1="58" y1="88" x2="84" y2="88" stroke="#ddcfae" strokeWidth="2.6" strokeLinecap="round" />
+                {/* sello de conformidad */}
+                <circle cx="110" cy="96" r="19" fill="#fffaf0" stroke="#5b3d16" strokeWidth="3" />
+                <circle cx="110" cy="96" r="14" fill="none" stroke="#d9b25c" strokeWidth="1.2" />
+                <path d="M102 96.5 l5.5 5.5 L119 90" stroke="#5b3d16" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <strong className="coordination-panel__empty-title">
-              Sin problemas activos
-            </strong>
+            <div className="coordination-panel__empty-ribbon">
+              <span className="coordination-panel__empty-ribbon-tail left" aria-hidden="true" />
+              <strong className="coordination-panel__empty-title">
+                Sin problemas activos
+              </strong>
+              <span className="coordination-panel__empty-ribbon-tail right" aria-hidden="true" />
+            </div>
             <p className="coordination-panel__empty-desc">
               Esta coordinación opera con normalidad. No se registran
               incidentes pendientes de resolución.

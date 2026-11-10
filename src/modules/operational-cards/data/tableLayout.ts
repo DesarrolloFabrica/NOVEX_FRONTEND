@@ -128,11 +128,15 @@ const CARD_ASPECT = 1.324
  *   alto girado  = ancho·senθ + alto·cosθ
  *   ancho girado = ancho·cosθ + alto·senθ
  */
-const TILT_RADIANS = (ARC_TILT * Math.PI) / 180
-const VERTICAL_BLEED =
-  (Math.sin(TILT_RADIANS) / CARD_ASPECT + Math.cos(TILT_RADIANS) - 1) / 2
-const HORIZONTAL_BLEED =
-  (Math.cos(TILT_RADIANS) - 1 + CARD_ASPECT * Math.sin(TILT_RADIANS)) / 2
+function bleedsFor(tiltDegrees: number) {
+  const radians = (tiltDegrees * Math.PI) / 180
+  return {
+    vertical:
+      (Math.sin(radians) / CARD_ASPECT + Math.cos(radians) - 1) / 2,
+    horizontal:
+      (Math.cos(radians) - 1 + CARD_ASPECT * Math.sin(radians)) / 2,
+  }
+}
 
 /**
  * Secuencia determinística en [-0.5, 0.5] a partir de un entero.
@@ -230,6 +234,14 @@ export interface TableLayoutOptions {
    * que reordenar aquí rompería la estructura.
    */
   sortByDisplayOrder?: boolean
+  /**
+   * Elevación de los extremos del arco, en altos de carta. Por defecto
+   * `ARC_RISE`. Una composición con la mesa a todo el ancho (ADMIN) usa un
+   * arco más plano para que la baraja no gaste alto en la curva.
+   */
+  arcRise?: number
+  /** Inclinación de los extremos, en grados. Por defecto `ARC_TILT`. */
+  arcTilt?: number
 }
 
 export function buildTableLayout(
@@ -237,6 +249,9 @@ export function buildTableLayout(
   options: TableLayoutOptions = {},
 ): TableLayout {
   const overlap = options.overlap ?? RESTING_OVERLAP
+  const arcRise = options.arcRise ?? ARC_RISE
+  const arcTilt = options.arcTilt ?? ARC_TILT
+  const bleed = bleedsFor(arcTilt)
 
   /*
    * La mesa dibuja SIEMPRE las nueve coordinaciones. Hubo una opción para
@@ -285,7 +300,7 @@ export function buildTableLayout(
     // elevada `ARC_RISE` y girada— roce el techo del escenario sin salirse.
     // Por eso el margen superior es exactamente la sangría vertical del giro y
     // no un valor suelto.
-    const arcBase = VERTICAL_BLEED + ARC_RISE + arc * (1 - VERTICAL_OVERLAP)
+    const arcBase = bleed.vertical + arcRise + arc * (1 - VERTICAL_OVERLAP)
 
     arcRows.forEach((coordination, indexInArc) => {
       // Posición normalizada a [-1, 1]: negativa a la izquierda del centro.
@@ -308,8 +323,8 @@ export function buildTableLayout(
         arcSize,
         x: round(x),
         // Los extremos SUBEN: restar acerca la carta al techo.
-        y: round(arcBase - ARC_RISE * curve * curve + wobble(seed) * WOBBLE_Y),
-        rotation: round(ARC_TILT * t + wobble(seed + 977) * WOBBLE_TILT),
+        y: round(arcBase - arcRise * curve * curve + wobble(seed) * WOBBLE_Y),
+        rotation: round(arcTilt * t + wobble(seed + 977) * WOBBLE_TILT),
         zIndex: Z_ARC_BASE[Math.min(arc, Z_ARC_BASE.length - 1)] + indexInArc,
         orientation,
       })
@@ -319,9 +334,9 @@ export function buildTableLayout(
   return {
     slots,
     orientationByCode,
-    stageHeight: round(stageHeightOf(slots)),
+    stageHeight: round(stageHeightOf(slots, bleed.vertical)),
     // Sangría horizontal de las cartas giradas de los extremos, a ambos lados.
-    stageWidth: round(widest + 2 * HORIZONTAL_BLEED),
+    stageWidth: round(widest + 2 * bleed.horizontal),
     overlap,
   }
 }
@@ -332,8 +347,11 @@ export function buildTableLayout(
  * con una fórmula cerrada, de modo que un reparto distinto de 8 + 7 —nueve
  * coordinaciones, o diecisiete— sigue reservando el alto correcto.
  */
-function stageHeightOf(slots: readonly TableSlot[]): number {
+function stageHeightOf(
+  slots: readonly TableSlot[],
+  verticalBleed: number,
+): number {
   if (slots.length === 0) return 0
   const lowest = Math.max(...slots.map((slot) => slot.y))
-  return lowest + 1 + VERTICAL_BLEED
+  return lowest + 1 + verticalBleed
 }

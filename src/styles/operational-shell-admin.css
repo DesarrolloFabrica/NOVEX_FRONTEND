@@ -1,0 +1,4230 @@
+/*
+ * CENTRO OPERACIONAL · COMPOSICIÓN ADMIN (referencia «escenario circense»).
+ *
+ * Todo vive bajo `.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck']`: ANALISTA,
+ * COORDINADOR y DIRECTOR no cambian. Se carga después del resto de hojas del
+ * shell para ganar por orden sin recurrir a `!important` salvo donde la hoja
+ * piloto ya lo usa (selects del ticket).
+ *
+ * Composición:
+ *   ┌ cabecera ───────────────────────────────────────────────┐
+ *   │ personaje │ coordinación activa / problemas │ acciones  │  ← fila superior
+ *   ├ cinta «Coordinaciones» a todo el ancho ─────────────────┤
+ *   │ baraja en abanico (cartas solapadas, se conserva)       │
+ *   └─────────────────────────────────────────────────────────┘
+ * Con un formulario, historial o detalle abierto, el panel derecho vuelve a
+ * ocupar las dos filas: ese contenido necesita altura, no una banda.
+ */
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] {
+  --admin-serif: 'Merriweather', Georgia, 'Times New Roman', serif;
+  --admin-display: 'Cinzel', 'Merriweather', Georgia, serif;
+  --admin-sans: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  --admin-ink: #2a1a0e;
+  --admin-ink-soft: #5c4631;
+  --admin-gold: #d4af37;
+  --admin-gold-soft: #f5d485;
+  --admin-wine: #3a1418;
+  --admin-wine-deep: #1f0a0d;
+  --admin-paper: #fbf3e2;
+  --admin-line: rgba(138, 96, 45, 0.28);
+
+  --shell-action-w: 29%;
+  --admin-header-h: 56px;
+  --admin-top-h: clamp(400px, calc(100vh - 415px), 600px);
+
+  grid-template-columns: minmax(0, 1fr) var(--shell-action-w);
+  grid-template-rows: var(--admin-top-h) minmax(0, 1fr);
+  column-gap: 14px;
+  row-gap: 10px;
+  padding: calc(var(--admin-header-h) + 20px) 18px 8px;
+}
+
+/*
+ * El panel derecho NO cambia de tamaño al abrir un detalle, historial o
+ * formulario: cambiar la rejilla redistribuía la baraja de golpe. El contenido
+ * se desplaza por dentro y entra con un fundido corto.
+ */
+
+/* `main` deja de ser caja: sus dos filas se colocan en la rejilla del shell. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-shell__main {
+  display: contents;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-shell__top {
+  position: relative;
+  z-index: 2;
+  grid-area: top;
+  grid-template-columns: minmax(250px, 215fr) minmax(0, 785fr);
+  gap: 14px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'][data-has-coordination='true']
+  .operational-shell__top {
+  grid-template-columns: minmax(250px, 215fr) minmax(0, 785fr);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-shell__action {
+  grid-area: action;
+  z-index: 2;
+}
+
+/* ==========================================================================
+   CABECERA
+   ========================================================================== */
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header {
+  top: 12px;
+  left: 18px;
+  right: 72px;
+  height: var(--admin-header-h);
+  padding: 0 26px 0 30px;
+  overflow: visible;
+  border: 1.5px solid rgba(212, 175, 55, 0.6);
+  border-radius: 16px;
+  background:
+    radial-gradient(120% 140% at 50% -20%, rgba(120, 36, 40, 0.55) 0%, rgba(0, 0, 0, 0) 60%),
+    linear-gradient(180deg, #2b1013 0%, #170709 100%);
+  box-shadow:
+    0 6px 22px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 230, 160, 0.22),
+    inset 0 0 0 4px rgba(23, 7, 9, 0.9),
+    inset 0 0 0 5px rgba(212, 175, 55, 0.22);
+}
+
+/* Remates en rombo a los lados, como el marco de la referencia. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header::before,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid rgba(212, 175, 55, 0.75);
+  background: #2b1013;
+  transform: translateY(-50%) rotate(45deg);
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.35);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header::before {
+  left: -8px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header::after {
+  right: -8px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__brand {
+  gap: 12px;
+  align-items: center;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__brand
+  .operational-role-header__star {
+  display: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__logo {
+  font-family: var(--admin-display);
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  background: linear-gradient(180deg, #fff1c4 0%, #f2cf74 45%, #c4922f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.55));
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__sep {
+  color: var(--admin-gold-soft);
+  font-size: 18px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__venue {
+  font-family: var(--admin-serif);
+  font-size: 19px;
+  font-weight: 700;
+  color: #fbeed0;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__center {
+  position: relative;
+}
+
+/* Destellos a ambos lados del grupo central. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__role-group {
+  position: relative;
+  gap: 18px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__role-group::before,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__role-group::after {
+  content: '✦';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--admin-gold-soft);
+  font-size: 22px;
+  text-shadow: 0 0 10px rgba(245, 212, 133, 0.6);
+  pointer-events: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__role-group::before {
+  left: -56px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__role-group::after {
+  right: -56px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__badge,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__admin-link,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__metric-chip {
+  height: 36px;
+  padding: 0 18px;
+  gap: 9px;
+  border-radius: 8px;
+  font-family: var(--admin-sans);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__badge--admin {
+  border: 1px solid rgba(167, 139, 250, 0.7);
+  background: linear-gradient(180deg, rgba(76, 50, 140, 0.75) 0%, rgba(46, 28, 92, 0.8) 100%);
+  color: #f1ebff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 0 14px rgba(124, 92, 230, 0.25);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__admin-link {
+  border: 1px solid rgba(212, 175, 55, 0.6);
+  background: linear-gradient(180deg, rgba(64, 38, 18, 0.9) 0%, rgba(40, 22, 10, 0.92) 100%);
+  color: #fbeed0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__admin-link:hover {
+  border-color: var(--admin-gold-soft);
+  box-shadow: 0 0 12px rgba(245, 212, 133, 0.3);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__metric-chip {
+  border: 1px solid rgba(212, 175, 55, 0.55);
+  background: rgba(14, 6, 8, 0.85);
+  color: #fbeed0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__pulse-dot {
+  width: 9px;
+  height: 9px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__right {
+  gap: 18px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__star--right {
+  color: var(--admin-gold-soft);
+  font-size: 22px;
+  text-shadow: 0 0 10px rgba(245, 212, 133, 0.6);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__user {
+  gap: 10px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__user-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffe08a 0%, #e0a93a 60%, #a8741c 100%);
+  color: #3a2108;
+  font-family: var(--admin-serif);
+  font-size: 16px;
+  font-weight: 900;
+  border: 1px solid rgba(255, 236, 170, 0.7);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__user-name {
+  max-width: 200px;
+  color: #fbeed0;
+  font-family: var(--admin-sans);
+  font-size: 15px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__user-caret {
+  color: #fbeed0;
+  font-size: 13px;
+}
+
+/* El botón de la cabecera no tiene acción: el menú real es el disparador del shell. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__menu-btn {
+  display: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-shell__menu-anchor {
+  top: 20px;
+  right: 18px;
+}
+
+/* ==========================================================================
+   PANELES-TICKET: aire interior común
+   ========================================================================== */
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-shell__region--ticket-panel {
+  --ticket-pilot-content-inset: 22px;
+}
+
+/* ==========================================================================
+   PANEL IZQUIERDO · personaje + resumen + mis reportes
+   ========================================================================== */
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-shell__region--admin-left {
+  padding: 22px 18px 20px;
+  justify-content: stretch;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-left-ticket-wrapper {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  gap: 10px;
+  padding: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-left-ticket-wrapper .direction-character {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: 6px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--admin-line);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-left-ticket-wrapper .direction-character__figure {
+  order: 1;
+  position: relative;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 90px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-left-ticket-wrapper .direction-character__figure canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-left-ticket-wrapper .direction-character__readout {
+  order: 2;
+  margin: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-left-ticket-wrapper .direction-character__lives {
+  order: 3;
+  position: static;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-left-ticket-wrapper .direction-character__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #2f8a4a 0%, #1f6a35 100%);
+  color: #ffffff;
+  font-family: var(--admin-sans);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  box-shadow: 0 2px 6px rgba(31, 106, 53, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-left-ticket-wrapper .direction-character__status::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #bff5cf;
+  box-shadow: 0 0 6px rgba(191, 245, 207, 0.9);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-left-ticket-wrapper .direction-character[data-status='ALERTA'] .direction-character__status {
+  background: linear-gradient(180deg, #c98a1b 0%, #9c6510 100%);
+  box-shadow: 0 2px 6px rgba(156, 101, 16, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-left-ticket-wrapper .direction-character[data-status='CRITICO'] .direction-character__status {
+  background: linear-gradient(180deg, #b3262e 0%, #86141b 100%);
+  box-shadow: 0 2px 6px rgba(134, 20, 27, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-left-ticket-wrapper .character-lives {
+  gap: 10px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-left-ticket-wrapper .character-lives__hearts svg {
+  width: 18px;
+  height: 18px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-left-ticket-wrapper .character-lives__value {
+  color: var(--admin-ink);
+  font-family: var(--admin-serif);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-ticket-section {
+  flex: 0 0 auto;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--admin-line);
+  border-radius: 8px;
+  background: rgba(255, 252, 244, 0.6);
+  box-shadow: 0 1px 2px rgba(60, 35, 10, 0.08);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-ticket-tab {
+  gap: 10px;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(180deg, #4a1a1e 0%, #2c0d10 100%);
+  box-shadow: inset 0 -1px 0 rgba(212, 175, 55, 0.35);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-ticket-tab__icon {
+  display: inline-flex;
+  color: var(--admin-gold-soft);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-ticket-tab__title {
+  font-family: var(--admin-serif);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #fbeed0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-general-summary {
+  gap: 0;
+  padding: 2px 14px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-general-summary__item {
+  gap: 10px;
+  padding: 7px 0;
+  font-family: var(--admin-sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--admin-ink);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-general-summary__item + .admin-general-summary__item {
+  border-top: 1px solid rgba(138, 96, 45, 0.16);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-general-summary__icon {
+  display: inline-flex;
+  color: var(--admin-ink-soft);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-general-summary__icon--status {
+  color: #2f8a4a;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-general-summary__item[data-tone='alerta'] .admin-general-summary__icon--status {
+  color: #b7791f;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-general-summary__item[data-tone='critico'] .admin-general-summary__icon--status {
+  color: #b3262e;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-general-summary__item[data-tone='desconocido'] .admin-general-summary__icon--status {
+  color: #8a7a66;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-my-reports-stat {
+  gap: 14px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-my-reports-stat:hover {
+  transform: none;
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-my-reports-stat__count {
+  font-family: var(--admin-serif);
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--admin-ink);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-my-reports-stat__label {
+  margin-left: 0;
+  font-family: var(--admin-sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--admin-ink);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-my-reports-stat__chevron {
+  display: inline-flex;
+  color: var(--admin-ink);
+}
+
+/* ==========================================================================
+   PANEL CENTRAL · coordinación activa + filtros + problemas
+   ========================================================================== */
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-shell__region--admin-center {
+  padding: 22px 26px 22px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-problems-view {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-focus-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0;
+  padding: 2px 4px 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-focus-banner__left {
+  flex: 1 1 auto;
+  align-items: flex-end;
+  gap: 12px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-focus-banner__left > div {
+  min-width: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-focus-banner__dot {
+  width: 11px;
+  height: 11px;
+  margin-bottom: 9px;
+  box-shadow: 0 0 0 3px rgba(40, 200, 244, 0.18);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-focus-banner__label {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--admin-ink-soft);
+  font-family: var(--admin-sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-focus-banner__title {
+  margin: 0;
+  color: var(--admin-ink);
+  font-family: var(--admin-serif);
+  font-size: clamp(18px, 1.45vw, 26px);
+  font-weight: 900;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-focus-banner__right {
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-focus-banner__health {
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-family: var(--admin-sans);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-focus-banner__health--estable {
+  border: 1px solid rgba(47, 138, 74, 0.35);
+  background: #d6efd9;
+  color: #1f6a35;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-focus-banner__health--alerta {
+  border: 1px solid rgba(183, 121, 31, 0.4);
+  background: #f7e6c4;
+  color: #8a5a10;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-focus-banner__health--critico {
+  border: 1px solid rgba(179, 38, 46, 0.4);
+  background: #f6d5d6;
+  color: #8f1a21;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-focus-banner__clear-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 16px;
+  border: 1px solid rgba(138, 96, 45, 0.35);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffffff 0%, #f6efe1 100%);
+  color: var(--admin-ink);
+  font-family: var(--admin-sans);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(60, 35, 10, 0.15);
+  cursor: pointer;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-focus-banner__clear-btn:hover {
+  border-color: #8a602d;
+  box-shadow: 0 3px 8px rgba(60, 35, 10, 0.2);
+  transform: translateY(-1px);
+}
+
+/*
+ * La lista compartida pinta «título → filtros → lista». La referencia pide
+ * «filtros → [título + lista en su propio marco]». Se reordena sin tocar el
+ * componente: el cuerpo deja de ser caja y sus hijos entran en la rejilla del
+ * panel, donde los filtros suben y el título y la lista forman el marco.
+ */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel.coordination-panel--ticket-pilot {
+  display: grid;
+  flex: 1 1 auto;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel--ticket-pilot .coordination-panel__stub + .coordination-panel__body,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel--ticket-pilot .coordination-panel__body {
+  display: contents;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel--ticket-pilot .coordination-panel__filters {
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin: 0 0 14px;
+  padding: 0 4px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel__filter {
+  gap: 6px;
+  padding: 0 18px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel__filter:first-child {
+  padding-left: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel__filter:last-child {
+  padding-right: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel__filter + .coordination-panel__filter {
+  border-left: 1px solid var(--admin-line);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel__filter-label {
+  margin: 0;
+  color: var(--admin-ink);
+  font-family: var(--admin-serif);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel.coordination-panel--ticket-pilot .coordination-panel__filter-select {
+  height: 40px !important;
+  padding: 0 40px 0 16px !important;
+  border: 1px solid rgba(90, 62, 30, 0.45) !important;
+  border-radius: 6px !important;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%232a1a0e' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+      no-repeat right 14px center / 14px 14px,
+    linear-gradient(180deg, #ffffff 0%, #fbf7ee 100%) !important;
+  box-shadow: 0 1px 2px rgba(60, 35, 10, 0.12), inset 0 1px 0 #ffffff !important;
+  color: var(--admin-ink) !important;
+  font-family: var(--admin-sans);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel.coordination-panel--ticket-pilot [data-testid='coordination-filter-period'] {
+  padding-left: 42px !important;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%232a1a0e' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.5' y='5' width='17' height='15.5' rx='2'/%3E%3Cpath d='M3.5 10h17M8 3v4M16 3v4M8 14h2M12 14h2M16 14h.5M8 17h2M12 17h2'/%3E%3C/svg%3E")
+      no-repeat 14px center / 18px 18px,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%232a1a0e' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+      no-repeat right 14px center / 14px 14px,
+    linear-gradient(180deg, #ffffff 0%, #fbf7ee 100%) !important;
+}
+
+/* Marco «Problemas de la coordinación»: cabecera (stub) + lista/vacío. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel--ticket-pilot .coordination-panel__stub {
+  grid-row: 2;
+  position: relative;
+  margin: 0;
+  padding: 14px 20px 10px;
+  border: 1px solid rgba(138, 96, 45, 0.35);
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+  background: linear-gradient(180deg, rgba(255, 249, 234, 0.85) 0%, rgba(250, 240, 218, 0.7) 100%);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel--ticket-pilot .coordination-panel__name--circus {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--admin-ink);
+  font-family: var(--admin-serif);
+  font-size: clamp(16px, 1.3vw, 23px);
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel--ticket-pilot .coordination-panel__name--circus::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 1.1em;
+  height: 1.1em;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.3 3.9 1.8 18.5A2 2 0 0 0 3.5 21.5h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z'/%3E%3Cpath d='M12 9.5v4.5M12 17.5v.1'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.3 3.9 1.8 18.5A2 2 0 0 0 3.5 21.5h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z'/%3E%3Cpath d='M12 9.5v4.5M12 17.5v.1'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel--ticket-pilot .coordination-panel__stub ~ * {
+  grid-column: 1;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel--ticket-pilot .coordination-panel__scope-note {
+  grid-row: 1;
+  align-self: end;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel--ticket-pilot .coordination-panel__problems,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel--ticket-pilot .coordination-panel__skeleton,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel--ticket-pilot .coordination-panel__notice,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel--ticket-pilot .coordination-panel__empty {
+  grid-row: 3;
+  min-height: 0;
+  margin: 0 !important;
+  padding: 10px 16px 16px;
+  border: 1px solid rgba(138, 96, 45, 0.35);
+  border-top: 0;
+  border-radius: 0 0 10px 10px;
+  background: linear-gradient(180deg, rgba(250, 240, 218, 0.7) 0%, rgba(246, 234, 208, 0.75) 100%);
+  box-shadow: none;
+}
+
+/* Hoja interior más clara, como el lienzo de la referencia. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel--ticket-pilot .coordination-panel__empty--circus {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  max-width: none;
+  width: auto;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(250, 240, 218, 0.7) 0%, rgba(246, 234, 208, 0.75) 100%) padding-box;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel--ticket-pilot .coordination-panel__empty--circus::before {
+  content: '';
+  position: absolute;
+  inset: 0 16px 16px;
+  border: 1px solid rgba(138, 96, 45, 0.18);
+  z-index: 0;
+  border-radius: 6px;
+  background: radial-gradient(ellipse at 50% 38%, rgba(255, 253, 245, 0.95) 0%, rgba(253, 247, 232, 0.75) 55%, rgba(248, 238, 214, 0.55) 100%);
+  pointer-events: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel__empty-sunburst {
+  top: 40%;
+  width: 360px;
+  height: 260px;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse at center, rgba(245, 212, 133, 0.55) 0%, rgba(245, 212, 133, 0.18) 45%, rgba(245, 212, 133, 0) 72%),
+    repeating-conic-gradient(from 0deg at 50% 50%, rgba(245, 212, 133, 0.16) 0deg 6deg, rgba(245, 212, 133, 0) 6deg 18deg);
+  -webkit-mask: radial-gradient(ellipse at center, #000 0%, rgba(0, 0, 0, 0.6) 45%, transparent 72%);
+  mask: radial-gradient(ellipse at center, #000 0%, rgba(0, 0, 0, 0.6) 45%, transparent 72%);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel__empty-emblem {
+  position: relative;
+  z-index: 1;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: transparent;
+  margin-bottom: -6px;
+  filter: drop-shadow(0 6px 14px rgba(140, 96, 35, 0.3));
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel__empty-clipboard {
+  width: clamp(110px, 9vw, 160px);
+  height: auto;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel__empty-ribbon {
+  z-index: 1;
+  margin: 0 0 16px;
+  padding: 8px 34px;
+  border: 1px solid rgba(255, 215, 120, 0.35);
+  border-radius: 2px;
+  background: linear-gradient(180deg, #8f1d24 0%, #6a1016 100%);
+  box-shadow: 0 4px 10px rgba(80, 10, 14, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel__empty-ribbon-tail {
+  top: 8px;
+  width: 26px;
+  height: 100%;
+  background: #4f0a0f;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel__empty-ribbon-tail.left {
+  left: -20px;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 35% 50%);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel__empty-ribbon-tail.right {
+  right: -20px;
+  clip-path: polygon(0 0, 100% 0, 65% 50%, 100% 100%, 0 100%);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel__empty-title {
+  font-family: var(--admin-serif);
+  font-size: clamp(15px, 1.15vw, 20px);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #fff6e0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel__empty-desc {
+  position: relative;
+  z-index: 1;
+  max-width: 460px;
+  color: var(--admin-ink);
+  font-family: var(--admin-sans);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* Vista sin coordinación seleccionada. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-empty-prompt {
+  position: relative;
+  z-index: 1;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-empty-prompt__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 14px;
+  border: 1.5px solid rgba(138, 96, 45, 0.45);
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #fff8e6 0%, #efdcae 100%);
+  color: #6b4a1e;
+  font-size: 0;
+  filter: none;
+  box-shadow: 0 0 0 6px rgba(245, 212, 133, 0.25), 0 6px 16px rgba(140, 96, 35, 0.25);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-empty-prompt__title {
+  font-family: var(--admin-serif);
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--admin-ink);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-empty-prompt__text {
+  max-width: 460px;
+  font-family: var(--admin-sans);
+  font-size: 14px;
+  color: var(--admin-ink-soft);
+}
+
+/* ==========================================================================
+   PANEL DERECHO · reportar o consultar
+   ========================================================================== */
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-shell__action {
+  padding: 16px 18px 14px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel {
+  position: relative;
+  z-index: 1;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel[data-mode='idle'] {
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__idle {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: auto;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__hero-cta {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin: 0;
+  padding: 2px 4px 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__search-icon-wrap {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(138, 96, 45, 0.3);
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #fff8e6 0%, #f1dfb6 100%);
+  color: var(--admin-ink);
+  box-shadow: 0 2px 6px rgba(60, 35, 10, 0.15);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__idle-heading {
+  margin: 2px 0 4px;
+  color: var(--admin-ink);
+  font-family: var(--admin-serif);
+  font-size: clamp(17px, 1.25vw, 22px);
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__idle-subtext {
+  margin: 0;
+  color: var(--admin-ink-soft);
+  font-family: var(--admin-sans);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__cta-safe {
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__cta--prominent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 44px;
+  border: 1px solid rgba(80, 50, 10, 0.7);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #b98a26 0%, #8c6416 55%, #6f4e0f 100%);
+  color: #fffaf0;
+  font-family: var(--admin-sans);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+  box-shadow:
+    0 4px 10px rgba(80, 50, 10, 0.3),
+    inset 0 1px 0 rgba(255, 236, 170, 0.45),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  transition: filter 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__cta--prominent:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__cta-icon {
+  display: inline-flex;
+  font-size: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__guidance {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__guidance-card {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid rgba(138, 96, 45, 0.28);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(255, 253, 247, 0.92) 0%, rgba(250, 243, 228, 0.92) 100%);
+  box-shadow: 0 1px 3px rgba(60, 35, 10, 0.1);
+  text-align: left;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__guidance-card--clickable {
+  cursor: pointer;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__guidance-card:hover {
+  border-color: rgba(138, 96, 45, 0.55);
+  box-shadow: 0 4px 10px rgba(60, 35, 10, 0.14);
+  transform: translateY(-1px);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__guidance-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__guidance-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(138, 96, 45, 0.22);
+  border-radius: 10px;
+  background: linear-gradient(180deg, #fbf3e0 0%, #f0e2c2 100%);
+  color: var(--admin-ink);
+  font-size: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__guidance-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__guidance-title {
+  margin: 0 0 3px;
+  color: var(--admin-ink);
+  font-family: var(--admin-serif);
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1.25;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__guidance-text {
+  margin: 0;
+  color: var(--admin-ink-soft);
+  font-family: var(--admin-sans);
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__guidance-chevron {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--admin-ink);
+  font-size: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__guidance-card--admin {
+  border-color: rgba(124, 92, 230, 0.4);
+  background: linear-gradient(180deg, #f3ecff 0%, #e7dcff 100%);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__guidance-card--admin .action-panel__guidance-title {
+  color: #2c1a66;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__guidance-card--admin .action-panel__guidance-text {
+  color: #3d2d6b;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__guidance-icon--admin {
+  border-color: rgba(124, 92, 230, 0.3);
+  background: linear-gradient(180deg, #ffffff 0%, #efe7ff 100%);
+  color: #2c1a66;
+}
+
+/* ==========================================================================
+   ESCENARIO · cinta «Coordinaciones» + baraja en abanico
+   ========================================================================== */
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-shell__stage {
+  grid-area: stage;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  padding-bottom: 0;
+  /* Contenedor de tamaño: la carta se dimensiona por el ALTO disponible. */
+  container-type: size;
+  container-name: admin-stage;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__header-ribbon {
+  position: relative;
+  z-index: 3;
+  flex: 0 0 auto;
+  max-width: none;
+  height: 50px;
+  margin: 0;
+  padding: 0 18px 0 0;
+  gap: 24px;
+  overflow: visible;
+  border: 1.5px solid rgba(212, 175, 55, 0.5);
+  border-radius: 12px;
+  background:
+    linear-gradient(90deg, rgba(58, 20, 24, 0.94) 0%, rgba(28, 10, 12, 0.94) 40%, rgba(28, 10, 12, 0.94) 60%, rgba(58, 20, 24, 0.94) 100%);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 230, 160, 0.18);
+  backdrop-filter: blur(6px);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__header-ribbon::before,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__header-ribbon::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid rgba(212, 175, 55, 0.75);
+  background: #2b1013;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__header-ribbon::before {
+  left: -7px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__header-ribbon::after {
+  right: -7px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__ribbon-pill {
+  position: relative;
+  height: 100%;
+  gap: 14px;
+  padding: 0 36px 0 26px;
+  border: 0;
+  border-right: 1.5px solid rgba(212, 175, 55, 0.55);
+  border-radius: 11px 0 0 11px;
+  background: linear-gradient(180deg, #4a1a1e 0%, #2c0d10 100%);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__ribbon-icon {
+  display: inline-flex;
+  color: var(--admin-gold-soft);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__ribbon-title {
+  font-family: var(--admin-serif);
+  font-size: 20px;
+  font-weight: 700;
+  color: #fbeed0;
+  letter-spacing: 0.01em;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__ribbon-desc {
+  flex: 1;
+  font-family: var(--admin-serif);
+  font-size: 14px;
+  font-style: italic;
+  font-weight: 400;
+  color: rgba(251, 238, 208, 0.88);
+  text-align: left;
+  letter-spacing: 0.01em;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__ribbon-nav {
+  gap: 12px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__ribbon-btn {
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid rgba(245, 212, 133, 0.7);
+  background: radial-gradient(circle at 40% 30%, rgba(90, 40, 30, 0.95) 0%, rgba(30, 10, 12, 0.95) 100%);
+  color: #fbeed0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__ribbon-btn:hover {
+  background: radial-gradient(circle at 40% 30%, rgba(140, 70, 40, 0.95) 0%, rgba(60, 20, 20, 0.95) 100%);
+  box-shadow: 0 0 12px rgba(245, 212, 133, 0.45);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck {
+  /* Atenuado de las cartas no elegidas: suave, que no ensucie el arte. */
+  --card-veil-dimmed: 0.22;
+  --stack-dimmed-opacity: 1;
+  --selected-lift: -14px;
+  --selected-scale: 1.05;
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  gap: 0;
+}
+
+/* El admin no usa miga de pan (se oculta en la otra hoja): su ranura sobra. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__crumb-slot {
+  display: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__composition {
+  flex: 1 1 auto;
+  justify-content: flex-end;
+  gap: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__stage {
+  flex: 1 1 0;
+  min-height: 0;
+  padding: 0;
+}
+
+/*
+ * Tamaño de carta: el abanico se conserva (solape y arco del layout), pero la
+ * carta se limita por el ALTO de la banda además de por su ancho. Sin esto, a
+ * todo el ancho la carta crecía hasta 250 px y el arco no cabía bajo la cinta.
+ * 86 px = cinta (50) + separación (6) + aire para que la carta elegida suba.
+ */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-table {
+  --card-width-max: min(
+    13.1vw,
+    210px,
+    calc((100cqh - 86px) / ((var(--table-stage-h, 1.2) + 0.07) * var(--card-aspect)))
+  );
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+/* Por debajo de 1600 px los destellos decorativos ya no caben en la cabecera. */
+@media (max-width: 1600px) {
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header {
+    padding: 0 18px 0 22px;
+    gap: 10px;
+  }
+
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__role-group::before,
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__role-group::after,
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__star--right {
+    display: none;
+  }
+
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__role-group {
+    gap: 10px;
+  }
+
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__badge,
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__admin-link,
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__metric-chip {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 12.5px;
+  }
+
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__logo {
+    font-size: 26px;
+  }
+
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__venue {
+    font-size: 16px;
+  }
+
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__user-name {
+    max-width: 150px;
+    font-size: 13.5px;
+  }
+
+  /* Las guías del panel derecho se recortan a dos líneas para que quepan. */
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__guidance-text {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__idle-subtext {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 1440px) {
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] {
+    --shell-action-w: 31%;
+  }
+
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__sep,
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__venue {
+    display: none;
+  }
+
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-role-header__user-name {
+    max-width: 120px;
+  }
+
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel__filter {
+    padding: 0 10px;
+  }
+}
+
+@media (max-height: 820px) {
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-left-ticket-wrapper .direction-character__figure {
+    min-height: 64px;
+  }
+
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-ticket-tab {
+    padding: 7px 12px;
+  }
+
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-general-summary__item {
+    padding: 5px 0;
+  }
+
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-my-reports-stat {
+    padding: 7px 12px;
+  }
+
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel__empty-clipboard {
+    width: 96px;
+  }
+}
+
+/* ==========================================================================
+   BARAJA · acabado
+   ========================================================================== */
+
+/* Sombra de contacto sobre el suelo y foco cálido detrás del abanico. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-table::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--card-height) * -0.06);
+  width: calc(var(--card-width) * (var(--table-stage-w) + 0.6));
+  height: calc(var(--card-height) * 0.32);
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(10, 4, 2, 0.6) 0%, rgba(10, 4, 2, 0.32) 45%, rgba(10, 4, 2, 0) 72%);
+  filter: blur(6px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-table::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: calc(var(--card-height) * -0.25);
+  width: calc(var(--card-width) * (var(--table-stage-w) + 1.4));
+  height: calc(var(--card-height) * 1.5);
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse 50% 50% at 50% 55%, rgba(255, 196, 110, 0.16) 0%, rgba(255, 196, 110, 0.05) 50%, rgba(255, 196, 110, 0) 75%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Cada carta proyecta sombra propia: separa las superpuestas sin oscurecerlas. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-table .coordination-card {
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.45),
+    0 2px 4px rgba(0, 0, 0, 0.35);
+  transition:
+    box-shadow 220ms ease,
+    filter 220ms ease;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-table .coordination-card:hover {
+  box-shadow:
+    0 18px 34px rgba(0, 0, 0, 0.5),
+    0 0 0 1.5px rgba(245, 212, 133, 0.55);
+}
+
+/* ==========================================================================
+   PANEL DERECHO · entrada suave al cambiar de modo
+   ========================================================================== */
+
+@keyframes admin-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel > * {
+  animation: admin-panel-enter 220ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel > * {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   PANEL DERECHO · detalle de situación, historial y formulario
+   ========================================================================== */
+
+/* El sello y el adorno superior del tema se dibujaban ENCIMA del texto del panel. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-shell__action .ticket-panel__watermark {
+  display: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-shell__action .ticket-panel__ornament--tr {
+  display: none !important;
+}
+
+/* Aire interior: el marco del ticket es grueso y el texto quedaba pegado. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel:not([data-mode='idle']) {
+  gap: 6px;
+  /* Arriba y abajo despeja la línea interior del marco del ticket (~29 px). */
+  padding: 24px 12px 23px 10px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(138, 96, 45, 0.45) transparent;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0;
+}
+
+/* Cabecera del expediente como tarjeta propia. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-detail__header {
+  padding: 10px 14px 12px;
+  border: 1px solid rgba(138, 96, 45, 0.28);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255, 253, 247, 0.95) 0%, rgba(250, 243, 228, 0.92) 100%);
+  box-shadow: 0 1px 3px rgba(60, 35, 10, 0.1);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-detail__topline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-detail__back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(138, 96, 45, 0.4);
+  border-radius: 50%;
+  background: #fffaf0;
+  color: var(--admin-ink);
+  box-shadow: 0 1px 2px rgba(60, 35, 10, 0.12);
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-detail__back:hover {
+  border-color: #8a602d;
+  background: #f6ead0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-detail__folio {
+  color: var(--admin-ink-soft);
+  font-family: var(--admin-sans);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-detail__type {
+  padding: 2px 8px;
+  border: 1px solid rgba(138, 96, 45, 0.35);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--admin-ink-soft);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-detail__title {
+  margin: 10px 0 0;
+  color: var(--admin-ink);
+  font-family: var(--admin-serif);
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.3;
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-detail__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-detail__badge {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-family: var(--admin-sans);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+/* Coordinación responsable. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-detail__coordination {
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid rgba(138, 96, 45, 0.24);
+  border-radius: 10px;
+  background: rgba(255, 252, 244, 0.85);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-detail__context-value {
+  color: var(--admin-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Bloques de lectura: descripción, afectaciones, evidencias y desplegables. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-detail__description,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-consequences,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-evidences,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-detail > .problem-detail__sections {
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid rgba(138, 96, 45, 0.2);
+  border-radius: 10px;
+  background: rgba(255, 252, 244, 0.6);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-detail > .problem-detail__sections {
+  padding: 0 14px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-detail__block-title {
+  margin: 0 0 6px;
+  color: var(--admin-ink-soft);
+  font-family: var(--admin-sans);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .detail-section__title {
+  color: var(--admin-ink-soft);
+  font-family: var(--admin-sans);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-detail__description-text {
+  color: var(--admin-ink);
+  font-family: var(--admin-sans);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .detail-section__note {
+  color: var(--admin-ink-soft);
+  font-size: 12.5px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-detail__sections > * + * {
+  border-top: 1px solid rgba(138, 96, 45, 0.16);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .detail-section__toggle {
+  padding: 9px 0;
+}
+
+/* Pestañas de evidencias como control segmentado. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-evidences__tabs {
+  display: inline-flex;
+  gap: 2px;
+  margin-bottom: 8px;
+  padding: 3px;
+  border: 1px solid rgba(138, 96, 45, 0.28);
+  border-radius: 999px;
+  background: rgba(240, 226, 194, 0.6);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-evidences__tab {
+  padding: 5px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--admin-ink-soft);
+  font-family: var(--admin-sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-evidences__tab[aria-selected='true'],
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-evidences__tab[aria-pressed='true'],
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-evidences__tab.is-active {
+  background: linear-gradient(180deg, #4a1a1e 0%, #2c0d10 100%);
+  color: #fbeed0;
+  box-shadow: 0 1px 3px rgba(44, 13, 16, 0.35);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-evidences .problem-detail__sections {
+  padding: 0;
+}
+
+/* Seguimiento y gestión administrativa. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-actions {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(138, 96, 45, 0.28);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255, 253, 247, 0.95) 0%, rgba(250, 243, 228, 0.92) 100%);
+  box-shadow: 0 1px 3px rgba(60, 35, 10, 0.1);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-actions__block-title {
+  color: var(--admin-ink);
+  font-family: var(--admin-serif);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-actions__block-hint {
+  margin: 4px 0 8px;
+  color: var(--admin-ink-soft);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-actions__admin-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-actions__admin-btn {
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-family: var(--admin-sans);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   PANEL DERECHO QUE SE EXPANDE (sin saltos)
+   --------------------------------------------------------------------------
+   La rejilla ya no cambia de áreas: el panel vive SIEMPRE en las dos filas de
+   la columna derecha y lo que se anima es su ALTO (de la fila superior a la
+   escena completa). La baraja ocupa todo el ancho y, mientras el panel baja,
+   se desliza a la izquierda con un `padding-right` animado: las cartas se
+   recolocan fotograma a fotograma en lugar de saltar.
+   ========================================================================== */
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] {
+  --admin-expand-ease: cubic-bezier(0.22, 0.8, 0.24, 1);
+  --admin-expand-ms: 460ms;
+  grid-template-areas: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-shell__top {
+  grid-area: auto;
+  grid-row: 1;
+  grid-column: 1;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-shell__action {
+  grid-area: auto;
+  grid-row: 1 / 3;
+  grid-column: 2;
+  align-self: start;
+  height: var(--admin-top-h);
+  z-index: 4;
+  transition: height var(--admin-expand-ms) var(--admin-expand-ease);
+  will-change: height;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-shell__stage {
+  grid-area: auto;
+  grid-row: 2;
+  grid-column: 1 / 3;
+  padding-right: 0;
+  transition: padding-right var(--admin-expand-ms) var(--admin-expand-ease);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck']:has(.action-panel:not([data-mode='idle'])) .operational-shell__action {
+  height: 100%;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck']:has(.action-panel:not([data-mode='idle'])) .operational-shell__stage {
+  padding-right: calc(var(--shell-action-w) + 14px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-shell__action,
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-shell__stage {
+    transition: none;
+  }
+}
+
+/* En reposo el menú cabe entero: sin reserva de ornamento ni barra fantasma. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel[data-mode='idle'] {
+  padding: 0 2px 2px 0;
+  overflow-y: auto;
+  scrollbar-gutter: auto;
+  scrollbar-width: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel[data-mode='idle']::-webkit-scrollbar {
+  display: none;
+}
+
+/* Expandido: barra fina y discreta, solo si el expediente es muy largo. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel:not([data-mode='idle']) {
+  scrollbar-gutter: auto;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel:not([data-mode='idle'])::-webkit-scrollbar {
+  width: 6px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel:not([data-mode='idle'])::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(138, 96, 45, 0.4);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel:not([data-mode='idle'])::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ==========================================================================
+   CINTA · regreso a todas las cartas y miga del mazo abierto
+   ========================================================================== */
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__header-ribbon {
+  margin: 0 0 6px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__ribbon-trail {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__ribbon-back {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 16px 0 12px;
+  border: 1.5px solid rgba(245, 212, 133, 0.75);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(185, 138, 38, 0.95) 0%, rgba(122, 86, 16, 0.95) 100%);
+  color: #fffaf0;
+  font-family: var(--admin-sans);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 236, 170, 0.45);
+  cursor: pointer;
+  animation: admin-panel-enter 260ms ease-out both;
+  transition: filter 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__ribbon-back:hover {
+  filter: brightness(1.08);
+  transform: translateX(-2px);
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.4),
+    0 0 12px rgba(245, 212, 133, 0.35),
+    inset 0 1px 0 rgba(255, 236, 170, 0.45);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__ribbon-back:focus-visible {
+  outline: 2px solid var(--admin-gold-soft);
+  outline-offset: 2px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__ribbon-crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: rgba(251, 238, 208, 0.7);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__ribbon-crumb-sep {
+  display: inline-flex;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__ribbon-crumb-current {
+  overflow: hidden;
+  color: #fbeed0;
+  font-family: var(--admin-serif);
+  font-size: 15px;
+  font-style: italic;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-deck__ribbon-btn:focus-visible {
+  outline: 2px solid var(--admin-gold-soft);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   MAZO CON SUBORDINACIONES (Operación Académica) · hover
+   --------------------------------------------------------------------------
+   El hover por defecto subía el mazo 35 px y abría las hijas HACIA ARRIBA en
+   miniatura; en el admin ese aire es la cinta, así que el abanico salía
+   recortado contra ella. Aquí el mazo sube como cualquier carta y sus hijas se
+   abren como una MANO detrás de la principal: pivotan desde el pie, asoman a
+   ambos lados y no rebasan la parte alta de la mesa.
+   ========================================================================== */
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-table:not([data-mode='selected'])
+  .coordination-deck-stack[data-children]:not([data-children='0']):hover,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-table:not([data-mode='selected'])
+  .coordination-deck-stack[data-children]:not([data-children='0']):has(:focus-visible) {
+  transform: translateY(-10px) scale(1.03);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-deck-stack__peek {
+  transition:
+    transform 320ms cubic-bezier(0.22, 0.8, 0.24, 1),
+    opacity 240ms ease,
+    filter 240ms ease,
+    box-shadow 240ms ease;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-table:not([data-mode='selected'])
+  .coordination-deck-stack:hover
+  .coordination-deck-stack__peek,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-table:not([data-mode='selected'])
+  .coordination-deck-stack:has(:focus-visible)
+  .coordination-deck-stack__peek {
+  transform-origin: 50% 100%;
+  transform: translate(calc(var(--peek-open-x) * 0.48 * var(--card-width)), 2%)
+    rotate(calc(var(--peek-open-rot) * 0.8deg))
+    scale(0.88);
+  border-color: rgb(var(--coord-rgb) / 0.7);
+  border-radius: 14px;
+  box-shadow:
+    0 12px 24px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(245, 212, 133, 0.25);
+  opacity: 1;
+  filter: brightness(0.92) saturate(0.95);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-deck-stack__peek-face {
+  border-radius: 13px;
+}
+
+/* Etiqueta del mazo: dice cuántas coordinaciones guarda y que se abre con clic. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-deck-stack[data-children]:not([data-children='0'])::after {
+  content: '+' attr(data-children) ' coordinaciones · abrir mazo';
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: calc(100% - 10px);
+  padding: 4px 12px;
+  border: 1px solid rgba(245, 212, 133, 0.7);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #4a1a1e 0%, #2c0d10 100%);
+  color: #fbeed0;
+  font-family: var(--admin-sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transform: translate(-50%, 6px);
+  transition: opacity 200ms ease, transform 240ms cubic-bezier(0.22, 0.8, 0.24, 1);
+  pointer-events: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-table:not([data-mode='selected'])
+  .coordination-deck-stack[data-children]:not([data-children='0']):hover::after,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-table:not([data-mode='selected'])
+  .coordination-deck-stack[data-children]:not([data-children='0']):has(:focus-visible)::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-deck-stack__peek,
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-deck-stack[data-children]::after {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   DETALLE · Análisis inteligente sobre papel (sus colores venían del tema
+   oscuro: títulos blancos y aviso gris azulado ilegibles sobre crema).
+   ========================================================================== */
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .detail-section__toggle {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .detail-section__toggle:hover .detail-section__title {
+  color: var(--admin-ink);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .detail-section__toggle:focus-visible {
+  outline: 2px solid rgba(138, 96, 45, 0.55) !important;
+  outline-offset: 2px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .detail-section__hint {
+  color: var(--admin-ink-soft);
+  font-family: var(--admin-sans);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .detail-section__panel {
+  padding: 2px 0 12px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-analysis__disclaimer {
+  margin: 0 0 12px;
+  padding: 10px 12px 10px 14px;
+  border: 1px solid rgba(138, 96, 45, 0.25);
+  border-left: 3px solid #b98a26;
+  border-radius: 6px;
+  background: rgba(245, 212, 133, 0.18);
+  color: var(--admin-ink-soft);
+  font-family: var(--admin-sans);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-analysis__body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-analysis__meta,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-analysis__meta span {
+  margin: 0;
+  color: var(--admin-ink-soft);
+  font-family: var(--admin-sans);
+  font-size: 11.5px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-analysis__block,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-analysis__history {
+  margin: 0;
+  padding: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-analysis__block + .problem-analysis__block,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-analysis__history {
+  padding-top: 12px;
+  border-top: 1px dashed rgba(138, 96, 45, 0.28);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-analysis__history {
+  margin-top: 14px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-analysis__block-title {
+  margin: 0 0 8px;
+  color: #8a602d;
+  font-family: var(--admin-sans);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-analysis__headline {
+  margin: 0 0 6px;
+  color: var(--admin-ink);
+  font-family: var(--admin-serif);
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-analysis__summary,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-analysis__contrast,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-analysis__contrast strong {
+  margin: 0 0 8px;
+  color: var(--admin-ink-soft);
+  font-family: var(--admin-sans);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-analysis__contrast strong {
+  color: var(--admin-ink);
+  font-weight: 700;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-analysis__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-analysis__list li {
+  position: relative;
+  padding-left: 16px;
+  color: var(--admin-ink);
+  font-family: var(--admin-sans);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-analysis__list li::before {
+  content: '';
+  position: absolute;
+  top: 0.62em;
+  left: 2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #b98a26;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-analysis__list li strong {
+  color: var(--admin-ink);
+  font-weight: 700;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-analysis__chip {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 8px;
+  border: 1px solid rgba(138, 96, 45, 0.4);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  color: #8a602d;
+  font-family: var(--admin-sans);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-analysis__history-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--admin-ink-soft);
+  font-family: var(--admin-sans);
+  font-size: 12px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-analysis__history-list li {
+  padding: 4px 0;
+  color: var(--admin-ink-soft);
+}
+
+/* Expandido, el contenedor cede su relleno: el despeje del marco lo da el panel. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .operational-shell__action:has(.action-panel:not([data-mode='idle'])) {
+  padding-top: 12px;
+  padding-bottom: 10px;
+}
+
+/* ==========================================================================
+   MENÚ EN REPOSO · que la última tarjeta no pise el marco
+   ========================================================================== */
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel[data-mode='idle'] {
+  padding: 2px 2px 18px 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel[data-mode='idle'] .action-panel__guidance {
+  gap: 7px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel[data-mode='idle'] .action-panel__guidance-card {
+  padding: 7px 12px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel[data-mode='idle'] .action-panel__guidance-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__guidance-card--clickable:focus-visible {
+  outline: 2px solid rgba(138, 96, 45, 0.6);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   VISTAS DE CONSULTA DEL ADMIN (gestión, aprendizajes, acciones)
+   ========================================================================== */
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-family: var(--admin-sans);
+  color: var(--admin-ink);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__header {
+  padding: 12px 14px 14px;
+  border: 1px solid rgba(138, 96, 45, 0.28);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255, 253, 247, 0.96) 0%, rgba(250, 243, 228, 0.92) 100%);
+  box-shadow: 0 1px 3px rgba(60, 35, 10, 0.1);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__topline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(138, 96, 45, 0.4);
+  border-radius: 50%;
+  background: #fffaf0;
+  color: var(--admin-ink);
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__back:hover {
+  border-color: #8a602d;
+  background: #f6ead0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__eyebrow {
+  color: #8a602d;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__title-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(138, 96, 45, 0.25);
+  border-radius: 10px;
+  background: linear-gradient(180deg, #fbf3e0 0%, #f0e2c2 100%);
+  color: var(--admin-ink);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] [data-view='admin-actions'] .admin-insight__title-icon {
+  border-color: rgba(124, 92, 230, 0.35);
+  background: linear-gradient(180deg, #ffffff 0%, #efe7ff 100%);
+  color: #2c1a66;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__title {
+  margin: 0 0 3px;
+  font-family: var(--admin-serif);
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__subtitle {
+  margin: 0;
+  color: var(--admin-ink-soft);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+/* Indicadores */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__metrics--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid rgba(138, 96, 45, 0.22);
+  border-top: 3px solid #b98a26;
+  border-radius: 8px;
+  background: rgba(255, 252, 244, 0.9);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__metric[data-tone='critical'] {
+  border-top-color: #b3262e;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__metric[data-tone='alert'] {
+  border-top-color: #c98a1b;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__metric[data-tone='stable'] {
+  border-top-color: #2f8a4a;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__metric strong {
+  font-family: var(--admin-serif);
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__metric span {
+  color: var(--admin-ink-soft);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__caption {
+  margin: -4px 2px 0;
+  color: var(--admin-ink-soft);
+  font-size: 12px;
+}
+
+/* Control segmentado */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__segmented {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid rgba(138, 96, 45, 0.28);
+  border-radius: 999px;
+  background: rgba(240, 226, 194, 0.6);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__segmented button {
+  display: inline-flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--admin-ink-soft);
+  font-family: var(--admin-sans);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__segmented button:hover {
+  color: var(--admin-ink);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__segmented button[aria-pressed='true'] {
+  background: linear-gradient(180deg, #4a1a1e 0%, #2c0d10 100%);
+  color: #fbeed0;
+  box-shadow: 0 1px 3px rgba(44, 13, 16, 0.35);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__segmented-count {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(138, 96, 45, 0.15);
+  font-size: 10.5px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__segmented button[aria-pressed='true'] .admin-insight__segmented-count {
+  background: rgba(251, 238, 208, 0.2);
+}
+
+/* Grupos y listas */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 2px 6px;
+  border-bottom: 1px solid rgba(138, 96, 45, 0.25);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__group-head h3 {
+  margin: 0;
+  font-family: var(--admin-serif);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__group-head span {
+  color: var(--admin-ink-soft);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__row {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px 10px 16px;
+  overflow: hidden;
+  border: 1px solid rgba(138, 96, 45, 0.22);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.92);
+  color: var(--admin-ink);
+  font-family: var(--admin-sans);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(60, 35, 10, 0.08);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__row:hover {
+  border-color: rgba(138, 96, 45, 0.5);
+  box-shadow: 0 4px 10px rgba(60, 35, 10, 0.12);
+  transform: translateY(-1px);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__row:focus-visible {
+  outline: 2px solid rgba(138, 96, 45, 0.6);
+  outline-offset: 2px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__row-severity {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 4px;
+  background: #c9b48c;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__row[data-severity='CRITICAL'] .admin-insight__row-severity {
+  background: #b3262e;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__row[data-severity='HIGH'] .admin-insight__row-severity {
+  background: #d07a1a;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__row[data-severity='MEDIUM'] .admin-insight__row-severity {
+  background: #c9a227;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__row-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__row-coord {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--admin-ink-soft);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__row-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__row-title {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__row-age {
+  color: var(--admin-ink-soft);
+  font-size: 11px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__row-chevron {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--admin-ink-soft);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border: 1px solid rgba(138, 96, 45, 0.3);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--admin-ink-soft);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__pill[data-tone='critical'] {
+  border-color: rgba(179, 38, 46, 0.35);
+  background: #f9e1e2;
+  color: #8f1a21;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__pill[data-tone='alert'] {
+  border-color: rgba(183, 121, 31, 0.4);
+  background: #f9ead0;
+  color: #8a5a10;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__pill[data-tone='stable'] {
+  border-color: rgba(47, 138, 74, 0.35);
+  background: #def1e2;
+  color: #1f6a35;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__pill[data-tone='admin'] {
+  border-color: rgba(124, 92, 230, 0.4);
+  background: #efe7ff;
+  color: #3d2d6b;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__learning {
+  display: block;
+  margin-top: 6px;
+  padding: 7px 10px;
+  border-left: 3px solid #b98a26;
+  border-radius: 0 6px 6px 0;
+  background: rgba(245, 212, 133, 0.16);
+  color: var(--admin-ink);
+  font-family: var(--admin-serif);
+  font-size: 12px;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__learning small {
+  margin-left: 6px;
+  color: var(--admin-ink-soft);
+  font-family: var(--admin-sans);
+  font-size: 11px;
+  font-style: normal;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__learning--missing {
+  border-left-color: rgba(138, 96, 45, 0.3);
+  background: rgba(138, 96, 45, 0.06);
+  color: var(--admin-ink-soft);
+  font-family: var(--admin-sans);
+  font-size: 11.5px;
+}
+
+/* Herramientas administrativas */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__tools {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__tool {
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(124, 92, 230, 0.28);
+  border-radius: 10px;
+  background: linear-gradient(180deg, #f8f4ff 0%, #efe7ff 100%);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__tool[data-tool='cancel'] {
+  border-color: rgba(179, 38, 46, 0.25);
+  background: linear-gradient(180deg, #fff7f6 0%, #fbe9e8 100%);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__tool-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #2c1a66;
+  box-shadow: 0 1px 2px rgba(44, 26, 102, 0.15);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__tool[data-tool='cancel'] .admin-insight__tool-icon {
+  color: #8f1a21;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__tool h3 {
+  margin: 0 0 3px;
+  font-family: var(--admin-serif);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__tool p {
+  margin: 0;
+  color: var(--admin-ink-soft);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__more {
+  align-self: center;
+  padding: 7px 16px;
+  border: 1px solid rgba(138, 96, 45, 0.4);
+  border-radius: 999px;
+  background: #fffaf0;
+  color: var(--admin-ink);
+  font-family: var(--admin-sans);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__more:hover {
+  background: #f6ead0;
+}
+
+/* Estados */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 18px 16px;
+  border: 1px dashed rgba(138, 96, 45, 0.35);
+  border-radius: 10px;
+  background: rgba(255, 252, 244, 0.6);
+  text-align: center;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__empty strong {
+  font-family: var(--admin-serif);
+  font-size: 13.5px;
+  font-weight: 900;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__empty span {
+  color: var(--admin-ink-soft);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__retry {
+  margin-top: 6px;
+  padding: 6px 14px;
+  border: 1px solid rgba(138, 96, 45, 0.45);
+  border-radius: 999px;
+  background: #fffaf0;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@keyframes admin-insight-shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__loading {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__loading span {
+  height: 58px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(240, 226, 194, 0.5) 0%, rgba(255, 250, 238, 0.95) 50%, rgba(240, 226, 194, 0.5) 100%) 0 0 / 400px 100%;
+  animation: admin-insight-shimmer 1.2s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__loading span {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   HISTORIAL DE PROBLEMAS sobre papel (venía con filas del tema oscuro).
+   ========================================================================== */
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px 14px;
+  border: 1px solid rgba(138, 96, 45, 0.28);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255, 253, 247, 0.96) 0%, rgba(250, 243, 228, 0.92) 100%);
+  box-shadow: 0 1px 3px rgba(60, 35, 10, 0.1);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__heading {
+  margin: 0;
+  color: var(--admin-ink);
+  font-family: var(--admin-serif);
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__back {
+  height: 30px;
+  padding: 0 14px;
+  border: 1px solid rgba(138, 96, 45, 0.4);
+  border-radius: 999px;
+  background: #fffaf0;
+  color: var(--admin-ink);
+  font-family: var(--admin-sans);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__back:hover {
+  background: #f6ead0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .history-period-picker {
+  width: 100%;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .history-period-picker__label {
+  color: #8a602d;
+  font-family: var(--admin-sans);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .history-period-picker__trigger {
+  width: 100%;
+  height: 38px;
+  border: 1px solid rgba(90, 62, 30, 0.4);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbf7ee 100%);
+  color: var(--admin-ink);
+  font-family: var(--admin-sans);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__summary {
+  margin: 0;
+  color: var(--admin-ink-soft);
+  font-family: var(--admin-sans);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__list > li {
+  width: 100%;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__row {
+  width: 100%;
+  border: 1px solid rgba(138, 96, 45, 0.25);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.95);
+  color: var(--admin-ink);
+  opacity: 1;
+  box-shadow: 0 1px 2px rgba(60, 35, 10, 0.08);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__row:hover {
+  border-color: rgba(138, 96, 45, 0.5);
+  box-shadow: 0 4px 10px rgba(60, 35, 10, 0.12);
+  transform: translateY(-1px);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__row .problem-dossier__body,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__row .problem-dossier__headline,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__row .problem-dossier__headline * {
+  color: var(--admin-ink);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__row .problem-dossier__headline {
+  font-family: var(--admin-sans);
+  font-weight: 700;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__row .problem-dossier__context,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__row .problem-dossier__context * {
+  color: var(--admin-ink-soft);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__row .problem-dossier__meta * {
+  border-color: rgba(138, 96, 45, 0.3);
+  color: var(--admin-ink-soft);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__meta {
+  margin: 4px 2px 0;
+  color: var(--admin-ink-soft);
+  font-family: var(--admin-sans);
+  font-size: 11.5px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__empty {
+  width: 100%;
+  border: 1px dashed rgba(138, 96, 45, 0.35);
+  border-radius: 10px;
+  background: rgba(255, 252, 244, 0.6);
+}
+
+/* ==========================================================================
+   HISTORIAL · misma cabecera que las demás vistas de consulta:
+   ← circular arriba a la izquierda + etiqueta, y debajo icono, título y
+   subtítulo. Solo CSS: el componente es compartido con otros roles y el botón
+   conserva su texto «Volver» como nombre accesible.
+   ========================================================================== */
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__header-row {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 10px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__header-row::before {
+  content: 'Consulta · todas las coordinaciones';
+  grid-column: 2;
+  grid-row: 1;
+  color: #8a602d;
+  font-family: var(--admin-sans);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__back {
+  position: relative;
+  grid-column: 1;
+  grid-row: 1;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid rgba(138, 96, 45, 0.4);
+  border-radius: 50%;
+  background: #fffaf0;
+  color: var(--admin-ink);
+  font-size: 0;
+  line-height: 0;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__back::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  transform: translate(-50%, -50%);
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m14.5 6-6 6 6 6'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m14.5 6-6 6 6 6'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__back:hover {
+  border-color: #8a602d;
+  background: #f6ead0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__back:focus-visible {
+  outline: 2px solid rgba(138, 96, 45, 0.6);
+  outline-offset: 2px;
+}
+
+/* Icono + título + subtítulo, como en Gestión y Aprendizajes. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__heading {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-row: 2;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 3px;
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.25;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__heading::before {
+  content: '';
+  grid-column: 1;
+  grid-row: 1 / 3;
+  align-self: start;
+  width: 40px;
+  height: 40px;
+  box-sizing: border-box;
+  border: 1px solid rgba(138, 96, 45, 0.25);
+  border-radius: 10px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232a1a0e' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='4.5' width='14' height='17' rx='2'/%3E%3Cpath d='M9 3h6v3H9z'/%3E%3Cpath d='M9 11h6'/%3E%3Cpath d='M9 14.5h6'/%3E%3Cpath d='M9 18h4'/%3E%3C/svg%3E")
+      center / 22px 22px no-repeat,
+    linear-gradient(180deg, #fbf3e0 0%, #f0e2c2 100%);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .problem-history__heading::after {
+  content: 'Problemas cerrados en el período elegido, con su fecha de cierre y responsable.';
+  grid-column: 2;
+  grid-row: 2;
+  color: var(--admin-ink-soft);
+  font-family: var(--admin-sans);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+/* ==========================================================================
+   LISTA FILTRADA SIN RESULTADOS (y lectura parcial vacía)
+   El <p> heredaba un ancho máximo y quedaba como una columna estrecha a la
+   izquierda del marco. Ocupa todo el recuadro y se presenta como estado vacío.
+   ========================================================================== */
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel--ticket-pilot .coordination-panel__empty:not(.coordination-panel__empty--circus) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  justify-self: stretch;
+  align-self: stretch;
+  width: auto !important;
+  max-width: none !important;
+  min-height: 0;
+  color: var(--admin-ink);
+  font-family: var(--admin-serif);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel--ticket-pilot .coordination-panel__empty:not(.coordination-panel__empty--circus)::before {
+  content: '';
+  width: 56px;
+  height: 56px;
+  border: 1.5px solid rgba(138, 96, 45, 0.4);
+  border-radius: 50%;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b4a1e' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 5h16l-6 7.5V18l-4 2v-7.5z'/%3E%3C/svg%3E")
+      center / 26px 26px no-repeat,
+    radial-gradient(circle at 40% 35%, #fff8e6 0%, #efdcae 100%);
+  box-shadow: 0 0 0 6px rgba(245, 212, 133, 0.22);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .coordination-panel--ticket-pilot [data-testid='coordination-panel-empty-filtered']::after {
+  content: 'Ajuste la severidad o el estado para ver otros problemas de esta coordinación.';
+  max-width: 380px;
+  color: var(--admin-ink-soft);
+  font-family: var(--admin-sans);
+  font-size: 12.5px;
+  font-weight: 400;
+}
+
+/* ==========================================================================
+   INDICADORES (KPI) del ADMIN
+   ========================================================================== */
+
+/* Acción principal + Indicadores, lado a lado. */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__cta-safe:has(.action-panel__cta--kpis) {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__cta--kpis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid rgba(245, 212, 133, 0.6);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #4a1a1e 0%, #2c0d10 100%);
+  color: #fbeed0;
+  font-family: var(--admin-sans);
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow:
+    0 4px 10px rgba(44, 13, 16, 0.3),
+    inset 0 1px 0 rgba(255, 230, 160, 0.2);
+  cursor: pointer;
+  transition: filter 160ms ease, transform 160ms ease;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__cta--kpis:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__cta--kpis:focus-visible {
+  outline: 2px solid var(--admin-gold-soft);
+  outline-offset: 2px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .action-panel__cta--kpis .action-panel__cta-icon {
+  color: var(--admin-gold-soft);
+}
+
+/*
+ * Las gráficas necesitan más ancho que una lista: con los indicadores abiertos
+ * la columna derecha pasa del 29 % al 42 % (el ancho que usa el DIRECTOR), con
+ * la misma transición suave que la expansión vertical.
+ */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] {
+  transition: grid-template-columns var(--admin-expand-ms, 460ms)
+    var(--admin-expand-ease, ease);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'][data-admin-view='kpis'] {
+  --shell-action-w: 42%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] {
+    transition: none;
+  }
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight--kpis {
+  gap: 10px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .admin-insight__kpi-body {
+  min-width: 0;
+}
+
+/* ==========================================================================
+   TABLERO DE INDICADORES (AdminKpiDashboard)
+   ========================================================================== */
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-dashboard {
+  --kpi-critical: #b3262e;
+  --kpi-high: #d07a1a;
+  --kpi-medium: #c9a227;
+  --kpi-low: #8a9a5b;
+  --kpi-alert: #c98a1b;
+  --kpi-stable: #2f8a4a;
+  --kpi-created: #6b4a2a;
+  --kpi-closed: #2f8a4a;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--admin-ink);
+  font-family: var(--admin-sans);
+}
+
+/* Barra de alcance y período */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(138, 96, 45, 0.25);
+  border-radius: 10px;
+  background: rgba(255, 252, 244, 0.85);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-toolbar__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-segmented {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid rgba(138, 96, 45, 0.28);
+  border-radius: 999px;
+  background: rgba(240, 226, 194, 0.6);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-segmented button {
+  flex: 1 1 0;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--admin-ink-soft);
+  font-family: var(--admin-sans);
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-segmented button[aria-pressed='true'] {
+  background: linear-gradient(180deg, #4a1a1e 0%, #2c0d10 100%);
+  color: #fbeed0;
+  box-shadow: 0 1px 3px rgba(44, 13, 16, 0.35);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-segmented--small {
+  flex: 0 0 auto;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-select {
+  display: flex;
+  flex: 1 1 200px;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-select span {
+  color: #8a602d;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-select select {
+  height: 36px;
+  padding: 0 34px 0 12px;
+  border: 1px solid rgba(90, 62, 30, 0.4);
+  border-radius: 8px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%232a1a0e' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+      no-repeat right 12px center / 14px 14px,
+    linear-gradient(180deg, #ffffff 0%, #fbf7ee 100%);
+  color: var(--admin-ink);
+  font-family: var(--admin-sans);
+  font-size: 13px;
+  font-weight: 600;
+  appearance: none;
+  cursor: pointer;
+}
+
+/* Estado principal */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid rgba(138, 96, 45, 0.25);
+  border-left: 5px solid var(--kpi-stable);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255, 253, 247, 0.98) 0%, rgba(250, 243, 228, 0.94) 100%);
+  box-shadow: 0 1px 3px rgba(60, 35, 10, 0.1);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-hero[data-status='CRITICO'] {
+  border-left-color: var(--kpi-critical);
+  background: linear-gradient(180deg, #fff8f6 0%, #fbeceb 100%);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-hero[data-status='ALERTA'] {
+  border-left-color: var(--kpi-alert);
+  background: linear-gradient(180deg, #fffaf1 0%, #fbf0dc 100%);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-hero__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-hero__eyebrow {
+  color: #8a602d;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-hero__headline {
+  margin: 2px 0 0;
+  font-family: var(--admin-serif);
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-hero__detail {
+  margin: 0;
+  color: var(--admin-ink-soft);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-hero__note {
+  margin: 2px 0 0;
+  color: var(--admin-ink-soft);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #def1e2;
+  color: #1f6a35;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-status__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-status[data-status='CRITICO'] {
+  background: #f9e1e2;
+  color: #8f1a21;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-status[data-status='ALERTA'] {
+  background: #f9ead0;
+  color: #8a5a10;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-status[data-status='DESCONOCIDO'] {
+  background: #ece6da;
+  color: #6b5d48;
+}
+
+/* Salud */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-health {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-health__top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-health__top strong {
+  font-family: var(--admin-serif);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-health__track {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(138, 96, 45, 0.15);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-health__track span {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  border-radius: 999px;
+  background: var(--kpi-stable);
+  transition: width 400ms ease;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-health[data-tone='alert'] .kpi-health__track span {
+  background: var(--kpi-alert);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-health[data-tone='critical'] .kpi-health__track span {
+  background: var(--kpi-critical);
+}
+
+/* Cifras clave */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 11px 12px;
+  border: 1px solid rgba(138, 96, 45, 0.22);
+  border-top: 3px solid #b98a26;
+  border-radius: 8px;
+  background: rgba(255, 252, 244, 0.95);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-tile[data-tone='critical'] {
+  border-top-color: var(--kpi-critical);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-tile[data-tone='alert'] {
+  border-top-color: var(--kpi-alert);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-tile[data-tone='stable'] {
+  border-top-color: var(--kpi-stable);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-tile__value {
+  font-family: var(--admin-serif);
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-tile__label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-tile__hint {
+  color: var(--admin-ink-soft);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+/* Secciones-pregunta */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid rgba(138, 96, 45, 0.22);
+  border-radius: 10px;
+  background: rgba(255, 252, 244, 0.85);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-section__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-section__question {
+  margin: 0 0 3px;
+  font-family: var(--admin-serif);
+  font-size: 14.5px;
+  font-weight: 900;
+  line-height: 1.3;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-section__help {
+  margin: 0;
+  color: var(--admin-ink-soft);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-section__aside {
+  flex: 0 0 auto;
+}
+
+/* Barra apilada + leyenda */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-stack__bar {
+  display: flex;
+  gap: 3px;
+  height: 18px;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-stack__segment {
+  flex-basis: 0;
+  min-width: 6px;
+  border-radius: 3px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] [data-tone='critical'] > .kpi-legend__swatch,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-stack__segment[data-tone='critical'] {
+  background: var(--kpi-critical);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] [data-tone='high'] > .kpi-legend__swatch,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-stack__segment[data-tone='high'] {
+  background: var(--kpi-high);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] [data-tone='medium'] > .kpi-legend__swatch,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-stack__segment[data-tone='medium'] {
+  background: var(--kpi-medium);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] [data-tone='low'] > .kpi-legend__swatch,
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-stack__segment[data-tone='low'] {
+  background: var(--kpi-low);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] [data-tone='created'] > .kpi-legend__swatch {
+  background: var(--kpi-created);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] [data-tone='closed'] > .kpi-legend__swatch {
+  background: var(--kpi-closed);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-legend {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-legend li {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 6px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgba(240, 226, 194, 0.35);
+  font-size: 12px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-legend__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-legend__label {
+  color: var(--admin-ink-soft);
+  font-weight: 600;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-legend li strong {
+  font-family: var(--admin-serif);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-legend__pct {
+  grid-column: 2 / 4;
+  color: var(--admin-ink-soft);
+  font-size: 10.5px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-legend--inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-legend--inline li {
+  grid-template-rows: auto;
+}
+
+/* Estado de las coordinaciones */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-status-card {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #def1e2;
+  color: #1f6a35;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-status-card strong {
+  font-family: var(--admin-serif);
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-status-card span {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-status-card[data-status='CRITICO'] {
+  background: #f9e1e2;
+  color: #8f1a21;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-status-card[data-status='ALERTA'] {
+  background: #f9ead0;
+  color: #8a5a10;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-rule {
+  border-top: 1px dashed rgba(138, 96, 45, 0.3);
+  padding-top: 8px;
+  font-size: 12px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-rule summary {
+  color: #8a602d;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-rule ul {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--admin-ink-soft);
+  line-height: 1.45;
+}
+
+/* Ranking de coordinaciones */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-ranking {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-ranking__row {
+  display: grid;
+  width: 100%;
+  grid-template-columns: minmax(110px, 1.1fr) minmax(80px, 1.6fr) auto auto 14px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid rgba(138, 96, 45, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.95);
+  color: var(--admin-ink);
+  font-family: var(--admin-sans);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-ranking__row:hover {
+  border-color: rgba(138, 96, 45, 0.5);
+  box-shadow: 0 3px 8px rgba(60, 35, 10, 0.12);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-ranking__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  overflow: hidden;
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-ranking__dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-ranking__bar {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(138, 96, 45, 0.12);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-ranking__bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--kpi-stable);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-ranking__bar span[data-status='CRITICO'] {
+  background: var(--kpi-critical);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-ranking__bar span[data-status='ALERTA'] {
+  background: var(--kpi-alert);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-ranking__meta {
+  color: var(--admin-ink-soft);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-ranking__meta strong {
+  color: var(--admin-ink);
+  font-size: 13px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-ranking__chevron {
+  display: inline-flex;
+  color: var(--admin-ink-soft);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-calm {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #e9f4ea;
+  color: #2c5a37;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Flujo reportados / cerrados */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-balance {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #def1e2;
+  color: #1f6a35;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-balance[data-trend='up'] {
+  background: #f9ead0;
+  color: #8a5a10;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-flow {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  height: 150px;
+  padding: 0 4px;
+  border-bottom: 1px solid rgba(138, 96, 45, 0.35);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-flow__col {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-flow__bars {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-flow__bar {
+  position: relative;
+  width: min(22px, 40%);
+  min-height: 2px;
+  border-radius: 4px 4px 0 0;
+  background: var(--kpi-created);
+  transition: height 400ms ease;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-flow__bar[data-kind='closed'] {
+  background: var(--kpi-closed);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-flow__bar em {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-bottom: 2px;
+  transform: translateX(-50%);
+  color: var(--admin-ink);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-flow__label {
+  margin-bottom: -22px;
+  color: var(--admin-ink-soft);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-flow__col[data-current='true'] .kpi-flow__label {
+  color: var(--admin-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-flow + .kpi-legend {
+  margin-top: 18px;
+}
+
+/* Bandas de antigüedad / categorías */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-bands {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-bands li {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.9fr) minmax(0, 2fr) 28px;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-bands__label {
+  color: var(--admin-ink-soft);
+  font-weight: 600;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-bands__track {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(138, 96, 45, 0.12);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-bands__track span {
+  display: block;
+  height: 100%;
+  min-width: 0;
+  border-radius: 999px;
+  background: #b98a26;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-bands__track span[data-band='8-14'] {
+  background: var(--kpi-medium);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-bands__track span[data-band='15-30'] {
+  background: var(--kpi-high);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-bands__track span[data-band='31+'] {
+  background: var(--kpi-critical);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-bands li strong {
+  font-family: var(--admin-serif);
+  font-size: 14px;
+  font-weight: 900;
+  text-align: right;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-bands--categories .kpi-bands__track span {
+  background: #6b4a2a;
+}
+
+/* Casos más antiguos */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-oldest h4 {
+  margin: 4px 0 8px;
+  color: #8a602d;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-oldest ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-oldest__row {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 58px minmax(0, 1fr) auto 14px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid rgba(138, 96, 45, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.95);
+  color: var(--admin-ink);
+  font-family: var(--admin-sans);
+  text-align: left;
+  cursor: pointer;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-oldest__row:hover {
+  border-color: rgba(138, 96, 45, 0.5);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-oldest__age {
+  color: var(--admin-ink-soft);
+  font-size: 11px;
+  text-align: center;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-oldest__age strong {
+  display: block;
+  color: var(--admin-ink);
+  font-family: var(--admin-serif);
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-oldest__title {
+  overflow: hidden;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-oldest__tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-oldest__chevron {
+  display: inline-flex;
+  color: var(--admin-ink-soft);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-tag {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #ece6da;
+  color: #5c4631;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-tag[data-severity='CRITICAL'],
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-tag[data-tone='overdue'] {
+  background: #f9e1e2;
+  color: #8f1a21;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-tag[data-severity='HIGH'] {
+  background: #fbe5cf;
+  color: #8a4a10;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-tag[data-severity='MEDIUM'] {
+  background: #f7efcf;
+  color: #7a6210;
+}
+
+/* Atención */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-attention {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(138, 96, 45, 0.3);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-attention__item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #f9ead0;
+  color: #8a5a10;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-attention__item[data-tone='progress'] {
+  background: #def1e2;
+  color: #1f6a35;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-attention__item strong {
+  font-family: var(--admin-serif);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-attention__item span {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-attention p {
+  margin: 0;
+  color: var(--admin-ink-soft);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+/* Aprendizajes */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-learning {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-learning__ring {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side, #fffaf0 74%, transparent 75% 100%),
+    conic-gradient(var(--kpi-stable) var(--coverage), rgba(138, 96, 45, 0.18) 0);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-learning__ring strong {
+  font-family: var(--admin-serif);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-learning p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* Estados */
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-empty {
+  margin: 0;
+  padding: 12px;
+  border: 1px dashed rgba(138, 96, 45, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 252, 244, 0.6);
+  color: var(--admin-ink-soft);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid rgba(179, 38, 46, 0.3);
+  border-radius: 8px;
+  background: #fbefee;
+  color: #8f1a21;
+  font-size: 12px;
+  text-align: center;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-error button {
+  margin-top: 4px;
+  padding: 5px 14px;
+  border: 1px solid rgba(143, 26, 33, 0.4);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #8f1a21;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-loading span {
+  height: 54px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(240, 226, 194, 0.5) 0%, rgba(255, 250, 238, 0.95) 50%, rgba(240, 226, 194, 0.5) 100%) 0 0 / 400px 100%;
+  animation: admin-insight-shimmer 1.2s linear infinite;
+}
+
+@media (max-width: 1500px) {
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-tiles,
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-legend {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-loading span {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   INDICADORES «POR COORDINACIÓN»: la coordinación se elige en la mesa
+   ========================================================================== */
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-picked {
+  display: flex;
+  flex: 1 1 220px;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-picked__label {
+  color: #8a602d;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-picked__value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 12px;
+  overflow: hidden;
+  border: 1px solid rgba(90, 62, 30, 0.35);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbf7ee 100%);
+  font-family: var(--admin-serif);
+  font-size: 14px;
+  font-weight: 900;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-picked__value small {
+  overflow: hidden;
+  color: var(--admin-ink-soft);
+  font-family: var(--admin-sans);
+  font-size: 11px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-picked__dot {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.8);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-picked__value--empty {
+  border-style: dashed;
+  color: var(--admin-ink-soft);
+  font-family: var(--admin-sans);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Aviso: elija una carta */
+@keyframes kpi-pick-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 34px 26px;
+  border: 1.5px dashed rgba(185, 138, 38, 0.6);
+  border-radius: 12px;
+  background:
+    radial-gradient(ellipse at 50% 20%, rgba(245, 212, 133, 0.35) 0%, rgba(245, 212, 133, 0) 65%),
+    rgba(255, 252, 244, 0.85);
+  text-align: center;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-pick__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  height: 76px;
+  margin-bottom: 4px;
+  border: 1.5px solid rgba(138, 96, 45, 0.4);
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #fff8e6 0%, #efdcae 100%);
+  color: #6b4a1e;
+  box-shadow: 0 0 0 7px rgba(245, 212, 133, 0.25);
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-pick strong {
+  font-family: var(--admin-serif);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-pick p {
+  max-width: 420px;
+  margin: 0;
+  color: var(--admin-ink-soft);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-pick__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(245, 212, 133, 0.3);
+  color: #6b4a1e;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-pick__arrow {
+  display: inline-block;
+  font-size: 15px;
+  animation: kpi-pick-bob 1.4s ease-in-out infinite;
+}
+
+/* La mesa invita a elegir: brillo dorado suave y alterno en las cartas. */
+@keyframes kpi-card-invite {
+  0%, 100% {
+    box-shadow:
+      0 10px 22px rgba(0, 0, 0, 0.45),
+      0 0 0 1.5px rgba(245, 212, 133, 0.25);
+  }
+  50% {
+    box-shadow:
+      0 10px 22px rgba(0, 0, 0, 0.45),
+      0 0 0 2px rgba(245, 212, 133, 0.9),
+      0 0 22px rgba(245, 212, 133, 0.55);
+  }
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'][data-kpi-awaiting-card='true'] .operational-table .coordination-card {
+  animation: kpi-card-invite 1.8s ease-in-out infinite;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'][data-kpi-awaiting-card='true'] .operational-table__slot:nth-child(even) .coordination-card {
+  animation-delay: 0.45s;
+}
+
+.operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'][data-kpi-awaiting-card='true'] .operational-deck__header-ribbon {
+  border-color: rgba(245, 212, 133, 0.85);
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.45),
+    0 0 16px rgba(245, 212, 133, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'] .kpi-pick__arrow,
+  .operational-shell.operational-shell[data-shell-experience='admin'][data-shell-layout='deck'][data-kpi-awaiting-card='true'] .operational-table .coordination-card {
+    animation: none;
+  }
+}

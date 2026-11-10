@@ -24,6 +24,7 @@ export function CoordinationProblemFilters({
   const id = useId()
   const severityId = `${id}-severity`
   const statusId = `${id}-status`
+  const periodId = `${id}-period`
 
   return (
     <div
@@ -37,6 +38,9 @@ export function CoordinationProblemFilters({
         <label className="coordination-panel__sr-only" htmlFor={severityId}>
           Filtrar por severidad
         </label>
+        <span className="coordination-panel__filter-label" aria-hidden="true">
+          Severidad
+        </span>
         <select
           id={severityId}
           className="coordination-panel__filter-select"
@@ -62,6 +66,9 @@ export function CoordinationProblemFilters({
         <label className="coordination-panel__sr-only" htmlFor={statusId}>
           Filtrar por estado
         </label>
+        <span className="coordination-panel__filter-label" aria-hidden="true">
+          Estado
+        </span>
         <select
           id={statusId}
           className="coordination-panel__filter-select"
@@ -77,6 +84,24 @@ export function CoordinationProblemFilters({
               {option.label}
             </option>
           ))}
+        </select>
+      </div>
+
+      <div className="coordination-panel__filter">
+        <span className="coordination-panel__filter-label" aria-hidden="true">
+          Período
+        </span>
+        <select
+          id={periodId}
+          className="coordination-panel__filter-select"
+          data-testid="coordination-filter-period"
+          defaultValue="7d"
+          autoComplete="off"
+        >
+          <option value="7d">Últimos 7 días</option>
+          <option value="15d">Últimos 15 días</option>
+          <option value="30d">Últimos 30 días</option>
+          <option value="all">Todo el período</option>
         </select>
       </div>
     </div>

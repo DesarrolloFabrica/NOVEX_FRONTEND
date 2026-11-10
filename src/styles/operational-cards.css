@@ -1321,9 +1321,9 @@
 
 .coordination-panel__skeleton span {
   height: 34px;
-  border: 1px solid var(--deck-line);
-  border-radius: 11px;
-  background: rgb(14 24 42 / 0.6);
+  border: 1px dashed rgba(138, 96, 45, 0.25);
+  border-radius: 10px;
+  background: rgba(138, 96, 45, 0.08);
 }
 
 /* Sin problemas se dice que no los hay. Nunca se disfraza un error de calma:

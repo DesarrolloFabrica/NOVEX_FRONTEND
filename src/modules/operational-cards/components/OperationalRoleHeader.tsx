@@ -50,6 +50,7 @@ export function OperationalRoleHeader({
       aria-label="Orientación del Centro Operacional"
     >
       <div className="operational-role-header__brand">
+        <span className="operational-role-header__star" aria-hidden="true">✦</span>
         <span className="operational-role-header__logo" aria-hidden="true">
           NOVEX
         </span>
@@ -59,6 +60,7 @@ export function OperationalRoleHeader({
         <span className="operational-role-header__venue">
           Centro Operacional
         </span>
+        <span className="operational-role-header__star" aria-hidden="true">✦</span>
       </div>
 
       <div className="operational-role-header__center">
@@ -81,10 +83,10 @@ export function OperationalRoleHeader({
               <span>Consola de Administración</span>
             </NavLink>
             <span
-              className="operational-role-header__metric-chip"
+              className="operational-role-header__metric-chip operational-role-header__metric-chip--active"
               data-testid="admin-overview-metric"
             >
-              <NovexIcon name="activity" />
+              <span className="operational-role-header__pulse-dot" aria-hidden="true" />
               <span>{activeProblemsCount} situaciones activas</span>
             </span>
           </div>
@@ -193,14 +195,26 @@ export function OperationalRoleHeader({
         )}
       </div>
 
-      <div className="operational-role-header__user" data-testid="role-header-user">
-        <span
-          className="operational-role-header__user-avatar"
-          aria-hidden="true"
+      <div className="operational-role-header__right">
+        <span className="operational-role-header__star operational-role-header__star--right" aria-hidden="true">✦</span>
+        <div className="operational-role-header__user" data-testid="role-header-user">
+          <span
+            className="operational-role-header__user-avatar"
+            aria-hidden="true"
+          >
+            {userInitial}
+          </span>
+          <span className="operational-role-header__user-name">{userName}</span>
+          <span className="operational-role-header__user-caret" aria-hidden="true">▾</span>
+        </div>
+        <button
+          type="button"
+          className="operational-role-header__menu-btn"
+          aria-label="Menú principal"
+          title="Menú"
         >
-          {userInitial}
-        </span>
-        <span className="operational-role-header__user-name">{userName}</span>
+          <span className="operational-role-header__menu-icon">≡</span>
+        </button>
       </div>
     </header>
   )

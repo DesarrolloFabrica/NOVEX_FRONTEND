@@ -1,10 +1,14 @@
-import { useMemo } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { CoordinationTable } from '@/modules/operational-cards/components/CoordinationTable'
 import { OperationalBreadcrumb } from '@/modules/operational-cards/components/OperationalBreadcrumb'
 import { resolveDeckSelectionContext } from '@/modules/operational-cards/data/deckContext'
-import { buildTableLayout } from '@/modules/operational-cards/data/tableLayout'
+import {
+  buildTableLayout,
+  type TableLayoutOptions,
+} from '@/modules/operational-cards/data/tableLayout'
 import { buildProductTable } from '@/modules/operational-cards/data/productHierarchy'
 import type { OperationalCardsController } from '@/modules/operational-cards/hooks/useOperationalOverview'
+import type { CoordinationId } from '@/modules/impact-network/data/coordination-islands.config'
 import type { OperationalIntegrityStatus } from '@/modules/operational-cards/types/operational-status.types'
 import '@/styles/operational-cards.css'
 
@@ -33,10 +37,37 @@ export interface OperationalCardExperienceProps {
    * arriba, donde viven las dos piezas, y baja como dato.
    */
   controller: OperationalCardsController
+  /**
+   * Geometría opcional de la mesa (solape, arco, giro). Sin ella se usa la
+   * calibración por defecto. La pasa la composición, no la carta.
+   */
+  tableGeometry?: Pick<TableLayoutOptions, 'overlap' | 'arcRise' | 'arcTilt'>
+  /**
+   * Cabecera opcional de la baraja (la cinta «Coordinaciones» del ADMIN).
+   * Recibe el contexto de navegación de la mesa para poder ofrecer el regreso
+   * a todas las cartas cuando hay un mazo abierto y recorrer las coordinaciones.
+   */
+  deckHeader?: (context: DeckHeaderContext) => ReactNode
+}
+
+export interface DeckHeaderContext {
+  /** Hay un mazo con subordinaciones abierto (p. ej. Operación Académica). */
+  deckOpen: boolean
+  /** Nombre de producto del mazo abierto, si lo hay. */
+  deckLabel: string | null
+  /** Nombre de producto de la coordinación observada, si la hay. */
+  selectedLabel: string | null
+  /** Vuelve a la mesa completa con todas las coordinaciones. */
+  onBackToAll: () => void
+  /** Observa la coordinación anterior / siguiente de la mesa (circular). */
+  onPrevious: () => void
+  onNext: () => void
 }
 
 export function OperationalCardExperience({
   controller,
+  tableGeometry,
+  deckHeader,
 }: OperationalCardExperienceProps) {
   const {
     level0,
@@ -120,9 +151,18 @@ export function OperationalCardExperience({
    * `sortByDisplayOrder: false` porque la mesa de producto ya llega en su orden
    * declarado, y el `displayOrder` de la base de datos no refleja el organigrama.
    */
+  const overlap = tableGeometry?.overlap
+  const arcRise = tableGeometry?.arcRise
+  const arcTilt = tableGeometry?.arcTilt
   const layout = useMemo(
-    () => buildTableLayout(topLevelRows, { sortByDisplayOrder: false }),
-    [topLevelRows],
+    () =>
+      buildTableLayout(topLevelRows, {
+        sortByDisplayOrder: false,
+        overlap,
+        arcRise,
+        arcTilt,
+      }),
+    [topLevelRows, overlap, arcRise, arcTilt],
   )
 
   /**
@@ -150,6 +190,40 @@ export function OperationalCardExperience({
   const compositionMode = selectionContext.mode
 
   /*
+   * Recorrido de la mesa para la cabecera: la posición actual es el mazo
+   * abierto (si se observa una hija, cuenta su padre) o la carta observada.
+   */
+  const tableCodes = useMemo(
+    () => productTable.nodes.map((node) => node.coordination.code),
+    [productTable],
+  )
+  const currentTableCode =
+    selectionContext.deckParentCode ?? selectedCoordination?.code ?? null
+  const stepTable = (direction: 1 | -1) => {
+    if (tableCodes.length === 0) return
+    const index = currentTableCode ? tableCodes.indexOf(currentTableCode) : -1
+    const nextIndex =
+      index < 0
+        ? direction === 1
+          ? 0
+          : tableCodes.length - 1
+        : (index + direction + tableCodes.length) % tableCodes.length
+    selectCoordination(tableCodes[nextIndex] as CoordinationId)
+  }
+  const headerContext: DeckHeaderContext = {
+    deckOpen: compositionMode === 'DECK_SELECTED',
+    deckLabel: selectionContext.deckParentCode
+      ? (labelByCode[selectionContext.deckParentCode] ?? null)
+      : null,
+    selectedLabel: selectedCoordination
+      ? (labelByCode[selectedCoordination.code] ?? selectedCoordination.name)
+      : null,
+    onBackToAll: clearCoordination,
+    onPrevious: () => stepTable(-1),
+    onNext: () => stepTable(1),
+  }
+
+  /*
    * Aquí se resolvía el ANCLAJE del panel a su carta. Con la lectura de
    * problemas en su región del shell, el panel dejó de existir y con él la
    * pregunta: ninguna pieza de esta escena cuelga ya de la x de un slot.
@@ -173,6 +247,8 @@ export function OperationalCardExperience({
       <h1 id="operational-cards-title" className="operational-deck__sr-title">
         Estado operacional de la Dirección de Operaciones
       </h1>
+
+      {deckHeader ? deckHeader(headerContext) : null}
 
       {/*
         HUECO FIJO de la flecha de regreso, exista o no.
