@@ -92,8 +92,7 @@ function props(
     onLearningChange: vi.fn(),
     onResolve: vi.fn(),
     onAdvanceToInProgress: vi.fn(),
-    onReportInternal: vi.fn(),
-    onReportDependency: vi.fn(),
+    onReportSituation: vi.fn(),
     onCancelReport: vi.fn(),
     onCloseDetail: vi.fn(),
     onRetryDetail: vi.fn(),
@@ -139,8 +138,10 @@ describe('OperationalActionPanel · composición por modo', () => {
     expect(html).toContain('data-mode="idle"')
     expect(html).toContain('data-can-create="true"')
     expect(html).toContain('data-testid="report-cta-group"')
-    expect(html).toContain('data-testid="report-internal-button"')
-    expect(html).toContain('data-testid="report-dependency-button"')
+    expect(html).toContain('data-testid="report-situation-button"')
+    expect(html).toContain('Registrar situación')
+    expect(html).not.toContain('data-testid="report-internal-button"')
+    expect(html).not.toContain('data-testid="report-dependency-button"')
     expect(html).toContain('data-testid="history-open-button"')
     expect(html).toContain('Reportar o consultar')
     const headingIdx = html.indexOf('action-panel__idle-heading')
@@ -159,7 +160,7 @@ describe('OperationalActionPanel · composición por modo', () => {
     expect(html).toContain('data-consult-only="true"')
     expect(html).toContain('data-testid="history-open-button"')
     expect(html).toContain('data-testid="consult-idle-copy"')
-    expect(html).not.toContain('data-testid="report-internal-button"')
+    expect(html).not.toContain('data-testid="report-situation-button"')
   })
 
   it('detalle muestra expediente y acciones, sin botones de creación ni historial', () => {
@@ -173,7 +174,7 @@ describe('OperationalActionPanel · composición por modo', () => {
     expect(html).toContain('data-testid="problem-detail"')
     expect(html).toContain('data-testid="problem-actions"')
     expect(html).toContain('data-testid="detail-back"')
-    expect(html).not.toContain('data-testid="report-internal-button"')
+    expect(html).not.toContain('data-testid="report-situation-button"')
     expect(html).not.toContain('data-testid="history-open-button"')
   })
 
@@ -197,7 +198,7 @@ describe('OperationalActionPanel · composición por modo', () => {
     expect(html).toContain('data-mode="history"')
     expect(html).toContain('data-testid="problem-history"')
     expect(html).toContain('data-testid="history-back"')
-    expect(html).not.toContain('data-testid="report-internal-button"')
+    expect(html).not.toContain('data-testid="report-situation-button"')
   })
 
   it('modo report sin canCreate no pinta el formulario', () => {
@@ -209,7 +210,7 @@ describe('OperationalActionPanel · composición por modo', () => {
     })
     expect(html).toContain('data-mode="idle"')
     expect(html).not.toContain('data-testid="report-form"')
-    expect(html).not.toContain('data-testid="report-internal-button"')
+    expect(html).not.toContain('data-testid="report-situation-button"')
   })
 
   it('modo report no muestra CTAs de idle', () => {

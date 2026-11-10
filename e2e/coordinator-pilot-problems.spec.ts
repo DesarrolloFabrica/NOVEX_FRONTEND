@@ -124,7 +124,7 @@ async function expectReportOptions(page: Page, label: string) {
   const panel = page.getByTestId('action-panel')
   await expect(panel).toHaveAttribute('data-mode', 'idle')
   await expect(panel).toHaveAttribute('data-can-create', 'true')
-  for (const testId of ['report-internal-button', 'report-dependency-button', 'history-open-button']) {
+  for (const testId of ['report-situation-button', 'history-open-button']) {
     await expect(panel.getByTestId(testId)).toBeEnabled()
     await expectUncovered(page, `[data-testid="${testId}"]`, label)
   }

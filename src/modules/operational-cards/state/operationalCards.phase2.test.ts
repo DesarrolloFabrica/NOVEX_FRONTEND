@@ -119,7 +119,7 @@ describe('panel derecho · modos', () => {
     expect(state.panelMode).toBe('idle')
   })
 
-  it('«Reportar problema» abre el formulario y suelta el problema abierto', () => {
+  it('«Registrar situación» abre el formulario y suelta el problema abierto', () => {
     const state = reduce(
       READY,
       { type: 'SELECT_COORDINATION', code: 'coord-b2b' },
@@ -127,9 +127,21 @@ describe('panel derecho · modos', () => {
       { type: 'OPEN_REPORT_FORM', kind: 'INTERNAL' },
     )
     expect(state.panelMode).toBe('report')
+    expect(state.reportFormKind).toBe('INTERNAL')
     // Sin esto, la lista central seguiría marcando una fila como activa
     // mientras el panel habla de otra cosa.
     expect(state.selectedProblemId).toBeNull()
+  })
+
+  it('cambiar el tipo en el formulario unificado no reinicia el modo report', () => {
+    const state = reduce(
+      READY,
+      { type: 'SELECT_COORDINATION', code: 'coord-b2b' },
+      { type: 'OPEN_REPORT_FORM', kind: 'INTERNAL' },
+      { type: 'SET_REPORT_FORM_KIND', kind: 'INTER_COORDINATION' },
+    )
+    expect(state.panelMode).toBe('report')
+    expect(state.reportFormKind).toBe('INTER_COORDINATION')
   })
 
   it('cerrar el formulario vuelve a idle y conserva la coordinación', () => {

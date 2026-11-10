@@ -22,7 +22,7 @@ test('el coordinador aterriza en el Centro Operacional', async ({ page }) => {
   await expect(page.getByTestId('my-reports')).toBeVisible()
   // El botón de reportar vive en el panel de acción; sin coordinación
   // seleccionada aparece deshabilitado, pero visible.
-  await expect(page.getByTestId('report-internal-button')).toBeVisible()
+  await expect(page.getByTestId('report-situation-button')).toBeVisible()
 })
 
 /*

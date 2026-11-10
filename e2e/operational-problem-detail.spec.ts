@@ -696,11 +696,10 @@ test.describe('detalle persistente del problema · 1440x900', () => {
     await expect(page.getByTestId('status-advance-block')).toBeVisible()
 
     // Las vías de creación NO viven dentro del expediente.
-    await expect(panel.getByTestId('report-internal-button')).toHaveCount(0)
-    await expect(panel.getByTestId('report-dependency-button')).toHaveCount(0)
+    await expect(panel.getByTestId('report-situation-button')).toHaveCount(0)
     // Ni en Mis reportes (solo consulta).
     await expect(
-      page.getByTestId('my-reports').getByTestId('report-internal-button'),
+      page.getByTestId('my-reports').getByTestId('report-situation-button'),
     ).toHaveCount(0)
 
     // Timeline abierto: no debe solaparse con «Seguimiento del problema».
@@ -739,8 +738,7 @@ test.describe('detalle persistente del problema · 1440x900', () => {
     await expect(panel).toHaveAttribute('data-mode', 'idle')
     await expect(page.getByTestId('problem-detail')).toHaveCount(0)
     await expect(panel).toHaveAttribute('data-can-create', 'false')
-    await expect(panel.getByTestId('report-internal-button')).toHaveCount(0)
-    await expect(panel.getByTestId('report-dependency-button')).toHaveCount(0)
+    await expect(panel.getByTestId('report-situation-button')).toHaveCount(0)
 
     await page.screenshot({
       path: testInfo.outputPath('action-panel-idle-admin-no-create-1440x900.png'),

@@ -341,7 +341,7 @@ test.describe('historial y CTAs compactos', () => {
         /problema[s]? cerrado/,
       )
       await expect(page.getByTestId('history-list')).toBeVisible()
-      await expect(panel.getByTestId('report-internal-button')).toHaveCount(0)
+      await expect(panel.getByTestId('report-situation-button')).toHaveCount(0)
 
       const closedQuery = api.getLastClosedQuery()
       expect(closedQuery?.get('status')).toBe('CLOSED')
@@ -420,7 +420,7 @@ test.describe('historial y CTAs compactos', () => {
     const panel = page.getByTestId('action-panel')
     await expect(panel).toHaveAttribute('data-can-create', 'false')
     await expect(panel).toHaveAttribute('data-consult-only', 'true')
-    await expect(page.getByTestId('report-internal-button')).toHaveCount(0)
+    await expect(page.getByTestId('report-situation-button')).toHaveCount(0)
     await expect(page.getByTestId('consult-idle-copy')).toBeVisible()
     await expect(page.getByTestId('history-open-button')).toBeVisible()
 
@@ -455,14 +455,13 @@ test.describe('historial y CTAs compactos', () => {
     })
   })
 
-  test('COORDINADOR idle con tres accesos · 1440x900', async ({ page }) => {
+  test('COORDINADOR idle con registro e historial · 1440x900', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
     await installCoordinator(page)
     await page.goto('/centro-operacional')
     await settle(page)
 
-    await expect(page.getByTestId('report-internal-button')).toBeVisible()
-    await expect(page.getByTestId('report-dependency-button')).toBeVisible()
+    await expect(page.getByTestId('report-situation-button')).toBeVisible()
     await expect(page.getByTestId('history-open-button')).toBeVisible()
     await expect(
       page.getByTestId('my-reports').getByTestId('history-open-button'),

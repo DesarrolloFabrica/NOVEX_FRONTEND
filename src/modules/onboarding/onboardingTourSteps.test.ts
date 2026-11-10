@@ -62,7 +62,7 @@ describe('getOnboardingSteps', () => {
     const targets = steps.map((step) => step.target)
     expect(targets).toContain('[data-tour="my-reports"]')
     expect(targets).toContain('[data-tour="coordination-problems"]')
-    expect(targets).toContain('[data-tour="report-problem"]')
+    expect(targets).toContain('[data-tour="report-situation"]')
     expect(targets).toContain('[data-tour="action-panel"]')
     expect(targets).toContain('[data-tour="operational-deck"]')
   })

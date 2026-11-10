@@ -69,8 +69,7 @@ const ANCHORS_BY_ROLE: Record<RoleCode, { present: string[]; absent: string[] }>
     ],
     absent: [
       'director-reading',
-      'report-internal',
-      'report-dependency',
+      'report-situation',
       'report-form',
       'director-mode-state',
       'own-coordination',
@@ -93,8 +92,7 @@ const ANCHORS_BY_ROLE: Record<RoleCode, { present: string[]; absent: string[] }>
     absent: [
       'my-reports',
       'action-panel',
-      'report-internal',
-      'report-dependency',
+      'report-situation',
       'report-form',
       'history-open',
       'own-coordination',
@@ -108,8 +106,7 @@ const ANCHORS_BY_ROLE: Record<RoleCode, { present: string[]; absent: string[] }>
       'coordination-problems',
       'my-reports',
       'action-panel',
-      'report-internal',
-      'report-dependency',
+      'report-situation',
       'history-open',
     ],
     absent: [
@@ -126,8 +123,7 @@ const ANCHORS_BY_ROLE: Record<RoleCode, { present: string[]; absent: string[] }>
       'coordination-problems',
       'my-reports',
       'action-panel',
-      'report-internal',
-      'report-dependency',
+      'report-situation',
       'history-open',
     ],
     absent: [
@@ -236,7 +232,7 @@ test('COORDINADOR: su carta propia y la acción de reportar quedan disponibles',
 
   await expect(page.locator('[data-tour="own-coordination"]')).toHaveCount(1)
   // Su coordinación queda seleccionada desde el inicio: reportar está activo.
-  await expect(page.locator('[data-tour="report-internal"]')).toBeEnabled()
+  await expect(page.locator('[data-tour="report-situation"]')).toBeEnabled()
 })
 
 test('ANALISTA: parte con Coordinación General y puede reportar; al cambiar de carta muestra sus problemas', async ({
@@ -247,12 +243,11 @@ test('ANALISTA: parte con Coordinación General y puede reportar; al cambiar de 
   await page.goto('/')
 
   // Sin elegir nada, el panel usa Coordinación General: reportar ya está activo.
-  await expect(page.locator('[data-tour="report-internal"]')).toBeEnabled()
-  await expect(page.locator('[data-tour="report-dependency"]')).toBeEnabled()
+  await expect(page.locator('[data-tour="report-situation"]')).toBeEnabled()
 
   await selectFirstCard(page)
 
-  await expect(page.locator('[data-tour="report-internal"]')).toBeEnabled()
+  await expect(page.locator('[data-tour="report-situation"]')).toBeEnabled()
   // La región de problemas muestra su estado (vacío o lista) tras la selección.
   await expect(
     page
@@ -270,7 +265,7 @@ test('ANALISTA: el formulario de reporte se abre dentro del panel de acción y s
   await page.goto('/')
 
   await selectFirstCard(page)
-  await page.locator('[data-tour="report-internal"]').click()
+  await page.locator('[data-tour="report-situation"]').click()
 
   await expect(page.locator('[data-tour="report-form"]')).toHaveCount(1)
   await expect(page.locator('[data-tour="action-panel"] [data-tour="report-form"]')).toHaveCount(1)
@@ -311,8 +306,7 @@ test('ADMIN: seleccionar una carta no habilita ninguna acción de reporte', asyn
 
   await selectFirstCard(page)
 
-  await expect(page.locator('[data-tour="report-internal"]')).toHaveCount(0)
-  await expect(page.locator('[data-tour="report-dependency"]')).toHaveCount(0)
+  await expect(page.locator('[data-tour="report-situation"]')).toHaveCount(0)
   await expect(page.locator('[data-tour="history-open"]')).toHaveCount(1)
 })
 

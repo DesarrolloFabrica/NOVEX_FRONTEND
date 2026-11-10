@@ -35,7 +35,8 @@ const { emptyReportDraft } = await import(
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
-const DRAFT_KEY = 'coord-fabrica-contenidos:INTERNAL'
+const DRAFT_KEY = 'coord-fabrica-contenidos:unified'
+const REQUEST_KEY = 'coord-fabrica-contenidos:unified:INTERNAL'
 
 const draft = (title = 'Internet intermitente') => ({
   ...emptyReportDraft('2026-10-26T08:30'),
@@ -46,6 +47,7 @@ const draft = (title = 'Internet intermitente') => ({
 
 const submitInput = (title?: string) => ({
   draftKey: DRAFT_KEY,
+  requestKey: REQUEST_KEY,
   reportKind: 'INTERNAL' as const,
   selectedCoordinationCode: 'coord-fabrica-contenidos' as never,
   selectedCoordinationId: '00000000-0000-4000-8000-000000000014',

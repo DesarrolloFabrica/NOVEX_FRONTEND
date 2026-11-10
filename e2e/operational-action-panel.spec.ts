@@ -210,32 +210,33 @@ test.describe('panel derecho · modos', () => {
     await expect(page.getByTestId('report-form')).toHaveCount(0)
   })
 
-  test('«Reportar problema» abre el formulario con su destino a la vista', async ({
+  test('«Registrar situación» abre el formulario unificado con destino a la vista', async ({
     page,
   }) => {
     await page.locator(CARD).first().click({ force: true })
     await settle(page)
-    await page.getByTestId('report-internal-button').first().click()
+    await page.getByTestId('report-situation-button').first().click()
     await settle(page)
 
     await expect(page.locator(PANEL)).toHaveAttribute('data-mode', 'report')
     await expect(page.getByTestId('report-form-destination')).toBeVisible()
+    await expect(page.getByTestId('report-kind-fieldset')).toBeVisible()
     // Severidad visible y con MEDIUM de partida, no oculta.
     await expect(page.getByTestId('report-severity-MEDIUM')).toBeChecked()
   })
 
-  test('sin coordinación los CTAs están deshabilitados', async ({ page }) => {
-    await expect(page.getByTestId('report-internal-button').first()).toBeDisabled()
-    await expect(page.getByTestId('report-dependency-button').first()).toBeDisabled()
+  test('sin coordinación el CTA de registro está deshabilitado', async ({ page }) => {
+    await expect(page.getByTestId('report-situation-button').first()).toBeDisabled()
     await expect(page.getByTestId('report-cta-need-card').first()).toBeVisible()
   })
 
-  test('Volver desde el formulario restaura idle con ambos CTAs', async ({
+  test('Volver desde el formulario restaura idle con el CTA unificado', async ({
     page,
   }) => {
     await page.locator(CARD).first().click({ force: true })
     await settle(page)
-    await page.getByTestId('report-dependency-button').click()
+    await page.getByTestId('report-situation-button').click()
+    await page.getByTestId('report-kind-inter').click()
     await settle(page)
     await expect(page.locator(PANEL)).toHaveAttribute('data-mode', 'report')
 
@@ -243,8 +244,7 @@ test.describe('panel derecho · modos', () => {
     await settle(page)
 
     await expect(page.locator(PANEL)).toHaveAttribute('data-mode', 'idle')
-    await expect(page.getByTestId('report-internal-button')).toBeVisible()
-    await expect(page.getByTestId('report-dependency-button')).toBeVisible()
+    await expect(page.getByTestId('report-situation-button')).toBeVisible()
   })
 
   test('en idle el título queda arriba y los CTAs compactos debajo', async ({
@@ -302,13 +302,11 @@ test.describe('«Mis reportes»', () => {
     page,
   }) => {
     const myReports = page.getByTestId('my-reports')
-    await expect(myReports.getByTestId('report-internal-button')).toHaveCount(0)
-    await expect(myReports.getByTestId('report-dependency-button')).toHaveCount(0)
+    await expect(myReports.getByTestId('report-situation-button')).toHaveCount(0)
 
     const panel = page.getByTestId('action-panel')
     await expect(panel).toHaveAttribute('data-mode', 'idle')
-    await expect(panel.getByTestId('report-internal-button')).toBeVisible()
-    await expect(panel.getByTestId('report-dependency-button')).toBeVisible()
+    await expect(panel.getByTestId('report-situation-button')).toBeVisible()
   })
 })
 
@@ -365,7 +363,7 @@ for (const viewport of [
       expect(round(stageSeleccionada.y)).toBe(round(stageAntes.y))
       expect(round(stageSeleccionada.height)).toBe(round(stageAntes.height))
 
-      await page.getByTestId('report-internal-button').first().click()
+      await page.getByTestId('report-situation-button').first().click()
       await settle(page)
       await esperarEscenaEstable(page, '[data-testid="shell-stage"]')
 

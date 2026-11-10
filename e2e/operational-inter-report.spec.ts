@@ -183,7 +183,7 @@ async function selectCardByCode(page: Page, code: string) {
   const card = page.locator(`${CARD}[data-code="${code}"]`)
   await expect(card).toBeVisible({ timeout: 30_000 })
   await card.click({ force: true })
-  await expect(page.getByTestId('report-dependency-button').first()).toBeEnabled({
+  await expect(page.getByTestId('report-situation-button').first()).toBeEnabled({
     timeout: 15_000,
   })
 }
@@ -204,7 +204,8 @@ test.describe('Registro dual ANALISTA', () => {
     await settle(page)
 
     await selectCardByCode(page, SABER)
-    await page.getByTestId('report-dependency-button').first().click()
+    await page.getByTestId('report-situation-button').first().click()
+    await page.getByTestId('report-kind-inter').click()
     await settle(page)
 
     await expect(page.locator('[data-testid="action-panel"]')).toHaveAttribute(
@@ -291,7 +292,7 @@ test.describe('Registro dual ANALISTA', () => {
     })
     await settle(page)
     await selectCardByCode(page, SABER)
-    await page.getByTestId('report-internal-button').first().click()
+    await page.getByTestId('report-situation-button').first().click()
     await settle(page)
     await expect(page.getByTestId('report-form')).toHaveAttribute(
       'data-report-kind',

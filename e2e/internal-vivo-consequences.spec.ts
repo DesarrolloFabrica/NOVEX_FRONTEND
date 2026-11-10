@@ -290,7 +290,7 @@ test.describe('INTERNAL vivo · afectaciones', () => {
     await page.goto('/centro-operacional')
     await settle(page)
 
-    await page.getByTestId('report-internal-button').first().click()
+    await page.getByTestId('report-situation-button').first().click()
     await expect(page.getByTestId('report-internal-destination')).toHaveCount(0)
     await page.getByTestId('report-title').fill('Internet intermitente en el estudio')
     await page.getByTestId('report-description').fill('Hay conexión pero se corta.')

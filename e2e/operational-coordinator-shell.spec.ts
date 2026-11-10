@@ -581,14 +581,14 @@ test.describe('Centro operacional COORDINADOR', () => {
 
     // CTAs solo en el panel de acciones; Mis reportes no los duplica.
     await expect(
-      page.getByTestId('my-reports').getByTestId('report-internal-button'),
+      page.getByTestId('my-reports').getByTestId('report-situation-button'),
     ).toHaveCount(0)
     await expect(page.getByTestId('action-panel')).toHaveAttribute(
       'data-can-create',
       'true',
     )
 
-    await page.getByTestId('report-internal-button').first().click()
+    await page.getByTestId('report-situation-button').first().click()
     await settle(page)
     await expect(page.getByTestId('report-form')).toHaveAttribute(
       'data-report-kind',
@@ -604,7 +604,7 @@ test.describe('Centro operacional COORDINADOR', () => {
     await page.getByTestId('report-submit').click()
     await settle(page)
 
-    // Tras el alta el panel abre el expediente; Volver restaura idle y los CTAs.
+    // Tras el alta el panel abre el expediente; Volver restaura idle y el CTA.
     await expect(page.getByTestId('action-panel')).toHaveAttribute(
       'data-mode',
       'detail',
@@ -616,7 +616,8 @@ test.describe('Centro operacional COORDINADOR', () => {
       'idle',
     )
 
-    await page.getByTestId('report-dependency-button').first().click()
+    await page.getByTestId('report-situation-button').first().click()
+    await page.getByTestId('report-kind-inter').click()
     await settle(page)
     await expect(page.getByTestId('report-form')).toHaveAttribute(
       'data-report-kind',
@@ -897,7 +898,7 @@ function livesHeart(page: Page, index: number) {
 }
 
 async function createMediumInternal(page: Page) {
-  await page.getByTestId('report-internal-button').first().click()
+  await page.getByTestId('report-situation-button').first().click()
   await settle(page)
   await page.getByTestId('report-title').fill('Nuevo interno B2B')
   await page.getByTestId('report-description').fill('Descripción suficiente')

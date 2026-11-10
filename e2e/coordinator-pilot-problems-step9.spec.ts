@@ -20,8 +20,7 @@ const LIST = '[data-tour="coordination-problems"]'
 const ROW = `${LIST} [data-testid="problem-row"]`
 const DETAIL = '[data-tour="problem-detail"]'
 const IDLE = '[data-testid="action-panel-idle"]'
-const INTERNAL = '[data-testid="report-internal-button"]'
-const DEPENDENCY = '[data-testid="report-dependency-button"]'
+const REPORT = '[data-testid="report-situation-button"]'
 const HISTORY = '[data-testid="history-open-button"]'
 const REPORT_FORM = '[data-testid="report-form"]'
 const REPORT_BACK = '[data-testid="report-form-back"]'
@@ -131,7 +130,7 @@ for (const viewport of VIEWPORTS) {
 
       await expect.poll(() => highlightError(page, IDLE), { timeout: 10_000 }).toBeLessThanOrEqual(3)
       await expectCardInViewport(page, 'CRITICO')
-      for (const selector of [INTERNAL, DEPENDENCY, HISTORY]) {
+      for (const selector of [REPORT, HISTORY]) {
         await expect(page.locator(selector)).toBeEnabled()
         expect(await cardCoverRatio(page, selector), `CRITICO: el globo tapa ${selector}`).toBe(0)
       }
@@ -155,12 +154,12 @@ test.describe('paso 9 de reportar · estados, permisos y navegación', () => {
     expect(idle && panel && idle.height < panel.height * 0.5, 'el bloque ocupa menos de la mitad del panel').toBe(true)
   })
 
-  test('elegir «Problema interno» abre el formulario y «Volver» regresa sin enviar nada', async ({ page }) => {
+  test('elegir «Registrar situación» abre el formulario y «Volver» regresa sin enviar nada', async ({ page }) => {
     const writes = await install(page, { scenario: 'CRITICO' })
     await openPilotAtStep6(page)
     await reachStep9(page, 0)
 
-    await page.locator(INTERNAL).click()
+    await page.locator(REPORT).click()
     await expect(page.locator(REPORT_FORM)).toBeVisible()
     await expect(page.getByTestId('action-panel')).toHaveAttribute('data-mode', 'report')
     // La condición previa del globo vuelve a pedir regresar mientras el formulario está abierto.

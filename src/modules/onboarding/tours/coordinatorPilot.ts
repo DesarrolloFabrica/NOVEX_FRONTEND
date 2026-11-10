@@ -158,7 +158,7 @@ export const COORDINATOR_PILOT_STEPS: OnboardingTourStep[] = [
     eyebrow: 'Reportar',
     title: 'Reporte situaciones y consulte su historial',
     description:
-      '«Problema interno» registra una situación que su coordinación debe resolver. «Dependencia de otra coordinación» pide a otra área resolverla; la afectada es la suya.',
+      '«Registrar situación» abre un solo formulario. Elija si es de su coordinación o si depende de otra área; la afectada es la suya.',
     expectation: 'Su coordinación ya está seleccionada. Durante el recorrido no se envía ningún reporte.',
     requires: ['SITUATIONS_CREATE'],
     gate: returnToPanelGate(['detail', 'history', 'report'], 'las opciones de reporte'),

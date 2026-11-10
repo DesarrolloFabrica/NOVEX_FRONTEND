@@ -177,11 +177,11 @@ const OPERATIONAL_SHELL_FLOW: OnboardingTourStep[] = [
   {
     id: 'shell-report',
     route: EXECUTIVE_OPERATIONS_HOME,
-    target: '[data-tour="report-problem"]',
+    target: '[data-tour="report-situation"]',
     eyebrow: 'Reportar',
-    title: 'Registre un problema de su coordinación',
+    title: 'Registre una situación de su coordinación',
     description:
-      'El formulario aparece a la derecha y muestra siempre a qué área quedará atribuido. Usted indica qué tan grave es y, si ya produjo una consecuencia, su afectación inicial.',
+      '«Registrar situación» abre el formulario a la derecha. Elija si es interna o depende de otra área; luego indique severidad y, si aplica, la afectación inicial.',
     expectation:
       'Un problema que ocurre en otra coordinación se registra como dependencia.',
   },
@@ -224,7 +224,7 @@ const ANALYST_SHELL_COPY: Record<string, Partial<OnboardingTourStep>> = {
   'shell-report': {
     title: 'Registre un problema en la coordinación seleccionada',
     description:
-      'Elija una carta y abra «Problema interno». Usted indica qué tan grave es y, si ya produjo una consecuencia, su afectación inicial.',
+      'Elija una carta y abra «Registrar situación». Indique el tipo, qué tan grave es y, si ya produjo una consecuencia, su afectación inicial.',
     expectation: 'En sus propios reportes podrá registrar después nuevas afectaciones.',
   },
   'shell-resolve': {

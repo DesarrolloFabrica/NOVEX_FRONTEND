@@ -603,7 +603,7 @@ async function createInSelected(page: Page, severity: 'MEDIUM' | 'HIGH') {
   // Tras un alta el panel abre el detalle del problema creado: se vuelve.
   const back = page.getByTestId('detail-back')
   if ((await back.count()) > 0) await back.click()
-  await page.getByTestId('report-internal-button').first().click()
+  await page.getByTestId('report-situation-button').first().click()
   await page.getByTestId('report-title').fill(`Nuevo ${severity}`)
   await page.getByTestId('report-description').fill('Descripción suficiente')
   await page.getByTestId('report-category').selectOption('cat-acas')

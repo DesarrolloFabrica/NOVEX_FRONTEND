@@ -261,10 +261,10 @@ describe('ProblemActions · Pasar a En atención', () => {
 
   it('no incluye botones de creación de reportes en el expediente', () => {
     const html = markup({ detail: detail() })
+    expect(html).not.toContain('data-testid="report-situation-button"')
     expect(html).not.toContain('data-testid="report-internal-button"')
     expect(html).not.toContain('data-testid="report-dependency-button"')
-    expect(html).not.toContain('Problema interno')
-    expect(html).not.toContain('Dependencia de otra coordinación')
+    expect(html).not.toContain('Registrar situación')
   })
 })
 

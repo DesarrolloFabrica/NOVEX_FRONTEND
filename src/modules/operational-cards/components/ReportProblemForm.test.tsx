@@ -38,6 +38,18 @@ function render(reportKind: 'INTERNAL' | 'INTER_COORDINATION') {
   )
 }
 
+describe('ReportProblemForm unificado', () => {
+  it('muestra título unificado y selector de tipo', () => {
+    const html = render('INTERNAL')
+    expect(html).toContain('Registrar situación')
+    expect(html).toContain('data-testid="report-kind-fieldset"')
+    expect(html).toContain('data-testid="report-kind-internal"')
+    expect(html).toContain('data-testid="report-kind-inter"')
+    expect(html).toContain('En mi coordinación')
+    expect(html).toContain('Dependo de otra coordinación')
+  })
+})
+
 describe('ReportProblemForm INTERNAL', () => {
   it('ya no ofrece «Destino»: se registra en la carta', () => {
     const html = render('INTERNAL')
@@ -48,6 +60,7 @@ describe('ReportProblemForm INTERNAL', () => {
   it('pide los campos en orden y la afectación inicial es opcional', () => {
     const html = render('INTERNAL')
     const order = [
+      'report-kind-fieldset',
       'report-title',
       'report-description',
       'report-category',
@@ -78,8 +91,12 @@ describe('ReportProblemForm INTERNAL', () => {
 })
 
 describe('ReportProblemForm INTER', () => {
-  it('no pide afectación inicial (solo aplica a INTERNAL)', () => {
+  it('pide proceso y entrega, sin afectación inicial ni categoría', () => {
     const html = render('INTER_COORDINATION')
+    expect(html).toContain('Coordinación afectada:')
+    expect(html).toContain('report-affected-process')
+    expect(html).toContain('report-pending-delivery')
     expect(html).not.toContain('report-initial-consequence')
+    expect(html).not.toContain('report-category')
   })
 })

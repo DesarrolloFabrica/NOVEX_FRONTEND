@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   reportDraftKey,
+  reportRequestKey,
   resolveSituationViewpointLabel,
 } from '@/modules/operational-cards/data/situationViewpoint'
 import { validateReportDraft } from '@/modules/operational-cards/services/report-submission.service'
@@ -38,9 +39,12 @@ describe('situationViewpoint', () => {
     ).toBe('Problema que debemos resolver para otra coordinación')
   })
 
-  it('separa borradores por kind', () => {
-    expect(reportDraftKey('coord-saber-pro', 'INTERNAL')).not.toBe(
+  it('unifica el borrador por coordinación y separa la idempotencia por tipo', () => {
+    expect(reportDraftKey('coord-saber-pro', 'INTERNAL')).toBe(
       reportDraftKey('coord-saber-pro', 'INTER_COORDINATION'),
+    )
+    expect(reportRequestKey('coord-saber-pro', 'INTERNAL')).not.toBe(
+      reportRequestKey('coord-saber-pro', 'INTER_COORDINATION'),
     )
   })
 })

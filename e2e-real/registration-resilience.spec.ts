@@ -129,7 +129,7 @@ async function openOperationalCenter(page: Page, session: Session): Promise<void
 }
 
 async function openInternalReport(page: Page): Promise<void> {
-  await page.getByTestId('report-internal-button').first().click()
+  await page.getByTestId('report-situation-button').first().click()
   await expect(page.getByTestId('report-form')).toHaveAttribute('data-report-kind', 'INTERNAL')
 }
 

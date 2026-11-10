@@ -219,12 +219,12 @@ test.describe('capturas · CTAs en Reportar o consultar', () => {
       await expect(panel).toHaveAttribute('data-mode', 'idle')
       await expect(panel).toHaveAttribute('data-can-create', 'true')
       await expect(
-        page.getByTestId('my-reports').getByTestId('report-internal-button'),
+        page.getByTestId('my-reports').getByTestId('report-situation-button'),
       ).toHaveCount(0)
 
       await page.locator(`${CARD}[data-code="${SABER}"]`).click({ force: true })
       await settle(page)
-      await expect(page.getByTestId('report-internal-button')).toBeEnabled()
+      await expect(page.getByTestId('report-situation-button')).toBeEnabled()
 
       const cta = await page.getByTestId('report-cta-group').boundingBox()
       const heading = await page
@@ -237,10 +237,10 @@ test.describe('capturas · CTAs en Reportar o consultar', () => {
         fullPage: false,
       })
 
-      await page.getByTestId('report-internal-button').click()
+      await page.getByTestId('report-situation-button').click()
       await settle(page)
       await expect(panel).toHaveAttribute('data-mode', 'report')
-      await expect(panel.getByTestId('report-internal-button')).toHaveCount(0)
+      await expect(panel.getByTestId('report-situation-button')).toHaveCount(0)
 
       await page.screenshot({
         path: path.join(OUT, `analyst-report-${viewport.tag}.png`),
@@ -250,12 +250,12 @@ test.describe('capturas · CTAs en Reportar o consultar', () => {
       await page.getByTestId('report-form-back').click()
       await settle(page)
       await expect(panel).toHaveAttribute('data-mode', 'idle')
-      await expect(page.getByTestId('report-internal-button')).toBeVisible()
+      await expect(page.getByTestId('report-situation-button')).toBeVisible()
 
       await page.getByTestId('my-report-row').first().click()
       await settle(page)
       await expect(panel).toHaveAttribute('data-mode', 'detail')
-      await expect(panel.getByTestId('report-internal-button')).toHaveCount(0)
+      await expect(panel.getByTestId('report-situation-button')).toHaveCount(0)
       await expect(page.getByTestId('detail-back')).toBeVisible()
 
       await page.screenshot({
@@ -290,21 +290,21 @@ test.describe('capturas · CTAs en Reportar o consultar', () => {
       'coordinator',
     )
     await expect(
-      page.getByTestId('my-reports').getByTestId('report-internal-button'),
+      page.getByTestId('my-reports').getByTestId('report-situation-button'),
     ).toHaveCount(0)
     await expect(page.getByTestId('action-panel')).toHaveAttribute(
       'data-can-create',
       'true',
     )
-    await expect(page.getByTestId('report-internal-button')).toBeVisible()
-    await expect(page.getByTestId('report-dependency-button')).toBeVisible()
+    await expect(page.getByTestId('report-situation-button')).toBeVisible()
 
     await page.screenshot({
       path: path.join(OUT, 'coordinator-idle-1440x900.png'),
       fullPage: false,
     })
 
-    await page.getByTestId('report-dependency-button').click()
+    await page.getByTestId('report-situation-button').click()
+    await page.getByTestId('report-kind-inter').click()
     await settle(page)
     await expect(page.getByTestId('action-panel')).toHaveAttribute(
       'data-mode',
@@ -321,6 +321,6 @@ test.describe('capturas · CTAs en Reportar o consultar', () => {
       'data-mode',
       'idle',
     )
-    await expect(page.getByTestId('report-internal-button')).toBeVisible()
+    await expect(page.getByTestId('report-situation-button')).toBeVisible()
   })
 })
