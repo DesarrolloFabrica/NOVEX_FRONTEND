@@ -25,12 +25,13 @@ export const DOSSIER_ACTIVE_STATUS_LABEL = {
   IN_PROGRESS: 'En atención',
 } as const
 
-/** Historial «Mis reportes»: incluye cierre. */
+/** Historial «Mis reportes»: incluye cierre y anulación administrativa. */
 export const DOSSIER_HISTORY_STATUS_LABEL: Record<string, string> = {
   OPEN: 'Abierto',
   IN_PROGRESS: 'En atención',
   RESOLVED: 'En atención',
   CLOSED: 'Cerrado',
+  CANCELLED: 'Anulado',
 }
 
 export type DossierSlaHealth = 'on_track' | 'at_risk' | 'overdue' | 'closed'

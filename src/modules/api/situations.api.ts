@@ -2,11 +2,13 @@ import type {
   ExecuteAIAnalysisResponse,
 } from '@/modules/api/types/analysis.types'
 import type {
+  CancelSituationPayload,
   CreateSituationConsequencePayload,
   CreateSituationPayload,
   IncidentCategorySummary,
   SituationConsequenceResponse,
   SituationResponse,
+  TransferSituationCoordinationPayload,
 } from '@/modules/situations/types/situation.types'
 import { apiRequest } from '@/shared/api/http'
 
@@ -184,4 +186,38 @@ export async function updateSituation(
     method: 'PATCH',
     body: JSON.stringify(payload),
   })
+}
+
+/**
+ * Anulación administrativa. Solo ADMIN con `SITUATIONS_CANCEL`.
+ * Respuesta 201: detalle actualizado (`status: CANCELLED`).
+ */
+export async function cancelSituation(
+  situationId: string,
+  payload: CancelSituationPayload,
+): Promise<SituationResponse> {
+  return apiRequest<SituationResponse>(
+    `/situations/${situationId}/cancellation`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+  )
+}
+
+/**
+ * Traslado administrativo de la coordinación responsable. Solo ADMIN con
+ * `SITUATIONS_TRANSFER`. No sustituye al PATCH con `coordinationId`.
+ */
+export async function transferSituationCoordination(
+  situationId: string,
+  payload: TransferSituationCoordinationPayload,
+): Promise<SituationResponse> {
+  return apiRequest<SituationResponse>(
+    `/situations/${situationId}/coordination-transfer`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+  )
 }

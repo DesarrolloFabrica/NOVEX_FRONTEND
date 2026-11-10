@@ -88,6 +88,10 @@ export interface ProblemDetail {
   pendingDelivery: string | null
   /** Autor del reporte, distinto de quien lo resuelve. */
   createdByUserName: string | null
+  /** UUID de la coordinación responsable (traslado / control optimista). */
+  coordinationId: string | null
+  /** UUID de la coordinación afectada (reglas INTER del traslado). */
+  affectedCoordinationId: string | null
   /**
    * Decisión del BACKEND sobre si este usuario puede resolver ESTE problema.
    * La interfaz solo la obedece; no la recalcula ni la deduce del rol.
@@ -103,8 +107,22 @@ export interface ProblemDetail {
    * sí sola el botón «En atención».
    */
   canUpdate: boolean
+  /** Pista ADMIN: anular (`SITUATIONS_CANCEL`). No se deduce del rol FE. */
+  canCancel: boolean
+  /** Pista ADMIN: trasladar coordinación (`SITUATIONS_TRANSFER`). */
+  canTransfer: boolean
   /** Aprendizaje y datos de resolución, si existen. */
   resolution: ProblemResolution | null
+  /** Anulación administrativa, si existe. */
+  cancellation: ProblemCancellation | null
+}
+
+/** Registro de anulación expuesto en el detalle. */
+export interface ProblemCancellation {
+  reason: string
+  previousStatus: string
+  cancelledByUserName: string
+  cancelledAt: string
 }
 
 export interface ProblemResolution {

@@ -106,6 +106,33 @@ describe('problem-detail.service · sin IA', () => {
     expect(detail.affectedCoordinationName).toBe('Negocios')
   })
 
+  it('copia canCancel/canTransfer y cancellation desde el contrato del backend', () => {
+    const detail = toProblemDetail({
+      ...SITUATION,
+      canCancel: true,
+      canTransfer: true,
+      cancellation: {
+        reason: 'Duplicado confirmado por soporte',
+        previousStatus: 'OPEN',
+        cancelledByUserId: 'a1',
+        cancelledByUserName: 'Admin',
+        cancelledAt: '2026-11-10T12:00:00.000Z',
+      },
+    } as never)
+
+    expect(detail.canCancel).toBe(true)
+    expect(detail.canTransfer).toBe(true)
+    expect(detail.coordinationId).toBe('c1')
+    expect(detail.cancellation?.cancelledByUserName).toBe('Admin')
+  })
+
+  it('sin pistas administrativas del API, canCancel/canTransfer quedan en false', () => {
+    const detail = toProblemDetail(SITUATION as never)
+    expect(detail.canCancel).toBe(false)
+    expect(detail.canTransfer).toBe(false)
+    expect(detail.cancellation).toBeNull()
+  })
+
   it('la descripción llega íntegra, sin recortar ni deduplicar', () => {
     const legacy =
       'Texto del reporte.\n\n---\nContexto reportado por el usuario:\nNotas adicionales: repetida en las notas.'

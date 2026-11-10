@@ -3,6 +3,35 @@ export type SituationSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
 /** Tipo de registro. Independiente de la categoría de incidente. */
 export type SituationReportKind = 'INTERNAL' | 'INTER_COORDINATION'
 
+/** Estados operativos + anulación administrativa (Fase 01B.1). */
+export type SituationStatus =
+  | 'OPEN'
+  | 'IN_PROGRESS'
+  | 'RESOLVED'
+  | 'CLOSED'
+  | 'CANCELLED'
+
+/** Anulación registrada (`GET` detalle / listado). */
+export interface SituationCancellationSummary {
+  reason: string
+  previousStatus: SituationStatus | string
+  cancelledByUserId: string
+  cancelledByUserName: string
+  cancelledAt: string
+}
+
+/** Cuerpo de `POST /situations/:id/cancellation`. */
+export interface CancelSituationPayload {
+  reason: string
+}
+
+/** Cuerpo de `POST /situations/:id/coordination-transfer`. */
+export interface TransferSituationCoordinationPayload {
+  toCoordinationId: string
+  reason: string
+  expectedCurrentCoordinationId?: string
+}
+
 export interface CoordinationSummary {
   id: string
   code: string
@@ -118,7 +147,7 @@ export interface SituationResponse {
   severity: SituationSeverity
   /** Severidad REPORTADA al registrar. Inmutable; base del SLA. */
   reportedSeverity?: SituationSeverity
-  status: string
+  status: SituationStatus | string
   lastStatusComment?: string | null
   resolvedAt?: string | null
   closedAt?: string | null
@@ -137,6 +166,8 @@ export interface SituationResponse {
    * es legítima y no se rellena con texto inventado.
    */
   resolution?: SituationResolutionSummary | null
+  /** Anulación administrativa; `null` si el caso no está anulado. */
+  cancellation?: SituationCancellationSummary | null
   /**
    * Si el USUARIO DE ESTA PETICIÓN puede solucionar el problema. Lo calcula el
    * backend con la misma política que autoriza la escritura. Es una PISTA para
@@ -159,6 +190,10 @@ export interface SituationResponse {
    * regla: solo lee este indicador.
    */
   canAddConsequence?: boolean
+  /** Pista ADMIN: anular este caso (`SITUATIONS_CANCEL`). */
+  canCancel?: boolean
+  /** Pista ADMIN: trasladar la coordinación responsable (`SITUATIONS_TRANSFER`). */
+  canTransfer?: boolean
   /** Solo en el detalle: historial ascendente; la primera fila es REPORTED. */
   severityHistory?: SituationSeverityHistoryItem[]
   /** Solo en el detalle: orden por ocurrencia. */

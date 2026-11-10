@@ -64,13 +64,18 @@ export function toProblemDetail(situation: SituationResponse): ProblemDetail {
     reportKind: situation.reportKind ?? 'INTERNAL',
     affectedProcess: situation.affectedProcess ?? null,
     pendingDelivery: situation.pendingDelivery ?? null,
+    coordinationId: situation.coordinationId ?? null,
+    affectedCoordinationId: situation.affectedCoordinationId ?? null,
     /*
      * Capacidades de escritura: las decide el BACKEND. Se copian tal cual.
      * El botón «En atención» usa `canAdvanceToInProgress`, no `canUpdate`.
+     * Anulación/traslado usan `canCancel` / `canTransfer` (no el rol FE).
      */
     canResolve: situation.canResolve === true,
     canAdvanceToInProgress: situation.canAdvanceToInProgress === true,
     canUpdate: situation.canUpdate === true,
+    canCancel: situation.canCancel === true,
+    canTransfer: situation.canTransfer === true,
     resolution: situation.resolution
       ? {
           learning: situation.resolution.learning,
@@ -78,6 +83,14 @@ export function toProblemDetail(situation: SituationResponse): ProblemDetail {
           resolvedAt: situation.resolution.resolvedAt,
           closedAt: situation.closedAt ?? null,
           recordedAt: situation.resolution.recordedAt ?? null,
+        }
+      : null,
+    cancellation: situation.cancellation
+      ? {
+          reason: situation.cancellation.reason,
+          previousStatus: String(situation.cancellation.previousStatus),
+          cancelledByUserName: situation.cancellation.cancelledByUserName,
+          cancelledAt: situation.cancellation.cancelledAt,
         }
       : null,
   }
