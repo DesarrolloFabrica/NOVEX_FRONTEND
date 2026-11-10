@@ -126,6 +126,9 @@ export function splitProblemEvidences(items: readonly SituationEvidenceItem[]): 
   const others: ProblemOtherEvidenceView[] = []
 
   for (const item of items) {
+    // El listado activo no debe mezclar retiradas (historial aparte).
+    if (item.status === 'RETIRED' || item.retirement?.retiredAt) continue
+
     const author = nonEmpty(item.uploadedByUserName) ?? AUTHOR_NOT_RECORDED
     const date = formatProblemDateTime(item.createdAt)
 
@@ -175,11 +178,14 @@ const TIMELINE_EVENT_LABEL: Record<string, string> = {
   SEVERITY_CHANGED: 'Severidad cambiada',
   UPDATED: 'Problema actualizado',
   ATTACHMENT_ADDED: 'Evidencia agregada',
+  ATTACHMENT_RETIRED: 'Evidencia retirada',
   SLA_WARNING: 'Plazo próximo a vencer',
   SLA_BREACHED: 'Plazo operativo vencido',
   CLOSED: 'Problema cerrado',
   CONSEQUENCE_ADDED: 'Afectación registrada',
   SEVERITY_ESCALATED: 'Severidad escalada',
+  CANCELLED: 'Situación anulada',
+  COORDINATION_TRANSFERRED: 'Coordinación trasladada',
 }
 
 /** Etiqueta neutra: un código nuevo no se expone ni se atribuye a nadie. */

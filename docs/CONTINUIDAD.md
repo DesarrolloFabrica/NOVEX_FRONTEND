@@ -27,6 +27,10 @@ En esta máquina la copia de consolidación es `NOVEX-review-01b2-frontend` (`re
 
 Integrado en esta rama: tipos `CANCELLED` / `cancellation` / `canCancel` / `canTransfer`, clients `cancelSituation` + `transferSituationCoordination`, validación de motivo, submission kinds, reducer/hook, host `situation-admin-actions` en `ProblemActions` para Antigravity. Sin botones/modales todavía.
 
+### Fase 02C (evidencias)
+
+Retiro lógico + historial en el detalle de cartas: `ProblemEvidencesPanel`, modal de retiro, `includeRetired`, clients/servicios y submission `evidence-retirement`. Historial solo tras autorización efectiva del backend (ADMIN o UPDATE+alcance).
+
 ### Fase 02B (UI/UX anulación y traslado administrativo)
 
 Integrado por Antigravity:
