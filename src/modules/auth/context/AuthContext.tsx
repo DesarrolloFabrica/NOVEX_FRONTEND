@@ -13,7 +13,11 @@ import {
   useState,
 } from 'react'
 import type { ReactNode } from 'react'
-import { bootstrapAuthSessionRequest } from '@/modules/auth/services/auth-session.service'
+import {
+  bootstrapAuthSessionRequest,
+  isInvalidSessionError,
+  isTransientSessionError,
+} from '@/modules/auth/services/auth-session.service'
 import type { User } from '@/modules/auth/types/user.types'
 import {
   completeOnboardingRequest,
@@ -31,7 +35,14 @@ import {
   clearAccessToken,
   readAccessToken,
 } from '@/modules/auth/utils/accessTokenStorage'
-import { setUnauthorizedHandler } from '@/shared/api/http'
+import { isAccessTokenExpired } from '@/modules/auth/utils/decodeAccessToken'
+import {
+  clearSessionExpiryNotice,
+  markSessionExpired,
+  sanitizeReturnPath,
+} from '@/modules/auth/utils/sessionExpiryNotice'
+import { clearUserOperationalDrafts } from '@/modules/operational-cards/services/clear-user-drafts'
+import { ApiError, setUnauthorizedHandler } from '@/shared/api/http'
 import { getErrorMessage } from '@/shared/utils/error'
 
 interface AuthState {
@@ -39,6 +50,8 @@ interface AuthState {
   isAuthenticated: boolean
   loading: boolean
   error: string | null
+  /** Bootstrap falló por red/5xx: se puede reintentar sin perder el token. */
+  canRetrySession: boolean
 }
 
 type AuthAction =
@@ -46,6 +59,11 @@ type AuthAction =
   | { type: 'AUTH_BOOTSTRAP_START' }
   | { type: 'AUTH_SUCCESS'; user: User }
   | { type: 'AUTH_ERROR'; error: string }
+  | {
+      type: 'AUTH_BOOTSTRAP_TRANSIENT_FAILURE'
+      error: string
+      user: User | null
+    }
   | { type: 'AUTH_LOGOUT' }
 
 function createInitialState(): AuthState {
@@ -60,6 +78,7 @@ function createInitialState(): AuthState {
       isAuthenticated: false,
       loading: false,
       error: null,
+      canRetrySession: false,
     }
   }
 
@@ -68,6 +87,7 @@ function createInitialState(): AuthState {
     isAuthenticated: false,
     loading: true,
     error: null,
+    canRetrySession: false,
   }
 }
 
@@ -75,7 +95,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
     case 'AUTH_START':
     case 'AUTH_BOOTSTRAP_START':
-      return { ...state, loading: true, error: null }
+      return { ...state, loading: true, error: null, canRetrySession: false }
 
     case 'AUTH_SUCCESS':
       return {
@@ -83,10 +103,27 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         isAuthenticated: true,
         loading: false,
         error: null,
+        canRetrySession: false,
       }
 
     case 'AUTH_ERROR':
-      return { ...state, loading: false, error: action.error }
+      return {
+        ...state,
+        loading: false,
+        error: action.error,
+        canRetrySession: false,
+      }
+
+    case 'AUTH_BOOTSTRAP_TRANSIENT_FAILURE':
+      return {
+        user: action.user,
+        // Con usuario en caché se mantiene la UI usable; sin él, se muestra
+        // reintento sin fingir autenticación completa.
+        isAuthenticated: Boolean(action.user),
+        loading: false,
+        error: action.error,
+        canRetrySession: true,
+      }
 
     case 'AUTH_LOGOUT':
       return {
@@ -94,6 +131,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         isAuthenticated: false,
         loading: false,
         error: null,
+        canRetrySession: false,
       }
 
     default:
@@ -109,11 +147,20 @@ export interface AuthContextValue extends AuthState {
   loginWithEmail: (email: string) => Promise<void>
   loginWithGoogle: (credential: string) => Promise<void>
   logout: () => Promise<void>
+  /** Reintenta `/auth/me` tras un fallo transitorio de red/5xx. */
+  retrySessionBootstrap: () => Promise<void>
   completeOnboarding: () => Promise<void>
   saveOnboardingProgress: (step: number, completed?: boolean) => Promise<void>
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)
+
+function currentReturnPath(): string | null {
+  if (typeof window === 'undefined') return null
+  return sanitizeReturnPath(
+    `${window.location.pathname}${window.location.search}${window.location.hash}`,
+  )
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(
@@ -126,7 +173,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const onboardingMutationQueueRef = useRef<Promise<void>>(Promise.resolve())
   currentUserRef.current = state.user
 
-  const clearSession = useCallback(() => {
+  const clearSession = useCallback((options?: { voluntary?: boolean }) => {
+    const previousUserId = currentUserRef.current?.id ?? null
+    if (options?.voluntary && previousUserId) {
+      clearUserOperationalDrafts(previousUserId)
+      clearSessionExpiryNotice()
+    }
     currentUserRef.current = null
     clearAccessToken()
     clearAuthSession()
@@ -134,43 +186,90 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'AUTH_LOGOUT' })
   }, [])
 
+  const invalidateSession = useCallback(
+    (reason: 'expired' | 'unauthorized') => {
+      markSessionExpired({
+        reason,
+        returnPath: currentReturnPath(),
+        userId: currentUserRef.current?.id ?? readAuthSession()?.id ?? null,
+      })
+      clearSession()
+    },
+    [clearSession],
+  )
+
   useEffect(() => {
     setUnauthorizedHandler(() => {
-      clearSession()
+      invalidateSession('expired')
     })
 
     return () => {
       setUnauthorizedHandler(null)
     }
-  }, [clearSession])
+  }, [invalidateSession])
+
+  const runBootstrap = useCallback(async (cancelled: () => boolean) => {
+    dispatch({ type: 'AUTH_BOOTSTRAP_START' })
+    const token = readAccessToken()
+    if (!token) {
+      dispatch({ type: 'AUTH_LOGOUT' })
+      return
+    }
+
+    if (isAccessTokenExpired(token)) {
+      if (cancelled()) return
+      invalidateSession('expired')
+      return
+    }
+
+    try {
+      const user = await bootstrapAuthSessionRequest()
+      if (cancelled()) return
+      writeAuthSession(user)
+      clearSessionExpiryNotice()
+      dispatch({ type: 'AUTH_SUCCESS', user })
+    } catch (error) {
+      if (cancelled()) return
+
+      if (isInvalidSessionError(error)) {
+        const status = error instanceof ApiError ? error.status : 401
+        invalidateSession(status === 403 ? 'unauthorized' : 'expired')
+        return
+      }
+
+      if (isTransientSessionError(error)) {
+        const cached = readAuthSession()
+        dispatch({
+          type: 'AUTH_BOOTSTRAP_TRANSIENT_FAILURE',
+          error:
+            'No pudimos verificar tu sesión por un problema temporal de conexión. Puedes reintentar sin perder el trabajo en curso.',
+          user: cached,
+        })
+        return
+      }
+
+      // Token ilegible u otro error local de sesión: limpiar.
+      clearAccessToken()
+      clearAuthSession()
+      dispatch({ type: 'AUTH_LOGOUT' })
+    }
+  }, [invalidateSession])
 
   useEffect(() => {
     const token = readAccessToken()
     if (!token) return
 
     let cancelled = false
-
-    async function bootstrap() {
-      dispatch({ type: 'AUTH_BOOTSTRAP_START' })
-      try {
-        const user = await bootstrapAuthSessionRequest()
-        if (cancelled) return
-        writeAuthSession(user)
-        dispatch({ type: 'AUTH_SUCCESS', user })
-      } catch {
-        if (cancelled) return
-        clearAccessToken()
-        clearAuthSession()
-        dispatch({ type: 'AUTH_LOGOUT' })
-      }
-    }
-
-    void bootstrap()
+    void runBootstrap(() => cancelled)
 
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [runBootstrap])
+
+  const retrySessionBootstrap = useCallback(async () => {
+    await runBootstrap(() => false)
+  }, [runBootstrap])
 
   const beginBootSplash = useCallback(() => {
     setBootSplashActive(true)
@@ -207,7 +306,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await logoutRequest()
     } finally {
-      clearSession()
+      clearSession({ voluntary: true })
     }
   }, [clearSession])
 
@@ -221,8 +320,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const current = currentUserRef.current
         if (!current || current.id !== requestedBy.id) return
 
-        // Siempre confirma en servidor. Esto evita que un reinicio del tutorial
-        // pendiente pueda finalizar después y dejar el onboarding reabierto.
         const updated = await completeOnboardingRequest(current)
         if (currentUserRef.current?.id !== requestedBy.id) return
 
@@ -258,8 +355,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           dispatch({ type: 'AUTH_SUCCESS', user: updated })
         })
 
-      // Una única cola conserva el orden avance/reinicio/finalización. La copia
-      // local sigue siendo el respaldo si una sincronización de progreso falla.
       onboardingMutationQueueRef.current = mutation.catch(() => undefined)
       return mutation.catch(() => undefined)
     },
@@ -275,6 +370,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loginWithEmail,
       loginWithGoogle,
       logout,
+      retrySessionBootstrap,
       completeOnboarding,
       saveOnboardingProgress,
     }),
@@ -286,6 +382,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loginWithEmail,
       loginWithGoogle,
       logout,
+      retrySessionBootstrap,
       completeOnboarding,
       saveOnboardingProgress,
     ],

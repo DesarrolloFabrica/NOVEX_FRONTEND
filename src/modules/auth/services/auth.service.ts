@@ -22,15 +22,28 @@ interface UserApiResponse {
 }
 
 function toUser(payload: UserApiResponse, base?: User): User {
+  const coordinationId =
+    typeof payload.coordinationId === 'string' &&
+    payload.coordinationId.trim().length > 0
+      ? payload.coordinationId
+      : undefined
+  const coordinationCode =
+    typeof payload.coordinationCode === 'string' &&
+    payload.coordinationCode.trim().length > 0
+      ? payload.coordinationCode
+      : undefined
+  const role = payload.roleCode === 'COORDINADOR' ? 'ejecutor' : 'supervisor'
+
   return {
     id: payload.id,
     name: payload.fullName,
-    role: payload.roleCode === 'COORDINADOR' ? 'ejecutor' : 'supervisor',
+    role,
     roleCode: payload.roleCode,
     roleName: payload.roleName,
+    // Onboarding no refresca RBAC: se conservan los permisos de la sesión actual.
     permissions: base?.permissions ?? [],
-    selectedAreaId: payload.coordinationCode ?? base?.selectedAreaId,
-    coordinationId: payload.coordinationId ?? base?.coordinationId,
+    selectedAreaId: role === 'ejecutor' ? coordinationCode : undefined,
+    coordinationId,
     onboardingStep: payload.onboardingStep,
     onboardingCompleted: payload.onboardingCompleted,
     onboardingSeenAt: payload.onboardingSeenAt,

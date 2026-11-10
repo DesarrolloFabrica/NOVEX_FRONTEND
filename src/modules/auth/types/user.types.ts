@@ -12,11 +12,11 @@ export interface User {
   roleCode: string
   /** Nombre visible del rol desde el catálogo del backend. */
   roleName: string
-  /** Permisos embebidos en el JWT. */
+  /** Permisos efectivos (desde `/auth/me` tras bootstrap; claims solo en login fresco). */
   permissions: string[]
   /** Código de coordinación del backend (relevante para el rol ejecutor). */
   selectedAreaId?: string
-  /** Coordinación principal del usuario (UUID embebido en el JWT). */
+  /** Coordinación principal vigente del usuario (desde `/auth/me` / resumen). */
   coordinationId?: string
   /** Preferencia: onboarding de primera vez completado. */
   onboardingCompleted: boolean

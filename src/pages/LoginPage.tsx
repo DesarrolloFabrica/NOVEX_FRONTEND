@@ -4,9 +4,15 @@
 import { GoogleLogin } from '@react-oauth/google'
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { getRoleLandingPath } from '@/modules/auth/utils/roleExperience'
+import { setPostLoginDestination } from '@/modules/auth/utils/postLoginDestination'
+import {
+  consumeSessionExpiryNotice,
+  sanitizeReturnPath,
+  type SessionExpiryNotice,
+} from '@/modules/auth/utils/sessionExpiryNotice'
 import {
   NOVEX_BETA_HINT,
   NOVEX_BETA_LABEL,
@@ -20,6 +26,26 @@ import { usePostLoginTransitionCue } from '@/shared/transition/postLoginTransiti
 /** Solo en local: VITE_ENABLE_EMAIL_LOGIN=true. En deploy no se define → solo Google. */
 const emailLoginEnabled = import.meta.env.VITE_ENABLE_EMAIL_LOGIN === 'true'
 
+function resolvePostLoginPath(
+  userId: string | undefined,
+  notice: SessionExpiryNotice | null,
+  locationFrom: unknown,
+): string | null {
+  const fromState = sanitizeReturnPath(
+    locationFrom &&
+      typeof locationFrom === 'object' &&
+      'from' in locationFrom
+      ? (locationFrom as { from?: unknown }).from
+      : null,
+  )
+  if (notice?.returnPath && notice.userId && notice.userId === userId) {
+    return notice.returnPath
+  }
+  // Sin aviso de caducidad ligado al usuario: no restaurar rutas ajenas.
+  if (!notice && fromState) return fromState
+  return null
+}
+
 export function LoginPage() {
   const {
     isAuthenticated,
@@ -32,12 +58,23 @@ export function LoginPage() {
     loginWithGoogle,
   } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [email, setEmail] = useState('')
   const [googleError, setGoogleError] = useState<string | null>(null)
+  const [expiryNotice, setExpiryNotice] = useState<SessionExpiryNotice | null>(
+    null,
+  )
   const loginAttemptedRef = useRef(false)
   const characterRef = useRef<NovexCharacterHandle>(null)
   const celebratedRef = useRef(false)
   const transitionCue = usePostLoginTransitionCue()
+  const pendingNoticeRef = useRef<SessionExpiryNotice | null>(null)
+
+  useEffect(() => {
+    const notice = consumeSessionExpiryNotice()
+    pendingNoticeRef.current = notice
+    setExpiryNotice(notice)
+  }, [])
 
   useEffect(() => {
     if (loading) return
@@ -56,12 +93,45 @@ export function LoginPage() {
       return
     }
 
-    navigate(getRoleLandingPath(user), { replace: true })
-  }, [beginBootSplash, isAuthenticated, loading, navigate, transitionCue, user])
+    const restored = resolvePostLoginPath(
+      user?.id,
+      pendingNoticeRef.current,
+      location.state,
+    )
+    pendingNoticeRef.current = null
+    navigate(restored ?? getRoleLandingPath(user), { replace: true })
+  }, [
+    beginBootSplash,
+    isAuthenticated,
+    loading,
+    location.state,
+    navigate,
+    transitionCue,
+    user,
+  ])
+
+  const captureReturnDestination = () => {
+    const notice = pendingNoticeRef.current
+    const path = resolvePostLoginPath(
+      notice?.userId ?? undefined,
+      notice,
+      location.state,
+    )
+    if (!path) {
+      setPostLoginDestination(null)
+      return
+    }
+    setPostLoginDestination({
+      path,
+      // Con aviso de caducidad exigimos el mismo usuario al restaurar.
+      userId: notice?.userId ?? null,
+    })
+  }
 
   const handleEmailSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     loginAttemptedRef.current = true
+    captureReturnDestination()
     void loginWithEmail(email)
   }
 
@@ -69,6 +139,7 @@ export function LoginPage() {
     if (!credential) return
     setGoogleError(null)
     loginAttemptedRef.current = true
+    captureReturnDestination()
     void loginWithGoogle(credential)
   }
 
@@ -123,6 +194,12 @@ export function LoginPage() {
                 : 'Ingresa con tu cuenta de Google institucional.'}
             </p>
           </header>
+
+          {expiryNotice && !authError ? (
+            <p className="novex-login-stage__error" role="status">
+              {expiryNotice.message}
+            </p>
+          ) : null}
 
           {authError && (
             <p className="novex-login-stage__error" role="alert">

@@ -6,7 +6,9 @@
 import { useCallback, useEffect, useReducer, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
+import { takePostLoginDestination } from '@/modules/auth/utils/postLoginDestination'
 import { getRoleLandingPath } from '@/modules/auth/utils/roleExperience'
+import { sanitizeReturnPath } from '@/modules/auth/utils/sessionExpiryNotice'
 import { LoginCurtains } from '@/shared/components/LoginCurtains'
 import {
   CURTAIN_SETTLE_FALLBACK_MS,
@@ -87,7 +89,12 @@ export function PostLoginCurtainTransition() {
   useEffect(() => {
     if (phase !== 'covered' || navigatedFromRef.current !== null) return
     navigatedFromRef.current = pathname
-    navigate(getRoleLandingPath(userRef.current), { replace: true })
+    const restored = sanitizeReturnPath(
+      takePostLoginDestination(userRef.current?.id),
+    )
+    navigate(restored || getRoleLandingPath(userRef.current), {
+      replace: true,
+    })
   }, [phase, pathname, navigate])
 
   // covered → opening: cuando la ruta cambió (el destino se montó en este commit)
