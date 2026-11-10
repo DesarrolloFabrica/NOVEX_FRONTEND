@@ -1,5 +1,6 @@
 import { CoordinationProblemList } from '@/modules/operational-cards/components/CoordinationProblemList'
 import { MyReportsPanel } from '@/modules/operational-cards/components/MyReportsPanel'
+import { OperationalRoleHeader } from '@/modules/operational-cards/components/OperationalRoleHeader'
 import { resolveCoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
 import { OperationalCardExperience } from '@/modules/operational-cards/experience/OperationalCardExperience'
 import {
@@ -7,6 +8,7 @@ import {
   ShellBottom,
   ShellRegion,
 } from '@/modules/operational-cards/experience/layouts/OperationalCenterChrome'
+import { useAuth } from '@/modules/auth/hooks/useAuth'
 import type { OperationalCenterExperienceId } from '@/modules/operational-cards/experience/resolveOperationalCenterExperience'
 import type { OperationalShellModel } from '@/modules/operational-cards/hooks/useOperationalShellModel'
 import type { CoordinationId } from '@/modules/impact-network/data/coordination-islands.config'
@@ -23,9 +25,11 @@ export function DeckOperationalLayout({
   model: OperationalShellModel
   experience: OperationalCenterExperienceId
 }) {
+  const { user } = useAuth()
   const {
     controller,
     selectedCoordination,
+    canCreate,
     labelByCode,
     rowLabelByCode,
     colorByCode,
@@ -34,6 +38,20 @@ export function DeckOperationalLayout({
     character,
     actionPanel,
   } = model
+
+  const activeProblemsCount = selectedCoordination
+    ? selectedCoordination.activeProblemsCount
+    : (controller.overview?.coordinations.reduce(
+        (sum, c) => sum + c.activeProblemsCount,
+        0,
+      ) ?? 0)
+
+  const criticalProblemsCount = selectedCoordination
+    ? selectedCoordination.criticalCount
+    : (controller.overview?.coordinations.reduce(
+        (sum, c) => sum + c.criticalCount,
+        0,
+      ) ?? 0)
 
   return (
     <div
@@ -46,6 +64,21 @@ export function DeckOperationalLayout({
       data-ticket-theme={ticketTheme}
     >
       <CircusScene />
+
+      <OperationalRoleHeader
+        experience={experience}
+        user={user}
+        selectedCoordination={selectedCoordination}
+        directionStatus={controller.overview?.directionStatus}
+        activeProblemsCount={activeProblemsCount}
+        criticalProblemsCount={criticalProblemsCount}
+        onReportSituation={
+          canCreate
+            ? () => controller.openReportForm('INTERNAL')
+            : undefined
+        }
+        canCreate={canCreate}
+      />
 
       <div className="operational-shell__main" data-testid="shell-main">
         <div className="operational-shell__top" data-testid="shell-top">

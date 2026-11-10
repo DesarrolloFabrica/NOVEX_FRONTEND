@@ -332,6 +332,46 @@ export function OperationalActionPanel({
             <p className="action-panel__idle-text">{idleHint ?? defaultHint}</p>
           </>
         )}
+
+        <div
+          className="action-panel__guidance"
+          data-testid="action-panel-guidance"
+        >
+          <div className="action-panel__guidance-card">
+            <h3 className="action-panel__guidance-title">
+              Gestión de Situaciones Operativas
+            </h3>
+            <p className="action-panel__guidance-text">
+              {canCreate
+                ? 'Registre incidencias internas de su área o dependencias causadas por otras coordinaciones. Cada caso contará con seguimiento de SLA y trazabilidad de resolución.'
+                : 'Consulte las situaciones operativas y su estado de avance. El detalle muestra la cronología completa de eventos y evidencias.'}
+            </p>
+          </div>
+
+          <div className="action-panel__guidance-card">
+            <h3 className="action-panel__guidance-title">
+              Historial y Aprendizajes
+            </h3>
+            <p className="action-panel__guidance-text">
+              Revise situaciones cerradas organizadas por semana, mes o ciclo
+              académico para analizar causas raíz y lecciones aprendidas
+              institucionales.
+            </p>
+          </div>
+
+          {administration && (
+            <div className="action-panel__guidance-card action-panel__guidance-card--admin">
+              <h3 className="action-panel__guidance-title">
+                Acciones Administrativas
+              </h3>
+              <p className="action-panel__guidance-text">
+                Como Administrador, dispone de herramientas excepcionales en el
+                detalle de cada situación para anular casos o trasladar la
+                coordinación responsable.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

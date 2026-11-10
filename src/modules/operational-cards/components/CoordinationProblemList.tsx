@@ -292,12 +292,38 @@ export function CoordinationProblemList({
             No hay problemas activos visibles para tu usuario
           </p>
         ) : (
-          <p
-            className="coordination-panel__empty"
+          <div
+            className="coordination-panel__empty coordination-panel__empty--card"
             data-testid="coordination-panel-empty"
           >
-            Sin problemas activos
-          </p>
+            <div
+              className="coordination-panel__empty-emblem"
+              aria-hidden="true"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="28"
+                height="28"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <circle cx="12" cy="12" r="10" strokeOpacity="0.4" />
+                <path
+                  d="M8 12l2.5 2.5L16 9"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+            <strong className="coordination-panel__empty-title">
+              Sin problemas activos
+            </strong>
+            <p className="coordination-panel__empty-desc">
+              Esta coordinación opera con normalidad. No se registran
+              incidentes pendientes de resolución.
+            </p>
+          </div>
         )
       ) : (
         <div

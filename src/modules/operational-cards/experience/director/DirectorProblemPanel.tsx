@@ -114,23 +114,124 @@ export function DirectorProblemPanel({
     )
   }
 
+  const alertCoordinations = direction
+    ? direction.coordinations.filter(
+        (c) =>
+          c.integrityStatus === 'CRITICO' ||
+          c.integrityStatus === 'ALERTA' ||
+          c.problems.activeCount > 0,
+      )
+    : []
+
   return (
     <div
       className="director-direction-brief"
       data-testid="director-direction-brief"
     >
-      <h2 className="director-direction-brief__title">Resumen de Dirección</h2>
-      <p className="director-direction-brief__copy">
-        Seleccione una carta para ver los problemas activos de esa coordinación.
-      </p>
+      <header className="director-direction-brief__header">
+        <h2 className="director-direction-brief__title">Resumen de Dirección</h2>
+        <p className="director-direction-brief__copy">
+          Seleccione una carta para ver los problemas activos de esa coordinación
+          o pulse en un área para enfocarla directamente.
+        </p>
+      </header>
+
       {direction ? (
-        <ul className="director-direction-brief__facts">
-          <li>Activos {direction.problems.activeCount}</li>
-          <li>Críticos {direction.problems.severity.critical}</li>
-          <li>
-            Coordinaciones críticas {direction.coordinationStatusTotals.critical}
-          </li>
-        </ul>
+        <>
+          <div
+            className="director-direction-brief__cards"
+            data-testid="director-brief-cards"
+          >
+            <div className="director-direction-brief__card">
+              <span className="director-direction-brief__card-val">
+                {direction.problems.activeCount}
+              </span>
+              <span className="director-direction-brief__card-lbl">
+                Situaciones Activas
+              </span>
+            </div>
+            <div
+              className={`director-direction-brief__card ${
+                direction.problems.severity.critical > 0 ? 'is-critical' : ''
+              }`}
+            >
+              <span className="director-direction-brief__card-val">
+                {direction.problems.severity.critical}
+              </span>
+              <span className="director-direction-brief__card-lbl">
+                Situaciones Críticas
+              </span>
+            </div>
+            <div className="director-direction-brief__card">
+              <span className="director-direction-brief__card-val">
+                {direction.coordinationStatusTotals.critical +
+                  direction.coordinationStatusTotals.alert}
+              </span>
+              <span className="director-direction-brief__card-lbl">
+                Coordinaciones en Alerta
+              </span>
+            </div>
+          </div>
+
+          {alertCoordinations.length > 0 ? (
+            <div
+              className="director-direction-brief__alert-areas"
+              data-testid="director-alert-areas"
+            >
+              <h3 className="director-direction-brief__subheading">
+                Áreas con atención prioritaria
+              </h3>
+              <div className="director-direction-brief__pills">
+                {alertCoordinations.map((coord) => (
+                  <button
+                    key={coord.coordination.code}
+                    type="button"
+                    className={`director-direction-brief__pill director-direction-brief__pill--${coord.integrityStatus.toLowerCase()}`}
+                    data-status={coord.integrityStatus.toLowerCase()}
+                    data-testid={`director-quick-jump-${coord.coordination.code}`}
+                    onClick={() =>
+                      controller.selectCoordination(coord.coordination.code)
+                    }
+                    title={`Enfocar ${coord.coordination.name}`}
+                  >
+                    <span className="director-direction-brief__pill-name">
+                      {coord.coordination.name}
+                    </span>
+                    <span className="director-direction-brief__pill-badge">
+                      {coord.problems.activeCount}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div
+              className="director-direction-brief__stable-notice"
+              data-testid="director-stable-notice"
+            >
+              <span
+                className="director-direction-brief__stable-icon"
+                aria-hidden="true"
+              >
+                ✓
+              </span>
+              <p>
+                Operación institucional estable. Ninguna coordinación reporta
+                situaciones críticas en curso.
+              </p>
+            </div>
+          )}
+
+          {/* Conserva la lista oficial de hechos para compatibilidad estricta */}
+          <ul className="director-direction-brief__facts">
+            <li>Activos {direction.problems.activeCount}</li>
+            <li>Críticos {direction.problems.severity.critical}</li>
+            <li>
+              Coordinaciones críticas{' '}
+              {direction.coordinationStatusTotals.critical}
+            </li>
+          </ul>
+        </>
       ) : null}
     </div>
   )

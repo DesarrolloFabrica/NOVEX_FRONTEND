@@ -1,11 +1,13 @@
 import { DirectorProblemPanel } from '@/modules/operational-cards/experience/director/DirectorProblemPanel'
 import { DirectorReadingPanel } from '@/modules/operational-cards/experience/director/DirectorReadingPanel'
 import { OperationalCardExperience } from '@/modules/operational-cards/experience/OperationalCardExperience'
+import { OperationalRoleHeader } from '@/modules/operational-cards/components/OperationalRoleHeader'
 import {
   CircusScene,
   ShellBottom,
   ShellRegion,
 } from '@/modules/operational-cards/experience/layouts/OperationalCenterChrome'
+import { useAuth } from '@/modules/auth/hooks/useAuth'
 import type { DirectorKpiModel } from '@/modules/operational-cards/hooks/useDirectorKpi'
 import type { OperationalShellModel } from '@/modules/operational-cards/hooks/useOperationalShellModel'
 
@@ -21,8 +23,26 @@ export function DirectorOperationalLayout({
   model: OperationalShellModel
   kpi: DirectorKpiModel
 }) {
+  const { user } = useAuth()
   const { controller, selectedCoordination, ticketTheme, ticketRegionClass, character } =
     model
+
+  const activeProblemsCount =
+    kpi.direction?.problems.activeCount ??
+    (controller.overview?.coordinations.reduce(
+      (sum, c) => sum + c.activeProblemsCount,
+      0,
+    ) ?? 0)
+
+  const criticalProblemsCount =
+    kpi.direction?.problems.severity.critical ??
+    (controller.overview?.coordinations.reduce(
+      (sum, c) => sum + c.criticalCount,
+      0,
+    ) ?? 0)
+
+  const directionStatus =
+    kpi.direction?.directionStatus ?? controller.overview?.directionStatus
 
   return (
     <div
@@ -36,6 +56,15 @@ export function DirectorOperationalLayout({
       data-selected-coordination={selectedCoordination?.code ?? ''}
     >
       <CircusScene />
+
+      <OperationalRoleHeader
+        experience="director"
+        user={user}
+        selectedCoordination={selectedCoordination}
+        directionStatus={directionStatus}
+        activeProblemsCount={activeProblemsCount}
+        criticalProblemsCount={criticalProblemsCount}
+      />
 
       <div className="operational-shell__main" data-testid="shell-main">
         <div className="operational-shell__top" data-testid="shell-top">

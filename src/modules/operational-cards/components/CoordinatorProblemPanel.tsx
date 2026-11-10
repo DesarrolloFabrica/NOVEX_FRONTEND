@@ -61,12 +61,61 @@ function GroupList({
         <span className="coordinator-problems__group-count">{problems.length}</span>
       </h3>
       {problems.length === 0 ? (
-        <p
+        <div
           className="coordinator-problems__group-empty"
           data-testid={`${testId}-empty`}
         >
-          {emptyMessage}
-        </p>
+          <div className="coordinator-problems__empty-icon" aria-hidden="true">
+            {testId === 'coordinator-to-resolve' ? (
+              <svg
+                viewBox="0 0 24 24"
+                width="22"
+                height="22"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <circle cx="12" cy="12" r="10" strokeOpacity="0.4" />
+                <path
+                  d="m8 12 2.5 2.5L16 9"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            ) : (
+              <svg
+                viewBox="0 0 24 24"
+                width="22"
+                height="22"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+                  strokeLinecap="round"
+                />
+              </svg>
+            )}
+          </div>
+          <div className="coordinator-problems__empty-content">
+            <strong className="coordinator-problems__empty-heading">
+              {testId === 'coordinator-to-resolve'
+                ? 'Operación al día'
+                : 'Sin bloqueos externos'}
+            </strong>
+            <p className="coordinator-problems__empty-text">{emptyMessage}</p>
+            <span className="coordinator-problems__empty-hint">
+              {testId === 'coordinator-to-resolve'
+                ? 'Las situaciones asignadas a su área aparecerán aquí ordenadas por severidad y tiempo de respuesta.'
+                : 'Si una entrega de otra coordinación presenta retrasos, puede registrarla como dependencia en el panel derecho.'}
+            </span>
+          </div>
+        </div>
       ) : (
         <ul className="coordinator-problems__group-list">
           {problems.map((problem) => (

@@ -1,12 +1,14 @@
 import { CoordinationCard } from '@/modules/operational-cards/components/CoordinationCard'
 import { CoordinatorProblemPanel } from '@/modules/operational-cards/components/CoordinatorProblemPanel'
 import { MyReportsPanel } from '@/modules/operational-cards/components/MyReportsPanel'
+import { OperationalRoleHeader } from '@/modules/operational-cards/components/OperationalRoleHeader'
 import { resolveCoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
 import {
   CircusScene,
   ShellBottom,
   ShellRegion,
 } from '@/modules/operational-cards/experience/layouts/OperationalCenterChrome'
+import { useAuth } from '@/modules/auth/hooks/useAuth'
 import type { OperationalShellModel } from '@/modules/operational-cards/hooks/useOperationalShellModel'
 import type { CoordinationId } from '@/modules/impact-network/data/coordination-islands.config'
 
@@ -19,10 +21,12 @@ export function CoordinatorOperationalLayout({
 }: {
   model: OperationalShellModel
 }) {
+  const { user } = useAuth()
   const {
     controller,
     assignedCoordination,
     coordinatorAssignmentError,
+    canCreate,
     labelByCode,
     rowLabelByCode,
     colorByCode,
@@ -75,6 +79,19 @@ export function CoordinatorOperationalLayout({
       data-assigned-code={own?.code ?? undefined}
     >
       <CircusScene />
+
+      <OperationalRoleHeader
+        experience="coordinator"
+        user={user}
+        assignedCoordination={own}
+        directionStatus={own?.status}
+        activeProblemsCount={own?.activeProblemsCount}
+        criticalProblemsCount={own?.criticalCount}
+        onReportSituation={
+          canCreate ? () => controller.openReportForm('INTERNAL') : undefined
+        }
+        canCreate={canCreate}
+      />
 
       <div
         className="operational-shell__rail-stack"
