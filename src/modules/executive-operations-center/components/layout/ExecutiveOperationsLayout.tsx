@@ -14,15 +14,12 @@ import '@/modules/executive-operations-center/styles/executive-home.css'
  * demás experiencias, que no declaran nada y conservan el default.
  *
  * El opt-out es explícito y por componente (`rail={false}`), no por ruta: este
- * layout sirve exclusivamente `/centro-operacional` y sus tres secciones
- * hijas —Panorama, Inteligencia y Auditoría, que desde la fase 1 solo
- * redirigen a la home—, que son partes del mismo Centro
- * y comparten su marco. Ninguna otra ruta pasa por aquí, así que no hay nada
- * que condicionar por `pathname`.
+ * layout sirve exclusivamente `/centro-operacional` (home de cartas). Las
+ * secciones legadas Panorama / Inteligencia / Reportes redirigen fuera de este
+ * layout para no montar el proveedor ni disparar su carga masiva (FE-04).
  */
 export function ExecutiveOperationsLayout() {
   const location = useLocation()
-  const isHome = location.pathname === '/centro-operacional'
 
   useLayoutEffect(() => {
     const scrollContainer = document.querySelector<HTMLElement>(
@@ -34,24 +31,16 @@ export function ExecutiveOperationsLayout() {
   }, [location.pathname])
 
   return (
-    <ExecutiveOperationsProvider enabled={!isHome}>
+    <ExecutiveOperationsProvider enabled={false}>
       <NovexRoom scene="intelligence" environment="pending" rail={false}>
         <NovexFrame environment="pending">
           <MainScreen environment="pending">
             <ScreenDeck
               environment="pending"
-              className={`eoc-deck ${isHome ? 'eoc-deck--home' : ''}`}
+              className="eoc-deck eoc-deck--home"
               header={null}
             >
-              {/*
-                La home reparte su alto entre bandas, así que necesita un alto
-                DEFINIDO; las otras tres secciones conservan el alto automático y
-                su scroll de siempre. Por eso la variante es una clase de la
-                home y no un cambio en la envoltura compartida.
-              */}
-              <div
-                className={`eoc-embedded ${isHome ? 'eoc-embedded--shell' : ''}`.trim()}
-              >
+              <div className="eoc-embedded eoc-embedded--shell">
                 <h1 className="eoc-accessible-title">Centro operacional</h1>
                 <Outlet />
               </div>

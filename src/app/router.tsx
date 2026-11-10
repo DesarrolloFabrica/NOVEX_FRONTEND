@@ -17,6 +17,10 @@ import {
   ExecutiveOperationsLayout,
 } from '@/modules/executive-operations-center'
 import { OperationalCenterHome } from '@/modules/operational-cards/experience/OperationalCenterHome'
+import {
+  LEGACY_EXECUTIVE_SECTION_REDIRECTS,
+  LEGACY_PLATFORM_REDIRECTS,
+} from '@/app/legacyOperationalRedirects'
 
 /**
  * Pantallas legacy retiradas como destino (fase 1).
@@ -68,16 +72,22 @@ export const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <OperationalCenterHome /> },
-              // Secciones ejecutivas legacy (pestañas retiradas).
-              { path: 'panorama', element: toOperationalCenter },
-              { path: 'inteligencia', element: toOperationalCenter },
-              { path: 'reportes', element: toOperationalCenter },
             ],
           },
-          { path: '/dashboard', element: toOperationalCenter },
-          { path: '/red-impacto', element: toOperationalCenter },
-          { path: '/situaciones', element: toOperationalCenter },
-          { path: '/gestion', element: toOperationalCenter },
+          /*
+           * FE-04: redirecciones ligeras FUERA del layout ejecutivo.
+           * Si viven como hijas de ExecutiveOperationsLayout, el proveedor
+           * legado monta y dispara la carga masiva (situaciones/IA/historial)
+           * antes de que Navigate redirija.
+           */
+          ...LEGACY_EXECUTIVE_SECTION_REDIRECTS.map((path) => ({
+            path,
+            element: toOperationalCenter,
+          })),
+          ...LEGACY_PLATFORM_REDIRECTS.map((path) => ({
+            path,
+            element: toOperationalCenter,
+          })),
           {
             // Compatibilidad con el antiguo registro de situaciones: abre el
             // formulario INTERNAL del Centro (se conserva tal cual).
@@ -92,10 +102,6 @@ export const router = createBrowserRouter([
             path: '/operational-events/register',
             element: <RedirectToInternalReport />,
           },
-          { path: '/intelligence', element: toOperationalCenter },
-          { path: '/operational-events', element: toOperationalCenter },
-          { path: '/situation-management', element: toOperationalCenter },
-          { path: '/legacy-monitoring', element: toOperationalCenter },
         ],
       },
       { path: '*', element: <Navigate to="/" replace /> },
