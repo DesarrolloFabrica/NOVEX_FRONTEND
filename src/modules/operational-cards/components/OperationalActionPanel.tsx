@@ -3,6 +3,7 @@ import {
   ProblemActions,
   type SituationAdministrationHandlers,
 } from '@/modules/operational-cards/components/ProblemActions'
+import type { ProblemDetailProps } from '@/modules/operational-cards/components/ProblemDetail'
 import { ReportProblemForm } from '@/modules/operational-cards/components/ReportProblemForm'
 import type { ReportProblemFormProps } from '@/modules/operational-cards/components/ReportProblemForm'
 import { ProblemHistoryPanel } from '@/modules/operational-cards/components/ProblemHistoryPanel'
@@ -68,6 +69,14 @@ export interface OperationalActionPanelProps {
    * operativo; solo el shell ADMIN lo cablea.
    */
   administration?: SituationAdministrationHandlers | null
+  /**
+   * Retiro de evidencias. Shells operativos; el historial retirado lo autoriza
+   * el backend (ADMIN o UPDATE + alcance). `submission` lo aporta el panel.
+   */
+  evidenceActions?: Omit<
+    NonNullable<ProblemDetailProps['evidenceActions']>,
+    'submission'
+  > | null
   /** Quien puede consultar situaciones ve el acceso al historial. */
   canViewHistory?: boolean
   idleHint?: string | null
@@ -105,6 +114,7 @@ export function OperationalActionPanel({
   canCreate = false,
   allowLifecycleActions = true,
   administration = null,
+  evidenceActions = null,
   canViewHistory = false,
   idleHint = null,
   labelByCode,
@@ -174,6 +184,11 @@ export function OperationalActionPanel({
             // el API enviara el indicador.
             allowLifecycleActions && onAddConsequence
               ? { submission, onSubmit: onAddConsequence }
+              : null
+          }
+          evidenceActions={
+            evidenceActions
+              ? { ...evidenceActions, submission }
               : null
           }
         />

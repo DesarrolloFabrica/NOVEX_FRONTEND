@@ -1,12 +1,14 @@
-import { useRef, type CSSProperties, type ReactNode } from 'react'
+import { useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { CoordinationMark } from '@/modules/operational-cards/components/CoordinationMark'
 import { ProblemDetailSection } from '@/modules/operational-cards/components/ProblemDetailSection'
+import { ProblemEvidencesPanel } from '@/modules/operational-cards/components/ProblemEvidencesPanel'
 import { resolveCoordinationMarkAsset } from '@/modules/operational-cards/data/coordinationMark'
 import {
-  splitProblemEvidences,
   toProblemTimelineEntryView,
   type FormattedDateTime,
 } from '@/modules/operational-cards/data/problemDetailPresentation'
+import type { User } from '@/modules/auth/types/user.types'
+import { canOfferEvidenceRetirement } from '@/modules/operational-cards/data/evidenceAccess'
 import {
   formatDossierFolio,
   resolveDossierCoordinationColor,
@@ -70,6 +72,7 @@ const STATUS_LABEL: Record<string, string> = {
   IN_PROGRESS: 'En revisión',
   RESOLVED: 'En revisión',
   CLOSED: 'Cerrado',
+  CANCELLED: 'Anulado',
 }
 
 const SLA_LABEL = {
@@ -262,6 +265,16 @@ export interface ProblemDetailProps {
     submission: OperationalSubmissionState
     onSubmit: (draft: ConsequenceDraft) => Promise<boolean>
   } | null
+  /**
+   * Retiro de evidencias. El shell operativo lo cablea; el historial retirado
+   * se consulta aparte con autorización del servidor.
+   */
+  evidenceActions?: {
+    user: Pick<User, 'roleCode' | 'permissions'> | null
+    allowOperationalWrites: boolean
+    submission: OperationalSubmissionState
+    onRetire: (evidenceId: string, reason: string) => Promise<boolean>
+  } | null
   /** Regreso que decide el panel contenedor. Sin él, no hay flecha. */
   onBack?: () => void
   /** Nombre accesible de la flecha («Volver a problemas», «Volver»…). */
@@ -282,6 +295,7 @@ export function ProblemDetail({
   onToggleSection,
   onRetrySection = () => undefined,
   consequenceActions = null,
+  evidenceActions = null,
   onBack,
   backLabel = 'Volver a problemas',
 }: ProblemDetailProps) {
@@ -300,13 +314,17 @@ export function ProblemDetail({
   const headingRef = useRef<HTMLDivElement>(null)
   useOrnamentClearance(headingRef)
 
-  // Notas y otras evidencias salen de la misma carga; separarlas aquí decide
-  // qué acordeones existen sin pedir nada más.
   const evidences = sections.evidences
-  const { notes, others } =
-    evidences.status === 'ready'
-      ? splitProblemEvidences(evidences.items)
-      : { notes: [], others: [] }
+  const [historyRefreshKey, setHistoryRefreshKey] = useState(0)
+  const canRetire = Boolean(
+    detail &&
+      evidenceActions &&
+      canOfferEvidenceRetirement({
+        user: evidenceActions.user,
+        situationStatus: detail.status,
+        allowOperationalWrites: evidenceActions.allowOperationalWrites,
+      }),
+  )
 
   return (
     <section
@@ -507,89 +525,28 @@ export function ProblemDetail({
             />
           )}
 
-          {/*
-           * Mientras no se sabe si hay notas se dice en una línea, sin pintar un
-           * acordeón que podría quedar vacío; sin notas, no aparece nada.
-           */}
-          {(evidences.status === 'idle' || evidences.status === 'loading') && (
-            <p
-              className="detail-section__note problem-detail__notes-status"
-              data-testid="detail-notes-loading"
-              role="status"
-            >
-              Cargando notas del reporte…
-            </p>
-          )}
-
-          {evidences.status === 'error' && (
-            <RetryNotice
-              message="No pudimos cargar las notas del reporte."
-              testId="detail-notes-error"
-              onRetry={() => onRetrySection('evidences')}
-            />
-          )}
+          <ProblemEvidencesPanel
+            situationId={detail.id}
+            situationStatus={detail.status}
+            user={evidenceActions?.user ?? null}
+            activeStatus={evidences.status}
+            activeItems={evidences.items}
+            activeErrorMessage={evidences.errorMessage}
+            expanded={expanded}
+            onToggleSection={onToggleSection}
+            onRetryActive={() => onRetrySection('evidences')}
+            canRetire={canRetire}
+            submission={evidenceActions?.submission ?? IDLE_SUBMISSION}
+            historyRefreshKey={historyRefreshKey}
+            onRetire={async (evidenceId, reason) => {
+              if (!evidenceActions) return false
+              const ok = await evidenceActions.onRetire(evidenceId, reason)
+              if (ok) setHistoryRefreshKey((n) => n + 1)
+              return ok
+            }}
+          />
 
           <div className="problem-detail__sections">
-            {notes.length > 0 && (
-              <ProblemDetailSection
-                id="notes"
-                title="Notas del reporte"
-                expanded={isExpanded('notes')}
-                onToggle={onToggleSection}
-              >
-                <ul className="detail-entries" data-testid="detail-notes">
-                  {notes.map((note) => (
-                    <li key={note.id} className="detail-entry">
-                      <p className="detail-entry__title">{note.title}</p>
-                      <p className="detail-entry__content">{note.content}</p>
-                      <Byline author={note.author} date={note.date} />
-                    </li>
-                  ))}
-                </ul>
-              </ProblemDetailSection>
-            )}
-
-            {others.length > 0 && (
-              <ProblemDetailSection
-                id="other-evidences"
-                title="Otras evidencias"
-                expanded={isExpanded('other-evidences')}
-                onToggle={onToggleSection}
-              >
-                <ul
-                  className="detail-entries"
-                  data-testid="detail-other-evidences"
-                >
-                  {others.map((item) => (
-                    <li key={item.id} className="detail-entry">
-                      <p className="detail-entry__title">
-                        {item.title}
-                        <span className="detail-entry__kind">
-                          {item.typeLabel}
-                        </span>
-                      </p>
-                      {item.description && (
-                        <p className="detail-entry__content">
-                          {item.description}
-                        </p>
-                      )}
-                      {item.facts.length > 0 && (
-                        <dl className="detail-entry__facts">
-                          {item.facts.map((fact) => (
-                            <div key={fact.label}>
-                              <dt>{fact.label}</dt>
-                              <dd>{fact.value}</dd>
-                            </div>
-                          ))}
-                        </dl>
-                      )}
-                      <Byline author={item.author} date={item.date} />
-                    </li>
-                  ))}
-                </ul>
-              </ProblemDetailSection>
-            )}
-
             <ProblemDetailSection
               id="timeline"
               title="Cronología"

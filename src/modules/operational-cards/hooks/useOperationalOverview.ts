@@ -43,6 +43,8 @@ import {
 import { submitProblemCancellation } from '@/modules/operational-cards/services/problem-cancellation.service'
 import { submitProblemCoordinationTransfer } from '@/modules/operational-cards/services/problem-coordination-transfer.service'
 import { describeSituationAdministrationError } from '@/modules/operational-cards/services/situation-administration-errors'
+import { submitEvidenceRetirement } from '@/modules/operational-cards/services/problem-evidence-retirement.service'
+import { describeEvidenceRetirementError } from '@/modules/operational-cards/services/evidence-retirement-errors'
 import type { ReportDraft } from '@/modules/operational-cards/types/operational-cards.state'
 
 /**
@@ -128,6 +130,12 @@ export interface OperationalCardsController extends OperationalCardsState {
       expectedCurrentCoordinationId?: string | null
       invalidateCoordinationCodes?: readonly (CoordinationId | null)[]
     },
+  ) => Promise<boolean>
+  /** Retiro lógico de una evidencia (SITUATIONS_UPDATE + caso operable). */
+  submitEvidenceRetirement: (
+    problemId: string,
+    evidenceId: string,
+    reason: string,
   ) => Promise<boolean>
   /** El personaje avisa de que ya representó la reacción. */
   consumeCharacterReaction: (id: number) => void
@@ -829,6 +837,42 @@ export function useOperationalOverview(
     [],
   )
 
+  const submitEvidenceRetirementFn = useCallback(
+    async (
+      problemId: string,
+      evidenceId: string,
+      reason: string,
+    ): Promise<boolean> => {
+      if (sendingRef.current) return false
+      sendingRef.current = true
+
+      dispatch({
+        type: 'SUBMIT_EVIDENCE_RETIREMENT',
+        problemId,
+        evidenceId,
+      })
+
+      try {
+        await submitEvidenceRetirement(problemId, evidenceId, reason)
+        dispatch({
+          type: 'SUBMIT_EVIDENCE_RETIREMENT_SUCCESS',
+          problemId,
+          evidenceId,
+        })
+        return true
+      } catch (error: unknown) {
+        dispatch({
+          type: 'SUBMIT_EVIDENCE_RETIREMENT_ERROR',
+          message: describeEvidenceRetirementError(error),
+        })
+        return false
+      } finally {
+        sendingRef.current = false
+      }
+    },
+    [],
+  )
+
   /*
    * El resumen operacional se vuelve a pedir tras cada escritura confirmada: es
    * la fuente del aura de las cartas y del estado del personaje, y crear o
@@ -876,6 +920,7 @@ export function useOperationalOverview(
     submitConsequence,
     submitCancellation,
     submitCoordinationTransfer,
+    submitEvidenceRetirement: submitEvidenceRetirementFn,
     consumeCharacterReaction,
   }
 }

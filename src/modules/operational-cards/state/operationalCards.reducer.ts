@@ -187,6 +187,17 @@ export type OperationalCardsAction =
       invalidateCoordinationCodes: readonly (CoordinationId | null)[]
     }
   | { type: 'SUBMIT_COORDINATION_TRANSFER_ERROR'; message: string }
+  | {
+      type: 'SUBMIT_EVIDENCE_RETIREMENT'
+      problemId: string
+      evidenceId: string
+    }
+  | {
+      type: 'SUBMIT_EVIDENCE_RETIREMENT_SUCCESS'
+      problemId: string
+      evidenceId: string
+    }
+  | { type: 'SUBMIT_EVIDENCE_RETIREMENT_ERROR'; message: string }
   | { type: 'CONSUME_CHARACTER_REACTION'; id: number }
 
 export const initialOperationalCardsState: OperationalCardsState = {
@@ -1571,6 +1582,69 @@ export function operationalCardsReducer(
         ...state,
         submission: {
           kind: 'coordination-transfer',
+          status: 'error',
+          targetKey: state.submission.targetKey,
+          errorMessage: action.message,
+          confirmedButStale: false,
+        },
+      }
+
+    case 'SUBMIT_EVIDENCE_RETIREMENT':
+      if (state.submission.status === 'sending') return state
+      return {
+        ...state,
+        submission: {
+          kind: 'evidence-retirement',
+          status: 'sending',
+          targetKey: `${action.problemId}:${action.evidenceId}`,
+          errorMessage: null,
+          confirmedButStale: false,
+        },
+      }
+
+    case 'SUBMIT_EVIDENCE_RETIREMENT_SUCCESS': {
+      /*
+       * Retiro confirmado. Se invalidan evidencias activas y cronología para
+       * recargarlas; el historial lo refresca el panel de evidencias.
+       */
+      const previousSections =
+        state.detailByProblem[action.problemId]?.sections ??
+        state.level2.sections
+      const sections = {
+        ...previousSections,
+        evidences: {
+          status: 'idle' as const,
+          items: [],
+          errorMessage: null,
+        },
+        timeline: {
+          status: 'idle' as const,
+          items: [],
+          errorMessage: null,
+        },
+      }
+      const cached = state.detailByProblem[action.problemId]
+      return {
+        ...state,
+        detailByProblem: cached
+          ? {
+              ...state.detailByProblem,
+              [action.problemId]: { ...cached, sections },
+            }
+          : state.detailByProblem,
+        level2:
+          state.selectedProblemId === action.problemId
+            ? { ...state.level2, sections }
+            : state.level2,
+        submission: initialOperationalCardsState.submission,
+      }
+    }
+
+    case 'SUBMIT_EVIDENCE_RETIREMENT_ERROR':
+      return {
+        ...state,
+        submission: {
+          kind: 'evidence-retirement',
           status: 'error',
           targetKey: state.submission.targetKey,
           errorMessage: action.message,

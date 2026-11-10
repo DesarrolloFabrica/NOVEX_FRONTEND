@@ -5,6 +5,10 @@ import { DirectorProblemPanel } from '@/modules/operational-cards/experience/dir
 import type { OperationalShellModel } from '@/modules/operational-cards/hooks/useOperationalShellModel'
 import type { ProblemDetail } from '@/modules/operational-cards/types/problem-detail.types'
 
+vi.mock('@/modules/auth/hooks/useAuth', () => ({
+  useAuth: () => ({ user: { roleCode: 'DIRECTOR', permissions: ['SITUATIONS_VIEW'] } }),
+}))
+
 // El cuerpo del expediente tiene su propia suite; aquí importa lo que va DEBAJO.
 vi.mock('@/modules/operational-cards/components/ProblemDetail', () => ({
   ProblemDetail: () => <div data-testid="problem-detail-stub" />,
@@ -54,6 +58,13 @@ function panel(detail: ProblemDetail | null, status: 'ready' | 'loading' = 'read
       selectedCoordinationCode: 'fabrica',
       toggleSection: vi.fn(),
       retrySection: vi.fn(),
+      submission: {
+        kind: null,
+        status: 'idle',
+        targetKey: null,
+        errorMessage: null,
+        confirmedButStale: false,
+      },
     },
     selectedCoordination: null,
     labelByCode: {},

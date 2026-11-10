@@ -3,6 +3,7 @@ import { ProblemDetail } from '@/modules/operational-cards/components/ProblemDet
 import { ProblemResolutionRecord } from '@/modules/operational-cards/components/ProblemResolutionRecord'
 import { resolveCoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
 import { useProblemListFilters } from '@/modules/operational-cards/hooks/useProblemListFilters'
+import { useAuth } from '@/modules/auth/hooks/useAuth'
 import type { OperationalKpiDirectionSnapshot } from '@/modules/operational-cards/types/operational-kpi.types'
 import type { OperationalShellModel } from '@/modules/operational-cards/hooks/useOperationalShellModel'
 import '@/styles/director-kpi-panel.css'
@@ -26,6 +27,7 @@ export function DirectorProblemPanel({
     rowLabelByCode,
     colorByCode,
   } = model
+  const { user } = useAuth()
   // Los filtros viven aquí: el detalle sustituye a la lista y «Volver» debe
   // recuperarlos tal como estaban.
   const [filters, setFilters] = useProblemListFilters(
@@ -44,6 +46,12 @@ export function DirectorProblemPanel({
           selectedCoordinationCode={controller.selectedCoordinationCode}
           onToggleSection={controller.toggleSection}
           onRetrySection={controller.retrySection}
+          evidenceActions={{
+            user,
+            allowOperationalWrites: false,
+            submission: controller.submission,
+            onRetire: async () => false,
+          }}
         />
         {/*
          * Expediente de CONSULTA: el aprendizaje del cierre en solo lectura.

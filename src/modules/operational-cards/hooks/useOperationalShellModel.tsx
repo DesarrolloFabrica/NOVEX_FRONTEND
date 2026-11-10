@@ -410,6 +410,19 @@ export function useOperationalShellModel(
     canViewHistory,
     allowLifecycleActions,
     administration,
+    evidenceActions: {
+      user,
+      allowOperationalWrites: allowLifecycleActions,
+      onRetire: (evidenceId, reason) => {
+        const detail = controller.level2.detail
+        if (!detail) return Promise.resolve(false)
+        return controller.submitEvidenceRetirement(
+          detail.id,
+          evidenceId,
+          reason,
+        )
+      },
+    },
     labelByCode: rowLabelByCode,
     colorByCode,
     idleHint: isCoordinator
