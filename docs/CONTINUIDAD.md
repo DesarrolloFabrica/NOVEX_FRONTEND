@@ -27,6 +27,15 @@ En esta máquina la copia de consolidación es `NOVEX-review-01b2-frontend` (`re
 
 Integrado en esta rama: tipos `CANCELLED` / `cancellation` / `canCancel` / `canTransfer`, clients `cancelSituation` + `transferSituationCoordination`, validación de motivo, submission kinds, reducer/hook, host `situation-admin-actions` en `ProblemActions` para Antigravity. Sin botones/modales todavía.
 
+### Fase 02B (UI/UX anulación y traslado administrativo)
+
+Integrado por Antigravity:
+- Sección secundaria «Gestión administrativa» en `ProblemActions` dentro del host `situation-admin-actions`, visible solo si `administration.allow` y existen pistas `canCancel` / `canTransfer`.
+- Modales accesibles `CancelSituationModal` y `TransferCoordinationModal` con validación de 10 a 1000 caracteres, trampa de foco, Escape, prevención de doble clic y manejo de errores con refresco de concurrencia.
+- Vista de estado `CANCELLED` reflejada con distinción como acción administrativa excepcional.
+- Filtrado preventivo de coordinación actual y de afectada en reportes INTER.
+- Integración visual sobria coherente con la identidad Cartas y Circo y soporte en tema ticket.
+
 ## Retomar
 
 ```bash

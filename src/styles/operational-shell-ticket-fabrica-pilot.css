@@ -2286,6 +2286,99 @@
   color: #8a342c;
 }
 
+/* Gestión administrativa en el ticket: botones discretos con tinta de circo */
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__block--administration {
+  border-top: 1px dashed rgb(42 33 24 / 0.28);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__block-title--admin {
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__admin-btn {
+  border-radius: 8px;
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__admin-btn--cancel {
+  border: 1px solid rgb(185 28 28 / 0.4);
+  background: rgb(254 226 226 / 0.5);
+  color: #991b1b;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__admin-btn--cancel:hover:not(:disabled),
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__admin-btn--cancel:focus-visible {
+  border-color: #b91c1c;
+  background: rgb(254 226 226 / 0.85);
+  outline: 2px solid color-mix(in srgb, #b91c1c 45%, transparent);
+  outline-offset: 1px;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__admin-btn--transfer {
+  border: 1px solid var(--ticket-accent-deep);
+  background: var(--ticket-teal-soft);
+  color: var(--ticket-accent-deep);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__admin-btn--transfer:hover:not(:disabled),
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__admin-btn--transfer:focus-visible {
+  background: color-mix(in srgb, var(--ticket-accent) 25%, #fff);
+  outline: 2px solid color-mix(in srgb, var(--ticket-accent-deep) 45%, transparent);
+  outline-offset: 1px;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__cancellation {
+  border: 1px solid rgb(185 28 28 / 0.35);
+  border-radius: 8px;
+  background: rgb(254 242 242 / 0.7);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__cancellation-pill {
+  border: 1px solid rgb(185 28 28 / 0.5);
+  background: rgb(254 226 226 / 0.9);
+  color: #991b1b;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__cancellation-meta {
+  color: #991b1b;
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__cancellation-byline {
+  color: var(--ticket-pilot-ink);
+}
+
+.operational-shell[data-ticket-theme]
+  .operational-shell__region--ticket-panel
+  .problem-actions__cancellation-hint {
+  color: var(--ticket-pilot-ink-soft);
+}
+
 /* Selector visual de responsable: papel crema, sin overlay absoluto. */
 .operational-shell[data-ticket-theme]
   .operational-shell__region--ticket-panel

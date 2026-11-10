@@ -268,8 +268,8 @@ describe('ProblemActions · Pasar a En atención', () => {
   })
 })
 
-describe('ProblemActions · administración (host Antigravity)', () => {
-  it('expone pistas canCancel/canTransfer sin ofrecer botones aún', () => {
+describe('ProblemActions · administración (Fase 02B)', () => {
+  it('expone pistas y monta los botones de anulación y traslado cuando ambas están permitidas', () => {
     const html = renderToStaticMarkup(
       <ProblemActions
         detail={detail({ canCancel: true, canTransfer: true })}
@@ -289,8 +289,53 @@ describe('ProblemActions · administración (host Antigravity)', () => {
     expect(html).toContain('data-can-cancel="true"')
     expect(html).toContain('data-can-transfer="true"')
     expect(html).toContain('data-testid="situation-admin-actions"')
-    expect(html).not.toContain('Anular situación')
-    expect(html).not.toContain('Trasladar coordinación')
+    expect(html).toContain('Gestión administrativa')
+    expect(html).toContain('data-testid="cancel-situation-button"')
+    expect(html).toContain('Anular situación')
+    expect(html).toContain('data-testid="transfer-coordination-button"')
+    expect(html).toContain('Trasladar coordinación')
+  })
+
+  it('ofrece únicamente anulación cuando canTransfer es false', () => {
+    const html = renderToStaticMarkup(
+      <ProblemActions
+        detail={detail({ canCancel: true, canTransfer: false })}
+        learningDraft=""
+        submission={idleSubmission}
+        onLearningChange={() => undefined}
+        onResolve={() => undefined}
+        onAdvanceToInProgress={() => undefined}
+        allowLifecycleActions={false}
+        administration={{
+          allow: true,
+          onCancel: () => undefined,
+          onTransfer: () => undefined,
+        }}
+      />,
+    )
+    expect(html).toContain('data-testid="cancel-situation-button"')
+    expect(html).not.toContain('data-testid="transfer-coordination-button"')
+  })
+
+  it('ofrece únicamente traslado cuando canCancel es false', () => {
+    const html = renderToStaticMarkup(
+      <ProblemActions
+        detail={detail({ canCancel: false, canTransfer: true })}
+        learningDraft=""
+        submission={idleSubmission}
+        onLearningChange={() => undefined}
+        onResolve={() => undefined}
+        onAdvanceToInProgress={() => undefined}
+        allowLifecycleActions={false}
+        administration={{
+          allow: true,
+          onCancel: () => undefined,
+          onTransfer: () => undefined,
+        }}
+      />,
+    )
+    expect(html).not.toContain('data-testid="cancel-situation-button"')
+    expect(html).toContain('data-testid="transfer-coordination-button"')
   })
 
   it('no monta el host admin sin pistas del backend', () => {
@@ -314,7 +359,7 @@ describe('ProblemActions · administración (host Antigravity)', () => {
     expect(html).not.toContain('data-testid="situation-admin-actions"')
   })
 
-  it('muestra error de anulación reutilizando submission', () => {
+  it('muestra error de anulación reutilizando submission y botón de refresco si hay onRetryDetail', () => {
     const html = renderToStaticMarkup(
       <ProblemActions
         detail={detail({ canCancel: true })}
@@ -335,10 +380,45 @@ describe('ProblemActions · administración (host Antigravity)', () => {
           onCancel: () => undefined,
           onTransfer: () => undefined,
         }}
+        onRetryDetail={() => undefined}
       />,
     )
     expect(html).toContain('data-testid="cancellation-error"')
     expect(html).toContain('No tiene permiso para esta acción administrativa.')
+    expect(html).toContain('Refrescar situación')
+  })
+
+  it('muestra estado CANCELLED con distintivo de acción excepcional', () => {
+    const html = renderToStaticMarkup(
+      <ProblemActions
+        detail={detail({
+          status: 'CANCELLED',
+          cancellation: {
+            reason: 'Duplicado con FOL-102',
+            previousStatus: 'OPEN',
+            cancelledByUserName: 'Administrador General',
+            cancelledAt: '2026-10-01T12:00:00Z',
+          },
+        })}
+        learningDraft=""
+        submission={idleSubmission}
+        onLearningChange={() => undefined}
+        onResolve={() => undefined}
+        onAdvanceToInProgress={() => undefined}
+        allowLifecycleActions={false}
+        administration={{
+          allow: true,
+          onCancel: () => undefined,
+          onTransfer: () => undefined,
+        }}
+      />,
+    )
+    expect(html).toContain('data-cancelled="true"')
+    expect(html).toContain('data-testid="cancellation-badge"')
+    expect(html).toContain('Situación anulada')
+    expect(html).toContain('Acción administrativa excepcional')
+    expect(html).toContain('data-testid="cancellation-record"')
+    expect(html).toContain('Anulado por Administrador General: Duplicado con FOL-102')
   })
 })
 

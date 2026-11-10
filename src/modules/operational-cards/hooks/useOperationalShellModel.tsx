@@ -318,6 +318,15 @@ export function useOperationalShellModel(
 
   const noop = () => {}
 
+  const coordinationOptions = useMemo(() => {
+    if (!overview) return []
+    return overview.coordinations.map((row) => ({
+      id: row.id,
+      label: labelByCode[row.code] ?? row.shortName,
+      code: row.code,
+    }))
+  }, [overview, labelByCode])
+
   const administration: SituationAdministrationHandlers | null = canAdminister
     ? {
         allow: true,
@@ -338,6 +347,7 @@ export function useOperationalShellModel(
             invalidateCoordinationCodes: [originCode],
           })
         },
+        coordinationOptions,
       }
     : null
 

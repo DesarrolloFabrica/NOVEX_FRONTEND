@@ -10480,6 +10480,109 @@ textarea {
   padding-top: 4px;
 }
 
+.novex-ops-modal__comment select {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid rgb(148 163 184 / 0.22);
+  border-radius: 10px;
+  background: rgb(8 16 30 / 0.9);
+  color: #e8f2ff;
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+.novex-ops-modal__situation-title {
+  margin: 0 0 6px;
+  color: #dce9fb;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.novex-ops-modal__situation-title strong {
+  color: #fff;
+}
+
+.novex-ops-modal__coordination-info {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 0.78rem;
+}
+
+.novex-ops-modal__coord-label {
+  color: #94a3b8;
+}
+
+.novex-ops-modal__coord-current {
+  color: #7dd3fc;
+  font-weight: 600;
+}
+
+.novex-ops-modal__hint--reopen-warning {
+  display: block;
+  margin-top: 4px;
+  color: #fde047;
+}
+
+.novex-ops-modal__field-meta {
+  display: flex;
+  justify-content: flex-end;
+  font-size: 0.68rem;
+}
+
+.novex-ops-modal__counter {
+  color: #94a3b8;
+}
+
+.novex-ops-modal__counter--warn {
+  color: #fca5a5;
+}
+
+.novex-ops-modal__error-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.novex-ops-modal__retry-btn {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border: 1px solid rgb(240 176 84 / 0.45);
+  border-radius: 6px;
+  background: rgb(240 176 84 / 0.15);
+  color: #fde68a;
+  font-size: 0.72rem;
+  font-weight: 550;
+  cursor: pointer;
+}
+
+.novex-ops-modal__retry-btn:hover {
+  background: rgb(240 176 84 / 0.28);
+}
+
+.novex-ops-modal__primary--destructive {
+  border-color: rgb(239 68 68 / 0.45);
+  background: linear-gradient(135deg, rgb(185 28 28 / 0.4), rgb(127 29 29 / 0.35));
+  color: #fee2e2;
+}
+
+.novex-ops-modal__primary--destructive:hover:not(:disabled) {
+  border-color: rgb(239 68 68 / 0.7);
+  background: linear-gradient(135deg, rgb(185 28 28 / 0.6), rgb(127 29 29 / 0.5));
+}
+
+.novex-ops-modal__primary:disabled,
+.novex-ops-modal__secondary:disabled,
+.novex-ops-modal__close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 @media (max-width: 900px) {
   .novex-os[data-scene='commitments'] .novex-ops-intelligence__grid {
     grid-template-columns: 1fr;

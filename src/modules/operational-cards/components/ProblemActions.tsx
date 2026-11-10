@@ -1,10 +1,15 @@
-import { useId, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import type { ProblemDetail } from '@/modules/operational-cards/types/problem-detail.types'
 import type { OperationalSubmissionState } from '@/modules/operational-cards/types/operational-cards.state'
 import { DOSSIER_HISTORY_STATUS_LABEL } from '@/modules/operational-cards/data/problemDossier'
 import { resolveSituationAdminActionAvailability } from '@/modules/operational-cards/data/situationAdminActions'
 import { resolveResolutionCopy } from '@/modules/situations/data/resolutionCopy'
 import { ProblemResolutionRecord } from '@/modules/operational-cards/components/ProblemResolutionRecord'
+import { CancelSituationModal } from '@/modules/operational-cards/components/CancelSituationModal'
+import {
+  TransferCoordinationModal,
+  type AdministrationCoordinationOption,
+} from '@/modules/operational-cards/components/TransferCoordinationModal'
 
 /**
  * ACCIONES sobre el problema, bajo su detalle y en el mismo panel.
@@ -13,7 +18,7 @@ import { ProblemResolutionRecord } from '@/modules/operational-cards/components/
  *   Seguimiento   Estado actual + «Pasar a En atención» si OPEN y
  *                 canAdvanceToInProgress.
  *   Cierre        Aprendizaje obligatorio si canResolve (OPEN o IN_PROGRESS).
- *   Administración  Host para anulación/traslado (Antigravity monta UI).
+ *   Administración  Host para anulación/traslado (botones + modales accesibles).
  *
  * El endpoint de cierre solo acepta `learning`. No hay campo «solución» aparte.
  * Las vías de CREACIÓN de reportes viven en el modo idle del panel, no aquí.
@@ -26,8 +31,7 @@ function statusLabel(status: string): string {
 }
 
 /**
- * Cableado técnico de anulación/traslado. La UI visual (botones + modal) la
- * añade Antigravity sobre este contrato; no se inventa un flujo paralelo.
+ * Cableado técnico de anulación/traslado.
  */
 export interface SituationAdministrationHandlers {
   /**
@@ -40,6 +44,8 @@ export interface SituationAdministrationHandlers {
     toCoordinationId: string
     reason: string
   }) => void
+  /** Opciones de coordinación para el selector de traslado. */
+  coordinationOptions?: readonly AdministrationCoordinationOption[]
 }
 
 export interface ProblemActionsProps {
@@ -57,6 +63,8 @@ export interface ProblemActionsProps {
   allowLifecycleActions?: boolean
   /** Anulación / traslado. Independiente de `allowLifecycleActions`. */
   administration?: SituationAdministrationHandlers | null
+  /** Reintento o refresco del detalle del problema ante concurrencia (409) */
+  onRetryDetail?: () => void
 }
 
 export function ProblemActions({
@@ -68,10 +76,15 @@ export function ProblemActions({
   onAdvanceToInProgress,
   allowLifecycleActions = true,
   administration = null,
+  onRetryDetail,
 }: ProblemActionsProps) {
   const idPrefijo = useId()
   const copy = resolveResolutionCopy(detail.reportKind)
   const adminAvailability = resolveSituationAdminActionAvailability(detail)
+  const [activeAdminModal, setActiveAdminModal] = useState<
+    'cancel' | 'transfer' | null
+  >(null)
+
   const enviandoResolucion =
     submission.status === 'sending' &&
     submission.kind === 'resolution' &&
@@ -135,6 +148,38 @@ export function ProblemActions({
     Boolean(administration?.allow) &&
     (adminAvailability.canCancel || adminAvailability.canTransfer)
 
+  // Cierre automático de modales tras confirmación exitosa
+  const wasSendingCancellation = useRef(false)
+  const wasSendingTransfer = useRef(false)
+
+  useEffect(() => {
+    if (enviandoAnulacion) {
+      wasSendingCancellation.current = true
+    } else if (wasSendingCancellation.current) {
+      wasSendingCancellation.current = false
+      if (!errorAnulacion) {
+        setActiveAdminModal(null)
+      }
+    }
+  }, [enviandoAnulacion, errorAnulacion])
+
+  useEffect(() => {
+    if (enviandoTraslado) {
+      wasSendingTransfer.current = true
+    } else if (wasSendingTransfer.current) {
+      wasSendingTransfer.current = false
+      if (!errorTraslado) {
+        setActiveAdminModal(null)
+      }
+    }
+  }, [enviandoTraslado, errorTraslado])
+
+  useEffect(() => {
+    if (terminal) {
+      setActiveAdminModal(null)
+    }
+  }, [terminal, detail.id])
+
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
     if (ocupado || sinTexto) return
@@ -147,8 +192,9 @@ export function ProblemActions({
       data-testid="problem-actions"
       data-tour="problem-actions"
       data-surface="problem-actions"
+      data-busy={ocupado ? 'true' : 'false'}
+      data-can-advance={puedeAvanzar ? 'true' : 'false'}
       data-can-resolve={detail.canResolve ? 'true' : 'false'}
-      data-can-advance={detail.canAdvanceToInProgress ? 'true' : 'false'}
       data-can-update={detail.canUpdate ? 'true' : 'false'}
       data-can-cancel={adminAvailability.canCancel ? 'true' : 'false'}
       data-can-transfer={adminAvailability.canTransfer ? 'true' : 'false'}
@@ -169,21 +215,45 @@ export function ProblemActions({
         />
       )}
 
-      {anulada && detail.cancellation && (
-        <p
-          className="problem-actions__note"
-          data-testid="cancellation-record"
+      {anulada && (
+        <div
+          className="problem-actions__cancellation"
+          data-testid="cancellation-record-block"
           data-surface="problem-cancellation"
         >
-          Anulado por {detail.cancellation.cancelledByUserName}:{' '}
-          {detail.cancellation.reason}
-        </p>
+          <div className="problem-actions__cancellation-header">
+            <span
+              className="problem-actions__cancellation-pill"
+              data-testid="cancellation-badge"
+            >
+              Situación anulada
+            </span>
+            <span className="problem-actions__cancellation-meta">
+              Acción administrativa excepcional
+            </span>
+          </div>
+
+          {detail.cancellation && (
+            <p
+              className="problem-actions__note problem-actions__cancellation-byline"
+              data-testid="cancellation-record"
+              data-surface="problem-cancellation"
+            >
+              Anulado por {detail.cancellation.cancelledByUserName}:{' '}
+              {detail.cancellation.reason}
+            </p>
+          )}
+
+          <p className="problem-actions__cancellation-hint">
+            Esta situación fue anulada administrativamente. No admite nuevas
+            acciones operativas ni registro de aprendizajes.
+          </p>
+        </div>
       )}
 
       {muestraSeguimiento && (
         <div
           className="problem-actions__block problem-actions__block--tracking"
-          data-testid="status-advance-block"
           data-surface="problem-tracking"
         >
           <div className="problem-actions__block-head">
@@ -192,8 +262,8 @@ export function ProblemActions({
             </h3>
             <span
               className="problem-actions__status"
-              data-testid="actions-status"
               data-status={detail.status}
+              data-testid="actions-status"
             >
               {statusLabel(detail.status)}
             </span>
@@ -207,7 +277,7 @@ export function ProblemActions({
                   data-testid="status-advance-sending"
                   role="status"
                 >
-                  Actualizando el estado…
+                  Actualizando el estado del caso…
                 </p>
               )}
 
@@ -225,9 +295,11 @@ export function ProblemActions({
                 type="button"
                 className="problem-actions__advance-button"
                 data-testid="status-advance-button"
+                data-surface="status-advance"
                 aria-label="Pasar a En atención"
                 disabled={ocupado}
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation()
                   if (ocupado) return
                   onAdvanceToInProgress()
                 }}
@@ -326,15 +398,48 @@ export function ProblemActions({
           data-affected-coordination-id={
             detail.affectedCoordinationId ?? undefined
           }
-          /*
-           * Antigravity: montar aquí «Anular situación», «Trasladar
-           * coordinación», modal de motivo y selector de destino. Handlers:
-           * administration.onCancel(reason) /
-           * administration.onTransfer({ toCoordinationId, reason }).
-           * No crear un segundo flujo fuera de este host.
-           */
           aria-label="Acciones administrativas"
         >
+          <div className="problem-actions__block-head">
+            <h3 className="problem-actions__block-title problem-actions__block-title--admin">
+              Gestión administrativa
+            </h3>
+          </div>
+          <p className="problem-actions__block-hint">
+            Acciones operativas excepcionales para administradores sobre la
+            asignación y vigencia del caso.
+          </p>
+
+          <div
+            className="problem-actions__admin-group"
+            role="group"
+            aria-label="Acciones de gestión administrativa"
+          >
+            {adminAvailability.canCancel && (
+              <button
+                type="button"
+                className="problem-actions__admin-btn problem-actions__admin-btn--cancel"
+                data-testid="cancel-situation-button"
+                disabled={ocupado}
+                onClick={() => setActiveAdminModal('cancel')}
+              >
+                Anular situación
+              </button>
+            )}
+
+            {adminAvailability.canTransfer && (
+              <button
+                type="button"
+                className="problem-actions__admin-btn problem-actions__admin-btn--transfer"
+                data-testid="transfer-coordination-button"
+                disabled={ocupado}
+                onClick={() => setActiveAdminModal('transfer')}
+              >
+                Trasladar coordinación
+              </button>
+            )}
+          </div>
+
           {enviandoAnulacion && (
             <p
               className="problem-actions__note"
@@ -345,13 +450,24 @@ export function ProblemActions({
             </p>
           )}
           {errorAnulacion && (
-            <p
-              className="problem-actions__note problem-actions__note--error"
-              data-testid="cancellation-error"
-              role="alert"
-            >
-              {errorAnulacion}
-            </p>
+            <div className="problem-actions__error-box">
+              <p
+                className="problem-actions__note problem-actions__note--error"
+                data-testid="cancellation-error"
+                role="alert"
+              >
+                {errorAnulacion}
+              </p>
+              {onRetryDetail && (
+                <button
+                  type="button"
+                  className="problem-actions__retry-btn"
+                  onClick={onRetryDetail}
+                >
+                  Refrescar situación
+                </button>
+              )}
+            </div>
           )}
           {enviandoTraslado && (
             <p
@@ -363,14 +479,58 @@ export function ProblemActions({
             </p>
           )}
           {errorTraslado && (
-            <p
-              className="problem-actions__note problem-actions__note--error"
-              data-testid="coordination-transfer-error"
-              role="alert"
-            >
-              {errorTraslado}
-            </p>
+            <div className="problem-actions__error-box">
+              <p
+                className="problem-actions__note problem-actions__note--error"
+                data-testid="coordination-transfer-error"
+                role="alert"
+              >
+                {errorTraslado}
+              </p>
+              {onRetryDetail && (
+                <button
+                  type="button"
+                  className="problem-actions__retry-btn"
+                  onClick={onRetryDetail}
+                >
+                  Refrescar situación
+                </button>
+              )}
+            </div>
           )}
+
+          <CancelSituationModal
+            isOpen={activeAdminModal === 'cancel'}
+            situationTitle={detail.title}
+            isSubmitting={enviandoAnulacion}
+            error={errorAnulacion}
+            onClose={() => setActiveAdminModal(null)}
+            onConfirm={(reason) => administration.onCancel(reason)}
+            onRetryDetail={onRetryDetail}
+          />
+
+          <TransferCoordinationModal
+            isOpen={activeAdminModal === 'transfer'}
+            situationTitle={detail.title}
+            currentCoordinationName={detail.coordinationName ?? ''}
+            currentCoordinationId={detail.coordinationId}
+            currentCoordinationCode={detail.coordinationCode}
+            affectedCoordinationId={detail.affectedCoordinationId}
+            affectedCoordinationCode={detail.affectedCoordinationCode}
+            reportKind={detail.reportKind}
+            currentStatus={detail.status}
+            coordinationOptions={administration.coordinationOptions ?? []}
+            isSubmitting={enviandoTraslado}
+            error={errorTraslado}
+            onClose={() => setActiveAdminModal(null)}
+            onConfirm={(destinationId, reason) =>
+              administration.onTransfer({
+                toCoordinationId: destinationId,
+                reason,
+              })
+            }
+            onRetryDetail={onRetryDetail}
+          />
         </div>
       )}
     </section>

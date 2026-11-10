@@ -200,6 +200,7 @@ export function OperationalActionPanel({
             onAdvanceToInProgress={onAdvanceToInProgress}
             allowLifecycleActions={allowLifecycleActions}
             administration={administration}
+            onRetryDetail={onRetryDetail}
           />
         )}
       </div>
