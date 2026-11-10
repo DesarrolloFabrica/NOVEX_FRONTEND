@@ -2,6 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { canCreateSituations, hasPermission } from '@/modules/auth/utils/permissions'
+import {
+  canExecuteSituationAnalysis,
+  canViewSituationAnalysis,
+} from '@/modules/operational-cards/data/analysisAccess'
 import { fetchIncidentCategories } from '@/modules/api/situations.api'
 import { DirectionCharacter } from '@/modules/operational-cards/components/DirectionCharacter'
 import { OperationalActionPanel } from '@/modules/operational-cards/components/OperationalActionPanel'
@@ -58,10 +62,14 @@ export function useOperationalShellModel(
   const canCreate = canOperate && canCreateSituations(user)
   const allowLifecycleActions = canOperate
   const canViewHistory = hasPermission(user, 'SITUATIONS_VIEW')
+  const canViewAnalysis = canViewSituationAnalysis(user)
   const assignedCoordinationId = user?.coordinationId?.trim() || null
 
   // El borrador y la clave de idempotencia del reporte se guardan por usuario.
-  const controller = useOperationalOverview({ persistenceScope: user?.id ?? null })
+  const controller = useOperationalOverview({
+    persistenceScope: user?.id ?? null,
+    enableAnalysis: canViewAnalysis,
+  })
   const { level0, overview, selectedCoordinationCode, hoveredCoordinationCode } =
     controller
 
@@ -424,6 +432,21 @@ export function useOperationalShellModel(
         )
       },
     },
+    analysisActions: canViewAnalysis
+      ? {
+          canExecute: canExecuteSituationAnalysis(
+            user,
+            controller.level2.detail?.status,
+          ),
+          onExecute: () => {
+            const detail = controller.level2.detail
+            if (!detail) return
+            void controller.submitAiAnalysis(detail.id)
+          },
+          onRetry: () => controller.retryAnalysis(),
+          onRetryHistory: () => controller.retryAnalysisHistory(),
+        }
+      : null,
     labelByCode: rowLabelByCode,
     colorByCode,
     idleHint: isCoordinator

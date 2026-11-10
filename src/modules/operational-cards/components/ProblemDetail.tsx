@@ -2,6 +2,7 @@ import { useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { CoordinationMark } from '@/modules/operational-cards/components/CoordinationMark'
 import { ProblemDetailSection } from '@/modules/operational-cards/components/ProblemDetailSection'
 import { ProblemEvidencesPanel } from '@/modules/operational-cards/components/ProblemEvidencesPanel'
+import { ProblemAnalysisPanel } from '@/modules/operational-cards/components/ProblemAnalysisPanel'
 import { resolveCoordinationMarkAsset } from '@/modules/operational-cards/data/coordinationMark'
 import {
   toProblemTimelineEntryView,
@@ -275,6 +276,17 @@ export interface ProblemDetailProps {
     submission: OperationalSubmissionState
     onRetire: (evidenceId: string, reason: string) => Promise<boolean>
   } | null
+  /**
+   * Análisis IA contextual. Ausente = el usuario no tiene `AI_VIEW_REPORTS`
+   * (la sección no se monta). Execute solo si `canExecute`.
+   */
+  analysisActions?: {
+    canExecute: boolean
+    submission: OperationalSubmissionState
+    onExecute: () => void
+    onRetry: () => void
+    onRetryHistory: () => void
+  } | null
   /** Regreso que decide el panel contenedor. Sin él, no hay flecha. */
   onBack?: () => void
   /** Nombre accesible de la flecha («Volver a problemas», «Volver»…). */
@@ -296,6 +308,7 @@ export function ProblemDetail({
   onRetrySection = () => undefined,
   consequenceActions = null,
   evidenceActions = null,
+  analysisActions = null,
   onBack,
   backLabel = 'Volver a problemas',
 }: ProblemDetailProps) {
@@ -587,6 +600,22 @@ export function ProblemDetail({
                 )}
               </SectionState>
             </ProblemDetailSection>
+
+            {analysisActions ? (
+              <ProblemAnalysisPanel
+                situationId={detail.id}
+                situationStatus={detail.status}
+                analysis={sections.analysis}
+                expanded={expanded}
+                onToggleSection={onToggleSection}
+                canExecute={analysisActions.canExecute}
+                submission={analysisActions.submission}
+                onExecute={analysisActions.onExecute}
+                onRetry={analysisActions.onRetry}
+                onRetryHistory={analysisActions.onRetryHistory}
+                confirmedConsequenceCount={detail.consequences.length}
+              />
+            ) : null}
           </div>
         </>
       )}

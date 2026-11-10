@@ -15,8 +15,8 @@ import type { ProblemDetail } from '@/modules/operational-cards/types/problem-de
  *
  * Apertura = la situación. En cuanto está lista se piden sus evidencias, por
  * separado y sin bloquear el panel: de ellas sale «Notas del reporte». La
- * Cronología se pide solo al desplegarse. El detalle no consulta el análisis
- * IA ni sus recomendaciones.
+ * Cronología se pide solo al desplegarse. El análisis IA se carga en una
+ * sección contextual aparte (`sections.analysis`), no en este servicio.
  *
  * Las coordinaciones relacionadas (`relatedCoordinations`) no se leen aquí: no
  * representan un impacto medido ni intervienen en el Centro Operacional. Siguen

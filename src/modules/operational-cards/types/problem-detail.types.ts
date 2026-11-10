@@ -5,28 +5,37 @@ import type {
   SituationSeverity,
 } from '@/modules/situations/types/situation.types'
 import type { LoadState } from '@/modules/operational-cards/types/operational-cards.state'
+import {
+  initialProblemAnalysisSectionState,
+  type ProblemAnalysisSectionState,
+} from '@/modules/operational-cards/types/problem-analysis.types'
 
 /**
  * Contrato de LEVEL 2: lo que el detalle necesita para responder «¿qué
  * ocurre exactamente con este problema?».
  *
- * Sin IA: no hay resumen ejecutivo, evaluación de impacto del análisis ni
- * recomendaciones. Todo lo que llega aquí lo registró una persona o lo produjo
- * el propio flujo operacional (estado, SLA, resolución).
+ * El expediente operacional (estado, SLA, resolución, afectaciones confirmadas)
+ * sigue siendo la fuente de hechos. La sección de análisis IA es sugerencia
+ * contextual y no modifica esos hechos.
  */
 
 /**
  * Acordeones del detalle. «Notas del reporte» y «Otras evidencias» salen de la
  * MISMA carga de evidencias (se separan por tipo) y solo se pintan si tienen
- * contenido; «Cronología», siempre.
+ * contenido; «Cronología» y «Análisis inteligente», siempre disponibles.
  */
-export type ProblemSectionId = 'notes' | 'other-evidences' | 'timeline'
+export type ProblemSectionId =
+  | 'notes'
+  | 'other-evidences'
+  | 'timeline'
+  | 'ai-analysis'
 
 /** Orden congelado de los acordeones. */
 export const PROBLEM_SECTION_ORDER: readonly ProblemSectionId[] = [
   'notes',
   'other-evidences',
   'timeline',
+  'ai-analysis',
 ]
 
 /** Un nivel del historial de severidad, listo para la vista. */
@@ -146,20 +155,26 @@ export interface ProblemSectionState<T> {
 export interface ProblemSectionsState {
   evidences: ProblemSectionState<SituationEvidenceItem>
   timeline: ProblemSectionState<SituationTimelineEntry>
+  analysis: ProblemAnalysisSectionState
 }
 
 export const initialProblemSectionsState: ProblemSectionsState = {
   evidences: { status: 'idle', items: [], errorMessage: null },
   timeline: { status: 'idle', items: [], errorMessage: null },
+  analysis: initialProblemAnalysisSectionState,
 }
 
-/** Datos que se piden aparte de la situación, cada uno con su petición. */
-export type LazyProblemSectionId = keyof ProblemSectionsState
+/**
+ * Datos lazy con forma de lista (`items`). El análisis IA usa su propio shape
+ * (`sections.analysis`) y acciones dedicadas.
+ */
+export type LazyProblemSectionId = 'evidences' | 'timeline'
 
 /**
  * Datos que pide un acordeón al desplegarse. Las evidencias no están: se piden
  * en cuanto el detalle está listo, porque de ellas depende saber si las notas
  * existen, y eso no puede exigir abrir un acordeón que quizá esté vacío.
+ * El análisis vigente también se pide al quedar listo el detalle (si hay permiso).
  */
 export function lazyDataForSection(
   section: ProblemSectionId,

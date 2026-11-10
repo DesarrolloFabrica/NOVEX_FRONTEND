@@ -136,6 +136,7 @@ export type OperationalSubmissionKind =
   | 'cancellation'
   | 'coordination-transfer'
   | 'evidence-retirement'
+  | 'ai-analysis'
   | null
 
 export interface OperationalSubmissionState {

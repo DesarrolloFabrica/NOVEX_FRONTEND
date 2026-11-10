@@ -79,6 +79,14 @@ export interface OperationalActionPanelProps {
   > | null
   /** Ámbito de borradores de motivo administrativo (id de usuario). */
   draftScope?: string | null
+  /**
+   * Análisis IA contextual. `null` = sin permiso de lectura; no se monta la
+   * sección. `submission` lo aporta el panel.
+   */
+  analysisActions?: Omit<
+    NonNullable<ProblemDetailProps['analysisActions']>,
+    'submission'
+  > | null
   /** Quien puede consultar situaciones ve el acceso al historial. */
   canViewHistory?: boolean
   idleHint?: string | null
@@ -118,6 +126,7 @@ export function OperationalActionPanel({
   administration = null,
   evidenceActions = null,
   draftScope = null,
+  analysisActions = null,
   canViewHistory = false,
   idleHint = null,
   labelByCode,
@@ -192,6 +201,11 @@ export function OperationalActionPanel({
           evidenceActions={
             evidenceActions
               ? { ...evidenceActions, submission }
+              : null
+          }
+          analysisActions={
+            analysisActions
+              ? { ...analysisActions, submission }
               : null
           }
         />

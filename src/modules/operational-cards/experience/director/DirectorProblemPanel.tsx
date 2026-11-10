@@ -4,6 +4,10 @@ import { ProblemResolutionRecord } from '@/modules/operational-cards/components/
 import { resolveCoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
 import { useProblemListFilters } from '@/modules/operational-cards/hooks/useProblemListFilters'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
+import {
+  canExecuteSituationAnalysis,
+  canViewSituationAnalysis,
+} from '@/modules/operational-cards/data/analysisAccess'
 import type { OperationalKpiDirectionSnapshot } from '@/modules/operational-cards/types/operational-kpi.types'
 import type { OperationalShellModel } from '@/modules/operational-cards/hooks/useOperationalShellModel'
 import '@/styles/director-kpi-panel.css'
@@ -52,6 +56,23 @@ export function DirectorProblemPanel({
             submission: controller.submission,
             onRetire: async () => false,
           }}
+          analysisActions={
+            canViewSituationAnalysis(user)
+              ? {
+                  canExecute: canExecuteSituationAnalysis(
+                    user,
+                    detail?.status,
+                  ),
+                  submission: controller.submission,
+                  onExecute: () => {
+                    if (!detail) return
+                    void controller.submitAiAnalysis(detail.id)
+                  },
+                  onRetry: () => controller.retryAnalysis(),
+                  onRetryHistory: () => controller.retryAnalysisHistory(),
+                }
+              : null
+          }
         />
         {/*
          * Expediente de CONSULTA: el aprendizaje del cierre en solo lectura.

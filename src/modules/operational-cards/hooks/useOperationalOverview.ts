@@ -49,6 +49,12 @@ import { submitProblemCoordinationTransfer } from '@/modules/operational-cards/s
 import { describeSituationAdministrationError } from '@/modules/operational-cards/services/situation-administration-errors'
 import { submitEvidenceRetirement } from '@/modules/operational-cards/services/problem-evidence-retirement.service'
 import { describeEvidenceRetirementError } from '@/modules/operational-cards/services/evidence-retirement-errors'
+import {
+  describeAnalysisError,
+  executeProblemAnalysis,
+  loadProblemAnalysis,
+  loadProblemAnalysisHistory,
+} from '@/modules/operational-cards/services/problem-analysis.service'
 import type { ReportDraft } from '@/modules/operational-cards/types/operational-cards.state'
 
 /**
@@ -141,6 +147,12 @@ export interface OperationalCardsController extends OperationalCardsState {
     evidenceId: string,
     reason: string,
   ) => Promise<boolean>
+  /** Ejecuta o reanaliza con Gemini (AI_ANALYZE + caso workable). */
+  submitAiAnalysis: (problemId: string) => Promise<boolean>
+  /** Reintenta la carga del análisis vigente tras un error. */
+  retryAnalysis: () => void
+  /** Reintenta el historial de versiones de análisis. */
+  retryAnalysisHistory: () => void
   /** El personaje avisa de que ya representó la reacción. */
   consumeCharacterReaction: (id: number) => void
 }
@@ -162,9 +174,15 @@ export function useOperationalOverview(
      * sobrevive a una recarga.
      */
     persistenceScope?: string | null
+    /**
+     * Si es true (permiso `AI_VIEW_REPORTS`), carga el análisis vigente al
+     * abrir el detalle y el historial al expandir la sección.
+     */
+    enableAnalysis?: boolean
   } = {},
 ): OperationalCardsController {
   const persistenceScope = options.persistenceScope ?? null
+  const enableAnalysis = options.enableAnalysis === true
   const [state, dispatch] = useReducer(
     operationalCardsReducer,
     persistenceScope,
@@ -355,6 +373,62 @@ export function useOperationalOverview(
     }
   }, [selectedProblemId, level2Status, expandedSections, sectionsState])
 
+  // Análisis IA vigente: al quedar listo el detalle, si el usuario puede verlo.
+  // Una respuesta de otro problema la descarta el reducer (selectedProblemId).
+  const analysisStatus = sectionsState.analysis.status
+  useEffect(() => {
+    if (!enableAnalysis || !selectedProblemId) return
+    if (level2Status !== 'ready') return
+    if (analysisStatus !== 'idle') return
+
+    const problemId = selectedProblemId
+    dispatch({ type: 'LOAD_ANALYSIS', problemId })
+    void loadProblemAnalysis(problemId)
+      .then((latest) => {
+        dispatch({ type: 'LOAD_ANALYSIS_SUCCESS', problemId, latest })
+      })
+      .catch((error: unknown) => {
+        dispatch({
+          type: 'LOAD_ANALYSIS_ERROR',
+          problemId,
+          message: describeAnalysisError(error),
+        })
+      })
+  }, [enableAnalysis, selectedProblemId, level2Status, analysisStatus])
+
+  // Historial de versiones: solo al expandir «Análisis inteligente».
+  const analysisHistoryStatus = sectionsState.analysis.historyStatus
+  const analysisExpanded = expandedSections.includes('ai-analysis')
+  useEffect(() => {
+    if (!enableAnalysis || !selectedProblemId) return
+    if (!analysisExpanded) return
+    if (analysisHistoryStatus !== 'idle') return
+
+    const problemId = selectedProblemId
+    dispatch({ type: 'LOAD_ANALYSIS_HISTORY', problemId })
+    void loadProblemAnalysisHistory(problemId)
+      .then((history) => {
+        dispatch({
+          type: 'LOAD_ANALYSIS_HISTORY_SUCCESS',
+          problemId,
+          history: history.items,
+          latestVersion: history.latestVersion,
+        })
+      })
+      .catch((error: unknown) => {
+        dispatch({
+          type: 'LOAD_ANALYSIS_HISTORY_ERROR',
+          problemId,
+          message: describeAnalysisError(error),
+        })
+      })
+  }, [
+    enableAnalysis,
+    selectedProblemId,
+    analysisExpanded,
+    analysisHistoryStatus,
+  ])
+
   const retrySection = useCallback(
     (section: LazyProblemSectionId) => {
       if (!selectedProblemId) return
@@ -362,6 +436,16 @@ export function useOperationalOverview(
     },
     [selectedProblemId],
   )
+
+  const retryAnalysis = useCallback(() => {
+    if (!selectedProblemId) return
+    dispatch({ type: 'RETRY_ANALYSIS', problemId: selectedProblemId })
+  }, [selectedProblemId])
+
+  const retryAnalysisHistory = useCallback(() => {
+    if (!selectedProblemId) return
+    dispatch({ type: 'RETRY_ANALYSIS_HISTORY', problemId: selectedProblemId })
+  }, [selectedProblemId])
 
   const selectProblem = useCallback((problemId: string) => {
     dispatch({ type: 'SELECT_PROBLEM', problemId })
@@ -887,6 +971,34 @@ export function useOperationalOverview(
     [],
   )
 
+  const submitAiAnalysis = useCallback(
+    async (problemId: string): Promise<boolean> => {
+      if (sendingRef.current) return false
+      sendingRef.current = true
+
+      dispatch({ type: 'SUBMIT_AI_ANALYSIS', problemId })
+
+      try {
+        const latest = await executeProblemAnalysis(problemId)
+        dispatch({
+          type: 'SUBMIT_AI_ANALYSIS_SUCCESS',
+          problemId,
+          latest,
+        })
+        return true
+      } catch (error: unknown) {
+        dispatch({
+          type: 'SUBMIT_AI_ANALYSIS_ERROR',
+          message: describeAnalysisError(error),
+        })
+        return false
+      } finally {
+        sendingRef.current = false
+      }
+    },
+    [],
+  )
+
   /*
    * El resumen operacional se vuelve a pedir tras cada escritura confirmada: es
    * la fuente del aura de las cartas y del estado del personaje, y crear o
@@ -935,6 +1047,9 @@ export function useOperationalOverview(
     submitCancellation,
     submitCoordinationTransfer,
     submitEvidenceRetirement: submitEvidenceRetirementFn,
+    submitAiAnalysis,
+    retryAnalysis,
+    retryAnalysisHistory,
     consumeCharacterReaction,
   }
 }

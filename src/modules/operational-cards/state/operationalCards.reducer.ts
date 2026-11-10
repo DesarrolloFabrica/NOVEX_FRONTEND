@@ -13,12 +13,17 @@ import type {
 } from '@/modules/operational-cards/types/problem-history.types'
 import { defaultHistoryPeriod } from '@/modules/operational-cards/data/problemHistoryPeriod'
 import type { SituationsListScope } from '@/modules/api/situations.api'
+import type { AnalysisSessionSummary } from '@/modules/api/analysis.api'
 import {
   initialProblemSectionsState,
   type LazyProblemSectionId,
   type ProblemDetail,
   type ProblemSectionId,
 } from '@/modules/operational-cards/types/problem-detail.types'
+import {
+  initialProblemAnalysisSectionState,
+  type ProblemAnalysisView,
+} from '@/modules/operational-cards/types/problem-analysis.types'
 
 /**
  * Reducer de la experiencia: LEVEL 0 (overview), selección, LEVEL 1
@@ -29,8 +34,8 @@ import {
  * una respuesta que llega tarde tras cambiar de carta o cerrar la isla se
  * descarta en vez de contaminar lo que el usuario tiene delante.
  *
- * Impacto e Inteligencia IA no aparecen entre las secciones perezosas: se
- * derivan del análisis que ya se carga al abrir la isla.
+ * El análisis IA vive en `sections.analysis` (shape propio) y se pide al
+ * quedar listo el detalle cuando el usuario puede ver informes.
  */
 
 export type OperationalCardsAction =
@@ -84,6 +89,24 @@ export type OperationalCardsAction =
       message: string
     }
   | { type: 'RETRY_SECTION'; problemId: string; section: LazyProblemSectionId }
+  // ---- Análisis IA (sección dedicada; no usa `items`) ----
+  | { type: 'LOAD_ANALYSIS'; problemId: string }
+  | {
+      type: 'LOAD_ANALYSIS_SUCCESS'
+      problemId: string
+      latest: ProblemAnalysisView | null
+    }
+  | { type: 'LOAD_ANALYSIS_ERROR'; problemId: string; message: string }
+  | { type: 'RETRY_ANALYSIS'; problemId: string }
+  | { type: 'LOAD_ANALYSIS_HISTORY'; problemId: string }
+  | {
+      type: 'LOAD_ANALYSIS_HISTORY_SUCCESS'
+      problemId: string
+      history: readonly AnalysisSessionSummary[]
+      latestVersion: number | null
+    }
+  | { type: 'LOAD_ANALYSIS_HISTORY_ERROR'; problemId: string; message: string }
+  | { type: 'RETRY_ANALYSIS_HISTORY'; problemId: string }
   // ---- «Mis reportes» ----
   | { type: 'LOAD_MY_REPORTS'; page: number }
   | {
@@ -199,6 +222,13 @@ export type OperationalCardsAction =
       evidenceId: string
     }
   | { type: 'SUBMIT_EVIDENCE_RETIREMENT_ERROR'; message: string }
+  | { type: 'SUBMIT_AI_ANALYSIS'; problemId: string }
+  | {
+      type: 'SUBMIT_AI_ANALYSIS_SUCCESS'
+      problemId: string
+      latest: ProblemAnalysisView
+    }
+  | { type: 'SUBMIT_AI_ANALYSIS_ERROR'; message: string }
   | { type: 'CONSUME_CHARACTER_REACTION'; id: number }
 
 export const initialOperationalCardsState: OperationalCardsState = {
@@ -669,6 +699,182 @@ export function operationalCardsReducer(
           sections: {
             ...state.level2.sections,
             [action.section]: { status: 'idle', items: [], errorMessage: null },
+          },
+        },
+      }
+
+    case 'LOAD_ANALYSIS': {
+      if (state.selectedProblemId !== action.problemId) return state
+      const analysis = {
+        ...state.level2.sections.analysis,
+        status: 'loading' as const,
+        errorMessage: null,
+      }
+      return {
+        ...state,
+        level2: {
+          ...state.level2,
+          sections: { ...state.level2.sections, analysis },
+        },
+      }
+    }
+
+    case 'LOAD_ANALYSIS_SUCCESS': {
+      const analysis = {
+        ...((state.selectedProblemId === action.problemId
+          ? state.level2.sections.analysis
+          : state.detailByProblem[action.problemId]?.sections.analysis) ??
+          initialProblemAnalysisSectionState),
+        status: 'ready' as const,
+        latest: action.latest,
+        errorMessage: null,
+      }
+      const cachedEntry = state.detailByProblem[action.problemId]
+      const detailByProblem = cachedEntry
+        ? {
+            ...state.detailByProblem,
+            [action.problemId]: {
+              ...cachedEntry,
+              sections: { ...cachedEntry.sections, analysis },
+            },
+          }
+        : state.detailByProblem
+
+      if (state.selectedProblemId !== action.problemId) {
+        return { ...state, detailByProblem }
+      }
+
+      return {
+        ...state,
+        detailByProblem,
+        level2: {
+          ...state.level2,
+          sections: { ...state.level2.sections, analysis },
+        },
+      }
+    }
+
+    case 'LOAD_ANALYSIS_ERROR':
+      if (state.selectedProblemId !== action.problemId) return state
+      return {
+        ...state,
+        level2: {
+          ...state.level2,
+          sections: {
+            ...state.level2.sections,
+            analysis: {
+              ...state.level2.sections.analysis,
+              status: 'error',
+              latest: null,
+              errorMessage: action.message,
+            },
+          },
+        },
+      }
+
+    case 'RETRY_ANALYSIS':
+      if (state.selectedProblemId !== action.problemId) return state
+      if (state.level2.sections.analysis.status !== 'error') return state
+      return {
+        ...state,
+        level2: {
+          ...state.level2,
+          sections: {
+            ...state.level2.sections,
+            analysis: {
+              ...state.level2.sections.analysis,
+              status: 'idle',
+              errorMessage: null,
+            },
+          },
+        },
+      }
+
+    case 'LOAD_ANALYSIS_HISTORY': {
+      if (state.selectedProblemId !== action.problemId) return state
+      const analysis = {
+        ...state.level2.sections.analysis,
+        historyStatus: 'loading' as const,
+        historyErrorMessage: null,
+      }
+      return {
+        ...state,
+        level2: {
+          ...state.level2,
+          sections: { ...state.level2.sections, analysis },
+        },
+      }
+    }
+
+    case 'LOAD_ANALYSIS_HISTORY_SUCCESS': {
+      const previous =
+        (state.selectedProblemId === action.problemId
+          ? state.level2.sections.analysis
+          : state.detailByProblem[action.problemId]?.sections.analysis) ??
+        initialProblemAnalysisSectionState
+      const analysis = {
+        ...previous,
+        historyStatus: 'ready' as const,
+        history: action.history,
+        historyLatestVersion: action.latestVersion,
+        historyErrorMessage: null,
+      }
+      const cachedEntry = state.detailByProblem[action.problemId]
+      const detailByProblem = cachedEntry
+        ? {
+            ...state.detailByProblem,
+            [action.problemId]: {
+              ...cachedEntry,
+              sections: { ...cachedEntry.sections, analysis },
+            },
+          }
+        : state.detailByProblem
+
+      if (state.selectedProblemId !== action.problemId) {
+        return { ...state, detailByProblem }
+      }
+
+      return {
+        ...state,
+        detailByProblem,
+        level2: {
+          ...state.level2,
+          sections: { ...state.level2.sections, analysis },
+        },
+      }
+    }
+
+    case 'LOAD_ANALYSIS_HISTORY_ERROR':
+      if (state.selectedProblemId !== action.problemId) return state
+      return {
+        ...state,
+        level2: {
+          ...state.level2,
+          sections: {
+            ...state.level2.sections,
+            analysis: {
+              ...state.level2.sections.analysis,
+              historyStatus: 'error',
+              historyErrorMessage: action.message,
+            },
+          },
+        },
+      }
+
+    case 'RETRY_ANALYSIS_HISTORY':
+      if (state.selectedProblemId !== action.problemId) return state
+      if (state.level2.sections.analysis.historyStatus !== 'error') return state
+      return {
+        ...state,
+        level2: {
+          ...state.level2,
+          sections: {
+            ...state.level2.sections,
+            analysis: {
+              ...state.level2.sections.analysis,
+              historyStatus: 'idle',
+              historyErrorMessage: null,
+            },
           },
         },
       }
@@ -1650,6 +1856,64 @@ export function operationalCardsReducer(
         ...state,
         submission: {
           kind: 'evidence-retirement',
+          status: 'error',
+          targetKey: state.submission.targetKey,
+          errorMessage: action.message,
+          confirmedButStale: false,
+        },
+      }
+
+    case 'SUBMIT_AI_ANALYSIS':
+      if (state.submission.status === 'sending') return state
+      return {
+        ...state,
+        submission: {
+          kind: 'ai-analysis',
+          status: 'sending',
+          targetKey: action.problemId,
+          errorMessage: null,
+          confirmedButStale: false,
+        },
+      }
+
+    case 'SUBMIT_AI_ANALYSIS_SUCCESS': {
+      const previousSections =
+        state.detailByProblem[action.problemId]?.sections ??
+        state.level2.sections
+      const analysis = {
+        ...previousSections.analysis,
+        status: 'ready' as const,
+        latest: action.latest,
+        errorMessage: null,
+        // Tras un execute nuevo, el historial debe refrescarse.
+        historyStatus: 'idle' as const,
+        history: [],
+        historyErrorMessage: null,
+        historyLatestVersion: null,
+      }
+      const sections = { ...previousSections, analysis }
+      const cached = state.detailByProblem[action.problemId]
+      return {
+        ...state,
+        detailByProblem: cached
+          ? {
+              ...state.detailByProblem,
+              [action.problemId]: { ...cached, sections },
+            }
+          : state.detailByProblem,
+        level2:
+          state.selectedProblemId === action.problemId
+            ? { ...state.level2, sections }
+            : state.level2,
+        submission: initialOperationalCardsState.submission,
+      }
+    }
+
+    case 'SUBMIT_AI_ANALYSIS_ERROR':
+      return {
+        ...state,
+        submission: {
+          kind: 'ai-analysis',
           status: 'error',
           targetKey: state.submission.targetKey,
           errorMessage: action.message,

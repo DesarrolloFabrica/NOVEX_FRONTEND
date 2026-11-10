@@ -1039,3 +1039,146 @@
 .detail-entry--retired {
   opacity: 0.92;
 }
+
+/* Analisis inteligente (Fase 02E): secundaria frente al expediente. */
+.problem-analysis {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.problem-analysis__disclaimer {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px dashed rgb(126 168 224 / 0.35);
+  background: rgb(18 32 54 / 0.55);
+  color: var(--deck-muted, #8b9cb6);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+.problem-analysis__status {
+  margin: 0;
+  color: var(--deck-muted, #8b9cb6);
+  font-size: 12px;
+}
+
+.problem-analysis__error {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+
+.problem-analysis__error p,
+.problem-analysis__error-inline {
+  margin: 0;
+  color: #f0b4b4;
+  font-size: 12px;
+}
+
+.problem-analysis__retry,
+.problem-analysis__execute {
+  appearance: none;
+  width: fit-content;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgb(126 168 224 / 0.35);
+  background: rgb(20 34 58 / 0.85);
+  color: var(--deck-text, #edf5ff);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.problem-analysis__retry:hover,
+.problem-analysis__execute:hover {
+  border-color: rgb(150 196 255 / 0.55);
+}
+
+.problem-analysis__execute:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.problem-analysis__meta {
+  margin: 0;
+  color: var(--deck-muted, #8b9cb6);
+  font-size: 11px;
+}
+
+.problem-analysis__block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.problem-analysis__block-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--deck-text, #edf5ff);
+}
+
+.problem-analysis__headline {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.problem-analysis__summary,
+.problem-analysis__contrast {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--deck-text, #edf5ff);
+}
+
+.problem-analysis__list {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.problem-analysis__chip {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid rgb(126 168 224 / 0.35);
+  color: var(--deck-muted, #8b9cb6);
+  font-size: 10px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.problem-analysis__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.problem-analysis__history {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 4px;
+  border-top: 1px solid rgb(126 168 224 / 0.12);
+}
+
+.problem-analysis__history-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 11.5px;
+  color: var(--deck-muted, #8b9cb6);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
