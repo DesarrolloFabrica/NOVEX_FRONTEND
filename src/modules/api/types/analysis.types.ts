@@ -188,6 +188,11 @@ export interface SituationAIAnalysisResponse {
   updatedAt: string
 }
 
+/**
+ * Respuesta de `POST /situations/:id/analyze`.
+ * Los campos de impacto/recomendaciones/timeline son artefactos derivados;
+ * no mutan severidad, estado ni responsable del caso.
+ */
 export interface ExecuteAIAnalysisResponse {
   situationId: string
   sessionId: string
@@ -196,4 +201,29 @@ export interface ExecuteAIAnalysisResponse {
   createdAt: string
   confidence: number
   analysis: AIAnalysisResult
+  /** Presente en el contrato actual del orquestador; opcional por compatibilidad. */
+  impactAssessment?: unknown
+  recommendations?: unknown[]
+  timeline?: unknown[]
+}
+
+/**
+ * Detalle de una versión (`GET …/analysis/history/:version`).
+ * `promptSnapshot` solo llega para ADMIN; el resto recibe `promptSnapshotWithheld`.
+ */
+export interface AnalysisSessionDetailResponse {
+  sessionId: string
+  situationId: string
+  analysisVersion: number
+  isLatest: boolean
+  provider: string
+  model: string
+  promptVersion: string
+  confidence: number
+  executionTimeMs: number
+  tokenEstimate: number
+  createdAt: string
+  analysis: AIAnalysisResult
+  promptSnapshot: string | null
+  promptSnapshotWithheld: boolean
 }

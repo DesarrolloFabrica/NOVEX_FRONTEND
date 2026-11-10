@@ -1,4 +1,5 @@
 import type {
+  AnalysisSessionDetailResponse,
   ExecuteAIAnalysisResponse,
   SituationAIAnalysisResponse,
 } from '@/modules/api/types/analysis.types'
@@ -47,6 +48,15 @@ export async function fetchAnalysisHistory(
 ): Promise<AnalysisHistoryResponse> {
   return apiRequest<AnalysisHistoryResponse>(
     `/situations/${situationId}/analysis/history`,
+  )
+}
+
+export async function fetchAnalysisByVersion(
+  situationId: string,
+  version: number,
+): Promise<AnalysisSessionDetailResponse> {
+  return apiRequest<AnalysisSessionDetailResponse>(
+    `/situations/${situationId}/analysis/history/${version}`,
   )
 }
 
