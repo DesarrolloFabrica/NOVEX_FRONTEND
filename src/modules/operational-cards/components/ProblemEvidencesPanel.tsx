@@ -26,7 +26,7 @@ type EvidenceTab = 'active' | 'history'
 export interface ProblemEvidencesPanelProps {
   situationId: string
   situationStatus: string
-  user: Pick<User, 'roleCode' | 'permissions'> | null
+  user: Pick<User, 'id' | 'roleCode' | 'permissions'> | null
   /** Evidencias activas ya cargadas con el detalle. */
   activeStatus: LoadState
   activeItems: readonly SituationEvidenceItem[]
@@ -508,6 +508,8 @@ export function ProblemEvidencesPanel({
       <RetireEvidenceModal
         isOpen={Boolean(retireTarget)}
         evidenceTitle={retireTarget?.title ?? ''}
+        evidenceId={retireTarget?.id ?? ''}
+        draftScope={user && 'id' in user ? user.id : null}
         isSubmitting={retiring}
         error={retireError}
         onClose={() => {

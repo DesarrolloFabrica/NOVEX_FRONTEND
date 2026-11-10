@@ -410,6 +410,7 @@ export function useOperationalShellModel(
     canViewHistory,
     allowLifecycleActions,
     administration,
+    draftScope: user?.id ?? null,
     evidenceActions: {
       user,
       allowOperationalWrites: allowLifecycleActions,

@@ -63,6 +63,8 @@ export interface ProblemActionsProps {
   allowLifecycleActions?: boolean
   /** Anulación / traslado. Independiente de `allowLifecycleActions`. */
   administration?: SituationAdministrationHandlers | null
+  /** Ámbito de borradores de motivo (id de usuario). */
+  draftScope?: string | null
   /** Reintento o refresco del detalle del problema ante concurrencia (409) */
   onRetryDetail?: () => void
 }
@@ -76,6 +78,7 @@ export function ProblemActions({
   onAdvanceToInProgress,
   allowLifecycleActions = true,
   administration = null,
+  draftScope = null,
   onRetryDetail,
 }: ProblemActionsProps) {
   const idPrefijo = useId()
@@ -502,6 +505,8 @@ export function ProblemActions({
           <CancelSituationModal
             isOpen={activeAdminModal === 'cancel'}
             situationTitle={detail.title}
+            situationId={detail.id}
+            draftScope={draftScope}
             isSubmitting={enviandoAnulacion}
             error={errorAnulacion}
             onClose={() => setActiveAdminModal(null)}
@@ -512,6 +517,8 @@ export function ProblemActions({
           <TransferCoordinationModal
             isOpen={activeAdminModal === 'transfer'}
             situationTitle={detail.title}
+            situationId={detail.id}
+            draftScope={draftScope}
             currentCoordinationName={detail.coordinationName ?? ''}
             currentCoordinationId={detail.coordinationId}
             currentCoordinationCode={detail.coordinationCode}

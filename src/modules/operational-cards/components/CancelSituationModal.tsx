@@ -13,10 +13,14 @@ import {
   SITUATION_ADMIN_REASON_MIN_LENGTH,
   SITUATION_ADMIN_REASON_MAX_LENGTH,
 } from '@/modules/situations/data/assertAdminReason'
+import { useReasonDraft } from '@/modules/operational-cards/hooks/useReasonDraft'
 
 export interface CancelSituationModalProps {
   isOpen: boolean
   situationTitle: string
+  situationId: string
+  /** Ámbito de borrador (id de usuario). Sin él el motivo solo vive en memoria. */
+  draftScope?: string | null
   isSubmitting: boolean
   error: string | null
   onClose: () => void
@@ -40,6 +44,8 @@ function isConcurrencyOrStaleError(errorMessage: string | null): boolean {
 export function CancelSituationModal({
   isOpen,
   situationTitle,
+  situationId,
+  draftScope = null,
   isSubmitting,
   error,
   onClose,
@@ -53,8 +59,14 @@ export function CancelSituationModal({
   const dialogRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLElement | null>(null)
 
-  const [reason, setReason] = useState('')
+  const { reason, setReason, clearDraft } = useReasonDraft({
+    scope: draftScope,
+    kind: 'cancel',
+    targetId: situationId,
+    isOpen,
+  })
   const [localError, setLocalError] = useState<string | null>(null)
+  const confirmedRef = useRef(false)
 
   // Guardar elemento activo al abrir y restaurar foco al cerrar
   useEffect(() => {
@@ -76,13 +88,22 @@ export function CancelSituationModal({
     }
   }, [isOpen])
 
-  // Limpiar campos locales al abrir
   useEffect(() => {
     if (isOpen) {
-      setReason('')
+      confirmedRef.current = false
       setLocalError(null)
+      return
     }
-  }, [isOpen])
+    if (confirmedRef.current) {
+      clearDraft()
+      confirmedRef.current = false
+    }
+  }, [isOpen, clearDraft])
+
+  // Si el envío falla, el motivo debe seguir respaldado.
+  useEffect(() => {
+    if (error) confirmedRef.current = false
+  }, [error])
 
   // Cierre con Escape
   useEffect(() => {
@@ -139,6 +160,7 @@ export function CancelSituationModal({
     setLocalError(null)
     try {
       const validated = assertAdminReason(reason)
+      confirmedRef.current = true
       onConfirm(validated)
     } catch (err) {
       if (err instanceof AdminReasonValidationError) {

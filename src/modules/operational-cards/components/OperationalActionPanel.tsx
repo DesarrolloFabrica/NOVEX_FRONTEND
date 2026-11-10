@@ -77,6 +77,8 @@ export interface OperationalActionPanelProps {
     NonNullable<ProblemDetailProps['evidenceActions']>,
     'submission'
   > | null
+  /** Ámbito de borradores de motivo administrativo (id de usuario). */
+  draftScope?: string | null
   /** Quien puede consultar situaciones ve el acceso al historial. */
   canViewHistory?: boolean
   idleHint?: string | null
@@ -115,6 +117,7 @@ export function OperationalActionPanel({
   allowLifecycleActions = true,
   administration = null,
   evidenceActions = null,
+  draftScope = null,
   canViewHistory = false,
   idleHint = null,
   labelByCode,
@@ -215,6 +218,7 @@ export function OperationalActionPanel({
             onAdvanceToInProgress={onAdvanceToInProgress}
             allowLifecycleActions={allowLifecycleActions}
             administration={administration}
+            draftScope={draftScope}
             onRetryDetail={onRetryDetail}
           />
         )}

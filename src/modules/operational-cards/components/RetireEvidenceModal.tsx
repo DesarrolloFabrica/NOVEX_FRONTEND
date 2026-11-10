@@ -13,10 +13,14 @@ import {
   SITUATION_ADMIN_REASON_MIN_LENGTH,
   SITUATION_ADMIN_REASON_MAX_LENGTH,
 } from '@/modules/situations/data/assertAdminReason'
+import { useReasonDraft } from '@/modules/operational-cards/hooks/useReasonDraft'
 
 export interface RetireEvidenceModalProps {
   isOpen: boolean
   evidenceTitle: string
+  evidenceId: string
+  /** Ámbito de borrador (id de usuario). */
+  draftScope?: string | null
   isSubmitting: boolean
   error: string | null
   onClose: () => void
@@ -26,6 +30,8 @@ export interface RetireEvidenceModalProps {
 export function RetireEvidenceModal({
   isOpen,
   evidenceTitle,
+  evidenceId,
+  draftScope = null,
   isSubmitting,
   error,
   onClose,
@@ -38,8 +44,14 @@ export function RetireEvidenceModal({
   const dialogRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLElement | null>(null)
 
-  const [reason, setReason] = useState('')
+  const { reason, setReason, clearDraft } = useReasonDraft({
+    scope: draftScope,
+    kind: 'retire',
+    targetId: evidenceId,
+    isOpen,
+  })
   const [localError, setLocalError] = useState<string | null>(null)
+  const confirmedRef = useRef(false)
 
   useEffect(() => {
     if (!isOpen) return
@@ -56,10 +68,19 @@ export function RetireEvidenceModal({
 
   useEffect(() => {
     if (isOpen) {
-      setReason('')
+      confirmedRef.current = false
       setLocalError(null)
+      return
     }
-  }, [isOpen])
+    if (confirmedRef.current) {
+      clearDraft()
+      confirmedRef.current = false
+    }
+  }, [isOpen, clearDraft])
+
+  useEffect(() => {
+    if (error) confirmedRef.current = false
+  }, [error])
 
   useEffect(() => {
     if (!isOpen) return
@@ -101,7 +122,9 @@ export function RetireEvidenceModal({
     if (isSubmitting) return
     setLocalError(null)
     try {
-      onConfirm(assertAdminReason(reason))
+      const validated = assertAdminReason(reason)
+      confirmedRef.current = true
+      onConfirm(validated)
     } catch (err) {
       setLocalError(
         err instanceof AdminReasonValidationError

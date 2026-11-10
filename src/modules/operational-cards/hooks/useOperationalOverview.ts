@@ -34,6 +34,10 @@ import {
   readPersistedReportDrafts,
   rotateReportRequestId,
 } from '@/modules/operational-cards/services/report-persistence'
+import {
+  persistLearningDrafts,
+  readPersistedLearningDrafts,
+} from '@/modules/operational-cards/services/learning-persistence'
 import { submitProblemResolution } from '@/modules/operational-cards/services/problem-resolution.service'
 import { submitProblemStatusAdvance } from '@/modules/operational-cards/services/problem-status-advance.service'
 import {
@@ -167,6 +171,7 @@ export function useOperationalOverview(
     (scope): OperationalCardsState => ({
       ...initialOperationalCardsState,
       reportDrafts: readPersistedReportDrafts(scope),
+      learningDrafts: readPersistedLearningDrafts(scope),
     }),
   )
 
@@ -186,10 +191,19 @@ export function useOperationalOverview(
         type: 'HYDRATE_REPORT_DRAFTS',
         drafts: readPersistedReportDrafts(persistenceScope),
       })
+      dispatch({
+        type: 'HYDRATE_LEARNING_DRAFTS',
+        drafts: readPersistedLearningDrafts(persistenceScope),
+      })
       return
     }
     persistReportDrafts(persistenceScope, state.reportDrafts)
   }, [persistenceScope, state.reportDrafts])
+
+  useEffect(() => {
+    if (hydratedScopeRef.current !== persistenceScope) return
+    persistLearningDrafts(persistenceScope, state.learningDrafts)
+  }, [persistenceScope, state.learningDrafts])
 
   const overviewRequestRef = useRef<Promise<OperationalOverview> | null>(null)
 

@@ -38,6 +38,7 @@ describe('CancelSituationModal', () => {
         <CancelSituationModal
           isOpen={false}
           situationTitle="Caída de servicios"
+          situationId="sit-1"
           isSubmitting={false}
           error={null}
           onClose={vi.fn()}
@@ -55,6 +56,7 @@ describe('CancelSituationModal', () => {
         <CancelSituationModal
           isOpen={true}
           situationTitle="Caída de servicios"
+          situationId="sit-1"
           isSubmitting={false}
           error={null}
           onClose={vi.fn()}
@@ -80,6 +82,7 @@ describe('CancelSituationModal', () => {
         <CancelSituationModal
           isOpen={true}
           situationTitle="Caída de servicios"
+          situationId="sit-1"
           isSubmitting={false}
           error={null}
           onClose={vi.fn()}
@@ -113,6 +116,7 @@ describe('CancelSituationModal', () => {
         <CancelSituationModal
           isOpen={true}
           situationTitle="Caída de servicios"
+          situationId="sit-1"
           isSubmitting={false}
           error={null}
           onClose={vi.fn()}
@@ -155,6 +159,7 @@ describe('CancelSituationModal', () => {
         <CancelSituationModal
           isOpen={true}
           situationTitle="Caída de servicios"
+          situationId="sit-1"
           isSubmitting={true}
           error={null}
           onClose={vi.fn()}
@@ -182,6 +187,7 @@ describe('CancelSituationModal', () => {
         <CancelSituationModal
           isOpen={true}
           situationTitle="Caída de servicios"
+          situationId="sit-1"
           isSubmitting={false}
           error="El caso ya no admite esta operación."
           onClose={vi.fn()}
@@ -210,6 +216,7 @@ describe('CancelSituationModal', () => {
         <CancelSituationModal
           isOpen={true}
           situationTitle="Caída de servicios"
+          situationId="sit-1"
           isSubmitting={false}
           error={null}
           onClose={onClose}
@@ -232,6 +239,7 @@ describe('CancelSituationModal', () => {
         <CancelSituationModal
           isOpen={true}
           situationTitle="Caída de servicios"
+          situationId="sit-1"
           isSubmitting={true}
           error={null}
           onClose={onClose}

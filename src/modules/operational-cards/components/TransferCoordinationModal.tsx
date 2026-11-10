@@ -14,6 +14,7 @@ import {
   SITUATION_ADMIN_REASON_MAX_LENGTH,
 } from '@/modules/situations/data/assertAdminReason'
 import { fetchCoordinations } from '@/modules/api/coordinations.api'
+import { useReasonDraft } from '@/modules/operational-cards/hooks/useReasonDraft'
 
 export interface AdministrationCoordinationOption {
   id: string
@@ -24,6 +25,9 @@ export interface AdministrationCoordinationOption {
 export interface TransferCoordinationModalProps {
   isOpen: boolean
   situationTitle: string
+  situationId: string
+  /** Ámbito de borrador (id de usuario). */
+  draftScope?: string | null
   currentCoordinationName: string
   currentCoordinationId?: string | null
   currentCoordinationCode?: string | null
@@ -55,6 +59,8 @@ function isConcurrencyOrStaleError(errorMessage: string | null): boolean {
 export function TransferCoordinationModal({
   isOpen,
   situationTitle,
+  situationId,
+  draftScope = null,
   currentCoordinationName,
   currentCoordinationId,
   currentCoordinationCode,
@@ -78,8 +84,14 @@ export function TransferCoordinationModal({
   const triggerRef = useRef<HTMLElement | null>(null)
 
   const [destinationId, setDestinationId] = useState('')
-  const [reason, setReason] = useState('')
+  const { reason, setReason, clearDraft } = useReasonDraft({
+    scope: draftScope,
+    kind: 'transfer',
+    targetId: situationId,
+    isOpen,
+  })
   const [localError, setLocalError] = useState<string | null>(null)
+  const confirmedRef = useRef(false)
   const [fetchedOptions, setFetchedOptions] = useState<
     readonly AdministrationCoordinationOption[]
   >([])
@@ -145,14 +157,23 @@ export function TransferCoordinationModal({
     }
   }, [isOpen])
 
-  // Limpiar campos locales al abrir
+  // Limpiar destino local al abrir; el motivo se hidrata desde el borrador.
   useEffect(() => {
     if (isOpen) {
+      confirmedRef.current = false
       setDestinationId('')
-      setReason('')
       setLocalError(null)
+      return
     }
-  }, [isOpen])
+    if (confirmedRef.current) {
+      clearDraft()
+      confirmedRef.current = false
+    }
+  }, [isOpen, clearDraft])
+
+  useEffect(() => {
+    if (error) confirmedRef.current = false
+  }, [error])
 
   // Cierre con Escape
   useEffect(() => {
@@ -232,6 +253,7 @@ export function TransferCoordinationModal({
 
     try {
       const validated = assertAdminReason(reason)
+      confirmedRef.current = true
       onConfirm(destinationId, validated)
     } catch (err) {
       if (err instanceof AdminReasonValidationError) {

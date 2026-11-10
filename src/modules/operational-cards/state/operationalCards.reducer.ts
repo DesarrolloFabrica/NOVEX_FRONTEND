@@ -132,6 +132,7 @@ export type OperationalCardsAction =
   | { type: 'SET_REPORT_DRAFT'; key: string; draft: Partial<ReportDraft> }
   /** Borradores guardados del usuario actual (al cambiar de sesión). */
   | { type: 'HYDRATE_REPORT_DRAFTS'; drafts: Record<string, ReportDraft> }
+  | { type: 'HYDRATE_LEARNING_DRAFTS'; drafts: Record<string, string> }
   | { type: 'SET_LEARNING_DRAFT'; problemId: string; learning: string }
   // ---- Escrituras ----
   | { type: 'SUBMIT_REPORT'; targetKey: string }
@@ -939,6 +940,10 @@ export function operationalCardsReducer(
     case 'HYDRATE_REPORT_DRAFTS':
       // Sustituye, no mezcla: los borradores de otra sesión no se arrastran.
       return { ...state, reportDrafts: action.drafts }
+
+    case 'HYDRATE_LEARNING_DRAFTS':
+      // Misma política que reportes: al cambiar de usuario se sustituye el mapa.
+      return { ...state, learningDrafts: action.drafts }
 
     case 'SET_LEARNING_DRAFT':
       return {

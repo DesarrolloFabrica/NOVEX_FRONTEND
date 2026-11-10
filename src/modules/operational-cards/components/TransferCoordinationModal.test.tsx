@@ -45,6 +45,7 @@ describe('TransferCoordinationModal', () => {
         <TransferCoordinationModal
           isOpen={false}
           situationTitle="Caída de servicios"
+          situationId="sit-1"
           currentCoordinationName="B2B"
           currentCoordinationId="coord-2"
           currentCoordinationCode="coord-b2b"
@@ -68,6 +69,7 @@ describe('TransferCoordinationModal', () => {
         <TransferCoordinationModal
           isOpen={true}
           situationTitle="Falla en pasarela"
+          situationId="sit-1"
           currentCoordinationName="B2B"
           currentCoordinationId="coord-2"
           currentCoordinationCode="coord-b2b"
@@ -108,6 +110,7 @@ describe('TransferCoordinationModal', () => {
         <TransferCoordinationModal
           isOpen={true}
           situationTitle="Dependencia externa"
+          situationId="sit-1"
           currentCoordinationName="B2B"
           currentCoordinationId="coord-2"
           currentCoordinationCode="coord-b2b"
@@ -140,6 +143,7 @@ describe('TransferCoordinationModal', () => {
         <TransferCoordinationModal
           isOpen={true}
           situationTitle="Falla en pasarela"
+          situationId="sit-1"
           currentCoordinationName="B2B"
           currentCoordinationId="coord-2"
           currentCoordinationCode="coord-b2b"
@@ -167,6 +171,7 @@ describe('TransferCoordinationModal', () => {
         <TransferCoordinationModal
           isOpen={true}
           situationTitle="Falla en pasarela"
+          situationId="sit-1"
           currentCoordinationName="B2B"
           currentCoordinationId="coord-2"
           currentCoordinationCode="coord-b2b"
@@ -233,6 +238,7 @@ describe('TransferCoordinationModal', () => {
         <TransferCoordinationModal
           isOpen={true}
           situationTitle="Falla en pasarela"
+          situationId="sit-1"
           currentCoordinationName="B2B"
           currentCoordinationId="coord-2"
           currentCoordinationCode="coord-b2b"
@@ -259,6 +265,7 @@ describe('TransferCoordinationModal', () => {
         <TransferCoordinationModal
           isOpen={true}
           situationTitle="Falla en pasarela"
+          situationId="sit-1"
           currentCoordinationName="B2B"
           currentCoordinationId="coord-2"
           currentCoordinationCode="coord-b2b"
@@ -295,6 +302,7 @@ describe('TransferCoordinationModal', () => {
         <TransferCoordinationModal
           isOpen={true}
           situationTitle="Falla en pasarela"
+          situationId="sit-1"
           currentCoordinationName="B2B"
           currentCoordinationId="coord-2"
           currentCoordinationCode="coord-b2b"

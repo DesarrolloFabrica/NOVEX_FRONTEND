@@ -45,7 +45,11 @@ function markup(
     <ProblemEvidencesPanel
       situationId="s1"
       situationStatus="OPEN"
-      user={{ roleCode: 'COORDINADOR', permissions: ['SITUATIONS_UPDATE'] }}
+      user={{
+        id: 'user-1',
+        roleCode: 'COORDINADOR',
+        permissions: ['SITUATIONS_UPDATE'],
+      }}
       activeStatus="ready"
       activeItems={[NOTE]}
       activeErrorMessage={null}

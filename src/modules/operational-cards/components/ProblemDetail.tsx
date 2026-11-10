@@ -270,7 +270,7 @@ export interface ProblemDetailProps {
    * se consulta aparte con autorización del servidor.
    */
   evidenceActions?: {
-    user: Pick<User, 'roleCode' | 'permissions'> | null
+    user: Pick<User, 'id' | 'roleCode' | 'permissions'> | null
     allowOperationalWrites: boolean
     submission: OperationalSubmissionState
     onRetire: (evidenceId: string, reason: string) => Promise<boolean>

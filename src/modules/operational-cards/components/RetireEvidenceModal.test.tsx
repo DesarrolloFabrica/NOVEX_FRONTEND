@@ -35,6 +35,7 @@ describe('RetireEvidenceModal', () => {
         <RetireEvidenceModal
           isOpen={false}
           evidenceTitle="Nota"
+          evidenceId="ev-1"
           isSubmitting={false}
           error={null}
           onClose={() => undefined}
@@ -52,6 +53,7 @@ describe('RetireEvidenceModal', () => {
         <RetireEvidenceModal
           isOpen
           evidenceTitle="Nota duplicada"
+          evidenceId="ev-1"
           isSubmitting={false}
           error={null}
           onClose={() => undefined}
@@ -85,6 +87,7 @@ describe('RetireEvidenceModal', () => {
         <RetireEvidenceModal
           isOpen
           evidenceTitle="Nota duplicada"
+          evidenceId="ev-1"
           isSubmitting={false}
           error={null}
           onClose={() => undefined}
@@ -115,6 +118,7 @@ describe('RetireEvidenceModal', () => {
         <RetireEvidenceModal
           isOpen
           evidenceTitle="Nota duplicada"
+          evidenceId="ev-1"
           isSubmitting
           error={null}
           onClose={() => undefined}
@@ -136,6 +140,7 @@ describe('RetireEvidenceModal', () => {
         <RetireEvidenceModal
           isOpen
           evidenceTitle="Nota"
+          evidenceId="ev-1"
           isSubmitting={false}
           error="La evidencia ya fue retirada."
           onClose={() => undefined}
@@ -154,6 +159,7 @@ describe('RetireEvidenceModal', () => {
         <RetireEvidenceModal
           isOpen
           evidenceTitle="Nota"
+          evidenceId="ev-1"
           isSubmitting={false}
           error={null}
           onClose={() => undefined}
