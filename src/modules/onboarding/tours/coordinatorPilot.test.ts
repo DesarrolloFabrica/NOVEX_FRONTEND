@@ -1,23 +1,10 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { planTourSteps } from '../engine/tourPlan'
 import { COORDINATOR_PILOT_STEPS, COORDINATOR_PILOT_STEP_COUNT } from './coordinatorPilot'
 
 const SRC = join(process.cwd(), 'src')
-
-function sourceFiles(directory: string): string[] {
-  return readdirSync(directory).flatMap((entry) => {
-    const path = join(directory, entry)
-    if (statSync(path).isDirectory()) return sourceFiles(path)
-    const isProductionSource = /\.(tsx?|ts)$/.test(entry) && !/\.test\.(tsx?|ts)$/.test(entry)
-    return isProductionSource ? [path] : []
-  })
-}
-
-const SOURCE_TEXT = sourceFiles(SRC)
-  .map((file) => readFileSync(file, 'utf8'))
-  .join('\n')
 
 /** Extrae los atributos `data-tour` y `data-testid` que un selector de paso exige. */
 function requiredAttributes(selector: string): string[] {
@@ -26,6 +13,39 @@ function requiredAttributes(selector: string): string[] {
   return [...tour, ...testIds]
 }
 
+const COORDINATOR_SCREEN_FILES = [
+  'modules/operational-cards/experience/layouts/CoordinatorOperationalLayout.tsx',
+  'modules/operational-cards/experience/layouts/OperationalCenterChrome.tsx',
+  'modules/operational-cards/experience/layouts/OperationalCenterMenu.tsx',
+  'modules/operational-cards/components/CoordinatorProblemPanel.tsx',
+  'modules/operational-cards/components/CoordinationCard.tsx',
+  'modules/operational-cards/components/OperationalActionPanel.tsx',
+  'modules/operational-cards/components/ProblemDetail.tsx',
+  'modules/operational-cards/components/ProblemActions.tsx',
+  'modules/operational-cards/components/ProblemHistoryPanel.tsx',
+  'modules/operational-cards/components/AdminInsightPanels.tsx',
+]
+
+/** Solo el código que pinta la pantalla del coordinador: un ancla de otro rol no cuenta. */
+const COORDINATOR_SCREEN_TEXT = COORDINATOR_SCREEN_FILES.map((file) =>
+  readFileSync(join(SRC, file), 'utf8'),
+).join('\n')
+
+/** `tourId="x"` de ShellRegion se pinta como `data-tour="x"`. */
+function presentOnCoordinatorScreen(attribute: string): boolean {
+  if (COORDINATOR_SCREEN_TEXT.includes(attribute)) return true
+  const tour = attribute.match(/^data-tour="(.+)"$/)
+  if (tour && COORDINATOR_SCREEN_TEXT.includes(`tourId="${tour[1]}"`)) return true
+  // Valores calculados (`data-testid={cond ? 'a' : 'b'}`): basta el literal.
+  const value = attribute.match(/^data-[a-z-]+="(.+)"$/)?.[1]
+  return Boolean(value && COORDINATOR_SCREEN_TEXT.includes(`'${value}'`))
+}
+
+/** Predicado como texto legible, sin las comillas escapadas de JSON. */
+const asText = (value: unknown) => JSON.stringify(value ?? '').replace(/\\"/g, '"')
+
+const byId = (id: string) => COORDINATOR_PILOT_STEPS.find((step) => step.id === id)
+
 describe('recorrido piloto del COORDINADOR · secuencia', () => {
   it('tiene once pasos con identificadores únicos', () => {
     expect(COORDINATOR_PILOT_STEP_COUNT).toBe(11)
@@ -33,19 +53,18 @@ describe('recorrido piloto del COORDINADOR · secuencia', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it('recorre en orden la bienvenida, la carta, los indicadores, el personaje, los reportes, los problemas y el menú', () => {
-    const ids = COORDINATOR_PILOT_STEPS.map((step) => step.id)
-    expect(ids).toEqual([
+  it('sigue la pantalla de arriba abajo y de izquierda a derecha', () => {
+    expect(COORDINATOR_PILOT_STEPS.map((step) => step.id)).toEqual([
       'bienvenida',
-      'carta-propia',
-      'indicadores',
-      'personaje',
-      'mis-reportes',
-      'problemas',
-      'detalle',
+      'resumen',
+      'carta',
+      'estado',
+      'situaciones',
+      'abrir',
+      'expediente',
       'seguimiento',
-      'reportar',
-      'historial',
+      'registrar',
+      'consultar',
       'menu',
     ])
   })
@@ -56,64 +75,69 @@ describe('recorrido piloto del COORDINADOR · secuencia', () => {
     }
   })
 
-  it('ningún paso avanza por una acción de negocio: no declara hitos de escritura', () => {
+  it('la bienvenida va centrada y sin resaltar nada', () => {
+    expect(byId('bienvenida')?.placement).toBe('center')
+    expect(byId('bienvenida')?.highlightTarget).toBe(false)
+  })
+
+  it('ningún paso usa hitos heredados ni bloquea la navegación', () => {
     for (const step of COORDINATOR_PILOT_STEPS) {
       expect(step.advanceOnTarget).toBeUndefined()
       expect(step.advanceOnVisibleTarget).toBeUndefined()
-      expect(step.advanceWhen).toBeUndefined()
       expect(step.lockNavigation).toBeFalsy()
     }
   })
 
-  it('los pasos que dependen de un problema seleccionado son opcionales y explican su ausencia', () => {
-    for (const id of ['detalle', 'seguimiento']) {
-      const step = COORDINATOR_PILOT_STEPS.find((item) => item.id === id)
-      expect(step?.optional).toBe(true)
-      expect(step?.missingNotice).toBeTruthy()
-    }
+  it('el único paso de acción solo espera a que se abra un expediente, y puede omitirse', () => {
+    const actions = COORDINATOR_PILOT_STEPS.filter((step) => step.kind === 'action')
+    expect(actions.map((step) => step.id)).toEqual(['abrir'])
+    expect(asText(byId('abrir')?.advanceWhen)).toContain('data-mode="detail"')
+    expect(byId('abrir')?.optional).toBe(true)
+    expect(byId('abrir')?.waitingLabel).toBeTruthy()
   })
 })
 
 describe('recorrido piloto del COORDINADOR · anclas reales', () => {
-  it('cada ancla que un paso señala existe en el código de producción', () => {
+  it('cada ancla que un paso señala existe en la pantalla del coordinador', () => {
     for (const step of COORDINATOR_PILOT_STEPS) {
       const selectors = [
         step.target,
         step.missingTarget ?? '',
         step.gate?.target ?? '',
         step.placementTarget ?? '',
+        asText(step.showWhen),
+        asText(step.advanceWhen),
       ]
       for (const attribute of selectors.flatMap(requiredAttributes)) {
         expect(
-          SOURCE_TEXT.includes(attribute),
-          `${step.id}: no existe ${attribute} en src`,
+          presentOnCoordinatorScreen(attribute),
+          `${step.id}: no existe ${attribute} en la pantalla del coordinador`,
         ).toBe(true)
       }
     }
   })
 })
 
-describe('recorrido piloto del COORDINADOR · transición desde el expediente', () => {
-  const byId = (id: string) => COORDINATOR_PILOT_STEPS.find((step) => step.id === id)
-
-  it('los pasos que piden elegir un problema resaltan la lista para hacerlo', () => {
-    for (const id of ['detalle', 'seguimiento']) {
-      expect(byId(id)?.missingTarget).toContain('data-tour="coordination-problems"')
-    }
+describe('recorrido piloto del COORDINADOR · pasos que dependen de un expediente', () => {
+  it('expediente y seguimiento solo se muestran si hay uno abierto', () => {
+    expect(asText(byId('expediente')?.showWhen)).toContain('data-mode="detail"')
+    expect(asText(byId('seguimiento')?.showWhen)).toContain('problem-actions')
   })
 
-  it('reportar e historial piden volver al panel antes de explicar sus opciones', () => {
-    for (const id of ['reportar', 'historial']) {
+  it('«Abra una situación» se salta si no hay filas o si ya hay un expediente abierto', () => {
+    const condition = asText(byId('abrir')?.showWhen)
+    expect(condition).toContain('situation-row')
+    expect(condition).toContain('"type":"not"')
+  })
+
+  it('registrar y consultar piden volver a la vista principal antes de explicarse', () => {
+    for (const id of ['registrar', 'consultar']) {
       const gate = byId(id)?.gate
       expect(gate, id).toBeDefined()
-      expect(gate?.target).toContain('data-testid="detail-back"')
-      expect(JSON.stringify(gate?.when)).toContain('data-mode=\\"detail\\"')
+      expect(gate?.target).toContain('data-testid="detail-bar-back"')
+      expect(gate?.target).toContain('data-testid="admin-insight-back"')
+      expect(asText(gate?.when)).toContain('coordinator-actions')
     }
-  })
-
-  it('el historial abierto no bloquea su propio paso: lo resalta', () => {
-    expect(JSON.stringify(byId('historial')?.gate?.when)).not.toContain('history')
-    expect(byId('historial')?.target).toContain('data-tour="problem-history"')
   })
 })
 
@@ -134,15 +158,6 @@ describe('recorrido piloto del COORDINADOR · permisos', () => {
       'COORDINADOR',
     )
     expect(steps.map((step) => step.id)).not.toContain('seguimiento')
-  })
-
-  it('sin permiso de crear, el paso de reportar no se muestra', () => {
-    const steps = planTourSteps(
-      COORDINATOR_PILOT_STEPS,
-      { permissions: ['SITUATIONS_UPDATE', 'SITUATIONS_VIEW'] },
-      'COORDINADOR',
-    )
-    expect(steps.map((step) => step.id)).not.toContain('reportar')
   })
 })
 

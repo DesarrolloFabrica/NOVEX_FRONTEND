@@ -4,7 +4,7 @@ import { operationalOverviewFixture } from './operational-overview.fixture'
 /**
  * Escenario del piloto del COORDINADOR con problemas registrados.
  *
- * El piloto base (`coordinator-pilot-tour.spec.ts`) solo cubre el estado vacío.
+ * Lo usa `coordinator-pilot-flow.spec.ts`, el recorrido de principio a fin.
  * Aquí la coordinación del usuario (B2B) tiene problemas en todos los estados
  * reales y con capacidades calculadas como las calcula el backend
  * (`OperationalScopeService`):
@@ -377,7 +377,19 @@ export async function install(
     }
 
     if (path.endsWith('/auth/me')) {
-      await route.fulfill({ json: { user: { ...current, fullName: session.name } } })
+      // `/auth/me` publica los permisos vigentes aparte del usuario (catálogo RBAC).
+      await route.fulfill({
+        json: {
+          user: { ...current, fullName: session.name },
+          permissions: current.permissions.map((code) => ({
+            id: code,
+            code,
+            name: code,
+            module: 'e2e',
+            description: null,
+          })),
+        },
+      })
       return
     }
 

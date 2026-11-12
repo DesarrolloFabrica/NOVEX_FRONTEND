@@ -14,6 +14,8 @@ export type TourPredicate =
   | { type: 'attribute'; selector: string; name: string; value: string }
   | { type: 'all'; predicates: TourPredicate[] }
   | { type: 'any'; predicates: TourPredicate[] }
+  /** Se cumple cuando el predicado interior no se cumple (una vista cerrada, una lista vacía). */
+  | { type: 'not'; predicate: TourPredicate }
 
 export function evaluateTourPredicate(
   predicate: TourPredicate,
@@ -34,6 +36,8 @@ export function evaluateTourPredicate(
       return predicate.predicates.some((item) =>
         evaluateTourPredicate(item, root),
       )
+    case 'not':
+      return !evaluateTourPredicate(predicate.predicate, root)
   }
 }
 

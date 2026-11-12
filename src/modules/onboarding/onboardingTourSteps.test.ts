@@ -43,7 +43,7 @@ describe('getOnboardingSteps', () => {
       expect(step.lockNavigation).toBeFalsy()
     }
     expect(steps.find((step) => step.id === 'shell-report')?.title).toBe(
-      'Registre un problema en la coordinación seleccionada',
+      'Registre una situación en la coordinación seleccionada',
     )
     expect(
       steps.find((step) => step.id === 'shell-resolve')?.description,

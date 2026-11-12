@@ -144,7 +144,8 @@ export function decideTourStart(
  * recorrido: nunca comparte registro con el onboarding real ni escribe en backend.
  */
 export const PILOT_TOUR_ID = 'coordinador-piloto'
-export const PILOT_VERSION = 1
+/** v2: guion rehecho sobre la pantalla actual; un índice guardado con v1 no apunta al mismo paso. */
+export const PILOT_VERSION = 2
 
 export function getPilotProgressKey(userId: string): string {
   return `novex.onboarding.pilot.${PILOT_TOUR_ID}.v${PILOT_VERSION}.${encodeURIComponent(userId)}`

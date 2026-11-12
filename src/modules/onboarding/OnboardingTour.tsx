@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { useOnboarding } from './OnboardingContext'
+import { useOnboarding } from './useOnboarding'
 import { TourOverlay } from './TourOverlay'
 
 /**

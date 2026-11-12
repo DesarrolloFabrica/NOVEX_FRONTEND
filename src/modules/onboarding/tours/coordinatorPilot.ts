@@ -5,45 +5,54 @@ import type { OnboardingTourStep, TourStepGate } from '../onboardingTourSteps'
  * Piloto del recorrido del COORDINADOR. Es una definición independiente: no
  * sustituye ni modifica los pasos de los demás roles.
  *
+ * Sigue la pantalla real del coordinador (`CoordinatorOperationalLayout`):
+ *
+ *   resumen ─ carta ─ estado y salud ─ situaciones ─ abrir una ─ expediente ─
+ *   seguimiento ─ registrar ─ consultar ─ menú
+ *
  * Todos los pasos viven en /centro-operacional. Ninguno ejecuta acciones de
- * negocio: los que dependen de un problema seleccionado son opcionales y ofrecen
- * continuar cuando no hay datos.
+ * negocio. Los que dependen de una situación abierta declaran `showWhen`: si el
+ * usuario no abrió ninguna, el motor los salta sin avisos de elementos ausentes.
  */
 const ROUTE = '/centro-operacional'
-const EYEBROW_PREFIX = 'Piloto · '
 
-/** La lista de problemas, solo cuando tiene alguno que elegir. */
-const PROBLEM_LIST_WITH_ROWS =
-  '[data-tour="coordination-problems"]:has([data-testid="problem-row"])'
+/** La lista de la pestaña activa (cualquiera de las tres), solo cuando tiene filas. */
+const SITUATION_LIST = '[data-tour="situation-list"]'
+const SITUATION_LIST_WITH_ROWS = `${SITUATION_LIST}:has(.situation-row)`
 
-/** Controles «Volver» reales del expediente, del historial y del formulario de reporte. */
-const PANEL_BACK_CONTROLS =
-  '[data-testid="detail-back"], [data-testid="history-back"], [data-testid="report-form-back"]'
-
-/** El panel de acción muestra alguna de estas vistas en lugar de sus opciones. */
-function panelShowing(modes: string[]): TourPredicate {
-  return {
-    type: 'any',
-    predicates: modes.map((mode) => ({
-      type: 'present',
-      selector: `[data-testid="action-panel"][data-mode="${mode}"]`,
-    })),
-  }
+/** Expediente abierto en la columna derecha. */
+const DETAIL_OPEN: TourPredicate = {
+  type: 'present',
+  selector: '[data-testid="action-panel"][data-mode="detail"]',
 }
 
+/** En reposo la columna derecha muestra las fichas «Registrar situación» y «Consultar». */
+const ACTIONS_AT_REST: TourPredicate = {
+  type: 'present',
+  selector: '[data-testid="coordinator-actions"]',
+}
+
+/** Controles «Volver» reales del expediente, del historial y de las consultas. */
+const PANEL_BACK_CONTROLS = [
+  '[data-testid="detail-bar-back"]',
+  '[data-testid="detail-back"]',
+  '[data-testid="history-back"]',
+  '[data-testid="admin-insight-back"]',
+].join(', ')
+
 /**
- * Pide volver a la vista principal del panel antes de explicar sus opciones.
- * Solo resalta el control «Volver»: nunca lo pulsa ni cambia el problema.
+ * Pide volver a la columna derecha en reposo antes de explicar sus fichas.
+ * Solo resalta el control «Volver»: nunca lo pulsa ni cambia la situación.
  */
-function returnToPanelGate(modes: string[], purpose: string): TourStepGate {
+function returnToActionsGate(purpose: string): TourStepGate {
   return {
-    when: panelShowing(modes),
+    when: { type: 'not', predicate: ACTIONS_AT_REST },
     target: PANEL_BACK_CONTROLS,
     eyebrow: 'Volver',
-    title: 'Regrese a la vista de su coordinación',
-    description: `Para ver ${purpose}, cierre la vista abierta con la flecha «Volver». Cerrarla no cambia ningún dato.`,
-    expectation: 'Cuando el panel muestre sus opciones, el recorrido continuará aquí.',
-    waitingLabel: 'Esperando que cierre la vista',
+    title: 'Regrese a la vista principal',
+    description: `Para ver ${purpose}, cierre la vista abierta con «Volver». Cerrarla no cambia ningún dato.`,
+    expectation: 'En cuanto se cierre, el recorrido continúa solo.',
+    waitingLabel: 'Esperando que pulse «Volver»',
   }
 }
 
@@ -54,138 +63,134 @@ export const COORDINATOR_PILOT_STEPS: OnboardingTourStep[] = [
     target: '[data-tour="operational-shell"]',
     highlightTarget: false,
     placement: 'center',
-    eyebrow: `${EYEBROW_PREFIX}Coordinador`,
-    title: 'Bienvenido a su coordinación',
+    eyebrow: 'Recorrido · Coordinador',
+    title: 'Bienvenido a su Centro Operacional',
     description:
-      'Este es su espacio de trabajo en NOVEX. Aquí podrá conocer el estado de su coordinación, consultar situaciones y realizar seguimiento a los problemas que requieren atención.',
-    expectation: 'El recorrido no cambia ningún dato. Puede omitirlo cuando quiera.',
+      'En un par de minutos verá dónde leer el estado de su coordinación, cómo atender sus situaciones y dónde registrar novedades.',
+    expectation: 'El recorrido no cambia ningún dato. Puede cerrarlo y retomarlo cuando quiera.',
   },
   {
-    id: 'carta-propia',
+    id: 'resumen',
     route: ROUTE,
-    // La carta misma: su contenedor se estira con la columna y resaltaría escenario vacío.
+    target: '[data-tour="coordinator-intro"]',
+    eyebrow: 'Resumen',
+    title: 'Lo primero que debe saber',
+    description:
+      'Esta franja dice qué hacer ahora y cuenta sus situaciones por resolver, las críticas y las de otras áreas que afectan la suya.',
+    expectation: 'La frase de orientación cambia según el estado de su coordinación.',
+  },
+  {
+    id: 'carta',
+    route: ROUTE,
+    // La carta misma: su contenedor se estira con la columna y resaltaría espacio vacío.
     target: '[data-tour="own-coordination"] [data-testid="coordination-card"]',
     eyebrow: 'Su coordinación',
     title: 'Su coordinación, en una carta',
     description:
-      'Esta carta representa a su coordinación y es la pieza central de su espacio de trabajo. Su ilustración, su color y sus señales le muestran cómo está su área.',
-    expectation:
-      'Siempre verá aquí la coordinación a la que pertenece. En el siguiente paso leerá su estado.',
+      'Esta carta representa a su coordinación. Su ilustración y su color la identifican en todo NOVEX.',
+    expectation: 'Siempre verá aquí la coordinación a la que pertenece.',
   },
   {
-    id: 'indicadores',
+    id: 'estado',
     route: ROUTE,
-    target: '[data-tour="own-coordination"] [data-testid="coordination-card-status"]',
-    // Se resalta solo la etiqueta, pero el globo se aparta de la carta entera.
-    placementTarget: '[data-tour="own-coordination"] [data-testid="coordination-card"]',
-    eyebrow: 'Estado',
-    title: 'El estado de su coordinación',
+    target: '[data-tour="own-facts"]',
+    eyebrow: 'Estado y salud',
+    title: 'Cómo está su área',
     description:
-      'Esta etiqueta indica el estado operativo actual de su coordinación. Se calcula con sus problemas activos y con las dependencias de otras áreas que la afectan.',
-    expectation: 'Alerta y Crítico piden su atención. Desconocido indica que no se pudo calcular.',
+      'El estado (Estable, En alerta o Crítico) resume sus situaciones activas. La salud, de 0 a 10, baja con la cantidad y la gravedad de lo que la afecta.',
+    expectation: 'Ambos se calculan solos: usted los mejora resolviendo situaciones.',
   },
   {
-    id: 'personaje',
+    id: 'situaciones',
     route: ROUTE,
-    // La figura, sus vidas y su rótulo como una unidad; la región solo añade el marco.
-    // Atributos literales: el testid de la región se genera con una plantilla.
-    target: '[data-tour="operational-shell"] [data-testid="direction-character"]',
-    eyebrow: 'Personaje',
-    title: 'El personaje de su coordinación',
+    target: '[data-tour="situation-tabs"]',
+    // Se resaltan las pestañas, pero el globo no tapa la lista que hay debajo.
+    placementTarget: '[data-tour="coordination-problems"]',
+    eyebrow: 'Situaciones',
+    title: 'Tres bandejas de trabajo',
     description:
-      'Su expresión refleja el estado de su coordinación. Los corazones representan sus vidas operativas y disminuyen según la cantidad y gravedad de los problemas que la afectan.',
-    expectation:
-      'Estado y vidas son indicadores distintos: Crítico no significa haber perdido todos los corazones.',
+      '«Por resolver» son las de su coordinación. «Afectan mi área», las de otras áreas que la frenan. «Mis reportes», las que usted registró.',
+    expectation: 'El número de cada pestaña indica cuántas hay. Arriba puede filtrar por fecha.',
   },
   {
-    id: 'mis-reportes',
+    id: 'abrir',
     route: ROUTE,
-    // El panel sin el marco de su región: cabecera con el total, lista y «Expandir».
-    target: '[data-tour="my-reports"] [data-testid="my-reports"]',
-    eyebrow: 'Mis reportes',
-    title: 'Los problemas que usted ha reportado',
-    description:
-      'Aquí encuentra los problemas que usted ha registrado, abiertos o cerrados, con su estado actual, aunque involucren a otras coordinaciones.',
-    expectation: 'Al elegir uno se abre su expediente. Solo aparecen los que usted registró.',
-  },
-  {
-    id: 'problemas',
-    route: ROUTE,
-    target: '[data-tour="coordination-problems"]',
-    eyebrow: 'Problemas',
-    title: 'Problemas de su coordinación',
-    description:
-      'Aquí están los problemas activos: «Debo resolver» son los de su coordinación y «Afectan mi coordinación», los de otras áreas.',
-    expectation:
-      'Elija una situación para continuar. Si no hay activas, aparecerán al registrarse.',
-  },
-  {
-    id: 'detalle',
-    route: ROUTE,
-    target: '[data-tour="problem-detail"]',
-    eyebrow: 'Expediente',
-    title: 'Conozca los detalles de una situación',
-    description:
-      'El expediente reúne la descripción, la gravedad, las coordinaciones y la cronología del problema.',
-    expectation:
-      'Revise la información antes de seguir.',
+    target: SITUATION_LIST,
+    kind: 'action',
+    advanceWhen: DETAIL_OPEN,
+    // Solo si hay algo que abrir y aún no hay un expediente abierto.
+    showWhen: {
+      type: 'all',
+      predicates: [
+        { type: 'present', selector: SITUATION_LIST_WITH_ROWS },
+        { type: 'not', predicate: DETAIL_OPEN },
+      ],
+    },
     optional: true,
-    missingNotice:
-      'Todavía no hay un problema seleccionado. Si su lista tiene problemas, elija uno y pulse «Reintentar».',
-    missingTarget: PROBLEM_LIST_WITH_ROWS,
+    skipLabel: 'Saltar paso',
+    eyebrow: 'Pruébelo',
+    title: 'Abra una situación',
+    description:
+      'Pulse cualquier fila de la lista. La etiqueta indica si es interna o para otra área, y a la derecha verá su gravedad y su estado.',
+    expectation: 'Abrirla solo muestra su detalle; no cambia nada.',
+    waitingLabel: 'Esperando que elija una fila',
+  },
+  {
+    id: 'expediente',
+    route: ROUTE,
+    // El panel que lo muestra, no su contenido: el usuario se desplaza dentro de
+    // él para leer y el foco no debe moverse ni encogerse con el scroll.
+    target: '[data-testid="action-panel"][data-mode="detail"]',
+    showWhen: DETAIL_OPEN,
+    eyebrow: 'Detalle',
+    title: 'Todo sobre la situación',
+    description:
+      'El detalle reúne la descripción, la gravedad, las coordinaciones involucradas y la cronología de lo ocurrido.',
+    expectation: 'Desplácese dentro del panel para leerlo completo.',
   },
   {
     id: 'seguimiento',
     route: ROUTE,
     target: '[data-tour="problem-actions"]',
-    eyebrow: 'Seguimiento',
-    title: 'Seguimiento y resolución',
-    description:
-      'Aquí verá el estado del problema y, si su coordinación es la responsable, las acciones para pasarlo a En atención o cerrarlo con aprendizaje.',
-    expectation:
-      'Consultar estas acciones no cambia el problema. Si no aparecen, depende del estado o de la coordinación responsable.',
+    showWhen: { type: 'present', selector: '[data-tour="problem-actions"]' },
     requires: ['SITUATIONS_UPDATE'],
-    optional: true,
-    missingNotice:
-      'Estas acciones aparecen al abrir un problema. Elija uno en la lista y pulse «Reintentar».',
-    missingTarget: PROBLEM_LIST_WITH_ROWS,
+    eyebrow: 'Seguimiento',
+    title: 'Avance y cierre',
+    description:
+      'Si su coordinación es la responsable, desde aquí pasa la situación a «En atención» y la cierra registrando lo aprendido.',
+    expectation: 'Consultar estas acciones no cambia la situación.',
   },
   {
-    id: 'reportar',
+    id: 'registrar',
     route: ROUTE,
-    // Solo el bloque de reposo: encabezado, botones y acceso al historial.
-    target: '[data-testid="action-panel-idle"]',
-    eyebrow: 'Reportar',
-    title: 'Reporte situaciones y consulte su historial',
+    target: '[data-testid="coordinator-actions"] [data-tour="action-panel"]',
+    eyebrow: 'Registrar',
+    title: 'Registre una novedad',
     description:
-      '«Registrar situación» abre un solo formulario. Elija si es de su coordinación o si depende de otra área; la afectada es la suya.',
-    expectation: 'Su coordinación ya está seleccionada. Durante el recorrido no se envía ningún reporte.',
-    requires: ['SITUATIONS_CREATE'],
-    gate: returnToPanelGate(['detail', 'history', 'report'], 'las opciones de reporte'),
+      '«Registrar situación» abre un formulario corto. Elija si la situación es de su coordinación o si depende de otra área.',
+    expectation: 'Su coordinación ya viene seleccionada. Durante el recorrido no se envía nada.',
+    gate: returnToActionsGate('dónde registrar situaciones'),
   },
   {
-    id: 'historial',
+    id: 'consultar',
     route: ROUTE,
-    // Con el historial ya abierto se resalta el propio historial.
-    target: '[data-tour="history-open"], [data-tour="problem-history"]',
-    eyebrow: 'Historial',
-    title: 'Problemas ya cerrados',
+    target: '[data-tour="consult"]',
+    eyebrow: 'Consultar',
+    title: 'Historial y gestión',
     description:
-      'En el historial consulta problemas cerrados por semana, mes o ciclo, con el aprendizaje que quedó registrado.',
-    expectation: 'Abrirlo no cambia nada. Para volver use «Volver».',
-    optional: true,
-    missingNotice: 'El acceso al historial no está visible en este momento.',
-    gate: returnToPanelGate(['detail', 'report'], 'el acceso al historial'),
+      'En «Historial» están los cierres por período con su aprendizaje; en «Gestión», las situaciones activas por prioridad y plazo.',
+    expectation: 'Cada consulta se abre en esta columna y se cierra con «Volver».',
+    gate: returnToActionsGate('las consultas disponibles'),
   },
   {
     id: 'menu',
     route: ROUTE,
     target: '[data-tour="center-menu"]',
     eyebrow: 'Menú',
-    title: 'Menú y final del recorrido',
+    title: 'Listo para trabajar',
     description:
-      'Desde el menú cambia de vista, abre la ayuda y registra un problema cuando lo necesite.',
-    expectation: 'Con esto termina el recorrido. Pulse Finalizar.',
+      'Desde el menú cambia de vista, abre la ayuda y puede repetir este recorrido cuando lo necesite.',
+    expectation: 'Pulse «Finalizar» para cerrar el recorrido.',
   },
 ]
 

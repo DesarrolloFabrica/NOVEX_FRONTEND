@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest'
 import {
+  minimalRevealDelta,
   planCardPlacement,
   pickSheetEdge,
   revealInScrollContainers,
@@ -235,5 +236,27 @@ describe('revealInScrollContainers con franja', () => {
     const desiredTop = BAND.top + (BAND.bottom - BAND.top - 140) / 2
     expect(container.scrollTop).toBe(900 - desiredTop)
     container.remove()
+  })
+})
+
+describe('minimalRevealDelta', () => {
+  const frame = { top: 100, bottom: 700 }
+
+  it('no mueve nada si el objetivo ya se ve entero', () => {
+    expect(minimalRevealDelta({ top: 200, bottom: 400 }, frame)).toBe(0)
+  })
+
+  it('si cabe, desplaza solo lo justo para que entre (no lo centra)', () => {
+    expect(minimalRevealDelta({ top: 600, bottom: 800 }, frame)).toBe(800 - (700 - 16))
+    expect(minimalRevealDelta({ top: 20, bottom: 220 }, frame)).toBe(20 - (100 + 16))
+  })
+
+  it('si no cabe y ya llena buena parte del contenedor desde arriba, no lo toca', () => {
+    expect(minimalRevealDelta({ top: 110, bottom: 2000 }, frame)).toBe(0)
+  })
+
+  it('si no cabe y su inicio está oculto, alinea su inicio arriba', () => {
+    expect(minimalRevealDelta({ top: -400, bottom: 1500 }, frame)).toBe(-400 - (100 + 16))
+    expect(minimalRevealDelta({ top: 650, bottom: 2400 }, frame)).toBe(650 - (100 + 16))
   })
 })

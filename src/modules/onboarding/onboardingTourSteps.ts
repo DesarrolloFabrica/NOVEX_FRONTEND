@@ -47,6 +47,14 @@ export interface OnboardingTourStep extends TourStepRequirements {
    */
   placementTarget?: string
   gate?: TourStepGate
+  /**
+   * El paso solo tiene sentido si esto se cumple al llegar a él (por ejemplo,
+   * un expediente abierto). Si no se cumple, el motor lo salta en la dirección
+   * en que el usuario avanzaba, sin mostrar avisos de elementos ausentes.
+   */
+  showWhen?: TourPredicate
+  /** Texto del botón para saltar un paso de acción opcional sin completarlo. */
+  skipLabel?: string
   lockNavigation?: boolean
   placement?: 'auto' | 'center' | 'left'
   highlightTarget?: boolean
@@ -92,7 +100,7 @@ const EXECUTIVE_FLOW: OnboardingTourStep[] = [
     eyebrow: 'Riesgos',
     title: 'Lo prioritario aparece primero',
     description:
-      'Las situaciones abiertas más recientes y sensibles quedan a un clic de su expediente.',
+      'Las situaciones abiertas más recientes y sensibles quedan a un clic de su detalle.',
     expectation:
       'Puede abrir el detalle y los reportes sin entrar al flujo operativo.',
   },
@@ -141,7 +149,7 @@ const OPERATIONAL_SHELL_FLOW: OnboardingTourStep[] = [
     eyebrow: 'Centro operacional',
     title: 'Su jornada ocurre en esta pantalla',
     description:
-      'Aquí ve el estado de las coordinaciones, reporta problemas y resuelve los de su área, sin cambiar de vista.',
+      'Aquí ve el estado de las coordinaciones, registra situaciones y resuelve las de su área, sin cambiar de vista.',
     expectation: 'Todo lo que necesita está a la vista, sin capas encima.',
   },
   {
@@ -158,11 +166,11 @@ const OPERATIONAL_SHELL_FLOW: OnboardingTourStep[] = [
     id: 'shell-coordination-problems',
     route: EXECUTIVE_OPERATIONS_HOME,
     target: '[data-tour="coordination-problems"]',
-    eyebrow: 'Problemas del área',
+    eyebrow: 'Situaciones del área',
     title: 'Lo que ocurre en la coordinación observada',
     description:
-      'La lista se ordena por criticidad. Si solo tiene acceso a parte de los problemas, la pantalla se lo advierte.',
-    expectation: 'Al elegir un problema se abre su detalle a la derecha.',
+      'La lista se ordena por criticidad. Si solo tiene acceso a parte de las situaciones, la pantalla se lo advierte.',
+    expectation: 'Al elegir una situación se abre su detalle a la derecha.',
   },
   {
     id: 'shell-my-reports',
@@ -183,7 +191,7 @@ const OPERATIONAL_SHELL_FLOW: OnboardingTourStep[] = [
     description:
       '«Registrar situación» abre el formulario a la derecha. Elija si es interna o depende de otra área; luego indique severidad y, si aplica, la afectación inicial.',
     expectation:
-      'Un problema que ocurre en otra coordinación se registra como dependencia.',
+      'Una situación que ocurre en otra coordinación se registra como dependencia.',
   },
   {
     id: 'shell-resolve',
@@ -191,9 +199,9 @@ const OPERATIONAL_SHELL_FLOW: OnboardingTourStep[] = [
     target: '[data-tour="action-panel"]',
     placement: 'left',
     eyebrow: 'Resolver',
-    title: 'Cierre los problemas de su área con un aprendizaje',
+    title: 'Cierre las situaciones de su área con un aprendizaje',
     description:
-      'En el detalle de un problema de la coordinación que usted coordina aparecen el campo de aprendizaje y el botón «Problema solucionado».',
+      'En el detalle de una situación de la coordinación que usted coordina aparecen el campo de aprendizaje y el botón «Cerrar situación».',
     expectation:
       'Solo el coordinador responsable puede resolver; en los demás casos el detalle se consulta.',
   },
@@ -206,7 +214,7 @@ const OPERATIONAL_SHELL_FLOW: OnboardingTourStep[] = [
     eyebrow: 'Recorrido completado',
     title: 'Ya puede operar el Centro Operacional',
     description:
-      'Observar coordinaciones, consultar problemas, reportar y resolver con aprendizaje.',
+      'Observar coordinaciones, consultar situaciones, registrarlas y resolverlas con aprendizaje.',
     expectation:
       'Puede volver a ver este tutorial desde el menú de usuario cuando lo necesite.',
   },
@@ -219,10 +227,10 @@ const OPERATIONAL_SHELL_FLOW: OnboardingTourStep[] = [
 const ANALYST_SHELL_COPY: Record<string, Partial<OnboardingTourStep>> = {
   'shell-intro': {
     description:
-      'Aquí ve el estado de las coordinaciones y reporta problemas en la que tenga seleccionada, sin cambiar de vista.',
+      'Aquí ve el estado de las coordinaciones y registra situaciones en la que tenga seleccionada, sin cambiar de vista.',
   },
   'shell-report': {
-    title: 'Registre un problema en la coordinación seleccionada',
+    title: 'Registre una situación en la coordinación seleccionada',
     description:
       'Elija una carta y abra «Registrar situación». Indique el tipo, qué tan grave es y, si ya produjo una consecuencia, su afectación inicial.',
     expectation: 'En sus propios reportes podrá registrar después nuevas afectaciones.',
@@ -230,7 +238,7 @@ const ANALYST_SHELL_COPY: Record<string, Partial<OnboardingTourStep>> = {
   'shell-resolve': {
     title: 'Consulte el detalle y siga sus reportes',
     description:
-      'En el detalle verá cómo fue reportado, su severidad actual y sus afectaciones. Un analista resuelve solo problemas de Coordinación General.',
+      'En el detalle verá cómo se reportó, su severidad actual y sus afectaciones. Un analista resuelve solo situaciones de Coordinación General.',
     expectation: 'En los demás casos el cierre corresponde al coordinador responsable.',
   },
 }

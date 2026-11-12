@@ -71,6 +71,17 @@ describe('evaluateTourPredicate', () => {
   })
 })
 
+describe('predicado not', () => {
+  it('invierte el predicado interior', () => {
+    const root = document.createElement('div')
+    root.innerHTML = '<section data-testid="actions"></section>'
+    const present = { type: 'present', selector: '[data-testid="actions"]' } as const
+    expect(evaluateTourPredicate({ type: 'not', predicate: present }, root)).toBe(false)
+    root.innerHTML = ''
+    expect(evaluateTourPredicate({ type: 'not', predicate: present }, root)).toBe(true)
+  })
+})
+
 describe('legacyAdvancePredicate', () => {
   it('traduce los campos heredados a presencia', () => {
     expect(legacyAdvancePredicate({ advanceOnTarget: '[data-tour="x"]' })).toEqual({

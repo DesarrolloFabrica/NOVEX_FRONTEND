@@ -1,7 +1,5 @@
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -23,20 +21,9 @@ import {
   writeTourProgress,
   type TourOutcome,
 } from './engine/tourProgress'
+import { OnboardingContext } from './useOnboarding'
 
-interface OnboardingContextValue {
-  active: boolean
-  stepIndex: number
-  steps: ReturnType<typeof getOnboardingSteps>
-  next: () => void
-  previous: () => void
-  pause: () => void
-  skip: () => void
-  restart: () => void
-  resume: () => void
-}
 
-const OnboardingContext = createContext<OnboardingContextValue | null>(null)
 
 /**
  * RECORRIDO SUSPENDIDO (fase 1 de retiro del shell legacy).
@@ -271,11 +258,4 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       {children}
     </OnboardingContext.Provider>
   )
-}
-
-export function useOnboarding(): OnboardingContextValue {
-  const value = useContext(OnboardingContext)
-  if (!value)
-    throw new Error('useOnboarding debe usarse dentro de OnboardingProvider.')
-  return value
 }

@@ -17,9 +17,12 @@ export interface CoordinatorPilotTourProps {
  */
 export function CoordinatorPilotTour({ onClose }: CoordinatorPilotTourProps) {
   const { user } = useAuth()
+  const userId = user?.id
+  // Siempre desde el principio: retomar a medias dejaba al usuario en pasos
+  // finales sin contexto y se percibía como un salto. El progreso se sigue
+  // registrando, pero no decide dónde empieza.
   const [stepIndex, setStepIndex] = useState(0)
   const [active, setActive] = useState(true)
-  const userId = user?.id
 
   const steps = useMemo(
     () =>

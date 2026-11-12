@@ -81,6 +81,76 @@ export function isElementVisible(element: Element): boolean {
   return style.display !== 'none' && style.visibility !== 'hidden'
 }
 
+/** Contenedores que recortan a sus hijos (scroll u overflow oculto). */
+function clipsContent(style: CSSStyleDeclaration): boolean {
+  return /(auto|scroll|hidden|clip)/.test(`${style.overflowX} ${style.overflowY}`)
+}
+
+/**
+ * Rectángulo de la parte VISIBLE del elemento: su caja recortada por cada
+ * ancestro que recorta su contenido y por la ventana. Un expediente largo
+ * dentro de un panel con scroll mide solo lo que asoma en el panel; antes se
+ * medía entero y el foco se salía del panel tapando la cabecera.
+ */
+export function visibleBox(element: Element): TourRect | null {
+  const box = element.getBoundingClientRect()
+  let top = box.top
+  let left = box.left
+  let bottom = box.bottom
+  let right = box.right
+  let container = element.parentElement
+  while (container && container !== document.body && container !== document.documentElement) {
+    if (clipsContent(window.getComputedStyle(container))) {
+      const frame = container.getBoundingClientRect()
+      top = Math.max(top, frame.top)
+      left = Math.max(left, frame.left)
+      bottom = Math.min(bottom, frame.bottom)
+      right = Math.min(right, frame.right)
+    }
+    container = container.parentElement
+  }
+  top = Math.max(top, 0)
+  left = Math.max(left, 0)
+  bottom = Math.min(bottom, window.innerHeight)
+  right = Math.min(right, window.innerWidth)
+  if (bottom - top < 1 || right - left < 1) return null
+  return { top, left, width: right - left, height: bottom - top }
+}
+
+/** Altura mínima de lo visible para que el foco siga en el elemento y no en su panel. */
+const MIN_VISIBLE_SLICE = 48
+
+/**
+ * Qué iluminar para un elemento. Normalmente su parte visible. Pero si es
+ * contenido de un panel con scroll y el usuario lo desplaza (o es más alto que
+ * el panel), su parte visible se vuelve una franja que corre bajo barras fijas:
+ * entonces se ilumina el panel, que no se mueve mientras el usuario lee.
+ */
+export function highlightBox(element: Element): TourRect | null {
+  const visible = visibleBox(element)
+  const scroller = nearestScrollContainer(element)
+  if (!scroller) return visible
+  const box = element.getBoundingClientRect()
+  const frame = scroller.getBoundingClientRect()
+  const tallerThanFrame = box.height > frame.height + REVEAL_TOLERANCE
+  const sliver = !visible || (visible.height < MIN_VISIBLE_SLICE && box.height > visible.height + 1)
+  if (tallerThanFrame || sliver) return visibleBox(scroller) ?? visible
+  return visible
+}
+
+/** Ancestro más cercano con scroll vertical propio y contenido que lo desborda. */
+export function nearestScrollContainer(element: Element): HTMLElement | null {
+  let container = element.parentElement
+  while (container && container !== document.body && container !== document.documentElement) {
+    const style = window.getComputedStyle(container)
+    if (/(auto|scroll)/.test(style.overflowY) && container.scrollHeight > container.clientHeight) {
+      return container
+    }
+    container = container.parentElement
+  }
+  return null
+}
+
 export function isSmallViewport(viewport: TourViewport): boolean {
   return viewport.width < TOUR_SHEET_BREAKPOINT
 }
@@ -300,13 +370,42 @@ function revealWithinBand(element: HTMLElement, band: TourBand): void {
   }
 }
 
+/** Margen que se deja entre el objetivo y el borde de su contenedor al revelarlo. */
+const REVEAL_MARGIN = 16
+
 /**
- * Desplaza solo los contenedores con scroll propio que ocultan el elemento.
- * No desplaza el documento ni toca contenedores donde el elemento ya se ve,
- * para no mover el escenario sin necesidad.
+ * Desplazamiento MÍNIMO para que el objetivo se vea dentro de un contenedor:
+ * si cabe, lo justo para que entre entero (no se centra: centrar movía todo el
+ * Centro Operacional y parecía que la página se recargaba); si no cabe, se
+ * alinea su inicio con el borde superior, salvo que ese inicio ya se vea con
+ * una porción útil debajo, en cuyo caso no se toca.
+ */
+export function minimalRevealDelta(
+  box: { top: number; bottom: number },
+  frame: { top: number; bottom: number },
+): number {
+  const frameHeight = frame.bottom - frame.top
+  const height = box.bottom - box.top
+  const top = frame.top + REVEAL_MARGIN
+  const bottom = frame.bottom - REVEAL_MARGIN
+  if (height <= bottom - top) {
+    if (box.top < top) return box.top - top
+    if (box.bottom > bottom) return box.bottom - bottom
+    return 0
+  }
+  // Su inicio (título) ya se ve y deja debajo una porción útil: no se toca.
+  const startVisible =
+    box.top >= frame.top - REVEAL_TOLERANCE &&
+    box.top <= frame.bottom - Math.min(frameHeight * 0.5, 240)
+  return startVisible ? 0 : box.top - top
+}
+
+/**
+ * Desplaza solo los contenedores con scroll propio que ocultan el elemento, de
+ * dentro hacia fuera y lo mínimo posible. No desplaza el documento.
  *
  * Con `band` (hoja en pantallas pequeñas) el objetivo se lleva a la franja
- * libre de la hoja en lugar de centrarse en su contenedor.
+ * libre de la hoja en lugar de revelarse en su contenedor.
  */
 export function revealInScrollContainers(
   element: HTMLElement,
@@ -317,30 +416,33 @@ export function revealInScrollContainers(
     revealWithinBand(element, band)
     return
   }
+  // Se calculan las posiciones finales escribiendo de forma directa (cada
+  // contenedor exterior debe medir el elemento ya movido por el interior) y,
+  // con movimiento permitido, se reproducen después de forma suave.
+  const moves: Array<{ container: HTMLElement; from: number; to: number }> = []
   let container = element.parentElement
   while (container) {
     const style = window.getComputedStyle(container)
-    const scrollable = /(auto|scroll)/.test(style.overflowY)
-    if (scrollable && container.scrollHeight > container.clientHeight) {
-      const frame = container.getBoundingClientRect()
-      const box = element.getBoundingClientRect()
-      const fullyVisible =
-        box.top >= frame.top && box.bottom <= frame.bottom
-      if (!fullyVisible) {
-        const target =
-          container.scrollTop +
-          (box.top - frame.top) -
-          frame.height / 2 +
-          box.height / 2
+    if (/(auto|scroll)/.test(style.overflowY) && container.scrollHeight > container.clientHeight) {
+      const delta = minimalRevealDelta(
+        element.getBoundingClientRect(),
+        container.getBoundingClientRect(),
+      )
+      if (Math.abs(delta) >= REVEAL_TOLERANCE) {
+        const from = container.scrollTop
         const maximum = container.scrollHeight - container.clientHeight
-        const next = clamp(target, 0, maximum)
-        if (reduceMotion) {
-          container.scrollTop = next
-        } else {
-          container.scrollTo({ top: next, behavior: 'smooth' })
+        const to = clamp(from + delta, 0, maximum)
+        if (to !== from) {
+          container.scrollTop = to
+          moves.push({ container, from, to })
         }
       }
     }
     container = container.parentElement
+  }
+  if (reduceMotion) return
+  for (const move of moves) {
+    move.container.scrollTop = move.from
+    move.container.scrollTo({ top: move.to, behavior: 'smooth' })
   }
 }

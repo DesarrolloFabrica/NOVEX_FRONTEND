@@ -51,12 +51,12 @@ export function CoordinatorPilotInvitation({ onStart }: CoordinatorPilotInvitati
       role="region"
       aria-labelledby="pilot-invitation-title"
     >
-      <p className="pilot-invitation__eyebrow">Tutorial · solo desarrollo</p>
+      <p className="pilot-invitation__eyebrow">Recorrido guiado</p>
       <h2 id="pilot-invitation-title" className="pilot-invitation__title">
         ¿Quiere conocer su Centro Operacional?
       </h2>
       <p className="pilot-invitation__text">
-        Le mostraremos cómo consultar los problemas de su coordinación, realizar
+        Le mostraremos cómo consultar las situaciones de su coordinación, realizar
         seguimiento y utilizar las herramientas disponibles.
       </p>
       {/* La acción principal va al final, donde termina la lectura. */}

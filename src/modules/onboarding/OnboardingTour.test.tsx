@@ -17,7 +17,7 @@ const ctx = vi.hoisted(() => ({
   resume: vi.fn(),
 }))
 
-vi.mock('./OnboardingContext', () => ({
+vi.mock('./useOnboarding', () => ({
   useOnboarding: () => ctx,
 }))
 
@@ -357,5 +357,167 @@ describe('OnboardingTour · foco y seguridad', () => {
     })
 
     expect(fetchSpy).not.toHaveBeenCalled()
+  })
+})
+
+describe('OnboardingTour · pasos que no aplican', () => {
+  const NOT_APPLICABLE: OnboardingTourStep = {
+    ...INFO,
+    id: 'not-applicable',
+    title: 'Paso condicionado',
+    showWhen: { type: 'present', selector: '[data-tour="open-detail"]' },
+  }
+
+  it('se saltan hacia delante si la condición sigue sin cumplirse tras el margen', () => {
+    vi.useFakeTimers()
+    addAnchor({}, 'anchor-info')
+    ctx.steps = [INFO, NOT_APPLICABLE, INFO]
+    mount()
+    expect(ctx.next).not.toHaveBeenCalled()
+
+    ctx.stepIndex = 1
+    mount()
+    // Durante el margen no salta ni muestra el globo: solo el velo.
+    expect(ctx.next).not.toHaveBeenCalled()
+    expect(document.querySelector('.novex-tour__card')).toBeNull()
+    expect(document.querySelector('.novex-tour__shade--full')).not.toBeNull()
+
+    act(() => {
+      vi.advanceTimersByTime(500)
+    })
+    expect(ctx.next).toHaveBeenCalledTimes(1)
+    expect(document.body.textContent).not.toContain('Paso condicionado')
+  })
+
+  it('no salta si lo que espera aparece durante el margen (vista aún cargando)', async () => {
+    addAnchor({}, 'anchor-info')
+    ctx.steps = [INFO, NOT_APPLICABLE, INFO]
+    ctx.stepIndex = 1
+    mount()
+    await act(async () => {
+      await sleep(100)
+      addAnchor({}, 'open-detail')
+      await sleep(100)
+    })
+    expect(document.body.textContent).toContain('Paso condicionado')
+    await act(async () => {
+      await sleep(500)
+    })
+    expect(ctx.next).not.toHaveBeenCalled()
+  })
+
+  it('al retroceder se saltan hacia atrás, sin rebotar hacia delante', () => {
+    vi.useFakeTimers()
+    addAnchor({}, 'anchor-info')
+    ctx.steps = [INFO, NOT_APPLICABLE, INFO]
+    ctx.stepIndex = 2
+    mount()
+
+    ctx.stepIndex = 1
+    mount()
+    act(() => {
+      vi.advanceTimersByTime(500)
+    })
+    expect(ctx.previous).toHaveBeenCalledTimes(1)
+    expect(ctx.next).not.toHaveBeenCalled()
+  })
+
+  it('un render ajeno durante el margen no salta dos veces', () => {
+    vi.useFakeTimers()
+    addAnchor({}, 'anchor-info')
+    ctx.steps = [INFO, NOT_APPLICABLE, INFO]
+    ctx.stepIndex = 1
+    mount()
+    mount()
+    act(() => {
+      vi.advanceTimersByTime(200)
+    })
+    mount()
+    act(() => {
+      vi.advanceTimersByTime(800)
+    })
+    expect(ctx.next).toHaveBeenCalledTimes(1)
+  })
+
+  it('se muestran con normalidad si la condición se cumple', () => {
+    addAnchor({}, 'anchor-info')
+    addAnchor({}, 'open-detail')
+    ctx.steps = [NOT_APPLICABLE]
+    mount()
+    expect(document.body.textContent).toContain('Paso condicionado')
+    expect(ctx.next).not.toHaveBeenCalled()
+  })
+})
+
+describe('OnboardingTour · bienvenida sin resaltado', () => {
+  it('oscurece toda la pantalla aunque el ancla exista y centra el globo', async () => {
+    addAnchor({}, 'anchor-info')
+    ctx.steps = [{ ...INFO, highlightTarget: false, placement: 'center' }]
+    mount()
+    await act(async () => {
+      await sleep(50)
+    })
+    expect(document.querySelector('.novex-tour__shade--full')).not.toBeNull()
+    expect(document.querySelector('.novex-tour__spotlight')).toBeNull()
+    const card = document.querySelector<HTMLElement>('.novex-tour__card')
+    expect(card?.classList.contains('novex-tour__card--center')).toBe(true)
+    // El centrado va en CSS (`translate`): nada en línea que la animación pise.
+    expect(card?.style.transform).toBe('')
+  })
+})
+
+describe('OnboardingTour · paso de acción opcional', () => {
+  it('mientras espera la acción ofrece saltar el paso', async () => {
+    addAnchor({ 'data-scope': 'direction' }, 'anchor-action')
+    ctx.steps = [{ ...ACTION, optional: true, skipLabel: 'Saltar este paso' }]
+    mount()
+    await act(async () => {
+      await sleep(50)
+    })
+    expect(document.body.textContent).toContain('Elija una coordinación en la baraja')
+    act(() => buttonWithText('Saltar este paso')?.click())
+    expect(ctx.next).toHaveBeenCalledTimes(1)
+  })
+
+  it('sin `optional` no ofrece saltarlo', async () => {
+    addAnchor({ 'data-scope': 'direction' }, 'anchor-action')
+    ctx.steps = [ACTION]
+    mount()
+    await act(async () => {
+      await sleep(50)
+    })
+    expect(buttonWithText('Saltar este paso')).toBeUndefined()
+  })
+})
+
+describe('OnboardingTour · teclas de los controles de la página', () => {
+  it('las flechas y Escape dentro de un campo o una pestaña no mueven el recorrido', () => {
+    addAnchor({}, 'anchor-info')
+    mount()
+    const select = document.createElement('select')
+    const textarea = document.createElement('textarea')
+    const tab = document.createElement('button')
+    tab.setAttribute('role', 'tab')
+    document.body.append(select, textarea, tab)
+
+    for (const element of [select, textarea, tab]) {
+      act(() => {
+        for (const key of ['ArrowRight', 'ArrowLeft', 'Escape']) {
+          element.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }))
+        }
+      })
+    }
+    expect(ctx.next).not.toHaveBeenCalled()
+    expect(ctx.previous).not.toHaveBeenCalled()
+    expect(ctx.pause).not.toHaveBeenCalled()
+  })
+
+  it('con modificadores (Alt+→ del navegador) tampoco', () => {
+    addAnchor({}, 'anchor-info')
+    mount()
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', altKey: true }))
+    })
+    expect(ctx.next).not.toHaveBeenCalled()
   })
 })

@@ -16,24 +16,28 @@ export interface TourBubbleProps {
   onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void
   /** Pie con las acciones del paso (Anterior, Siguiente, Omitir, etc.). */
   footer: ReactNode
-  /** Mensaje de espera o de incidencia, mostrado sobre el pie. */
+  /** Mensaje de incidencia, mostrado sobre el pie. */
   notice?: ReactNode
+  /** Qué espera el recorrido (una acción, volver, la carga): línea propia sobre el pie. */
+  status?: ReactNode
   /**
    * Texto de qué esperar; reemplaza al de la definición del paso si hay
    * incidencia. Vacío oculta el bloque (el aviso ya lo explica).
    */
   expectationOverride?: string
+  /** Recuerda los atajos de teclado (solo con teclado y ratón, no en la hoja móvil). */
+  keyboardHint?: boolean
 }
 
-const CENTER_STYLE: CSSProperties = {
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-}
+/** Por encima de este número de pasos, los segmentos se vuelven una barra continua. */
+const MAX_SEGMENTS = 14
 
 /**
  * Globo explicativo reutilizable. No conoce pasos ni permisos: recibe el
  * contenido ya resuelto y la posición calculada por el motor.
+ *
+ * El centrado no usa `transform`: la animación de entrada lo anima y lo
+ * anularía. La clase `--center` centra con `translate`, que se compone con él.
  */
 export const TourBubble = forwardRef<HTMLDivElement, TourBubbleProps>(
   function TourBubble(
@@ -51,18 +55,19 @@ export const TourBubble = forwardRef<HTMLDivElement, TourBubbleProps>(
       onKeyDown,
       footer,
       notice,
+      status,
+      keyboardHint = false,
     },
     ref,
   ) {
     const isSheet = placement.mode === 'sheet'
-    const style: CSSProperties | undefined = isSheet
-      ? undefined
-      : placement.mode === 'center'
-        ? CENTER_STYLE
-        : { top: placement.top, left: placement.left }
+    const isCenter = placement.mode === 'center'
+    const style: CSSProperties | undefined =
+      isSheet || isCenter ? undefined : { top: placement.top, left: placement.left }
 
     const className = [
       'novex-tour__card',
+      isCenter ? 'novex-tour__card--center' : '',
       isSheet ? 'novex-tour__card--sheet' : '',
       isSheet && placement.edge === 'top' ? 'novex-tour__card--sheet-top' : '',
       placement.arrow ? `novex-tour__card--arrow-${placement.arrow.side}` : '',
@@ -76,12 +81,16 @@ export const TourBubble = forwardRef<HTMLDivElement, TourBubbleProps>(
         } as CSSProperties)
       : undefined
 
+    const shownExpectation = expectationOverride ?? expectation
+    const segmented = stepTotal > 1 && stepTotal <= MAX_SEGMENTS
+
     return (
       <div
         ref={ref}
         className={className}
         style={style}
         role="dialog"
+        aria-modal="false"
         aria-labelledby="novex-tour-title"
         aria-describedby="novex-tour-description"
         tabIndex={-1}
@@ -94,36 +103,64 @@ export const TourBubble = forwardRef<HTMLDivElement, TourBubbleProps>(
             aria-hidden="true"
           />
         ) : null}
-        <header>
-          <span>{eyebrow}</span>
+        <header className="novex-tour__head">
+          <span className="novex-tour__eyebrow">{eyebrow}</span>
           <small className="novex-tour__count">
             Paso {stepNumber} de {stepTotal}
           </small>
           {!pauseHidden && onPause ? (
-            <button type="button" onClick={onPause} aria-label="Pausar tutorial">
+            <button
+              type="button"
+              className="novex-tour__close"
+              onClick={onPause}
+              aria-label="Cerrar recorrido"
+              title="Cerrar recorrido (Esc)"
+            >
               <NovexIcon name="x" />
             </button>
           ) : null}
         </header>
         <div
-          className="novex-tour__progress"
+          className={`novex-tour__progress${segmented ? ' novex-tour__progress--segmented' : ''}`}
           aria-hidden="true"
         >
-          <i style={{ width: `${(stepNumber / stepTotal) * 100}%` }} />
+          {segmented ? (
+            Array.from({ length: stepTotal }, (_, index) => (
+              <i
+                key={index}
+                data-state={
+                  index + 1 < stepNumber ? 'done' : index + 1 === stepNumber ? 'current' : 'todo'
+                }
+              />
+            ))
+          ) : (
+            <i style={{ width: `${(stepNumber / stepTotal) * 100}%` }} />
+          )}
         </div>
-        <h2 id="novex-tour-title">{title}</h2>
-        <p id="novex-tour-description">{description}</p>
-        {(expectationOverride ?? expectation) ? (
-          <div className="novex-tour__expectation">
-            <NovexIcon name="sparkles" />
-            <span>
-              <strong>Qué esperar</strong>
-              {expectationOverride ?? expectation}
-            </span>
+        {/* `key`: el texto entra de nuevo con cada paso, aunque el globo no se mueva. */}
+        <div className="novex-tour__body" key={`${stepNumber}-${title}`}>
+          <h2 id="novex-tour-title">{title}</h2>
+          <p id="novex-tour-description">{description}</p>
+          {shownExpectation ? (
+            <p className="novex-tour__expectation">
+              <NovexIcon name="sparkles" />
+              <span>{shownExpectation}</span>
+            </p>
+          ) : null}
+        </div>
+        {notice ? (
+          <div className="novex-tour__notice" role="status">
+            {notice}
           </div>
         ) : null}
-        {notice ? <div className="novex-tour__notice">{notice}</div> : null}
+        {status ? <div className="novex-tour__status">{status}</div> : null}
         <footer>{footer}</footer>
+        {keyboardHint ? (
+          <p className="novex-tour__keys" aria-hidden="true">
+            <kbd>←</kbd>
+            <kbd>→</kbd> para moverse · <kbd>Esc</kbd> para cerrar
+          </p>
+        ) : null}
       </div>
     )
   },
