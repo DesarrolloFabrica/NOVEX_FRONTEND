@@ -8,6 +8,7 @@ import '@/styles/novex-os.css'
 import '@/styles/login.css'
 import '@/styles/login-stage.css'
 import '@/styles/login-institutional.css'
+import '@/styles/entry-cover.css'
 import '@/styles/platform-backgrounds.css'
 import '@/styles/operational-experience.css'
 

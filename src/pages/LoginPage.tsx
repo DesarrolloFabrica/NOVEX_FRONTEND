@@ -76,8 +76,8 @@ export function LoginPage() {
     if (!isAuthenticated) return
 
     if (loginAttemptedRef.current) {
-      // Inicio de la transición teatral: el personaje celebra y el host global
-      // (PostLoginCurtainTransition) espera su reacción antes de cerrar cortinas.
+      // Inicio de la transición de entrada: el personaje celebra y el host global
+      // (PostLoginEntryTransition) espera su reacción antes de cerrar el obturador.
       // Si el personaje aún no estaba listo, no hay reacción que esperar.
       if (!celebratedRef.current) {
         celebratedRef.current = true
@@ -171,17 +171,17 @@ export function LoginPage() {
           </div>
 
           <div className="novex-login-stage__introduction">
-            <span className="novex-login-stage__intro-rule" aria-hidden="true">✦</span>
+            <span className="novex-login-stage__intro-rule" aria-hidden="true" />
             <h2>Una visión clara de la operación</h2>
             <p>
               NOVEX reúne el estado de las coordinaciones, las situaciones operativas
               y los indicadores que ayudan a tomar decisiones oportunas.
             </p>
-            <div className="novex-login-stage__intro-topics" aria-label="Funciones de NOVEX">
-              <span>Seguimiento</span><span aria-hidden="true">·</span>
-              <span>Coordinación</span><span aria-hidden="true">·</span>
-              <span>Decisiones</span>
-            </div>
+            <ul className="novex-login-stage__intro-topics" aria-label="Funciones de NOVEX">
+              <li>Seguimiento</li>
+              <li>Coordinación</li>
+              <li>Decisiones</li>
+            </ul>
           </div>
         </div>
 
@@ -191,8 +191,8 @@ export function LoginPage() {
             <h2 id="access-title">Accede a tu cuenta</h2>
             <p className="novex-login-stage__panel-lead">
               {emailLoginEnabled
-                ? 'Continúa con tu cuenta institucional para consultar tu espacio de trabajo.'
-                : 'Continúa con tu cuenta de Google institucional para consultar tu espacio de trabajo.'}
+                ? 'Ingresa con tu cuenta institucional para abrir tu centro operacional.'
+                : 'Ingresa con tu cuenta de Google institucional para abrir tu centro operacional.'}
             </p>
           </header>
 
@@ -236,7 +236,7 @@ export function LoginPage() {
               <>
                 <div className="novex-login-stage__separator" aria-hidden="true">
                   <span />
-                  <b>o</b>
+                  <b>o con tu correo</b>
                   <span />
                 </div>
 

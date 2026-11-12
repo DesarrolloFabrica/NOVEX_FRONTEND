@@ -2,11 +2,12 @@ import { NOVEX_CHARACTER_REACTIONS } from '@/shared/character/novexCharacterRive
 import type { NovexCharacterReaction } from '@/shared/character/novexCharacterRive'
 
 /**
- * Transición teatral post-login, sin React: la secuencia se prueba sola.
+ * Transición de entrada post-login (obturador con sello NOVEX), sin React:
+ * la secuencia se prueba sola.
  *
- *   idle ──start──▶ reacting ──reaction-done──▶ closing ──curtains-closed──▶ covered
- *     ▲                                                                        │
- *     └──────curtains-opened────── opening ◀──────destination-mounted─────────┘
+ *   idle ──start──▶ reacting ──reaction-done──▶ closing ──cover-closed──▶ covered
+ *     ▲                                                                    │
+ *     └──────cover-opened────── opening ◀──────destination-mounted─────────┘
  *
  * `abort` (logout o fin externo de la transición) vuelve a `idle` desde cualquier fase.
  * Cualquier otro evento fuera de orden se ignora: así un evento repetido no
@@ -17,9 +18,9 @@ export type PostLoginTransitionPhase = 'idle' | 'reacting' | 'closing' | 'covere
 export type PostLoginTransitionEvent =
   | 'start'
   | 'reaction-done'
-  | 'curtains-closed'
+  | 'cover-closed'
   | 'destination-mounted'
-  | 'curtains-opened'
+  | 'cover-opened'
   | 'abort'
 
 const NEXT_PHASE: Record<
@@ -28,9 +29,9 @@ const NEXT_PHASE: Record<
 > = {
   idle: { start: 'reacting' },
   reacting: { 'reaction-done': 'closing' },
-  closing: { 'curtains-closed': 'covered' },
+  closing: { 'cover-closed': 'covered' },
   covered: { 'destination-mounted': 'opening' },
-  opening: { 'curtains-opened': 'idle' },
+  opening: { 'cover-opened': 'idle' },
 }
 
 export function postLoginTransitionReducer(
@@ -58,21 +59,36 @@ export function reactionHoldMs(reactionAccepted: boolean): number {
  * Red de seguridad si el navegador no emite `transitionend` (pestaña oculta,
  * estilos no cargados): la secuencia avanza igualmente. No marca el ritmo normal.
  */
-export const CURTAIN_SETTLE_FALLBACK_MS = 2500
+export const COVER_SETTLE_FALLBACK_MS = 2500
 export const DESTINATION_MOUNT_FALLBACK_MS = 6000
 
-export type LoginCurtainsState = 'open' | 'closed' | 'retracted'
+/**
+ * Tiempo mínimo con la pantalla cubierta antes de abrir: el sello NOVEX y la
+ * barra de carga terminan su entrada y la ruta destino tiene margen para pintar.
+ */
+export const COVER_MIN_HOLD_MS = 900
 
 /**
- * Qué muestran las cortinas en cada fase.
- * - En /login sin transición: abiertas, enmarcando la escena.
- * - Fuera de /login sin transición: no se renderizan.
- * - En destino se retiran del todo (no al marco), para no desaparecer de golpe.
+ * Cuánto falta para abrir, medido desde que la pantalla quedó cubierta.
+ * Nunca negativo: si el destino tardó más que el mínimo, se abre ya.
  */
-export function curtainStateForPhase(
+export function remainingCoverHoldMs(coveredAt: number, now: number): number {
+  return Math.max(0, COVER_MIN_HOLD_MS - (now - coveredAt))
+}
+
+export type EntryCoverState = 'open' | 'closed' | 'retracted'
+
+/**
+ * Estado del obturador en cada fase.
+ * - `open`: hojas fuera de pantalla (en /login, listas para cerrar).
+ * - `closed`: las dos hojas se encuentran en el centro y cubren el viewport.
+ * - `retracted`: se separan (arriba y abajo) y descubren el destino.
+ * Fuera de /login y sin transición no se renderiza.
+ */
+export function coverStateForPhase(
   phase: PostLoginTransitionPhase,
   onLoginRoute: boolean,
-): LoginCurtainsState | null {
+): EntryCoverState | null {
   switch (phase) {
     case 'idle':
       return onLoginRoute ? 'open' : null

@@ -1,6 +1,6 @@
 // Capa: componente compartido (host de la transición post-login).
-// Responsabilidad: orquestar las cortinas a nivel de router para que sobrevivan
-// al desmontaje de LoginPage. Sustituye la presentación de PostLoginBootSplash
+// Responsabilidad: orquestar el obturador de entrada a nivel de router para que
+// sobreviva al desmontaje de LoginPage. Sustituye la presentación de PostLoginBootSplash
 // y conserva su contrato con AuthContext (bootSplashActive / endBootSplash).
 
 import { useCallback, useEffect, useReducer, useRef } from 'react'
@@ -9,14 +9,15 @@ import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { takePostLoginDestination } from '@/modules/auth/utils/postLoginDestination'
 import { getRoleLandingPath } from '@/modules/auth/utils/roleExperience'
 import { sanitizeReturnPath } from '@/modules/auth/utils/sessionExpiryNotice'
-import { LoginCurtains } from '@/shared/components/LoginCurtains'
+import { EntryCover } from '@/shared/components/EntryCover'
 import {
-  CURTAIN_SETTLE_FALLBACK_MS,
+  COVER_SETTLE_FALLBACK_MS,
   DESTINATION_MOUNT_FALLBACK_MS,
-  curtainStateForPhase,
+  coverStateForPhase,
   postLoginTransitionReducer,
+  remainingCoverHoldMs,
 } from '@/shared/transition/postLoginTransition'
-import type { LoginCurtainsState } from '@/shared/transition/postLoginTransition'
+import type { EntryCoverState } from '@/shared/transition/postLoginTransition'
 import { usePostLoginTransitionCue } from '@/shared/transition/postLoginTransitionCue'
 
 const LOGIN_PATH = '/login'
@@ -25,15 +26,16 @@ const LOGIN_PATH = '/login'
  * Secuencia (ver `postLoginTransition`):
  *   reacting  el personaje reproduce happy_1 (lo pide LoginPage); se espera su
  *             duración solo si la aceptó (si Rive no estaba listo, 0 ms)
- *   closing   las cortinas se cierran
- *   covered   pantalla tapada → se navega a la ruta del rol
- *   opening   el destino ya montó → las cortinas se retiran
+ *   closing   las dos hojas del obturador se cierran sobre el centro
+ *   covered   pantalla tapada (sello NOVEX) → se navega a la ruta del rol;
+ *             se abre cuando el destino montó y pasó COVER_MIN_HOLD_MS
+ *   opening   las hojas se separan y descubren el destino
  *   idle      endBootSplash(): libera onboarding y loaders, como hacía el splash
  *
  * `bootSplashActive` sigue siendo la señal de "transición post-login en curso"
  * para el resto de la app; su ciclo de vida no cambia.
  */
-export function PostLoginCurtainTransition() {
+export function PostLoginEntryTransition() {
   const { bootSplashActive, endBootSplash, user } = useAuth()
   const navigate = useNavigate()
   const { pathname } = useLocation()
@@ -59,6 +61,13 @@ export function PostLoginCurtainTransition() {
     if (phase === 'idle') navigatedFromRef.current = null
   }, [phase])
 
+  /** Momento en que la pantalla quedó cubierta (para el tiempo mínimo del sello). */
+  const coveredAtRef = useRef<number | null>(null)
+  useEffect(() => {
+    if (phase === 'covered') coveredAtRef.current ??= performance.now()
+    else coveredAtRef.current = null
+  }, [phase])
+
   // reacting: espera lo que LoginPage anotó (la reacción aceptada, o nada).
   // La anotación se lee una vez al entrar en la fase.
   const reactionHoldRef = useRef<number | null>(null)
@@ -80,8 +89,8 @@ export function PostLoginCurtainTransition() {
   // closing / opening: el avance real lo da `onSettled`; esto es solo red de seguridad.
   useEffect(() => {
     if (phase !== 'closing' && phase !== 'opening') return
-    const event = phase === 'closing' ? 'curtains-closed' : 'curtains-opened'
-    const timer = window.setTimeout(() => dispatch(event), CURTAIN_SETTLE_FALLBACK_MS)
+    const event = phase === 'closing' ? 'cover-closed' : 'cover-opened'
+    const timer = window.setTimeout(() => dispatch(event), COVER_SETTLE_FALLBACK_MS)
     return () => window.clearTimeout(timer)
   }, [phase])
 
@@ -97,8 +106,8 @@ export function PostLoginCurtainTransition() {
     })
   }, [phase, pathname, navigate])
 
-  // covered → opening: cuando la ruta cambió (el destino se montó en este commit)
-  // y ya se pintó; dos frames garantizan que el destino está en pantalla.
+  // covered → opening: cuando la ruta cambió (el destino se montó en este commit),
+  // ya se pintó (dos frames) y el sello estuvo visible el tiempo mínimo.
   useEffect(() => {
     if (phase !== 'covered' || navigatedFromRef.current === null) return
 
@@ -109,19 +118,27 @@ export function PostLoginCurtainTransition() {
     if (pathname === navigatedFromRef.current) return () => window.clearTimeout(fallback)
 
     let second = 0
+    let hold = 0
     const first = window.requestAnimationFrame(() => {
-      second = window.requestAnimationFrame(() => dispatch('destination-mounted'))
+      second = window.requestAnimationFrame(() => {
+        const coveredAt = coveredAtRef.current ?? performance.now()
+        hold = window.setTimeout(
+          () => dispatch('destination-mounted'),
+          remainingCoverHoldMs(coveredAt, performance.now()),
+        )
+      })
     })
     return () => {
       window.clearTimeout(fallback)
+      window.clearTimeout(hold)
       window.cancelAnimationFrame(first)
       window.cancelAnimationFrame(second)
     }
   }, [phase, pathname])
 
-  const handleSettled = useCallback((state: LoginCurtainsState) => {
-    if (state === 'closed') dispatch('curtains-closed')
-    if (state === 'retracted') dispatch('curtains-opened')
+  const handleSettled = useCallback((state: EntryCoverState) => {
+    if (state === 'closed') dispatch('cover-closed')
+    if (state === 'retracted') dispatch('cover-opened')
   }, [])
 
   // opening → idle: fin de la transición; mismo cierre que tenía el splash
@@ -132,12 +149,12 @@ export function PostLoginCurtainTransition() {
     previousPhase.current = phase
   }, [phase, bootSplashActive, endBootSplash])
 
-  const curtainState = curtainStateForPhase(phase, pathname === LOGIN_PATH)
-  if (!curtainState) return null
+  const coverState = coverStateForPhase(phase, pathname === LOGIN_PATH)
+  if (!coverState) return null
 
   return (
-    <LoginCurtains
-      state={curtainState}
+    <EntryCover
+      state={coverState}
       blockInput={phase !== 'idle'}
       onSettled={handleSettled}
     />
