@@ -9,8 +9,8 @@ import {
   DOSSIER_SEVERITY_LABEL,
 } from '@/modules/operational-cards/data/problemDossier'
 import {
-  emptyHistoryHint,
-  emptyHistoryMessage,
+  bogotaTodayParts,
+  buildCyclePeriod,
   summaryCountLabel,
 } from '@/modules/operational-cards/data/problemHistoryPeriod'
 import type {
@@ -33,6 +33,17 @@ export interface ProblemHistoryPanelProps {
   onLoadMore: () => void
   onRetry: () => void
   onBack: () => void
+  /** Alcance que se nombra en la cabecera («mi coordinación», «todas…»). */
+  scopeLabel?: string
+}
+
+/** Ciclo vigente y el anterior, para salir de un período vacío en un clic. */
+function cycleShortcuts(period: ProblemHistoryPeriod): ProblemHistoryPeriod[] {
+  const { year, monthIndex } = bogotaTodayParts()
+  const half: 1 | 2 = monthIndex < 6 ? 1 : 2
+  const current = buildCyclePeriod(year, half)
+  const previous = half === 1 ? buildCyclePeriod(year - 1, 2) : buildCyclePeriod(year, 1)
+  return [current, previous].filter((option) => option.key !== period.key)
 }
 
 function formatClosedAt(value: string | null): string {
@@ -72,9 +83,7 @@ function HistoryRow({
     DOSSIER_HISTORY_STATUS_LABEL[entry.status] ?? entry.status
   const severityLabel = DOSSIER_SEVERITY_LABEL[entry.severity]
   const closedLabel = formatClosedAt(entry.closedAt)
-  const resolver = entry.resolvedByUserName
-    ? `Resuelto por ${entry.resolvedByUserName}`
-    : 'Resolutor no registrado'
+  const resolver = entry.resolvedByUserName ?? 'No registrado'
 
   return (
     <li>
@@ -103,13 +112,19 @@ function HistoryRow({
         statusTestId="history-row-status"
         onClick={() => onSelect(entry.id)}
       />
-      <p className="problem-history__meta" data-testid="history-row-meta">
-        <span>{closedLabel}</span>
-        <span aria-hidden="true"> · </span>
-        <span>{resolver}</span>
-      </p>
+      <dl className="problem-history__meta" data-testid="history-row-meta">
+        <div>
+          <dt>Cerrado</dt>
+          <dd>{closedLabel}</dd>
+        </div>
+        <div>
+          <dt>Resuelto por</dt>
+          <dd>{resolver}</dd>
+        </div>
+      </dl>
       {entry.learningPreview ? (
         <p className="problem-history__learning" data-testid="history-row-learning">
+          <span className="problem-history__learning-label">Lección registrada</span>
           {entry.learningPreview}
         </p>
       ) : null}
@@ -127,6 +142,7 @@ export function ProblemHistoryPanel({
   onLoadMore,
   onRetry,
   onBack,
+  scopeLabel,
 }: ProblemHistoryPanelProps) {
   const { status, items, total, loadingMore, errorMessage, period } = history
   const quedanMas = items.length < total
@@ -142,16 +158,36 @@ export function ProblemHistoryPanel({
       data-status={status}
     >
       <header className="problem-history__header">
-        <div className="problem-history__header-row">
-          <h2 className="problem-history__heading">Historial de problemas</h2>
+        <div className="problem-history__topline">
           <button
             type="button"
             className="problem-history__back"
             data-testid="history-back"
             onClick={onBack}
+            aria-label="Volver"
+            title="Volver"
           >
             Volver
           </button>
+          <span className="problem-history__eyebrow">
+            Consulta · {scopeLabel ?? 'situaciones cerradas'}
+          </span>
+        </div>
+        <div className="problem-history__title-row">
+          <span className="problem-history__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="5" y="4.5" width="14" height="17" rx="2" />
+              <path d="M9 3h6v3H9z" />
+              <path d="M9 11h6M9 14.5h6M9 18h4" />
+            </svg>
+          </span>
+          <div>
+            <h2 className="problem-history__title">Historial de problemas</h2>
+            <p className="problem-history__subtitle">
+              Situaciones ya cerradas, con su fecha de cierre, quién las resolvió
+              y la lección registrada.
+            </p>
+          </div>
         </div>
 
         <HistoryPeriodPicker
@@ -194,12 +230,30 @@ export function ProblemHistoryPanel({
           data-testid="history-empty"
           role="status"
         >
+          <span className="problem-history__empty-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="4" y="5" width="16" height="15" rx="2" />
+              <path d="M8 3v4M16 3v4M4 10h16" />
+            </svg>
+          </span>
           <p className="problem-history__empty-title">
-            {emptyHistoryMessage()}
+            Sin problemas cerrados {period.summaryPhrase}
           </p>
           <p className="problem-history__empty-hint">
-            {emptyHistoryHint(period)}
+            Pruebe con un período más amplio para consultar cierres anteriores.
           </p>
+          <div className="problem-history__empty-actions">
+            {cycleShortcuts(period).map((option) => (
+              <button
+                key={option.key}
+                type="button"
+                className="problem-history__empty-action"
+                onClick={() => onPeriodChange(option)}
+              >
+                Ver {option.label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 

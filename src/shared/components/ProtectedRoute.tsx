@@ -4,6 +4,7 @@
 
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
+import { RouteFallback } from '@/shared/components/RouteFallback'
 
 export function ProtectedRoute() {
   const { isAuthenticated, loading, canRetrySession, error, retrySessionBootstrap } =
@@ -11,16 +12,13 @@ export function ProtectedRoute() {
   const location = useLocation()
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-sm text-slate-300">
-        Validando sesión…
-      </div>
-    )
+    // Mismo escenario que la pantalla final (ver RouteFallback).
+    return <RouteFallback label="Validando sesión…" />
   }
 
   if (canRetrySession && !isAuthenticated) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-950 px-6 text-center text-sm text-slate-300">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#160d0b] px-6 text-center text-sm text-amber-50/90">
         <p role="alert">{error ?? 'No pudimos verificar tu sesión.'}</p>
         <button
           type="button"

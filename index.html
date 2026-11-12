@@ -5,20 +5,53 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/novex-mark.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="preload" as="image" href="/novex-mark.png" fetchpriority="high" />
-    <link
-      rel="preload"
-      as="image"
-      href="/assests/scenes/novex-city-intelligence.jpg"
-      fetchpriority="high"
-    />
-    <link rel="prefetch" as="image" href="/assests/scenes/novex-city-events.jpg" />
-    <link rel="prefetch" as="image" href="/assests/scenes/novex-city-register.jpg" />
-    <link
-      rel="prefetch"
-      as="image"
-      href="/assests/scenes/novex-city-commitments.jpg"
-    />
+    <!--
+      Tono base del escenario ANTES de que llegue el CSS: sin esto el primer
+      pintado era blanco y luego azul marino. Es el mismo tono que usan las
+      pantallas de carga y la sala (platform-backgrounds.css).
+    -->
+    <style>
+      html,
+      body {
+        background: #160d0b;
+      }
+    </style>
+    <!--
+      Precarga del escenario que se va a pintar primero, según el destino:
+      con sesión guardada fuera del login, el escenario del circo del Centro;
+      si no, el del login (marca, fondo y telones). Antes se precargaban
+      siempre los del login, también al recargar el Centro.
+    -->
+    <script>
+      ;(function () {
+        var assets = [
+          ['/novex-mark.webp', 'high'],
+          ['/assets/login/login-stage-background.webp', 'high'],
+          ['/assets/login/curtain-left.webp', 'auto'],
+          ['/assets/login/curtain-right.webp', 'auto'],
+        ]
+        try {
+          if (
+            location.pathname.indexOf('/login') !== 0 &&
+            localStorage.getItem('novex.auth.session.v1')
+          ) {
+            assets = [
+              ['/assets/scenes/circus-stage-background.webp', 'high'],
+              ['/assets/tickets/common/ticket-paper-cream.webp', 'auto'],
+            ]
+          }
+        } catch (e) {}
+        for (var i = 0; i < assets.length; i++) {
+          var link = document.createElement('link')
+          link.rel = 'preload'
+          link.as = 'image'
+          link.type = 'image/webp'
+          link.href = assets[i][0]
+          link.setAttribute('fetchpriority', assets[i][1])
+          document.head.appendChild(link)
+        }
+      })()
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -27,7 +60,7 @@
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
-    <meta name="theme-color" content="#020b10" />
+    <meta name="theme-color" content="#160d0b" />
     <meta
       name="description"
       content="NOVEX — Visión general"

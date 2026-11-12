@@ -111,6 +111,8 @@ export interface OperationalActionPanelProps {
   onPrimaryConsult?: () => void
   /** Acceso a los indicadores (KPI). Solo se muestra si se pasa. */
   onOpenKpis?: () => void
+  /** Alcance que nombra la cabecera del historial. */
+  historyScopeLabel?: string
   idleHint?: string | null
   labelByCode?: Readonly<Record<string, string>>
   colorByCode?: Readonly<Record<string, string>>
@@ -154,7 +156,7 @@ export function OperationalActionPanel({
   onOpenAdminActions,
   onPrimaryConsult,
   onOpenKpis,
-  idleHint = null,
+  historyScopeLabel,
   labelByCode,
   colorByCode,
 }: OperationalActionPanelProps) {
@@ -195,6 +197,7 @@ export function OperationalActionPanel({
           onLoadMore={onLoadMoreHistory}
           onRetry={onRetryHistory}
           onBack={onCloseHistory}
+          scopeLabel={historyScopeLabel}
         />
       </div>
     )
@@ -208,6 +211,36 @@ export function OperationalActionPanel({
         data-surface="action-panel"
         data-mode="detail"
       >
+        {/*
+          Barra FIJA arriba del expediente: al desplazarse por un detalle largo
+          «Volver» y «Registrar situación» siguen a mano (antes había que subir
+          hasta la flecha de la cabecera). Volver regresa a la lista o al
+          historial, de donde se haya venido.
+        */}
+        <div className="action-panel__detail-bar" data-testid="detail-bar">
+          <button
+            type="button"
+            className="action-panel__detail-back"
+            data-testid="detail-bar-back"
+            onClick={onCloseDetail}
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="m14.5 6-6 6 6 6" />
+            </svg>
+            Volver
+          </button>
+          {canCreate ? (
+            <button
+              type="button"
+              className="action-panel__detail-new"
+              data-testid="detail-bar-report"
+              onClick={onReportSituation}
+            >
+              <span aria-hidden="true">+</span>
+              Registrar situación
+            </button>
+          ) : null}
+        </div>
         {/* La flecha de regreso vive en la primera línea del expediente. Puede
             volver a la lista o al historial, así que se nombra «Volver». */}
         <ProblemDetail
@@ -266,15 +299,11 @@ export function OperationalActionPanel({
     )
   }
 
-  const defaultHint = canCreate
-    ? hasCoordination
-      ? 'También puede seleccionar un problema de las listas para consultar su detalle.'
-      : 'Seleccione una coordinación en las cartas para registrar, o elija un reporte propio para consultar su detalle.'
-    : hasCoordination
-      ? 'Seleccione un problema de las listas para consultar su detalle.'
-      : 'Seleccione una coordinación en las cartas para ver sus problemas, o un reporte propio para abrir su detalle.'
-
   const consultOnly = canViewHistory && !canCreate
+  // Área a la que irá el registro (la carta observada), en lenguaje de producto.
+  const reportTargetLabel = selectedCoordinationCode
+    ? (labelByCode?.[selectedCoordinationCode] ?? null)
+    : null
 
   return (
     <div
@@ -297,12 +326,29 @@ export function OperationalActionPanel({
       >
         <div className="action-panel__hero-cta">
           <div className="action-panel__search-icon-wrap" aria-hidden="true">
-            <IconSearch size={26} strokeWidth={2.2} />
+            {canCreate ? (
+              <IconPen size={24} strokeWidth={2.2} />
+            ) : (
+              <IconSearch size={26} strokeWidth={2.2} />
+            )}
           </div>
           <div className="action-panel__hero-info">
-            <h2 className="action-panel__idle-heading">Reportar o consultar</h2>
+            <h2 className="action-panel__idle-heading">
+              {canCreate ? '¿Ocurrió un problema?' : 'Reportar o consultar'}
+            </h2>
             <p className="action-panel__idle-subtext" data-testid="consult-idle-copy">
-              Registra un nuevo problema o consulta situaciones existentes y su estado.
+              {canCreate ? (
+                hasCoordination ? (
+                  <>
+                    Regístrelo en menos de un minuto. Quedará en{' '}
+                    <strong>{reportTargetLabel ?? 'la coordinación elegida'}</strong>.
+                  </>
+                ) : (
+                  'Elija primero en la mesa la coordinación afectada.'
+                )
+              ) : (
+                'Registra un nuevo problema o consulta situaciones existentes y su estado.'
+              )}
             </p>
           </div>
         </div>
@@ -319,8 +365,7 @@ export function OperationalActionPanel({
               disabled={!hasCoordination}
             >
               <span className="action-panel__cta-icon" aria-hidden="true"><IconPen size={17} /></span>
-              <span>Reportar o consultar</span>
-              <span className="coordination-panel__sr-only"> Registrar situación</span>
+              <span>Registrar situación</span>
             </button>
           ) : (
             <button
@@ -377,6 +422,9 @@ export function OperationalActionPanel({
           className="action-panel__guidance"
           data-testid="action-panel-guidance"
         >
+          {canCreate ? (
+            <h3 className="action-panel__guidance-heading">Consultar</h3>
+          ) : null}
           {/* Card 1: Historial de problemas */}
           <button
             type="button"
@@ -411,8 +459,8 @@ export function OperationalActionPanel({
                   Gestión de Situaciones Operativas
                 </h3>
                 <p className="action-panel__guidance-text">
-                  {canCreate
-                    ? 'Registre incidencias internas de su área o dependencias causadas por otras coordinaciones. Cada caso contará con seguimiento de SLA y trazabilidad de resolución.'
+                  {onOpenOperations
+                    ? 'Situaciones activas de todas las coordinaciones, con las de SLA vencido y mayor severidad primero.'
                     : 'Consulte las situaciones operativas y su estado de avance. El detalle muestra la cronología completa de eventos y evidencias.'}
                 </p>
               </div>

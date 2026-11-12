@@ -18,12 +18,12 @@ describe('resolveTicketTheme', () => {
     expect(theme.accent).toBe('#5C5E2C')
     expect(theme.accentDeep).toBe('#2D3325')
     expect(theme.watermark).toBe(
-      '/assets/tickets/saber-pro/cut/watermark-meerkat.png',
+      '/assets/tickets/saber-pro/cut/watermark-meerkat.webp',
     )
     expect(theme.ornaments.character).toHaveLength(1)
     expect(theme.ornaments.action.map((o) => o.src)).toEqual([
-      '/assets/tickets/saber-pro/cut/ornament-checklist.png',
-      '/assets/tickets/saber-pro/cut/ornament-laurel.png',
+      '/assets/tickets/saber-pro/cut/ornament-checklist.webp',
+      '/assets/tickets/saber-pro/cut/ornament-laurel.webp',
     ])
   })
 
@@ -35,26 +35,26 @@ describe('resolveTicketTheme', () => {
     expect(theme.accent).toBe('#7B110D')
     expect(theme.accentDeep).toBe('#3A0C0A')
     expect(theme.watermark).toBe(
-      '/assets/tickets/especializaciones/cut/watermark-falcon.png',
+      '/assets/tickets/especializaciones/cut/watermark-falcon.webp',
     )
     expect(theme.ornaments.character).toEqual([
       {
-        src: '/assets/tickets/especializaciones/cut/ornament-mortarboard.png',
+        src: '/assets/tickets/especializaciones/cut/ornament-mortarboard.webp',
         corner: 'bl',
       },
     ])
     expect(theme.ornaments.reports.map((o) => o.src)).toEqual([
-      '/assets/tickets/especializaciones/cut/ornament-books.png',
-      '/assets/tickets/especializaciones/cut/ornament-ribbon-star.png',
+      '/assets/tickets/especializaciones/cut/ornament-books.webp',
+      '/assets/tickets/especializaciones/cut/ornament-ribbon-star.webp',
     ])
     expect(theme.ornaments.problems.map((o) => o.src)).toEqual([
-      '/assets/tickets/especializaciones/cut/ornament-chart-rise.png',
-      '/assets/tickets/especializaciones/cut/ornament-globe.png',
+      '/assets/tickets/especializaciones/cut/ornament-chart-rise.webp',
+      '/assets/tickets/especializaciones/cut/ornament-globe.webp',
     ])
     expect(theme.ornaments.action.map((o) => o.src)).toEqual([
-      '/assets/tickets/especializaciones/cut/ornament-books.png',
-      '/assets/tickets/especializaciones/cut/ornament-chart-rise.png',
-      '/assets/tickets/especializaciones/cut/ornament-mortarboard.png',
+      '/assets/tickets/especializaciones/cut/ornament-books.webp',
+      '/assets/tickets/especializaciones/cut/ornament-chart-rise.webp',
+      '/assets/tickets/especializaciones/cut/ornament-mortarboard.webp',
     ])
   })
 
@@ -66,25 +66,25 @@ describe('resolveTicketTheme', () => {
     expect(theme.accent).toBe('#5C2E58')
     expect(theme.accentDeep).toBe('#3A1C35')
     expect(theme.watermark).toBe(
-      '/assets/tickets/desarrollo-profesional/cut/watermark-butterfly.png',
+      '/assets/tickets/desarrollo-profesional/cut/watermark-butterfly.webp',
     )
     expect(theme.ornaments.character).toEqual([
       {
-        src: '/assets/tickets/desarrollo-profesional/cut/ornament-corner-star.png',
+        src: '/assets/tickets/desarrollo-profesional/cut/ornament-corner-star.webp',
         corner: 'bl',
       },
     ])
     expect(theme.ornaments.reports.map((o) => o.src)).toEqual([
-      '/assets/tickets/desarrollo-profesional/cut/ornament-climber-steps.png',
-      '/assets/tickets/desarrollo-profesional/cut/ornament-sun-rays.png',
+      '/assets/tickets/desarrollo-profesional/cut/ornament-climber-steps.webp',
+      '/assets/tickets/desarrollo-profesional/cut/ornament-sun-rays.webp',
     ])
     expect(theme.ornaments.problems.map((o) => o.src)).toEqual([
-      '/assets/tickets/desarrollo-profesional/cut/ornament-stepped-arrow.png',
-      '/assets/tickets/desarrollo-profesional/cut/ornament-corner-star.png',
+      '/assets/tickets/desarrollo-profesional/cut/ornament-stepped-arrow.webp',
+      '/assets/tickets/desarrollo-profesional/cut/ornament-corner-star.webp',
     ])
     expect(theme.ornaments.action.map((o) => o.src)).toEqual([
-      '/assets/tickets/desarrollo-profesional/cut/ornament-climber-steps.png',
-      '/assets/tickets/desarrollo-profesional/cut/ornament-sun-rays.png',
+      '/assets/tickets/desarrollo-profesional/cut/ornament-climber-steps.webp',
+      '/assets/tickets/desarrollo-profesional/cut/ornament-sun-rays.webp',
     ])
     expect(theme.ornaments.action.map((o) => o.corner)).toEqual(['bl', 'tr'])
   })
@@ -99,21 +99,21 @@ describe('resolveTicketTheme', () => {
     )
     expect(theme.ornaments.character).toEqual([
       {
-        src: '/assets/tickets/b2b/cut/ornament-four-point-star.png',
+        src: '/assets/tickets/b2b/cut/ornament-four-point-star.webp',
         corner: 'bl',
       },
     ])
     expect(theme.ornaments.reports.map((o) => o.src)).toEqual([
-      '/assets/tickets/b2b/cut/ornament-corner-quotes.png',
-      '/assets/tickets/b2b/cut/ornament-globe-lines.png',
+      '/assets/tickets/b2b/cut/ornament-corner-quotes.webp',
+      '/assets/tickets/b2b/cut/ornament-globe-lines.webp',
     ])
     expect(theme.ornaments.problems.map((o) => o.src)).toEqual([
-      '/assets/tickets/b2b/cut/ornament-speech-bubbles.png',
-      '/assets/tickets/b2b/cut/ornament-four-point-star.png',
+      '/assets/tickets/b2b/cut/ornament-speech-bubbles.webp',
+      '/assets/tickets/b2b/cut/ornament-four-point-star.webp',
     ])
     expect(theme.ornaments.action.map((o) => o.src)).toEqual([
-      '/assets/tickets/b2b/cut/ornament-globe-lines.png',
-      '/assets/tickets/b2b/cut/ornament-rule-dot.png',
+      '/assets/tickets/b2b/cut/ornament-globe-lines.webp',
+      '/assets/tickets/b2b/cut/ornament-rule-dot.webp',
     ])
     expect(theme.ornaments.action.map((o) => o.corner)).toEqual(['bl', 'tr'])
   })
@@ -128,21 +128,21 @@ describe('resolveTicketTheme', () => {
     )
     expect(theme.ornaments.character).toEqual([
       {
-        src: '/assets/tickets/general/cut/ornament-corner-star.png',
+        src: '/assets/tickets/general/cut/ornament-corner-star.webp',
         corner: 'bl',
       },
     ])
     expect(theme.ornaments.reports.map((o) => o.src)).toEqual([
-      '/assets/tickets/general/cut/ornament-team.png',
-      '/assets/tickets/general/cut/ornament-target.png',
+      '/assets/tickets/general/cut/ornament-team.webp',
+      '/assets/tickets/general/cut/ornament-target.webp',
     ])
     expect(theme.ornaments.problems.map((o) => o.src)).toEqual([
-      '/assets/tickets/general/cut/ornament-org-nodes.png',
-      '/assets/tickets/general/cut/ornament-route.png',
+      '/assets/tickets/general/cut/ornament-org-nodes.webp',
+      '/assets/tickets/general/cut/ornament-route.webp',
     ])
     expect(theme.ornaments.action.map((o) => o.src)).toEqual([
-      '/assets/tickets/general/cut/ornament-route.png',
-      '/assets/tickets/general/cut/ornament-corner-star.png',
+      '/assets/tickets/general/cut/ornament-route.webp',
+      '/assets/tickets/general/cut/ornament-corner-star.webp',
     ])
     expect(theme.ornaments.action.map((o) => o.corner)).toEqual(['bl', 'tr'])
   })
@@ -159,21 +159,21 @@ describe('resolveTicketTheme', () => {
     )
     expect(theme.ornaments.character).toEqual([
       {
-        src: '/assets/tickets/proyeccion-social/cut/ornament-corner-star.png',
+        src: '/assets/tickets/proyeccion-social/cut/ornament-corner-star.webp',
         corner: 'bl',
       },
     ])
     expect(theme.ornaments.reports.map((o) => o.src)).toEqual([
-      '/assets/tickets/proyeccion-social/cut/ornament-leaf-vine.png',
-      '/assets/tickets/proyeccion-social/cut/ornament-heart.png',
+      '/assets/tickets/proyeccion-social/cut/ornament-leaf-vine.webp',
+      '/assets/tickets/proyeccion-social/cut/ornament-heart.webp',
     ])
     expect(theme.ornaments.problems.map((o) => o.src)).toEqual([
-      '/assets/tickets/proyeccion-social/cut/ornament-people-leaf.png',
-      '/assets/tickets/proyeccion-social/cut/ornament-social-globe.png',
+      '/assets/tickets/proyeccion-social/cut/ornament-people-leaf.webp',
+      '/assets/tickets/proyeccion-social/cut/ornament-social-globe.webp',
     ])
     expect(theme.ornaments.action.map((o) => o.src)).toEqual([
-      '/assets/tickets/proyeccion-social/cut/ornament-people-leaf.png',
-      '/assets/tickets/proyeccion-social/cut/ornament-corner-star.png',
+      '/assets/tickets/proyeccion-social/cut/ornament-people-leaf.webp',
+      '/assets/tickets/proyeccion-social/cut/ornament-corner-star.webp',
     ])
     expect(theme.ornaments.action.map((o) => o.corner)).toEqual(['bl', 'tr'])
   })
@@ -189,21 +189,21 @@ describe('resolveTicketTheme', () => {
     )
     expect(theme.ornaments.character).toEqual([
       {
-        src: '/assets/tickets/servicio/cut/ornament-corner-star.png',
+        src: '/assets/tickets/servicio/cut/ornament-corner-star.webp',
         corner: 'bl',
       },
     ])
     expect(theme.ornaments.reports.map((o) => o.src)).toEqual([
-      '/assets/tickets/servicio/cut/ornament-open-hand.png',
-      '/assets/tickets/servicio/cut/ornament-location-pin.png',
+      '/assets/tickets/servicio/cut/ornament-open-hand.webp',
+      '/assets/tickets/servicio/cut/ornament-location-pin.webp',
     ])
     expect(theme.ornaments.problems.map((o) => o.src)).toEqual([
-      '/assets/tickets/servicio/cut/ornament-care-heart.png',
-      '/assets/tickets/servicio/cut/ornament-handshake.png',
+      '/assets/tickets/servicio/cut/ornament-care-heart.webp',
+      '/assets/tickets/servicio/cut/ornament-handshake.webp',
     ])
     expect(theme.ornaments.action.map((o) => o.src)).toEqual([
-      '/assets/tickets/servicio/cut/ornament-handshake.png',
-      '/assets/tickets/servicio/cut/ornament-corner-star.png',
+      '/assets/tickets/servicio/cut/ornament-handshake.webp',
+      '/assets/tickets/servicio/cut/ornament-corner-star.webp',
     ])
     expect(theme.ornaments.action.map((o) => o.corner)).toEqual(['bl', 'tr'])
   })
@@ -221,20 +221,20 @@ describe('resolveTicketTheme', () => {
     )
     expect(theme.ornaments.character).toEqual([
       {
-        src: '/assets/tickets/operacion-academica/cut/ornament-five-school-fan.png',
+        src: '/assets/tickets/operacion-academica/cut/ornament-five-school-fan.webp',
         corner: 'bl',
       },
     ])
     expect(theme.ornaments.reports.map((o) => o.src)).toEqual([
-      '/assets/tickets/operacion-academica/cut/ornament-academic-hub.png',
+      '/assets/tickets/operacion-academica/cut/ornament-academic-hub.webp',
     ])
     expect(theme.ornaments.problems.map((o) => o.src)).toEqual([
-      '/assets/tickets/operacion-academica/cut/ornament-five-school-chain.png',
-      '/assets/tickets/operacion-academica/cut/ornament-five-point-rosette.png',
+      '/assets/tickets/operacion-academica/cut/ornament-five-school-chain.webp',
+      '/assets/tickets/operacion-academica/cut/ornament-five-point-rosette.webp',
     ])
     expect(theme.ornaments.action.map((o) => o.src)).toEqual([
-      '/assets/tickets/operacion-academica/cut/ornament-academic-hub.png',
-      '/assets/tickets/operacion-academica/cut/ornament-five-point-rosette.png',
+      '/assets/tickets/operacion-academica/cut/ornament-academic-hub.webp',
+      '/assets/tickets/operacion-academica/cut/ornament-five-point-rosette.webp',
     ])
     expect(theme.ornaments.action.map((o) => o.corner)).toEqual(['tr', 'br'])
   })
@@ -249,25 +249,25 @@ describe('resolveTicketTheme', () => {
     expect(theme.accent).toBe('#4A2868')
     expect(theme.accentDeep).toBe('#2A1740')
     expect(theme.watermark).toBe(
-      '/assets/tickets/bellas-artes/cut/watermark-horse.png',
+      '/assets/tickets/bellas-artes/cut/watermark-horse.webp',
     )
     expect(theme.ornaments.character).toEqual([
       {
-        src: '/assets/tickets/bellas-artes/cut/ornament-corner-star.png',
+        src: '/assets/tickets/bellas-artes/cut/ornament-corner-star.webp',
         corner: 'bl',
       },
     ])
     expect(theme.ornaments.reports.map((o) => o.src)).toEqual([
-      '/assets/tickets/bellas-artes/cut/ornament-pointe-shoes.png',
-      '/assets/tickets/bellas-artes/cut/ornament-music-notes.png',
+      '/assets/tickets/bellas-artes/cut/ornament-pointe-shoes.webp',
+      '/assets/tickets/bellas-artes/cut/ornament-music-notes.webp',
     ])
     expect(theme.ornaments.problems.map((o) => o.src)).toEqual([
       '/assets/tickets/bellas-artes/cut/ornament-ballerina.png',
-      '/assets/tickets/bellas-artes/cut/ornament-corner-star.png',
+      '/assets/tickets/bellas-artes/cut/ornament-corner-star.webp',
     ])
     expect(theme.ornaments.action.map((o) => o.src)).toEqual([
       '/assets/tickets/bellas-artes/cut/ornament-ballerina.png',
-      '/assets/tickets/bellas-artes/cut/ornament-corner-star.png',
+      '/assets/tickets/bellas-artes/cut/ornament-corner-star.webp',
     ])
     expect(theme.ornaments.action.map((o) => o.corner)).toEqual(['tr', 'br'])
   })
@@ -289,21 +289,21 @@ describe('resolveTicketTheme', () => {
     )
     expect(theme.ornaments.character).toEqual([
       {
-        src: '/assets/tickets/transformacion-empresarial/cut/ornament-corner-star.png',
+        src: '/assets/tickets/transformacion-empresarial/cut/ornament-corner-star.webp',
         corner: 'bl',
       },
     ])
     expect(theme.ornaments.reports.map((o) => o.src)).toEqual([
-      '/assets/tickets/transformacion-empresarial/cut/ornament-cycle-refresh.png',
-      '/assets/tickets/transformacion-empresarial/cut/ornament-process-gear.png',
+      '/assets/tickets/transformacion-empresarial/cut/ornament-cycle-refresh.webp',
+      '/assets/tickets/transformacion-empresarial/cut/ornament-process-gear.webp',
     ])
     expect(theme.ornaments.problems.map((o) => o.src)).toEqual([
-      '/assets/tickets/transformacion-empresarial/cut/ornament-split-arrow.png',
-      '/assets/tickets/transformacion-empresarial/cut/ornament-corner-star.png',
+      '/assets/tickets/transformacion-empresarial/cut/ornament-split-arrow.webp',
+      '/assets/tickets/transformacion-empresarial/cut/ornament-corner-star.webp',
     ])
     expect(theme.ornaments.action.map((o) => o.src)).toEqual([
-      '/assets/tickets/transformacion-empresarial/cut/ornament-cycle-refresh.png',
-      '/assets/tickets/transformacion-empresarial/cut/ornament-process-gear.png',
+      '/assets/tickets/transformacion-empresarial/cut/ornament-cycle-refresh.webp',
+      '/assets/tickets/transformacion-empresarial/cut/ornament-process-gear.webp',
     ])
     expect(theme.ornaments.action.map((o) => o.corner)).toEqual(['bl', 'tr'])
   })
@@ -331,20 +331,20 @@ describe('resolveTicketTheme', () => {
     )
     expect(theme.ornaments.character).toEqual([
       {
-        src: '/assets/tickets/ingenierias/cut/ornament-corner-star.png',
+        src: '/assets/tickets/ingenierias/cut/ornament-corner-star.webp',
         corner: 'bl',
       },
     ])
     expect(theme.ornaments.reports.map((o) => o.src)).toEqual([
-      '/assets/tickets/ingenierias/cut/ornament-hex-bolt.png',
+      '/assets/tickets/ingenierias/cut/ornament-hex-bolt.webp',
       '/assets/tickets/ingenierias/cut/ornament-drafting-compass.png',
     ])
     expect(theme.ornaments.problems.map((o) => o.src)).toEqual([
-      '/assets/tickets/ingenierias/cut/ornament-set-square.png',
-      '/assets/tickets/ingenierias/cut/ornament-corner-star.png',
+      '/assets/tickets/ingenierias/cut/ornament-set-square.webp',
+      '/assets/tickets/ingenierias/cut/ornament-corner-star.webp',
     ])
     expect(theme.ornaments.action.map((o) => o.src)).toEqual([
-      '/assets/tickets/ingenierias/cut/ornament-set-square.png',
+      '/assets/tickets/ingenierias/cut/ornament-set-square.webp',
       '/assets/tickets/ingenierias/cut/ornament-drafting-compass.png',
     ])
     expect(theme.ornaments.action.map((o) => o.corner)).toEqual(['br', 'tr'])
@@ -373,21 +373,21 @@ describe('resolveTicketTheme', () => {
     )
     expect(theme.ornaments.character).toEqual([
       {
-        src: '/assets/tickets/transversales/cut/ornament-corner-star.png',
+        src: '/assets/tickets/transversales/cut/ornament-corner-star.webp',
         corner: 'bl',
       },
     ])
     expect(theme.ornaments.reports.map((o) => o.src)).toEqual([
-      '/assets/tickets/transversales/cut/ornament-span-bridge.png',
-      '/assets/tickets/transversales/cut/ornament-flow-nodes.png',
+      '/assets/tickets/transversales/cut/ornament-span-bridge.webp',
+      '/assets/tickets/transversales/cut/ornament-flow-nodes.webp',
     ])
     expect(theme.ornaments.problems.map((o) => o.src)).toEqual([
-      '/assets/tickets/transversales/cut/ornament-flow-nodes.png',
-      '/assets/tickets/transversales/cut/ornament-corner-star.png',
+      '/assets/tickets/transversales/cut/ornament-flow-nodes.webp',
+      '/assets/tickets/transversales/cut/ornament-corner-star.webp',
     ])
     expect(theme.ornaments.action.map((o) => o.src)).toEqual([
-      '/assets/tickets/transversales/cut/ornament-span-bridge.png',
-      '/assets/tickets/transversales/cut/ornament-synergy-link.png',
+      '/assets/tickets/transversales/cut/ornament-span-bridge.webp',
+      '/assets/tickets/transversales/cut/ornament-synergy-link.webp',
     ])
     expect(theme.ornaments.action.map((o) => o.corner)).toEqual(['br', 'tr'])
   })

@@ -38,13 +38,17 @@ export interface AdminInsightPanelProps {
   onOpenSituation: (situation: SituationResponse) => void
   labelByCode: Record<string, string>
   colorByCode: Record<string, string>
+  /**
+   * Alcance que se nombra en la cabecera. El backend ya limita lo que cada
+   * rol ve; el COORDINADOR lee «mi coordinación», no «todas».
+   */
+  scopeLabel?: string
   /** Contexto de la vista de indicadores (KPI). */
   kpi?: {
     selectedCoordination: CoordinationOverview | null
     selectedLabel: string | null
     openProblemId: string | null
     onOpenProblem: (problemId: string) => void
-    onClearCoordination: () => void
     onSelectCoordination: (code: string) => void
     onAwaitingCardChange: (awaiting: boolean) => void
   }
@@ -202,7 +206,7 @@ function percent(part: number, total: number): string {
   return `${Math.round((part / total) * 100)} %`
 }
 
-function InsightHeader({
+export function InsightHeader({
   icon,
   eyebrow,
   title,
@@ -213,20 +217,23 @@ function InsightHeader({
   eyebrow: string
   title: string
   subtitle: string
-  onBack: () => void
+  /** Sin destino (p. ej. el DIRECTOR, sin menú) no se pinta «Volver». */
+  onBack?: () => void
 }) {
   return (
     <header className="admin-insight__header">
       <div className="admin-insight__topline">
-        <button
-          type="button"
-          className="admin-insight__back"
-          onClick={onBack}
-          aria-label="Volver al menú"
-          title="Volver al menú"
-        >
-          <IconChevronLeft size={16} />
-        </button>
+        {onBack ? (
+          <button
+            type="button"
+            className="admin-insight__back"
+            onClick={onBack}
+            aria-label="Volver al menú"
+            title="Volver al menú"
+          >
+            <IconChevronLeft size={16} />
+          </button>
+        ) : null}
         <span className="admin-insight__eyebrow">{eyebrow}</span>
       </div>
       <div className="admin-insight__title-row">
@@ -414,6 +421,7 @@ function OperationsView({
   onOpenSituation,
   labelByCode,
   colorByCode,
+  scopeLabel = 'todas las coordinaciones',
 }: AdminInsightPanelProps) {
   const { state, retry } = useSituationsByStatus(ACTIVE_STATUSES)
   const [filter, setFilter] = useState<OperationsFilter>('all')
@@ -449,7 +457,7 @@ function OperationsView({
     <section className="admin-insight" data-view="operations">
       <InsightHeader
         icon={<IconGear size={22} />}
-        eyebrow="Consulta · todas las coordinaciones"
+        eyebrow={`Consulta · ${scopeLabel}`}
         title="Gestión de Situaciones Operativas"
         subtitle="Situaciones activas ordenadas por prioridad: SLA vencido y severidad primero."
         onBack={onBack}
@@ -584,6 +592,7 @@ function LearningsView({
   onOpenSituation,
   labelByCode,
   colorByCode,
+  scopeLabel,
 }: AdminInsightPanelProps) {
   const { state, retry } = useSituationsByStatus(CLOSED_STATUSES)
   const [grouping, setGrouping] = useState<Grouping>('month')
@@ -618,7 +627,7 @@ function LearningsView({
     <section className="admin-insight" data-view="learnings">
       <InsightHeader
         icon={<IconBook size={22} />}
-        eyebrow="Consulta · situaciones cerradas"
+        eyebrow={scopeLabel ? `Consulta · ${scopeLabel}` : 'Consulta · situaciones cerradas'}
         title="Historial y Aprendizajes"
         subtitle="Cierres agrupados por período, con su cumplimiento de SLA y la lección registrada."
         onBack={onBack}
@@ -920,7 +929,6 @@ function KpiView({ onBack, kpi, labelByCode, colorByCode }: AdminInsightPanelPro
         labelByCode={labelByCode}
         colorByCode={colorByCode}
         onOpenProblem={kpi?.onOpenProblem ?? (() => undefined)}
-        onClearCoordination={kpi?.onClearCoordination ?? (() => undefined)}
         onSelectCoordination={kpi?.onSelectCoordination ?? (() => undefined)}
         onAwaitingCardChange={kpi?.onAwaitingCardChange}
       />

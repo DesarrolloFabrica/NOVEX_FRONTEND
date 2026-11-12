@@ -1,0 +1,2749 @@
+/* ==========================================================================
+   COORDINADOR · «escenario circense» sin baraja
+   --------------------------------------------------------------------------
+   Comparte la piel de ADMIN, DIRECTOR y ANALISTA (operational-shell-admin.css,
+   que ya incluye `coordinator` en sus selectores). Aquí solo cambia la
+   composición: un titular arriba y tres columnas a todo el alto, sin mesa.
+
+     ┌ titular: coordinación + qué hacer ahora ─────────────────────┐
+     ├ carta y estado ┬ situaciones (pestañas) ┬ registrar/consultar┤
+     └────────────────┴────────────────────────┴────────────────────┘
+
+   Las reglas de colocación usan !important porque la piel compartida reubica
+   el panel derecho con `:has(...)` (más específico) al abrir un detalle.
+   ========================================================================== */
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] {
+  --shell-action-w: 30%;
+  --coord-intro-h: auto;
+
+  grid-template-columns: minmax(0, 1fr) var(--shell-action-w);
+  grid-template-rows: auto minmax(0, 1fr);
+  row-gap: 14px;
+  height: var(--admin-h);
+}
+
+@media (min-width: 1600px) {
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] {
+    --shell-action-w: 28%;
+  }
+}
+
+/* ---------- Titular ---------- */
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  grid-row: 1;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  padding: 14px 22px;
+  border: 1px solid rgb(184 140 60 / 0.55);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgb(255 251 242 / 0.97) 0%, rgb(246 234 210 / 0.97) 100%);
+  box-shadow:
+    inset 0 0 0 4px rgb(255 250 240 / 0.9),
+    inset 0 0 0 5px rgb(184 140 60 / 0.3),
+    0 10px 24px rgb(20 8 4 / 0.35);
+  color: var(--admin-ink);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__icon {
+  display: grid;
+  flex: none;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border: 1px solid rgb(184 140 60 / 0.5);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff8e6 0%, #f3e0b6 100%);
+  color: #6b4a1c;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__eyebrow {
+  color: #6b4a1c;
+  font: 700 11.5px var(--admin-sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__title {
+  overflow: hidden;
+  margin: 0;
+  color: var(--admin-ink);
+  font: 900 clamp(20px, 1.7vw, 27px) / 1.15 var(--admin-serif);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__guidance {
+  max-width: 95ch;
+  margin: 2px 0 0;
+  color: var(--admin-ink-soft);
+  font: 500 14px / 1.45 var(--admin-sans);
+  text-wrap: pretty;
+}
+
+/* ---------- Reparto: carta + situaciones | panel derecho ---------- */
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .operational-shell__top {
+  grid-row: 2 !important;
+  grid-column: 1 !important;
+  grid-template-columns: minmax(270px, 0.3fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .operational-shell__action {
+  grid-row: 2 !important;
+  grid-column: 2 !important;
+  align-self: stretch;
+  height: 100% !important;
+}
+
+/* ---------- Columna izquierda: carta + estado ---------- */
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__card {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 0;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own > * {
+  flex-shrink: 0;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__card {
+  /* Sin mesa no hay unidad de carta: tamaño propio, misma proporción del arte. */
+  --card-aspect: 1.324;
+  --card-width: 190px;
+  --card-height: calc(var(--card-width) * var(--card-aspect));
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__card .coordination-card {
+  width: var(--card-width);
+  min-height: var(--card-height);
+  max-height: none;
+  aspect-ratio: unset;
+  pointer-events: none;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__facts {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  border: 1px solid rgb(138 96 45 / 0.28);
+  border-radius: 12px;
+  background: rgb(255 250 240 / 0.8);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__fact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 14px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__fact + .coordinator-own__fact {
+  border-top: 1px solid rgb(138 96 45 / 0.18);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__fact dt {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--admin-ink-soft);
+  font: 600 13px var(--admin-sans);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__fact dd {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--admin-ink);
+  font: 600 13.5px var(--admin-sans);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__fact dd strong {
+  font: 900 18px var(--admin-serif);
+  font-variant-numeric: tabular-nums;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__status {
+  padding: 3px 10px;
+  border: 1px solid #9fd0a0;
+  border-radius: 999px;
+  background: #e3f4e2;
+  color: #1f6b30;
+  font: 700 12.5px var(--admin-sans);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__status[data-status='alerta'] {
+  border-color: #e3bf72;
+  background: #fbefd2;
+  color: #8a5a12;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__status[data-status='critico'] {
+  border-color: rgb(179 38 46 / 0.4);
+  background: #fbe5e2;
+  color: #8f1a21;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__health {
+  position: relative;
+  width: 52px;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(138 96 45 / 0.18);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__health-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #b3262e, #d07a1a 50%, #3e8e47);
+  background-size: 52px 100%;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__health-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__critical {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fbe5e2;
+  color: #8f1a21;
+  font: 700 11.5px var(--admin-sans);
+}
+
+/* ---------- Centro: situaciones con pestañas ---------- */
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__title {
+  margin: 0;
+  color: var(--admin-ink);
+  font: 900 clamp(20px, 1.5vw, 24px) / 1.15 var(--admin-serif);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__summary {
+  margin: 3px 0 0;
+  color: var(--admin-ink-soft);
+  font: 500 13px / 1.4 var(--admin-sans);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid rgb(138 96 45 / 0.28);
+  border-radius: 14px;
+  background: rgb(240 226 194 / 0.6);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--admin-ink-soft);
+  font: 700 13px var(--admin-sans);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__tab:hover {
+  color: var(--admin-ink);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__tab[aria-selected='true'] {
+  background: linear-gradient(180deg, #4a1a1e 0%, #2c0d10 100%);
+  color: #fbeed0;
+  box-shadow: 0 1px 3px rgb(44 13 16 / 0.35);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__tab:focus-visible {
+  outline: 2px solid #8a602d;
+  outline-offset: 2px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__tab-count {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgb(138 96 45 / 0.16);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__tab[aria-selected='true'] .coordinator-situations__tab-count {
+  background: rgb(245 212 133 / 0.22);
+  color: #f5d485;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0 2px 2px 0;
+  list-style: none;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__empty,
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 100%;
+  min-height: 180px;
+  padding: 24px;
+  border: 1px dashed rgb(138 96 45 / 0.35);
+  border-radius: 12px;
+  background: rgb(255 250 240 / 0.6);
+  color: var(--admin-ink);
+  text-align: center;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__empty strong {
+  font: 800 17px var(--admin-serif);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__empty p,
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__error p {
+  max-width: 46ch;
+  margin: 0;
+  color: var(--admin-ink-soft);
+  font: 500 13.5px / 1.45 var(--admin-sans);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__empty-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e3f4e2;
+  color: #1f6b30;
+  font: 800 18px var(--admin-sans);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgb(138 96 45 / 0.22);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__range {
+  color: var(--admin-ink-soft);
+  font: 600 13px var(--admin-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__pager {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__pager button {
+  display: inline-grid;
+  min-width: 34px;
+  height: 34px;
+  place-items: center;
+  padding: 0 8px;
+  border: 1px solid rgb(90 62 30 / 0.3);
+  border-radius: 9px;
+  background: #fffaf0;
+  color: var(--admin-ink);
+  font: 700 13.5px var(--admin-sans);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__pager button:hover:not(:disabled) {
+  border-color: #8a602d;
+  background: #fff3d8;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__pager button[aria-current='page'] {
+  border-color: #2c0d10;
+  background: linear-gradient(180deg, #4a1a1e 0%, #2c0d10 100%);
+  color: #fbeed0;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__pager button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__pager button:focus-visible {
+  outline: 2px solid #8a602d;
+  outline-offset: 2px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__gap {
+  color: var(--admin-ink-soft);
+}
+
+/* ---------- Derecha: solo accesos con destino ---------- */
+
+/* Las guías sin destino para este rol eran texto con flecha: se ocultan. */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .action-panel__guidance-card:not(.action-panel__guidance-card--clickable) {
+  display: none;
+}
+
+/* ---------- Tablet y móvil ---------- */
+
+@media (max-width: 1100px) {
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    height: auto;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .operational-shell__top {
+    grid-row: 2 !important;
+    grid-template-columns: minmax(210px, 0.34fr) minmax(0, 0.66fr);
+    grid-template-rows: minmax(480px, auto);
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .operational-shell__action {
+    grid-row: 3 !important;
+    grid-column: 1 !important;
+    height: auto !important;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck']:has(.operational-shell__action .action-panel:not([data-mode='idle'])) .operational-shell__action {
+    height: min(80dvh, 780px) !important;
+  }
+}
+
+/* Cabecera en tablet: «Registrar situación» pasa a icono (el texto sigue
+   para lectores de pantalla) para no pisar el avatar. Columna izquierda
+   estrecha: la barra de salud se omite y queda el valor. */
+@media (max-width: 1000px) {
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .operational-role-header__quick-cta {
+    justify-content: center;
+    width: 32px;
+    min-width: 32px;
+    padding: 0;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .operational-role-header__quick-cta > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__health {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .operational-shell__top {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(460px, auto);
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro {
+    padding: 12px 14px;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__icon {
+    display: none;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__title {
+    white-space: normal;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__card {
+    --card-width: 120px;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__facts {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__footer {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 420px) {
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own {
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__tab {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   COLUMNA IZQUIERDA · carta viva y datos legibles
+   --------------------------------------------------------------------------
+   · La columna desplaza solo en vertical: el aura de la carta asomaba 5 px y
+     `overflow-y: auto` abría también una barra horizontal.
+   · La carta se veía apagada: el degradado inferior cubría casi la mitad del
+     arte y la píldora de estado heredaba tinta oscura (los colores de estado
+     solo se definen dentro de la mesa). Aquí se definen, la píldora pasa a
+     sólida y el arte gana un punto de saturación y contraste, sin tocar la
+     imagen.
+   ========================================================================== */
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own {
+  overflow-x: hidden;
+  padding-inline: 4px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__card {
+  --status-stable-rgb: 31 122 56;
+  --status-alert-rgb: 196 128 20;
+  --status-critical-rgb: 179 38 46;
+  --status-unknown-rgb: 110 94 76;
+
+  padding: 6px 0 2px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__card .coordination-card {
+  border: 0;
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 2px rgb(212 175 55 / 0.7),
+    0 0 0 5px rgb(255 250 240 / 0.9),
+    0 0 0 6px rgb(184 140 60 / 0.35),
+    0 16px 30px rgb(40 18 6 / 0.38);
+}
+
+/* El aura de estado es para la mesa oscura; sobre papel solo ensucia. */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__card .coordination-card__aura {
+  display: none;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__card .coordination-card__face img {
+  filter: saturate(1.14) contrast(1.06) brightness(1.03);
+}
+
+/* Degradado solo en el pie, donde va la píldora: el emblema queda limpio. */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__card .coordination-card__scrim {
+  inset: 74% 0 0;
+  background: linear-gradient(180deg, transparent 0%, rgb(6 12 24 / 0.42) 100%);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__card .coordination-card__status {
+  margin-bottom: 12px;
+  padding: 4px 12px;
+  border: 1px solid rgb(255 255 255 / 0.6);
+  background: rgb(var(--status-rgb));
+  box-shadow: 0 4px 10px rgb(0 0 0 / 0.3);
+  color: #fff;
+  font: 700 11.5px var(--admin-sans);
+  letter-spacing: 0.06em;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__card .coordination-card__status-dot {
+  width: 7px;
+  height: 7px;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.35);
+}
+
+/* ---------- Datos bajo la carta ---------- */
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__facts {
+  border: 1px solid rgb(184 140 60 / 0.45);
+  background: linear-gradient(180deg, #fffdf8 0%, #fbf3e2 100%);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 6px 14px rgb(60 35 10 / 0.08);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__fact dt {
+  color: var(--admin-ink);
+  font-weight: 600;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__fact dt svg {
+  color: #8a602d;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__status {
+  border: 0;
+  background: #1f7a38;
+  box-shadow: 0 2px 6px rgb(31 122 56 / 0.3);
+  color: #fff;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__status[data-status='alerta'] {
+  border: 0;
+  background: #c48014;
+  box-shadow: 0 2px 6px rgb(196 128 20 / 0.3);
+  color: #fff;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__status[data-status='critico'] {
+  border: 0;
+  background: #b3262e;
+  box-shadow: 0 2px 6px rgb(179 38 46 / 0.3);
+  color: #fff;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__health {
+  width: 56px;
+  height: 8px;
+  background: rgb(138 96 45 / 0.16);
+  box-shadow: inset 0 1px 2px rgb(60 35 10 / 0.15);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__health-value {
+  font: 800 14px var(--admin-sans);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__facts[data-tone='critico'] .coordinator-own__health-value {
+  color: #8f1a21;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__fact dd strong {
+  font-size: 20px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__critical {
+  background: #b3262e;
+  color: #fff;
+}
+
+/* ==========================================================================
+   COLUMNA IZQUIERDA · ajuste fino
+   · La píldora de estado de la carta tapaba el emblema (el arte se recorta
+     por abajo y no hay pie libre). El estado ya figura en «Estado actual»:
+     la píldora queda solo para lectores de pantalla.
+   · Cada dato es una rejilla etiqueta | valor; la etiqueta cede (puntos
+     suspensivos) antes que el valor, y la barra de salud ocupa su propia
+     fila a todo el ancho. Nada sale del recuadro.
+   ========================================================================== */
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__card .coordination-card__status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__card .coordination-card__scrim {
+  display: none;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__fact {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 7px;
+  padding: 9px 14px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__fact dt {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__fact dt svg {
+  flex: none;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__fact dd {
+  justify-self: end;
+  flex-wrap: nowrap;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__health {
+  display: block;
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 6px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__health-bar {
+  background-size: auto;
+}
+
+/* ==========================================================================
+   CENTRO · «Situaciones de mi coordinación» (referencia)
+   ========================================================================== */
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__icon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border: 1px solid rgb(184 140 60 / 0.5);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff8e6 0%, #f3e0b6 100%);
+  color: #6b4a1c;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__heading {
+  min-width: 0;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__title {
+  overflow: hidden;
+  font-size: clamp(19px, 1.4vw, 23px);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__summary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__period {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__period-label {
+  color: #6b4a1c;
+  font: 700 10.5px var(--admin-sans);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__period select {
+  min-width: 170px;
+  min-height: 40px;
+  padding: 0 34px 0 12px;
+  border: 1px solid rgb(90 62 30 / 0.3);
+  border-radius: 10px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%232a1a0e' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+      no-repeat right 12px center,
+    #fffdf8;
+  box-shadow: 0 2px 6px rgb(60 35 10 / 0.08);
+  color: var(--admin-ink);
+  font: 600 13.5px var(--admin-sans);
+  appearance: none;
+  cursor: pointer;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__period select:focus-visible {
+  outline: 3px solid rgb(201 154 59 / 0.35);
+  border-color: #8a602d;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__list {
+  gap: 8px;
+}
+
+/* ---------- Fila ---------- */
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 64px;
+  padding: 10px 12px 10px 18px;
+  overflow: hidden;
+  border: 1px solid rgb(138 96 45 / 0.22);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fffdf8 0%, #fbf4e6 100%);
+  box-shadow: 0 2px 8px rgb(60 35 10 / 0.07);
+  color: var(--admin-ink);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+/* Franja con el color de la coordinación representada. */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 6px;
+  background: rgb(var(--row-rgb));
+  content: '';
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row:hover {
+  border-color: rgb(138 96 45 / 0.45);
+  box-shadow: 0 6px 16px rgb(60 35 10 / 0.12);
+  transform: translateY(-1px);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row:focus-visible {
+  outline: 2px solid #8a602d;
+  outline-offset: 2px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row[data-selected='true'] {
+  border-color: rgb(var(--row-rgb) / 0.75);
+  background: linear-gradient(180deg, #fffaf0 0%, #f6ead1 100%);
+  box-shadow:
+    0 0 0 2px rgb(var(--row-rgb) / 0.35),
+    0 6px 16px rgb(60 35 10 / 0.12);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row__badge {
+  padding: 4px 10px;
+  border-radius: 7px;
+  background: rgb(var(--row-rgb) / 0.16);
+  color: rgb(var(--row-rgb));
+  font: 800 11px var(--admin-sans);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  filter: brightness(0.75) saturate(1.2);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row__main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row__title {
+  overflow: hidden;
+  color: var(--admin-ink);
+  font: 700 14.5px / 1.3 var(--admin-sans);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row__origin {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--admin-ink-soft);
+  font: 500 12.5px var(--admin-sans);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row__origin svg {
+  flex: none;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row__chips {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  min-width: 92px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] :is(.situation-row__severity, .situation-row__status) {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font: 700 12px / 1.5 var(--admin-sans);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row__severity {
+  background: #ece3d3;
+  color: #5c4631;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row__severity[data-severity='LOW'] {
+  background: #e3efda;
+  color: #3d6b2a;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row__severity[data-severity='HIGH'] {
+  background: #fbe2bd;
+  color: #8a4f0e;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row__severity[data-severity='CRITICAL'] {
+  background: #b3262e;
+  color: #fff;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row__status {
+  background: rgb(138 96 45 / 0.1);
+  color: #4a3826;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row__status[data-status='IN_PROGRESS'],
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row__status[data-status='RESOLVED'] {
+  background: #d9efeb;
+  color: #1e6b62;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row__status[data-status='CLOSED'] {
+  background: #e3f4e2;
+  color: #1f6b30;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row__status[data-status='CANCELLED'] {
+  background: #ece7e1;
+  color: #6e5e4c;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row__chevron {
+  display: grid;
+  color: #5c4631;
+}
+
+/* ---------- Pie ---------- */
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__pager button {
+  min-width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgb(60 35 10 / 0.08);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__range {
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   DERECHA · dos fichas en reposo (referencia)
+   ========================================================================== */
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions {
+  display: flex;
+  flex-direction: column;
+  grid-row: 2;
+  grid-column: 2;
+  gap: 14px;
+  min-height: 0;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  padding: max(22px, var(--frame-pad-y, 0px)) max(24px, var(--frame-pad-x, 0px));
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__card > :not(.ticket-panel) {
+  position: relative;
+  z-index: 1;
+}
+
+/* «Consultar» ocupa el resto del alto: sin hueco vacío bajo la columna. */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__card--consult {
+  flex: 1 1 auto;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__icon {
+  display: grid;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 1px solid rgb(184 140 60 / 0.5);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff8e6 0%, #f3e0b6 100%);
+  color: #6b4a1c;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__title {
+  margin: 0;
+  color: var(--admin-ink);
+  font: 900 clamp(19px, 1.4vw, 23px) / 1.2 var(--admin-serif);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__text {
+  margin: 4px 0 0;
+  color: var(--admin-ink-soft);
+  font: 500 13.5px / 1.45 var(--admin-sans);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 1px solid #2c0d10;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #6a2128 0%, #3a1418 100%);
+  box-shadow:
+    0 8px 18px rgb(58 20 24 / 0.32),
+    inset 0 1px 0 rgb(255 255 255 / 0.15);
+  color: #fbeed0;
+  font: 700 15px var(--admin-sans);
+  cursor: pointer;
+  transition: transform 160ms ease, filter 160ms ease;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__cta > span {
+  color: #f5d485;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__cta:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__cta:focus-visible {
+  outline: 3px solid rgb(201 154 59 / 0.55);
+  outline-offset: 2px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__link {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 54px;
+  padding: 0 14px 0 16px;
+  border: 1px solid rgb(138 96 45 / 0.25);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fffdf8 0%, #fbf4e6 100%);
+  box-shadow: 0 2px 8px rgb(60 35 10 / 0.07);
+  color: var(--admin-ink);
+  font: 700 14.5px var(--admin-serif);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__link svg {
+  color: #6b4a1c;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__link:hover {
+  border-color: rgb(138 96 45 / 0.5);
+  box-shadow: 0 6px 16px rgb(60 35 10 / 0.12);
+  transform: translateY(-1px);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__link:focus-visible {
+  outline: 2px solid #8a602d;
+  outline-offset: 2px;
+}
+
+@media (max-width: 1440px) {
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row {
+    gap: 10px;
+    padding-left: 16px;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row__badge {
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions {
+    grid-row: 3;
+    grid-column: 1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__header {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__period {
+    grid-column: 1 / -1;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__summary {
+    white-space: normal;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row__badge {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row__chevron {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] :is(.situation-row, .coordinator-actions__cta, .coordinator-actions__link) {
+    transition: none;
+  }
+}
+
+/* El selector de fecha va en papel claro (la piel del ticket fuerza los
+   `select` en oscuro con !important). */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__period select {
+  border: 1px solid rgb(90 62 30 / 0.3) !important;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%232a1a0e' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+      no-repeat right 12px center,
+    #fffdf8 !important;
+  color: var(--admin-ink) !important;
+  color-scheme: light;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__period select option {
+  background: #fffdf8;
+  color: var(--admin-ink);
+}
+
+/* Fila de 64 px exactos (la paginación calcula con 64 + 8 de separación). */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row {
+  height: 64px;
+  min-height: 64px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] :is(.situation-row__severity, .situation-row__status) {
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+/* Enlaces de «Consultar» con una línea que dice qué hay detrás. */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__link {
+  min-height: 64px;
+  padding-block: 10px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__link-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__link-text small {
+  overflow: hidden;
+  color: var(--admin-ink-soft);
+  font: 500 12.5px / 1.35 var(--admin-sans);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* «¿Cómo funciona?»: solo cuando sobra alto; si no, no ocupa nada. */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__steps {
+  display: none;
+  margin: 2px 0 0;
+  padding: 14px 0 0;
+  border-top: 1px solid rgb(138 96 45 / 0.22);
+  list-style: none;
+  counter-reset: coord-step;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__steps li {
+  position: relative;
+  padding: 0 0 10px 34px;
+  color: var(--admin-ink-soft);
+  font: 500 13px / 1.45 var(--admin-sans);
+  counter-increment: coord-step;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__steps li::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 50%;
+  background: #3a1418;
+  color: #f5d485;
+  content: counter(coord-step);
+  font: 800 11.5px var(--admin-sans);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__steps strong {
+  color: var(--admin-ink);
+}
+
+@media (min-height: 940px) and (min-width: 1101px) {
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-actions__steps {
+    display: block;
+  }
+}
+
+/* ==========================================================================
+   TITULAR · cartel de la coordinación
+   --------------------------------------------------------------------------
+   Antes era una franja crema plana. Ahora es un cartel de la misma familia
+   que los tickets: papel con doble filete dorado, remates en las esquinas,
+   medallón vino con el emblema, estado junto al nombre y tres cifras a la
+   derecha. Las rayas de carpa del extremo derecho son solo CSS (sin imagen)
+   y se desvanecen hacia el texto para no competir con él.
+   ========================================================================== */
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro {
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 22px;
+  padding: 18px 26px 18px 22px;
+  border: 1px solid #b88c3c;
+  border-radius: 18px;
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgb(255 255 255 / 0.7) 0%, transparent 45%),
+    linear-gradient(180deg, #fffaf0 0%, #f6e8cc 100%);
+  box-shadow:
+    inset 0 0 0 4px #fffaf0,
+    inset 0 0 0 5px rgb(184 140 60 / 0.55),
+    inset 0 0 0 8px rgb(255 250 240 / 0.6),
+    inset 0 0 0 9px rgb(184 140 60 / 0.22),
+    0 14px 30px rgb(20 8 4 / 0.42),
+    0 2px 0 rgb(255 240 200 / 0.4);
+}
+
+/* Rayas de carpa (vino/crema) que nacen en el borde derecho. */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 0 auto;
+  width: 46%;
+  background: repeating-linear-gradient(
+    112deg,
+    rgb(122 26 34 / 0.13) 0 22px,
+    rgb(255 250 240 / 0) 22px 44px
+  );
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 70%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 70%);
+  content: '';
+}
+
+/* Remates dorados en las cuatro esquinas, como los tickets. */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro::after {
+  position: absolute;
+  z-index: -1;
+  inset: 11px;
+  border-radius: 10px;
+  background:
+    linear-gradient(#c99a3b, #c99a3b) top left / 22px 2px no-repeat,
+    linear-gradient(#c99a3b, #c99a3b) top left / 2px 22px no-repeat,
+    linear-gradient(#c99a3b, #c99a3b) top right / 22px 2px no-repeat,
+    linear-gradient(#c99a3b, #c99a3b) top right / 2px 22px no-repeat,
+    linear-gradient(#c99a3b, #c99a3b) bottom left / 22px 2px no-repeat,
+    linear-gradient(#c99a3b, #c99a3b) bottom left / 2px 22px no-repeat,
+    linear-gradient(#c99a3b, #c99a3b) bottom right / 22px 2px no-repeat,
+    linear-gradient(#c99a3b, #c99a3b) bottom right / 2px 22px no-repeat;
+  content: '';
+  pointer-events: none;
+}
+
+/* Medallón vino con el emblema dorado. */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__medallion {
+  position: relative;
+  display: grid;
+  align-self: center;
+  width: 68px;
+  height: 68px;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #7a2a31 0%, #3a1418 70%, #24090c 100%);
+  box-shadow:
+    0 0 0 3px #f5d485,
+    0 0 0 5px #8a602d,
+    0 0 0 9px rgb(245 212 133 / 0.25),
+    0 8px 18px rgb(58 20 24 / 0.4);
+  color: #f5d485;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__text {
+  justify-content: center;
+  gap: 4px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #8a602d;
+  font-size: 11.5px;
+  letter-spacing: 0.18em;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__eyebrow::after {
+  width: 48px;
+  height: 1px;
+  background: linear-gradient(90deg, #c99a3b, transparent);
+  content: '';
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  min-width: 0;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__title {
+  font-size: clamp(24px, 2vw, 32px);
+  letter-spacing: -0.01em;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 0.7);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #1f7a38;
+  box-shadow: 0 3px 8px rgb(31 122 56 / 0.3);
+  color: #fff;
+  font: 700 12px var(--admin-sans);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__status > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 0.3);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__status[data-status='alerta'] {
+  background: #c48014;
+  box-shadow: 0 3px 8px rgb(196 128 20 / 0.3);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__status[data-status='critico'] {
+  background: #b3262e;
+  box-shadow: 0 3px 8px rgb(179 38 46 / 0.35);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__guidance {
+  max-width: 78ch;
+  color: #4a3826;
+  font-size: 14.5px;
+}
+
+/* Tres cifras con filetes dorados entre ellas. */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__stats {
+  display: flex;
+  align-self: center;
+  margin: 0;
+  padding: 8px 6px;
+  border: 1px solid rgb(184 140 60 / 0.45);
+  border-radius: 14px;
+  background: rgb(255 253 248 / 0.88);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 6px 16px rgb(60 35 10 / 0.12);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__stat {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 112px;
+  padding: 4px 18px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__stat + .coordinator-intro__stat {
+  border-left: 1px solid rgb(184 140 60 / 0.4);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__stat dt {
+  color: #6b4a1c;
+  font: 700 11px var(--admin-sans);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__stat dd {
+  margin: 0;
+  color: var(--admin-ink);
+  font: 900 30px / 1 var(--admin-serif);
+  font-variant-numeric: tabular-nums;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__stat[data-tone='critical'] dd {
+  color: #b3262e;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__stat[data-tone='alert'] dd {
+  color: #a8650c;
+}
+
+@media (max-width: 1280px) {
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__stat {
+    min-width: 92px;
+    padding: 4px 12px;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__stat dd {
+    font-size: 26px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__stats {
+    grid-column: 1 / -1;
+    justify-content: space-around;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__stat {
+    flex: 1 1 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__medallion {
+    display: none;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__stat {
+    min-width: 0;
+    padding: 4px 6px;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__stat dt {
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-intro__stat dd {
+    font-size: 22px;
+  }
+}
+
+/* ==========================================================================
+   MODAL «REGISTRAR SITUACIÓN»
+   --------------------------------------------------------------------------
+   Mismo cartel que el titular: papel, doble filete dorado, medallón vino.
+   El formulario por pasos va dentro con su cabecera propia oculta (el modal
+   ya nombra la acción y el destino) y su pie de acciones fijo abajo.
+   ========================================================================== */
+
+@keyframes report-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes report-modal-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgb(58 20 24 / 0.55) 0%, rgb(20 6 8 / 0.82) 100%);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  animation: report-modal-fade 200ms ease-out both;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal__dialog {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(760px, 100%);
+  max-height: min(880px, calc(100dvh - 48px));
+  overflow: hidden;
+  border: 1px solid #b88c3c;
+  border-radius: 20px;
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgb(255 255 255 / 0.65) 0%, transparent 45%),
+    linear-gradient(180deg, #fffaf0 0%, #f6ead1 100%);
+  box-shadow:
+    inset 0 0 0 4px #fffaf0,
+    inset 0 0 0 5px rgb(184 140 60 / 0.55),
+    0 30px 70px rgb(10 3 2 / 0.6),
+    0 0 0 1px rgb(245 212 133 / 0.25);
+  color: var(--admin-ink);
+  color-scheme: light;
+  animation: report-modal-in 240ms cubic-bezier(0.22, 0.8, 0.24, 1) both;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal__dialog:focus {
+  outline: none;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal__header {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 22px 26px 18px;
+  border-bottom: 1px solid rgb(184 140 60 / 0.35);
+  background: repeating-linear-gradient(
+      112deg,
+      rgb(122 26 34 / 0.07) 0 18px,
+      rgb(255 250 240 / 0) 18px 36px
+    )
+    right / 40% 100% no-repeat;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal__medallion {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #7a2a31 0%, #3a1418 70%, #24090c 100%);
+  box-shadow:
+    0 0 0 3px #f5d485,
+    0 0 0 5px #8a602d,
+    0 8px 16px rgb(58 20 24 / 0.35);
+  color: #f5d485;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal__heading {
+  min-width: 0;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal__eyebrow {
+  color: #8a602d;
+  font: 700 11px var(--admin-sans);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal__title {
+  margin: 2px 0 2px;
+  color: var(--admin-ink);
+  font: 900 clamp(22px, 2vw, 27px) / 1.15 var(--admin-serif);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal__destination {
+  margin: 0;
+  color: var(--admin-ink-soft);
+  font: 500 14px var(--admin-sans);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal__destination strong {
+  color: var(--admin-ink);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal__close {
+  display: grid;
+  align-self: start;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid rgb(90 62 30 / 0.3);
+  border-radius: 50%;
+  background: #fffdf8;
+  color: var(--admin-ink);
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal__close:hover {
+  border-color: #8a602d;
+  background: #fff3d8;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal__close:focus-visible {
+  outline: 3px solid rgb(201 154 59 / 0.5);
+  outline-offset: 2px;
+}
+
+/* El cuerpo desplaza; el pie del formulario queda fijo abajo. */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 26px 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(138 96 45 / 0.45) transparent;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .action-panel {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 0 !important;
+  animation: none;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .action-panel > * {
+  animation: none;
+}
+
+/* El modal ya nombra la acción y el destino. */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form__header {
+  display: none;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form {
+  gap: 14px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form__step {
+  background: rgb(255 253 248 / 0.85);
+}
+
+/* Campos claros también fuera del ticket (la piel global es oscura). */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form :is(input:not([type='radio']), textarea, select) {
+  border: 1px solid rgb(42 33 24 / 0.32) !important;
+  background: #fffdf8 !important;
+  color: var(--admin-ink) !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form ::placeholder {
+  color: #7a6a58;
+  opacity: 1;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form :is(.report-form__kind-option, .report-form__severity-option) {
+  border: 1px solid rgb(90 62 30 / 0.28);
+  background: #fffdf8;
+  color: var(--admin-ink);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form :is(.report-form__kind-option, .report-form__severity-option)[data-selected='true'] {
+  border-color: #8a602d;
+  background: #f6ead1;
+  box-shadow: inset 0 0 0 1px #8a602d;
+}
+
+/* Gravedad en cuatro columnas: hay ancho de sobra en el modal. */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form__severity-options {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form__footer {
+  margin: 4px -26px 0;
+  padding: 16px 26px 20px;
+  border-top: 1px solid rgb(184 140 60 / 0.35);
+  background: linear-gradient(180deg, #f8eedb 0%, #f4e6c8 100%);
+}
+
+/* Acción principal a la derecha, cancelar a su izquierda (convención). */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form__footer {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form__submit {
+  flex: 0 1 260px;
+}
+
+@media (max-width: 720px) {
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal {
+    padding: 0;
+    align-items: end;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal__dialog {
+    max-height: 94dvh;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal__header {
+    padding: 18px 18px 14px;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal__medallion {
+    display: none;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal__header {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal__body {
+    padding: 14px 18px 0;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form__footer {
+    margin-inline: -18px;
+    padding-inline: 18px;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form__severity-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form__submit {
+    flex: 1 1 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] :is(.report-modal__dialog, .report-modal__backdrop) {
+    animation: none;
+  }
+}
+
+/* Fuera del ticket, el formulario heredaba los colores claros de la piel
+   global oscura: textos de opción casi invisibles, foco verde y marcador
+   azulado. Aquí se fijan en tinta y oro. */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form :is(.report-form__kind-label, .report-form__severity-label) {
+  color: var(--admin-ink) !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form :is(.report-form__kind-hint, .report-form__severity-hint, .report-form__hint) {
+  color: var(--admin-ink-soft) !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form :is(legend, label) {
+  color: var(--admin-ink);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form input[type='radio'] {
+  accent-color: #8a602d;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form :is(input:not([type='radio']), textarea, select)::placeholder {
+  color: #8a7a66 !important;
+  opacity: 1;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form :is(input:not([type='radio']), textarea, select):focus,
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form :is(input:not([type='radio']), textarea, select):focus-visible {
+  border-color: #8a602d !important;
+  outline: 3px solid rgb(201 154 59 / 0.35) !important;
+  outline-offset: 0;
+  box-shadow: none !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form :is(.report-form__kind-option, .report-form__severity-option):has(input:focus-visible) {
+  outline: 3px solid rgb(201 154 59 / 0.45);
+  outline-offset: 1px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .report-form__severity-option[data-severity='CRITICAL'][data-selected='true'] {
+  background: #fbe5e2;
+}
+
+/* Selector de coordinación responsable (dependencias) en papel, no en azul
+   noche de la piel global. */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .responsible-picker__label,
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .responsible-picker__search-label {
+  color: var(--admin-ink) !important;
+  font: 650 13.5px var(--admin-sans) !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal :is(.responsible-picker__trigger, .responsible-picker__summary, .responsible-picker__panel) {
+  border: 1px solid rgb(90 62 30 / 0.3) !important;
+  border-radius: 12px !important;
+  background: #fffdf8 !important;
+  box-shadow: 0 8px 20px rgb(60 35 10 / 0.12) !important;
+  color: var(--admin-ink) !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .responsible-picker__panel-toolbar {
+  background: transparent !important;
+  color: var(--admin-ink-soft) !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal :is(.responsible-picker__dismiss, .responsible-picker__change) {
+  border: 1px solid rgb(90 62 30 / 0.3) !important;
+  background: #fffaf0 !important;
+  color: var(--admin-ink) !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .responsible-picker__list {
+  background: transparent !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .responsible-picker__option {
+  border: 1px solid transparent !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  color: var(--admin-ink) !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .responsible-picker__option:is(:hover, [data-active='true']) {
+  border-color: rgb(138 96 45 / 0.35) !important;
+  background: #f6ead1 !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .responsible-picker__option[aria-selected='true'] {
+  border-color: #8a602d !important;
+  background: #f1e0bb !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal :is(.responsible-picker__option-label, .responsible-picker__summary-text) {
+  color: var(--admin-ink) !important;
+  font-weight: 600;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal :is(.responsible-picker__empty, .responsible-picker__error) {
+  color: var(--admin-ink-soft) !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .report-modal .responsible-picker__mark {
+  border: 1px solid rgb(138 96 45 / 0.25);
+  background-color: #f6ead1 !important;
+}
+
+/* ==========================================================================
+   ANALISTA · mismo modal «Registrar situación» que el COORDINADOR
+   ========================================================================== */
+
+/* ==========================================================================
+   MODAL «REGISTRAR SITUACIÓN»
+   --------------------------------------------------------------------------
+   Mismo cartel que el titular: papel, doble filete dorado, medallón vino.
+   El formulario por pasos va dentro con su cabecera propia oculta (el modal
+   ya nombra la acción y el destino) y su pie de acciones fijo abajo.
+   ========================================================================== */
+
+
+
+
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgb(58 20 24 / 0.55) 0%, rgb(20 6 8 / 0.82) 100%);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  animation: report-modal-fade 200ms ease-out both;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal__dialog {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(760px, 100%);
+  max-height: min(880px, calc(100dvh - 48px));
+  overflow: hidden;
+  border: 1px solid #b88c3c;
+  border-radius: 20px;
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgb(255 255 255 / 0.65) 0%, transparent 45%),
+    linear-gradient(180deg, #fffaf0 0%, #f6ead1 100%);
+  box-shadow:
+    inset 0 0 0 4px #fffaf0,
+    inset 0 0 0 5px rgb(184 140 60 / 0.55),
+    0 30px 70px rgb(10 3 2 / 0.6),
+    0 0 0 1px rgb(245 212 133 / 0.25);
+  color: var(--admin-ink);
+  color-scheme: light;
+  animation: report-modal-in 240ms cubic-bezier(0.22, 0.8, 0.24, 1) both;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal__dialog:focus {
+  outline: none;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal__header {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 22px 26px 18px;
+  border-bottom: 1px solid rgb(184 140 60 / 0.35);
+  background: repeating-linear-gradient(
+      112deg,
+      rgb(122 26 34 / 0.07) 0 18px,
+      rgb(255 250 240 / 0) 18px 36px
+    )
+    right / 40% 100% no-repeat;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal__medallion {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #7a2a31 0%, #3a1418 70%, #24090c 100%);
+  box-shadow:
+    0 0 0 3px #f5d485,
+    0 0 0 5px #8a602d,
+    0 8px 16px rgb(58 20 24 / 0.35);
+  color: #f5d485;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal__heading {
+  min-width: 0;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal__eyebrow {
+  color: #8a602d;
+  font: 700 11px var(--admin-sans);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal__title {
+  margin: 2px 0 2px;
+  color: var(--admin-ink);
+  font: 900 clamp(22px, 2vw, 27px) / 1.15 var(--admin-serif);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal__destination {
+  margin: 0;
+  color: var(--admin-ink-soft);
+  font: 500 14px var(--admin-sans);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal__destination strong {
+  color: var(--admin-ink);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal__close {
+  display: grid;
+  align-self: start;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid rgb(90 62 30 / 0.3);
+  border-radius: 50%;
+  background: #fffdf8;
+  color: var(--admin-ink);
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal__close:hover {
+  border-color: #8a602d;
+  background: #fff3d8;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal__close:focus-visible {
+  outline: 3px solid rgb(201 154 59 / 0.5);
+  outline-offset: 2px;
+}
+
+/* El cuerpo desplaza; el pie del formulario queda fijo abajo. */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 26px 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(138 96 45 / 0.45) transparent;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .action-panel {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 0 !important;
+  animation: none;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .action-panel > * {
+  animation: none;
+}
+
+/* El modal ya nombra la acción y el destino. */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form__header {
+  display: none;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form {
+  gap: 14px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form__step {
+  background: rgb(255 253 248 / 0.85);
+}
+
+/* Campos claros también fuera del ticket (la piel global es oscura). */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form :is(input:not([type='radio']), textarea, select) {
+  border: 1px solid rgb(42 33 24 / 0.32) !important;
+  background: #fffdf8 !important;
+  color: var(--admin-ink) !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form ::placeholder {
+  color: #7a6a58;
+  opacity: 1;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form :is(.report-form__kind-option, .report-form__severity-option) {
+  border: 1px solid rgb(90 62 30 / 0.28);
+  background: #fffdf8;
+  color: var(--admin-ink);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form :is(.report-form__kind-option, .report-form__severity-option)[data-selected='true'] {
+  border-color: #8a602d;
+  background: #f6ead1;
+  box-shadow: inset 0 0 0 1px #8a602d;
+}
+
+/* Gravedad en cuatro columnas: hay ancho de sobra en el modal. */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form__severity-options {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form__footer {
+  margin: 4px -26px 0;
+  padding: 16px 26px 20px;
+  border-top: 1px solid rgb(184 140 60 / 0.35);
+  background: linear-gradient(180deg, #f8eedb 0%, #f4e6c8 100%);
+}
+
+/* Acción principal a la derecha, cancelar a su izquierda (convención). */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form__footer {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form__submit {
+  flex: 0 1 260px;
+}
+
+@media (max-width: 720px) {
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal {
+    padding: 0;
+    align-items: end;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal__dialog {
+    max-height: 94dvh;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal__header {
+    padding: 18px 18px 14px;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal__medallion {
+    display: none;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal__header {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal__body {
+    padding: 14px 18px 0;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form__footer {
+    margin-inline: -18px;
+    padding-inline: 18px;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form__severity-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form__submit {
+    flex: 1 1 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] :is(.report-modal__dialog, .report-modal__backdrop) {
+    animation: none;
+  }
+}
+
+/* Fuera del ticket, el formulario heredaba los colores claros de la piel
+   global oscura: textos de opción casi invisibles, foco verde y marcador
+   azulado. Aquí se fijan en tinta y oro. */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form :is(.report-form__kind-label, .report-form__severity-label) {
+  color: var(--admin-ink) !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form :is(.report-form__kind-hint, .report-form__severity-hint, .report-form__hint) {
+  color: var(--admin-ink-soft) !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form :is(legend, label) {
+  color: var(--admin-ink);
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form input[type='radio'] {
+  accent-color: #8a602d;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form :is(input:not([type='radio']), textarea, select)::placeholder {
+  color: #8a7a66 !important;
+  opacity: 1;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form :is(input:not([type='radio']), textarea, select):focus,
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form :is(input:not([type='radio']), textarea, select):focus-visible {
+  border-color: #8a602d !important;
+  outline: 3px solid rgb(201 154 59 / 0.35) !important;
+  outline-offset: 0;
+  box-shadow: none !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form :is(.report-form__kind-option, .report-form__severity-option):has(input:focus-visible) {
+  outline: 3px solid rgb(201 154 59 / 0.45);
+  outline-offset: 1px;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .report-form__severity-option[data-severity='CRITICAL'][data-selected='true'] {
+  background: #fbe5e2;
+}
+
+/* Selector de coordinación responsable (dependencias) en papel, no en azul
+   noche de la piel global. */
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .responsible-picker__label,
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .responsible-picker__search-label {
+  color: var(--admin-ink) !important;
+  font: 650 13.5px var(--admin-sans) !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal :is(.responsible-picker__trigger, .responsible-picker__summary, .responsible-picker__panel) {
+  border: 1px solid rgb(90 62 30 / 0.3) !important;
+  border-radius: 12px !important;
+  background: #fffdf8 !important;
+  box-shadow: 0 8px 20px rgb(60 35 10 / 0.12) !important;
+  color: var(--admin-ink) !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .responsible-picker__panel-toolbar {
+  background: transparent !important;
+  color: var(--admin-ink-soft) !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal :is(.responsible-picker__dismiss, .responsible-picker__change) {
+  border: 1px solid rgb(90 62 30 / 0.3) !important;
+  background: #fffaf0 !important;
+  color: var(--admin-ink) !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .responsible-picker__list {
+  background: transparent !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .responsible-picker__option {
+  border: 1px solid transparent !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  color: var(--admin-ink) !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .responsible-picker__option:is(:hover, [data-active='true']) {
+  border-color: rgb(138 96 45 / 0.35) !important;
+  background: #f6ead1 !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .responsible-picker__option[aria-selected='true'] {
+  border-color: #8a602d !important;
+  background: #f1e0bb !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal :is(.responsible-picker__option-label, .responsible-picker__summary-text) {
+  color: var(--admin-ink) !important;
+  font-weight: 600;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal :is(.responsible-picker__empty, .responsible-picker__error) {
+  color: var(--admin-ink-soft) !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-experience='analyst'][data-shell-layout='deck'] .report-modal .responsible-picker__mark {
+  border: 1px solid rgb(138 96 45 / 0.25);
+  background-color: #f6ead1 !important;
+}
+
+/* ==========================================================================
+   HISTORIAL DE PROBLEMAS · cabecera real y estado vacío útil
+   --------------------------------------------------------------------------
+   La cabecera ya no se fabrica con `content:` en CSS (decía «todas las
+   coordinaciones» también al COORDINADOR): el componente la pinta con su
+   alcance. El estado vacío ocupa el panel, nombra el período y ofrece pasar
+   al ciclo vigente o al anterior en un clic.
+   ========================================================================== */
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+  border: 1px solid rgb(138 96 45 / 0.25);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fffdf8 0%, #fbf3e2 100%);
+  box-shadow: 0 4px 12px rgb(60 35 10 / 0.07);
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__topline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__eyebrow {
+  color: #8a602d;
+  font: 700 11px var(--admin-sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__icon {
+  display: grid;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid rgb(138 96 45 / 0.3);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fbf3e0 0%, #f0e2c2 100%);
+  color: var(--admin-ink);
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__title {
+  margin: 0;
+  color: var(--admin-ink);
+  font: 900 clamp(18px, 1.35vw, 21px) / 1.2 var(--admin-serif);
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__subtitle {
+  margin: 3px 0 0;
+  color: var(--admin-ink-soft);
+  font: 500 13px / 1.45 var(--admin-sans);
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__summary {
+  margin: 0;
+  color: var(--admin-ink);
+  font: 700 13px var(--admin-sans);
+}
+
+/* ---------- Vacío ---------- */
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__empty {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 220px;
+  padding: 28px 22px;
+  border: 1px dashed rgb(138 96 45 / 0.4);
+  border-radius: 14px;
+  background: rgb(255 252 244 / 0.75);
+  text-align: center;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__empty-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  margin-bottom: 4px;
+  border: 1px solid rgb(138 96 45 / 0.35);
+  border-radius: 50%;
+  background: #f6ead1;
+  color: #6b4a1c;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__empty-title {
+  margin: 0;
+  color: var(--admin-ink);
+  font: 800 16px / 1.35 var(--admin-serif);
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__empty-hint {
+  max-width: 40ch;
+  margin: 0;
+  color: var(--admin-ink-soft);
+  font: 500 13px / 1.45 var(--admin-sans);
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__empty-action {
+  min-height: 38px;
+  padding: 0 16px;
+  border: 1px solid #2c0d10;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #5a1d23 0%, #3a1418 100%);
+  color: #fbeed0;
+  font: 700 13px var(--admin-sans);
+  cursor: pointer;
+  transition: filter 160ms ease;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__empty-action + .problem-history__empty-action {
+  border-color: rgb(90 62 30 / 0.35);
+  background: #fffaf0;
+  color: var(--admin-ink);
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__empty-action:hover {
+  filter: brightness(1.1);
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__empty-action:focus-visible {
+  outline: 3px solid rgb(201 154 59 / 0.5);
+  outline-offset: 2px;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__note {
+  margin: 0;
+  color: var(--admin-ink-soft);
+  font: 600 13px var(--admin-sans);
+}
+
+/* Cada cierre es UNA ficha: fila del problema + cuándo, quién y la lección. */
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__list > li {
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid rgb(138 96 45 / 0.25);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fffdf8 0%, #fbf4e6 100%);
+  box-shadow: 0 2px 8px rgb(60 35 10 / 0.07);
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__list > li .problem-history__row {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__list > li .problem-history__row:hover {
+  background: rgb(246 234 209 / 0.6) !important;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 0;
+  padding: 8px 14px;
+  border-top: 1px solid rgb(138 96 45 / 0.18);
+  font: 500 12.5px / 1.4 var(--admin-sans);
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__meta div {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__meta dt {
+  color: var(--admin-ink-soft);
+  font-weight: 600;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__meta dt::after {
+  content: ':';
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__meta dd {
+  margin: 0;
+  color: var(--admin-ink);
+  font-weight: 700;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__learning {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 14px 12px;
+  padding: 8px 12px;
+  border-left: 3px solid #c99a3b;
+  border-radius: 0 8px 8px 0;
+  background: rgb(246 234 209 / 0.55);
+  color: var(--admin-ink);
+  font: 500 13px / 1.45 var(--admin-sans);
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__learning-label {
+  color: #8a602d;
+  font: 700 10.5px var(--admin-sans);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__more {
+  min-height: 40px;
+  border: 1px solid rgb(90 62 30 / 0.3);
+  border-radius: 10px;
+  background: #fffaf0;
+  color: var(--admin-ink);
+  font: 700 13px var(--admin-sans);
+  cursor: pointer;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-history__more:hover:not(:disabled) {
+  border-color: #8a602d;
+  background: #fff3d8;
+}
+
+/* Cierre con aprendizaje: el campo es obligatorio y el botón lo explica. */
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-actions__required {
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgb(179 38 46 / 0.12);
+  color: #8f1a21;
+  font: 700 10px var(--admin-sans);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-actions__submit-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 0;
+  color: var(--admin-ink-soft);
+  font: 600 12.5px / 1.4 var(--admin-sans);
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-actions__submit-hint::before {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #c99a3b;
+  color: #fff;
+  content: 'i';
+  font: 800 11px/16px var(--admin-serif);
+  text-align: center;
+}
+
+/* «Pasar a En atención»: paso principal del caso abierto, no un botón gris. */
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-actions__advance {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgb(30 107 98 / 0.35);
+  border-left: 4px solid #1e6b62;
+  border-radius: 10px;
+  background: #eef7f5;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-actions__advance-hint {
+  margin: 0;
+  color: var(--admin-ink);
+  font: 500 13px / 1.45 var(--admin-sans);
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-actions__advance-hint strong {
+  color: #1e6b62;
+  font-weight: 800;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-actions__advance-button {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 18px !important;
+  border: 1px solid #154c46 !important;
+  border-radius: 10px !important;
+  background: linear-gradient(180deg, #24826f 0%, #1a5f55 100%) !important;
+  box-shadow:
+    0 6px 14px rgb(26 95 85 / 0.28),
+    inset 0 1px 0 rgb(255 255 255 / 0.2) !important;
+  color: #fff !important;
+  font: 700 14.5px var(--admin-sans) !important;
+  cursor: pointer;
+  transition: transform 160ms ease, filter 160ms ease;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-actions__advance-button:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-actions__advance-button:focus-visible {
+  outline: 3px solid rgb(36 130 111 / 0.45) !important;
+  outline-offset: 2px;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-actions__advance-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-actions__advance-icon {
+  flex: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .problem-actions__advance-button {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   DETALLE · barra fija con «Volver» y «Registrar situación»
+   ========================================================================== */
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .action-panel[data-mode='detail'] > .action-panel__detail-bar {
+  /* El panel tiene 12 px de relleno superior y `sticky` lo respeta: la barra
+     sube esos 12 px para tapar también esa franja al desplazarse. */
+  position: sticky;
+  top: -12px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: -12px 0 10px;
+  padding: 14px 0 10px;
+  border-bottom: 1px solid rgb(138 96 45 / 0.25);
+  background: #f6ead3;
+  box-shadow: 0 8px 12px -10px rgb(60 35 10 / 0.35);
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] :is(.action-panel__detail-back, .action-panel__detail-new) {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font: 700 13.5px var(--admin-sans);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease, filter 160ms ease;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .action-panel__detail-back {
+  border: 1px solid rgb(90 62 30 / 0.35);
+  background: #fffdf8;
+  color: var(--admin-ink);
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .action-panel__detail-back:hover {
+  border-color: #8a602d;
+  background: #fff3d8;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .action-panel__detail-new {
+  border: 1px solid #2c0d10;
+  background: linear-gradient(180deg, #6a2128 0%, #3a1418 100%);
+  box-shadow: 0 4px 10px rgb(58 20 24 / 0.25);
+  color: #fbeed0;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .action-panel__detail-new > span {
+  color: #f5d485;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .action-panel__detail-new:hover {
+  filter: brightness(1.12);
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] :is(.action-panel__detail-back, .action-panel__detail-new):focus-visible {
+  outline: 3px solid rgb(201 154 59 / 0.5);
+  outline-offset: 2px;
+}
+
+/* La barra ya ofrece «Volver» (también a lectores de pantalla): la flecha
+   de la cabecera del expediente se retira para no duplicarlo. */
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .action-panel[data-mode='detail'] .problem-detail__back {
+  display: none;
+}

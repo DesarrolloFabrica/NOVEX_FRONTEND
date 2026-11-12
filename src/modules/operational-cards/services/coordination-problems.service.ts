@@ -110,7 +110,28 @@ export interface CoordinationProblemsResult {
   scope: SituationsListScope
 }
 
-export async function fetchCoordinationProblems(
+/**
+ * Peticiones en vuelo por coordinación. La precarga en segundo plano y la
+ * carga bajo demanda de la carta elegida pueden pedir la MISMA coordinación a
+ * la vez: comparten una sola petición en lugar de duplicarla. Se olvida al
+ * terminar, así que una llamada posterior siempre trae datos frescos.
+ */
+const inFlight = new Map<string, Promise<CoordinationProblemsResult>>()
+
+export function fetchCoordinationProblems(
+  coordinationUuid: string,
+): Promise<CoordinationProblemsResult> {
+  const existing = inFlight.get(coordinationUuid)
+  if (existing) return existing
+
+  const request = loadCoordinationProblems(coordinationUuid).finally(() => {
+    inFlight.delete(coordinationUuid)
+  })
+  inFlight.set(coordinationUuid, request)
+  return request
+}
+
+async function loadCoordinationProblems(
   coordinationUuid: string,
 ): Promise<CoordinationProblemsResult> {
   const pages = (

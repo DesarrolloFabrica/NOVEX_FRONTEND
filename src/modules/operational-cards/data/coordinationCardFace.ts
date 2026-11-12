@@ -26,21 +26,21 @@ const COORDINATIONS_WITHOUT_FACE: readonly string[] = []
 
 /** 15 caras ilustradas; ninguna coordinación queda en `COORDINATIONS_WITHOUT_FACE`. */
 const COORDINATION_CARD_FACE: Readonly<Record<string, string>> = {
-  'coord-general': 'coordinacionGeneral.png',
-  'coord-b2b': 'b2b.png',
-  'coord-bellas-artes': 'BellasArtes.png',
-  'coord-desarrollo-profesional': 'DesarrolloProfesional.png',
-  'coord-empresarial': 'transformacionEmpresarial.png',
-  'coord-especializaciones': 'especializaciones.png',
-  'coord-fabrica-contenidos': 'fabrica.png',
-  'coord-homologaciones': 'Homologaciones.png',
-  'coord-ingenierias': 'ingenierias.png',
-  'coord-negocios': 'negocios.png',
-  'coord-operaciones-academicas': 'operacionAcademica.png',
-  'coord-proyeccion-social': 'ProyeccionSocial.png',
-  'coord-saber-pro': 'SaberPro.png',
-  'coord-servicios': 'servicio.png',
-  'coord-transversales': 'Transversales.png',
+  'coord-general': 'coordinacionGeneral.webp',
+  'coord-b2b': 'b2b.webp',
+  'coord-bellas-artes': 'BellasArtes.webp',
+  'coord-desarrollo-profesional': 'DesarrolloProfesional.webp',
+  'coord-empresarial': 'transformacionEmpresarial.webp',
+  'coord-especializaciones': 'especializaciones.webp',
+  'coord-fabrica-contenidos': 'fabrica.webp',
+  'coord-homologaciones': 'Homologaciones.webp',
+  'coord-ingenierias': 'ingenierias.webp',
+  'coord-negocios': 'negocios.webp',
+  'coord-operaciones-academicas': 'operacionAcademica.webp',
+  'coord-proyeccion-social': 'ProyeccionSocial.webp',
+  'coord-saber-pro': 'SaberPro.webp',
+  'coord-servicios': 'servicio.webp',
+  'coord-transversales': 'Transversales.webp',
 }
 
 /**

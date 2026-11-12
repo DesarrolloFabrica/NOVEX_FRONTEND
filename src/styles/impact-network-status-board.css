@@ -3830,36 +3830,6 @@
   opacity: 0.32;
 }
 
-.novex-os[data-scene='impact']:has(.impact-network--executive)
-  .novex-os__aurora {
-  opacity: 0.13;
-}
-
-.novex-os[data-scene='impact']:has(.impact-network--executive)
-  .novex-os__grid,
-.novex-os[data-scene='impact']:has(.impact-network--executive)
-  .novex-os__grid::before {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 0.1;
-  background-image:
-    linear-gradient(rgb(88 150 255 / 0.13) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(88 150 255 / 0.13) 1px, transparent 1px);
-  background-size: 64px 64px;
-}
-
-.novex-os[data-scene='impact']:has(.impact-network--executive)
-  .novex-os__grid::before {
-  opacity: 0.28;
-  background-image: none;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgb(var(--os-scene-accent) / 0.62),
-    transparent
-  );
-}
-
 .impact-network--executive,
 .impact-network--v2.impact-network--executive {
   border: 0;

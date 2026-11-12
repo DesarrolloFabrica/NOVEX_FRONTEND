@@ -3,7 +3,7 @@ type NovexBrandMarkProps = {
   className?: string
 }
 
-const SRC = '/novex-mark.png'
+const SRC = '/novex-mark.webp'
 
 /**
  * Iso limpio de Novex (derivado de LogoLimpio) para marca compacta.

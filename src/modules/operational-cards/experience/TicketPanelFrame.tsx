@@ -1,9 +1,10 @@
-import { useId } from 'react'
+import { useId, useRef } from 'react'
 import {
   getTicketTheme,
   type TicketPanelVariant,
   type TicketThemeId,
 } from '@/modules/operational-cards/experience/ticketThemes'
+import { useTicketFrameInset } from '@/modules/operational-cards/experience/useTicketFrameInset'
 
 /**
  * Marco ticket compartido (fases 3–4).
@@ -34,9 +35,14 @@ export function TicketPanelFrame({ themeId, variant }: TicketPanelFrameProps) {
   const uid = useId().replace(/:/g, '')
   const theme = getTicketTheme(themeId)
   const ornaments = theme.ornaments[variant]
+  // La región que contiene el marco recibe la distancia real a su línea
+  // interior (--frame-x / --frame-y) para que su relleno nunca la invada.
+  const rootRef = useRef<HTMLDivElement>(null)
+  useTicketFrameInset(rootRef, 'parent')
 
   return (
     <div
+      ref={rootRef}
       className={`ticket-panel ticket-panel--${variant}`}
       data-testid={`ticket-panel-${variant}`}
       data-ticket-panel={variant}
@@ -119,6 +125,7 @@ export function TicketPanelFrame({ themeId, variant }: TicketPanelFrameProps) {
             className={`ticket-panel__ornament ticket-panel__ornament--${item.corner}`}
             src={item.src}
             alt=""
+            decoding="async"
             draggable={false}
           />
         ))}

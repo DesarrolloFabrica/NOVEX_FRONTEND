@@ -1,4 +1,5 @@
-import { renderToStaticMarkup } from 'react-dom/server'
+import type { ReactElement } from 'react'
+import { prerender } from 'react-dom/static'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { OperationalCenterHome } from '@/modules/operational-cards/experience/OperationalCenterHome'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
@@ -44,6 +45,15 @@ vi.mock(
 
 const mockedUseAuth = vi.mocked(useAuth)
 
+/**
+ * Los shells son chunks diferidos (`React.lazy`): un render síncrono solo vería
+ * el fallback de Suspense. `prerender` espera a que se resuelvan.
+ */
+async function renderToHtml(element: ReactElement): Promise<string> {
+  const { prelude } = await prerender(element)
+  return new Response(prelude).text()
+}
+
 function user(roleCode: User['roleCode']): User {
   return {
     id: 'u1',
@@ -63,7 +73,7 @@ describe('OperationalCenterHome · aislamiento de shells', () => {
     mockedUseAuth.mockReset()
   })
 
-  it('DIRECTOR monta DirectorOperationalShell', () => {
+  it('DIRECTOR monta DirectorOperationalShell', async () => {
     mockedUseAuth.mockReturnValue({
       user: user('DIRECTOR'),
       loading: false,
@@ -72,39 +82,39 @@ describe('OperationalCenterHome · aislamiento de shells', () => {
       logout: vi.fn(),
       completeOnboarding: vi.fn(),
     } as never)
-    const html = renderToStaticMarkup(<OperationalCenterHome />)
+    const html = await renderToHtml(<OperationalCenterHome />)
     expect(html).toContain('data-testid="director-operational-shell"')
     expect(html).not.toContain('data-testid="analyst-operational-shell"')
     expect(html).not.toContain('data-testid="coordinator-operational-shell"')
     expect(html).not.toContain('data-testid="admin-operational-shell"')
   })
 
-  it('ANALISTA monta AnalystOperationalShell', () => {
+  it('ANALISTA monta AnalystOperationalShell', async () => {
     mockedUseAuth.mockReturnValue({
       user: user('ANALISTA'),
       loading: false,
     } as never)
-    const html = renderToStaticMarkup(<OperationalCenterHome />)
+    const html = await renderToHtml(<OperationalCenterHome />)
     expect(html).toContain('data-testid="analyst-operational-shell"')
     expect(html).not.toContain('data-testid="director-operational-shell"')
   })
 
-  it('COORDINADOR monta CoordinatorOperationalShell', () => {
+  it('COORDINADOR monta CoordinatorOperationalShell', async () => {
     mockedUseAuth.mockReturnValue({
       user: user('COORDINADOR'),
       loading: false,
     } as never)
-    const html = renderToStaticMarkup(<OperationalCenterHome />)
+    const html = await renderToHtml(<OperationalCenterHome />)
     expect(html).toContain('data-testid="coordinator-operational-shell"')
     expect(html).not.toContain('data-testid="analyst-operational-shell"')
   })
 
-  it('ADMIN monta AdminOperationalShell', () => {
+  it('ADMIN monta AdminOperationalShell', async () => {
     mockedUseAuth.mockReturnValue({
       user: user('ADMIN'),
       loading: false,
     } as never)
-    const html = renderToStaticMarkup(<OperationalCenterHome />)
+    const html = await renderToHtml(<OperationalCenterHome />)
     expect(html).toContain('data-testid="admin-operational-shell"')
     expect(html).not.toContain('data-testid="director-operational-shell"')
   })

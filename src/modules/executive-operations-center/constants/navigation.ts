@@ -8,7 +8,7 @@ import {
 export const EXECUTIVE_CENTER_RAIL_ITEM = {
   to: EXECUTIVE_OPERATIONS_HOME,
   label: 'Centro operacional',
-  eyebrow: 'Vista ejecutiva',
+  eyebrow: 'Panel principal de su rol',
   icon: 'command' as const,
   end: false,
 }

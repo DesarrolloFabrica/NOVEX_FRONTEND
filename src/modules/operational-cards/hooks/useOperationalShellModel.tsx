@@ -200,13 +200,18 @@ export function useOperationalShellModel(
   ])
 
   /*
-   * DIRECTOR, ADMIN y ANALISTA entran con Coordinación General de Operaciones activa:
+   * ADMIN y ANALISTA entran con Coordinación General de Operaciones activa:
    * sin carta seleccionada el centro arranca vacío. Se aplica UNA vez, cuando
    * el overview está listo; si después el usuario vuelve a la Dirección, no se
    * le fuerza de nuevo. Una intención de reporte con carta propia tiene
    * prioridad.
+   *
+   * El DIRECTOR no: su primera vista es la DIRECCIÓN completa (qué está
+   * pasando y dónde actuar). La General solía estar sin problemas y la
+   * pantalla inicial no contaba nada.
    */
-  const defaultsToGeneral = experience !== 'coordinator'
+  const defaultsToGeneral =
+    experience !== 'coordinator' && experience !== 'director'
   const defaultAppliedRef = useRef(false)
   useEffect(() => {
     if (!defaultsToGeneral || defaultAppliedRef.current) return

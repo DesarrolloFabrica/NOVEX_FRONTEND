@@ -94,6 +94,10 @@ function createInitialState(): AuthState {
 function authReducer(state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
     case 'AUTH_START':
+      // Conserva el error previo para que el login no “salte” al reintentar
+      // (el mensaje se reemplaza al terminar, no se vacía a mitad).
+      return { ...state, loading: true, canRetrySession: false }
+
     case 'AUTH_BOOTSTRAP_START':
       return { ...state, loading: true, error: null, canRetrySession: false }
 
@@ -134,8 +138,11 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         canRetrySession: false,
       }
 
-    default:
+    default: {
+      const _exhaustive: never = action
+      void _exhaustive
       return state
+    }
   }
 }
 

@@ -73,22 +73,22 @@ export const TICKET_THEMES: Readonly<Record<TicketThemeId, TicketThemeDefinition
       id: 'fabrica',
       accent: '#1a9aa6',
       accentDeep: '#0c5f68',
-      watermark: `${FABRICA_CUT}/watermark-seal.png`,
+      watermark: `${FABRICA_CUT}/watermark-seal.webp`,
       ornaments: {
         character: [
-          { src: `${FABRICA_CUT}/ornament-bottom-left.png`, corner: 'bl' },
+          { src: `${FABRICA_CUT}/ornament-bottom-left.webp`, corner: 'bl' },
         ],
         reports: [
-          { src: `${FABRICA_CUT}/ornament-bottom-left.png`, corner: 'bl' },
-          { src: `${FABRICA_CUT}/ornament-bottom-right.png`, corner: 'br' },
+          { src: `${FABRICA_CUT}/ornament-bottom-left.webp`, corner: 'bl' },
+          { src: `${FABRICA_CUT}/ornament-bottom-right.webp`, corner: 'br' },
         ],
         problems: [
-          { src: `${FABRICA_CUT}/ornament-bottom-left.png`, corner: 'bl' },
-          { src: `${FABRICA_CUT}/ornament-bottom-right.png`, corner: 'br' },
+          { src: `${FABRICA_CUT}/ornament-bottom-left.webp`, corner: 'bl' },
+          { src: `${FABRICA_CUT}/ornament-bottom-right.webp`, corner: 'br' },
         ],
         action: [
-          { src: `${FABRICA_CUT}/ornament-bottom-left.png`, corner: 'bl' },
-          { src: `${FABRICA_CUT}/ornament-header.png`, corner: 'tr' },
+          { src: `${FABRICA_CUT}/ornament-bottom-left.webp`, corner: 'bl' },
+          { src: `${FABRICA_CUT}/ornament-header.webp`, corner: 'tr' },
         ],
       },
     },
@@ -97,20 +97,20 @@ export const TICKET_THEMES: Readonly<Record<TicketThemeId, TicketThemeDefinition
       /* Oliva mate de la cara; distinto del #9ACD50 canónico y del ESTABLE. */
       accent: '#5C5E2C',
       accentDeep: '#2D3325',
-      watermark: `${SABER_CUT}/watermark-meerkat.png`,
+      watermark: `${SABER_CUT}/watermark-meerkat.webp`,
       ornaments: {
-        character: [{ src: `${SABER_CUT}/ornament-laurel.png`, corner: 'bl' }],
+        character: [{ src: `${SABER_CUT}/ornament-laurel.webp`, corner: 'bl' }],
         reports: [
-          { src: `${SABER_CUT}/ornament-checklist.png`, corner: 'bl' },
-          { src: `${SABER_CUT}/ornament-check-seal.png`, corner: 'br' },
+          { src: `${SABER_CUT}/ornament-checklist.webp`, corner: 'bl' },
+          { src: `${SABER_CUT}/ornament-check-seal.webp`, corner: 'br' },
         ],
         problems: [
-          { src: `${SABER_CUT}/ornament-check-seal.png`, corner: 'bl' },
-          { src: `${SABER_CUT}/ornament-laurel.png`, corner: 'br' },
+          { src: `${SABER_CUT}/ornament-check-seal.webp`, corner: 'bl' },
+          { src: `${SABER_CUT}/ornament-laurel.webp`, corner: 'br' },
         ],
         action: [
-          { src: `${SABER_CUT}/ornament-checklist.png`, corner: 'bl' },
-          { src: `${SABER_CUT}/ornament-laurel.png`, corner: 'tr' },
+          { src: `${SABER_CUT}/ornament-checklist.webp`, corner: 'bl' },
+          { src: `${SABER_CUT}/ornament-laurel.webp`, corner: 'tr' },
         ],
       },
     },
@@ -122,24 +122,24 @@ export const TICKET_THEMES: Readonly<Record<TicketThemeId, TicketThemeDefinition
        */
       accent: '#7B110D',
       accentDeep: '#3A0C0A',
-      watermark: `${ESPECIALIZACIONES_CUT}/watermark-falcon.png`,
+      watermark: `${ESPECIALIZACIONES_CUT}/watermark-falcon.webp`,
       ornaments: {
         character: [
-          { src: `${ESPECIALIZACIONES_CUT}/ornament-mortarboard.png`, corner: 'bl' },
+          { src: `${ESPECIALIZACIONES_CUT}/ornament-mortarboard.webp`, corner: 'bl' },
         ],
         reports: [
-          { src: `${ESPECIALIZACIONES_CUT}/ornament-books.png`, corner: 'bl' },
-          { src: `${ESPECIALIZACIONES_CUT}/ornament-ribbon-star.png`, corner: 'br' },
+          { src: `${ESPECIALIZACIONES_CUT}/ornament-books.webp`, corner: 'bl' },
+          { src: `${ESPECIALIZACIONES_CUT}/ornament-ribbon-star.webp`, corner: 'br' },
         ],
         problems: [
-          { src: `${ESPECIALIZACIONES_CUT}/ornament-chart-rise.png`, corner: 'bl' },
-          { src: `${ESPECIALIZACIONES_CUT}/ornament-globe.png`, corner: 'br' },
+          { src: `${ESPECIALIZACIONES_CUT}/ornament-chart-rise.webp`, corner: 'bl' },
+          { src: `${ESPECIALIZACIONES_CUT}/ornament-globe.webp`, corner: 'br' },
         ],
         /* Action: birrete arriba, libros + gráfica abajo (sin motivos ajenos). */
         action: [
-          { src: `${ESPECIALIZACIONES_CUT}/ornament-books.png`, corner: 'bl' },
-          { src: `${ESPECIALIZACIONES_CUT}/ornament-chart-rise.png`, corner: 'br' },
-          { src: `${ESPECIALIZACIONES_CUT}/ornament-mortarboard.png`, corner: 'tr' },
+          { src: `${ESPECIALIZACIONES_CUT}/ornament-books.webp`, corner: 'bl' },
+          { src: `${ESPECIALIZACIONES_CUT}/ornament-chart-rise.webp`, corner: 'br' },
+          { src: `${ESPECIALIZACIONES_CUT}/ornament-mortarboard.webp`, corner: 'tr' },
         ],
       },
     },
@@ -151,42 +151,42 @@ export const TICKET_THEMES: Readonly<Record<TicketThemeId, TicketThemeDefinition
        */
       accent: '#5C2E58',
       accentDeep: '#3A1C35',
-      watermark: `${DESARROLLO_PROFESIONAL_CUT}/watermark-butterfly.png`,
+      watermark: `${DESARROLLO_PROFESIONAL_CUT}/watermark-butterfly.webp`,
       ornaments: {
         character: [
           {
-            src: `${DESARROLLO_PROFESIONAL_CUT}/ornament-corner-star.png`,
+            src: `${DESARROLLO_PROFESIONAL_CUT}/ornament-corner-star.webp`,
             corner: 'bl',
           },
         ],
         reports: [
           {
-            src: `${DESARROLLO_PROFESIONAL_CUT}/ornament-climber-steps.png`,
+            src: `${DESARROLLO_PROFESIONAL_CUT}/ornament-climber-steps.webp`,
             corner: 'bl',
           },
           {
-            src: `${DESARROLLO_PROFESIONAL_CUT}/ornament-sun-rays.png`,
+            src: `${DESARROLLO_PROFESIONAL_CUT}/ornament-sun-rays.webp`,
             corner: 'br',
           },
         ],
         problems: [
           {
-            src: `${DESARROLLO_PROFESIONAL_CUT}/ornament-stepped-arrow.png`,
+            src: `${DESARROLLO_PROFESIONAL_CUT}/ornament-stepped-arrow.webp`,
             corner: 'bl',
           },
           {
-            src: `${DESARROLLO_PROFESIONAL_CUT}/ornament-corner-star.png`,
+            src: `${DESARROLLO_PROFESIONAL_CUT}/ornament-corner-star.webp`,
             corner: 'br',
           },
         ],
         /* Action: sun-rays arriba, climber abajo; mariposa como watermark. */
         action: [
           {
-            src: `${DESARROLLO_PROFESIONAL_CUT}/ornament-climber-steps.png`,
+            src: `${DESARROLLO_PROFESIONAL_CUT}/ornament-climber-steps.webp`,
             corner: 'bl',
           },
           {
-            src: `${DESARROLLO_PROFESIONAL_CUT}/ornament-sun-rays.png`,
+            src: `${DESARROLLO_PROFESIONAL_CUT}/ornament-sun-rays.webp`,
             corner: 'tr',
           },
         ],
@@ -203,20 +203,20 @@ export const TICKET_THEMES: Readonly<Record<TicketThemeId, TicketThemeDefinition
       watermark: `${B2B_CUT}/watermark-woodpecker.png`,
       ornaments: {
         character: [
-          { src: `${B2B_CUT}/ornament-four-point-star.png`, corner: 'bl' },
+          { src: `${B2B_CUT}/ornament-four-point-star.webp`, corner: 'bl' },
         ],
         reports: [
-          { src: `${B2B_CUT}/ornament-corner-quotes.png`, corner: 'bl' },
-          { src: `${B2B_CUT}/ornament-globe-lines.png`, corner: 'br' },
+          { src: `${B2B_CUT}/ornament-corner-quotes.webp`, corner: 'bl' },
+          { src: `${B2B_CUT}/ornament-globe-lines.webp`, corner: 'br' },
         ],
         problems: [
-          { src: `${B2B_CUT}/ornament-speech-bubbles.png`, corner: 'bl' },
-          { src: `${B2B_CUT}/ornament-four-point-star.png`, corner: 'br' },
+          { src: `${B2B_CUT}/ornament-speech-bubbles.webp`, corner: 'bl' },
+          { src: `${B2B_CUT}/ornament-four-point-star.webp`, corner: 'br' },
         ],
         /* Action: globo abajo, regla arriba; carpintero como watermark. */
         action: [
-          { src: `${B2B_CUT}/ornament-globe-lines.png`, corner: 'bl' },
-          { src: `${B2B_CUT}/ornament-rule-dot.png`, corner: 'tr' },
+          { src: `${B2B_CUT}/ornament-globe-lines.webp`, corner: 'bl' },
+          { src: `${B2B_CUT}/ornament-rule-dot.webp`, corner: 'tr' },
         ],
       },
     },
@@ -231,20 +231,20 @@ export const TICKET_THEMES: Readonly<Record<TicketThemeId, TicketThemeDefinition
       watermark: `${GENERAL_CUT}/watermark-giraffe.png`,
       ornaments: {
         character: [
-          { src: `${GENERAL_CUT}/ornament-corner-star.png`, corner: 'bl' },
+          { src: `${GENERAL_CUT}/ornament-corner-star.webp`, corner: 'bl' },
         ],
         reports: [
-          { src: `${GENERAL_CUT}/ornament-team.png`, corner: 'bl' },
-          { src: `${GENERAL_CUT}/ornament-target.png`, corner: 'br' },
+          { src: `${GENERAL_CUT}/ornament-team.webp`, corner: 'bl' },
+          { src: `${GENERAL_CUT}/ornament-target.webp`, corner: 'br' },
         ],
         problems: [
-          { src: `${GENERAL_CUT}/ornament-org-nodes.png`, corner: 'bl' },
-          { src: `${GENERAL_CUT}/ornament-route.png`, corner: 'br' },
+          { src: `${GENERAL_CUT}/ornament-org-nodes.webp`, corner: 'bl' },
+          { src: `${GENERAL_CUT}/ornament-route.webp`, corner: 'br' },
         ],
         /* Action: ruta abajo, estrella arriba; jirafa como watermark. */
         action: [
-          { src: `${GENERAL_CUT}/ornament-route.png`, corner: 'bl' },
-          { src: `${GENERAL_CUT}/ornament-corner-star.png`, corner: 'tr' },
+          { src: `${GENERAL_CUT}/ornament-route.webp`, corner: 'bl' },
+          { src: `${GENERAL_CUT}/ornament-corner-star.webp`, corner: 'tr' },
         ],
       },
     },
@@ -260,38 +260,38 @@ export const TICKET_THEMES: Readonly<Record<TicketThemeId, TicketThemeDefinition
       ornaments: {
         character: [
           {
-            src: `${PROYECCION_SOCIAL_CUT}/ornament-corner-star.png`,
+            src: `${PROYECCION_SOCIAL_CUT}/ornament-corner-star.webp`,
             corner: 'bl',
           },
         ],
         reports: [
           {
-            src: `${PROYECCION_SOCIAL_CUT}/ornament-leaf-vine.png`,
+            src: `${PROYECCION_SOCIAL_CUT}/ornament-leaf-vine.webp`,
             corner: 'bl',
           },
           {
-            src: `${PROYECCION_SOCIAL_CUT}/ornament-heart.png`,
+            src: `${PROYECCION_SOCIAL_CUT}/ornament-heart.webp`,
             corner: 'br',
           },
         ],
         problems: [
           {
-            src: `${PROYECCION_SOCIAL_CUT}/ornament-people-leaf.png`,
+            src: `${PROYECCION_SOCIAL_CUT}/ornament-people-leaf.webp`,
             corner: 'bl',
           },
           {
-            src: `${PROYECCION_SOCIAL_CUT}/ornament-social-globe.png`,
+            src: `${PROYECCION_SOCIAL_CUT}/ornament-social-globe.webp`,
             corner: 'br',
           },
         ],
         /* Action: people-leaf abajo, estrella arriba; colibrí como watermark. */
         action: [
           {
-            src: `${PROYECCION_SOCIAL_CUT}/ornament-people-leaf.png`,
+            src: `${PROYECCION_SOCIAL_CUT}/ornament-people-leaf.webp`,
             corner: 'bl',
           },
           {
-            src: `${PROYECCION_SOCIAL_CUT}/ornament-corner-star.png`,
+            src: `${PROYECCION_SOCIAL_CUT}/ornament-corner-star.webp`,
             corner: 'tr',
           },
         ],
@@ -310,20 +310,20 @@ export const TICKET_THEMES: Readonly<Record<TicketThemeId, TicketThemeDefinition
       watermark: `${SERVICIO_CUT}/watermark-flamingo.png`,
       ornaments: {
         character: [
-          { src: `${SERVICIO_CUT}/ornament-corner-star.png`, corner: 'bl' },
+          { src: `${SERVICIO_CUT}/ornament-corner-star.webp`, corner: 'bl' },
         ],
         reports: [
-          { src: `${SERVICIO_CUT}/ornament-open-hand.png`, corner: 'bl' },
-          { src: `${SERVICIO_CUT}/ornament-location-pin.png`, corner: 'br' },
+          { src: `${SERVICIO_CUT}/ornament-open-hand.webp`, corner: 'bl' },
+          { src: `${SERVICIO_CUT}/ornament-location-pin.webp`, corner: 'br' },
         ],
         problems: [
-          { src: `${SERVICIO_CUT}/ornament-care-heart.png`, corner: 'bl' },
-          { src: `${SERVICIO_CUT}/ornament-handshake.png`, corner: 'br' },
+          { src: `${SERVICIO_CUT}/ornament-care-heart.webp`, corner: 'bl' },
+          { src: `${SERVICIO_CUT}/ornament-handshake.webp`, corner: 'br' },
         ],
         /* Action: handshake abajo, estrella arriba; flamenco como watermark. */
         action: [
-          { src: `${SERVICIO_CUT}/ornament-handshake.png`, corner: 'bl' },
-          { src: `${SERVICIO_CUT}/ornament-corner-star.png`, corner: 'tr' },
+          { src: `${SERVICIO_CUT}/ornament-handshake.webp`, corner: 'bl' },
+          { src: `${SERVICIO_CUT}/ornament-corner-star.webp`, corner: 'tr' },
         ],
       },
     },
@@ -340,34 +340,34 @@ export const TICKET_THEMES: Readonly<Record<TicketThemeId, TicketThemeDefinition
       ornaments: {
         character: [
           {
-            src: `${OPERACION_ACADEMICA_CUT}/ornament-five-school-fan.png`,
+            src: `${OPERACION_ACADEMICA_CUT}/ornament-five-school-fan.webp`,
             corner: 'bl',
           },
         ],
         reports: [
           {
-            src: `${OPERACION_ACADEMICA_CUT}/ornament-academic-hub.png`,
+            src: `${OPERACION_ACADEMICA_CUT}/ornament-academic-hub.webp`,
             corner: 'bl',
           },
         ],
         problems: [
           {
-            src: `${OPERACION_ACADEMICA_CUT}/ornament-five-school-chain.png`,
+            src: `${OPERACION_ACADEMICA_CUT}/ornament-five-school-chain.webp`,
             corner: 'bl',
           },
           {
-            src: `${OPERACION_ACADEMICA_CUT}/ornament-five-point-rosette.png`,
+            src: `${OPERACION_ACADEMICA_CUT}/ornament-five-point-rosette.webp`,
             corner: 'br',
           },
         ],
         /* Action: hub TR, roseta BR; lobo watermark en BL (hocico al centro). */
         action: [
           {
-            src: `${OPERACION_ACADEMICA_CUT}/ornament-academic-hub.png`,
+            src: `${OPERACION_ACADEMICA_CUT}/ornament-academic-hub.webp`,
             corner: 'tr',
           },
           {
-            src: `${OPERACION_ACADEMICA_CUT}/ornament-five-point-rosette.png`,
+            src: `${OPERACION_ACADEMICA_CUT}/ornament-five-point-rosette.webp`,
             corner: 'br',
           },
         ],
@@ -382,21 +382,21 @@ export const TICKET_THEMES: Readonly<Record<TicketThemeId, TicketThemeDefinition
        */
       accent: '#4A2868',
       accentDeep: '#2A1740',
-      watermark: `${BELLAS_ARTES_CUT}/watermark-horse.png`,
+      watermark: `${BELLAS_ARTES_CUT}/watermark-horse.webp`,
       ornaments: {
         character: [
           {
-            src: `${BELLAS_ARTES_CUT}/ornament-corner-star.png`,
+            src: `${BELLAS_ARTES_CUT}/ornament-corner-star.webp`,
             corner: 'bl',
           },
         ],
         reports: [
           {
-            src: `${BELLAS_ARTES_CUT}/ornament-pointe-shoes.png`,
+            src: `${BELLAS_ARTES_CUT}/ornament-pointe-shoes.webp`,
             corner: 'bl',
           },
           {
-            src: `${BELLAS_ARTES_CUT}/ornament-music-notes.png`,
+            src: `${BELLAS_ARTES_CUT}/ornament-music-notes.webp`,
             corner: 'br',
           },
         ],
@@ -406,7 +406,7 @@ export const TICKET_THEMES: Readonly<Record<TicketThemeId, TicketThemeDefinition
             corner: 'bl',
           },
           {
-            src: `${BELLAS_ARTES_CUT}/ornament-corner-star.png`,
+            src: `${BELLAS_ARTES_CUT}/ornament-corner-star.webp`,
             corner: 'br',
           },
         ],
@@ -417,7 +417,7 @@ export const TICKET_THEMES: Readonly<Record<TicketThemeId, TicketThemeDefinition
             corner: 'tr',
           },
           {
-            src: `${BELLAS_ARTES_CUT}/ornament-corner-star.png`,
+            src: `${BELLAS_ARTES_CUT}/ornament-corner-star.webp`,
             corner: 'br',
           },
         ],
@@ -437,38 +437,38 @@ export const TICKET_THEMES: Readonly<Record<TicketThemeId, TicketThemeDefinition
       ornaments: {
         character: [
           {
-            src: `${TRANSFORMACION_EMPRESARIAL_CUT}/ornament-corner-star.png`,
+            src: `${TRANSFORMACION_EMPRESARIAL_CUT}/ornament-corner-star.webp`,
             corner: 'bl',
           },
         ],
         reports: [
           {
-            src: `${TRANSFORMACION_EMPRESARIAL_CUT}/ornament-cycle-refresh.png`,
+            src: `${TRANSFORMACION_EMPRESARIAL_CUT}/ornament-cycle-refresh.webp`,
             corner: 'bl',
           },
           {
-            src: `${TRANSFORMACION_EMPRESARIAL_CUT}/ornament-process-gear.png`,
+            src: `${TRANSFORMACION_EMPRESARIAL_CUT}/ornament-process-gear.webp`,
             corner: 'br',
           },
         ],
         problems: [
           {
-            src: `${TRANSFORMACION_EMPRESARIAL_CUT}/ornament-split-arrow.png`,
+            src: `${TRANSFORMACION_EMPRESARIAL_CUT}/ornament-split-arrow.webp`,
             corner: 'bl',
           },
           {
-            src: `${TRANSFORMACION_EMPRESARIAL_CUT}/ornament-corner-star.png`,
+            src: `${TRANSFORMACION_EMPRESARIAL_CUT}/ornament-corner-star.webp`,
             corner: 'br',
           },
         ],
         /* Action: ciclo BL, engranaje TR; orca watermark BR (mirando derecha). */
         action: [
           {
-            src: `${TRANSFORMACION_EMPRESARIAL_CUT}/ornament-cycle-refresh.png`,
+            src: `${TRANSFORMACION_EMPRESARIAL_CUT}/ornament-cycle-refresh.webp`,
             corner: 'bl',
           },
           {
-            src: `${TRANSFORMACION_EMPRESARIAL_CUT}/ornament-process-gear.png`,
+            src: `${TRANSFORMACION_EMPRESARIAL_CUT}/ornament-process-gear.webp`,
             corner: 'tr',
           },
         ],
@@ -488,13 +488,13 @@ export const TICKET_THEMES: Readonly<Record<TicketThemeId, TicketThemeDefinition
       ornaments: {
         character: [
           {
-            src: `${INGENIERIAS_CUT}/ornament-corner-star.png`,
+            src: `${INGENIERIAS_CUT}/ornament-corner-star.webp`,
             corner: 'bl',
           },
         ],
         reports: [
           {
-            src: `${INGENIERIAS_CUT}/ornament-hex-bolt.png`,
+            src: `${INGENIERIAS_CUT}/ornament-hex-bolt.webp`,
             corner: 'bl',
           },
           {
@@ -504,18 +504,18 @@ export const TICKET_THEMES: Readonly<Record<TicketThemeId, TicketThemeDefinition
         ],
         problems: [
           {
-            src: `${INGENIERIAS_CUT}/ornament-set-square.png`,
+            src: `${INGENIERIAS_CUT}/ornament-set-square.webp`,
             corner: 'bl',
           },
           {
-            src: `${INGENIERIAS_CUT}/ornament-corner-star.png`,
+            src: `${INGENIERIAS_CUT}/ornament-corner-star.webp`,
             corner: 'br',
           },
         ],
         /* Action: escuadra BR, compás TR; castor watermark BL (mira derecha). */
         action: [
           {
-            src: `${INGENIERIAS_CUT}/ornament-set-square.png`,
+            src: `${INGENIERIAS_CUT}/ornament-set-square.webp`,
             corner: 'br',
           },
           {
@@ -540,38 +540,38 @@ export const TICKET_THEMES: Readonly<Record<TicketThemeId, TicketThemeDefinition
       ornaments: {
         character: [
           {
-            src: `${TRANSVERSALES_CUT}/ornament-corner-star.png`,
+            src: `${TRANSVERSALES_CUT}/ornament-corner-star.webp`,
             corner: 'bl',
           },
         ],
         reports: [
           {
-            src: `${TRANSVERSALES_CUT}/ornament-span-bridge.png`,
+            src: `${TRANSVERSALES_CUT}/ornament-span-bridge.webp`,
             corner: 'bl',
           },
           {
-            src: `${TRANSVERSALES_CUT}/ornament-flow-nodes.png`,
+            src: `${TRANSVERSALES_CUT}/ornament-flow-nodes.webp`,
             corner: 'br',
           },
         ],
         problems: [
           {
-            src: `${TRANSVERSALES_CUT}/ornament-flow-nodes.png`,
+            src: `${TRANSVERSALES_CUT}/ornament-flow-nodes.webp`,
             corner: 'bl',
           },
           {
-            src: `${TRANSVERSALES_CUT}/ornament-corner-star.png`,
+            src: `${TRANSVERSALES_CUT}/ornament-corner-star.webp`,
             corner: 'br',
           },
         ],
         /* Action: puente BR, synergy TR; abeja watermark BL (mira derecha). */
         action: [
           {
-            src: `${TRANSVERSALES_CUT}/ornament-span-bridge.png`,
+            src: `${TRANSVERSALES_CUT}/ornament-span-bridge.webp`,
             corner: 'br',
           },
           {
-            src: `${TRANSVERSALES_CUT}/ornament-synergy-link.png`,
+            src: `${TRANSVERSALES_CUT}/ornament-synergy-link.webp`,
             corner: 'tr',
           },
         ],

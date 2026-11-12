@@ -57,8 +57,6 @@ export interface AdminKpiDashboardProps {
   labelByCode: Record<string, string>
   colorByCode: Record<string, string>
   onOpenProblem: (problemId: string) => void
-  /** Suelta la carta observada para pedir que se elija una. */
-  onClearCoordination: () => void
   /** Observa una coordinación en la mesa (desde el ranking de la Dirección). */
   onSelectCoordination: (code: string) => void
   /** Avisa al shell de que el tablero espera que se elija una carta. */
@@ -284,7 +282,6 @@ export function AdminKpiDashboard({
   labelByCode,
   colorByCode,
   onOpenProblem,
-  onClearCoordination,
   onSelectCoordination,
   onAwaitingCardChange,
 }: AdminKpiDashboardProps) {
@@ -332,12 +329,12 @@ export function AdminKpiDashboard({
 
   useEffect(() => () => onAwaitingCardChange?.(false), [onAwaitingCardChange])
 
-  /** Entrar en «Por coordinación» suelta la carta: hay que elegirla en la mesa. */
-  const enterCoordinationScope = () => {
-    if (scope === 'coordination') return
-    setScope('coordination')
-    onClearCoordination()
-  }
+  /*
+   * «Por coordinación» lee la carta que ya se observa en la mesa. Antes la
+   * soltaba: el panel central saltaba a «Resumen de Dirección» y volver a
+   * «Toda la Dirección» no la recuperaba. Solo sin carta se pide elegir una.
+   */
+  const enterCoordinationScope = () => setScope('coordination')
 
   /** Desde el ranking: observa esa carta en la mesa y abre su lectura. */
   const openCoordination = (id: string) => {

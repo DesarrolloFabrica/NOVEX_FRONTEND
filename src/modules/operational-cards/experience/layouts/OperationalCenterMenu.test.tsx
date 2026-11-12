@@ -172,19 +172,21 @@ describe('OperationalCenterMenu', () => {
     expect(document.activeElement).toBe(byTestId('shell-menu-trigger'))
   })
 
-  it('reutiliza la ayuda contextual dentro del panel', () => {
+  it('despliega una ayuda propia del rol dentro del panel', () => {
     renderMenu(user('DIRECTOR'))
     click('shell-menu-trigger')
 
-    const help = container.querySelector<HTMLButtonElement>(
-      '.novex-help-menu__trigger',
-    )
-    expect(help).not.toBeNull()
-    act(() => help?.click())
+    const help = byTestId('shell-menu-help')
+    expect(help.getAttribute('aria-expanded')).toBe('false')
+    click('shell-menu-help')
 
-    expect(container.querySelector('.novex-help-menu__popover')?.textContent).toContain(
-      'Cada carta representa una coordinación',
+    expect(help.getAttribute('aria-expanded')).toBe('true')
+    expect(container.querySelector('.shell-menu__help')?.textContent).toContain(
+      'La vista inicial resume la Dirección',
     )
+
+    click('shell-menu-help')
+    expect(container.querySelector('.shell-menu__help')).toBeNull()
   })
 
   it('ofrece el tutorial solo cuando hay pasos y cierra antes de reiniciarlo', () => {

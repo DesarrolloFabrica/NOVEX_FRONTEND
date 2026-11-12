@@ -2,21 +2,28 @@
 // Responsabilidad: declarar las rutas y su protección. Sin lógica de negocio.
 // Experiencia principal: Centro Operacional (los cuatro roles aterrizan aquí).
 
+import { Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute'
 import { RootLayout } from '@/shared/components/RootLayout'
-import { LoginPage } from '@/pages/LoginPage'
 import { RedirectToInternalReport } from '@/shared/components/RedirectToInternalReport'
 import { RoleLandingRoute } from '@/shared/components/RoleLandingRoute'
 import { RequireRoleRoute } from '@/shared/components/RequireRoleRoute'
 import { RequireSituationCreationRoute } from '@/shared/components/RequireSituationCreationRoute'
-import { AdminConsolePage } from '@/pages/AdminConsolePage'
+// Constantes desde su archivo, no desde el barrel del módulo: el barrel
+// re-exporta páginas legacy (Panorama, Inteligencia, Reportes…) y las metía en
+// el bundle inicial.
 import {
   EXECUTIVE_OPERATIONS_HOME,
   OPERATIONAL_SHELL_ROLES,
+} from '@/modules/executive-operations-center/constants/routes'
+import {
+  AdminConsolePage,
+  Deferred,
   ExecutiveOperationsLayout,
-} from '@/modules/executive-operations-center'
-import { OperationalCenterHome } from '@/modules/operational-cards/experience/OperationalCenterHome'
+  LoginPage,
+  OperationalCenterHome,
+} from '@/app/lazyRoutes'
 import {
   LEGACY_EXECUTIVE_SECTION_REDIRECTS,
   LEGACY_PLATFORM_REDIRECTS,
@@ -38,11 +45,20 @@ const toOperationalCenter = (
   <Navigate to={EXECUTIVE_OPERATIONS_HOME} replace />
 )
 
+/* Login, Centro y consola admin son chunks propios (ver `lazyRoutes`). */
+
 export const router = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
-      { path: '/login', element: <LoginPage /> },
+      {
+        path: '/login',
+        element: (
+          <Deferred>
+            <LoginPage />
+          </Deferred>
+        ),
+      },
       // Alias legado. Fuera de ProtectedRoute desde siempre; el destino sí
       // está protegido, así que sin sesión termina en /login.
       { path: '/monitoring', element: toOperationalCenter },
@@ -59,7 +75,9 @@ export const router = createBrowserRouter([
             path: '/admin',
             element: (
               <RequireRoleRoute role="ADMIN">
-                <AdminConsolePage />
+                <Deferred>
+                  <AdminConsolePage />
+                </Deferred>
               </RequireRoleRoute>
             ),
           },
@@ -67,11 +85,20 @@ export const router = createBrowserRouter([
             path: EXECUTIVE_OPERATIONS_HOME,
             element: (
               <RequireRoleRoute role={OPERATIONAL_SHELL_ROLES}>
-                <ExecutiveOperationsLayout />
+                <Deferred>
+                  <ExecutiveOperationsLayout />
+                </Deferred>
               </RequireRoleRoute>
             ),
             children: [
-              { index: true, element: <OperationalCenterHome /> },
+              {
+                index: true,
+                element: (
+                  <Suspense fallback={null}>
+                    <OperationalCenterHome />
+                  </Suspense>
+                ),
+              },
             ],
           },
           /*

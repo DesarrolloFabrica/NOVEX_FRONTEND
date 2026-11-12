@@ -56,7 +56,7 @@ describe('coordinationCardFace · cobertura', () => {
   it('todas las rutas apuntan a /CoordCards', () => {
     for (const code of getCoordinationCardFaceCodes()) {
       expect(resolveCoordinationCardFace(code)).toMatch(
-        /^\/CoordCards\/[\w-]+\.png$/,
+        /^\/CoordCards\/[\w-]+\.webp$/,
       )
     }
   })
@@ -70,20 +70,20 @@ describe('coordinationCardFace · cobertura', () => {
 describe('coordinationCardFace · Servicio', () => {
   it('coord-servicios tiene cara propia', () => {
     expect(resolveCoordinationCardFace('coord-servicios')).toBe(
-      '/CoordCards/servicio.png',
+      '/CoordCards/servicio.webp',
     )
     expect(getCoordinationsWithoutFace()).not.toContain('coord-servicios')
   })
 
   it('coord-servicios NO usa el arte de Homologaciones', () => {
     expect(resolveCoordinationCardFace('coord-servicios')).not.toBe(
-      '/CoordCards/Homologaciones.png',
+      '/CoordCards/Homologaciones.webp',
     )
   })
 
   it('Homologaciones conserva su arte, que es suyo', () => {
     expect(resolveCoordinationCardFace('coord-homologaciones')).toBe(
-      '/CoordCards/Homologaciones.png',
+      '/CoordCards/Homologaciones.webp',
     )
   })
 

@@ -50,12 +50,8 @@ export function NovexRoom({
       data-rail={rail ? undefined : 'none'}
       className="novex-room novex-os"
     >
-      <div className="novex-os__backdrop" aria-hidden="true">
-        <span className="novex-os__aurora novex-os__aurora--one" />
-        <span className="novex-os__aurora novex-os__aurora--two" />
-        <span className="novex-os__grid" />
-        <span className="novex-os__noise" />
-      </div>
+      {/* Fondo de la sala: el escenario del circo (platform-backgrounds.css). */}
+      <div className="novex-os__backdrop" aria-hidden="true" />
       {rail ? <NovexSystemRail /> : null}
       <main className="novex-os__stage">{children}</main>
     </div>

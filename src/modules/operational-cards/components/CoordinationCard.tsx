@@ -118,7 +118,13 @@ export function CoordinationCard({
           el arte solo lleva el pie de marca, y el scrim lo disimula. */}
       {illustrated && (
         <span className="coordination-card__face" aria-hidden="true">
-          <img src={face} alt="" onError={() => setFaceFailed(true)} />
+          <img
+            src={face}
+            alt=""
+            decoding="async"
+            draggable={false}
+            onError={() => setFaceFailed(true)}
+          />
           <span className="coordination-card__scrim" />
         </span>
       )}

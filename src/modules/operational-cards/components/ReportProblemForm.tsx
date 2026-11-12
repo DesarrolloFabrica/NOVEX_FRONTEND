@@ -72,7 +72,8 @@ export function ReportProblemForm({
   maxOccurredAt,
 }: ReportProblemFormProps) {
   const idPrefijo = useId()
-  const enviando = submission.status === 'sending' && submission.kind === 'report'
+  const enviando =
+    submission.status === 'sending' && submission.kind === 'report'
   const errorEnvio =
     submission.status === 'error' && submission.kind === 'report'
       ? submission.errorMessage
@@ -156,8 +157,7 @@ export function ReportProblemForm({
           >
             {esInter ? (
               <>
-                Coordinación afectada:{' '}
-                <strong>{affectedLabel}</strong>
+                Coordinación afectada: <strong>{affectedLabel}</strong>
               </>
             ) : (
               <>
@@ -168,265 +168,330 @@ export function ReportProblemForm({
         )}
       </header>
 
-      <fieldset
-        className="report-form__field report-form__kind"
-        data-testid="report-kind-fieldset"
-      >
-        <legend>Tipo de situación</legend>
-        <div
-          className="report-form__kind-options"
-          role="radiogroup"
-          aria-label="Tipo de situación"
+      <section className="report-form__step" data-step="1">
+        <h3 className="report-form__step-title">
+          <span className="report-form__step-num" aria-hidden="true">
+            1
+          </span>
+          ¿Dónde ocurre?
+        </h3>
+        <fieldset
+          className="report-form__field report-form__kind"
+          data-testid="report-kind-fieldset"
         >
-          <label
-            className="report-form__kind-option"
-            data-selected={reportKind === 'INTERNAL' ? 'true' : undefined}
+          <legend>Tipo de situación</legend>
+          <div
+            className="report-form__kind-options"
+            role="radiogroup"
+            aria-label="Tipo de situación"
           >
-            <input
-              type="radio"
-              name={`${idPrefijo}-kind`}
-              value="INTERNAL"
-              data-testid="report-kind-internal"
-              checked={reportKind === 'INTERNAL'}
-              disabled={enviando || !onReportKindChange}
-              onChange={() => onReportKindChange?.('INTERNAL')}
-            />
-            <span className="report-form__kind-label">
-              En mi coordinación
-            </span>
-            <span className="report-form__kind-hint">
-              Situación interna del área seleccionada
-            </span>
-          </label>
-          <label
-            className="report-form__kind-option"
-            data-selected={
-              reportKind === 'INTER_COORDINATION' ? 'true' : undefined
-            }
-          >
-            <input
-              type="radio"
-              name={`${idPrefijo}-kind`}
-              value="INTER_COORDINATION"
-              data-testid="report-kind-inter"
-              checked={reportKind === 'INTER_COORDINATION'}
-              disabled={enviando || !onReportKindChange}
-              onChange={() => onReportKindChange?.('INTER_COORDINATION')}
-            />
-            <span className="report-form__kind-label">
-              Dependo de otra coordinación
-            </span>
-            <span className="report-form__kind-hint">
-              Otra área debe resolver algo que nos afecta
-            </span>
-          </label>
-        </div>
-      </fieldset>
-
-      {esInter && (
-        <div className="report-form__field">
-          <ResponsibleCoordinationPicker
-            options={pickerOptions}
-            value={draft.responsibleCoordinationId}
-            affectedLabel={affectedLabel ?? ''}
-            disabled={enviando || responsibleOptions.length === 0}
-            onChange={(coordinationId) =>
-              onDraftChange({ responsibleCoordinationId: coordinationId })
-            }
-          />
-        </div>
-      )}
-
-      <div className="report-form__field">
-        <label htmlFor={`${idPrefijo}-title`}>Título</label>
-        <input
-          id={`${idPrefijo}-title`}
-          data-testid="report-title"
-          type="text"
-          maxLength={200}
-          required
-          value={draft.title}
-          disabled={enviando}
-          onChange={(e) => onDraftChange({ title: e.target.value })}
-        />
-      </div>
-
-      <div className="report-form__field">
-        <label htmlFor={`${idPrefijo}-description`}>Descripción</label>
-        <textarea
-          id={`${idPrefijo}-description`}
-          data-testid="report-description"
-          rows={4}
-          maxLength={4000}
-          required
-          value={draft.description}
-          disabled={enviando}
-          aria-describedby={esInter ? undefined : `${idPrefijo}-description-hint`}
-          onChange={(e) => onDraftChange({ description: e.target.value })}
-        />
-        {!esInter && (
-          <p className="report-form__hint" id={`${idPrefijo}-description-hint`}>
-            Qué está fallando. Las consecuencias van en «Afectación inicial».
-          </p>
-        )}
-      </div>
-
-      {esInter ? (
-        <>
-          <div className="report-form__field">
-            <label htmlFor={`${idPrefijo}-process`}>
-              Proceso afectado que se retrasa o bloquea
-            </label>
-            <textarea
-              id={`${idPrefijo}-process`}
-              data-testid="report-affected-process"
-              rows={2}
-              maxLength={2000}
-              required
-              value={draft.affectedProcess}
-              disabled={enviando}
-              onChange={(e) =>
-                onDraftChange({ affectedProcess: e.target.value })
-              }
-            />
-          </div>
-          <div className="report-form__field">
-            <label htmlFor={`${idPrefijo}-pending`}>
-              Entrega o acción pendiente de la coordinación responsable
-            </label>
-            <textarea
-              id={`${idPrefijo}-pending`}
-              data-testid="report-pending-delivery"
-              rows={2}
-              maxLength={2000}
-              required
-              value={draft.pendingDelivery}
-              disabled={enviando}
-              onChange={(e) =>
-                onDraftChange({ pendingDelivery: e.target.value })
-              }
-            />
-          </div>
-        </>
-      ) : (
-        <div className="report-form__field">
-          <label htmlFor={`${idPrefijo}-category`}>Categoría</label>
-          <select
-            id={`${idPrefijo}-category`}
-            data-testid="report-category"
-            required
-            value={draft.categoryId}
-            disabled={enviando || categories.length === 0}
-            onChange={(e) => onDraftChange({ categoryId: e.target.value })}
-          >
-            <option value="">Seleccione…</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-          {categoriesError && (
-            <p className="report-form__hint report-form__hint--error">
-              {categoriesError}
-            </p>
-          )}
-        </div>
-      )}
-
-      <fieldset className="report-form__field report-form__severity">
-        <legend>{esInter ? 'Severidad' : '¿Qué tan grave es ahora?'}</legend>
-        <div className="report-form__severity-options">
-          {SEVERITY_OPTIONS.map((option) => (
             <label
-              key={option.value}
-              className="report-form__severity-option"
-              data-severity={option.value}
-              data-selected={draft.severity === option.value ? 'true' : undefined}
+              className="report-form__kind-option"
+              data-selected={reportKind === 'INTERNAL' ? 'true' : undefined}
             >
               <input
                 type="radio"
-                name={`${idPrefijo}-severity`}
-                value={option.value}
-                data-testid={`report-severity-${option.value}`}
-                checked={draft.severity === option.value}
-                disabled={enviando}
-                onChange={() => onDraftChange({ severity: option.value })}
+                name={`${idPrefijo}-kind`}
+                value="INTERNAL"
+                data-testid="report-kind-internal"
+                checked={reportKind === 'INTERNAL'}
+                disabled={enviando || !onReportKindChange}
+                onChange={() => onReportKindChange?.('INTERNAL')}
               />
-              <span className="report-form__severity-label">{option.label}</span>
-              <span className="report-form__severity-hint">{option.hint}</span>
+              <span className="report-form__kind-label">
+                En mi coordinación
+              </span>
+              <span className="report-form__kind-hint">
+                Situación interna del área seleccionada
+              </span>
             </label>
-          ))}
-        </div>
-      </fieldset>
+            <label
+              className="report-form__kind-option"
+              data-selected={
+                reportKind === 'INTER_COORDINATION' ? 'true' : undefined
+              }
+            >
+              <input
+                type="radio"
+                name={`${idPrefijo}-kind`}
+                value="INTER_COORDINATION"
+                data-testid="report-kind-inter"
+                checked={reportKind === 'INTER_COORDINATION'}
+                disabled={enviando || !onReportKindChange}
+                onChange={() => onReportKindChange?.('INTER_COORDINATION')}
+              />
+              <span className="report-form__kind-label">
+                Dependo de otra coordinación
+              </span>
+              <span className="report-form__kind-hint">
+                Otra área debe resolver algo que nos afecta
+              </span>
+            </label>
+          </div>
+        </fieldset>
 
-      <div className="report-form__field">
-        <label htmlFor={`${idPrefijo}-occurred`}>¿Cuándo ocurrió?</label>
-        <input
-          id={`${idPrefijo}-occurred`}
-          data-testid="report-occurred-at"
-          type="datetime-local"
-          required
-          max={maxOccurredAt}
-          value={draft.occurredAt}
-          disabled={enviando}
-          onChange={(e) => onDraftChange({ occurredAt: e.target.value })}
-        />
-      </div>
+        {esInter && (
+          <div className="report-form__field">
+            <ResponsibleCoordinationPicker
+              options={pickerOptions}
+              value={draft.responsibleCoordinationId}
+              affectedLabel={affectedLabel ?? ''}
+              disabled={enviando || responsibleOptions.length === 0}
+              onChange={(coordinationId) =>
+                onDraftChange({ responsibleCoordinationId: coordinationId })
+              }
+            />
+          </div>
+        )}
+      </section>
+
+      <section className="report-form__step" data-step="2">
+        <h3 className="report-form__step-title">
+          <span className="report-form__step-num" aria-hidden="true">
+            2
+          </span>
+          ¿Qué pasa?
+        </h3>
+        <div className="report-form__field">
+          <label htmlFor={`${idPrefijo}-title`}>Título</label>
+          <input
+            id={`${idPrefijo}-title`}
+            data-testid="report-title"
+            type="text"
+            maxLength={200}
+            required
+            placeholder="Ej.: Falla el acceso al aula virtual"
+            value={draft.title}
+            disabled={enviando}
+            onChange={(e) => onDraftChange({ title: e.target.value })}
+          />
+        </div>
+
+        <div className="report-form__field">
+          <label htmlFor={`${idPrefijo}-description`}>Descripción</label>
+          <textarea
+            id={`${idPrefijo}-description`}
+            data-testid="report-description"
+            rows={4}
+            maxLength={4000}
+            required
+            placeholder="Describa qué está fallando, desde cuándo y a quién afecta."
+            value={draft.description}
+            disabled={enviando}
+            aria-describedby={
+              esInter ? undefined : `${idPrefijo}-description-hint`
+            }
+            onChange={(e) => onDraftChange({ description: e.target.value })}
+          />
+          {!esInter && (
+            <p
+              className="report-form__hint"
+              id={`${idPrefijo}-description-hint`}
+            >
+              Qué está fallando. Las consecuencias van en «Afectación inicial».
+            </p>
+          )}
+        </div>
+
+        {esInter ? (
+          <>
+            <div className="report-form__field">
+              <label htmlFor={`${idPrefijo}-process`}>
+                Proceso afectado que se retrasa o bloquea
+              </label>
+              <textarea
+                id={`${idPrefijo}-process`}
+                data-testid="report-affected-process"
+                rows={2}
+                maxLength={2000}
+                required
+                value={draft.affectedProcess}
+                disabled={enviando}
+                onChange={(e) =>
+                  onDraftChange({ affectedProcess: e.target.value })
+                }
+              />
+            </div>
+            <div className="report-form__field">
+              <label htmlFor={`${idPrefijo}-pending`}>
+                Entrega o acción pendiente de la coordinación responsable
+              </label>
+              <textarea
+                id={`${idPrefijo}-pending`}
+                data-testid="report-pending-delivery"
+                rows={2}
+                maxLength={2000}
+                required
+                value={draft.pendingDelivery}
+                disabled={enviando}
+                onChange={(e) =>
+                  onDraftChange({ pendingDelivery: e.target.value })
+                }
+              />
+            </div>
+          </>
+        ) : (
+          <div className="report-form__field">
+            <label htmlFor={`${idPrefijo}-category`}>Categoría</label>
+            <select
+              id={`${idPrefijo}-category`}
+              data-testid="report-category"
+              required
+              value={draft.categoryId}
+              disabled={enviando || categories.length === 0}
+              onChange={(e) => onDraftChange({ categoryId: e.target.value })}
+            >
+              <option value="">Seleccione…</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+            {categoriesError && (
+              <p className="report-form__hint report-form__hint--error">
+                {categoriesError}
+              </p>
+            )}
+          </div>
+        )}
+      </section>
+
+      <section className="report-form__step" data-step="3">
+        <h3 className="report-form__step-title">
+          <span className="report-form__step-num" aria-hidden="true">
+            3
+          </span>
+          ¿Qué tan grave y cuándo?
+        </h3>
+        <fieldset className="report-form__field report-form__severity">
+          <legend>{esInter ? 'Severidad' : '¿Qué tan grave es ahora?'}</legend>
+          <div className="report-form__severity-options">
+            {SEVERITY_OPTIONS.map((option) => (
+              <label
+                key={option.value}
+                className="report-form__severity-option"
+                data-severity={option.value}
+                data-selected={
+                  draft.severity === option.value ? 'true' : undefined
+                }
+              >
+                <input
+                  type="radio"
+                  name={`${idPrefijo}-severity`}
+                  value={option.value}
+                  data-testid={`report-severity-${option.value}`}
+                  checked={draft.severity === option.value}
+                  disabled={enviando}
+                  onChange={() => onDraftChange({ severity: option.value })}
+                />
+                <span className="report-form__severity-label">
+                  {option.label}
+                </span>
+                <span className="report-form__severity-hint">
+                  {option.hint}
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <div className="report-form__field">
+          <label htmlFor={`${idPrefijo}-occurred`}>¿Cuándo ocurrió?</label>
+          <input
+            id={`${idPrefijo}-occurred`}
+            data-testid="report-occurred-at"
+            type="datetime-local"
+            required
+            max={maxOccurredAt}
+            value={draft.occurredAt}
+            disabled={enviando}
+            onChange={(e) => onDraftChange({ occurredAt: e.target.value })}
+          />
+        </div>
+      </section>
 
       {!esInter && (
-        <div className="report-form__field">
-          <label htmlFor={`${idPrefijo}-consequence`}>
-            Afectación inicial (opcional)
-          </label>
-          <textarea
-            id={`${idPrefijo}-consequence`}
-            data-testid="report-initial-consequence"
-            rows={2}
-            maxLength={2000}
-            value={draft.initialConsequence}
-            disabled={enviando}
-            aria-describedby={`${idPrefijo}-consequence-hint`}
-            placeholder="Ej.: Se retrasó la entrega de dos contenidos."
-            onChange={(e) =>
-              onDraftChange({ initialConsequence: e.target.value })
-            }
-          />
-          <p className="report-form__hint" id={`${idPrefijo}-consequence-hint`}>
-            ¿Qué se retrasó, bloqueó o no se pudo hacer como consecuencia de
-            este problema?
+        <section className="report-form__step" data-step="4">
+          <h3 className="report-form__step-title">
+            <span className="report-form__step-num" aria-hidden="true">
+              4
+            </span>
+            ¿Qué consecuencias tuvo?
+            <span className="report-form__step-optional">Opcional</span>
+          </h3>
+          <div className="report-form__field">
+            <label htmlFor={`${idPrefijo}-consequence`}>
+              Afectación inicial (opcional)
+            </label>
+            <textarea
+              id={`${idPrefijo}-consequence`}
+              data-testid="report-initial-consequence"
+              rows={2}
+              maxLength={2000}
+              value={draft.initialConsequence}
+              disabled={enviando}
+              aria-describedby={`${idPrefijo}-consequence-hint`}
+              placeholder="Ej.: Se retrasó la entrega de dos contenidos."
+              onChange={(e) =>
+                onDraftChange({ initialConsequence: e.target.value })
+              }
+            />
+            <p
+              className="report-form__hint"
+              id={`${idPrefijo}-consequence-hint`}
+            >
+              ¿Qué se retrasó, bloqueó o no se pudo hacer como consecuencia de
+              este problema?
+            </p>
+          </div>
+        </section>
+      )}
+
+      <div className="report-form__footer">
+        {enviando && (
+          <p
+            className="report-form__note"
+            data-testid="report-sending"
+            role="status"
+          >
+            Registrando el problema…
           </p>
-        </div>
-      )}
+        )}
 
-      {enviando && (
-        <p className="report-form__note" data-testid="report-sending" role="status">
-          Registrando el problema…
-        </p>
-      )}
+        {errorEnvio && (
+          <p
+            className="report-form__note report-form__note--error"
+            data-testid="report-error"
+            role="alert"
+          >
+            {errorEnvio}
+          </p>
+        )}
 
-      {errorEnvio && (
-        <p
-          className="report-form__note report-form__note--error"
-          data-testid="report-error"
-          role="alert"
+        <button
+          type="submit"
+          className="report-form__submit"
+          data-testid="report-submit"
+          disabled={
+            enviando ||
+            sinDestino ||
+            (esInter && !draft.responsibleCoordinationId)
+          }
         >
-          {errorEnvio}
-        </p>
-      )}
-
-      <button
-        type="submit"
-        className="report-form__submit"
-        data-testid="report-submit"
-        disabled={
-          enviando ||
-          sinDestino ||
-          (esInter && !draft.responsibleCoordinationId)
-        }
-      >
-        {enviando ? 'Registrando…' : 'Registrar situación'}
-      </button>
+          {enviando ? 'Registrando…' : 'Registrar situación'}
+        </button>
+        {onCancel ? (
+          <button
+            type="button"
+            className="report-form__cancel"
+            onClick={onCancel}
+            disabled={enviando}
+          >
+            Cancelar
+          </button>
+        ) : null}
+      </div>
     </form>
   )
 }

@@ -298,12 +298,12 @@ describe('CoordinationTable · Servicio', () => {
     // Es el punto de la fase: una carta rotulada «Servicio» mostrando un PNG
     // que dice «HOMOLOGACIONES» se lee como un error de identidad.
     const html = markup(coordinations())
-    expect(html).not.toContain('/CoordCards/Homologaciones.png')
+    expect(html).not.toContain('/CoordCards/Homologaciones.webp')
   })
 
   it('pinta la cara propia de Servicio', () => {
     const html = markup(coordinations())
-    expect(html).toContain('/CoordCards/servicio.png')
+    expect(html).toContain('/CoordCards/servicio.webp')
     // Nueve nodos principales, todos ilustrados.
     expect(countOf(html, 'coordination-card__face')).toBe(9)
     expect(countOf(html, 'coordination-card__island')).toBe(0)
@@ -633,9 +633,9 @@ describe('CoordinationCard · identidad visual compartida', () => {
   it('Servicios pinta su cara propia, no la de Homologaciones', () => {
     const servicios = cardOf('coord-servicios', 'ESTABLE')
 
-    expect(servicios).toContain('/CoordCards/servicio.png')
+    expect(servicios).toContain('/CoordCards/servicio.webp')
     expect(servicios).toContain('coordination-card__face')
-    expect(servicios).not.toContain('/CoordCards/Homologaciones.png')
+    expect(servicios).not.toContain('/CoordCards/Homologaciones.webp')
     expect(servicios).not.toContain('coordination-card__island')
   })
 
@@ -652,7 +652,7 @@ describe('CoordinationCard · identidad visual compartida', () => {
   it('Homologaciones sí conserva su cara ilustrada', () => {
     const homologaciones = cardOf('coord-homologaciones', 'CRITICO')
 
-    expect(homologaciones).toContain('/CoordCards/Homologaciones.png')
+    expect(homologaciones).toContain('/CoordCards/Homologaciones.webp')
     expect(homologaciones).toContain('coordination-card__name--hidden')
   })
 

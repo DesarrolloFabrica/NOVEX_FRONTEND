@@ -114,96 +114,153 @@ export function DirectorProblemPanel({
     )
   }
 
+  const STATUS_RANK: Record<string, number> = { CRITICO: 0, ALERTA: 1 }
   const alertCoordinations = direction
-    ? direction.coordinations.filter(
-        (c) =>
-          c.integrityStatus === 'CRITICO' ||
-          c.integrityStatus === 'ALERTA' ||
-          c.problems.activeCount > 0,
-      )
+    ? direction.coordinations
+        .filter(
+          (c) =>
+            c.integrityStatus === 'CRITICO' ||
+            c.integrityStatus === 'ALERTA' ||
+            c.problems.activeCount > 0,
+        )
+        .sort(
+          (a, b) =>
+            (STATUS_RANK[a.integrityStatus] ?? 2) -
+              (STATUS_RANK[b.integrityStatus] ?? 2) ||
+            b.problems.activeCount - a.problems.activeCount,
+        )
     : []
+
+  /*
+   * PRIMERA VISTA DEL DIRECTOR (sin carta observada). Responde, en este orden:
+   *   1. ¿Cómo está la Dirección?  → titular en lenguaje llano + una frase.
+   *   2. ¿Qué es lo más urgente?   → un botón directo a esa coordinación.
+   *   3. ¿Dónde más hay que mirar? → el resto de áreas, por gravedad.
+   */
+  const status = direction?.directionStatus ?? 'ESTABLE'
+  const headline =
+    status === 'CRITICO'
+      ? 'La operación está en estado crítico'
+      : status === 'ALERTA'
+        ? 'La operación necesita atención'
+        : 'La operación está estable'
+  const urgent = alertCoordinations[0] ?? null
+  const otherAreas = alertCoordinations.slice(1)
+  const nameOf = (code: string, fallback: string) => labelByCode[code] ?? fallback
+  const plural = (n: number, one: string, many: string) =>
+    `${n} ${n === 1 ? one : many}`
 
   return (
     <div
       className="director-direction-brief"
       data-testid="director-direction-brief"
+      data-status={status.toLowerCase()}
     >
       <header className="director-direction-brief__header">
-        <h2 className="director-direction-brief__title">Resumen de Dirección</h2>
-        <p className="director-direction-brief__copy">
-          Seleccione una carta para ver los problemas activos de esa coordinación
-          o pulse en un área para enfocarla directamente.
-        </p>
+        <span className="director-direction-brief__eyebrow">
+          Qué está pasando en la Dirección
+        </span>
+        <h2 className="director-direction-brief__title">{headline}</h2>
+        {direction ? (
+          <p className="director-direction-brief__copy">
+            {plural(direction.problems.activeCount, 'situación activa', 'situaciones activas')}
+            {direction.problems.severity.critical > 0
+              ? `, ${plural(direction.problems.severity.critical, 'crítica', 'críticas')}`
+              : ''}
+            . De {direction.coordinations.length} coordinaciones,{' '}
+            {direction.coordinationStatusTotals.critical} en estado crítico y{' '}
+            {direction.coordinationStatusTotals.alert} en alerta.
+          </p>
+        ) : null}
       </header>
+
+      {direction && urgent ? (
+        <button
+          type="button"
+          className="director-direction-brief__urgent"
+          data-status={urgent.integrityStatus.toLowerCase()}
+          data-testid={`director-quick-jump-${urgent.coordination.code}`}
+          onClick={() => controller.selectCoordination(urgent.coordination.code)}
+        >
+          <span className="director-direction-brief__urgent-label">
+            Lo más urgente
+          </span>
+          <span className="director-direction-brief__urgent-name">
+            {nameOf(urgent.coordination.code, urgent.coordination.name)}
+          </span>
+          <span className="director-direction-brief__urgent-meta">
+            {plural(urgent.problems.activeCount, 'situación activa', 'situaciones activas')}
+            {urgent.problems.severity.critical > 0
+              ? ` · ${plural(urgent.problems.severity.critical, 'crítica', 'críticas')}`
+              : ''}
+          </span>
+          <span className="director-direction-brief__urgent-cta" aria-hidden="true">
+            Ver sus problemas →
+          </span>
+        </button>
+      ) : null}
 
       {direction ? (
         <>
-          <div
-            className="director-direction-brief__cards"
-            data-testid="director-brief-cards"
-          >
-            <div className="director-direction-brief__card">
-              <span className="director-direction-brief__card-val">
-                {direction.problems.activeCount}
-              </span>
-              <span className="director-direction-brief__card-lbl">
-                Situaciones Activas
-              </span>
-            </div>
-            <div
-              className={`director-direction-brief__card ${
-                direction.problems.severity.critical > 0 ? 'is-critical' : ''
-              }`}
-            >
-              <span className="director-direction-brief__card-val">
-                {direction.problems.severity.critical}
-              </span>
-              <span className="director-direction-brief__card-lbl">
-                Situaciones Críticas
-              </span>
-            </div>
-            <div className="director-direction-brief__card">
-              <span className="director-direction-brief__card-val">
-                {direction.coordinationStatusTotals.critical +
-                  direction.coordinationStatusTotals.alert}
-              </span>
-              <span className="director-direction-brief__card-lbl">
-                Coordinaciones en Alerta
-              </span>
-            </div>
-          </div>
-
+          {otherAreas.length > 0 ? (
+            <h3 className="director-direction-brief__subheading">
+              Otras áreas que piden atención
+            </h3>
+          ) : null}
           {alertCoordinations.length > 0 ? (
-            <div
-              className="director-direction-brief__alert-areas"
+            <ul
+              className="director-direction-brief__areas"
               data-testid="director-alert-areas"
             >
-              <h3 className="director-direction-brief__subheading">
-                Áreas con atención prioritaria
-              </h3>
-              <div className="director-direction-brief__pills">
-                {alertCoordinations.map((coord) => (
-                  <button
-                    key={coord.coordination.code}
-                    type="button"
-                    className={`director-direction-brief__pill director-direction-brief__pill--${coord.integrityStatus.toLowerCase()}`}
-                    data-status={coord.integrityStatus.toLowerCase()}
-                    data-testid={`director-quick-jump-${coord.coordination.code}`}
-                    onClick={() =>
-                      controller.selectCoordination(coord.coordination.code)
-                    }
-                    title={`Enfocar ${coord.coordination.name}`}
-                  >
-                    <span className="director-direction-brief__pill-name">
-                      {coord.coordination.name}
-                    </span>
-                    <span className="director-direction-brief__pill-badge">
-                      {coord.problems.activeCount}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
+              {otherAreas.map((coord) => {
+                const status = coord.integrityStatus.toLowerCase()
+                const critical = coord.problems.severity.critical
+                return (
+                  <li key={coord.coordination.code}>
+                    <button
+                      type="button"
+                      className="director-direction-brief__area"
+                      data-status={status}
+                      data-testid={`director-quick-jump-${coord.coordination.code}`}
+                      onClick={() =>
+                        controller.selectCoordination(coord.coordination.code)
+                      }
+                    >
+                      <span
+                        className="director-direction-brief__area-dot"
+                        style={{
+                          backgroundColor:
+                            colorByCode[coord.coordination.code] ?? '#b98a26',
+                        }}
+                        aria-hidden="true"
+                      />
+                      <span className="director-direction-brief__area-text">
+                        <span className="director-direction-brief__area-name">
+                          {labelByCode[coord.coordination.code] ??
+                            coord.coordination.name}
+                        </span>
+                        <span className="director-direction-brief__area-meta">
+                          {coord.integrityStatus === 'CRITICO'
+                            ? 'Crítica'
+                            : coord.integrityStatus === 'ALERTA'
+                              ? 'En alerta'
+                              : 'Con actividad'}
+                          {critical > 0
+                            ? ` · ${critical} ${critical === 1 ? 'crítico' : 'críticos'}`
+                            : ''}
+                        </span>
+                      </span>
+                      <span
+                        className="director-direction-brief__area-count"
+                        aria-label={`${coord.problems.activeCount} activos`}
+                      >
+                        {coord.problems.activeCount}
+                      </span>
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
           ) : (
             <div
               className="director-direction-brief__stable-notice"
@@ -221,16 +278,6 @@ export function DirectorProblemPanel({
               </p>
             </div>
           )}
-
-          {/* Conserva la lista oficial de hechos para compatibilidad estricta */}
-          <ul className="director-direction-brief__facts">
-            <li>Activos {direction.problems.activeCount}</li>
-            <li>Críticos {direction.problems.severity.critical}</li>
-            <li>
-              Coordinaciones críticas{' '}
-              {direction.coordinationStatusTotals.critical}
-            </li>
-          </ul>
         </>
       ) : null}
     </div>

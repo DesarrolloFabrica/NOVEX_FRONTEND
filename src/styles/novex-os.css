@@ -15,7 +15,8 @@ body,
   min-width: 320px;
   min-height: 100%;
   margin: 0;
-  background: #02050c;
+  /* Tono base del escenario del circo (mismo que index.html y la sala). */
+  background: #160d0b;
 }
 
 body {
@@ -58,7 +59,7 @@ textarea {
   --os-danger: #ff465b;
   --os-radius: 16px;
   --os-ease: cubic-bezier(0.22, 0.72, 0.18, 1);
-  --os-scene-image: url('/assests/scenes/novex-city-intelligence.jpg');
+  --os-scene-image: none;
   --os-scene-position: 50% 48%;
   --os-scene-accent: 163 255 92;
   --os-type-h1: clamp(1.35rem, 2vw, 1.75rem);
@@ -92,19 +93,19 @@ textarea {
 }
 
 .novex-os[data-scene='events'] {
-  --os-scene-image: url('/assests/scenes/novex-city-events.jpg');
+  --os-scene-image: none;
   --os-scene-position: 50% 51%;
   --os-scene-accent: 86 126 255;
 }
 
 .novex-os[data-scene='register'] {
-  --os-scene-image: url('/assests/scenes/novex-city-register.jpg');
+  --os-scene-image: none;
   --os-scene-position: 50% 46%;
   --os-scene-accent: 163 255 92;
 }
 
 .novex-os[data-scene='commitments'] {
-  --os-scene-image: url('/assests/scenes/novex-city-commitments.jpg');
+  --os-scene-image: none;
   --os-scene-position: 50% 50%;
   --os-scene-accent: 151 91 255;
 }
@@ -152,74 +153,6 @@ textarea {
   background-size: 191px 173px, 229px 211px, 157px 199px, 263px 239px, 311px 283px;
   mix-blend-mode: screen;
   animation: novex-os-particle-drift 24s ease-in-out infinite alternate;
-}
-
-.novex-os__aurora {
-  position: absolute;
-  width: 46vw;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  opacity: 0.13;
-  filter: blur(120px);
-  animation: novex-os-aurora 18s var(--os-ease) infinite alternate;
-}
-
-.novex-os__aurora--one {
-  top: -28%;
-  left: 23%;
-  background: #174aff;
-}
-
-.novex-os__aurora--two {
-  right: -18%;
-  bottom: -36%;
-  background: #6a22d7;
-  animation-delay: -7s;
-}
-
-.novex-os__grid {
-  position: absolute;
-  inset: 0;
-  opacity: 0.1;
-  background-image:
-    linear-gradient(rgb(88 150 255 / 0.13) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(88 150 255 / 0.13) 1px, transparent 1px);
-  background-size: 64px 64px;
-  mask-image: radial-gradient(circle at 62% 45%, black, transparent 72%);
-}
-
-.novex-os__grid::before {
-  content: '';
-  position: absolute;
-  right: 8%;
-  left: 8%;
-  height: 1px;
-  opacity: 0.28;
-  background: linear-gradient(90deg, transparent, rgb(var(--os-scene-accent) / 0.62), transparent);
-  box-shadow: 0 0 12px rgb(var(--os-scene-accent) / 0.18);
-  animation: novex-os-ambient-scan 13s linear infinite;
-}
-
-.novex-os__grid::after {
-  content: '';
-  position: absolute;
-  inset: 20px 24px;
-  opacity: 0.34;
-  background:
-    linear-gradient(90deg, rgb(56 217 255 / 0.55), transparent) left top / 72px 1px no-repeat,
-    linear-gradient(180deg, rgb(56 217 255 / 0.55), transparent) left top / 1px 54px no-repeat,
-    linear-gradient(270deg, rgb(151 91 255 / 0.5), transparent) right bottom / 72px 1px no-repeat,
-    linear-gradient(0deg, rgb(151 91 255 / 0.5), transparent) right bottom / 1px 54px no-repeat,
-    repeating-linear-gradient(90deg, transparent 0 30px, rgb(110 170 255 / 0.45) 30px 31px, transparent 31px 62px) center top / 56% 5px no-repeat,
-    repeating-linear-gradient(90deg, transparent 0 30px, rgb(110 170 255 / 0.34) 30px 31px, transparent 31px 62px) center bottom / 46% 5px no-repeat;
-}
-
-.novex-os__noise {
-  position: absolute;
-  inset: 0;
-  opacity: 0.055;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 140 140' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.86' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.65'/%3E%3C/svg%3E");
-  mix-blend-mode: soft-light;
 }
 
 /* --- Navegación --------------------------------------------------------- */
@@ -1944,7 +1877,7 @@ textarea {
   background:
     linear-gradient(90deg, rgb(2 7 17 / 0.9), rgb(3 9 21 / 0.73) 45%, rgb(2 7 17 / 0.88)),
     radial-gradient(circle at 52% 56%, transparent 0 18%, rgb(2 7 17 / 0.48) 64%),
-    url('/assests/scenes/novex-city-events.jpg') center / cover no-repeat;
+    none center / cover no-repeat;
   box-shadow: none !important;
 }
 
@@ -2216,7 +2149,7 @@ textarea {
   background:
     linear-gradient(100deg, rgb(4 11 24 / 0.92), rgb(4 11 24 / 0.74) 42%, rgb(4 11 24 / 0.84)),
     radial-gradient(circle at 68% 44%, transparent 0 12%, rgb(4 11 24 / 0.42) 60%),
-    url('/assests/scenes/novex-city-register.jpg') center / cover no-repeat;
+    none center / cover no-repeat;
 }
 
 .novex-os .novex-wizard-station__rail {
@@ -3027,7 +2960,7 @@ textarea {
   background:
     linear-gradient(180deg, rgb(3 9 20 / 0.34), rgb(3 9 20 / 0.8)),
     radial-gradient(ellipse at 50% 58%, transparent 0 28%, rgb(5 13 29 / 0.5) 66%, rgb(3 8 18 / 0.94) 100%),
-    url('/assests/scenes/novex-city-commitments.jpg') center / cover no-repeat;
+    none center / cover no-repeat;
   box-shadow:
     inset 0 0 54px rgb(3 8 18 / 0.72),
     0 0 36px rgb(58 116 255 / 0.04);
@@ -3073,7 +3006,7 @@ textarea {
   inset: 0;
   background:
     linear-gradient(90deg, rgb(2 5 12 / 0.95) 0%, rgb(2 6 15 / 0.77) 45%, rgb(2 5 12 / 0.84) 100%),
-    url('/assests/scenes/novex-city-intelligence.jpg') 38% center / cover no-repeat;
+    none 38% center / cover no-repeat;
   transform: scale(1.012);
   animation: novex-os-scene-parallax 28s ease-in-out infinite alternate;
 }
@@ -4671,10 +4604,7 @@ textarea {
 }
 
 @media (prefers-contrast: more) {
-  .novex-os__noise,
-  .novex-os__backdrop::after,
-  .novex-os__grid::before,
-  .novex-os__grid::after {
+  .novex-os__backdrop::after {
     display: none;
   }
 
@@ -4722,17 +4652,10 @@ textarea {
 .novex-room--reference {
   background:
     linear-gradient(145deg, rgb(2 6 16 / 0.94), rgb(6 10 25 / 0.9) 52%, rgb(13 7 30 / 0.94)),
-    url('/assests/scenes/imagenfondo1.png') center / cover fixed no-repeat !important;
+    none center / cover fixed no-repeat !important;
 }
 
-.novex-room--reference .room-atmosphere {
-  opacity: 0.045 !important;
-  animation: none !important;
-}
-
-.novex-room--reference .novex-os__backdrop,
-.novex-room--reference .novex-os__noise,
-.novex-room--reference .novex-os__grid {
+.novex-room--reference .novex-os__backdrop {
   opacity: 0.08 !important;
 }
 
@@ -5292,12 +5215,10 @@ textarea {
 .novex-os {
   background:
     linear-gradient(145deg, rgb(2 6 16 / 0.94), rgb(6 10 25 / 0.9) 52%, rgb(13 7 30 / 0.94)),
-    url('/assests/scenes/imagenfondo1.png') center / cover fixed no-repeat;
+    none center / cover fixed no-repeat;
 }
 
-.novex-os .novex-os__backdrop,
-.novex-os .novex-os__grid,
-.novex-os .novex-os__noise {
+.novex-os .novex-os__backdrop {
   opacity: 0.08 !important;
 }
 
@@ -6182,7 +6103,6 @@ textarea {
   position: relative;
   z-index: 70;
 }
-
 
 .novex-os[data-scene='intelligence'] .novex-os-topbar__system-status span:last-child,
 .novex-os[data-scene='intelligence'] .novex-user-menu__identity,
@@ -15978,7 +15898,7 @@ textarea {
   background:
     linear-gradient(180deg, rgb(2 8 23 / 0.02), rgb(2 8 23 / 0.06) 55%, rgb(2 8 23 / 0.7)),
     radial-gradient(circle at 50% 50%, transparent 0 36%, rgb(2 8 23 / 0.3) 78%),
-    url('/analysis/novex-analysis-core.png') center / cover no-repeat;
+    url('/analysis/novex-analysis-core.webp') center / cover no-repeat;
   isolation: isolate;
 }
 

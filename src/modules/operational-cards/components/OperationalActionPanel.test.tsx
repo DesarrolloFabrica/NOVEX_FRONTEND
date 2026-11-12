@@ -143,7 +143,7 @@ describe('OperationalActionPanel · composición por modo', () => {
     expect(html).not.toContain('data-testid="report-internal-button"')
     expect(html).not.toContain('data-testid="report-dependency-button"')
     expect(html).toContain('data-testid="history-open-button"')
-    expect(html).toContain('Reportar o consultar')
+    expect(html).toContain('¿Ocurrió un problema?')
     const headingIdx = html.indexOf('action-panel__idle-heading')
     const ctaIdx = html.indexOf('report-cta-group')
     expect(headingIdx).toBeGreaterThan(-1)

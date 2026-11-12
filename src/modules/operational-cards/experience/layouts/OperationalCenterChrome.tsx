@@ -61,7 +61,7 @@ export function CircusScene() {
     >
       <img
         className="operational-shell__scene-image"
-        src="/assets/scenes/circus-stage-background.png"
+        src="/assets/scenes/circus-stage-background.webp"
         alt=""
         decoding="async"
         draggable={false}

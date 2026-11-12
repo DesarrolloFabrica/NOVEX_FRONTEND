@@ -5,8 +5,10 @@ import {
   useState,
   type ReactElement,
 } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   AdminInsightPanel,
+  InsightHeader,
   type AdminInsightView,
 } from '@/modules/operational-cards/components/AdminInsightPanels'
 import type { OperationalActionPanelProps } from '@/modules/operational-cards/components/OperationalActionPanel'
@@ -19,119 +21,35 @@ import { MyReportsPanel } from '@/modules/operational-cards/components/MyReports
 import {
   IconBarChart,
   IconCheckCircle,
-  IconChevronLeft,
   IconChevronRight,
   IconDocument,
   IconInfo,
   IconLayers,
-  IconSwap,
   IconTarget,
 } from '@/modules/operational-cards/components/OperationalIcons'
 import { OperationalRoleHeader } from '@/modules/operational-cards/components/OperationalRoleHeader'
-import { resolveCoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
 import {
-  OperationalCardExperience,
-  type DeckHeaderContext,
-} from '@/modules/operational-cards/experience/OperationalCardExperience'
+  CIRCUS_TABLE_GEOMETRY,
+  renderCircusDeckRibbon,
+} from '@/modules/operational-cards/experience/layouts/circusDeckRibbon'
+import { resolveCoordinationVisualIdentity } from '@/modules/operational-cards/data/coordinationVisualIdentity'
+import { OperationalCardExperience } from '@/modules/operational-cards/experience/OperationalCardExperience'
 import {
   CircusScene,
   ShellBottom,
   ShellRegion,
 } from '@/modules/operational-cards/experience/layouts/OperationalCenterChrome'
+import { ReportSituationModal } from '@/modules/operational-cards/experience/layouts/ReportSituationModal'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { hasPermission } from '@/modules/auth/utils/permissions'
 import type { OperationalCenterExperienceId } from '@/modules/operational-cards/experience/resolveOperationalCenterExperience'
 import type { OperationalShellModel } from '@/modules/operational-cards/hooks/useOperationalShellModel'
 import type { CoordinationId } from '@/modules/impact-network/data/coordination-islands.config'
 
-/**
- * Mesa del ADMIN: la baraja vive a todo el ancho bajo la cinta, así que se
- * abre más (solape del 12 %: el nombre de cada carta se lee entero), el arco
- * es más plano y el giro más suave. Las cartas siguen superpuestas.
- */
-const ADMIN_TABLE_GEOMETRY = {
-  overlap: 0.12,
-  arcRise: 0.08,
-  arcTilt: 4,
-} as const
 
-/**
- * Cinta «Coordinaciones» del ADMIN. Con un mazo abierto (p. ej. Operación
- * Académica) ofrece el regreso a la mesa completa y dice dónde está el usuario;
- * las flechas recorren las coordinaciones de la mesa.
- */
-function renderAdminDeckRibbon(context: DeckHeaderContext) {
-  const { deckOpen, deckLabel, selectedLabel, onBackToAll, onPrevious, onNext } =
-    context
-  const showBack = deckOpen
 
-  return (
-    <div
-      className="operational-deck__header-ribbon"
-      data-testid="coordinations-deck-ribbon"
-      data-deck-open={deckOpen ? 'true' : 'false'}
-    >
-      <div className="operational-deck__ribbon-pill">
-        <span className="operational-deck__ribbon-icon" aria-hidden="true">
-          <IconLayers size={22} />
-        </span>
-        <span className="operational-deck__ribbon-title">Coordinaciones</span>
-      </div>
-
-      {showBack ? (
-        <nav
-          className="operational-deck__ribbon-trail"
-          aria-label="Ubicación en la baraja"
-        >
-          <button
-            type="button"
-            className="operational-deck__ribbon-back"
-            data-testid="deck-ribbon-back"
-            onClick={onBackToAll}
-          >
-            <IconChevronLeft size={16} />
-            <span>Todas las coordinaciones</span>
-          </button>
-          <span className="operational-deck__ribbon-crumb">
-            <span className="operational-deck__ribbon-crumb-sep" aria-hidden="true">
-              <IconChevronRight size={14} />
-            </span>
-            <span className="operational-deck__ribbon-crumb-current">
-              Mazo {deckLabel ?? selectedLabel ?? ''}
-            </span>
-          </span>
-        </nav>
-      ) : (
-        <span className="operational-deck__ribbon-desc">
-          {selectedLabel
-            ? `Observando ${selectedLabel} · use las flechas para recorrer la mesa`
-            : 'Accede y gestiona las coordinaciones del sistema'}
-        </span>
-      )}
-
-      <div className="operational-deck__ribbon-nav">
-        <button
-          type="button"
-          className="operational-deck__ribbon-btn"
-          aria-label="Coordinación anterior"
-          title="Coordinación anterior"
-          onClick={onPrevious}
-        >
-          <IconChevronLeft size={16} />
-        </button>
-        <button
-          type="button"
-          className="operational-deck__ribbon-btn"
-          aria-label="Coordinación siguiente"
-          title="Coordinación siguiente"
-          onClick={onNext}
-        >
-          <IconChevronRight size={16} />
-        </button>
-      </div>
-    </div>
-  )
-}
+/** Vistas del panel derecho del ADMIN: las de consulta + «Mis reportes». */
+type AdminPanelView = AdminInsightView | 'my-reports'
 
 /**
  * Composición de baraja: personaje + reportes + problemas + mesa + acción.
@@ -154,7 +72,6 @@ export function DeckOperationalLayout({
     rowLabelByCode,
     colorByCode,
     ticketTheme,
-    ticketRegionClass,
     character,
     actionPanel,
   } = model
@@ -166,8 +83,11 @@ export function DeckOperationalLayout({
    * Al abrir un expediente desde una de ellas se recuerda la vista, y «Volver»
    * desde el detalle regresa a la lista en lugar de al menú.
    */
-  const [adminView, setAdminView] = useState<AdminInsightView | null>(null)
-  const returnViewRef = useRef<AdminInsightView | null>(null)
+  const [adminView, setAdminView] = useState<AdminPanelView | null>(null)
+  const returnViewRef = useRef<AdminPanelView | null>(null)
+  // Vista de consulta (sin «Mis reportes», que se pinta aparte).
+  const insightView: AdminInsightView | null =
+    adminView && adminView !== 'my-reports' ? adminView : null
   const panelMode = controller.panelMode
   // Indicadores «Por coordinación» esperando que se elija una carta: la mesa
   // lo señala con un brillo suave en las cartas.
@@ -185,6 +105,25 @@ export function DeckOperationalLayout({
     }
   }, [panelMode])
 
+  /*
+   * Enlace profundo desde la Consola («Operaciones»): `?vista=gestion` abre la
+   * gestión de situaciones en el panel derecho. El parámetro se consume para
+   * que recargar o volver no reabra la vista.
+   */
+  const [searchParams, setSearchParams] = useSearchParams()
+  const requestedView = searchParams.get('vista')
+  useEffect(() => {
+    if (experience !== 'admin' || requestedView !== 'gestion') return
+    setAdminView('operations')
+    setSearchParams(
+      (params) => {
+        params.delete('vista')
+        return params
+      },
+      { replace: true },
+    )
+  }, [experience, requestedView, setSearchParams])
+
   // Los KPI exigen KPIS_VIEW en el token; sin él, el acceso no se ofrece.
   const canViewKpis = hasPermission(user, 'KPIS_VIEW')
 
@@ -196,20 +135,43 @@ export function DeckOperationalLayout({
     controller.setHistoryPeriod(buildCyclePeriod(year, monthIndex < 6 ? 1 : 2))
   }
 
-  const adminActionPanel =
-    experience === 'admin'
-      ? cloneElement(
-          actionPanel as ReactElement<OperationalActionPanelProps>,
-          {
-            onOpenHistory: openAdminHistory,
-            onPrimaryConsult: () => setAdminView('operations'),
-            onOpenOperations: () => setAdminView('operations'),
-            onOpenLearnings: () => setAdminView('learnings'),
-            onOpenAdminActions: () => setAdminView('admin-actions'),
-            onOpenKpis: canViewKpis ? () => setAdminView('kpis') : undefined,
-          },
-        )
-      : actionPanel
+  /*
+   * ADMIN y ANALISTA comparten las vistas de consulta (situaciones,
+   * aprendizajes, indicadores): antes el ANALISTA veía esas tarjetas con
+   * flecha pero no llevaban a ninguna parte. Las acciones administrativas y
+   * el «consultar» como botón principal siguen siendo solo del ADMIN (el
+   * ANALISTA registra).
+   */
+  const hasInsightViews = experience === 'admin' || experience === 'analyst'
+  const adminActionPanel = hasInsightViews
+    ? cloneElement(actionPanel as ReactElement<OperationalActionPanelProps>, {
+        onOpenHistory: openAdminHistory,
+        historyScopeLabel: 'todas las coordinaciones',
+        onOpenOperations: () => setAdminView('operations'),
+        onOpenLearnings: () => setAdminView('learnings'),
+        onOpenKpis: canViewKpis ? () => setAdminView('kpis') : undefined,
+        ...(experience === 'admin'
+          ? {
+              onPrimaryConsult: () => setAdminView('operations'),
+              onOpenAdminActions: () => setAdminView('admin-actions'),
+            }
+          : {}),
+      })
+    : actionPanel
+
+  /*
+   * «Registrar situación» se abre en un modal (como en el COORDINADOR): el
+   * panel derecho sigue mostrando su menú en reposo detrás.
+   */
+  const reportOpen = panelMode === 'report'
+  const restingActionPanel = reportOpen
+    ? cloneElement(adminActionPanel as ReactElement<OperationalActionPanelProps>, {
+        mode: 'idle',
+      })
+    : adminActionPanel
+  const reportDestination = selectedCoordination
+    ? (labelByCode[selectedCoordination.code] ?? selectedCoordination.name)
+    : null
 
   const activeProblemsCount = selectedCoordination
     ? selectedCoordination.activeProblemsCount
@@ -278,295 +240,158 @@ export function DeckOperationalLayout({
 
       <div className="operational-shell__main" data-testid="shell-main">
         <div className="operational-shell__top" data-testid="shell-top">
-          {experience === 'admin' ? (
-            <>
-              <ShellRegion
-                region="character"
-                title="Estado del personaje"
-                className={`operational-shell__region--character operational-shell__region--admin-left${effectiveTicketRegionClass}`}
-                showTitle={false}
-                ticketTheme={effectiveTicketTheme}
-                ticketPanel="character"
-              >
-                <div className="admin-left-ticket-wrapper">
-                  {character}
+          {/*
+            Composición «escenario circense» (ADMIN y ANALISTA): personaje +
+            resumen + «Mis reportes» a la izquierda, problemas al centro,
+            acciones a la derecha y la mesa a todo el ancho bajo su cinta.
+            Cada rol conserva sus propias funciones.
+          */}
+          <ShellRegion
+            region="character"
+            title="Estado del personaje"
+            className={`operational-shell__region--character operational-shell__region--admin-left${effectiveTicketRegionClass}`}
+            showTitle={false}
+            ticketTheme={effectiveTicketTheme}
+            ticketPanel="character"
+          >
+            <div className="admin-left-ticket-wrapper">
+              {character}
 
-                  <div className="admin-ticket-section">
-                    <div className="admin-ticket-tab">
-                      <span className="admin-ticket-tab__icon" aria-hidden="true">
-                        <IconBarChart size={16} />
-                      </span>
-                      <span className="admin-ticket-tab__title">Resumen general</span>
+              <div className="admin-ticket-section">
+                <div className="admin-ticket-tab">
+                  <span className="admin-ticket-tab__icon" aria-hidden="true">
+                    <IconBarChart size={16} />
+                  </span>
+                  <span className="admin-ticket-tab__title">Resumen general</span>
+                </div>
+                <ul className="admin-general-summary">
+                  <li
+                    className="admin-general-summary__item"
+                    data-tone={summaryStatus.toLowerCase()}
+                  >
+                    <span className="admin-general-summary__icon admin-general-summary__icon--status" aria-hidden="true">
+                      <IconCheckCircle size={17} />
+                    </span>
+                    <span className="admin-general-summary__text">
+                      {summaryStatusLabel}
+                    </span>
+                  </li>
+                  <li className="admin-general-summary__item">
+                    <span className="admin-general-summary__icon" aria-hidden="true">
+                      <IconTarget size={17} />
+                    </span>
+                    <span className="admin-general-summary__text">
+                      {activeProblemsCount} situaciones activas
+                    </span>
+                  </li>
+                  <li className="admin-general-summary__item">
+                    <span className="admin-general-summary__icon" aria-hidden="true">
+                      <IconInfo size={17} />
+                    </span>
+                    <span className="admin-general-summary__text">
+                      {criticalProblemsCount > 0
+                        ? `${criticalProblemsCount} críticas pendientes`
+                        : 'Sin incidentes pendientes'}
+                    </span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="admin-ticket-section" data-tour="my-reports">
+                <div className="admin-ticket-tab">
+                  <span className="admin-ticket-tab__icon" aria-hidden="true">
+                    <IconDocument size={16} />
+                  </span>
+                  <span className="admin-ticket-tab__title">Mis reportes</span>
+                </div>
+                <button
+                  type="button"
+                  className="admin-my-reports-stat"
+                  onClick={() => setAdminView('my-reports')}
+                  aria-label={`Ver mis reportes (${controller.myReports.total} en el período)`}
+                  title="Ver mis reportes"
+                >
+                  <span className="admin-my-reports-stat__count">
+                    {controller.myReports.total}
+                  </span>
+                  <span className="admin-my-reports-stat__label">
+                    Reportes en el período
+                  </span>
+                  <span className="admin-my-reports-stat__chevron" aria-hidden="true">
+                    <IconChevronRight size={16} />
+                  </span>
+                </button>
+              </div>
+            </div>
+          </ShellRegion>
+
+          <ShellRegion
+            region="coordination-problems"
+            title="Problemas de la coordinación"
+            hint={
+              selectedCoordination ? undefined : 'Seleccione una coordinación'
+            }
+            className={`operational-shell__region--coordination-problems operational-shell__region--admin-center${effectiveTicketRegionClass}`}
+            showTitle={false}
+            ticketTheme={effectiveTicketTheme}
+            ticketPanel="problems"
+            tourId="coordination-problems"
+          >
+            {selectedCoordination ? (
+              <div className="coordination-problems-view">
+                <div className="coordination-focus-banner" data-testid="coordination-focus-banner">
+                  <div className="coordination-focus-banner__left">
+                    <span
+                      className="coordination-focus-banner__dot"
+                      style={{ backgroundColor: colorByCode[selectedCoordination.code] || '#f5d485' }}
+                      aria-hidden="true"
+                    />
+                    <div>
+                      <span className="coordination-focus-banner__label">Coordinación Activa</span>
+                      <h3 className="coordination-focus-banner__title">
+                        {labelByCode[selectedCoordination.code] ?? selectedCoordination.name}
+                      </h3>
                     </div>
-                    <ul className="admin-general-summary">
-                      <li
-                        className="admin-general-summary__item"
-                        data-tone={summaryStatus.toLowerCase()}
-                      >
-                        <span className="admin-general-summary__icon admin-general-summary__icon--status" aria-hidden="true">
-                          <IconCheckCircle size={17} />
-                        </span>
-                        <span className="admin-general-summary__text">
-                          {summaryStatusLabel}
-                        </span>
-                      </li>
-                      <li className="admin-general-summary__item">
-                        <span className="admin-general-summary__icon" aria-hidden="true">
-                          <IconTarget size={17} />
-                        </span>
-                        <span className="admin-general-summary__text">
-                          {activeProblemsCount} situaciones activas
-                        </span>
-                      </li>
-                      <li className="admin-general-summary__item">
-                        <span className="admin-general-summary__icon" aria-hidden="true">
-                          <IconInfo size={17} />
-                        </span>
-                        <span className="admin-general-summary__text">
-                          {criticalProblemsCount > 0
-                            ? `${criticalProblemsCount} críticas pendientes`
-                            : 'Sin incidentes pendientes'}
-                        </span>
-                      </li>
-                    </ul>
                   </div>
-
-                  <div className="admin-ticket-section" data-tour="my-reports">
-                    <div className="admin-ticket-tab">
-                      <span className="admin-ticket-tab__icon" aria-hidden="true">
-                        <IconDocument size={16} />
-                      </span>
-                      <span className="admin-ticket-tab__title">Mis reportes</span>
-                    </div>
-                    <div
-                      className="admin-my-reports-stat"
-                      onClick={() => controller.openReportForm('INTERNAL')}
-                      role="button"
-                      tabIndex={0}
-                      title="Ver o registrar reportes"
+                  <div className="coordination-focus-banner__right">
+                    <span
+                      className={`coordination-focus-banner__health coordination-focus-banner__health--${selectedCoordination.status.toLowerCase()}`}
                     >
-                      <span className="admin-my-reports-stat__count">
-                        {controller.myReports.total}
-                      </span>
-                      <span className="admin-my-reports-stat__label">
-                        Reportes en el período
-                      </span>
-                      <span className="admin-my-reports-stat__chevron" aria-hidden="true">
-                        <IconChevronRight size={16} />
-                      </span>
-                    </div>
-
-                    <div style={{ display: 'none' }}>
-                      <MyReportsPanel
-                        myReports={controller.myReports}
-                        selectedProblemId={controller.selectedProblemId}
-                        onSelect={(problemId, coordinationCode) =>
-                          controller.openMyReport(
-                            problemId,
-                            coordinationCode as CoordinationId | null,
-                          )
-                        }
-                        onLoadMore={controller.loadMoreMyReports}
-                        labelByCode={rowLabelByCode}
-                        colorByCode={colorByCode}
-                      />
-                    </div>
+                      {selectedCoordination.status === 'ESTABLE'
+                        ? 'Estable'
+                        : selectedCoordination.status === 'ALERTA'
+                          ? 'Alerta'
+                          : 'Crítico'}
+                    </span>
                   </div>
                 </div>
-              </ShellRegion>
 
-              <ShellRegion
-                region="coordination-problems"
-                title="Problemas de la coordinación"
-                hint={
-                  selectedCoordination ? undefined : 'Seleccione una coordinación'
-                }
-                className={`operational-shell__region--coordination-problems operational-shell__region--admin-center${effectiveTicketRegionClass}`}
-                showTitle={false}
-                ticketTheme={effectiveTicketTheme}
-                ticketPanel="problems"
-                tourId="coordination-problems"
-              >
-                {selectedCoordination ? (
-                  <div className="coordination-problems-view">
-                    <div className="coordination-focus-banner" data-testid="coordination-focus-banner">
-                      <div className="coordination-focus-banner__left">
-                        <span
-                          className="coordination-focus-banner__dot"
-                          style={{ backgroundColor: colorByCode[selectedCoordination.code] || '#f5d485' }}
-                          aria-hidden="true"
-                        />
-                        <div>
-                          <span className="coordination-focus-banner__label">Coordinación Activa</span>
-                          <h3 className="coordination-focus-banner__title">
-                            {labelByCode[selectedCoordination.code] ?? selectedCoordination.name}
-                          </h3>
-                        </div>
-                      </div>
-                      <div className="coordination-focus-banner__right">
-                        <span
-                          className={`coordination-focus-banner__health coordination-focus-banner__health--${selectedCoordination.status.toLowerCase()}`}
-                        >
-                          {selectedCoordination.status === 'ESTABLE'
-                            ? 'Estable'
-                            : selectedCoordination.status === 'ALERTA'
-                              ? 'Alerta'
-                              : 'Crítico'}
-                        </span>
-                        <button
-                          type="button"
-                          className="coordination-focus-banner__clear-btn"
-                          onClick={() => controller.clearCoordination()}
-                          title="Volver a la vista general de todas las coordinaciones"
-                        >
-                          <IconSwap size={15} />
-                          <span>Cambiar coordinación</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    <CoordinationProblemList
-                      coordination={selectedCoordination}
-                      identity={resolveCoordinationVisualIdentity(
-                        selectedCoordination,
-                      )}
-                      productLabel={labelByCode[selectedCoordination.code]}
-                      level1={controller.level1}
-                      selectedProblemId={controller.selectedProblemId}
-                      onProblemSelect={controller.selectProblem}
-                      onRetry={controller.retryCoordinationProblems}
-                      labelByCode={rowLabelByCode}
-                      colorByCode={colorByCode}
-                    />
-                  </div>
-                ) : (
-                  <div className="coordination-empty-prompt" data-testid="coordination-empty-prompt">
-                    <div className="coordination-empty-prompt__icon" aria-hidden="true">
-                      <IconLayers size={34} />
-                    </div>
-                    <h3 className="coordination-empty-prompt__title">Supervisión General de Coordinaciones</h3>
-                    <p className="coordination-empty-prompt__text">
-                      Seleccione una de las cartas en el escenario inferior para inspeccionar el estado de salud, incidentes activos y dependencias de esa coordinación.
-                    </p>
-                  </div>
-                )}
-              </ShellRegion>
-            </>
-          ) : (
-            <>
-              <ShellRegion
-                region="character"
-                title="Estado del personaje"
-                className={`operational-shell__region--character${effectiveTicketRegionClass}`}
-                showTitle={false}
-                ticketTheme={effectiveTicketTheme}
-                ticketPanel="character"
-              >
-                {character}
-              </ShellRegion>
-
-              <ShellRegion
-                region="my-reports"
-                title="Mis reportes"
-                className={`operational-shell__region--my-reports${effectiveTicketRegionClass}`}
-                showTitle={false}
-                ticketTheme={effectiveTicketTheme}
-                ticketPanel="reports"
-                tourId="my-reports"
-              >
-                <MyReportsPanel
-                  myReports={controller.myReports}
+                <CoordinationProblemList
+                  coordination={selectedCoordination}
+                  identity={resolveCoordinationVisualIdentity(
+                    selectedCoordination,
+                  )}
+                  productLabel={labelByCode[selectedCoordination.code]}
+                  level1={controller.level1}
                   selectedProblemId={controller.selectedProblemId}
-                  onSelect={(problemId, coordinationCode) =>
-                    controller.openMyReport(
-                      problemId,
-                      coordinationCode as CoordinationId | null,
-                    )
-                  }
-                  onLoadMore={controller.loadMoreMyReports}
+                  onProblemSelect={controller.selectProblem}
+                  onRetry={controller.retryCoordinationProblems}
                   labelByCode={rowLabelByCode}
                   colorByCode={colorByCode}
                 />
-              </ShellRegion>
-
-              <ShellRegion
-                region="coordination-problems"
-                title="Problemas de la coordinación"
-                hint={
-                  selectedCoordination ? undefined : 'Seleccione una coordinación'
-                }
-                className={`operational-shell__region--coordination-problems${effectiveTicketRegionClass}`}
-                showTitle={false}
-                ticketTheme={effectiveTicketTheme}
-                ticketPanel="problems"
-                tourId="coordination-problems"
-              >
-                {selectedCoordination ? (
-                  <div className="coordination-problems-view">
-                    <div className="coordination-focus-banner" data-testid="coordination-focus-banner">
-                      <div className="coordination-focus-banner__left">
-                        <span
-                          className="coordination-focus-banner__dot"
-                          style={{ backgroundColor: colorByCode[selectedCoordination.code] || '#f5d485' }}
-                          aria-hidden="true"
-                        />
-                        <div>
-                          <span className="coordination-focus-banner__label">Coordinación Activa</span>
-                          <h3 className="coordination-focus-banner__title">
-                            {labelByCode[selectedCoordination.code] ?? selectedCoordination.name}
-                          </h3>
-                        </div>
-                      </div>
-                      <div className="coordination-focus-banner__right">
-                        <span
-                          className={`coordination-focus-banner__health coordination-focus-banner__health--${selectedCoordination.status.toLowerCase()}`}
-                        >
-                          {selectedCoordination.status === 'ESTABLE'
-                            ? 'Estable'
-                            : selectedCoordination.status === 'ALERTA'
-                              ? 'Alerta'
-                              : 'Crítico'}
-                        </span>
-                        <button
-                          type="button"
-                          className="coordination-focus-banner__clear-btn"
-                          onClick={() => controller.clearCoordination()}
-                          title="Volver a la vista general de todas las coordinaciones"
-                        >
-                          <IconSwap size={15} />
-                          <span>Cambiar coordinación</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    <CoordinationProblemList
-                      coordination={selectedCoordination}
-                      identity={resolveCoordinationVisualIdentity(
-                        selectedCoordination,
-                      )}
-                      productLabel={labelByCode[selectedCoordination.code]}
-                      level1={controller.level1}
-                      selectedProblemId={controller.selectedProblemId}
-                      onProblemSelect={controller.selectProblem}
-                      onRetry={controller.retryCoordinationProblems}
-                      labelByCode={rowLabelByCode}
-                      colorByCode={colorByCode}
-                    />
-                  </div>
-                ) : (
-                  <div className="coordination-empty-prompt" data-testid="coordination-empty-prompt">
-                    <div className="coordination-empty-prompt__icon" aria-hidden="true">
-                      <IconLayers size={34} />
-                    </div>
-                    <h3 className="coordination-empty-prompt__title">Supervisión General de Coordinaciones</h3>
-                    <p className="coordination-empty-prompt__text">
-                      Seleccione una de las cartas en el escenario inferior para inspeccionar el estado de salud, incidentes activos y dependencias de esa coordinación.
-                    </p>
-                  </div>
-                )}
-              </ShellRegion>
-            </>
-          )}
+              </div>
+            ) : (
+              <div className="coordination-empty-prompt" data-testid="coordination-empty-prompt">
+                <div className="coordination-empty-prompt__icon" aria-hidden="true">
+                  <IconLayers size={34} />
+                </div>
+                <h3 className="coordination-empty-prompt__title">Supervisión General de Coordinaciones</h3>
+                <p className="coordination-empty-prompt__text">
+                  Seleccione una de las cartas en el escenario inferior para inspeccionar el estado de salud, incidentes activos y dependencias de esa coordinación.
+                </p>
+              </div>
+            )}
+          </ShellRegion>
         </div>
 
         <div
@@ -577,12 +402,8 @@ export function DeckOperationalLayout({
         >
           <OperationalCardExperience
             controller={controller}
-            tableGeometry={
-              experience === 'admin' ? ADMIN_TABLE_GEOMETRY : undefined
-            }
-            deckHeader={
-              experience === 'admin' ? renderAdminDeckRibbon : undefined
-            }
+            tableGeometry={CIRCUS_TABLE_GEOMETRY}
+            deckHeader={renderCircusDeckRibbon}
           />
         </div>
       </div>
@@ -596,15 +417,48 @@ export function DeckOperationalLayout({
         ticketPanel="action"
         tourId="action-panel"
       >
-        {experience === 'admin' && adminView ? (
+        {adminView === 'my-reports' ? (
           <div
             className="action-panel"
             data-testid="action-panel"
             data-surface="action-panel"
-            data-mode={`admin-${adminView}`}
+            data-mode="admin-my-reports"
+          >
+            <section className="admin-insight admin-insight--my-reports" data-view="my-reports">
+              <InsightHeader
+                icon={<IconDocument size={22} />}
+                eyebrow="Mis reportes · consulta"
+                title="Mis reportes"
+                subtitle="Lo que has reportado en cualquier coordinación, con su estado actual."
+                onBack={() => setAdminView(null)}
+              />
+              <MyReportsPanel
+                myReports={controller.myReports}
+                selectedProblemId={controller.selectedProblemId}
+                onSelect={(problemId, coordinationCode) => {
+                  // «Volver» desde el expediente regresa a esta lista.
+                  returnViewRef.current = 'my-reports'
+                  setAdminView(null)
+                  controller.openMyReport(
+                    problemId,
+                    coordinationCode as CoordinationId | null,
+                  )
+                }}
+                onLoadMore={controller.loadMoreMyReports}
+                labelByCode={rowLabelByCode}
+                colorByCode={colorByCode}
+              />
+            </section>
+          </div>
+        ) : hasInsightViews && insightView ? (
+          <div
+            className="action-panel"
+            data-testid="action-panel"
+            data-surface="action-panel"
+            data-mode={`admin-${insightView}`}
           >
             <AdminInsightPanel
-              view={adminView}
+              view={insightView}
               onBack={() => setAdminView(null)}
               onOpenSituation={(situation) => {
                 returnViewRef.current = adminView
@@ -628,7 +482,6 @@ export function DeckOperationalLayout({
                   setAdminView(null)
                   controller.selectProblem(problemId)
                 },
-                onClearCoordination: controller.clearCoordination,
                 onSelectCoordination: (code) =>
                   controller.selectCoordination(code as CoordinationId),
                 onAwaitingCardChange: setKpiAwaitingCard,
@@ -636,9 +489,18 @@ export function DeckOperationalLayout({
             />
           </div>
         ) : (
-          adminActionPanel
+          restingActionPanel
         )}
       </ShellRegion>
+
+      {reportOpen ? (
+        <ReportSituationModal
+          destination={reportDestination}
+          onClose={() => controller.closeReportForm()}
+        >
+          {adminActionPanel}
+        </ReportSituationModal>
+      ) : null}
 
       <ShellBottom />
     </div>

@@ -283,13 +283,6 @@
   opacity: 1;
 }
 
-.novex-room--reference .room-city-image,
-.novex-room--reference .command-center-floor,
-.novex-room--reference .observation-window-glass,
-.novex-room--reference .observation-window-frame {
-  display: none;
-}
-
 /* Paleta compartida con OPERATIONAL_ROOM_VISUAL: sky, teal, amber y red. */
 .novex-room[data-environment-status='pending'] {
   --window-status-reflection-rgb: 125 211 252;
@@ -309,413 +302,6 @@
 .novex-room[data-environment-status='critical'] {
   --window-status-reflection-rgb: 248 113 113;
   --window-status-reflection-strength: 0.4;
-}
-
-/* Ciudad principal: el fondo CSS del contenedor permanece detrás como fallback. */
-.room-city-image {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  user-select: none;
-  object-fit: var(--room-city-fit, cover);
-  object-position: var(--room-city-position, center center);
-  opacity: 0;
-  transform: scale(var(--room-city-scale, 1));
-  transform-origin: center center;
-  transition: opacity 500ms ease-out;
-  will-change: opacity;
-}
-
-.room-city-image[data-active='true'] {
-  opacity: var(--room-city-opacity, 1);
-}
-
-/* Suelo del centro de comando: superficie neutra delante de la ciudad. */
-.command-center-floor {
-  inset-inline: 0;
-  bottom: 0;
-  height: calc(
-    var(--command-floor-height) + var(--command-floor-back-offset)
-  );
-  user-select: none;
-}
-
-.command-center-floor__surface {
-  position: absolute;
-  inset: var(--command-floor-back-offset) 0 0;
-  clip-path: polygon(4% 0, 96% 0, 100% 100%, 0 100%);
-  background:
-    radial-gradient(
-      ellipse 72% 48% at 50% 115%,
-      rgb(214 229 234 / var(--command-floor-reflection-opacity)) 0%,
-      transparent 68%
-    ),
-    linear-gradient(
-      to bottom,
-      var(--command-floor-shadow-tone) 0%,
-      var(--command-floor-back-tone) 14%,
-      var(--command-floor-mid-tone) 54%,
-      var(--command-floor-front-tone) 100%
-    );
-}
-
-/* Vidrio limpio: limitado a la apertura, sin blur ni filtros de fondo. */
-.observation-window-glass {
-  --window-glass-base-opacity: 0.035;
-  --window-glass-reflection-opacity: 0.52;
-  --window-glass-seam-opacity: 0.62;
-  --window-glass-top-reflection-opacity: 0.055;
-  --window-glass-status-influence: 0.012;
-  --glass-pane-left-opacity: 0.014;
-  --glass-pane-center-opacity: 0.006;
-  --glass-pane-right-opacity: 0.018;
-
-  top: calc(var(--window-top-height) + var(--window-beam-depth));
-  right: calc(var(--window-column-width) - var(--window-column-outset));
-  bottom: var(--window-bottom-height);
-  left: calc(var(--window-column-width) - var(--window-column-outset));
-  overflow: hidden;
-  user-select: none;
-  background:
-    linear-gradient(
-      to bottom,
-      rgb(203 224 232 / var(--window-glass-base-opacity)) 0%,
-      rgb(
-          var(--window-status-reflection-rgb) /
-            var(--window-glass-status-influence)
-        )
-        34%,
-      rgb(112 151 166 / 0.008) 52%,
-      transparent 74%
-    );
-  box-shadow:
-    inset 0 1px 0
-      rgb(241 248 250 / var(--window-glass-top-reflection-opacity)),
-    inset 0 18px 32px rgb(190 220 230 / 0.022);
-}
-
-.observation-window-glass__pane {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 33.333%;
-  pointer-events: none;
-  background: linear-gradient(
-    to bottom,
-    rgb(210 229 235 / 0.72),
-    rgb(154 185 196 / 0.22) 42%,
-    transparent 76%
-  );
-}
-
-.observation-window-glass__pane--left {
-  left: 0;
-  opacity: var(--glass-pane-left-opacity);
-}
-
-.observation-window-glass__pane--center {
-  left: 33.333%;
-  opacity: var(--glass-pane-center-opacity);
-}
-
-.observation-window-glass__pane--right {
-  right: 0;
-  opacity: var(--glass-pane-right-opacity);
-}
-
-/* Dos juntas ópticas, no perfiles metálicos. */
-.observation-window-glass::before,
-.observation-window-glass::after {
-  content: '';
-  position: absolute;
-  z-index: 2;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  pointer-events: none;
-  opacity: var(--window-glass-seam-opacity);
-  background: linear-gradient(
-    to bottom,
-    rgb(220 235 240 / 0.08),
-    rgb(220 235 240 / 0.025) 40%,
-    rgb(10 20 25 / 0.08)
-  );
-  box-shadow:
-    1px 0 0 rgb(255 255 255 / 0.02),
-    -1px 0 3px rgb(0 0 0 / 0.05);
-}
-
-.observation-window-glass::before {
-  left: 33.333%;
-}
-
-.observation-window-glass::after {
-  left: 66.666%;
-}
-
-.observation-window-glass__reflection {
-  position: absolute;
-  z-index: 1;
-  inset: -20%;
-  pointer-events: none;
-  opacity: var(--window-glass-reflection-opacity);
-  background: linear-gradient(
-    112deg,
-    transparent 30%,
-    rgb(255 255 255 / 0.018) 40%,
-    rgb(255 255 255 / 0.052) 46%,
-    rgb(255 255 255 / 0.014) 52%,
-    transparent 64%
-  );
-  transform: translateX(-12%);
-}
-
-/* Ventanal de observación: arquitectura delante de la ciudad, no un piso. */
-.observation-window-frame {
-  /*
-   * Iteración 1: width clamp(2.5rem, 4.25vw, 5.5rem);
-   * outset clamp(0.75rem, 1.15vw, 1.5rem).
-   * Ahora width representa el ancho total y outset la porción fuera de cuadro.
-   */
-  --window-metal-edge: rgba(203, 213, 225, 0.24);
-  --window-inner-shadow: rgba(0, 0, 0, 0.62);
-
-  overflow: hidden;
-  user-select: none;
-}
-
-.observation-window-frame__top,
-.observation-window-frame__left,
-.observation-window-frame__right,
-.observation-window-frame__bottom {
-  position: absolute;
-  pointer-events: none;
-}
-
-.observation-window-frame__top {
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--window-top-height);
-  z-index: 2;
-  background:
-    linear-gradient(
-      90deg,
-      rgba(4, 7, 10, 0.98) 0%,
-      rgba(13, 19, 23, 0.96) 11%,
-      transparent 22%,
-      transparent 78%,
-      rgba(13, 19, 23, 0.96) 89%,
-      rgba(4, 7, 10, 0.98) 100%
-    ),
-    linear-gradient(
-      to bottom,
-      rgba(8, 14, 18, 0.98),
-      rgba(20, 29, 34, 0.92)
-    );
-  box-shadow:
-    inset 0 1px 0 rgba(226, 232, 240, 0.045),
-    0 8px 18px -16px var(--window-inner-shadow);
-  transition:
-    background 500ms ease-out,
-    box-shadow 500ms ease-out,
-    border-color 500ms ease-out,
-    opacity 500ms ease-out;
-}
-
-/* Piezas de transición: unen viga y columnas sin herrajes decorativos. */
-.observation-window-frame__top::before {
-  content: '';
-  position: absolute;
-  right: 0;
-  bottom: calc(-1 * (var(--window-beam-depth) + 0.75rem));
-  left: 0;
-  height: calc(var(--window-beam-depth) + 0.75rem);
-  pointer-events: none;
-  background:
-    linear-gradient(
-      135deg,
-      transparent 0%,
-      transparent 39%,
-      var(--window-corner-reflection) 45%,
-      transparent 49%
-    )
-      left top / calc(var(--window-column-width) + 1rem) 100% no-repeat,
-    linear-gradient(
-      225deg,
-      transparent 0%,
-      transparent 39%,
-      var(--window-corner-reflection) 45%,
-      transparent 49%
-    )
-      right top / calc(var(--window-column-width) + 1rem) 100% no-repeat,
-    linear-gradient(
-      135deg,
-      rgba(8, 13, 16, 0.96) 0%,
-      rgba(18, 25, 29, 0.76) 46%,
-      transparent 48%
-    )
-      left top / calc(var(--window-column-width) + 1rem) 100% no-repeat,
-    linear-gradient(
-      225deg,
-      rgba(8, 13, 16, 0.96) 0%,
-      rgba(18, 25, 29, 0.76) 46%,
-      transparent 48%
-    )
-      right top / calc(var(--window-column-width) + 1rem) 100% no-repeat;
-  filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.18));
-  transition:
-    background 500ms ease-out,
-    filter 500ms ease-out,
-    opacity 500ms ease-out;
-}
-
-/* Cara inferior de la viga: espesor frío de 6–12px, no un techo. */
-.observation-window-frame__top::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  bottom: calc(-1 * var(--window-beam-depth));
-  left: 0;
-  height: var(--window-beam-depth);
-  pointer-events: none;
-  border-top: 1px solid rgba(226, 232, 240, 0.07);
-  border-bottom: 1px solid
-    color-mix(
-      in srgb,
-      var(--window-metal-edge) 82%,
-      var(--window-status-reflection-edge) 18%
-    );
-  background:
-    linear-gradient(
-      to bottom,
-      transparent 0%,
-      var(--window-status-reflection-soft) 62%,
-      var(--window-status-reflection-medium) 100%
-    ),
-    linear-gradient(
-      to bottom,
-      rgba(35, 45, 50, 0.96),
-      rgba(16, 23, 27, 0.92)
-    );
-  box-shadow:
-    0 7px 12px -9px rgba(0, 0, 0, 0.72),
-    inset 0 -2px 5px -3px var(--window-status-reflection-soft);
-  transition:
-    background 500ms ease-out,
-    box-shadow 500ms ease-out,
-    border-color 500ms ease-out,
-    opacity 500ms ease-out;
-}
-
-.observation-window-frame__left,
-.observation-window-frame__right {
-  top: 0;
-  bottom: calc(
-    var(--command-floor-height) + var(--command-floor-back-offset)
-  );
-  width: var(--window-column-width);
-  z-index: 1;
-  background:
-    linear-gradient(
-      90deg,
-      transparent 0%,
-      transparent 72%,
-      var(--window-status-reflection-soft) 88%,
-      var(--window-status-reflection-medium) 100%
-    ),
-    linear-gradient(
-      90deg,
-      rgba(3, 6, 8, 0.99) 0%,
-      rgba(5, 9, 12, 0.99) 24%,
-      rgba(14, 21, 25, 0.98) 25%,
-      rgba(25, 33, 37, 0.96) 72%,
-      rgba(42, 51, 55, 0.94) 91%,
-      var(--window-metal-edge) calc(100% - 1px),
-      rgba(9, 14, 17, 0.98) 100%
-    );
-  box-shadow:
-    inset -12px 0 20px -17px var(--window-inner-shadow),
-    inset -4px 0 7px -5px var(--window-status-reflection-soft),
-    inset -1px 0 0
-      color-mix(
-        in srgb,
-        var(--window-metal-edge) 82%,
-        var(--window-status-reflection-edge) 18%
-      );
-  transition:
-    background 500ms ease-out,
-    box-shadow 500ms ease-out,
-    border-color 500ms ease-out,
-    opacity 500ms ease-out;
-}
-
-.observation-window-frame__left {
-  left: calc(-1 * var(--window-column-outset));
-  clip-path: polygon(0 0, 100% 1%, 94% 100%, 0 100%);
-}
-
-.observation-window-frame__right {
-  right: calc(-1 * var(--window-column-outset));
-  clip-path: polygon(0 1%, 100% 0, 100% 100%, 6% 100%);
-  transform: scaleX(-1);
-}
-
-.observation-window-frame__bottom {
-  right: 0;
-  bottom: calc(
-    var(--command-floor-height) + var(--window-threshold-height)
-  );
-  left: 0;
-  height: var(--window-bottom-height);
-  z-index: 2;
-  border-top: 1px solid
-    color-mix(
-      in srgb,
-      var(--window-metal-edge) 88%,
-      var(--window-status-reflection-edge) 12%
-    );
-  background: linear-gradient(
-    to bottom,
-    rgb(43 53 58 / 0.99) 0%,
-    rgb(18 24 28) 48%,
-    rgb(7 11 14) 100%
-  );
-  box-shadow:
-    inset 0 1px 0 rgb(220 232 237 / 0.105),
-    inset 0 -1px 0 rgb(0 0 0 / 0.72);
-}
-
-.observation-window-frame__bottom::before {
-  content: '';
-  position: absolute;
-  top: 100%;
-  inset-inline: 0;
-  height: var(--window-threshold-height);
-  pointer-events: none;
-  background: linear-gradient(
-    to bottom,
-    rgb(86 97 102 / 0.4),
-    rgb(31 39 44 / 0.76)
-  );
-  box-shadow: inset 0 1px 0 rgb(215 226 231 / 0.055);
-}
-
-.observation-window-frame__bottom::after {
-  content: '';
-  position: absolute;
-  top: calc(100% + var(--window-threshold-height));
-  inset-inline: 0;
-  height: var(--window-bottom-shadow-depth);
-  pointer-events: none;
-  background: linear-gradient(
-    to bottom,
-    rgb(0 0 0 / var(--window-bottom-shadow-opacity)) 0%,
-    rgb(0 0 0 / calc(var(--window-bottom-shadow-opacity) * 0.4)) 42%,
-    transparent 100%
-  );
 }
 
 .crystal-material-layers {
@@ -1135,1162 +721,9 @@
   animation-name: novex-detail-refresh-update;
 }
 
-/* Volumen base: múltiples fuentes de luz (techo + piso + centro) */
-.room-atmosphere {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: var(--room-atmosphere-opacity, 0.08);
-  /* Guías técnicas de fondo (Fase 3) */
-  --tech-line-intensity: 0.18;
-  --tech-line-width: 1px;
-  --tech-line-fade: 38%;
-  background:
-    /* Piso — pool de luz bajo el monitor */
-    radial-gradient(
-      ellipse 72% 38% at 50% 92%,
-      var(--scene-glow, rgba(45, 212, 191, 0.14)) 0%,
-      transparent 58%
-    ),
-    /* Techo — lavado cenital frío */
-    radial-gradient(
-      ellipse 100% 55% at 50% -12%,
-      var(--scene-ceiling, rgba(186, 230, 253, 0.07)) 0%,
-      transparent 52%
-    ),
-    /* Centro — volumen habitado (no vacío negro) */
-    radial-gradient(
-      ellipse 90% 70% at 50% 42%,
-      rgba(26, 34, 48, 0.55) 0%,
-      transparent 70%
-    ),
-    linear-gradient(
-      180deg,
-      rgba(14, 18, 24, 0.2) 0%,
-      rgba(10, 14, 20, 0.45) 55%,
-      rgba(8, 10, 14, 0.7) 100%
-    );
-  transition: background 800ms ease, opacity 800ms ease;
-}
-
-/* Infraestructura de fondo — canales horizontales discretos (no Matrix) */
-.room-atmosphere::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  transition: background 800ms ease, mask-image 800ms ease;
-  background:
-    linear-gradient(
-      90deg,
-      transparent 0%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--tech-line-intensity, 0.18) * 100%),
-          transparent
-        )
-        6%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--tech-line-intensity, 0.18) * 100%),
-          transparent
-        )
-        94%,
-      transparent 100%
-    )
-      center 16% / 100% var(--tech-line-width, 1px) no-repeat,
-    linear-gradient(
-      90deg,
-      transparent 0%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--tech-line-intensity, 0.18) * 88%),
-          transparent
-        )
-        8%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--tech-line-intensity, 0.18) * 88%),
-          transparent
-        )
-        92%,
-      transparent 100%
-    )
-      center 26% / 100% var(--tech-line-width, 1px) no-repeat,
-    linear-gradient(
-      90deg,
-      transparent 0%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--tech-line-intensity, 0.18) * 92%),
-          transparent
-        )
-        5%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--tech-line-intensity, 0.18) * 92%),
-          transparent
-        )
-        95%,
-      transparent 100%
-    )
-      center 36% / 100% var(--tech-line-width, 1px) no-repeat,
-    linear-gradient(
-      90deg,
-      transparent 0%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--tech-line-intensity, 0.18) * 78%),
-          transparent
-        )
-        10%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--tech-line-intensity, 0.18) * 78%),
-          transparent
-        )
-        90%,
-      transparent 100%
-    )
-      center 46% / 100% var(--tech-line-width, 1px) no-repeat,
-    linear-gradient(
-      90deg,
-      transparent 0%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--tech-line-intensity, 0.18) * 85%),
-          transparent
-        )
-        7%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--tech-line-intensity, 0.18) * 85%),
-          transparent
-        )
-        93%,
-      transparent 100%
-    )
-      center 56% / 100% var(--tech-line-width, 1px) no-repeat,
-    linear-gradient(
-      90deg,
-      transparent 0%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--tech-line-intensity, 0.18) * 72%),
-          transparent
-        )
-        12%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--tech-line-intensity, 0.18) * 72%),
-          transparent
-        )
-        88%,
-      transparent 100%
-    )
-      center 66% / 100% var(--tech-line-width, 1px) no-repeat;
-  /* Laterales visibles; centro apagado detrás del monitor */
-  mask-image: linear-gradient(
-    90deg,
-    black 0%,
-    black calc(50% - var(--tech-line-fade, 38%)),
-    rgba(0, 0, 0, 0.32) calc(50% - 16%),
-    transparent calc(50% - 5%),
-    transparent calc(50% + 5%),
-    rgba(0, 0, 0, 0.32) calc(50% + 16%),
-    black calc(50% + var(--tech-line-fade, 38%)),
-    black 100%
-  );
-}
-
-/* --- Spotlights cenitales — conos desde el techo (referencia Organigrama) ------- */
-
-.room-ceiling-spotlights {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1; /* detrás de ranuras (::after), delante de atmósfera */
-  overflow: hidden;
-  --spotlight-intensity: 0.36;
-  --spotlight-source: 0.52;
-  --spotlight-blur: 40px;
-  --spotlight-half-angle: 9deg;
-  --spotlight-falloff: 88%;
-  opacity: 0.9;
-  filter: blur(var(--spotlight-blur, 40px));
-  transition: opacity 800ms ease, filter 800ms ease;
-  background:
-    /* Fuentes — tres puntos de luz en el techo */
-    radial-gradient(
-      circle at 50% 0%,
-      color-mix(
-          in srgb,
-          rgba(248, 250, 252, 0.96) calc(var(--spotlight-source, 0.52) * 100%),
-          transparent
-        )
-        0%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--spotlight-intensity, 0.36) * 95%),
-          transparent
-        )
-        0.5%,
-      transparent 1.2%
-    ),
-    radial-gradient(
-      circle at 33% 0%,
-      color-mix(
-          in srgb,
-          rgba(248, 250, 252, 0.92) calc(var(--spotlight-source, 0.52) * 88%),
-          transparent
-        )
-        0%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--spotlight-intensity, 0.36) * 80%),
-          transparent
-        )
-        0.45%,
-      transparent 1.05%
-    ),
-    radial-gradient(
-      circle at 67% 0%,
-      color-mix(
-          in srgb,
-          rgba(248, 250, 252, 0.92) calc(var(--spotlight-source, 0.52) * 88%),
-          transparent
-        )
-        0%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--spotlight-intensity, 0.36) * 80%),
-          transparent
-        )
-        0.45%,
-      transparent 1.05%
-    ),
-    /* Cono central — foco principal */
-    conic-gradient(
-      from 270deg at 50% 0%,
-      transparent calc(270deg - var(--spotlight-half-angle, 9deg)),
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--spotlight-intensity, 0.36) * 100%),
-          rgba(248, 250, 252, 0.07)
-        )
-        calc(270deg - var(--spotlight-half-angle, 9deg) * 0.35),
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--spotlight-intensity, 0.36) * 72%),
-          transparent
-        )
-        270deg,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--spotlight-intensity, 0.36) * 100%),
-          rgba(248, 250, 252, 0.07)
-        )
-        calc(270deg + var(--spotlight-half-angle, 9deg) * 0.35),
-      transparent calc(270deg + var(--spotlight-half-angle, 9deg))
-    ),
-    /* Cono izquierdo */
-    conic-gradient(
-      from 268deg at 33% 0%,
-      transparent calc(268deg - var(--spotlight-half-angle, 9deg)),
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--spotlight-intensity, 0.36) * 86%),
-          transparent
-        )
-        268deg,
-      transparent calc(268deg + var(--spotlight-half-angle, 9deg))
-    ),
-    /* Cono derecho */
-    conic-gradient(
-      from 272deg at 67% 0%,
-      transparent calc(272deg - var(--spotlight-half-angle, 9deg)),
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--spotlight-intensity, 0.36) * 86%),
-          transparent
-        )
-        272deg,
-      transparent calc(272deg + var(--spotlight-half-angle, 9deg))
-    );
-  mask-image: linear-gradient(
-    180deg,
-    black 0%,
-    black 58%,
-    rgba(0, 0, 0, 0.42) 76%,
-    transparent var(--spotlight-falloff, 88%)
-  );
-}
-
-/* Halo volumétrico amplio — cuerpo suave del cono (como Organigrama) */
-.room-ceiling-spotlights::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.58;
-  filter: blur(56px);
-  transition: opacity 800ms ease, background 800ms ease;
-  background:
-    conic-gradient(
-      from 270deg at 50% 0%,
-      transparent calc(270deg - 14deg),
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--spotlight-intensity, 0.36) * 48%),
-          rgba(226, 232, 240, 0.04)
-        )
-        270deg,
-      transparent calc(270deg + 14deg)
-    ),
-    conic-gradient(
-      from 266deg at 33% 0%,
-      transparent calc(266deg - 11deg),
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--spotlight-intensity, 0.36) * 38%),
-          transparent
-        )
-        266deg,
-      transparent calc(266deg + 11deg)
-    ),
-    conic-gradient(
-      from 274deg at 67% 0%,
-      transparent calc(274deg - 11deg),
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--spotlight-intensity, 0.36) * 38%),
-          transparent
-        )
-        274deg,
-      transparent calc(274deg + 11deg)
-    );
-  mask-image: linear-gradient(
-    180deg,
-    black 0%,
-    black 52%,
-    transparent 84%
-  );
-}
-
-/* --- Techo: ranuras (1.1) + wash (1.2) — haces en capa spotlight (Fase 4) ---- */
-
-.room-ceiling-lighting {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  /* Altura mínima = alcance de los haces hacia el borde superior del monitor */
-  height: clamp(18rem, 28vh, 22rem);
-  pointer-events: none;
-  z-index: 1; /* sobre el fondo base, detrás de la pantalla (z-index 20) */
-  /* Color de las ranuras — tiñe según estado vía --scene-accent-soft */
-  --ceiling-slot-color: color-mix(
-    in srgb,
-    var(--scene-accent-soft, rgba(45, 212, 191, 0.16)) 30%,
-    rgba(226, 232, 240, 0.38)
-  );
-  /* Núcleo frío de cada ranura — acento mínimo, no neón */
-  --ceiling-slot-core: color-mix(
-    in srgb,
-    var(--scene-accent, #2dd4bf) 14%,
-    rgba(248, 250, 252, 0.52)
-  );
-  /* Halo externo de cada ranura — más ancho, muy tenue */
-  --ceiling-slot-glow: color-mix(
-    in srgb,
-    var(--scene-accent-soft, rgba(45, 212, 191, 0.16)) 24%,
-    rgba(226, 232, 240, 0.2)
-  );
-  /* Sombra de junta — borde oscuro frío que incrusta la ranura en el techo */
-  --ceiling-slot-shadow: rgba(6, 10, 18, 0.92);
-  /* Intensidad global de las líneas (subir/bajar visibilidad aquí) */
-  --ceiling-slot-intensity: 0.62;
-  --ceiling-slot-core-strength: 0.68;
-  --ceiling-slot-glow-strength: 0.34;
-  --ceiling-slot-shadow-strength: 0.22;
-  --ceiling-slot-blur: 1.5px;
-  /* Caída difusa bajo las ranuras (Fase 1.2) */
-  --ceiling-wash-intensity: 0.24;
-  --ceiling-wash-height: 11rem;
-  --ceiling-wash-blur: 20px;
-  /* Haces descendentes desde ranuras (Fase 1.3) */
-  --ceiling-beam-intensity: 0.26;
-  --ceiling-beam-height: 18rem;
-  --ceiling-beam-blur: 28px;
-  opacity: 0.5;
-  transition:
-    background 800ms ease,
-    opacity 800ms ease;
-  background:
-    /* Plano del techo — sombra superior (sin blur, ancla las ranuras) */
-    linear-gradient(
-      180deg,
-      rgba(4, 6, 10, 0.34) 0%,
-      rgba(8, 10, 14, 0.11) 30%,
-      transparent 100%
-    ),
-    /* Lavado cenital mínimo — volumen base */
-    linear-gradient(
-      180deg,
-      rgba(226, 232, 240, 0.035) 0%,
-      color-mix(in srgb, var(--scene-ceiling, rgba(186, 230, 253, 0.07)) 48%, transparent) 20%,
-      transparent 86%
-    );
-}
-
-/* Wash difuso — complemento tenue bajo los spotlights */
-.room-ceiling-lighting::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 1;
-  filter: blur(var(--ceiling-wash-blur, 20px));
-  transition: background 800ms ease, filter 800ms ease;
-  background:
-    radial-gradient(
-      ellipse 40% var(--ceiling-wash-height, 11rem) at 50% 4%,
-      color-mix(
-          in srgb,
-          color-mix(
-            in srgb,
-            var(--scene-accent-soft, rgba(45, 212, 191, 0.16)) 28%,
-            rgba(241, 245, 249, 0.07)
-          )
-            calc(var(--ceiling-wash-intensity, 0.24) * 100%),
-          transparent
-        )
-        0%,
-      color-mix(
-          in srgb,
-          var(--scene-ceiling, rgba(186, 230, 253, 0.07))
-            calc(var(--ceiling-wash-intensity, 0.24) * 100%),
-          transparent
-        )
-        38%,
-      transparent 68%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(
-          in srgb,
-          color-mix(
-            in srgb,
-            var(--scene-accent-soft, rgba(45, 212, 191, 0.16)) 14%,
-            rgba(226, 232, 240, 0.04)
-          )
-            calc(var(--ceiling-wash-intensity, 0.24) * 100%),
-          transparent
-        )
-        0%,
-      transparent min(var(--ceiling-wash-height, 11rem), 100%)
-    );
-  mask-image: linear-gradient(
-    180deg,
-    black 0%,
-    black 56%,
-    rgba(0, 0, 0, 0.5) 72%,
-    transparent 90%
-  );
-}
-
-/* Ranuras LED empotradas — núcleo + junta oscura + halo por luminaria */
-.room-ceiling-lighting::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: var(--ceiling-slot-intensity, 0.62);
-  filter: blur(var(--ceiling-slot-blur, 1.5px));
-  transition: background 800ms ease, opacity 800ms ease;
-  background:
-    /* 1 — núcleo principal (2px, centro más claro) */
-    linear-gradient(
-      93deg,
-      transparent 0%,
-      transparent 40%,
-      color-mix(in srgb, var(--ceiling-slot-color) 44%, transparent) 46%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-core)
-            calc(var(--ceiling-slot-core-strength, 0.68) * 100%),
-          rgba(255, 255, 255, calc(var(--ceiling-slot-core-strength, 0.68) * 16%))
-        )
-        50%,
-      color-mix(in srgb, var(--ceiling-slot-color) 44%, transparent) 54%,
-      transparent 60%,
-      transparent 100%
-    )
-      center 13% / min(68vw, 920px) 2px no-repeat,
-    /* 1 — sombra de junta superior (1px, incrustación) */
-    linear-gradient(
-      93deg,
-      transparent 0%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-shadow, rgba(6, 10, 18, 0.92))
-            calc(var(--ceiling-slot-shadow-strength, 0.22) * 100%),
-          transparent
-        )
-        16%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-shadow, rgba(6, 10, 18, 0.92))
-            calc(var(--ceiling-slot-shadow-strength, 0.22) * 100%),
-          transparent
-        )
-        84%,
-      transparent 100%
-    )
-      center calc(13% - 1px) / min(68vw, 920px) 1px no-repeat,
-    /* 1 — halo externo (5px) */
-    linear-gradient(
-      93deg,
-      transparent 0%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-glow)
-            calc(var(--ceiling-slot-glow-strength, 0.34) * 100%),
-          transparent
-        )
-        16%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-glow)
-            calc(var(--ceiling-slot-glow-strength, 0.34) * 100%),
-          transparent
-        )
-        84%,
-      transparent 100%
-    )
-      center 13% / min(68vw, 920px) 5px no-repeat,
-    /* 2 — núcleo corta central-alta (2px) */
-    linear-gradient(
-      87deg,
-      transparent 0%,
-      transparent 42%,
-      color-mix(in srgb, var(--ceiling-slot-color) 38%, transparent) 47%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-core)
-            calc(var(--ceiling-slot-core-strength, 0.68) * 100%),
-          rgba(255, 255, 255, calc(var(--ceiling-slot-core-strength, 0.68) * 14%))
-        )
-        50%,
-      color-mix(in srgb, var(--ceiling-slot-color) 38%, transparent) 53%,
-      transparent 58%,
-      transparent 100%
-    )
-      center 24% / min(44vw, 580px) 2px no-repeat,
-    /* 2 — sombra de junta superior (1px) */
-    linear-gradient(
-      87deg,
-      transparent 0%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-shadow, rgba(6, 10, 18, 0.92))
-            calc(var(--ceiling-slot-shadow-strength, 0.22) * 92%),
-          transparent
-        )
-        20%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-shadow, rgba(6, 10, 18, 0.92))
-            calc(var(--ceiling-slot-shadow-strength, 0.22) * 92%),
-          transparent
-        )
-        80%,
-      transparent 100%
-    )
-      center calc(24% - 1px) / min(44vw, 580px) 1px no-repeat,
-    /* 2 — halo externo (4px) */
-    linear-gradient(
-      87deg,
-      transparent 0%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-glow)
-            calc(var(--ceiling-slot-glow-strength, 0.34) * 85%),
-          transparent
-        )
-        20%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-glow)
-            calc(var(--ceiling-slot-glow-strength, 0.34) * 85%),
-          transparent
-        )
-        80%,
-      transparent 100%
-    )
-      center 24% / min(44vw, 580px) 4px no-repeat,
-    /* 3 — núcleo larga superior (2px) */
-    linear-gradient(
-      90deg,
-      transparent 0%,
-      transparent 38%,
-      color-mix(in srgb, var(--ceiling-slot-color) 48%, transparent) 44%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-core)
-            calc(var(--ceiling-slot-core-strength, 0.68) * 100%),
-          rgba(255, 255, 255, calc(var(--ceiling-slot-core-strength, 0.68) * 16%))
-        )
-        50%,
-      color-mix(in srgb, var(--ceiling-slot-color) 48%, transparent) 56%,
-      transparent 62%,
-      transparent 100%
-    )
-      center 8% / min(76vw, 1040px) 2px no-repeat,
-    /* 3 — sombra de junta superior (1px) */
-    linear-gradient(
-      90deg,
-      transparent 8%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-shadow, rgba(6, 10, 18, 0.92))
-            calc(var(--ceiling-slot-shadow-strength, 0.22) * 100%),
-          transparent
-        )
-        14%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-shadow, rgba(6, 10, 18, 0.92))
-            calc(var(--ceiling-slot-shadow-strength, 0.22) * 100%),
-          transparent
-        )
-        86%,
-      transparent 92%
-    )
-      center calc(8% - 1px) / min(76vw, 1040px) 1px no-repeat,
-    /* 3 — halo externo (5px) */
-    linear-gradient(
-      90deg,
-      transparent 8%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-glow)
-            calc(var(--ceiling-slot-glow-strength, 0.34) * 100%),
-          transparent
-        )
-        14%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-glow)
-            calc(var(--ceiling-slot-glow-strength, 0.34) * 100%),
-          transparent
-        )
-        86%,
-      transparent 92%
-    )
-      center 8% / min(76vw, 1040px) 5px no-repeat,
-    /* 4 — núcleo lateral izquierda (1px) */
-    linear-gradient(
-      96deg,
-      transparent 0%,
-      transparent 44%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-core)
-            calc(var(--ceiling-slot-core-strength, 0.68) * 92%),
-          rgba(255, 255, 255, calc(var(--ceiling-slot-core-strength, 0.68) * 12%))
-        )
-        50%,
-      transparent 56%,
-      transparent 100%
-    )
-      31% 33% / min(26vw, 360px) 1px no-repeat,
-    /* 4 — sombra de junta superior (1px) */
-    linear-gradient(
-      96deg,
-      transparent 0%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-shadow, rgba(6, 10, 18, 0.92))
-            calc(var(--ceiling-slot-shadow-strength, 0.22) * 82%),
-          transparent
-        )
-        24%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-shadow, rgba(6, 10, 18, 0.92))
-            calc(var(--ceiling-slot-shadow-strength, 0.22) * 82%),
-          transparent
-        )
-        76%,
-      transparent 100%
-    )
-      31% calc(33% - 1px) / min(26vw, 360px) 1px no-repeat,
-    /* 4 — halo externo (4px) */
-    linear-gradient(
-      96deg,
-      transparent 0%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-glow)
-            calc(var(--ceiling-slot-glow-strength, 0.34) * 72%),
-          transparent
-        )
-        24%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-glow)
-            calc(var(--ceiling-slot-glow-strength, 0.34) * 72%),
-          transparent
-        )
-        76%,
-      transparent 100%
-    )
-      31% 33% / min(26vw, 360px) 4px no-repeat,
-    /* 5 — núcleo lateral derecha (1px) */
-    linear-gradient(
-      84deg,
-      transparent 0%,
-      transparent 44%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-core)
-            calc(var(--ceiling-slot-core-strength, 0.68) * 92%),
-          rgba(255, 255, 255, calc(var(--ceiling-slot-core-strength, 0.68) * 12%))
-        )
-        50%,
-      transparent 56%,
-      transparent 100%
-    )
-      69% 33% / min(26vw, 360px) 1px no-repeat,
-    /* 5 — sombra de junta superior (1px) */
-    linear-gradient(
-      84deg,
-      transparent 0%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-shadow, rgba(6, 10, 18, 0.92))
-            calc(var(--ceiling-slot-shadow-strength, 0.22) * 82%),
-          transparent
-        )
-        24%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-shadow, rgba(6, 10, 18, 0.92))
-            calc(var(--ceiling-slot-shadow-strength, 0.22) * 82%),
-          transparent
-        )
-        76%,
-      transparent 100%
-    )
-      69% calc(33% - 1px) / min(26vw, 360px) 1px no-repeat,
-    /* 5 — halo externo (4px) */
-    linear-gradient(
-      84deg,
-      transparent 0%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-glow)
-            calc(var(--ceiling-slot-glow-strength, 0.34) * 72%),
-          transparent
-        )
-        24%,
-      color-mix(
-          in srgb,
-          var(--ceiling-slot-glow)
-            calc(var(--ceiling-slot-glow-strength, 0.34) * 72%),
-          transparent
-        )
-        76%,
-      transparent 100%
-    )
-      69% 33% / min(26vw, 360px) 4px no-repeat;
-}
-
-.scene--stable .room-ceiling-lighting {
-  opacity: 0.68;
-}
-
-.scene--attention .room-ceiling-lighting {
-  opacity: 0.62;
-}
-
-.scene--critical .room-ceiling-lighting {
-  opacity: 0.58;
-}
-
-.scene--stable .room-ceiling-spotlights {
-  opacity: 0.92;
-}
-
-.scene--attention .room-ceiling-spotlights {
-  opacity: 0.88;
-}
-
-.scene--critical .room-ceiling-spotlights {
-  opacity: 0.84;
-}
-
-/* --- Paredes laterales: profundidad de sala (Fase 2 — halo lateral) ------------ */
-
-.room-side-walls {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1; /* detrás del monitor (z-index 20) */
-  overflow: hidden;
-  /* Halo lateral — profundidad arquitectónica reactiva al estado */
-  --wall-halo-intensity: 0.24;
-  --wall-halo-spread: 34%;
-  /* Plano arquitectónico — arista interna + sombra de volumen (Fase 2.1) */
-  --wall-edge-intensity: 0.38;
-  --wall-edge-shadow: 0.46;
-  --wall-edge-angle: 8deg;
-  --wall-edge-secondary-offset: 35px;
-  opacity: 0.72;
-  transition: opacity 800ms ease, background 800ms ease;
-  background:
-    /* Halo izquierdo — bloom exterior difuso */
-    radial-gradient(
-      ellipse calc(var(--wall-halo-spread, 34%) * 1.15) 92% at -6% 42%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--wall-halo-intensity, 0.24) * 52%),
-          transparent
-        )
-        0%,
-      transparent 76%
-    ),
-    /* Halo izquierdo — núcleo lateral */
-    radial-gradient(
-      ellipse var(--wall-halo-spread, 34%) 88% at 0% 42%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--wall-halo-intensity, 0.24) * 100%),
-          transparent
-        )
-        0%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--wall-halo-intensity, 0.24) * 42%),
-          transparent
-        )
-        32%,
-      transparent 58%
-    ),
-    /* Halo derecho — bloom exterior difuso */
-    radial-gradient(
-      ellipse calc(var(--wall-halo-spread, 34%) * 1.15) 92% at 106% 42%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--wall-halo-intensity, 0.24) * 52%),
-          transparent
-        )
-        0%,
-      transparent 76%
-    ),
-    /* Halo derecho — núcleo lateral */
-    radial-gradient(
-      ellipse var(--wall-halo-spread, 34%) 88% at 100% 42%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--wall-halo-intensity, 0.24) * 100%),
-          transparent
-        )
-        0%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--wall-halo-intensity, 0.24) * 42%),
-          transparent
-        )
-        32%,
-      transparent 58%
-    );
-}
-
-/* Pared izquierda — volumen + perspectiva + arista interna + LED */
-.room-side-walls::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 10vh;
-  bottom: 6vh;
-  width: clamp(260px, 26vw, 620px);
-  pointer-events: none;
-  background:
-    /* LED media altura — detrás del monitor */
-    linear-gradient(
-      180deg,
-      transparent calc(42% - 1px),
-      color-mix(in srgb, var(--scene-accent, #2dd4bf) 42%, transparent) 42%,
-      transparent calc(42% + 1px)
-    ),
-    /* LED baja — cerca del piso */
-    linear-gradient(
-      180deg,
-      transparent calc(78% - 1px),
-      color-mix(in srgb, var(--scene-accent, #2dd4bf) 36%, transparent) 78%,
-      transparent calc(78% + 1px)
-    ),
-    /* Arista interna — borde hacia el monitor (1px, inclinada) */
-    linear-gradient(
-      calc(90deg + var(--wall-edge-angle, 8deg)),
-      transparent 0%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--wall-edge-intensity, 0.38) * 100%),
-          transparent
-        )
-        50%,
-      transparent 100%
-    )
-      calc(100% - 9%) 0 / 1px 100% no-repeat,
-    /* Arista secundaria — panel paralelo hacia el exterior (1px) */
-    linear-gradient(
-      calc(90deg + var(--wall-edge-angle, 8deg)),
-      transparent 0%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--wall-edge-intensity, 0.38) * 55%),
-          transparent
-        )
-        50%,
-      transparent 100%
-    )
-      calc(100% - 9% - var(--wall-edge-secondary-offset, 35px)) 0 / 1px 100% no-repeat,
-    /* Glow bajo — conecta pared con plataforma */
-    radial-gradient(
-      ellipse 70% 42% at 8% 92%,
-      color-mix(in srgb, var(--scene-accent, #2dd4bf) 28%, transparent) 0%,
-      transparent 68%
-    ),
-    /* Plano diagonal — pared que se aleja hacia el fondo */
-    linear-gradient(
-      108deg,
-      rgba(5, 7, 11, 0.72) 0%,
-      rgba(8, 11, 16, 0.42) 22%,
-      color-mix(in srgb, var(--scene-accent-soft, rgba(45, 212, 191, 0.16)) 18%, transparent) 44%,
-      transparent 72%
-    ),
-    /* Volumen horizontal — borde exterior → interior (centro oscuro) */
-    linear-gradient(
-      90deg,
-      rgba(2, 4, 8, calc(var(--wall-edge-shadow, 0.46) * 0.92)) 0%,
-      rgba(5, 8, 12, calc(var(--wall-edge-shadow, 0.46) * 0.62)) 10%,
-      rgba(8, 11, 16, calc(var(--wall-edge-shadow, 0.46) * 0.34)) 22%,
-      rgba(10, 14, 20, 0.22) 36%,
-      transparent 68%
-    ),
-    /* Sombra de junta — borde exterior pegado al muro */
-    linear-gradient(
-      90deg,
-      rgba(2, 4, 8, calc(var(--wall-edge-shadow, 0.46) * 0.88)) 0%,
-      rgba(4, 6, 10, calc(var(--wall-edge-shadow, 0.46) * 0.48)) 6%,
-      transparent 16%
-    )
-      0 0 / 2px 100% no-repeat;
-  opacity: 0.92;
-  transition: background 800ms ease, opacity 800ms ease;
-}
-
-/* Pared derecha — espejo de la izquierda */
-.room-side-walls::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 10vh;
-  bottom: 6vh;
-  width: clamp(260px, 26vw, 620px);
-  pointer-events: none;
-  background:
-    linear-gradient(
-      180deg,
-      transparent calc(42% - 1px),
-      color-mix(in srgb, var(--scene-accent, #2dd4bf) 42%, transparent) 42%,
-      transparent calc(42% + 1px)
-    ),
-    linear-gradient(
-      180deg,
-      transparent calc(78% - 1px),
-      color-mix(in srgb, var(--scene-accent, #2dd4bf) 36%, transparent) 78%,
-      transparent calc(78% + 1px)
-    ),
-    /* Arista interna — borde hacia el monitor (1px, inclinada) */
-    linear-gradient(
-      calc(90deg - var(--wall-edge-angle, 8deg)),
-      transparent 0%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--wall-edge-intensity, 0.38) * 100%),
-          transparent
-        )
-        50%,
-      transparent 100%
-    )
-      9% 0 / 1px 100% no-repeat,
-    /* Arista secundaria — panel paralelo hacia el exterior (1px) */
-    linear-gradient(
-      calc(90deg - var(--wall-edge-angle, 8deg)),
-      transparent 0%,
-      color-mix(
-          in srgb,
-          var(--scene-accent-soft, rgba(45, 212, 191, 0.16))
-            calc(var(--wall-edge-intensity, 0.38) * 55%),
-          transparent
-        )
-        50%,
-      transparent 100%
-    )
-      calc(9% + var(--wall-edge-secondary-offset, 35px)) 0 / 1px 100% no-repeat,
-    radial-gradient(
-      ellipse 70% 42% at 92% 92%,
-      color-mix(in srgb, var(--scene-accent, #2dd4bf) 28%, transparent) 0%,
-      transparent 68%
-    ),
-    linear-gradient(
-      252deg,
-      rgba(5, 7, 11, 0.72) 0%,
-      rgba(8, 11, 16, 0.42) 22%,
-      color-mix(in srgb, var(--scene-accent-soft, rgba(45, 212, 191, 0.16)) 18%, transparent) 44%,
-      transparent 72%
-    ),
-    linear-gradient(
-      270deg,
-      rgba(2, 4, 8, calc(var(--wall-edge-shadow, 0.46) * 0.92)) 0%,
-      rgba(5, 8, 12, calc(var(--wall-edge-shadow, 0.46) * 0.62)) 10%,
-      rgba(8, 11, 16, calc(var(--wall-edge-shadow, 0.46) * 0.34)) 22%,
-      rgba(10, 14, 20, 0.22) 36%,
-      transparent 68%
-    ),
-    linear-gradient(
-      270deg,
-      rgba(2, 4, 8, calc(var(--wall-edge-shadow, 0.46) * 0.88)) 0%,
-      rgba(4, 6, 10, calc(var(--wall-edge-shadow, 0.46) * 0.48)) 6%,
-      transparent 16%
-    )
-      100% 0 / 2px 100% no-repeat;
-  opacity: 0.92;
-  transition: background 800ms ease, opacity 800ms ease;
-}
-
-.scene--stable .room-side-walls {
-  opacity: 0.7;
-}
-
-.scene--attention .room-side-walls {
-  opacity: 0.74;
-}
-
-.scene--critical .room-side-walls {
-  opacity: 0.78;
-}
-
-/* Bruma de profundidad — aire entre cámara y monitor */
-.room-depth-haze {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 2;
-  background:
-    radial-gradient(
-      ellipse 85% 60% at 50% 48%,
-      transparent 40%,
-      var(--scene-haze, rgba(15, 23, 42, 0.42)) 100%
-    );
-  opacity: var(--room-depth-haze-opacity, 0.08);
-  transition: background 800ms ease, opacity 800ms ease;
-}
-
-/* Viñeta — dirige la mirada al centro */
-.room-ambient-vignette {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 3;
-  background: radial-gradient(
-    ellipse 95% 78% at 50% 38%,
-    transparent 48%,
-    rgba(6, 8, 12, 0.35) 78%,
-    rgba(4, 6, 10, 0.72) 100%
-  );
-  opacity: var(--room-vignette-opacity, 0.14);
-  transition: opacity 800ms ease;
-}
-
 /* Lavados cromáticos del estado: integración mínima, no recoloración. */
 .room-state-wash {
   opacity: var(--room-state-wash-opacity, 0.06);
-}
-
-/* --- Piso técnico / plataforma de proyección ------------------------------ */
-
-.room-floor-platform {
-  position: absolute;
-  left: 50%;
-  bottom: clamp(24px, 7vh, 80px);
-  transform: translateX(-50%);
-  width: clamp(720px, 72vw, 1500px);
-  max-width: 100%;
-  height: clamp(160px, 24vh, 280px);
-  pointer-events: none;
-  z-index: 4;
-  border-radius: 50%;
-  /* Superficie: centro iluminado, bordes desvanecidos, parte trasera más oscura */
-  background:
-    radial-gradient(
-      ellipse 100% 78% at 50% 100%,
-      rgba(2, 6, 12, 0.78) 0%,
-      transparent 58%
-    ),
-    radial-gradient(
-      ellipse 88% 52% at 50% 82%,
-      rgba(4, 8, 14, 0.42) 0%,
-      transparent 68%
-    ),
-    radial-gradient(
-      ellipse 76% 48% at 50% 68%,
-      color-mix(in srgb, var(--scene-accent-soft, rgba(45, 212, 191, 0.16)) 50%, rgba(15, 23, 42, 0.28)) 0%,
-      transparent 72%
-    ),
-    radial-gradient(
-      ellipse 50% 34% at 50% 52%,
-      color-mix(in srgb, var(--scene-glow, rgba(45, 212, 191, 0.22)) 28%, rgba(226, 232, 240, 0.03)) 0%,
-      transparent 78%
-    );
-  transition: background 800ms ease;
 }
 
 /* Glow central — ilumina el corazón de la plataforma sin subir al monitor */
@@ -2364,34 +797,6 @@
   opacity: 0.62;
 }
 
-/* Líneas técnicas — franja central y divisiones verticales muy tenues */
-.room-floor-lines {
-  position: absolute;
-  inset: 0;
-  transform: scaleY(0.42);
-  transform-origin: center bottom;
-  pointer-events: none;
-  opacity: 0.26;
-  background:
-    linear-gradient(
-      90deg,
-      transparent 0%,
-      color-mix(in srgb, var(--scene-accent, #2dd4bf) 16%, transparent) 10%,
-      color-mix(in srgb, var(--scene-accent, #2dd4bf) 26%, transparent) 50%,
-      color-mix(in srgb, var(--scene-accent, #2dd4bf) 16%, transparent) 90%,
-      transparent 100%
-    ) center 56% / 84% 1px no-repeat,
-    repeating-linear-gradient(
-      90deg,
-      transparent 0,
-      transparent calc(20% - 1px),
-      color-mix(in srgb, var(--scene-accent-soft, rgba(45, 212, 191, 0.16)) 50%, transparent) calc(20% - 1px),
-      color-mix(in srgb, var(--scene-accent-soft, rgba(45, 212, 191, 0.16)) 50%, transparent) 20%
-    ) center 66% / 70% 42% no-repeat;
-  mask-image: radial-gradient(ellipse 76% 60% at 50% 60%, black 18%, transparent 74%);
-  transition: opacity 800ms ease, background 800ms ease;
-}
-
 /* Reflejo ambiental sobre la superficie de la plataforma */
 .room-floor-reflect {
   position: absolute;
@@ -2417,16 +822,8 @@
   opacity: 0.56;
 }
 
-.scene--stable .room-floor-lines {
-  opacity: 0.24;
-}
-
 .scene--attention .room-floor-glow {
   opacity: 0.6;
-}
-
-.scene--attention .room-floor-lines {
-  opacity: 0.28;
 }
 
 .scene--attention .room-floor-rings {
@@ -2439,26 +836,6 @@
 
 .scene--critical .room-floor-rings {
   opacity: 0.54;
-}
-
-.scene--critical .room-floor-lines {
-  opacity: 0.3;
-}
-
-/* --- Pantalla principal — protagonista equilibrada (~52–60vh) ------------- */
-
-.room-screen-stage {
-  position: relative;
-  z-index: 20;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  perspective: 1800px;
-  width: 100%;
-  min-height: 0;
-  flex: 0 0 auto;
-  /* Aire de techo — no pegar el monitor al borde superior */
-  padding-top: var(--screen-top-space, clamp(32px, 7vh, 76px));
 }
 
 .novex-room .main-screen {
@@ -2479,11 +856,6 @@
     0 48px 80px -40px rgba(0, 0, 0, 0.45),
     inset 0 1px 0 rgba(226, 232, 240, 0.06);
   transition: box-shadow 800ms ease;
-}
-
-.novex-room--reference .room-screen-stage {
-  z-index: 20;
-  padding-top: var(--screen-top-space);
 }
 
 .novex-room--reference .room-scene-viewport {
@@ -2531,10 +903,6 @@
   transition: opacity 520ms ease;
 }
 
-.novex-room--reference .room-monitor-reflection {
-  display: none;
-}
-
 /* Halo ambiental del marco (instalación física) */
 .novex-room .main-screen::before {
   content: '';
@@ -2548,96 +916,6 @@
     0 0 1px 0 var(--scene-border, rgba(94, 234, 212, 0.22));
   opacity: 0.9;
   transition: box-shadow 800ms ease;
-}
-
-/* --- Reflejo del monitor en el piso (mancha de luz, no copia literal) ----- */
-
-.room-monitor-reflection {
-  position: absolute;
-  left: 50%;
-  top: var(--screen-reflection-top, clamp(390px, 62vh, 620px));
-  transform: translateX(-50%);
-  width: clamp(520px, 66vw, 1280px);
-  height: clamp(70px, 10vh, 130px);
-  pointer-events: none;
-  z-index: 12; /* sobre piso (4), bajo monitor (20) y proyección (35) */
-  border-radius: 50%;
-  filter: blur(22px);
-  opacity: 0.52;
-  transition:
-    background 800ms ease,
-    opacity 800ms ease,
-    filter 800ms ease;
-  background:
-  /* Mancha principal — luz blanca del monitor mezclada con estado */
-    radial-gradient(
-      ellipse 72% 100% at 50% 38%,
-      rgba(248, 250, 252, 0.14) 0%,
-      color-mix(in srgb, var(--scene-accent-soft, rgba(45, 212, 191, 0.16)) 55%, transparent) 42%,
-      transparent 72%
-    ),
-    /* Franja horizontal de luz reflejada */
-    linear-gradient(
-      90deg,
-      transparent 0%,
-      color-mix(in srgb, var(--scene-glow, rgba(45, 212, 191, 0.22)) 35%, rgba(226, 232, 240, 0.08)) 18%,
-      rgba(248, 250, 252, 0.12) 50%,
-      color-mix(in srgb, var(--scene-glow, rgba(45, 212, 191, 0.22)) 35%, rgba(226, 232, 240, 0.08)) 82%,
-      transparent 100%
-    );
-}
-
-/* Brillo del borde inferior del monitor */
-.room-monitor-reflection::before {
-  content: '';
-  position: absolute;
-  top: 20%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 70%;
-  height: 2px;
-  pointer-events: none;
-  border-radius: 999px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    color-mix(in srgb, var(--scene-accent, #2dd4bf) 28%, rgba(248, 250, 252, 0.35)) 50%,
-    transparent 100%
-  );
-  filter: blur(4px);
-  opacity: 0.38;
-}
-
-/* Segunda mancha — más amplia, conecta con el piso */
-.room-monitor-reflection::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 48%;
-  transform: translateX(-50%);
-  width: 88%;
-  height: 58%;
-  pointer-events: none;
-  border-radius: 50%;
-  background: radial-gradient(
-    ellipse 80% 90% at 50% 40%,
-    color-mix(in srgb, var(--scene-glow, rgba(45, 212, 191, 0.22)) 45%, rgba(248, 250, 252, 0.06)) 0%,
-    transparent 68%
-  );
-  filter: blur(14px);
-  opacity: 0.42;
-}
-
-.scene--stable .room-monitor-reflection {
-  opacity: 0.5;
-}
-
-.scene--attention .room-monitor-reflection {
-  opacity: 0.55;
-}
-
-.scene--critical .room-monitor-reflection {
-  opacity: 0.65;
 }
 
 /* Escritorio grande: monitor ~58vh (solo viewports altos; no portátiles anchos) */
@@ -2657,13 +935,7 @@
     --window-beam-depth: clamp(8px, 0.75vh, 12px);
   }
 
-  .room-screen-stage {
-    flex: 0 0 auto;
-    align-items: flex-start;
-    justify-content: center;
-    width: 100%;
-    padding-top: var(--screen-top-space);
-  }
+  
 
   .novex-room .room-scene-viewport {
     height: var(--screen-max-height);
@@ -2686,11 +958,7 @@
     height: 100%;
   }
 
-  .room-floor-platform {
-    bottom: clamp(20px, 6vh, 72px);
-    width: clamp(760px, 74vw, 1500px);
-    height: clamp(170px, 22vh, 260px);
-  }
+  
 }
 
 /*
@@ -2736,18 +1004,9 @@
     --screen-content-reflection-opacity: 0.007;
   }
 
-  .observation-window-glass {
-    --window-glass-reflection-opacity: 0.38;
-  }
+  
 
-  .room-screen-stage {
-    flex: 0 0 auto;
-    align-items: flex-start;
-    justify-content: center;
-    width: 100%;
-    padding-top: calc(var(--screen-top-space) + var(--screen-stage-offset, 0px));
-    overflow: visible;
-  }
+  
 
   .novex-room .room-scene-viewport {
     height: var(--screen-max-height);
@@ -2774,35 +1033,20 @@
     height: 100%;
   }
 
-  .room-side-walls {
-    opacity: 0.58;
-  }
+  
 
-  .room-side-walls::before,
-  .room-side-walls::after {
-    width: clamp(200px, 22vw, 420px);
-  }
+  
 
-  .room-floor-platform {
-    bottom: clamp(12px, 3.5vh, 44px);
-    width: clamp(640px, 78vw, 1200px);
-    height: clamp(100px, 14vh, 170px);
-    opacity: 0.88;
-  }
+  
 
   .room-floor-glow {
     opacity: 0.48;
     filter: blur(26px);
   }
 
-  .room-floor-lines {
-    opacity: 0.18;
-  }
+  
 
-  .room-monitor-reflection {
-    height: clamp(48px, 7vh, 88px);
-    filter: blur(16px);
-  }
+  
 }
 
 /* Tablet / móvil: más ancho, escena simplificada, piso visible */
@@ -2821,9 +1065,7 @@
     min-height: 100dvh;
   }
 
-  .command-center-floor__surface {
-    clip-path: polygon(2% 0, 98% 0, 100% 100%, 0 100%);
-  }
+  
 
   .novex-room {
     /* Antes: width clamp(1.25rem, 2.5vw, 2rem), outset 0.625rem. */
@@ -2850,18 +1092,11 @@
     display: none;
   }
 
-  .observation-window-glass {
-    --window-glass-reflection-opacity: 0.28;
-    --window-glass-seam-opacity: 0.48;
-  }
+  
 
-  .observation-window-glass::before {
-    display: none;
-  }
+  
 
-  .observation-window-glass::after {
-    left: 50%;
-  }
+  
 
   .novex-room .main-screen {
     width: var(--screen-width);
@@ -2879,47 +1114,21 @@
     display: none;
   }
 
-  .room-screen-stage {
-    perspective: none;
-    align-items: center;
-    padding-top: var(--screen-top-space);
-    flex: 0 0 auto;
-  }
+  
 
-  .room-ceiling-lighting {
-    height: clamp(72px, 12vh, 140px);
-    opacity: 0.32;
-  }
+  
 
-  .room-ceiling-spotlights {
-    opacity: 0.62;
-    --spotlight-intensity: 0.28;
-    filter: blur(32px);
-  }
+  
 
-  .room-ceiling-spotlights::before {
-    opacity: 0.42;
-    filter: blur(42px);
-  }
+  
 
-  .room-ceiling-lighting::after {
-    display: none;
-  }
+  
 
-  .room-side-walls {
-    opacity: 0.45;
-  }
+  
 
-  .room-side-walls::before,
-  .room-side-walls::after {
-    width: clamp(160px, 20vw, 280px);
-  }
+  
 
-  .room-floor-platform {
-    bottom: clamp(14px, 4vh, 40px);
-    width: min(92vw, 42rem);
-    height: clamp(100px, 14vh, 140px);
-  }
+  
 
   .room-floor-glow {
     opacity: 0.44;
@@ -2931,35 +1140,15 @@
     display: none;
   }
 
-  .room-floor-lines {
-    opacity: 0.16;
-    background:
-      linear-gradient(
-        90deg,
-        transparent 0%,
-        color-mix(in srgb, var(--scene-accent, #2dd4bf) 14%, transparent) 15%,
-        color-mix(in srgb, var(--scene-accent, #2dd4bf) 22%, transparent) 50%,
-        color-mix(in srgb, var(--scene-accent, #2dd4bf) 14%, transparent) 85%,
-        transparent 100%
-      ) center 56% / 78% 1px no-repeat;
-  }
+  
 
   .room-floor-reflect {
     opacity: 0.22;
   }
 
-  .room-monitor-reflection {
-    width: 80vw;
-    height: clamp(48px, 7vh, 90px);
-    top: clamp(300px, 56vh, 520px);
-    filter: blur(16px);
-    opacity: 0.38;
-  }
+  
 
-  .room-monitor-reflection::before,
-  .room-monitor-reflection::after {
-    display: none;
-  }
+  
 
 }
 
@@ -2973,9 +1162,7 @@
     min-height: 100dvh;
   }
 
-  .command-center-floor {
-    display: none;
-  }
+  
 
   .novex-room {
     /* Antes: width clamp(0.375rem, 1.25vw, 0.75rem), outset 0.25rem. */
@@ -3016,16 +1203,9 @@
     display: none;
   }
 
-  .observation-window-glass {
-    --window-glass-base-opacity: 0.026;
-  }
+  
 
-  .observation-window-glass::before,
-  .observation-window-glass::after,
-  .observation-window-glass__pane,
-  .observation-window-glass__reflection {
-    display: none;
-  }
+  
 
   .novex-room .main-screen {
     width: var(--screen-width);
@@ -3043,42 +1223,19 @@
     display: none;
   }
 
-  .room-screen-stage {
-    perspective: none;
-    align-items: center;
-    padding-top: var(--screen-top-space);
-    flex: 0 0 auto;
-  }
+  
 
-  .room-ceiling-lighting {
-    height: clamp(72px, 12vh, 140px);
-    opacity: 0.32;
-  }
+  
 
-  .room-ceiling-spotlights {
-    opacity: 0.62;
-    --spotlight-intensity: 0.28;
-    filter: blur(32px);
-  }
+  
 
-  .room-ceiling-spotlights::before {
-    opacity: 0.42;
-    filter: blur(42px);
-  }
+  
 
-  .room-ceiling-lighting::after {
-    display: none;
-  }
+  
 
-  .room-side-walls {
-    display: none;
-  }
+  
 
-  .room-floor-platform {
-    bottom: clamp(14px, 4vh, 40px);
-    width: min(92vw, 42rem);
-    height: clamp(100px, 14vh, 140px);
-  }
+  
 
   .room-floor-glow {
     opacity: 0.44;
@@ -3090,66 +1247,26 @@
     display: none;
   }
 
-  .room-floor-lines {
-    opacity: 0.16;
-    background:
-      linear-gradient(
-        90deg,
-        transparent 0%,
-        color-mix(in srgb, var(--scene-accent, #2dd4bf) 14%, transparent) 15%,
-        color-mix(in srgb, var(--scene-accent, #2dd4bf) 22%, transparent) 50%,
-        color-mix(in srgb, var(--scene-accent, #2dd4bf) 14%, transparent) 85%,
-        transparent 100%
-      ) center 56% / 78% 1px no-repeat;
-  }
+  
 
   .room-floor-reflect {
     opacity: 0.22;
   }
 
-  .room-monitor-reflection {
-    width: 80vw;
-    height: clamp(40px, 6vh, 72px);
-    top: clamp(260px, 52vh, 440px);
-    filter: blur(14px);
-    opacity: 0.32;
-  }
+  
 
-  .room-monitor-reflection::before,
-  .room-monitor-reflection::after {
-    display: none;
-  }
+  
 
 }
 
 @media (prefers-reduced-motion: reduce) {
   .novex-room,
-  .room-city-image,
-  .observation-window-frame__top,
-  .observation-window-frame__top::before,
-  .observation-window-frame__top::after,
-  .observation-window-frame__left,
-  .observation-window-frame__right,
-  .room-atmosphere,
-  .room-atmosphere::after,
-  .room-ceiling-spotlights,
-  .room-ceiling-spotlights::before,
-  .room-ceiling-lighting,
-  .room-side-walls,
-  .room-side-walls::before,
-  .room-side-walls::after,
-  .room-monitor-reflection,
-  .room-monitor-reflection::before,
-  .room-monitor-reflection::after,
-  .room-depth-haze,
-  .room-ambient-vignette,
-  .room-state-wash,
-  .room-floor-glow,
-  .room-floor-reflect,
-  .room-floor-rings,
-  .room-floor-lines,
-  .novex-room .main-screen,
-  .novex-room .main-screen::before {
+.room-state-wash,
+.room-floor-glow,
+.room-floor-reflect,
+.room-floor-rings,
+.novex-room .main-screen,
+.novex-room .main-screen::before {
     transition: none;
   }
 
@@ -3180,10 +1297,6 @@
   .selected-commitment-panel:has(> header),
   .selected-commitment-panel[aria-busy='true'] {
     animation: none;
-  }
-
-  .room-ceiling-lighting::after {
-    filter: none;
   }
 
   @media (min-width: 1024px) {
@@ -3410,11 +1523,7 @@
     object-fit: fill;
   }
 
-  .novex-room--reference .room-screen-stage {
-    width: 100%;
-    padding-top: var(--screen-top-space);
-    overflow: visible;
-  }
+  
 
   .novex-room--reference .room-scene-viewport {
     width: 100%;
@@ -3581,37 +1690,14 @@
       rgb(8 10 20 / 0.7) 48%,
       rgb(4 6 12 / 0.88) 100%
     ),
-    url('/assests/scenes/imagenfondo1.png') center / cover fixed no-repeat;
+    none center / cover fixed no-repeat;
   color: rgb(219 234 254);
 }
 
 .novex-room--reference .room-reference-layers,
 .novex-room--reference .room-reference-base-stack,
-.novex-room--reference .room-reference-projector,
-.novex-room--reference .room-depth-haze,
-.novex-room--reference .room-monitor-reflection {
+.novex-room--reference .room-reference-projector {
   opacity: 0;
-}
-
-.novex-room--reference .room-atmosphere {
-  opacity: 0.12;
-  background-image:
-    radial-gradient(circle, rgb(125 211 252 / 0.34) 0 1px, transparent 1.5px),
-    radial-gradient(circle, rgb(196 181 253 / 0.28) 0 1px, transparent 1.5px);
-  background-position: 0 0, 47px 83px;
-  background-size: 137px 137px, 193px 193px;
-  animation: novex-particle-drift 36s linear infinite;
-}
-
-.novex-room--reference .room-atmosphere::before,
-.novex-room--reference .room-atmosphere::after {
-  opacity: 0;
-}
-
-.novex-room--reference .room-ambient-vignette {
-  background:
-    linear-gradient(180deg, rgb(2 4 12 / 0.2), transparent 22% 70%, rgb(2 4 12 / 0.48)),
-    radial-gradient(ellipse at center, transparent 56%, rgb(2 4 12 / 0.38) 100%);
 }
 
 .novex-room.novex-room--reference .main-screen {
@@ -3724,7 +1810,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .novex-room--reference .room-atmosphere,
   .novex-room--reference .novex-screen-surface {
     animation: none;
   }
@@ -3749,15 +1834,6 @@
   height: 100vh;
   min-height: 100vh;
   transform: none;
-}
-
-.novex-room--reference .room-screen-stage {
-  width: 100%;
-  height: 100vh;
-  min-height: 0;
-  padding: 24px 32px;
-  align-items: stretch;
-  justify-content: flex-start;
 }
 
 .novex-room--reference .room-scene-viewport {
@@ -3833,10 +1909,4 @@
 .novex-room--reference .novex-screen-surface > div[class*='h-[3px]'],
 .novex-room--reference .novex-state-ornaments {
   opacity: 0;
-}
-
-@media (max-width: 767px) {
-  .novex-room--reference .room-screen-stage {
-    padding: 24px;
-  }
 }

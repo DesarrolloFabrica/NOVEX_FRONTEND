@@ -88,24 +88,6 @@
   animation-duration: 42s;
 }
 
-.novex-os[data-scene='impact'] .novex-os__aurora {
-  opacity: 0.06;
-  animation-duration: 32s;
-}
-
-.novex-os[data-scene='impact'] .novex-os__grid {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  background: none;
-}
-
-.novex-os[data-scene='impact'] .novex-os__grid::before {
-  display: none;
-  opacity: 0;
-  animation: none;
-}
-
 .impact-network {
   position: relative;
   isolation: isolate;

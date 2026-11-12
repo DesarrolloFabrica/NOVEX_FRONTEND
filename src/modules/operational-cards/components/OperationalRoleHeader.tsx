@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import { preloadAdminConsole } from '@/app/routeChunks'
 import { NovexIcon } from '@/shared/components/NovexIcon'
 import { NovexPlatformIcon } from '@/shared/components/NovexPlatformIcon'
 import type { User } from '@/modules/auth/types/user.types'
@@ -16,6 +17,11 @@ export interface OperationalRoleHeaderProps {
   criticalProblemsCount?: number
   onReportSituation?: () => void
   canCreate?: boolean
+  /**
+   * Si se indica, la marca «NOVEX · Centro Operacional» es un enlace a esa ruta
+   * (la usa la Consola de Administración para volver al Centro).
+   */
+  brandHref?: string
 }
 
 /**
@@ -33,13 +39,32 @@ export function OperationalRoleHeader({
   selectedCoordination,
   assignedCoordination,
   directionStatus = 'ESTABLE',
-  activeProblemsCount = 0,
+  activeProblemsCount,
   criticalProblemsCount = 0,
   onReportSituation,
   canCreate = false,
+  brandHref,
 }: OperationalRoleHeaderProps) {
+  // Sin dato todavía (la consola lo pide aparte), el chip no inventa un «0».
+  const activeCount = activeProblemsCount ?? 0
   const userName = user?.name?.trim() || 'Operador NOVEX'
   const userInitial = userName.slice(0, 1).toUpperCase()
+
+  const brand = (
+    <>
+      <span className="operational-role-header__star" aria-hidden="true">✦</span>
+      <span className="operational-role-header__logo" aria-hidden="true">
+        NOVEX
+      </span>
+      <span className="operational-role-header__sep" aria-hidden="true">
+        ·
+      </span>
+      <span className="operational-role-header__venue">
+        Centro Operacional
+      </span>
+      <span className="operational-role-header__star" aria-hidden="true">✦</span>
+    </>
+  )
 
   return (
     <header
@@ -49,19 +74,20 @@ export function OperationalRoleHeader({
       role="banner"
       aria-label="Orientación del Centro Operacional"
     >
-      <div className="operational-role-header__brand">
-        <span className="operational-role-header__star" aria-hidden="true">✦</span>
-        <span className="operational-role-header__logo" aria-hidden="true">
-          NOVEX
-        </span>
-        <span className="operational-role-header__sep" aria-hidden="true">
-          ·
-        </span>
-        <span className="operational-role-header__venue">
-          Centro Operacional
-        </span>
-        <span className="operational-role-header__star" aria-hidden="true">✦</span>
-      </div>
+      {brandHref ? (
+        <NavLink
+          to={brandHref}
+          viewTransition
+          className="operational-role-header__brand operational-role-header__brand--link"
+          aria-label="Volver al Centro Operacional"
+          title="Volver al Centro Operacional"
+          data-testid="role-header-home-link"
+        >
+          {brand}
+        </NavLink>
+      ) : (
+        <div className="operational-role-header__brand">{brand}</div>
+      )}
 
       <div className="operational-role-header__center">
         {experience === 'admin' && (
@@ -75,9 +101,15 @@ export function OperationalRoleHeader({
             </span>
             <NavLink
               to="/admin"
+              viewTransition
               className="operational-role-header__admin-link"
               data-testid="admin-tools-quicklink"
               title="Abrir la Consola de Administración"
+              // Código y datos de la consola se piden al señalar el enlace:
+              // al hacer clic la transición no espera a la red.
+              onPointerEnter={preloadAdminConsole}
+              onFocus={preloadAdminConsole}
+              onPointerDown={preloadAdminConsole}
             >
               <NovexPlatformIcon name="admin" />
               <span>Consola de Administración</span>
@@ -87,7 +119,11 @@ export function OperationalRoleHeader({
               data-testid="admin-overview-metric"
             >
               <span className="operational-role-header__pulse-dot" aria-hidden="true" />
-              <span>{activeProblemsCount} situaciones activas</span>
+              <span>
+                {activeProblemsCount === undefined
+                  ? 'Situaciones activas'
+                  : `${activeProblemsCount} situaciones activas`}
+              </span>
             </span>
           </div>
         )}
@@ -118,7 +154,7 @@ export function OperationalRoleHeader({
                   {criticalProblemsCount} críticas
                 </span>
               ) : (
-                <span>{activeProblemsCount} activas</span>
+                <span>{activeCount} activas</span>
               )}
             </span>
           </div>

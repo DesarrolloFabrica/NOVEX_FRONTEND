@@ -24,7 +24,7 @@
     var(--ticket-pilot-paper-fringe) + var(--ticket-pilot-band) + 10px
   );
   --ticket-pilot-ink-wear: url('/assets/tickets/fabrica/ticket-ink-wear.svg');
-  --ticket-pilot-paper: url('/assets/tickets/common/ticket-paper-cream.png');
+  --ticket-pilot-paper: url('/assets/tickets/common/ticket-paper-cream.webp');
   --ticket-pilot-serif: Georgia, 'Times New Roman', Times, serif;
 
   /* Accent: cada tema los redefine. */
@@ -49,7 +49,7 @@
   --ticket-accent-deep: #0c5f68;
   --ticket-pilot-teal: var(--ticket-accent);
   --ticket-pilot-teal-deep: var(--ticket-accent-deep);
-  --ticket-pilot-seal: url('/assets/tickets/fabrica/cut/watermark-seal.png');
+  --ticket-pilot-seal: url('/assets/tickets/fabrica/cut/watermark-seal.webp');
   --ticket-teal: var(--ticket-accent);
   --ticket-teal-deep: var(--ticket-accent-deep);
   --ticket-teal-soft: rgb(26 154 166 / 0.16);
@@ -61,7 +61,7 @@
   --ticket-accent-deep: #2d3325;
   --ticket-pilot-teal: var(--ticket-accent);
   --ticket-pilot-teal-deep: var(--ticket-accent-deep);
-  --ticket-pilot-seal: url('/assets/tickets/saber-pro/cut/watermark-meerkat.png');
+  --ticket-pilot-seal: url('/assets/tickets/saber-pro/cut/watermark-meerkat.webp');
   --ticket-teal: var(--ticket-accent);
   --ticket-teal-deep: var(--ticket-accent-deep);
   --ticket-teal-soft: rgb(92 94 44 / 0.16);
@@ -73,7 +73,7 @@
   --ticket-accent-deep: #3a0c0a;
   --ticket-pilot-teal: var(--ticket-accent);
   --ticket-pilot-teal-deep: var(--ticket-accent-deep);
-  --ticket-pilot-seal: url('/assets/tickets/especializaciones/cut/watermark-falcon.png');
+  --ticket-pilot-seal: url('/assets/tickets/especializaciones/cut/watermark-falcon.webp');
   --ticket-teal: var(--ticket-accent);
   --ticket-teal-deep: var(--ticket-accent-deep);
   --ticket-teal-soft: rgb(123 17 13 / 0.14);
@@ -85,7 +85,7 @@
   --ticket-accent-deep: #3a1c35;
   --ticket-pilot-teal: var(--ticket-accent);
   --ticket-pilot-teal-deep: var(--ticket-accent-deep);
-  --ticket-pilot-seal: url('/assets/tickets/desarrollo-profesional/cut/watermark-butterfly.png');
+  --ticket-pilot-seal: url('/assets/tickets/desarrollo-profesional/cut/watermark-butterfly.webp');
   --ticket-teal: var(--ticket-accent);
   --ticket-teal-deep: var(--ticket-accent-deep);
   --ticket-teal-soft: rgb(92 46 88 / 0.16);
@@ -160,7 +160,7 @@
   --ticket-action-text: #f7f4ea;
   --ticket-pilot-teal: var(--ticket-accent);
   --ticket-pilot-teal-deep: var(--ticket-accent-deep);
-  --ticket-pilot-seal: url('/assets/tickets/bellas-artes/cut/watermark-horse.png');
+  --ticket-pilot-seal: url('/assets/tickets/bellas-artes/cut/watermark-horse.webp');
   --ticket-teal: var(--ticket-accent);
   --ticket-teal-deep: var(--ticket-accent-deep);
   --ticket-teal-soft: var(--ticket-soft-fill);
@@ -229,7 +229,17 @@
   container-name: ticket-panel;
   position: relative;
   isolation: isolate;
-  padding: var(--ticket-pilot-content-inset);
+  /*
+   * Distancia mínima del contenido al borde: la línea interior del marco
+   * (--frame-x/--frame-y, que publica TicketPanelFrame al medir la región) más
+   * aire. El marco es proporcional al panel; en paneles grandes su línea queda
+   * más adentro que el relleno fijo y el contenido la invadía.
+   */
+  --frame-pad-x: calc(var(--frame-x, 0px) + 6px);
+  --frame-pad-y: calc(var(--frame-y, 0px) + 6px);
+  padding:
+    max(var(--ticket-pilot-content-inset), var(--frame-pad-y))
+    max(var(--ticket-pilot-content-inset), var(--frame-pad-x));
   border: 0;
   border-radius: 14px;
   background: transparent;
@@ -1056,9 +1066,10 @@
 .operational-shell[data-ticket-theme]
   .operational-shell__region--character.operational-shell__region--ticket-panel {
   /* Espacio para marco + Rive + estado sin recorte. */
-  padding: calc(var(--ticket-pilot-content-inset) + 2px)
-    var(--ticket-pilot-content-inset)
-    calc(var(--ticket-pilot-content-inset) + 6px);
+  padding:
+    max(calc(var(--ticket-pilot-content-inset) + 2px), var(--frame-pad-y, 0px))
+    max(var(--ticket-pilot-content-inset), var(--frame-pad-x, 0px))
+    max(calc(var(--ticket-pilot-content-inset) + 6px), var(--frame-pad-y, 0px));
   gap: 6px;
 }
 

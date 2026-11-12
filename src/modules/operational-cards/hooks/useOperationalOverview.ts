@@ -166,6 +166,27 @@ export interface OperationalCardsController extends OperationalCardsState {
 }
 
 /** Cargador de cada dato del detalle que no viene con la situación. */
+/** Coordinaciones precargadas a la vez (2 peticiones cada una). */
+const PREFETCH_CONCURRENCY = 3
+
+/**
+ * Ejecuta `task` cuando el navegador queda ocioso (con tope de espera), o tras
+ * un breve retardo donde no exista `requestIdleCallback` (Safari). Devuelve la
+ * cancelación.
+ */
+function scheduleWhenIdle(task: () => void): () => void {
+  const host = globalThis as typeof globalThis & {
+    requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number
+    cancelIdleCallback?: (handle: number) => void
+  }
+  if (host.requestIdleCallback && host.cancelIdleCallback) {
+    const handle = host.requestIdleCallback(task, { timeout: 1500 })
+    return () => host.cancelIdleCallback?.(handle)
+  }
+  const handle = setTimeout(task, 300)
+  return () => clearTimeout(handle)
+}
+
 const SECTION_LOADERS: Record<
   LazyProblemSectionId,
   (problemId: string) => Promise<readonly unknown[]>
@@ -242,6 +263,10 @@ export function useOperationalOverview(
   const generationRef = useRef(0)
   generationRef.current = state.dataGeneration
 
+  /** Espejo de la caché LEVEL 1: la precarga la consulta al arrancar. */
+  const problemsCacheRef = useRef(state.problemsByCoordination)
+  problemsCacheRef.current = state.problemsByCoordination
+
   useEffect(() => {
     let active = true
 
@@ -270,26 +295,60 @@ export function useOperationalOverview(
 
   // Precarga en segundo plano de problemas (LEVEL 1) para que cambiar de carta
   // sea instantáneo y sin parpadeos ni skeletons.
+  //
+  // Son 2 peticiones por coordinación (~34 con 17 cartas). Lanzarlas todas a
+  // la vez al montar competía con lo que el usuario ve primero (overview, arte
+  // de cartas, personaje) y saturaba las conexiones del navegador. Ahora
+  // esperan a que el hilo principal quede libre y van en tandas pequeñas; la
+  // carta seleccionada no espera: la pide su propio efecto (abajo) y, si la
+  // precarga ya la tenía en vuelo, comparten la petición.
   useEffect(() => {
     const coords = state.overview?.coordinations
     if (!coords || coords.length === 0) return
 
-    for (const coord of coords) {
-      if (state.problemsByCoordination[coord.code]) continue
-      void fetchCoordinationProblems(coord.id)
-        .then(({ problems, scope }) => {
-          dispatch({
-            type: 'LOAD_PROBLEMS_SUCCESS',
-            code: coord.code as CoordinationId,
-            problems,
-            scope,
-            generation: generationRef.current,
-          })
+    let cancelled = false
+    const pendingCoords = coords.filter(
+      (coord) => !problemsCacheRef.current[coord.code],
+    )
+
+    const prefetchOne = async (coord: (typeof coords)[number]) => {
+      // La carta elegida (u otra) pudo cargarse mientras esta esperaba turno.
+      if (problemsCacheRef.current[coord.code]) return
+      try {
+        const { problems, scope } = await fetchCoordinationProblems(coord.id)
+        dispatch({
+          type: 'LOAD_PROBLEMS_SUCCESS',
+          code: coord.code as CoordinationId,
+          problems,
+          scope,
+          generation: generationRef.current,
         })
-        .catch(() => {
-          // Ignorado en prefetch; se pedirá bajo demanda si el usuario la selecciona.
-        })
+      } catch {
+        // Ignorado en prefetch; se pedirá bajo demanda si el usuario la selecciona.
+      }
     }
+
+    const run = async () => {
+      let next = 0
+      const worker = async () => {
+        while (!cancelled && next < pendingCoords.length) {
+          await prefetchOne(pendingCoords[next++])
+        }
+      }
+      await Promise.all(
+        Array.from({ length: Math.min(PREFETCH_CONCURRENCY, pendingCoords.length) }, worker),
+      )
+    }
+
+    const cancelIdle = scheduleWhenIdle(() => {
+      void run()
+    })
+
+    return () => {
+      cancelled = true
+      cancelIdle()
+    }
+    // Solo cuando llega/cambia el overview: la caché se lee del ref al arrancar.
   }, [state.overview])
 
   const selectedCode = state.selectedCoordinationCode

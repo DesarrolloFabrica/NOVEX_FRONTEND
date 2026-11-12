@@ -65,7 +65,7 @@ export function LoginCurtains({ state, blockInput = false, onSettled }: LoginCur
       <div className="novex-login-curtains__side novex-login-curtains__side--left">
         <img
           className="novex-login-curtains__art"
-          src="/assets/login/curtain-left.png"
+          src="/assets/login/curtain-left.webp"
           alt=""
           draggable={false}
           decoding="async"
@@ -74,7 +74,7 @@ export function LoginCurtains({ state, blockInput = false, onSettled }: LoginCur
       <div className="novex-login-curtains__side novex-login-curtains__side--right">
         <img
           className="novex-login-curtains__art"
-          src="/assets/login/curtain-right.png"
+          src="/assets/login/curtain-right.webp"
           alt=""
           draggable={false}
           decoding="async"

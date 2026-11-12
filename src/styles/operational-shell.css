@@ -1034,7 +1034,6 @@
   font-style: italic;
 }
 
-
 /*
  * MARCA LATERAL de las filas de problema: logo de la coordinación representada
  * en una ficha circular clara, legible sobre la superficie oscura y sobre el
@@ -2038,7 +2037,6 @@
   opacity: 0.75;
 }
 
-
 /* ---------- Regiones ---------- */
 
 .operational-shell__region {
@@ -2099,7 +2097,7 @@
   color: #f5d485;
   background:
     linear-gradient(180deg, rgba(32, 16, 24, 0.96) 0%, rgba(20, 10, 16, 0.94) 100%),
-    url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
+    url('/assets/tickets/common/ticket-paper-cream.webp') center / cover;
   box-shadow:
     0 4px 16px rgba(0, 0, 0, 0.45),
     inset 0 1px 0 rgba(255, 230, 160, 0.2);
@@ -2120,7 +2118,7 @@
   border-color: #f5d485;
   background:
     linear-gradient(180deg, rgba(46, 24, 36, 0.98) 0%, rgba(28, 14, 22, 0.96) 100%),
-    url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
+    url('/assets/tickets/common/ticket-paper-cream.webp') center / cover;
   box-shadow:
     0 6px 20px rgba(0, 0, 0, 0.5),
     0 0 12px rgba(245, 212, 133, 0.35);
@@ -2189,7 +2187,7 @@
   color: var(--menu-ink);
   background:
     linear-gradient(rgb(250 241 216 / 0.9), rgb(238 222 184 / 0.91)),
-    url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
+    url('/assets/tickets/common/ticket-paper-cream.webp') center / cover;
   box-shadow:
     0 18px 42px rgb(2 5 12 / 0.68),
     inset 0 0 0 3px rgb(255 250 230 / 0.55),
@@ -2561,6 +2559,23 @@
  */
 .novex-os[data-scene='intelligence'][data-rail='none'] .novex-os__stage {
   padding: 0;
+}
+
+/*
+ * RENDIMIENTO · entrada de ruta sin estado residual.
+ *
+ * `novex-os-route-in` usa `fill-mode: both`: al terminar, el contenedor de todo
+ * el Centro conservaba `filter: blur(0)` + `transform`, y el navegador seguía
+ * componiendo la página entera como una superficie filtrada. Con `backwards`
+ * el fundido es idéntico pero, al acabar, no queda filtro ni transformación.
+ * `isolation` conserva el contexto de apilamiento que creaba el transform, así
+ * que el orden de capas no cambia.
+ */
+.novex-os[data-scene='intelligence'][data-rail='none']
+  .eoc-deck.eoc-deck--home
+  > .novex-os-deck__content {
+  animation-fill-mode: backwards;
+  isolation: isolate;
 }
 
 .eoc-embedded--shell > .operational-shell {
@@ -2948,7 +2963,7 @@
   padding: 0 16px;
   background:
     linear-gradient(180deg, rgba(28, 14, 22, 0.98) 0%, rgba(16, 8, 12, 0.96) 100%),
-    url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
+    url('/assets/tickets/common/ticket-paper-cream.webp') center / cover;
   backdrop-filter: blur(12px);
   border: 1.5px solid rgba(212, 175, 55, 0.55);
   border-radius: 9999px;
@@ -3312,7 +3327,7 @@
   padding: 12px 14px;
   background:
     linear-gradient(135deg, rgba(255, 247, 221, 0.6) 0%, rgba(239, 218, 173, 0.45) 100%),
-    url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
+    url('/assets/tickets/common/ticket-paper-cream.webp') center / cover;
   border: 1px dashed rgba(120, 86, 52, 0.32);
   border-radius: 8px;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
@@ -3372,7 +3387,7 @@
   text-align: center;
   background:
     linear-gradient(180deg, rgba(255, 252, 245, 0.88) 0%, rgba(246, 238, 222, 0.78) 100%),
-    url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
+    url('/assets/tickets/common/ticket-paper-cream.webp') center / cover;
   border: 1px dashed rgba(120, 86, 52, 0.35);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(42, 33, 24, 0.05);
@@ -3676,7 +3691,7 @@
   box-sizing: border-box;
   background:
     linear-gradient(180deg, rgba(255, 253, 248, 0.94) 0%, rgba(247, 240, 226, 0.88) 100%),
-    url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
+    url('/assets/tickets/common/ticket-paper-cream.webp') center / cover;
   border: 1px solid rgba(138, 96, 45, 0.22);
   border-left: 3.5px solid #8a602d;
   border-radius: 8px;
@@ -3695,7 +3710,7 @@
 .action-panel__guidance-card--admin {
   background:
     linear-gradient(180deg, rgba(250, 245, 255, 0.94) 0%, rgba(242, 232, 252, 0.88) 100%),
-    url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
+    url('/assets/tickets/common/ticket-paper-cream.webp') center / cover;
   border-color: rgba(138, 77, 204, 0.3);
   border-left: 3.5px solid #7c3aed;
   box-shadow: 0 1px 4px rgba(138, 77, 204, 0.08);
@@ -3846,30 +3861,6 @@
   background: rgba(231, 76, 60, 0.18);
   border: 1px solid rgba(231, 76, 60, 0.5);
   color: #931b1b;
-}
-
-.coordination-focus-banner__clear-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(244, 234, 214, 0.88) 100%);
-  border: 1px solid rgba(138, 96, 45, 0.38);
-  border-radius: 9999px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #4a3118;
-  cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  transition: all 160ms ease;
-}
-
-.coordination-focus-banner__clear-btn:hover {
-  background: linear-gradient(180deg, #ffffff 0%, #faecd0 100%);
-  border-color: #8a602d;
-  color: #1a0c04;
-  box-shadow: 0 2px 6px rgba(138, 96, 45, 0.22);
-  transform: translateY(-1px);
 }
 
 .coordination-empty-prompt {
@@ -4206,7 +4197,7 @@
   padding: 4px 14px;
   background:
     linear-gradient(180deg, rgba(28, 14, 22, 0.94) 0%, rgba(16, 8, 12, 0.92) 100%),
-    url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
+    url('/assets/tickets/common/ticket-paper-cream.webp') center / cover;
   border: 1.5px solid rgba(212, 175, 55, 0.45);
   border-radius: 9999px;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.45);
@@ -4282,7 +4273,7 @@
   padding: 4px 14px 4px 6px;
   background:
     linear-gradient(180deg, rgba(32, 16, 24, 0.92) 0%, rgba(20, 10, 16, 0.88) 100%),
-    url('/assets/tickets/common/ticket-paper-cream.png') center / cover;
+    url('/assets/tickets/common/ticket-paper-cream.webp') center / cover;
   border: 1px solid rgba(212, 175, 55, 0.5);
   border-radius: 9999px;
   box-shadow:

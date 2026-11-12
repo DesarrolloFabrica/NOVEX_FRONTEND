@@ -34,7 +34,7 @@
   background:
     linear-gradient(90deg, rgb(2 6 15 / 0.9), rgb(3 9 21 / 0.54) 47%, rgb(2 6 15 / 0.88)),
     linear-gradient(180deg, rgb(2 6 15 / 0.52), rgb(2 7 16 / 0.76)),
-    url('/assests/scenes/novex-city-intelligence.jpg') 48% 50% / cover no-repeat;
+    none 48% 50% / cover no-repeat;
   filter: saturate(0.72) brightness(0.78);
 }
 

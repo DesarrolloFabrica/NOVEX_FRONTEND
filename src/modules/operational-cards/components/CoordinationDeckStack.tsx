@@ -124,6 +124,8 @@ export function CoordinationDeckStack({
               className="coordination-deck-stack__peek-face"
               src={childFace(subordinations[index].code)!}
               alt=""
+              loading="lazy"
+              decoding="async"
               aria-hidden="true"
               draggable={false}
             />

@@ -195,17 +195,21 @@ export function LoginPage() {
             </p>
           </header>
 
-          {expiryNotice && !authError ? (
-            <p className="novex-login-stage__error" role="status">
-              {expiryNotice.message}
-            </p>
-          ) : null}
-
-          {authError && (
-            <p className="novex-login-stage__error" role="alert">
-              {authError}
-            </p>
-          )}
+          <div
+            className="novex-login-stage__status"
+            data-occupied={authError || expiryNotice ? 'true' : 'false'}
+            aria-live="polite"
+          >
+            {authError ? (
+              <p className="novex-login-stage__error" role="alert">
+                {authError}
+              </p>
+            ) : expiryNotice ? (
+              <p className="novex-login-stage__error" role="status">
+                {expiryNotice.message}
+              </p>
+            ) : null}
+          </div>
 
           <div className="novex-login-stage__auth-stack">
             {/* Botón oficial de Google (visible): el overlay casi invisible falla en deploy/FedCM. */}

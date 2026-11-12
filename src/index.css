@@ -2633,3 +2633,92 @@
     display: none;
   }
 }
+
+/* --- Carga de ruta (chunk diferido) --------------------------------------- */
+/*
+ * Mismo escenario que pinta el Centro al terminar de cargar (y con el mismo
+ * encuadre que `.operational-shell__scene-image`): la carga no cambia de
+ * fondo ni de color. En el login solo el tono base: su escenario entra con su
+ * propio encendido desde oscuro.
+ */
+.route-fallback {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #160d0b url('/assets/scenes/circus-stage-background.webp') center 36% / cover no-repeat;
+  color: rgb(251 238 208 / 0.88);
+  font-size: 0.875rem;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.7);
+}
+
+.route-fallback--plain {
+  background-image: none;
+}
+
+/* El indicador solo aparece si la espera es perceptible (>350 ms). */
+.route-fallback > * {
+  opacity: 0;
+  animation: route-fallback-in 240ms ease-out 350ms forwards;
+}
+
+.route-fallback__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d4af37;
+  animation:
+    route-fallback-in 240ms ease-out 350ms forwards,
+    route-fallback-pulse 1.1s ease-in-out 350ms infinite;
+}
+
+@keyframes route-fallback-in {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes route-fallback-pulse {
+  50% {
+    transform: scale(0.6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-fallback > *,
+  .route-fallback__dot {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* --- Transición Centro Operacional ⇄ Consola de Administración ------------
+ *
+ * Los enlaces entre ambas usan View Transitions (`viewTransition` de React
+ * Router). Las dos páginas comparten el mismo contenedor `.operational-shell`
+ * con el escenario dentro: se funden como UNA pareja (old/new), así el
+ * escenario —idéntico en ambas— no parpadea ni pierde brillo, y solo cambia el
+ * contenido. Cabecera y menú tienen nombre propio: se pintan encima y quedan
+ * quietos. La entrada escalonada de la consola corre dentro de la vista nueva.
+ * Navegadores sin View Transitions navegan igual, con la entrada propia.
+ */
+.operational-shell {
+  view-transition-name: novex-page;
+}
+
+.operational-role-header {
+  view-transition-name: novex-role-header;
+}
+
+.operational-shell__menu-anchor {
+  view-transition-name: novex-shell-menu;
+}
+
+::view-transition-group(novex-page),
+::view-transition-group(novex-role-header),
+::view-transition-group(novex-shell-menu) {
+  animation-duration: 320ms;
+  animation-timing-function: cubic-bezier(0.22, 0.8, 0.24, 1);
+}
