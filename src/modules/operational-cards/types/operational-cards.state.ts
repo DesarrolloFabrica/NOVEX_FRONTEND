@@ -118,6 +118,17 @@ export interface ReportDraft {
   initialConsequence: string
   affectedProcess: string
   pendingDelivery: string
+  /**
+   * Otras coordinaciones involucradas (UUID, en el orden en que se eligieron).
+   * Contexto declarado: no cambian quién responde ni la coordinación afectada,
+   * y nunca incluyen a ninguna de las dos.
+   */
+  relatedCoordinationIds: string[]
+  /**
+   * Categoría escrita al elegir «Otra» (solo INTERNAL). Se conserva aunque el
+   * usuario cambie de categoría y vuelva, pero solo se envía con «Otra».
+   */
+  categoryOtherText: string
 }
 
 /**

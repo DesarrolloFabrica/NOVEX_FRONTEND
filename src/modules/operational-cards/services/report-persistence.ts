@@ -113,7 +113,12 @@ function requestIdsKey(scope: string): string {
   return `${REQUEST_IDS_PREFIX}:${scope}`
 }
 
-/** Un borrador guardado solo se acepta si tiene la forma completa y válida. */
+/**
+ * Un borrador guardado solo se acepta si tiene la forma completa y válida.
+ * Los campos añadidos después (coordinaciones relacionadas, categoría
+ * escrita) son opcionales en lo guardado: un borrador anterior sigue valiendo
+ * y `toReportDraft` los completa.
+ */
 function isReportDraft(value: unknown): value is ReportDraft {
   if (!value || typeof value !== 'object') return false
   const draft = value as Record<string, unknown>
@@ -121,6 +126,22 @@ function isReportDraft(value: unknown): value is ReportDraft {
     TEXT_FIELDS.every((field) => typeof draft[field] === 'string') &&
     SEVERITIES.includes(draft.severity as SituationSeverity)
   )
+}
+
+/** Completa los campos opcionales y descarta valores corruptos en ellos. */
+function toReportDraft(value: ReportDraft): ReportDraft {
+  const raw = value as unknown as Record<string, unknown>
+  const related = Array.isArray(raw.relatedCoordinationIds)
+    ? raw.relatedCoordinationIds.filter(
+        (id): id is string => typeof id === 'string' && id.length > 0,
+      )
+    : []
+  return {
+    ...value,
+    relatedCoordinationIds: [...new Set(related)],
+    categoryOtherText:
+      typeof raw.categoryOtherText === 'string' ? raw.categoryOtherText : '',
+  }
 }
 
 /**
@@ -148,7 +169,7 @@ export function readPersistedReportDrafts(
   if (!scope) return {}
   const drafts: Record<string, ReportDraft> = {}
   for (const [draftKey, value] of Object.entries(readRecord(draftsKey(scope)))) {
-    if (isReportDraft(value)) drafts[draftKey] = value
+    if (isReportDraft(value)) drafts[draftKey] = toReportDraft(value)
   }
   return normalizeUnifiedDraftKeys(drafts)
 }

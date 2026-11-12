@@ -6,6 +6,8 @@ import type {
   SituationResponse,
 } from '@/modules/situations/types/situation.types'
 import type { ReportDraft } from '@/modules/operational-cards/types/operational-cards.state'
+import { validateCategoryOtherText } from '@/modules/operational-cards/data/reportCategories'
+import { sanitizeRelatedIds } from '@/modules/operational-cards/data/relatedCoordinationsPicker'
 
 /**
  * REPORTAR UN PROBLEMA desde el panel derecho.
@@ -29,6 +31,16 @@ export interface ReportSubmissionInput {
   selectedCoordinationId: string | null
   /** Code de la carta para reacciones / invalidación. */
   selectedCoordinationCode: string | null
+  /**
+   * La categoría elegida es «Otra» (INTERNAL): la categoría escrita es
+   * obligatoria y viaja en el alta. Lo decide quien conoce el catálogo.
+   */
+  categoryRequiresOtherText?: boolean
+}
+
+export interface ReportValidationOptions {
+  /** Ver `ReportSubmissionInput.categoryRequiresOtherText`. */
+  categoryRequiresOtherText?: boolean
 }
 
 export interface ReportValidation {
@@ -40,6 +52,7 @@ export function validateReportDraft(
   draft: ReportDraft,
   reportKind: SituationReportKind,
   now: Date = new Date(),
+  options: ReportValidationOptions = {},
 ): ReportValidation {
   const problemas: string[] = []
 
@@ -57,6 +70,10 @@ export function validateReportDraft(
 
   if (reportKind === 'INTERNAL') {
     if (!draft.categoryId) problemas.push('Seleccione una categoría.')
+    else if (options.categoryRequiresOtherText) {
+      const otherError = validateCategoryOtherText(draft.categoryOtherText)
+      if (otherError) problemas.push(`Categoría «Otra»: ${otherError}`)
+    }
     if (draft.initialConsequence.trim().length > REPORT_CONSEQUENCE_MAX) {
       problemas.push(
         `La afectación inicial no puede superar ${REPORT_CONSEQUENCE_MAX} caracteres.`,
@@ -116,7 +133,12 @@ export async function submitProblemReport(
   input: ReportSubmissionInput,
   idempotencyKey: string,
 ): Promise<ReportSubmissionResult> {
-  const validation = validateReportDraft(input.draft, input.reportKind)
+  const validation = validateReportDraft(
+    input.draft,
+    input.reportKind,
+    new Date(),
+    { categoryRequiresOtherText: input.categoryRequiresOtherText },
+  )
   if (!validation.valid) {
     throw new Error(validation.problemas.join(' '))
   }
@@ -144,6 +166,10 @@ export async function submitProblemReport(
         occurredAt: localInputToIso(input.draft.occurredAt),
         affectedProcess: input.draft.affectedProcess.trim(),
         pendingDelivery: input.draft.pendingDelivery.trim(),
+        ...relatedPayload(input.draft.relatedCoordinationIds, [
+          input.draft.responsibleCoordinationId,
+          input.selectedCoordinationId,
+        ]),
       },
       idempotencyKey,
     )
@@ -167,6 +193,11 @@ export async function submitProblemReport(
       coordinationId,
       affectedCoordinationId: coordinationId,
       categoryId: input.draft.categoryId,
+      // Solo con «Otra»: con otra categoría el texto guardado no viaja.
+      ...(input.categoryRequiresOtherText
+        ? { categoryOtherText: input.draft.categoryOtherText.trim() }
+        : {}),
+      ...relatedPayload(input.draft.relatedCoordinationIds, [coordinationId]),
       severity: input.draft.severity,
       occurredAt: localInputToIso(input.draft.occurredAt),
       // Opcional: vacía = el problema nace sin afectaciones (no se envía).
@@ -183,6 +214,19 @@ export async function submitProblemReport(
 }
 
 /**
+ * Coordinaciones relacionadas enviables. Sin ninguna, el campo no viaja: así
+ * un reporte sin relacionadas produce la misma huella de idempotencia que
+ * antes de existir el selector.
+ */
+function relatedPayload(
+  relatedIds: readonly string[] | undefined,
+  excludedIds: readonly (string | null)[],
+): { relatedCoordinationIds?: string[] } {
+  const ids = sanitizeRelatedIds(relatedIds ?? [], excludedIds)
+  return ids.length > 0 ? { relatedCoordinationIds: ids } : {}
+}
+
+/**
  * Mensaje para el usuario según la causa del fallo del alta. Los códigos los
  * fija el backend (ai-orchestrator.service.ts); el resto conserva el mensaje
  * del servidor (permisos, validaciones).
@@ -192,6 +236,10 @@ export function describeReportSubmissionError(error: unknown): string {
     switch (error.code) {
       case 'REGISTRATION_IN_PROGRESS':
         return 'El registro sigue procesándose en el servidor. Espere unos segundos y confirme de nuevo: no se creará un duplicado.'
+      case 'CATEGORY_OTHER_TEXT_REQUIRED':
+        return 'Escriba la categoría de la situación: eligió «Otra».'
+      case 'CATEGORY_OTHER_TEXT_NOT_ALLOWED':
+        return 'La categoría escrita solo se envía con «Otra». Revise la categoría elegida.'
       case 'IDEMPOTENCY_KEY_REUSED':
         return 'El intento anterior ya quedó registrado con otros datos. Revise «Mis reportes»: si confirma de nuevo se creará un registro nuevo.'
       case 'TIMEOUT':

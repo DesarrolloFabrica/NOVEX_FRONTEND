@@ -42,8 +42,10 @@ export function ReportSituationModal({
     const { overflow } = document.body.style
     document.body.style.overflow = 'hidden'
 
-    // Primer campo del formulario; si aún no está, el propio diálogo.
+    // Campo marcado como inicial (el título); si no, el primer campo de
+    // texto; si aún no hay formulario, el propio diálogo.
     const first =
+      dialog.querySelector<HTMLElement>('.report-form [data-initial-focus]') ??
       dialog.querySelector<HTMLElement>('.report-form input:not([type="radio"]), .report-form textarea') ??
       dialog.querySelector<HTMLElement>('.report-form input') ??
       dialog
@@ -51,6 +53,8 @@ export function ReportSituationModal({
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        // Un selector abierto ya atendió este Escape (cerró su lista).
+        if (event.defaultPrevented) return
         event.preventDefault()
         onCloseRef.current()
         return

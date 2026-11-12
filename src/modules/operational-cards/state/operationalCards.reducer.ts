@@ -305,6 +305,8 @@ export function emptyReportDraft(occurredAt: string): ReportDraft {
     initialConsequence: '',
     affectedProcess: '',
     pendingDelivery: '',
+    relatedCoordinationIds: [],
+    categoryOtherText: '',
   }
 }
 

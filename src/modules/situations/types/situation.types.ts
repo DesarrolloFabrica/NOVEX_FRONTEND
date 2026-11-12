@@ -70,6 +70,11 @@ export interface CreateSituationPayload {
   affectedProcess?: string
   pendingDelivery?: string
   relatedCoordinationIds?: string[]
+  /**
+   * Solo INTERNAL y solo con la categoría «Otra» (código OTRA), donde es
+   * obligatoria: la categoría que escribe quien reporta (3 a 120 caracteres).
+   */
+  categoryOtherText?: string
   /** Solo INTERNAL, opcional. Sin fecha propia: ocurre con el problema. */
   initialConsequence?: { description: string }
 }
@@ -143,6 +148,8 @@ export interface SituationResponse {
   categoryIcon?: string | null
   /** false = categoría legacy (ya no seleccionable), solo lectura. */
   categorySelectable?: boolean | null
+  /** Categoría escrita al elegir «Otra»; `null` en cualquier otra. */
+  categoryOtherText?: string | null
   /** Severidad EFECTIVA: el nivel operacional actual. */
   severity: SituationSeverity
   /** Severidad REPORTADA al registrar. Inmutable; base del SLA. */

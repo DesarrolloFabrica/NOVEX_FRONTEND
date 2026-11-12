@@ -1,0 +1,341 @@
+/* ==========================================================================
+   FORMULARIO «REGISTRAR SITUACIÓN» · coordinaciones relacionadas y «Otra»
+   --------------------------------------------------------------------------
+   Misma piel que el resto del formulario: papel, tinta, filete dorado y vino
+   en los acentos. Los colores salen de los tokens del shell en mesa
+   (`--admin-*`); fuera de él caen a `currentColor` para no romper otra piel.
+
+   La especificidad alta del bloque final («dentro del modal») es deliberada:
+   las reglas del modal fijan colores de campos y ayudas con `!important` y
+   una cadena larga de selectores; solo así el estado de error se ve.
+   ========================================================================== */
+
+.related-picker {
+  --rp-ink: var(--admin-ink, currentColor);
+  --rp-soft: var(--admin-ink-soft, currentColor);
+  --rp-gold: #8a602d;
+  --rp-gold-soft: rgb(201 154 59 / 0.4);
+  --rp-wine: #7a2a31;
+  --rp-paper: #fffdf8;
+  --rp-parchment: #f6ead1;
+  --rp-line: rgb(90 62 30 / 0.3);
+
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.related-picker__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Gana a `.report-form__field label` (rótulo pequeño de la piel base). */
+.report-form .related-picker .related-picker__label {
+  padding: 0;
+  color: var(--rp-ink);
+  font: 650 13.5px var(--admin-sans, inherit);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.related-picker__hint {
+  margin-top: -4px !important;
+}
+
+.related-picker__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- Chips de la selección ---------- */
+
+.related-picker__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.related-picker__chip {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 3px 3px 4px;
+  border: 1px solid rgb(138 96 45 / 0.45);
+  border-radius: 999px;
+  background: var(--rp-parchment);
+  color: var(--rp-ink);
+  font: 600 13px / 1.2 var(--admin-sans, inherit);
+  animation: related-chip-in 160ms ease-out both;
+}
+
+.related-picker__chip-mark,
+.related-picker__option-mark {
+  display: block;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 1px solid rgb(138 96 45 / 0.3);
+  border-radius: 50%;
+  background: #fbf8f1;
+}
+
+.related-picker__chip-mark img,
+.related-picker__option-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.related-picker__chip-mark[data-mark='neutral'],
+.related-picker__option-mark[data-mark='neutral'] {
+  border-style: dashed;
+  background: transparent;
+}
+
+.related-picker__chip-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.related-picker__chip-remove {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--rp-soft);
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.related-picker__chip-remove:hover:not(:disabled) {
+  background: var(--rp-wine);
+  color: #fffaf0;
+}
+
+.related-picker__chip-remove:focus-visible {
+  outline: 3px solid var(--rp-gold-soft);
+  outline-offset: 1px;
+}
+
+.related-picker__chip-remove:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ---------- Buscador ---------- */
+
+.related-picker__combo {
+  position: relative;
+  display: flex;
+  min-width: 0;
+}
+
+.related-picker__search-icon {
+  position: absolute;
+  top: 50%;
+  left: 13px;
+  color: var(--rp-soft);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.report-form .related-picker__input {
+  width: 100%;
+  padding-left: 38px !important;
+}
+
+/* ---------- Lista de opciones (inline, no overlay) ---------- */
+
+.related-picker__list {
+  display: flex;
+  max-height: 236px;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  border: 1px solid var(--rp-line);
+  border-radius: 12px;
+  background: var(--rp-paper);
+  box-shadow: 0 8px 20px rgb(60 35 10 / 0.12);
+  list-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(138 96 45 / 0.45) transparent;
+}
+
+.related-picker__list[hidden] {
+  display: none;
+}
+
+.related-picker__option {
+  display: flex;
+  min-width: 0;
+  min-height: 40px;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: var(--rp-ink);
+  font: 600 13.5px / 1.25 var(--admin-sans, inherit);
+  cursor: pointer;
+}
+
+.related-picker__option[data-active='true'] {
+  border-color: rgb(138 96 45 / 0.35);
+  background: var(--rp-parchment);
+}
+
+.related-picker__option-label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.related-picker__option-add {
+  color: var(--rp-gold);
+  font: 700 10.5px var(--admin-sans, inherit);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.related-picker__option[data-active='true'] .related-picker__option-add {
+  opacity: 1;
+}
+
+.related-picker__empty {
+  padding: 10px;
+  color: var(--rp-soft);
+  font: italic 500 13px var(--admin-sans, inherit);
+}
+
+/* ---------- «Otra»: categoría escrita ---------- */
+
+/*
+ * Cuelga visualmente de «Categoría»: filete dorado a la izquierda, como una
+ * nota al margen del campo que la abrió.
+ */
+.report-form__other-category {
+  position: relative;
+  margin-top: -2px !important;
+  padding-left: 14px !important;
+  border-left: 3px solid #c99a3b !important;
+  animation: other-category-in 180ms ease-out both;
+}
+
+.report-form__other-category[data-invalid='true'] {
+  border-left-color: #b3262e !important;
+}
+
+.report-form__other-hint {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.report-form__other-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.report-form__other-category[data-invalid='true'] input {
+  border-color: #b3262e !important;
+}
+
+.report-form__other-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #b3262e !important;
+  font-weight: 600;
+}
+
+.report-form__other-error::before {
+  content: '!';
+  display: inline-grid;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: #b3262e;
+  color: #fffaf0;
+  font: 800 11px / 1 var(--admin-sans, inherit);
+}
+
+/* ---------- Dentro del modal (vence a sus `!important`) ---------- */
+
+.operational-shell.operational-shell.operational-shell[data-shell-layout] .report-modal .report-form .report-form__other-category[data-invalid='true'] input[aria-invalid='true'] {
+  border-color: #b3262e !important;
+  background: #fff8f6 !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-layout] .report-modal .report-form .report-form__other-category[data-invalid='true'] input[aria-invalid='true']:focus-visible {
+  outline-color: rgb(179 38 46 / 0.3) !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-layout] .report-modal .report-form .report-form__other-category .report-form__hint.report-form__other-error {
+  color: #b3262e !important;
+}
+
+.operational-shell.operational-shell.operational-shell[data-shell-layout] .report-modal .report-form .related-picker .related-picker__label {
+  color: var(--admin-ink) !important;
+}
+
+@keyframes related-chip-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+
+@keyframes other-category-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (max-width: 720px) {
+  .related-picker__list {
+    max-height: 200px;
+  }
+
+  .related-picker__option-add {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .related-picker__chip,
+  .report-form__other-category {
+    animation: none;
+  }
+
+  .related-picker__chip-remove,
+  .related-picker__option-add {
+    transition: none;
+  }
+}

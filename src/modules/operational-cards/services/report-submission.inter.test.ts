@@ -58,5 +58,44 @@ describe('submitProblemReport INTER con responsable elegida', () => {
       KEY,
     )
     expect(createSituationWithAnalysis.mock.calls[0][0].categoryId).toBeUndefined()
+    expect(createSituationWithAnalysis.mock.calls[0][0]).not.toHaveProperty(
+      'categoryOtherText',
+    )
+  })
+})
+
+describe('submitProblemReport INTER con coordinaciones relacionadas', () => {
+  beforeEach(() => {
+    createSituationWithAnalysis.mockReset()
+    createSituationWithAnalysis.mockResolvedValue({
+      situation: { id: 'sit-2' },
+      analysis: null,
+    })
+  })
+
+  it('envía las relacionadas sin la responsable ni la afectada', async () => {
+    await submitProblemReport({
+      draft: {
+        ...emptyReportDraft('2026-09-16T10:00'),
+        title: 'Guiones',
+        description: 'Retraso de entrega',
+        responsibleCoordinationId: 'uuid-responsable',
+        affectedProcess: 'Certificación',
+        pendingDelivery: 'Guiones',
+        relatedCoordinationIds: [
+          'uuid-responsable',
+          'uuid-b2b',
+          'uuid-afectada',
+          'uuid-ing',
+        ],
+      },
+      reportKind: 'INTER_COORDINATION',
+      selectedCoordinationId: 'uuid-afectada',
+      selectedCoordinationCode: 'coord-saber-pro',
+    }, KEY)
+
+    expect(
+      createSituationWithAnalysis.mock.calls[0][0].relatedCoordinationIds,
+    ).toEqual(['uuid-b2b', 'uuid-ing'])
   })
 })

@@ -145,3 +145,48 @@ describe('report-persistence sin almacenamiento disponible', () => {
     expect(readOrCreateReportRequestId('user-mem', DRAFT_KEY)).toBe(first)
   })
 })
+
+describe('report-persistence: campos nuevos del borrador', () => {
+  beforeEach(() => window.localStorage.clear())
+
+  it('conserva relacionadas y categoría escrita tras recargar', () => {
+    const saved = {
+      ...draft(),
+      relatedCoordinationIds: ['uuid-neg', 'uuid-ing'],
+      categoryOtherText: 'Biblioteca',
+    }
+    persistReportDrafts('user-1', { [DRAFT_KEY]: saved })
+    expect(readPersistedReportDrafts('user-1')).toEqual({ [DRAFT_KEY]: saved })
+  })
+
+  it('un borrador guardado antes de estos campos sigue valiendo y se completa', () => {
+    const legacy: Record<string, unknown> = { ...draft() }
+    delete legacy.relatedCoordinationIds
+    delete legacy.categoryOtherText
+    window.localStorage.setItem(
+      'novex.cards.reportDrafts.v1:user-1',
+      JSON.stringify({ [DRAFT_KEY]: legacy }),
+    )
+    expect(readPersistedReportDrafts('user-1')[DRAFT_KEY]).toEqual({
+      ...draft(),
+      relatedCoordinationIds: [],
+      categoryOtherText: '',
+    })
+  })
+
+  it('descarta valores corruptos en los campos nuevos sin perder el borrador', () => {
+    window.localStorage.setItem(
+      'novex.cards.reportDrafts.v1:user-1',
+      JSON.stringify({
+        [DRAFT_KEY]: {
+          ...draft(),
+          relatedCoordinationIds: ['uuid-neg', 7, '', 'uuid-neg'],
+          categoryOtherText: 42,
+        },
+      }),
+    )
+    const restored = readPersistedReportDrafts('user-1')[DRAFT_KEY]
+    expect(restored.relatedCoordinationIds).toEqual(['uuid-neg'])
+    expect(restored.categoryOtherText).toBe('')
+  })
+})

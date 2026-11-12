@@ -105,6 +105,77 @@ describe('submitProblemReport INTERNAL (única puerta de creación)', () => {
     expect(createSituationWithAnalysis).not.toHaveBeenCalled()
   })
 
+  it('con «Otra» envía la categoría escrita recortada', async () => {
+    await submitProblemReport({
+      draft: { ...baseDraft(), categoryId: 'cat-otra', categoryOtherText: '  Biblioteca ' },
+      reportKind: 'INTERNAL',
+      selectedCoordinationId: 'uuid-fabrica',
+      selectedCoordinationCode: 'coord-fabrica-contenidos',
+      categoryRequiresOtherText: true,
+    }, KEY)
+    expect(createSituationWithAnalysis.mock.calls[0][0]).toEqual(
+      expect.objectContaining({
+        categoryId: 'cat-otra',
+        categoryOtherText: 'Biblioteca',
+      }),
+    )
+  })
+
+  it('con otra categoría, un texto guardado de «Otra» no viaja', async () => {
+    await submitProblemReport({
+      draft: { ...baseDraft(), categoryOtherText: 'Biblioteca' },
+      reportKind: 'INTERNAL',
+      selectedCoordinationId: 'uuid-fabrica',
+      selectedCoordinationCode: 'coord-fabrica-contenidos',
+      categoryRequiresOtherText: false,
+    }, KEY)
+    expect(createSituationWithAnalysis.mock.calls[0][0]).not.toHaveProperty(
+      'categoryOtherText',
+    )
+  })
+
+  it('«Otra» sin texto válido no llega al servidor', async () => {
+    for (const text of ['', '   ', 'ab']) {
+      await expect(
+        submitProblemReport({
+          draft: { ...baseDraft(), categoryId: 'cat-otra', categoryOtherText: text },
+          reportKind: 'INTERNAL',
+          selectedCoordinationId: 'uuid-fabrica',
+          selectedCoordinationCode: 'coord-fabrica-contenidos',
+          categoryRequiresOtherText: true,
+        }, KEY),
+      ).rejects.toThrow(/Categoría «Otra»/)
+    }
+    expect(createSituationWithAnalysis).not.toHaveBeenCalled()
+  })
+
+  it('envía varias coordinaciones relacionadas, sin la propia ni duplicados', async () => {
+    await submitProblemReport({
+      draft: {
+        ...baseDraft(),
+        relatedCoordinationIds: ['uuid-neg', 'uuid-fabrica', 'uuid-ing', 'uuid-neg'],
+      },
+      reportKind: 'INTERNAL',
+      selectedCoordinationId: 'uuid-fabrica',
+      selectedCoordinationCode: 'coord-fabrica-contenidos',
+    }, KEY)
+    expect(
+      createSituationWithAnalysis.mock.calls[0][0].relatedCoordinationIds,
+    ).toEqual(['uuid-neg', 'uuid-ing'])
+  })
+
+  it('sin relacionadas el campo no viaja (misma huella que antes)', async () => {
+    await submitProblemReport({
+      draft: baseDraft(),
+      reportKind: 'INTERNAL',
+      selectedCoordinationId: 'uuid-fabrica',
+      selectedCoordinationCode: 'coord-fabrica-contenidos',
+    }, KEY)
+    const payload = createSituationWithAnalysis.mock.calls[0][0]
+    expect(payload).not.toHaveProperty('relatedCoordinationIds')
+    expect(payload).not.toHaveProperty('categoryOtherText')
+  })
+
   it('valida el largo de la afectación inicial', () => {
     const result = validateReportDraft(
       { ...baseDraft(), initialConsequence: 'x'.repeat(2001) },
