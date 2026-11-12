@@ -54,6 +54,7 @@ Las variables `VITE_*` se **incrustan en tiempo de compilación**. Cambiarlas ex
 | `VITE_ENABLE_EMAIL_LOGIN` | No | Solo desarrollo local; mantener `false` fuera de local |
 | `VITE_APP_NAME` | No | Default `NOVEX` |
 | `VITE_APP_ENV` | No | `development` / `production` |
+| `VITE_ENABLE_COORDINATOR_TOUR` | No | `true` ofrece el recorrido guiado del COORDINADOR en ese despliegue; por defecto `false` (en `npm run dev` siempre está disponible) |
 
 El cliente usa `VITE_API_BASE_URL` como variable principal y recurre a
 `VITE_API_URL` únicamente por compatibilidad.
