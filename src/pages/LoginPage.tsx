@@ -13,12 +13,7 @@ import {
   sanitizeReturnPath,
   type SessionExpiryNotice,
 } from '@/modules/auth/utils/sessionExpiryNotice'
-import {
-  NOVEX_BETA_HINT,
-  NOVEX_BETA_LABEL,
-} from '@/shared/constants/platformStatus'
 import { LoginStageSpotlight } from '@/pages/LoginStageSpotlight'
-import { LoginTicketFrame } from '@/pages/LoginTicketFrame'
 import type { NovexCharacterHandle } from '@/shared/character/NovexCharacterFigure'
 import { POST_LOGIN_REACTION, reactionHoldMs } from '@/shared/transition/postLoginTransition'
 import { usePostLoginTransitionCue } from '@/shared/transition/postLoginTransitionCue'
@@ -160,22 +155,14 @@ export function LoginPage() {
       <div className="novex-login-stage__overlay" aria-hidden="true" />
 
       <div className="novex-login-stage__content">
+        <div className="novex-login-stage__identity">
         <header className="novex-login-stage__brand">
           <p className="novex-login-stage__eyebrow">
             <span aria-hidden="true" />
             Centro operacional
             <span aria-hidden="true" />
           </p>
-          <div className="novex-login-stage__title">
-            <h1>NOVEX</h1>
-            <span
-              className="novex-beta-mark"
-              title={NOVEX_BETA_HINT}
-              aria-label={NOVEX_BETA_HINT}
-            >
-              {NOVEX_BETA_LABEL}
-            </span>
-          </div>
+          <div className="novex-login-stage__title"><h1>NOVEX</h1></div>
           <p className="novex-login-stage__tagline">Inteligencia para decidir</p>
         </header>
 
@@ -183,15 +170,15 @@ export function LoginPage() {
         <div className="novex-login-stage__character-slot">
           <LoginStageSpotlight characterRef={characterRef} />
         </div>
+        </div>
 
         <section className="novex-login-stage__panel" aria-labelledby="access-title">
-          <LoginTicketFrame />
           <header className="novex-login-stage__panel-header">
-            <h2 id="access-title">Acceda a <strong>NOVEX</strong></h2>
+            <h2 id="access-title">Accede a tu cuenta</h2>
             <p className="novex-login-stage__panel-lead">
               {emailLoginEnabled
-                ? 'Ingrese con Google o con su correo institucional.'
-                : 'Ingrese con su cuenta de Google institucional.'}
+                ? 'Ingresa con tu cuenta institucional para continuar en el Centro Operacional.'
+                : 'Ingresa con tu cuenta de Google institucional para continuar en el Centro Operacional.'}
             </p>
           </header>
 
@@ -222,8 +209,9 @@ export function LoginPage() {
                 onError={handleGoogleError}
                 useOneTap={false}
                 ux_mode="popup"
-                theme="filled_black"
+                theme="outline"
                 size="large"
+                width="400"
                 text="signin_with"
                 shape="rectangular"
                 logo_alignment="left"
