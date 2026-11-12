@@ -52,7 +52,7 @@ const STATUS_LABEL: Record<string, string> = {
   ACTIVE: 'activo',
   INACTIVE: 'inactivo',
   OPEN: 'abierta',
-  IN_PROGRESS: 'en revisión',
+  IN_PROGRESS: 'en atención',
   RESOLVED: 'resuelta',
   CLOSED: 'cerrada',
   CANCELLED: 'anulada',

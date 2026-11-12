@@ -4,7 +4,6 @@
 // y despacha acciones); el reducer permanece puro.
 
 import {
-  createContext,
   useCallback,
   useEffect,
   useMemo,
@@ -44,6 +43,7 @@ import {
 import { clearUserOperationalDrafts } from '@/modules/operational-cards/services/clear-user-drafts'
 import { ApiError, setUnauthorizedHandler } from '@/shared/api/http'
 import { getErrorMessage } from '@/shared/utils/error'
+import { AuthContext } from './authContextObject'
 
 interface AuthState {
   user: User | null
@@ -160,7 +160,6 @@ export interface AuthContextValue extends AuthState {
   saveOnboardingProgress: (step: number, completed?: boolean) => Promise<void>
 }
 
-export const AuthContext = createContext<AuthContextValue | null>(null)
 
 function currentReturnPath(): string | null {
   if (typeof window === 'undefined') return null
@@ -249,7 +248,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         dispatch({
           type: 'AUTH_BOOTSTRAP_TRANSIENT_FAILURE',
           error:
-            'No pudimos verificar tu sesión por un problema temporal de conexión. Puedes reintentar sin perder el trabajo en curso.',
+            'No pudimos verificar su sesión por un problema temporal de conexión. Puede reintentar sin perder el trabajo en curso.',
           user: cached,
         })
         return

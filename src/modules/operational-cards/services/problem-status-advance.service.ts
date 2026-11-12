@@ -19,7 +19,7 @@ export async function submitProblemStatusAdvance(
 ): Promise<ProblemDetail> {
   if (currentStatus !== 'OPEN') {
     throw new Error(
-      'Solo un problema Abierto puede pasar a En atención.',
+      'Solo una situación Abierta puede pasar a En atención.',
     )
   }
 

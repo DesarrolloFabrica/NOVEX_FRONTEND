@@ -1,5 +1,6 @@
 import { expect, test, type Page } from 'playwright/test'
 import { operationalOverviewFixture } from './operational-overview.fixture'
+import { authMeBody } from './support/authMe'
 
 /**
  * LISTA PERSISTENTE DE PROBLEMAS.
@@ -19,9 +20,6 @@ const SESSION_KEY = 'novex.auth.session.v1'
 const TOKEN_KEY = 'novex.auth.accessToken.v1'
 const CARD = '[data-testid="coordination-card"]'
 const SLOT = '[data-testid="coordination-table-slot"]'
-const FAN_SLOT = '[data-testid="coordination-deck-fan-slot"]'
-const PANEL = '[data-testid="coordination-problem-list"]'
-const PARENT = 'coord-operaciones-academicas'
 
 const PERMISSIONS = [
   'SITUATIONS_VIEW',
@@ -112,7 +110,7 @@ async function installApi(page: Page) {
 
     if (url.pathname.endsWith('/auth/me')) {
       await route.fulfill({
-        json: { user: { ...session, fullName: session.name } },
+        json: authMeBody({ ...session, fullName: session.name }),
       })
       return
     }
@@ -445,7 +443,7 @@ test.describe('lista persistente de problemas · 1440x900', () => {
     await openShell(page)
 
     await selectCard(page, 'coord-b2b')
-    await page.getByTestId('breadcrumb-direction').click()
+    await page.getByTestId('deck-ribbon-back').click()
 
     await expect(page.locator(LIST)).toHaveCount(0)
     await expect(page.getByTestId('shell-region-coordination-problems')).toContainText(
@@ -618,7 +616,7 @@ test.describe('lista persistente de problemas · 1920x1080', () => {
       fullPage: false,
     })
 
-    await page.getByTestId('breadcrumb-direction').click()
+    await page.getByTestId('deck-ribbon-back').click()
     await expect(page.locator(LIST)).toHaveCount(0)
 
     await selectCard(page, DECK_PARENT)

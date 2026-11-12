@@ -4,30 +4,25 @@ import type { SituationResponse } from '@/modules/situations/types/situation.typ
 import { AdminKpiDashboard } from '@/modules/operational-cards/components/AdminKpiDashboard'
 import type { CoordinationOverview } from '@/modules/operational-cards/types/operational-overview.contract'
 import {
-  IconBan,
   IconBarChart,
-  IconBook,
   IconChevronLeft,
   IconChevronRight,
   IconCrown,
   IconGear,
-  IconSwap,
 } from '@/modules/operational-cards/components/OperationalIcons'
 
 /**
  * Vistas de consulta del ADMIN en el panel derecho.
  *
- * Las tres tarjetas guía del menú («Gestión de Situaciones Operativas»,
- * «Historial y Aprendizajes» y «Acciones Administrativas») eran texto sin
- * destino. Cada una abre aquí una lectura construida con el MISMO listado de
- * situaciones que usa el resto del Centro (`GET /situations`): no hay datos
- * inventados ni un endpoint nuevo. El endpoint de aprendizajes por KPI exige
- * `KPIS_VIEW`, que el ADMIN no tiene, así que el historial de aprendizajes sale
- * de las situaciones cerradas y de su registro de resolución.
+ * «Gestión de situaciones operativas» y «Acciones administrativas» abren aquí
+ * una lectura construida con el MISMO listado de situaciones que usa el resto
+ * del Centro (`GET /situations`): no hay datos inventados ni un endpoint nuevo.
+ * Los cierres y sus aprendizajes se consultan en «Historial» (ProblemHistoryPanel),
+ * filtrado por período en el servidor; la antigua vista «Historial y
+ * aprendizajes» lo duplicaba y se retiró.
  */
 export type AdminInsightView =
   | 'operations'
-  | 'learnings'
   | 'admin-actions'
   | 'kpis'
 
@@ -58,8 +53,6 @@ export function AdminInsightPanel(props: AdminInsightPanelProps) {
   switch (props.view) {
     case 'operations':
       return <OperationsView {...props} />
-    case 'learnings':
-      return <LearningsView {...props} />
     case 'admin-actions':
       return <AdminActionsView {...props} />
     case 'kpis':
@@ -72,6 +65,32 @@ export function AdminInsightPanel(props: AdminInsightPanelProps) {
 /* ========================================================================== */
 
 const PAGE_LIMIT = 100
+/**
+ * Se recorren TODAS las páginas que anuncia `total`: antes solo se leía la
+ * primera (100 por estado) y Gestión y Acciones
+ * administrativas se cortaban en silencio, con sus porcentajes calculados
+ * sobre esa lista parcial. Tope defensivo (2.000 por estado), como en LEVEL 1.
+ */
+const MAX_PAGES_PER_STATUS = 20
+
+async function fetchAllSituationsByStatus(status: string): Promise<SituationResponse[]> {
+  const first = await fetchSituations({ status, limit: PAGE_LIMIT, page: 1 })
+  const pageCount = Math.min(
+    Math.ceil((first.total ?? first.items.length) / PAGE_LIMIT),
+    MAX_PAGES_PER_STATUS,
+  )
+  if (pageCount <= 1) return first.items
+  const rest = await Promise.all(
+    Array.from({ length: pageCount - 1 }, (_unused, index) =>
+      fetchSituations({ status, limit: PAGE_LIMIT, page: index + 2 }),
+    ),
+  )
+  // Un caso que cambia de página entre peticiones no se cuenta dos veces.
+  const seen = new Set<string>()
+  return [first, ...rest]
+    .flatMap((response) => response.items)
+    .filter((item) => (seen.has(item.id) ? false : (seen.add(item.id), true)))
+}
 
 /** Lista vacía estable: evita recalcular memos mientras carga. */
 const NO_SITUATIONS: SituationResponse[] = []
@@ -92,17 +111,10 @@ function useSituationsByStatus(statuses: readonly string[]): {
   useEffect(() => {
     let cancelled = false
     setState({ status: 'loading' })
-    Promise.all(
-      key.split(',').map((status) =>
-        fetchSituations({ status, limit: PAGE_LIMIT, page: 1 }),
-      ),
-    )
-      .then((responses) => {
+    Promise.all(key.split(',').map((status) => fetchAllSituationsByStatus(status)))
+      .then((lists) => {
         if (cancelled) return
-        setState({
-          status: 'ready',
-          items: responses.flatMap((response) => response.items),
-        })
+        setState({ status: 'ready', items: lists.flat() })
       })
       .catch((error: unknown) => {
         if (cancelled) return
@@ -143,29 +155,23 @@ const SEVERITY_RANK: Record<string, number> = {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  OPEN: 'Abierto',
-  IN_PROGRESS: 'En progreso',
-  RESOLVED: 'Resuelto',
-  CLOSED: 'Cerrado',
-  CANCELLED: 'Anulado',
+  OPEN: 'Abierta',
+  IN_PROGRESS: 'En atención',
+  RESOLVED: 'En atención',
+  CLOSED: 'Cerrada',
+  CANCELLED: 'Anulada',
 }
 
 const SLA_LABEL: Record<string, string> = {
-  on_track: 'SLA en plazo',
-  at_risk: 'SLA en riesgo',
-  overdue: 'SLA vencido',
-  closed: 'SLA cerrado',
+  on_track: 'En plazo',
+  at_risk: 'Plazo en riesgo',
+  overdue: 'Plazo vencido',
+  closed: 'Plazo cerrado',
 }
 
 const shortDate = new Intl.DateTimeFormat('es-CO', {
   day: '2-digit',
   month: 'short',
-  year: 'numeric',
-  timeZone: TIME_ZONE,
-})
-
-const monthLabel = new Intl.DateTimeFormat('es-CO', {
-  month: 'long',
   year: 'numeric',
   timeZone: TIME_ZONE,
 })
@@ -189,21 +195,12 @@ function ageLabel(iso: string): string {
   return `hace ${days} días`
 }
 
-function capitalize(text: string): string {
-  return text.charAt(0).toUpperCase() + text.slice(1)
-}
-
 function coordinationLabel(
   situation: SituationResponse,
   labelByCode: Record<string, string>,
 ): string {
   const code = situation.coordinationCode ?? ''
   return labelByCode[code] ?? situation.coordinationName ?? 'Sin coordinación'
-}
-
-function percent(part: number, total: number): string {
-  if (total === 0) return '—'
-  return `${Math.round((part / total) * 100)} %`
 }
 
 export function InsightHeader({
@@ -227,6 +224,7 @@ export function InsightHeader({
           <button
             type="button"
             className="admin-insight__back"
+            data-testid="admin-insight-back"
             onClick={onBack}
             aria-label="Volver al menú"
             title="Volver al menú"
@@ -351,7 +349,7 @@ function SituationRow({
         className="admin-insight__row"
         data-severity={situation.severity}
         onClick={() => onOpen(situation)}
-        title="Abrir expediente"
+        title="Abrir detalle"
       >
         <span className="admin-insight__row-severity" aria-hidden="true" />
         <span className="admin-insight__row-body">
@@ -458,8 +456,8 @@ function OperationsView({
       <InsightHeader
         icon={<IconGear size={22} />}
         eyebrow={`Consulta · ${scopeLabel}`}
-        title="Gestión de Situaciones Operativas"
-        subtitle="Situaciones activas ordenadas por prioridad: SLA vencido y severidad primero."
+        title="Gestión de situaciones operativas"
+        subtitle="Situaciones activas ordenadas por prioridad: plazo vencido y severidad primero."
         onBack={onBack}
       />
 
@@ -473,13 +471,14 @@ function OperationsView({
           <div className="admin-insight__metrics">
             <Metric value={counts.all} label="Activas" />
             <Metric value={counts.critical} label="Críticas" tone="critical" />
-            <Metric value={counts.overdue} label="SLA vencido" tone="critical" />
-            <Metric value={counts.inProgress} label="En progreso" tone="stable" />
+            <Metric value={counts.overdue} label="Plazo vencido" tone="critical" />
+            <Metric value={counts.inProgress} label="En atención" tone="stable" />
           </div>
 
           <p className="admin-insight__caption">
-            {counts.all} situaciones activas en {counts.coordinations}{' '}
-            coordinaciones · {counts.atRisk} con SLA en riesgo.
+            {counts.all} {counts.all === 1 ? 'situación activa' : 'situaciones activas'} en{' '}
+            {counts.coordinations} {counts.coordinations === 1 ? 'coordinación' : 'coordinaciones'} ·{' '}
+            {counts.atRisk} con plazo en riesgo.
           </p>
 
           <Segmented<OperationsFilter>
@@ -489,8 +488,8 @@ function OperationsView({
             options={[
               { value: 'all', label: 'Todas', count: counts.all },
               { value: 'critical', label: 'Críticas', count: counts.critical },
-              { value: 'overdue', label: 'SLA vencido', count: counts.overdue },
-              { value: 'in-progress', label: 'En progreso', count: counts.inProgress },
+              { value: 'overdue', label: 'Plazo vencido', count: counts.overdue },
+              { value: 'in-progress', label: 'En atención', count: counts.inProgress },
             ]}
           />
 
@@ -529,200 +528,6 @@ function OperationsView({
                 />
               ))}
             </ul>
-          )}
-        </>
-      ) : null}
-    </section>
-  )
-}
-
-/* ========================================================================== */
-/* Historial y aprendizajes                                                    */
-/* ========================================================================== */
-
-const CLOSED_STATUSES = ['CLOSED'] as const
-
-type Grouping = 'week' | 'month' | 'cycle'
-
-function bogotaParts(iso: string): { year: number; month: number; day: number } {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: TIME_ZONE,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(new Date(iso))
-  const get = (type: string) => Number(parts.find((p) => p.type === type)?.value)
-  return { year: get('year'), month: get('month'), day: get('day') }
-}
-
-function groupKey(iso: string, grouping: Grouping): { key: string; label: string } {
-  const { year, month, day } = bogotaParts(iso)
-  if (grouping === 'cycle') {
-    const half = month <= 6 ? 1 : 2
-    return {
-      key: `${year}-H${half}`,
-      label: `Ciclo ${half} · ${year} (${half === 1 ? 'enero–junio' : 'julio–diciembre'})`,
-    }
-  }
-  if (grouping === 'month') {
-    return {
-      key: `${year}-${String(month).padStart(2, '0')}`,
-      label: capitalize(monthLabel.format(new Date(Date.UTC(year, month - 1, 15)))),
-    }
-  }
-  const date = new Date(Date.UTC(year, month - 1, day))
-  const weekday = (date.getUTCDay() + 6) % 7
-  date.setUTCDate(date.getUTCDate() - weekday)
-  const monday = date.toISOString().slice(0, 10)
-  const end = new Date(date)
-  end.setUTCDate(end.getUTCDate() + 6)
-  const fmt = new Intl.DateTimeFormat('es-CO', {
-    day: 'numeric',
-    month: 'short',
-    timeZone: 'UTC',
-  })
-  return {
-    key: monday,
-    label: `Semana del ${fmt.format(date).replace('.', '')} al ${fmt.format(end).replace('.', '')}`,
-  }
-}
-
-function LearningsView({
-  onBack,
-  onOpenSituation,
-  labelByCode,
-  colorByCode,
-  scopeLabel,
-}: AdminInsightPanelProps) {
-  const { state, retry } = useSituationsByStatus(CLOSED_STATUSES)
-  const [grouping, setGrouping] = useState<Grouping>('month')
-
-  const items = state.status === 'ready' ? state.items : NO_SITUATIONS
-  const totals = useMemo(() => {
-    const onTime = items.filter((s) => s.closedOnTime === true).length
-    const withLearning = items.filter((s) => s.resolution?.learning).length
-    return { closed: items.length, onTime, withLearning }
-  }, [items])
-
-  const groups = useMemo(() => {
-    const map = new Map<string, { label: string; items: SituationResponse[] }>()
-    const sorted = [...items].sort(
-      (left, right) =>
-        new Date(right.closedAt ?? right.updatedAt).getTime() -
-        new Date(left.closedAt ?? left.updatedAt).getTime(),
-    )
-    for (const situation of sorted) {
-      const { key, label } = groupKey(
-        situation.closedAt ?? situation.updatedAt,
-        grouping,
-      )
-      const group = map.get(key) ?? { label, items: [] }
-      group.items.push(situation)
-      map.set(key, group)
-    }
-    return [...map.entries()].map(([key, group]) => ({ key, ...group }))
-  }, [items, grouping])
-
-  return (
-    <section className="admin-insight" data-view="learnings">
-      <InsightHeader
-        icon={<IconBook size={22} />}
-        eyebrow={scopeLabel ? `Consulta · ${scopeLabel}` : 'Consulta · situaciones cerradas'}
-        title="Historial y Aprendizajes"
-        subtitle="Cierres agrupados por período, con su cumplimiento de SLA y la lección registrada."
-        onBack={onBack}
-      />
-
-      {state.status === 'loading' ? <LoadingBlock /> : null}
-      {state.status === 'error' ? (
-        <ErrorBlock message={state.message} onRetry={retry} />
-      ) : null}
-
-      {state.status === 'ready' ? (
-        <>
-          <div className="admin-insight__metrics admin-insight__metrics--three">
-            <Metric value={totals.closed} label="Cerradas" />
-            <Metric
-              value={percent(totals.onTime, totals.closed)}
-              label="Cerradas a tiempo"
-              tone="stable"
-            />
-            <Metric
-              value={totals.withLearning}
-              label="Con aprendizaje"
-              tone="alert"
-            />
-          </div>
-
-          <Segmented<Grouping>
-            label="Agrupar por"
-            value={grouping}
-            onChange={setGrouping}
-            options={[
-              { value: 'week', label: 'Semana' },
-              { value: 'month', label: 'Mes' },
-              { value: 'cycle', label: 'Ciclo' },
-            ]}
-          />
-
-          {groups.length === 0 ? (
-            <EmptyBlock
-              title="Aún no hay situaciones cerradas"
-              text="Cuando se cierren situaciones, aquí aparecerán agrupadas con su aprendizaje."
-            />
-          ) : (
-            groups.map((group) => {
-              const onTime = group.items.filter((s) => s.closedOnTime === true).length
-              return (
-                <section key={group.key} className="admin-insight__group">
-                  <header className="admin-insight__group-head">
-                    <h3>{group.label}</h3>
-                    <span>
-                      {group.items.length}{' '}
-                      {group.items.length === 1 ? 'cierre' : 'cierres'} ·{' '}
-                      {percent(onTime, group.items.length)} a tiempo
-                    </span>
-                  </header>
-                  <ul className="admin-insight__list">
-                    {group.items.map((situation) => (
-                      <SituationRow
-                        key={situation.id}
-                        situation={situation}
-                        labelByCode={labelByCode}
-                        colorByCode={colorByCode}
-                        onOpen={onOpenSituation}
-                        meta={
-                          <>
-                            <span className="admin-insight__row-age">
-                              Cerrada el {formatDate(situation.closedAt)}
-                            </span>
-                            {situation.closedOnTime === true ? (
-                              <Pill tone="stable">A tiempo</Pill>
-                            ) : situation.closedOnTime === false ? (
-                              <Pill tone="critical">Fuera de plazo</Pill>
-                            ) : null}
-                            <Pill tone={severityTone(situation.severity)}>
-                              {SEVERITY_LABEL[situation.severity] ?? situation.severity}
-                            </Pill>
-                          </>
-                        }
-                      >
-                        {situation.resolution?.learning ? (
-                          <span className="admin-insight__learning">
-                            «{situation.resolution.learning}»
-                            <small>— {situation.resolution.resolvedByUserName}</small>
-                          </span>
-                        ) : (
-                          <span className="admin-insight__learning admin-insight__learning--missing">
-                            Aprendizaje no registrado en el cierre.
-                          </span>
-                        )}
-                      </SituationRow>
-                    ))}
-                  </ul>
-                </section>
-              )
-            })
           )}
         </>
       ) : null}
@@ -774,36 +579,24 @@ function AdminActionsView({
       <InsightHeader
         icon={<IconCrown size={22} />}
         eyebrow="Exclusivo del administrador"
-        title="Acciones Administrativas"
-        subtitle="Herramientas excepcionales sobre la vigencia y la asignación de cada caso."
+        title="Acciones administrativas"
+        subtitle="Herramientas excepcionales sobre la vigencia y la asignación de cada situación."
         onBack={onBack}
       />
 
-      <div className="admin-insight__tools">
-        <article className="admin-insight__tool" data-tool="cancel">
-          <span className="admin-insight__tool-icon" aria-hidden="true">
-            <IconBan size={18} />
-          </span>
-          <div>
-            <h3>Anular situación</h3>
-            <p>
-              Retira un caso registrado por error o duplicado. Exige un motivo y
-              conserva quién lo anuló, cuándo y desde qué estado.
-            </p>
-          </div>
-        </article>
-        <article className="admin-insight__tool" data-tool="transfer">
-          <span className="admin-insight__tool-icon" aria-hidden="true">
-            <IconSwap size={18} />
-          </span>
-          <div>
-            <h3>Trasladar coordinación</h3>
-            <p>
-              Reasigna la coordinación responsable de una situación activa cuando
-              el caso pertenece a otra área.
-            </p>
-          </div>
-        </article>
+      {/* Texto informativo, no controles: las acciones viven en el detalle. */}
+      <div className="admin-insight__caption">
+        <p>Desde el detalle de cada situación activa puede:</p>
+        <ul>
+          <li>
+            <strong>Anularla</strong>, si se registró por error o está duplicada.
+            Exige un motivo y conserva quién la anuló, cuándo y desde qué estado.
+          </li>
+          <li>
+            <strong>Trasladarla</strong> a otra coordinación responsable cuando
+            corresponde a otra área.
+          </li>
+        </ul>
       </div>
 
       {state.status === 'loading' ? <LoadingBlock /> : null}
@@ -921,7 +714,7 @@ function KpiView({ onBack, kpi, labelByCode, colorByCode }: AdminInsightPanelPro
         icon={<IconBarChart size={22} />}
         eyebrow="Indicadores · consulta"
         title="Indicadores operacionales"
-        subtitle="Cómo está la operación hoy, dónde se concentran los problemas y cómo evolucionan."
+        subtitle="Cómo está la operación hoy, dónde se concentran las situaciones y cómo evolucionan."
         onBack={onBack}
       />
       <AdminKpiDashboard

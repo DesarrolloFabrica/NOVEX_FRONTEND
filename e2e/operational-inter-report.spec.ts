@@ -1,5 +1,6 @@
 import { expect, test, type Page } from 'playwright/test'
 import { operationalOverviewFixture } from './operational-overview.fixture'
+import { authMeBody } from './support/authMe'
 
 /**
  * Registro dual ANALISTA: problema interno y dependencia entre coordinaciones.
@@ -72,7 +73,7 @@ async function install(page: Page) {
 
     if (url.pathname.endsWith('/auth/me')) {
       await route.fulfill({
-        json: { user: { ...session, fullName: session.name } },
+        json: authMeBody({ ...session, fullName: session.name }),
       })
       return
     }

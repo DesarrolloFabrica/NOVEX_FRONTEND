@@ -2,7 +2,8 @@
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { AuthProvider, AuthContext } from '@/modules/auth/context/AuthContext'
+import { AuthProvider } from '@/modules/auth/context/AuthContext'
+import { AuthContext } from '@/modules/auth/context/authContextObject'
 import { useContext } from 'react'
 import {
   clearAccessToken,

@@ -1,6 +1,7 @@
 import { expect, test, type Page } from 'playwright/test'
 import { operationalOverviewFixture } from './operational-overview.fixture'
 import path from 'node:path'
+import { authMeBody } from './support/authMe'
 
 /**
  * Composición COORDINADOR: carta propia, sin baraja, grupos Debo resolver /
@@ -227,13 +228,11 @@ async function install(
 
     if (url.pathname.endsWith('/auth/me')) {
       await route.fulfill({
-        json: {
-          user: {
+        json: authMeBody({
             ...session,
             coordinationId,
             fullName: session.name,
-          },
-        },
+          }),
       })
       return
     }
@@ -474,7 +473,7 @@ test.describe('Centro operacional COORDINADOR', () => {
     await expect(internal.getByTestId('problem-row-origin')).toHaveText('B2B')
     await expect(internal.getByTestId('problem-row-origin')).toHaveAttribute(
       'title',
-      'Problema interno · B2B',
+      'Situación interna · B2B',
     )
 
     // Debo resolver (INTER): somos la responsable → la afectada.
@@ -502,7 +501,7 @@ test.describe('Centro operacional COORDINADOR', () => {
     )
     await expect(affectingRow).toHaveAttribute(
       'aria-label',
-      /Negocios nos afecta\. Dependencia que nos afecta\. Coordinación responsable: .+\. Severidad Alta\. Abierto\./,
+      /Negocios nos afecta\. Dependencia que nos afecta\. Coordinación responsable: .+\. Severidad Alta\. Abierta\./,
     )
   })
 
@@ -683,8 +682,7 @@ test.describe('Centro operacional COORDINADOR', () => {
       const url = new URL(route.request().url())
       if (url.pathname.endsWith('/auth/me')) {
         await route.fulfill({
-          json: {
-            user: {
+          json: authMeBody({
               id: 'e2e-admin',
               name: 'Admin',
               roleCode: 'ADMIN',
@@ -692,8 +690,7 @@ test.describe('Centro operacional COORDINADOR', () => {
               permissions: adminPerms,
               coordinationId: null,
               fullName: 'Admin',
-            },
-          },
+            }),
         })
         return
       }

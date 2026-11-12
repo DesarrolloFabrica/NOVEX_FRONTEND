@@ -36,7 +36,7 @@ describe('filtros del panel de problemas', () => {
       value: 'ALL',
       label: 'Todas las severidades',
     })
-    expect(STATUS_FILTER_OPTIONS[0]).toEqual({ value: 'ACTIVE', label: 'Activos' })
+    expect(STATUS_FILTER_OPTIONS[0]).toEqual({ value: 'ACTIVE', label: 'Activas' })
     expect(isDefaultProblemListFilters(DEFAULT_PROBLEM_LIST_FILTERS)).toBe(true)
   })
 
@@ -49,18 +49,18 @@ describe('filtros del panel de problemas', () => {
       'LOW',
     ])
     expect(STATUS_FILTER_OPTIONS.map((o) => `${o.value}:${o.label}`)).toEqual([
-      'ACTIVE:Activos',
-      'ALL:Todos',
-      'OPEN:Abiertos',
-      'IN_PROGRESS:En revisión',
-      'CLOSED:Cerrados',
+      'ACTIVE:Activas',
+      'ALL:Todas',
+      'OPEN:Abiertas',
+      'IN_PROGRESS:En atención',
+      'CLOSED:Cerradas',
     ])
   })
 
-  it('IN_PROGRESS se presenta como «En revisión» sin cambiar el valor', () => {
-    expect(PANEL_STATUS_LABEL.IN_PROGRESS).toBe('En revisión')
-    expect(PANEL_STATUS_LABEL.OPEN).toBe('Abierto')
-    expect(PANEL_STATUS_LABEL.CLOSED).toBe('Cerrado')
+  it('IN_PROGRESS se presenta como «En atención» sin cambiar el valor', () => {
+    expect(PANEL_STATUS_LABEL.IN_PROGRESS).toBe('En atención')
+    expect(PANEL_STATUS_LABEL.OPEN).toBe('Abierta')
+    expect(PANEL_STATUS_LABEL.CLOSED).toBe('Cerrada')
   })
 
   it('activos sin filtro de severidad: la lista completa, en su orden', () => {
@@ -83,7 +83,7 @@ describe('filtros del panel de problemas', () => {
     ])
   })
 
-  it('«Cerrados» no toma nada de LEVEL 1; «Todos» toma activos y cerrados', () => {
+  it('«Cerradas» no toma nada de LEVEL 1; «Todas» toma activas y cerradas', () => {
     expect(filterActiveProblems(ACTIVE, { severity: 'ALL', status: 'CLOSED' })).toEqual([])
     expect(needsActiveProblems('CLOSED')).toBe(false)
     expect(needsClosedProblems('CLOSED')).toBe(true)
@@ -97,24 +97,24 @@ describe('filtros del panel de problemas', () => {
   it('el vacío nombra la combinación elegida', () => {
     expect(
       buildFilteredEmptyMessage({ severity: 'CRITICAL', status: 'IN_PROGRESS' }, 'complete'),
-    ).toBe('No hay problemas críticos en revisión')
+    ).toBe('No hay situaciones críticas en atención')
     expect(
       buildFilteredEmptyMessage({ severity: 'HIGH', status: 'OPEN' }, 'complete'),
-    ).toBe('No hay problemas abiertos de severidad alta')
+    ).toBe('No hay situaciones abiertas de severidad alta')
     expect(buildFilteredEmptyMessage({ severity: 'ALL', status: 'CLOSED' }, 'complete')).toBe(
-      'No hay problemas cerrados',
+      'No hay situaciones cerradas',
     )
     expect(buildFilteredEmptyMessage({ severity: 'LOW', status: 'ALL' }, 'complete')).toBe(
-      'No hay problemas de severidad baja',
+      'No hay situaciones de severidad baja',
     )
     expect(buildFilteredEmptyMessage({ severity: 'ALL', status: 'ALL' }, 'complete')).toBe(
-      'No hay problemas registrados',
+      'No hay situaciones registradas',
     )
   })
 
   it('con lectura parcial aclara que habla de lo visible para el usuario', () => {
     expect(
       buildFilteredEmptyMessage({ severity: 'ALL', status: 'CLOSED' }, 'own-only'),
-    ).toBe('No hay problemas cerrados visibles para tu usuario')
+    ).toBe('No hay situaciones cerradas visibles para su usuario')
   })
 })

@@ -1,6 +1,5 @@
 import { useMemo, type ReactNode } from 'react'
 import { CoordinationTable } from '@/modules/operational-cards/components/CoordinationTable'
-import { OperationalBreadcrumb } from '@/modules/operational-cards/components/OperationalBreadcrumb'
 import { resolveDeckSelectionContext } from '@/modules/operational-cards/data/deckContext'
 import {
   buildTableLayout,
@@ -250,28 +249,6 @@ export function OperationalCardExperience({
 
       {deckHeader ? deckHeader(headerContext) : null}
 
-      {/*
-        HUECO FIJO de la flecha de regreso, exista o no.
-
-        En DIRECTOR la banda de la baraja mide lo que pide su contenido
-        (`max-content`). Si la fila de la flecha apareciera y desapareciera con
-        la selección, la banda crecería y menguaría con ella, y la banda de
-        arriba —personaje y problemas— saltaría ~33 px cada vez que se vuelve a
-        la mesa. Reservar la fila siempre deja la escena quieta.
-      */}
-      <div className="operational-deck__crumb-slot">
-        {selectedCoordination && (
-          <OperationalBreadcrumb
-            /* La miga usa el nombre de PRODUCTO, no el técnico: si no, pulsar
-               la carta «Servicio» abriría una miga que dice «Homologaciones». */
-            coordinationName={
-              labelByCode[selectedCoordination.code] ??
-              selectedCoordination.name
-            }
-            onBackToDirection={clearCoordination}
-          />
-        )}
-      </div>
 
       {/*
         ZONA DE COMPOSICIÓN: la mesa (el retorno vive en la miga superior).
@@ -362,17 +339,19 @@ export function OperationalCardExperience({
             así que pulsar una fila ya no tapa la mesa: la deja donde está.
           */}
 
-          {/* Registro de analista: sin problemas activos no se muestra nada.
-              Con problemas, marcador textual PROVISIONAL. No es carta, no
-              entra en la baraja y no participa de la selección. */}
+          {/* Registro de analista: sin situaciones activas no se muestra nada.
+              Con situaciones, un marcador textual. No es carta, no entra en
+              la baraja y no participa de la selección. */}
           {overview.analystRegistry.activeProblemsCount > 0 && (
             <p
               className="operational-deck__provisional"
               data-testid="analyst-registry-placeholder"
             >
-              Registro de analista —{' '}
-              {overview.analystRegistry.activeProblemsCount} problemas activos
-              (provisional)
+              Registro de analista:{' '}
+              {overview.analystRegistry.activeProblemsCount}{' '}
+              {overview.analystRegistry.activeProblemsCount === 1
+                ? 'situación activa'
+                : 'situaciones activas'}
             </p>
           )}
         </>

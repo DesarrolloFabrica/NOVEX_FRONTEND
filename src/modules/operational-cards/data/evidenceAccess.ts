@@ -14,10 +14,16 @@ const WORKABLE = new Set(['OPEN', 'IN_PROGRESS'])
  */
 export function mayRequestRetiredEvidenceHistory(
   user: Pick<User, 'roleCode' | 'permissions'> | null | undefined,
+  /**
+   * El backend decidió que este usuario puede operar ESTE caso (`canUpdate`,
+   * `canResolve` o `canAdvanceToInProgress`). Sin esa señal la petición acaba
+   * en un 404 seguro: el analista lo recibía en cada expediente ajeno.
+   */
+  caseOperable = true,
 ): boolean {
   if (!user) return false
   if (user.roleCode === 'ADMIN') return true
-  return hasPermission(user, 'SITUATIONS_UPDATE')
+  return hasPermission(user, 'SITUATIONS_UPDATE') && caseOperable
 }
 
 /**

@@ -943,94 +943,6 @@
   }
 }
 
-/* La mesa ya no necesita un punto de ruptura a 1700 px: el tamaño de carta es
-   un clamp sobre el ancho del viewport y la geometría se expresa en unidades
-   de carta, así que 1440 y 1920 usan el MISMO layout a distinta escala. */
-
-/* ==========================================================================
-   Selección: carta activa, baraja comprimida y migas
-   ========================================================================== */
-
-.operational-breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 0 4px;
-  color: var(--deck-muted);
-  font-size: 12px;
-}
-
-/* Alto de la flecha, reservado aunque no haya selección (ver la experiencia). */
-.operational-deck__crumb-slot {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  min-height: 32px;
-}
-
-/* Integración casa/oficina: las dos ramas estilizaron esta misma flecha de
-   32 px (como `__root`/`__icon` y como `__back`/`__back-icon`). Queda una
-   sola definición, la de `__back`, que es la clase que lleva el marcado. */
-
-/*
- * Flecha de regreso: el único control de vuelta a la mesa.
- *
- * 32 × 32 px de área interactiva aunque el icono mida 16: cumple el mínimo de
- * 24 × 24 de WCAG 2.2 (2.5.8) con holgura para el dedo, y no hay otro control
- * a su alrededor con el que pueda solaparse —a su derecha solo hay texto—.
- */
-.operational-breadcrumb__back {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: 1px solid var(--deck-line-strong);
-  border-radius: 999px;
-  background: rgb(14 24 42 / 0.6);
-  color: var(--deck-text);
-  cursor: pointer;
-  /* Sin retardo de doble toque en pantallas táctiles. */
-  touch-action: manipulation;
-  transition:
-    background-color 160ms ease,
-    border-color 160ms ease;
-}
-
-.operational-breadcrumb__back:hover,
-.operational-breadcrumb__back:focus-visible {
-  border-color: rgb(150 196 255 / 0.5);
-  background: rgb(20 34 58 / 0.85);
-}
-
-.operational-breadcrumb__back:focus-visible {
-  outline: 2px solid rgb(120 200 255 / 0.85);
-  outline-offset: 2px;
-}
-
-.operational-breadcrumb__back-icon {
-  width: 16px;
-  height: 16px;
-}
-
-.operational-breadcrumb__current {
-  color: var(--deck-text);
-  font-weight: 600;
-}
-
-/* Lectura institucional en modo selección. Va al extremo opuesto de la fila:
-   acompaña sin competir con la coordinación activa, que es el foco. */
-.operational-breadcrumb__summary {
-  margin: 0 0 0 auto;
-  padding-right: 4px;
-  color: var(--deck-muted);
-  font-size: 12px;
-  letter-spacing: 0.01em;
-  text-align: right;
-}
-
 /* ---------- Lectura de LEVEL 1: superficie de la lista de problemas ---------- */
 
 /*
@@ -1074,7 +986,6 @@
   background: none;
   box-shadow: none;
 }
-
 
 /* Línea de identidad en el borde alto: la misma señal cromática que lleva la
    carta, para que panel y carta se lean como una sola cosa. */
@@ -1478,7 +1389,6 @@
   font-size: 13px;
 }
 
-
 /* Con una coordinación bajo observación, el personaje cede alto para que quepa
    el panel de LEVEL 1 sin que la mesa se mueva de sitio. Sigue presente y
    sigue reaccionando: cede tamaño, no protagonismo. */
@@ -1606,11 +1516,6 @@
    su slot. Ninguna carta se mueve respecto a sus vecinas, así que quien pulsó
    B2B sigue sabiendo dónde está Saber Pro. Tampoco hay carta focal, ni copia,
    ni segunda escena: lo único que cambia es CÓMO se presentan. */
-
-
-
-
-
 
 /*
  * El personaje recupera su presencia de reposo.
@@ -1894,4 +1799,11 @@
   .operational-deck-fan__member {
     transition-duration: 0ms;
   }
+}
+
+/* Coordinación sin isla propia: un velo de su color en lugar de una imagen rota. */
+.coordination-card__island--empty {
+  background:
+    radial-gradient(circle at 50% 40%, rgb(var(--coord-rgb, 139 90 43) / 0.28), transparent 70%),
+    linear-gradient(160deg, rgb(var(--coord-rgb, 139 90 43) / 0.12), rgb(var(--coord-rgb, 139 90 43) / 0.04));
 }

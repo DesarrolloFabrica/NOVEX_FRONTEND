@@ -547,11 +547,21 @@
   }
 }
 
+/* Teléfono: la carta se queda a un lado de su estado, más pequeña. Apilada
+   ocupaba toda la primera pantalla y empujaba las situaciones fuera de vista. */
 @media (max-width: 420px) {
   .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own {
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-own__card {
+    --card-width: 92px;
   }
 }
+
+
 
 @media (prefers-reduced-motion: reduce) {
   .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__tab {
@@ -882,14 +892,17 @@
 
 .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row__badge {
   padding: 4px 10px;
+  border: 1px solid rgb(var(--row-rgb) / 0.4);
   border-radius: 7px;
-  background: rgb(var(--row-rgb) / 0.16);
-  color: rgb(var(--row-rgb));
+  background: rgb(var(--row-rgb) / 0.14);
+  /* El color de la coordinación mezclado con la tinta del pergamino: legible
+     también con colores claros (teal, gris, ámbar), que con el filtro anterior
+     quedaban casi del color del fondo. */
+  color: color-mix(in srgb, rgb(var(--row-rgb)) 30%, #2a160a);
   font: 800 11px var(--admin-sans);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   white-space: nowrap;
-  filter: brightness(0.75) saturate(1.2);
 }
 
 .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .situation-row__main {
@@ -2746,4 +2759,14 @@
    de la cabecera del expediente se retira para no duplicarlo. */
 .operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .action-panel[data-mode='detail'] .problem-detail__back {
   display: none;
+}
+
+/* Al final de la hoja: debe ganar a la regla de escritorio (misma especificidad). */
+/* El título de la bandeja se lee completo en móvil (antes «Situaciones de mi coord…»). */
+@media (max-width: 720px) {
+  .operational-shell.operational-shell.operational-shell[data-shell-experience='coordinator'][data-shell-layout='deck'] .coordinator-situations__title {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
 }

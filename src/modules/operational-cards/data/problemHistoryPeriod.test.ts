@@ -64,10 +64,10 @@ describe('problemHistoryPeriod · Colombia', () => {
   it('resumen usa el total real; sin total no inventa cifra', () => {
     const month = buildMonthPeriod(2026, 8)
     expect(summaryCountLabel(3, month)).toBe(
-      '3 problemas cerrados en septiembre de 2026',
+      '3 situaciones cerradas en septiembre de 2026',
     )
     expect(summaryCountLabel(1, month)).toBe(
-      '1 problema cerrado en septiembre de 2026',
+      '1 situación cerrada en septiembre de 2026',
     )
     expect(summaryCountLabel(null, month)).toBeNull()
   })

@@ -20,11 +20,11 @@ describe('problemDossier helpers', () => {
     expect(resolveDossierSlaNotice(undefined)).toBeNull()
     expect(resolveDossierSlaNotice('at_risk')).toEqual({
       tone: 'at_risk',
-      label: 'SLA en riesgo',
+      label: 'Plazo en riesgo',
     })
     expect(resolveDossierSlaNotice('overdue')).toEqual({
       tone: 'overdue',
-      label: 'SLA vencido',
+      label: 'Plazo vencido',
     })
   })
 
@@ -33,10 +33,10 @@ describe('problemDossier helpers', () => {
     expect(isDossierClosedStatus('OPEN')).toBe(false)
   })
 
-  it('distingue Interno y Dependencia', () => {
+  it('distingue Interna y Dependencia', () => {
     expect(resolveDossierTypeBadge('INTERNAL')).toEqual({
       key: 'internal',
-      label: 'Interno',
+      label: 'Interna',
     })
     expect(resolveDossierTypeBadge('INTER_COORDINATION')).toEqual({
       key: 'dependency',

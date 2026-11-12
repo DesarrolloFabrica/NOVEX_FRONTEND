@@ -171,7 +171,7 @@ describe('administración · anulación y traslado', () => {
     })
     const fail = operationalCardsReducer(base, {
       type: 'SUBMIT_COORDINATION_TRANSFER_ERROR',
-      message: 'La coordinación responsable cambió desde que consultó el caso. Vuelva a intentarlo.',
+      message: 'La coordinación responsable cambió desde que consultó la situación. Vuelva a intentarlo.',
     })
     expect(fail.submission.kind).toBe('coordination-transfer')
     expect(fail.submission.status).toBe('error')

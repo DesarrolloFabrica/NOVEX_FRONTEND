@@ -155,7 +155,7 @@ export function resolveProblemMark(input: ProblemMarkInput): ProblemMark {
     return build(
       responsible,
       'internal',
-      (label) => `Problema interno · ${label}`,
+      (label) => `Situación interna · ${label}`,
       responsible ? 'Coordinación responsable' : null,
     )
   }

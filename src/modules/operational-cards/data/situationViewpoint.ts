@@ -2,17 +2,17 @@ import type { CoordinationId } from '@/modules/impact-network/data/coordination-
 import type { SituationReportKind } from '@/modules/situations/types/situation.types'
 
 /**
- * Etiqueta de un problema según el punto de vista de la carta observada.
+ * Etiqueta de una situación según el punto de vista de la carta observada.
  *
- *   INTERNAL                         → «Problema interno»
+ *   INTERNAL                         → «Situación interna»
  *   INTER + carta = afectada         → «Dependencia que nos afecta»
- *   INTER + carta = responsable      → «Problema que debemos resolver para otra coordinación»
+ *   INTER + carta = responsable      → «Situación que debemos resolver para otra coordinación»
  *   Mis reportes / sin carta         → etiqueta neutra por kind
  */
 export type SituationViewpointLabel =
-  | 'Problema interno'
+  | 'Situación interna'
   | 'Dependencia que nos afecta'
-  | 'Problema que debemos resolver para otra coordinación'
+  | 'Situación que debemos resolver para otra coordinación'
   | 'Dependencia entre coordinaciones'
 
 export function resolveSituationViewpointLabel(input: {
@@ -22,14 +22,14 @@ export function resolveSituationViewpointLabel(input: {
   affectedCode: string | null | undefined
 }): SituationViewpointLabel {
   const kind = input.reportKind ?? 'INTERNAL'
-  if (kind !== 'INTER_COORDINATION') return 'Problema interno'
+  if (kind !== 'INTER_COORDINATION') return 'Situación interna'
 
   const selected = input.selectedCoordinationCode
   if (selected && input.affectedCode === selected) {
     return 'Dependencia que nos afecta'
   }
   if (selected && input.responsibleCode === selected) {
-    return 'Problema que debemos resolver para otra coordinación'
+    return 'Situación que debemos resolver para otra coordinación'
   }
   return 'Dependencia entre coordinaciones'
 }

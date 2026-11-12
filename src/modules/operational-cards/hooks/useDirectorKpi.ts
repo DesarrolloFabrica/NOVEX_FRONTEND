@@ -1,29 +1,25 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
-  fetchOperationalKpiCoordination,
   fetchOperationalKpiDirection,
   OperationalKpiContractError,
 } from '@/modules/operational-cards/services/operational-kpi.service'
-import type {
-  OperationalKpiCoordinationSnapshot,
-  OperationalKpiDirectionSnapshot,
-} from '@/modules/operational-cards/types/operational-kpi.types'
+import type { OperationalKpiDirectionSnapshot } from '@/modules/operational-cards/types/operational-kpi.types'
 import { getErrorMessage } from '@/shared/utils/error'
 
 export type DirectorKpiLoadStatus = 'loading' | 'error' | 'success'
 
-export function useDirectorKpi(coordinationId: string | null) {
+/**
+ * Indicadores de la Dirección para el shell del DIRECTOR. Una sola lectura que
+ * comparten el resumen, el panel central y el tablero de indicadores (antes el
+ * tablero la repetía, y además se pedían los KPI de la coordinación observada
+ * sin que ninguna vista los usara).
+ */
+export function useDirectorKpi() {
   const [directionStatus, setDirectionStatus] =
     useState<DirectorKpiLoadStatus>('loading')
   const [direction, setDirection] =
     useState<OperationalKpiDirectionSnapshot | null>(null)
   const [directionError, setDirectionError] = useState<string | null>(null)
-
-  const [coordinationStatus, setCoordinationStatus] =
-    useState<DirectorKpiLoadStatus>('success')
-  const [coordination, setCoordination] =
-    useState<OperationalKpiCoordinationSnapshot | null>(null)
-  const [coordinationError, setCoordinationError] = useState<string | null>(null)
 
   const reloadDirection = useCallback(() => {
     setDirectionStatus('loading')
@@ -48,45 +44,11 @@ export function useDirectorKpi(coordinationId: string | null) {
     reloadDirection()
   }, [reloadDirection])
 
-  useEffect(() => {
-    if (!coordinationId) {
-      setCoordination(null)
-      setCoordinationError(null)
-      setCoordinationStatus('success')
-      return
-    }
-    let active = true
-    setCoordinationStatus('loading')
-    setCoordinationError(null)
-    void fetchOperationalKpiCoordination(coordinationId)
-      .then((response) => {
-        if (!active) return
-        setCoordination(response.coordination)
-        setCoordinationStatus('success')
-      })
-      .catch((cause: unknown) => {
-        if (!active) return
-        setCoordination(null)
-        setCoordinationStatus('error')
-        setCoordinationError(
-          cause instanceof OperationalKpiContractError
-            ? cause.message
-            : getErrorMessage(cause),
-        )
-      })
-    return () => {
-      active = false
-    }
-  }, [coordinationId])
-
   return {
     directionStatus,
     direction,
     directionError,
     reloadDirection,
-    coordinationStatus,
-    coordination,
-    coordinationError,
   }
 }
 

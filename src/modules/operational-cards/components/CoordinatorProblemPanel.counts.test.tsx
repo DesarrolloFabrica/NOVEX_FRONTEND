@@ -94,11 +94,11 @@ describe('CoordinatorProblemPanel · conteos oficiales (K-03)', () => {
     )
     const summary = summaryText(html)
 
-    expect(summary).toContain('4 problemas activos')
-    expect(summary).toContain('1 crítico')
+    expect(summary).toContain('4 situaciones activas')
+    expect(summary).toContain('1 crítica')
     expect(summary).toContain('3 dependencias externas afectan mi área')
-    // Antes: 2 + 3 = 5 activos y 5 críticos contados sobre la lista.
-    expect(summary).not.toContain('5 problemas activos')
-    expect(summary).not.toContain('5 críticos')
+    // Antes: 2 + 3 = 5 activas y 5 críticas contadas sobre la lista.
+    expect(summary).not.toContain('5 situaciones activas')
+    expect(summary).not.toContain('5 críticas')
   })
 })

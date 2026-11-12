@@ -43,8 +43,8 @@ interface AuthMeResponse {
 }
 
 export const AUTH_UNAUTHORIZED_MESSAGE =
-  'Tu cuenta no está autorizada para acceder a NOVEX.'
-export const AUTH_INACTIVE_MESSAGE = 'Tu usuario se encuentra inactivo.'
+  'Su cuenta no está autorizada para acceder a NOVEX.'
+export const AUTH_INACTIVE_MESSAGE = 'Su usuario se encuentra inactivo.'
 
 export function mapAuthError(error: unknown): Error {
   if (error instanceof ApiError) {

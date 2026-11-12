@@ -19,7 +19,7 @@ export function ProtectedRoute() {
   if (canRetrySession && !isAuthenticated) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#160d0b] px-6 text-center text-sm text-amber-50/90">
-        <p role="alert">{error ?? 'No pudimos verificar tu sesión.'}</p>
+        <p role="alert">{error ?? 'No pudimos verificar su sesión.'}</p>
         <button
           type="button"
           className="rounded border border-slate-600 px-4 py-2 text-slate-100 hover:border-slate-400"

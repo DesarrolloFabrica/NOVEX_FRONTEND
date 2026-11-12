@@ -20,7 +20,7 @@ export function describeSituationAdministrationError(error: unknown): string {
       case 'SITUATION_CANCELLED':
         return 'Una situación anulada no admite esta operación.'
       case 'COORDINATION_CHANGED':
-        return 'La coordinación responsable cambió desde que consultó el caso. Vuelva a intentarlo.'
+        return 'La coordinación responsable cambió desde que consultó la situación. Vuelva a intentarlo.'
       case 'TRANSFER_SAME_COORDINATION':
         return 'El destino es la coordinación responsable actual.'
       case 'TRANSFER_DESTINATION_INACTIVE':
@@ -43,7 +43,7 @@ export function describeSituationAdministrationError(error: unknown): string {
       return error.message || 'Los datos del formulario no son válidos.'
     }
     if (error.status === 409) {
-      return error.message || 'El caso ya no admite esta operación.'
+      return error.message || 'La situación ya no admite esta operación.'
     }
   }
 

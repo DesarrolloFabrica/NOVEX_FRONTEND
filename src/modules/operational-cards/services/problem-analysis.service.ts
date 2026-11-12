@@ -70,7 +70,7 @@ export function describeAnalysisError(error: unknown): string {
     case 'SITUATION_CANCELLED':
       return 'Esta situación está anulada y no admite un nuevo análisis.'
     case 'PROMPT_TOO_LARGE':
-      return 'El expediente es demasiado amplio para analizarse ahora. Reduzca evidencias o reintente más tarde.'
+      return 'La situación tiene demasiada información para analizarse ahora. Reduzca evidencias o reintente más tarde.'
     case 'COORDINATION_REQUIRED':
       return 'Su usuario necesita una coordinación asignada para solicitar análisis.'
     default:
@@ -87,7 +87,7 @@ export function describeAnalysisError(error: unknown): string {
     return error.message || 'El análisis no puede ejecutarse en el estado actual.'
   }
   if (error.status === 422) {
-    return error.message || 'El análisis no pudo prepararse con el expediente actual.'
+    return error.message || 'El análisis no pudo prepararse con la información actual de la situación.'
   }
   if (error.status === 503) {
     return 'El servicio de análisis no está disponible en este momento. Intente más tarde.'
@@ -99,12 +99,16 @@ export function describeAnalysisError(error: unknown): string {
   return error.message || 'No pudimos completar el análisis inteligente.'
 }
 
-/** Carga el análisis vigente. `null` = aún no hay informe (404). */
+/**
+ * Carga el análisis vigente. `null` = aún no hay informe: el backend responde
+ * 204 (sin contenido); un 404 de una versión anterior se trata igual.
+ */
 export async function loadProblemAnalysis(
   situationId: string,
 ): Promise<ProblemAnalysisView | null> {
   try {
     const response = await fetchSituationAnalysis(situationId)
+    if (!response) return null
     return mapSituationAnalysisToView(response)
   } catch (error) {
     if (isAnalysisNotFoundError(error)) return null

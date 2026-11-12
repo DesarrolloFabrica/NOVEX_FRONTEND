@@ -32,7 +32,7 @@ export function CoordinationProblemFilters({
       data-testid="coordination-problem-filters"
       data-tour="problem-filters"
       role="group"
-      aria-label="Filtrar problemas"
+      aria-label="Filtrar situaciones"
     >
       <div className="coordination-panel__filter">
         <label className="coordination-panel__sr-only" htmlFor={severityId}>

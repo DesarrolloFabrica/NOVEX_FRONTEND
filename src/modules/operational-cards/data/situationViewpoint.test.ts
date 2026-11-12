@@ -16,7 +16,7 @@ describe('situationViewpoint', () => {
         responsibleCode: 'coord-saber-pro',
         affectedCode: 'coord-saber-pro',
       }),
-    ).toBe('Problema interno')
+    ).toBe('Situación interna')
   })
 
   it('distingue impacto recibido y responsabilidad pendiente', () => {
@@ -36,7 +36,7 @@ describe('situationViewpoint', () => {
         responsibleCode: 'coord-fabrica-contenidos',
         affectedCode: 'coord-saber-pro',
       }),
-    ).toBe('Problema que debemos resolver para otra coordinación')
+    ).toBe('Situación que debemos resolver para otra coordinación')
   })
 
   it('unifica el borrador por coordinación y separa la idempotencia por tipo', () => {

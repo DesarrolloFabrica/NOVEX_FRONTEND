@@ -94,8 +94,8 @@ export function ProblemAnalysisPanel({
       >
         <p className="problem-analysis__disclaimer" role="note">
           Sugerencias de inteligencia artificial. No modifican el estado, la
-          severidad ni el responsable del caso. Los hechos confirmados del
-          expediente siguen siendo la fuente operativa.
+          severidad ni el responsable de la situación. Los hechos confirmados
+          en su detalle siguen siendo la fuente operativa.
         </p>
 
         {analysis.status === 'loading' || analysis.status === 'idle' ? (
@@ -144,7 +144,7 @@ export function ProblemAnalysisPanel({
               Versión {latest.analysisVersion}
               {latest.isLatest ? ' (vigente)' : ''} · confianza{' '}
               {Math.round(latest.confidenceOverall * 100)}% ·{' '}
-              <span data-testid="analysis-suggestion-tag">sugerencia IA</span>
+              <span data-testid="analysis-suggestion-tag">Sugerencia de IA</span>
             </p>
 
             <section className="problem-analysis__block">
@@ -167,7 +167,7 @@ export function ProblemAnalysisPanel({
                 Impactos sugeridos
               </h5>
               <p className="problem-analysis__contrast">
-                Afectaciones confirmadas en el expediente:{' '}
+                Afectaciones confirmadas en la situación:{' '}
                 <strong data-testid="analysis-confirmed-count">
                   {confirmedConsequenceCount}
                 </strong>

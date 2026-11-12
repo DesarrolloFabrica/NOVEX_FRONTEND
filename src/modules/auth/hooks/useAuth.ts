@@ -3,10 +3,8 @@
 // Lanza un error claro si se usa fuera del provider (evita estados inválidos).
 
 import { useContext } from 'react'
-import {
-  AuthContext,
-  type AuthContextValue,
-} from '@/modules/auth/context/AuthContext'
+import type { AuthContextValue } from '@/modules/auth/context/AuthContext'
+import { AuthContext } from '@/modules/auth/context/authContextObject'
 
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext)

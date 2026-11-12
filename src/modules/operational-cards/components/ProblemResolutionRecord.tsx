@@ -35,7 +35,7 @@ export function ProblemResolutionRecord({
 
   return (
     <div className="problem-actions__resolved" data-testid="problem-resolved">
-      <h3 className="problem-actions__heading">Problema cerrado</h3>
+      <h3 className="problem-actions__heading">Situación cerrada</h3>
       {resolution ? (
         <>
           <p className="problem-actions__label" data-testid="problem-resolution-label">
@@ -50,7 +50,7 @@ export function ProblemResolutionRecord({
               <>
                 {' · '}
                 <time dateTime={closedAt} data-testid="problem-resolution-closed-at">
-                  Cerrado el {formatDay(closedAt)}
+                  Cerrada el {formatDay(closedAt)}
                 </time>
               </>
             ) : null}
@@ -58,7 +58,7 @@ export function ProblemResolutionRecord({
         </>
       ) : (
         <p className="problem-actions__note" data-testid="problem-without-learning">
-          Este problema se cerró antes de que se registrara el aprendizaje.
+          Esta situación se cerró antes de que se registrara el aprendizaje.
         </p>
       )}
     </div>

@@ -1,5 +1,6 @@
 import { expect, test, type Page } from 'playwright/test'
 import { operationalOverviewFixture } from './operational-overview.fixture'
+import { authMeBody } from './support/authMe'
 
 /**
  * Mesa operacional en reposo: nueve mazos de producto en un solo arco.
@@ -77,7 +78,7 @@ async function install(page: Page) {
     const { pathname } = new URL(route.request().url())
     if (pathname.endsWith('/auth/me')) {
       await route.fulfill({
-        json: { user: { ...session, fullName: session.name } },
+        json: authMeBody({ ...session, fullName: session.name }),
       })
       return
     }
@@ -496,7 +497,7 @@ test.describe('mesa en reposo · 1440x900', () => {
     await expect(page.getByTestId('coordination-carousel')).toHaveCount(0)
     await expect(page.getByTestId('coordination-problem-list')).toBeVisible()
 
-    await page.getByTestId('breadcrumb-direction').click()
+    await page.getByTestId('deck-ribbon-back').click()
 
     await expect(page.getByTestId('coordination-table')).toBeVisible()
     await expect(page.locator(CARD)).toHaveCount(9)

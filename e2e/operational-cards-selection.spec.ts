@@ -1,5 +1,6 @@
 import { expect, test, type Page } from 'playwright/test'
 import { operationalOverviewFixture } from './operational-overview.fixture'
+import { authMeBody } from './support/authMe'
 
 /**
  * Selección de coordinación y LEVEL 1.
@@ -142,7 +143,7 @@ async function installApi(page: Page, options: { fail?: boolean } = {}) {
 
     if (url.pathname.endsWith('/auth/me')) {
       await route.fulfill({
-        json: { user: { ...session, fullName: session.name } },
+        json: authMeBody({ ...session, fullName: session.name }),
       })
       return
     }
@@ -301,7 +302,7 @@ test.describe('selección in-place de coordinación', () => {
     )
 
     // Volver a la Dirección devuelve la composición global.
-    await page.getByTestId('breadcrumb-direction').click()
+    await page.getByTestId('deck-ribbon-back').click()
     await expect(scene).toHaveAttribute('data-composition-mode', 'GLOBAL')
     await expect(table).toHaveAttribute('data-composition-mode', 'GLOBAL')
   })
@@ -382,7 +383,7 @@ test.describe('selección in-place de coordinación', () => {
     await expect(page.getByTestId('operational-breadcrumb')).toContainText(
       'Operación Académica',
     )
-    await expect(page.getByTestId('breadcrumb-direction')).toBeVisible()
+    await expect(page.getByTestId('deck-ribbon-back')).toBeVisible()
 
     const character = page.getByTestId('direction-character')
     await expect(character).toHaveAttribute('data-interaction', 'SELECTED')
@@ -485,8 +486,8 @@ test.describe('selección in-place de coordinación', () => {
       'coord-homologaciones',
       'coord-fabrica-contenidos',
     ]) {
-      if (await page.getByTestId('breadcrumb-direction').count()) {
-        await page.getByTestId('breadcrumb-direction').click()
+      if (await page.getByTestId('deck-ribbon-back').count()) {
+        await page.getByTestId('deck-ribbon-back').click()
         await expect(page.locator(PANEL)).toHaveCount(0)
       }
       await select(page, code)
@@ -623,7 +624,7 @@ test.describe('selección in-place de coordinación', () => {
 
     await select(page, 'coord-especializaciones')
 
-    await page.getByTestId('breadcrumb-direction').click()
+    await page.getByTestId('deck-ribbon-back').click()
 
     await expect(page.getByTestId('coordination-problem-list')).toHaveCount(0)
     await expect(page.getByTestId('operational-breadcrumb')).toHaveCount(0)

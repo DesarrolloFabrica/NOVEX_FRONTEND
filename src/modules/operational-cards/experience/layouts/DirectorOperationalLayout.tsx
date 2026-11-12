@@ -21,12 +21,14 @@ import {
 } from '@/modules/operational-cards/experience/layouts/circusDeckRibbon'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import type { DirectorKpiModel } from '@/modules/operational-cards/hooks/useDirectorKpi'
+import { OPERATIONAL_STATUS_LABEL } from '@/modules/operational-cards/data/operationalStatusLabel'
 import type { OperationalShellModel } from '@/modules/operational-cards/hooks/useOperationalShellModel'
 
 const STATUS_LABEL: Record<string, string> = {
   ESTABLE: 'Operación estable',
   ALERTA: 'Operación en alerta',
   CRITICO: 'Operación crítica',
+  DESCONOCIDO: 'Estado sin datos',
 }
 
 /**
@@ -90,8 +92,9 @@ export function DirectorOperationalLayout({
         .length ?? 0)
 
   // El resumen habla de la coordinación observada o, sin ella, de la Dirección.
+  // Sin dato no se afirma «estable»: se dice que no hay dato.
   const scopeStatus =
-    selectedCoordination?.status ?? directionStatus ?? 'ESTABLE'
+    selectedCoordination?.status ?? directionStatus ?? 'DESCONOCIDO'
   const scopeActive =
     selectedCoordination?.activeProblemsCount ?? activeProblemsCount
   const scopeCritical =
@@ -113,6 +116,7 @@ export function DirectorOperationalLayout({
       <CircusScene />
 
       <OperationalRoleHeader
+        labelByCode={labelByCode}
         experience="director"
         user={user}
         selectedCoordination={selectedCoordination}
@@ -168,7 +172,7 @@ export function DirectorOperationalLayout({
                       <IconTarget size={17} />
                     </span>
                     <span className="admin-general-summary__text">
-                      {scopeActive} situaciones activas
+                      {scopeActive} {scopeActive === 1 ? 'situación activa' : 'situaciones activas'}
                     </span>
                   </li>
                   <li className="admin-general-summary__item">
@@ -193,7 +197,7 @@ export function DirectorOperationalLayout({
                     <IconInfo size={16} />
                   </span>
                   <span className="admin-ticket-tab__title">
-                    Coordinaciones en alerta
+                    Requieren atención
                   </span>
                 </div>
                 <div
@@ -204,9 +208,16 @@ export function DirectorOperationalLayout({
                     {coordinationsInAlert}
                   </span>
                   <span className="admin-my-reports-stat__label">
-                    {coordinationsInAlert === 1
-                      ? 'Coordinación requiere atención'
-                      : 'Coordinaciones requieren atención'}
+                    {coordinationsInAlert === 1 ? 'Coordinación' : 'Coordinaciones'}
+                    {/* Desglose: el título decía «en alerta» y contaba también las críticas. */}
+                    {kpi.direction ? (
+                      <small className="director-alert-stat__breakdown">
+                        {kpi.direction.coordinationStatusTotals.critical}{' '}
+                        {kpi.direction.coordinationStatusTotals.critical === 1 ? 'crítica' : 'críticas'}
+                        {' · '}
+                        {kpi.direction.coordinationStatusTotals.alert} en alerta
+                      </small>
+                    ) : null}
                   </span>
                 </div>
               </div>
@@ -215,7 +226,7 @@ export function DirectorOperationalLayout({
 
           <ShellRegion
             region="coordination-problems"
-            title="Problemas"
+            title="Situaciones"
             className={`operational-shell__region--coordination-problems operational-shell__region--admin-center${ticketClass}`}
             showTitle={false}
             ticketTheme={theme}
@@ -251,16 +262,19 @@ export function DirectorOperationalLayout({
                     <span
                       className={`coordination-focus-banner__health coordination-focus-banner__health--${selectedCoordination.status.toLowerCase()}`}
                     >
-                      {selectedCoordination.status === 'ESTABLE'
-                        ? 'Estable'
-                        : selectedCoordination.status === 'ALERTA'
-                          ? 'Alerta'
-                          : 'Crítico'}
+                      {OPERATIONAL_STATUS_LABEL[selectedCoordination.status] ??
+                        selectedCoordination.status}
                     </span>
                   </div>
                 </div>
               ) : null}
-              <DirectorProblemPanel model={model} direction={kpi.direction} />
+              <DirectorProblemPanel
+                model={model}
+                direction={kpi.direction}
+                directionLoad={kpi.directionStatus}
+                directionError={kpi.directionError}
+                onRetryDirection={kpi.reloadDirection}
+              />
             </div>
           </ShellRegion>
         </div>
@@ -304,7 +318,7 @@ export function DirectorOperationalLayout({
               icon={<IconBarChart size={22} />}
               eyebrow="Indicadores · consulta"
               title="Indicadores operacionales"
-              subtitle="Cómo está la operación hoy, dónde se concentran los problemas y cómo evolucionan."
+              subtitle="Cómo está la operación hoy, dónde se concentran las situaciones y cómo evolucionan."
             />
             <AdminKpiDashboard
               selectedCoordinationId={selectedCoordination?.id ?? null}
@@ -317,6 +331,11 @@ export function DirectorOperationalLayout({
                 )
               }
               onAwaitingCardChange={setAwaitingCard}
+              directionSource={{
+                direction: kpi.direction,
+                error: kpi.directionError,
+                reload: kpi.reloadDirection,
+              }}
             />
           </section>
         </div>

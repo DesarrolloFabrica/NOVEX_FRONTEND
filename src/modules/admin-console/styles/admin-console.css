@@ -2253,3 +2253,31 @@ button.admin-system__block:focus-visible {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/*
+ * La tabla de usuarios cabe en el ancho de la consola (1440 px): la
+ * coordinación y el último acceso pueden partirse en dos líneas y el nombre se
+ * recorta con puntos suspensivos. Antes, nombres y coordinaciones largas en una
+ * sola línea empujaban la columna «Estado» fuera de la vista.
+ */
+.admin-users__table {
+  min-width: 720px;
+}
+
+.admin-users__table td {
+  padding-inline: 12px;
+}
+
+.admin-users__table th button {
+  padding-inline: 12px;
+}
+
+.admin-users__meta {
+  align-items: flex-start;
+  white-space: normal;
+  line-height: 1.35;
+}
+
+.admin-users__person-text {
+  max-width: 260px;
+}

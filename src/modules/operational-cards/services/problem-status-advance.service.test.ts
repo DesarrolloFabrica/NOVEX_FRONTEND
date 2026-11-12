@@ -58,7 +58,7 @@ describe('submitProblemStatusAdvance', () => {
   it('rechaza avance si el estado local no es OPEN', async () => {
     await expect(
       submitProblemStatusAdvance('p1', 'IN_PROGRESS'),
-    ).rejects.toThrow(/Abierto/)
+    ).rejects.toThrow(/Abierta/)
     expect(updateSituation).not.toHaveBeenCalled()
   })
 

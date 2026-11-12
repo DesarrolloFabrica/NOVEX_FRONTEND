@@ -1,5 +1,6 @@
 import { expect, test, type Page } from 'playwright/test'
 import { operationalOverviewFixture } from './operational-overview.fixture'
+import { authMeBody } from './support/authMe'
 
 /**
  * COMPOSICIÓN SIMPLE: la mesa entera, con un nodo bajo observación.
@@ -119,7 +120,7 @@ async function installApi(page: Page) {
 
     if (url.pathname.endsWith('/auth/me')) {
       await route.fulfill({
-        json: { user: { ...session, fullName: session.name } },
+        json: authMeBody({ ...session, fullName: session.name }),
       })
       return
     }
@@ -496,7 +497,7 @@ test.describe('composición simple · 1440x900', () => {
       name: 'Volver a Dirección de Operaciones',
     })
     await expect(action).toBeVisible()
-    await expect(action).toHaveAttribute('data-testid', 'breadcrumb-direction')
+    await expect(action).toHaveAttribute('data-testid', 'deck-ribbon-back')
     await expect(page.getByTestId('operational-breadcrumb')).toContainText(
       'Saber Pro',
     )
@@ -504,7 +505,7 @@ test.describe('composición simple · 1440x900', () => {
     await expect(page.getByText('Volver a la mesa')).toHaveCount(0)
     // Control real, sin etiqueta visible y con nombre accesible propio.
     await expect(action).toHaveText('')
-    await expect(page.locator(`${PANEL} [data-testid="breadcrumb-direction"]`)).toHaveCount(0)
+    await expect(page.locator(`${PANEL} [data-testid="deck-ribbon-back"]`)).toHaveCount(0)
     const arrow = (await action.boundingBox())!
     expect(arrow.width).toBeGreaterThanOrEqual(24)
     expect(arrow.height).toBeGreaterThanOrEqual(24)
@@ -557,7 +558,7 @@ test.describe('composición simple · 1440x900', () => {
     await select(page, 'coord-b2b')
     const simple = await measure(page, 'SIMPLE_SELECTED coord-b2b (referencia)')
 
-    await page.getByTestId('breadcrumb-direction').click()
+    await page.getByTestId('deck-ribbon-back').click()
     await expect(page.locator(PANEL)).toHaveCount(0)
 
     await select(page, 'coord-operaciones-academicas')

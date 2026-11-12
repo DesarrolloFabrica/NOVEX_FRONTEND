@@ -313,16 +313,6 @@
   text-transform: capitalize;
 }
 
-.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .operational-role-header__user-caret {
-  color: #fbeed0;
-  font-size: 13px;
-}
-
-/* El botón de la cabecera no tiene acción: el menú real es el disparador del shell. */
-.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .operational-role-header__menu-btn {
-  display: none;
-}
-
 .operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .operational-shell__menu-anchor {
   top: 20px;
   right: 18px;
@@ -1282,11 +1272,6 @@
   height: auto;
   min-height: 0;
   gap: 0;
-}
-
-/* El admin no usa miga de pan (se oculta en la otra hoja): su ranura sobra. */
-.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .operational-deck__crumb-slot {
-  display: none;
 }
 
 .operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .operational-deck__composition {
@@ -4713,9 +4698,15 @@
 
   .operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .operational-role-header__health-pill {
     height: 28px;
+    flex: 0 0 auto;
     padding: 0 8px;
-    font-size: 11px;
+    /* Solo el valor («Alerta»): el prefijo «Estado:» cortaba el valor a 390 px. */
+    font-size: 0;
     white-space: nowrap;
+  }
+
+  .operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .operational-role-header__health-pill strong {
+    font-size: 11px;
   }
 
   .operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .operational-role-header__badge {
@@ -5523,4 +5514,9 @@
   .shell-menu__chevron {
     transition: none;
   }
+}
+
+/* Cuentas sin nombre registrado muestran su correo: tal cual, sin capitalizar. */
+.operational-shell.operational-shell[data-shell-layout='deck'] .operational-role-header__user-name[data-email='true'] {
+  text-transform: none;
 }

@@ -3,7 +3,7 @@ import {
   LEGACY_EXECUTIVE_SECTION_REDIRECTS,
   LEGACY_PLATFORM_REDIRECTS,
 } from '@/app/legacyOperationalRedirects'
-import { EXECUTIVE_OPERATIONS_HOME } from '@/modules/executive-operations-center'
+import { EXECUTIVE_OPERATIONS_HOME } from '@/modules/executive-operations-center/constants/routes'
 
 describe('legacyOperationalRedirects FE-04', () => {
   it('lista secciones ejecutivas fuera del layout (sin hijas del provider)', () => {

@@ -121,7 +121,7 @@ describe('ProblemAnalysisPanel', () => {
       />,
     )
 
-    expect(html).toContain('sugerencia IA')
+    expect(html).toContain('Sugerencia de IA')
     expect(html).toContain('data-testid="analysis-confirmed-count"')
     expect(html).toContain('>3<')
     expect(html).toContain('sugerido')

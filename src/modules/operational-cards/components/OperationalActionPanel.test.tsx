@@ -118,6 +118,8 @@ function props(
         initialConsequence: '',
         affectedProcess: '',
         pendingDelivery: '',
+        relatedCoordinationIds: [],
+        categoryOtherText: '',
       },
       submission: idleSubmission,
       maxOccurredAt: '2026-09-29T12:00',
@@ -143,7 +145,7 @@ describe('OperationalActionPanel · composición por modo', () => {
     expect(html).not.toContain('data-testid="report-internal-button"')
     expect(html).not.toContain('data-testid="report-dependency-button"')
     expect(html).toContain('data-testid="history-open-button"')
-    expect(html).toContain('¿Ocurrió un problema?')
+    expect(html).toContain('¿Hay una situación que registrar?')
     const headingIdx = html.indexOf('action-panel__idle-heading')
     const ctaIdx = html.indexOf('report-cta-group')
     expect(headingIdx).toBeGreaterThan(-1)

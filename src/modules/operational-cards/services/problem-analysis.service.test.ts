@@ -132,7 +132,7 @@ describe('problem-analysis.service', () => {
       describeAnalysisError(
         new ApiError('large', 422, { code: 'PROMPT_TOO_LARGE' }),
       ),
-    ).toMatch(/amplio|expediente/i)
+    ).toMatch(/demasiada información/i)
     expect(describeAnalysisError(new ApiError('down', 503))).toMatch(
       /no está disponible/i,
     )

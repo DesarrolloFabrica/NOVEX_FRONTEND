@@ -1,5 +1,6 @@
 import { expect, test, type Page } from 'playwright/test'
 import { operationalOverviewFixture } from './operational-overview.fixture'
+import { authMeBody } from './support/authMe'
 
 /**
  * VIDAS del personaje en la baraja (ADMIN / DIRECTOR / ANALISTA).
@@ -124,7 +125,7 @@ async function install(page: Page, roleCode: DeckRole) {
 
     if (url.pathname.endsWith('/auth/me')) {
       await route.fulfill({
-        json: { user: { ...session, fullName: session.name } },
+        json: authMeBody({ ...session, fullName: session.name }),
       })
       return
     }
@@ -298,7 +299,7 @@ async function openShell(page: Page) {
  * quedaría sobre un mazo y su hover mantendría transiciones en marcha.
  */
 async function returnToTable(page: Page) {
-  await page.getByTestId('breadcrumb-direction').click()
+  await page.getByTestId('deck-ribbon-back').click()
   await expect(page.locator(PANEL)).toHaveCount(0)
   await page.mouse.move(1, 1)
   await settle(page)
@@ -712,7 +713,7 @@ test.describe('robustez de la transición', () => {
     await select(page, ESPECIALIZACIONES)
     await createInSelected(page, 'MEDIUM')
     await expect(page.locator(LIVES)).toHaveAttribute('data-transition', 'loss')
-    await domClick(page, '[data-testid="breadcrumb-direction"]')
+    await domClick(page, '[data-testid="deck-ribbon-back"]')
     await expect(page.locator(PANEL)).toHaveCount(0)
     await expect(page.locator(LIVES)).toHaveCount(0)
     await expect(page.locator('.character-lives__delta')).toHaveCount(0)

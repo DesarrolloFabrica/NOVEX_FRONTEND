@@ -145,7 +145,7 @@ export function LoginPage() {
 
   const handleGoogleError = () => {
     setGoogleError(
-      'No se pudo abrir el acceso con Google. Revisa el origen autorizado o permite ventanas emergentes.',
+      'No se pudo abrir el acceso con Google. Revise el origen autorizado o permita ventanas emergentes.',
     )
   }
 
@@ -187,11 +187,11 @@ export function LoginPage() {
         <section className="novex-login-stage__panel" aria-labelledby="access-title">
           <LoginTicketFrame />
           <header className="novex-login-stage__panel-header">
-            <h2 id="access-title">Accede a <strong>Novex</strong></h2>
+            <h2 id="access-title">Acceda a <strong>NOVEX</strong></h2>
             <p className="novex-login-stage__panel-lead">
               {emailLoginEnabled
-                ? 'Ingresa con Google o con tu correo institucional.'
-                : 'Ingresa con tu cuenta de Google institucional.'}
+                ? 'Ingrese con Google o con su correo institucional.'
+                : 'Ingrese con su cuenta de Google institucional.'}
             </p>
           </header>
 

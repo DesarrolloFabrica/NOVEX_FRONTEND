@@ -1,5 +1,6 @@
 import { expect, test, type Page } from 'playwright/test'
 import { operationalOverviewFixture } from './operational-overview.fixture'
+import { authMeBody } from './support/authMe'
 
 /**
  * PANEL DERECHO: reportar o resolver.
@@ -14,7 +15,6 @@ import { operationalOverviewFixture } from './operational-overview.fixture'
  * seleccionar una carta NO abra el formulario.
  */
 
-const TOKEN_KEY = 'novex.auth.accessToken.v1'
 const CARD = '[data-testid="coordination-card"]'
 const PANEL = '[data-testid="action-panel"]'
 
@@ -121,7 +121,7 @@ async function install(page: Page) {
     const url = new URL(route.request().url())
 
     if (url.pathname.endsWith('/auth/me')) {
-      await route.fulfill({ json: { user: { ...session, fullName: session.name } } })
+      await route.fulfill({ json: authMeBody({ ...session, fullName: session.name }) })
       return
     }
     if (url.pathname.endsWith('/operational-overview')) {

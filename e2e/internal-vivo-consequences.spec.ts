@@ -1,5 +1,6 @@
 import { expect, test, type Page } from 'playwright/test'
 import { operationalOverviewFixture } from './operational-overview.fixture'
+import { authMeBody } from './support/authMe'
 
 /**
  * INTERNAL VIVO · afectaciones en el Centro Operacional (COORDINADOR).
@@ -170,7 +171,7 @@ async function install(page: Page) {
     const path = url.pathname
 
     if (path.endsWith('/auth/me')) {
-      await route.fulfill({ json: { user: { ...session, fullName: session.name } } })
+      await route.fulfill({ json: authMeBody({ ...session, fullName: session.name }) })
       return
     }
     if (path.endsWith('/operational-overview')) {

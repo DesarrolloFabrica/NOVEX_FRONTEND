@@ -1,5 +1,6 @@
 import type { Page } from 'playwright/test'
 import { installImpactNetworkApiMocks } from './impact-network.fixtures'
+import { authMeBody } from './support/authMe'
 
 const AUTH_SESSION_KEY = 'novex.auth.session.v1'
 const AUTH_TOKEN_KEY = 'novex.auth.accessToken.v1'
@@ -115,10 +116,10 @@ export async function installRoleExperience(page: Page, roleCode: RoleCode) {
 
     if (path.endsWith('/auth/me')) {
       await route.fulfill({
-        json: {
-          user: {
+        json: authMeBody({
             id: session.id,
             fullName: session.name,
+            permissions: session.permissions,
             roleCode,
             roleName,
             coordinationId: session.coordinationId ?? null,
@@ -126,8 +127,7 @@ export async function installRoleExperience(page: Page, roleCode: RoleCode) {
             onboardingStep: 100,
             onboardingCompleted: true,
             onboardingSeenAt: session.onboardingSeenAt,
-          },
-        },
+          }),
       })
       return
     }

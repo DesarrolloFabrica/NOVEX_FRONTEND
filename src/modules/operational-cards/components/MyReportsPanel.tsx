@@ -143,7 +143,7 @@ export function MyReportsPanel({
 
       {status === 'ready' && items.length === 0 && (
         <p className="my-reports__note" data-testid="my-reports-empty">
-          Todavía no ha reportado ningún problema.
+          Todavía no ha reportado ninguna situación.
         </p>
       )}
 

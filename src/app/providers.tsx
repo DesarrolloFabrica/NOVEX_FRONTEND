@@ -3,7 +3,6 @@
 
 import type { ReactNode } from 'react'
 import { AuthProvider } from '@/modules/auth/context/AuthContext'
-import { OperationalEventsProvider } from '@/modules/operational-events/context/OperationalEventsContext'
 
 interface ProvidersProps {
   children: ReactNode
@@ -11,8 +10,6 @@ interface ProvidersProps {
 
 export function Providers({ children }: ProvidersProps) {
   return (
-    <AuthProvider>
-      <OperationalEventsProvider>{children}</OperationalEventsProvider>
-    </AuthProvider>
+    <AuthProvider>{children}</AuthProvider>
   )
 }

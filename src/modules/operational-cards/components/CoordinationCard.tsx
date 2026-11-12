@@ -79,6 +79,9 @@ export function CoordinationCard({
   // coordinación. Se prefiere una carta funcional a un hueco negro.
   const [faceFailed, setFaceFailed] = useState(false)
   const illustrated = face !== null && !faceFailed
+  // Coordinaciones sin isla propia (nuevas o de prueba): su ruta no existe y el
+  // navegador pintaba el icono de imagen rota. Si falla, queda el fondo de color.
+  const [islandFailed, setIslandFailed] = useState(false)
 
   // El nombre de producto manda cuando existe.
   const displayName = productLabel ?? identity.shortName
@@ -133,8 +136,21 @@ export function CoordinationCard({
           propio, o cuando el suyo no cargó. Nunca se sustituye por el de otra. */}
       {!illustrated && (
         <>
-          <span className="coordination-card__island">
-            <img src={identity.islandAsset} alt="" aria-hidden="true" />
+          <span
+            className={
+              islandFailed
+                ? 'coordination-card__island coordination-card__island--empty'
+                : 'coordination-card__island'
+            }
+          >
+            {islandFailed ? null : (
+              <img
+                src={identity.islandAsset}
+                alt=""
+                aria-hidden="true"
+                onError={() => setIslandFailed(true)}
+              />
+            )}
           </span>
 
           <img

@@ -189,7 +189,7 @@ describe('CancelSituationModal', () => {
           situationTitle="Caída de servicios"
           situationId="sit-1"
           isSubmitting={false}
-          error="El caso ya no admite esta operación."
+          error="La situación ya no admite esta operación."
           onClose={vi.fn()}
           onConfirm={vi.fn()}
           onRetryDetail={onRetryDetail}
@@ -198,7 +198,7 @@ describe('CancelSituationModal', () => {
     })
 
     const errorEl = document.querySelector('[data-testid="cancel-situation-error"]')
-    expect(errorEl?.textContent).toContain('El caso ya no admite esta operación.')
+    expect(errorEl?.textContent).toContain('La situación ya no admite esta operación.')
 
     const retryBtn = document.querySelector('.novex-ops-modal__retry-btn') as HTMLButtonElement
     expect(retryBtn).not.toBeNull()

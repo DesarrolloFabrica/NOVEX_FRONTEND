@@ -30,33 +30,33 @@ export function resolveResolutionCopy(
     return {
       blockTitle: 'Cerrar con aprendizaje',
       blockHint:
-        'Al confirmar, el problema queda cerrado. Todo el relato se guarda en un único aprendizaje del cierre.',
+        'Al confirmar, la situación queda cerrada. Todo el relato se guarda en un único aprendizaje del cierre.',
       fieldLabel: 'Aprendizaje del cierre',
       fieldHelp:
-        'Indique qué se hizo para solucionarlo, qué procesos resultaron afectados y qué medida ayudaría a evitar que se repita.',
+        'Indique qué se hizo para solucionarla, qué procesos resultaron afectados y qué medida ayudaría a evitar que se repita.',
       placeholder:
         'Ej.: Se restableció el servicio de notas; afectó carga de notas y consulta de horarios; se documentó un runbook de rollback.',
-      submitLabel: 'Cerrar problema',
+      submitLabel: 'Cerrar situación',
       submittingLabel: 'Cerrando…',
       resolvedLabel: 'Aprendizaje registrado',
       emptyError:
-        'Escriba el aprendizaje del cierre antes de cerrar el problema.',
+        'Escriba el aprendizaje del cierre antes de cerrar la situación.',
     }
   }
 
   return {
     blockTitle: 'Cerrar con aprendizaje',
     blockHint:
-      'Al confirmar, el problema queda cerrado. Todo el relato se guarda en un único aprendizaje del cierre.',
+      'Al confirmar, la situación queda cerrada. Todo el relato se guarda en un único aprendizaje del cierre.',
     fieldLabel: 'Aprendizaje del cierre',
     fieldHelp:
-      'Indique qué se hizo para solucionarlo, qué entrega o dependencia resultó afectada y qué medida ayudaría a evitar que se repita.',
+      'Indique qué se hizo para solucionarla, qué entrega o dependencia resultó afectada y qué medida ayudaría a evitar que se repita.',
     placeholder:
       'Ej.: Se acordó el handoff con Especializaciones; la entrega del listado retrasó la matrícula; se fijará fecha de compromiso antes de reportar.',
-    submitLabel: 'Cerrar problema',
+    submitLabel: 'Cerrar situación',
     submittingLabel: 'Cerrando…',
     resolvedLabel: 'Aprendizaje registrado',
     emptyError:
-      'Escriba el aprendizaje del cierre antes de cerrar el problema.',
+      'Escriba el aprendizaje del cierre antes de cerrar la situación.',
   }
 }

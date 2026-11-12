@@ -7,7 +7,7 @@ import type { SituationSeverity } from '@/modules/situations/types/situation.typ
  * SEVERIDAD REPORTADA vs ACTUAL, en una línea.
  *
  * Si nunca cambió no se pinta nada: el badge de la cabecera ya lo dice. Si
- * cambió, se muestra «Reportado como Media · Actual Alta» y un acceso compacto
+ * cambió, se muestra «Reportada como Media · Actual Alta» y un acceso compacto
  * al historial («Media → Alta · 10 oct · por antigüedad»). No es una caja
  * técnica: solo los datos que explican por qué el nivel no es el reportado.
  */
@@ -20,9 +20,9 @@ const SEVERITY_LABEL: Record<SituationSeverity, string> = {
 }
 
 function reasonOf(step: ProblemSeverityStep): string {
-  if (step.source === 'REPORTED') return 'reportado'
+  if (step.source === 'REPORTED') return 'reportada'
   // Historia mock del escenario QA: nunca se presenta como política real.
-  if (step.simulated) return 'escalamiento simulado (QA)'
+  if (step.simulated) return 'escalamiento de prueba'
   return 'por antigüedad'
 }
 
@@ -43,7 +43,7 @@ export function ProblemSeverityTrail({
   return (
     <div className="severity-trail" data-testid="severity-trail">
       <p className="severity-trail__summary">
-        <span className="severity-trail__label">Reportado como</span>{' '}
+        <span className="severity-trail__label">Reportada como</span>{' '}
         <span
           className="severity-trail__value"
           data-severity={reportedSeverity}

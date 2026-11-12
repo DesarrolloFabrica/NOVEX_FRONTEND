@@ -306,7 +306,7 @@ export function TransferCoordinationModal({
 
         <div className="novex-ops-modal__context">
           <p className="novex-ops-modal__situation-title" title={situationTitle}>
-            Caso: <strong>{situationTitle}</strong>
+            Situación: <strong>{situationTitle}</strong>
           </p>
           <div className="novex-ops-modal__coordination-info">
             <span className="novex-ops-modal__coord-label">

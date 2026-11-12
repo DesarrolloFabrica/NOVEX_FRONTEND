@@ -2,7 +2,6 @@ import { useLayoutEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { ScreenDeck } from '@/modules/monitoring/components/ScreenDeck'
 import { MainScreen, NovexFrame, NovexRoom } from '@/modules/room'
-import { ExecutiveOperationsProvider } from '@/modules/executive-operations-center/context/ExecutiveOperationsProvider'
 import '@/modules/executive-operations-center/styles/executive-home.css'
 
 /**
@@ -31,8 +30,7 @@ export function ExecutiveOperationsLayout() {
   }, [location.pathname])
 
   return (
-    <ExecutiveOperationsProvider enabled={false}>
-      <NovexRoom scene="intelligence" environment="pending" rail={false}>
+    <NovexRoom scene="intelligence" environment="pending">
         <NovexFrame environment="pending">
           <MainScreen environment="pending">
             <ScreenDeck
@@ -48,6 +46,5 @@ export function ExecutiveOperationsLayout() {
           </MainScreen>
         </NovexFrame>
       </NovexRoom>
-    </ExecutiveOperationsProvider>
   )
 }

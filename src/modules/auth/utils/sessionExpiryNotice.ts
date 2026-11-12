@@ -18,10 +18,10 @@ export interface SessionExpiryNotice {
 const NOTICE_KEY = 'novex.auth.sessionExpiry.v1'
 
 export const SESSION_EXPIRED_MESSAGE =
-  'Tu sesión caducó. Vuelve a autenticarte para continuar; conservamos temporalmente lo que estabas escribiendo.'
+  'Su sesión caducó. Vuelva a autenticarse para continuar; conservamos temporalmente lo que estaba escribiendo.'
 
 export const SESSION_UNAUTHORIZED_MESSAGE =
-  'Tu sesión ya no es válida. Vuelve a autenticarte para continuar.'
+  'Su sesión ya no es válida. Vuelva a autenticarse para continuar.'
 
 function getStorage(): Storage | null {
   try {

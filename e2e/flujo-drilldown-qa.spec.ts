@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { flowStateResponse, type FlowQuery } from './flujo-state.fixture'
 import { operationalOverviewFixture } from './operational-overview.fixture'
 import { expectSingleScrollZone, scrollToModule } from './estado-lectura.helpers'
+import { authMeBody } from './support/authMe'
 
 /**
  * QA visual: ESTADO = CARGA | MOVIMIENTO lado a lado como navegador temporal.
@@ -91,7 +92,7 @@ async function installDirector(page: Page, states: FlowQuery[]) {
     const q = Object.fromEntries(url.searchParams.entries())
 
     if (p.endsWith('/auth/me')) {
-      await route.fulfill({ json: { user: { ...session, fullName: session.name, status: 'ACTIVE' } } })
+      await route.fulfill({ json: authMeBody({ ...session, fullName: session.name, status: 'ACTIVE' }) })
       return
     }
     if (p.endsWith('/operational-overview')) {

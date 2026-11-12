@@ -1,5 +1,6 @@
 import { expect, test, type Page } from 'playwright/test'
 import { operationalOverviewFixture } from './operational-overview.fixture'
+import { authMeBody } from './support/authMe'
 
 /**
  * Experiencia ADMIN de estado operacional.
@@ -103,7 +104,7 @@ async function installApi(
 
     if (path.endsWith('/auth/me')) {
       await route.fulfill({
-        json: { user: { ...session, fullName: session.name } },
+        json: authMeBody({ ...session, fullName: session.name }),
       })
       return
     }
@@ -306,7 +307,7 @@ test.describe('estado operacional', () => {
 
     const placeholder = page.getByTestId('analyst-registry-placeholder')
     await expect(placeholder).toBeVisible()
-    await expect(placeholder).toContainText('3 problemas activos')
+    await expect(placeholder).toContainText('3 situaciones activas')
     await expect(page.getByTestId('coordination-card')).toHaveCount(9)
     await expect(page.getByTestId('direction-character')).toHaveCount(1)
   })

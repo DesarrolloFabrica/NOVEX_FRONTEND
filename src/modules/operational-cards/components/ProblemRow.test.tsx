@@ -32,7 +32,7 @@ function problem(patch: Partial<CoordinationProblem>): CoordinationProblem {
 const noop = () => {}
 
 describe('ProblemRow con marca lateral', () => {
-  it('interno: logo propio, línea «Problema interno · …» y sin etiqueta antigua', () => {
+  it('interno: logo propio, línea «Situación interna · …» y sin etiqueta antigua', () => {
     const html = renderToStaticMarkup(
       <ProblemRow
         problem={problem({})}
@@ -44,7 +44,7 @@ describe('ProblemRow con marca lateral', () => {
     expect(html).toContain('data-mark-code="coord-saber-pro"')
     expect(html).toContain('src="/iconos/display/IconoSaberPro.jpg"')
     // Visible: solo la coordinación; la relación completa queda en el tooltip.
-    expect(html).toContain('title="Problema interno · Saber Pro">Saber Pro<')
+    expect(html).toContain('title="Situación interna · Saber Pro">Saber Pro<')
     expect(html).not.toContain('problem-row-kind')
     expect(html).toContain('data-testid="problem-row-severity"')
     expect(html).toContain('data-testid="problem-row-status"')
@@ -65,7 +65,7 @@ describe('ProblemRow con marca lateral', () => {
     expect(html).toContain('data-mark-code="coord-fabrica-contenidos"')
     expect(html).toContain('Nos afecta desde Fábrica de Contenidos')
     expect(html).toContain(
-      'aria-label="Guiones pendientes. Dependencia que nos afecta. Coordinación responsable: Fábrica de Contenidos. Severidad Alta. Abierto."',
+      'aria-label="Guiones pendientes. Dependencia que nos afecta. Coordinación responsable: Fábrica de Contenidos. Severidad Alta. Abierta."',
     )
   })
 
@@ -99,7 +99,7 @@ describe('ProblemRow con marca lateral', () => {
     expect(html).toContain('data-mark="neutral"')
     expect(html).not.toContain('<img')
     expect(html).not.toContain('IconoCoordGeneral')
-    expect(html).toContain('Problema interno · coordinación no identificada')
+    expect(html).toContain('Situación interna · coordinación no identificada')
   })
 
   it('la marca es decorativa: la fila entera sigue siendo el único botón', () => {
@@ -142,7 +142,7 @@ describe('ProblemRow con marca lateral', () => {
     expect(html).toContain('data-testid="problem-row-status"')
     expect(html).toContain('En atención')
     expect(html).toContain('data-testid="problem-dossier-type"')
-    expect(html).toContain('Interno')
+    expect(html).toContain('Interna')
     expect(html).toContain('data-stub-colored="true"')
   })
 
@@ -173,11 +173,11 @@ describe('ProblemRow con marca lateral', () => {
       />,
     )
     expect(html).toContain('data-closed="true"')
-    expect(html).toContain('>Cerrado<')
-    expect(html).toContain('Severidad Alta. Cerrado.')
+    expect(html).toContain('>Cerrada<')
+    expect(html).toContain('Severidad Alta. Cerrada.')
   })
 
-  it('dependencia muestra distintivo Dependencia y no Interno', () => {
+  it('dependencia muestra distintivo Dependencia y no Interna', () => {
     const html = renderToStaticMarkup(
       <ProblemRow
         problem={problem({
@@ -191,7 +191,7 @@ describe('ProblemRow con marca lateral', () => {
     )
     expect(html).toContain('data-dossier-type="dependency"')
     expect(html).toContain('>Dependencia<')
-    expect(html).not.toContain('>Interno<')
+    expect(html).not.toContain('>Interna<')
   })
 })
 
@@ -239,7 +239,7 @@ describe('«Mis reportes» con marca lateral', () => {
       'Afectada: Saber Pro · Responsable: Fábrica de Contenidos',
     )
     expect(html).toContain(
-      'aria-label="Guiones pendientes. Dependencia entre coordinaciones. Coordinación responsable: Fábrica de Contenidos. Severidad Crítica. Cerrado."',
+      'aria-label="Guiones pendientes. Dependencia entre coordinaciones. Coordinación responsable: Fábrica de Contenidos. Severidad Crítica. Cerrada."',
     )
     expect(html).not.toContain('my-report-kind')
   })
@@ -255,7 +255,7 @@ describe('«Mis reportes» con marca lateral', () => {
       }),
     ])
     expect(html).toContain('data-mark="neutral"')
-    expect(html).toContain('Problema interno · Sin coordinación')
+    expect(html).toContain('Situación interna · Sin coordinación')
     expect(html).not.toContain('IconoCoordGeneral')
   })
 
@@ -267,7 +267,7 @@ describe('«Mis reportes» con marca lateral', () => {
     // «Mis reportes» no hereda la variante compacta: conserva folio.
     expect(html).toContain('class="problem-dossier my-reports__row"')
     expect(html).toContain('problem-dossier__folio')
-    expect(html).toContain('Cerrado')
+    expect(html).toContain('Cerrada')
     expect(html).toContain('Crítica')
     expect(html).not.toContain('data-testid="problem-dossier-sla"')
   })

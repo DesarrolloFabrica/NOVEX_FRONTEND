@@ -2,8 +2,9 @@ import { expect, test, type Page, type Route } from 'playwright/test'
 import { mkdirSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { flowStateResponse, type FlowQuery } from './flujo-state.fixture'
+import { flowStateResponse } from './flujo-state.fixture'
 import { operationalOverviewFixture } from './operational-overview.fixture'
+import { authMeBody } from './support/authMe'
 
 /**
  * QA: un AnalysisPeriod para toda la Lectura de coordinación.
@@ -118,7 +119,7 @@ async function installDirector(page: Page, log: Logged[]) {
     const isWeek = q.kind === 'week' || (q.from && q.from >= '2026-10-01')
 
     if (p.endsWith('/auth/me')) {
-      await route.fulfill({ json: { user: { ...session, fullName: session.name, status: 'ACTIVE' } } })
+      await route.fulfill({ json: authMeBody({ ...session, fullName: session.name, status: 'ACTIVE' }) })
       return
     }
     if (p.endsWith('/operational-overview')) {

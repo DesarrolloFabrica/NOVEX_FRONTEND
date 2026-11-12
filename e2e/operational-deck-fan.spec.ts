@@ -1,5 +1,6 @@
 import { expect, test, type Page } from 'playwright/test'
 import { operationalOverviewFixture } from './operational-overview.fixture'
+import { authMeBody } from './support/authMe'
 
 /**
  * LA MANO: las cinco subordinaciones repartidas, ya interactivas.
@@ -117,7 +118,7 @@ async function installApi(page: Page) {
 
     if (url.pathname.endsWith('/auth/me')) {
       await route.fulfill({
-        json: { user: { ...session, fullName: session.name } },
+        json: authMeBody({ ...session, fullName: session.name }),
       })
       return
     }
@@ -547,7 +548,7 @@ test.describe('mano del mazo · 1440x900', () => {
     await openDeck(page)
     await selectChild(page, 'coord-bellas-artes')
 
-    await page.getByTestId('breadcrumb-direction').click()
+    await page.getByTestId('deck-ribbon-back').click()
     await expect(
       page.getByTestId('operational-cards-experience'),
     ).toHaveAttribute('data-composition-mode', 'GLOBAL')

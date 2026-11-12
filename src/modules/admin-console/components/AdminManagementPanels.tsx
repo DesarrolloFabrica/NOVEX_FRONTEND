@@ -577,7 +577,7 @@ export function AdminSystemPanel({
     },
     {
       label: 'Catálogos',
-      text: 'Coordinaciones y roles: altas, nombres, colores y estado.',
+      text: 'Coordinaciones: altas, nombres, colores y estado.',
       cta: 'Abrir coordinaciones',
       icon: <AdminIcon name="org" size={20} />,
       onClick: () => onGoToSection('coordinaciones'),
@@ -592,7 +592,7 @@ export function AdminSystemPanel({
     },
     {
       label: 'Operaciones',
-      text: 'Situaciones en curso: avanzar, trasladar o anular desde el Centro.',
+      text: 'Situaciones en curso: trasladar o anular desde el Centro.',
       cta: 'Ir a la gestión',
       icon: <AdminIcon name="refresh" size={20} />,
       onClick: () => navigate('/centro-operacional?vista=gestion', { viewTransition: true }),

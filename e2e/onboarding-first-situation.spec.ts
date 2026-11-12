@@ -1,4 +1,5 @@
 import { expect, test } from 'playwright/test'
+import { authMeBody } from './support/authMe'
 
 const situationId = '6ce4e56e-7777-4777-8777-777777777777'
 const coordinationId = '5ce4e56e-7777-4777-8777-777777777777'
@@ -271,10 +272,10 @@ test.skip('acompaña una primera situación real hasta informe, historial y esta
 
     if (path.endsWith('/auth/me')) {
       await route.fulfill({
-        json: {
-          user: {
+        json: authMeBody({
             id: session.id,
             fullName: session.name,
+            permissions: session.permissions,
             roleCode: session.roleCode,
             roleName: session.roleName,
             coordinationId: null,
@@ -282,8 +283,7 @@ test.skip('acompaña una primera situación real hasta informe, historial y esta
             onboardingStep: 0,
             onboardingCompleted: false,
             onboardingSeenAt: null,
-          },
-        },
+          }),
       })
       return
     }

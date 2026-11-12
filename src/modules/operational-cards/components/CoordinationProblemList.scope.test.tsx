@@ -64,11 +64,11 @@ describe('lectura COMPLETA sin resultados', () => {
   const html = pintar(nivel1({ problems: [], scope: 'complete' }))
 
   it('afirma que no hay problemas activos', () => {
-    expect(html).toContain('Sin problemas activos')
+    expect(html).toContain('Sin situaciones activas')
   })
 
   it('no insinúa que falte contenido por permisos', () => {
-    expect(html).not.toContain('visibles para tu usuario')
+    expect(html).not.toContain('visibles para su usuario')
   })
 })
 
@@ -76,8 +76,8 @@ describe('lectura PARCIAL sin resultados', () => {
   const html = pintar(nivel1({ problems: [], scope: 'own-only' }))
 
   it('dice que no hay ninguno VISIBLE, no que no los haya', () => {
-    expect(html).toContain('No hay problemas activos visibles para tu usuario')
-    expect(html).not.toContain('Sin problemas activos')
+    expect(html).toContain('No hay situaciones activas visibles para su usuario')
+    expect(html).not.toContain('Sin situaciones activas')
   })
 
   it('NO convierte el área en estable: el estado autorizado no se toca', () => {
@@ -123,18 +123,18 @@ describe('error de carga', () => {
   const html = pintar(nivel1({ status: 'error', errorMessage: 'boom' }))
 
   it('es un mensaje distinto del vacío, con reintento', () => {
-    expect(html).toContain('No pudimos cargar los problemas')
+    expect(html).toContain('No pudimos cargar las situaciones')
     expect(html).toContain('Reintentar')
-    expect(html).not.toContain('Sin problemas activos')
-    expect(html).not.toContain('visibles para tu usuario')
+    expect(html).not.toContain('Sin situaciones activas')
+    expect(html).not.toContain('visibles para su usuario')
   })
 })
 
 describe('carga en curso', () => {
   it('no afirma nada todavía', () => {
     const html = pintar(nivel1({ status: 'loading' }))
-    expect(html).not.toContain('Sin problemas activos')
-    expect(html).not.toContain('visibles para tu usuario')
+    expect(html).not.toContain('Sin situaciones activas')
+    expect(html).not.toContain('visibles para su usuario')
     expect(html).not.toContain('No pudimos cargar')
   })
 })

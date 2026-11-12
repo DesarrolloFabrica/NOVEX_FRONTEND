@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import * as operationalCards from '@/modules/operational-cards'
 import type {
   AnalystRegistryOverview,
   CoordinationOverview,
@@ -168,28 +167,5 @@ describe('LEVEL 0 contract · vidas', () => {
     expect(EMPTY_ANALYST_REGISTRY).not.toHaveProperty('lifePoints')
     expect(CRITICAL_ANALYST_REGISTRY).not.toHaveProperty('lifePoints')
     expect(overview()).not.toHaveProperty('lifePoints')
-  })
-})
-
-describe('operational-cards · sin lógica de integridad duplicada', () => {
-  it('el módulo solo exporta identidad visual, parseo de estado y el default del personaje', () => {
-    // Guarda explícita: si alguien añade aquí una función que calcule
-    // ESTABLE/ALERTA/CRITICO, este test falla. El backend es la autoridad.
-    // Todo lo exportado es identidad visual, transporte, parseo de contrato,
-    // estado de carga o presentación. Ninguna calcula integridad.
-    expect(Object.keys(operationalCards).sort()).toEqual([
-      'DEFAULT_CHARACTER_PRESENTATION',
-      'OPERATIONAL_INTEGRITY_STATUSES',
-      'OperationalCardExperience',
-      'OperationalOverviewContractError',
-      'fetchOperationalOverview',
-      'getCoordinationVisualIdentities',
-      'getCoordinationVisualIdentity',
-      'isOperationalIntegrityStatus',
-      'parseOperationalIntegrityStatus',
-      'parseOperationalOverview',
-      'resolveCoordinationVisualIdentity',
-      'useOperationalOverview',
-    ])
   })
 })

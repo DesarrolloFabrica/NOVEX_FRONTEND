@@ -87,7 +87,6 @@ describe('buildTableLayout · reparto en doble abanico', () => {
     expect(buildTableLayout(rows, { sortByDisplayOrder: false })).toEqual(
       buildTableLayout(rows, { sortByDisplayOrder: false }),
     )
-    expect(buildTableLayout(rows)).toHaveLength
     expect(buildTableLayout(rows).slots).toHaveLength(9)
   })
 })

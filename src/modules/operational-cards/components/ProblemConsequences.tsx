@@ -198,8 +198,8 @@ export function ProblemConsequences({
             Agregar afectación
           </h5>
           <p className="problem-consequences__composer-help">
-            Registra una nueva consecuencia generada mientras el problema
-            continúa activo.
+            Registre una nueva consecuencia generada mientras la situación
+            continúa activa.
           </p>
           <form
             className="problem-actions__form problem-consequences__form"

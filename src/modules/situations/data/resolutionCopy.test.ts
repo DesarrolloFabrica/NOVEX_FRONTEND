@@ -6,9 +6,9 @@ describe('resolutionCopy', () => {
   it('INTERNAL pide solución, procesos afectados y prevención en un solo aprendizaje', () => {
     const interno = resolveResolutionCopy('INTERNAL')
     expect(interno.fieldLabel).toBe('Aprendizaje del cierre')
-    expect(interno.submitLabel).toBe('Cerrar problema')
+    expect(interno.submitLabel).toBe('Cerrar situación')
     expect(interno.fieldLabel.toLowerCase()).not.toContain('solución')
-    expect(interno.fieldHelp.toLowerCase()).toContain('solucionarlo')
+    expect(interno.fieldHelp.toLowerCase()).toContain('solucionarla')
     expect(interno.fieldHelp.toLowerCase()).toContain('procesos')
     expect(interno.fieldHelp.toLowerCase()).toContain('evitar')
     expect(interno.blockHint.toLowerCase()).toContain('único')
@@ -18,7 +18,7 @@ describe('resolutionCopy', () => {
   it('INTER adapta la ayuda a entrega o dependencia sin campos separados', () => {
     const inter = resolveResolutionCopy('INTER_COORDINATION')
     expect(inter.fieldLabel).toBe('Aprendizaje del cierre')
-    expect(inter.fieldHelp.toLowerCase()).toContain('solucionarlo')
+    expect(inter.fieldHelp.toLowerCase()).toContain('solucionarla')
     expect(inter.fieldHelp.toLowerCase()).toMatch(/entrega|dependencia/)
     expect(inter.fieldHelp.toLowerCase()).toContain('evitar')
     expect(inter.blockHint.toLowerCase()).toContain('único')

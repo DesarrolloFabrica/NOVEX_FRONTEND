@@ -21,7 +21,7 @@ vi.mock('@/modules/api/situations.api', async (importOriginal) => ({
   true
 
 /**
- * Filtros del panel «Problemas de la coordinación»: activos desde LEVEL 1,
+ * Filtros del panel «Situaciones de la coordinación»: activos desde LEVEL 1,
  * cerrados desde el listado paginado, AND entre los dos desplegables, y una
  * cabecera que sigue hablando del universo activo pase lo que pase abajo.
  */
@@ -155,7 +155,7 @@ afterEach(() => {
 })
 
 describe('filtros del panel de problemas', () => {
-  it('arranca en «Todas · Activos», sin EXPANDIR y sin pedir cerrados', () => {
+  it('arranca en «Todas · Activas», sin EXPANDIR y sin pedir cerradas', () => {
     render()
     const severity = byTestId('coordination-filter-severity') as HTMLSelectElement
     const status = byTestId('coordination-filter-status') as HTMLSelectElement
@@ -169,20 +169,20 @@ describe('filtros del panel de problemas', () => {
       'Filtrar por estado',
     )
     expect(severity.selectedOptions[0]?.textContent).toBe('Todas las severidades')
-    expect(status.selectedOptions[0]?.textContent).toBe('Activos')
+    expect(status.selectedOptions[0]?.textContent).toBe('Activas')
     expect(rowIds()).toEqual(['a1', 'a2', 'a3'])
     expect(byTestId('coordination-problems-expand')).toBeNull()
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it('las filas de este panel dicen «En revisión», no «En atención»', () => {
+  it('las filas dicen «En atención», el mismo nombre que el resto del Centro', () => {
     render()
     const review = container.querySelector('[data-problem-id="a2"]')!
     expect(review.querySelector('[data-testid="problem-row-status"]')?.textContent).toBe(
-      'En revisión',
+      'En atención',
     )
     expect(review.getAttribute('data-status')).toBe('IN_PROGRESS')
-    expect(container.textContent).not.toContain('En atención')
+    expect(container.textContent).not.toContain('En revisión')
   })
 
   it('severidad AND estado sobre los activos, sin tocar la cabecera ni el estado', () => {
@@ -210,11 +210,11 @@ describe('filtros del panel de problemas', () => {
     choose('coordination-filter-status', 'IN_PROGRESS')
     expect(rowIds()).toEqual([])
     expect(byTestId('coordination-panel-empty-filtered')?.textContent).toBe(
-      'No hay problemas críticos en revisión',
+      'No hay situaciones críticas en atención',
     )
   })
 
-  it('«Cerrados» pide CLOSED de ESA coordinación, paginado, y carga más al pedirlo', async () => {
+  it('«Cerradas» pide CLOSED de ESA coordinación, paginado, y carga más al pedirlo', async () => {
     fetchMock
       .mockResolvedValueOnce(page([closedSituation('c1'), closedSituation('c2')], 3, 1, 2))
       .mockResolvedValueOnce(page([closedSituation('c2'), closedSituation('c3')], 3, 2, 2))
@@ -235,14 +235,14 @@ describe('filtros del panel de problemas', () => {
     expect(
       container.querySelector('[data-problem-id="c1"] [data-testid="problem-row-status"]')
         ?.textContent,
-    ).toBe('Cerrado')
+    ).toBe('Cerrada')
     expect(container.querySelector('[data-problem-id="c1"]')?.getAttribute('data-closed')).toBe(
       'true',
     )
 
     // Hay más que la primera página: no se presenta como el universo.
     const more = byTestId('coordination-panel-load-more') as HTMLButtonElement
-    expect(more.textContent).toBe('Ver más cerrados (1)')
+    expect(more.textContent).toBe('Ver más cerradas (1)')
     act(() => more.click())
     await flush()
 
@@ -263,11 +263,11 @@ describe('filtros del panel de problemas', () => {
       expect.objectContaining({ status: 'CLOSED', severity: 'CRITICAL', page: 1 }),
     )
     expect(byTestId('coordination-panel-empty-filtered')?.textContent).toBe(
-      'No hay problemas críticos cerrados',
+      'No hay situaciones críticas cerradas',
     )
   })
 
-  it('«Todos»: activos primero, cerrados después', async () => {
+  it('«Todas»: activas primero, cerradas después', async () => {
     fetchMock.mockResolvedValue(page([closedSituation('c1')], 1))
     render()
     choose('coordination-filter-status', 'ALL')

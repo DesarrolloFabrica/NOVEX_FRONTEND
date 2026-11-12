@@ -96,14 +96,39 @@ describe('problem-detail.service · sin IA', () => {
     expect(detail.description).toBe(SITUATION.description)
   })
 
-  it('las coordinaciones relacionadas no llegan al detalle; responsable y afectada sí', () => {
+  it('las coordinaciones relacionadas llegan como contexto, en su orden; nunca como impacto', () => {
     const detail = toProblemDetail(SITUATION as never)
 
-    // No representan un impacto medido: el detalle no las expone.
-    expect(detail).not.toHaveProperty('relatedCoordinations')
+    expect(detail.relatedCoordinations).toEqual([
+      { coordinationId: 'c2', code: 'coord-negocios', name: 'Negocios' },
+      { coordinationId: 'c3', code: 'coord-transversales', name: 'Transversales' },
+    ])
     expect(detail).not.toHaveProperty('impact')
     expect(detail.coordinationName).toBe('B2B')
     expect(detail.affectedCoordinationName).toBe('Negocios')
+  })
+
+  it('copia la categoría y la categoría escrita con «Otra»', () => {
+    const plain = toProblemDetail({
+      ...SITUATION,
+      reportKind: 'INTERNAL',
+      categoryCode: 'INTERNET',
+      categoryName: 'Internet',
+      relatedCoordinations: [],
+    } as never)
+    expect(plain.categoryName).toBe('Internet')
+    expect(plain.categoryOtherText).toBeNull()
+    expect(plain.relatedCoordinations).toEqual([])
+
+    const other = toProblemDetail({
+      ...SITUATION,
+      reportKind: 'INTERNAL',
+      categoryCode: 'OTRA',
+      categoryName: 'Otra',
+      categoryOtherText: '  Biblioteca  ',
+    } as never)
+    expect(other.categoryCode).toBe('OTRA')
+    expect(other.categoryOtherText).toBe('Biblioteca')
   })
 
   it('copia canCancel/canTransfer y cancellation desde el contrato del backend', () => {

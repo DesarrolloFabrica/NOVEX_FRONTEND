@@ -113,10 +113,8 @@ export const PRODUCT_TOP_LEVEL: readonly ProductNodeDeclaration[] = [
      * coordinadora asignada, problemas de severidad alta y cinco referencias
      * como área afectada. El renombrado del registro llegará después.
      *
-     * NO se usa `coord-servicios`: es una fila creada por migración, sin
-     * coordinadora, sin ninguna referencia cruzada y con cuatro situaciones
-     * activas que siguen existiendo técnicamente y cuyo destino decide el
-     * usuario. Aquí no se toca, no se oculta del sistema y no se fusiona.
+     * `coord-servicios` era la misma coordinación: sus situaciones se
+     * fusionaron aquí (migración backend 1789200000000) y quedó inactiva.
      */
     label: 'Servicio',
     code: 'coord-homologaciones',
@@ -144,8 +142,9 @@ export const PRODUCT_TOP_LEVEL: readonly ProductNodeDeclaration[] = [
  * de producto. Se declaran explícitamente para que su ausencia sea una
  * decisión visible y no un olvido, y para que las pruebas puedan vigilarla.
  *
- * `coord-servicios` conserva 4 situaciones activas. La mesa visual y los
- * totales técnicos divergen a propósito mientras dure esta reconciliación.
+ * `coord-servicios` se fusionó en `coord-homologaciones` (migración backend
+ * 1789200000000): queda inactiva y el overview ya no la envía. Se mantiene en
+ * la lista por si una caché antigua la trajera: nunca se pinta en la mesa.
  */
 export const LEGACY_UNMAPPED_CODES: readonly string[] = ['coord-servicios']
 

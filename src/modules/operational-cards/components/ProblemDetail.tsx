@@ -44,7 +44,7 @@ import '@/styles/operational-problem-detail.css'
  *
  * Orden de lectura (expediente):
  *   1. Encabezado        regreso, folio y tipo; título; severidad, estado y
- *                        SLA; si la severidad cambió, «Reportado como · Actual».
+ *                        SLA; si la severidad cambió, «Reportada como · Actual».
  *   2. Coordinación      responsable (y afectada en dependencias), con su logo
  *                        y color de identidad; proceso y entrega si existen.
  *   3. Descripción       el texto del reporte, íntegro (no se deduplica).
@@ -67,20 +67,20 @@ const SEVERITY_LABEL = {
   LOW: 'Baja',
 } as const
 
-/** `IN_PROGRESS` se presenta como «En revisión»; el valor de dominio no cambia. */
+/** `IN_PROGRESS` se presenta como «En atención» en todo el Centro; el valor de dominio no cambia. */
 const STATUS_LABEL: Record<string, string> = {
-  OPEN: 'Abierto',
-  IN_PROGRESS: 'En revisión',
-  RESOLVED: 'En revisión',
-  CLOSED: 'Cerrado',
-  CANCELLED: 'Anulado',
+  OPEN: 'Abierta',
+  IN_PROGRESS: 'En atención',
+  RESOLVED: 'En atención',
+  CLOSED: 'Cerrada',
+  CANCELLED: 'Anulada',
 }
 
 const SLA_LABEL = {
-  on_track: 'SLA en plazo',
-  at_risk: 'SLA en riesgo',
-  overdue: 'SLA vencido',
-  closed: 'SLA cerrado',
+  on_track: 'En plazo',
+  at_risk: 'Plazo en riesgo',
+  overdue: 'Plazo vencido',
+  closed: 'Plazo cerrado',
 } as const
 
 const HEADING_ID = 'problem-detail-title'
@@ -289,7 +289,7 @@ export interface ProblemDetailProps {
   } | null
   /** Regreso que decide el panel contenedor. Sin él, no hay flecha. */
   onBack?: () => void
-  /** Nombre accesible de la flecha («Volver a problemas», «Volver»…). */
+  /** Nombre accesible de la flecha («Volver a situaciones», «Volver»…). */
   backLabel?: string
 }
 
@@ -310,7 +310,7 @@ export function ProblemDetail({
   evidenceActions = null,
   analysisActions = null,
   onBack,
-  backLabel = 'Volver a problemas',
+  backLabel = 'Volver a situaciones',
 }: ProblemDetailProps) {
   const { detail, sections, expanded, status } = level2
   const isExpanded = (section: ProblemSectionId) => expanded.includes(section)
@@ -391,7 +391,7 @@ export function ProblemDetail({
             </div>
           )}
           <h3 id={HEADING_ID} className="problem-detail__title">
-            {detail?.title ?? 'Detalle del problema'}
+            {detail?.title ?? 'Detalle de la situación'}
           </h3>
 
           {detail && (
@@ -437,7 +437,7 @@ export function ProblemDetail({
           <dl
             className="problem-detail__context"
             data-testid="detail-context"
-            aria-label="Coordinación del problema"
+            aria-label="Coordinación de la situación"
           >
             {contextRows(detail).map((row) => {
               const isCoordination = row.code !== undefined
@@ -472,6 +472,69 @@ export function ProblemDetail({
                 </div>
               )
             })}
+            {detail.categoryName && (
+              <div
+                className="problem-detail__context-row"
+                data-context="category"
+                data-testid="detail-category"
+              >
+                <dt>Categoría</dt>
+                <dd>
+                  {detail.categoryOtherText ? (
+                    <span className="problem-detail__context-value problem-detail__category">
+                      <span
+                        className="problem-detail__category-tag"
+                        data-testid="detail-category-other-tag"
+                      >
+                        {detail.categoryName}
+                      </span>
+                      <span data-testid="detail-category-other-text">
+                        {detail.categoryOtherText}
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="problem-detail__context-value">
+                      {detail.categoryName}
+                    </span>
+                  )}
+                </dd>
+              </div>
+            )}
+            {detail.relatedCoordinations &&
+              detail.relatedCoordinations.length > 0 && (
+              <div
+                className="problem-detail__context-row"
+                data-context="related"
+                data-testid="detail-related"
+              >
+                <dt>Coordinaciones relacionadas</dt>
+                <dd>
+                  <ul className="problem-detail__related">
+                    {detail.relatedCoordinations.map((item) => (
+                      <li
+                        key={item.coordinationId}
+                        className="problem-detail__related-item"
+                        data-testid="detail-related-item"
+                        style={
+                          {
+                            '--coord-accent': resolveDossierCoordinationColor(
+                              item.code,
+                            ),
+                          } as CSSProperties
+                        }
+                      >
+                        <CoordinationMark
+                          className="problem-detail__coord-mark"
+                          asset={resolveCoordinationMarkAsset(item.code)}
+                          code={item.code}
+                        />
+                        <span>{item.name}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+            )}
           </dl>
           {/* Desde qué lado se lee la dependencia («nos afecta», «debemos
               resolver»): dato del punto de vista, no una coordinación más. */}
@@ -504,7 +567,7 @@ export function ProblemDetail({
           data-testid="detail-error"
           role="alert"
         >
-          No pudimos cargar el detalle del problema.
+          No pudimos cargar el detalle de la situación.
         </p>
       )}
 
@@ -551,6 +614,7 @@ export function ProblemDetail({
             canRetire={canRetire}
             submission={evidenceActions?.submission ?? IDLE_SUBMISSION}
             historyRefreshKey={historyRefreshKey}
+            caseOperable={detail.canUpdate || detail.canResolve || detail.canAdvanceToInProgress}
             onRetire={async (evidenceId, reason) => {
               if (!evidenceActions) return false
               const ok = await evidenceActions.onRetire(evidenceId, reason)

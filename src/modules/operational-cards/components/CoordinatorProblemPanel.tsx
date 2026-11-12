@@ -63,7 +63,7 @@ const EMPTY_COPY: Record<TabId, { heading: string; text: string }> = {
 }
 
 const KIND_BADGE: Record<ProblemMark['relation'], string> = {
-  internal: 'Interno',
+  internal: 'Interna',
   'affects-us': 'Dependencia',
   'we-resolve': 'Para otra área',
   responsible: 'Dependencia',
@@ -346,7 +346,12 @@ export function CoordinatorProblemPanel({
         </label>
       </header>
 
-      <div className="coordinator-situations__tabs" role="tablist" aria-label="Tipo de situación">
+      <div
+        className="coordinator-situations__tabs"
+        role="tablist"
+        aria-label="Tipo de situación"
+        data-tour="situation-tabs"
+      >
         {tabs.map((item) => (
           <button
             key={item.id}
@@ -415,6 +420,7 @@ export function CoordinatorProblemPanel({
           <ul
             className="coordinator-situations__list"
             data-testid={activeTab === 'my-reports' ? 'my-reports-list' : 'coordinator-problems-groups'}
+            data-tour="situation-list"
           >
             {visible.map((row) => (
               <li key={row.id}>

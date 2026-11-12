@@ -114,11 +114,11 @@ function HistoryRow({
       />
       <dl className="problem-history__meta" data-testid="history-row-meta">
         <div>
-          <dt>Cerrado</dt>
+          <dt>Cerrada</dt>
           <dd>{closedLabel}</dd>
         </div>
         <div>
-          <dt>Resuelto por</dt>
+          <dt>Resuelta por</dt>
           <dd>{resolver}</dd>
         </div>
       </dl>
@@ -182,7 +182,7 @@ export function ProblemHistoryPanel({
             </svg>
           </span>
           <div>
-            <h2 className="problem-history__title">Historial de problemas</h2>
+            <h2 className="problem-history__title">Historial</h2>
             <p className="problem-history__subtitle">
               Situaciones ya cerradas, con su fecha de cierre, quién las resolvió
               y la lección registrada.
@@ -205,7 +205,7 @@ export function ProblemHistoryPanel({
 
       {status === 'loading' && items.length === 0 && (
         <p className="problem-history__note" data-testid="history-loading">
-          Consultando problemas cerrados…
+          Consultando situaciones cerradas…
         </p>
       )}
 
@@ -237,7 +237,7 @@ export function ProblemHistoryPanel({
             </svg>
           </span>
           <p className="problem-history__empty-title">
-            Sin problemas cerrados {period.summaryPhrase}
+            Sin situaciones cerradas {period.summaryPhrase}
           </p>
           <p className="problem-history__empty-hint">
             Pruebe con un período más amplio para consultar cierres anteriores.

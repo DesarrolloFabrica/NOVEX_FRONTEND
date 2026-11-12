@@ -1,5 +1,6 @@
 import { expect, test, type Page } from 'playwright/test'
 import { operationalOverviewFixture } from './operational-overview.fixture'
+import { authMeBody } from './support/authMe'
 
 /**
  * DETALLE PERSISTENTE del problema (LEVEL 2).
@@ -215,7 +216,7 @@ async function installApi(page: Page, options: ApiOptions = {}) {
 
     if (path.endsWith('/auth/me')) {
       await route.fulfill({
-        json: { user: { ...session, fullName: session.name } },
+        json: authMeBody({ ...session, fullName: session.name }),
       })
       return
     }
@@ -610,8 +611,8 @@ test.describe('detalle persistente del problema · 1440x900', () => {
     // Cabecera: título, severidad, estado y SLA.
     await expect(detail).toContainText('Aulas sin conectividad')
     await expect(page.getByTestId('detail-severity')).toHaveText('Crítica')
-    await expect(page.getByTestId('detail-status')).toHaveText('Abierto')
-    await expect(page.getByTestId('detail-sla')).toHaveText('SLA vencido')
+    await expect(page.getByTestId('detail-status')).toHaveText('Abierta')
+    await expect(page.getByTestId('detail-sla')).toHaveText('Plazo vencido')
     await expect(page.getByTestId('detail-folio')).toBeVisible()
     // Contexto antes de la descripción, y la descripción es la del reporte.
     await expect(page.getByTestId('detail-context')).toContainText(
@@ -702,7 +703,7 @@ test.describe('detalle persistente del problema · 1440x900', () => {
       page.getByTestId('my-reports').getByTestId('report-situation-button'),
     ).toHaveCount(0)
 
-    // Timeline abierto: no debe solaparse con «Seguimiento del problema».
+    // Timeline abierto: no debe solaparse con «Seguimiento de la situación».
     const timelineToggle = page
       .locator('[data-section="timeline"] [data-testid="detail-section-toggle"]')
       .first()
@@ -734,7 +735,7 @@ test.describe('detalle persistente del problema · 1440x900', () => {
      * El catálogo RBAC no otorga SITUATIONS_CREATE a ADMIN. La creación se
      * ejercita con ANALISTA/COORDINADOR en otros specs.
      */
-    await page.getByTestId('breadcrumb-direction').click()
+    await page.getByTestId('deck-ribbon-back').click()
     await expect(panel).toHaveAttribute('data-mode', 'idle')
     await expect(page.getByTestId('problem-detail')).toHaveCount(0)
     await expect(panel).toHaveAttribute('data-can-create', 'false')
@@ -925,7 +926,7 @@ test.describe('detalle persistente del problema · 1440x900', () => {
     // Tres visibles (los dos de IA se filtran), en el orden del backend.
     await expect(items).toHaveCount(3)
     await expect(items.nth(0)).toContainText('Estado cambiado')
-    await expect(items.nth(0)).toContainText('Abierto → En atención')
+    await expect(items.nth(0)).toContainText('Abierta → En atención')
     await expect(items.nth(0)).toContainText(
       'Nota: Se escaló al proveedor de conectividad.',
     )
@@ -1081,7 +1082,7 @@ test.describe('detalle persistente del problema · 1440x900', () => {
      * hay detalle, solo un marcador.
      */
     await expect(detailRegion).toBeVisible()
-    await expect(detailRegion).toContainText('Reportar o consultar')
+    await expect(detailRegion).toContainText('Consultar situaciones')
     await expect(detailRegion).toContainText('Seleccione una coordinación')
     await expect(page.getByTestId('problem-detail')).toHaveCount(0)
     await expect(page.getByTestId('shell-region-coordination-problems')).toContainText(
@@ -1205,7 +1206,7 @@ test.describe('detalle persistente del problema · 1440x900', () => {
     await installApi(page)
     await openProblem(page)
 
-    await page.getByTestId('breadcrumb-direction').click()
+    await page.getByTestId('deck-ribbon-back').click()
 
     await expect(page.getByTestId('problem-detail')).toHaveCount(0)
     // Sin coordinación, el panel vuelve a invitar a elegir una carta.
@@ -1317,7 +1318,7 @@ test.describe('detalle persistente del problema · 1440x900', () => {
     /*
      * Lo que sobra se desplaza por dentro. El contenedor que desplaza es
      * `.action-panel`, no el detalle: un detalle que se encogía para «caber»
-     * dejaba su contenido derramado bajo «Seguimiento del problema». Por eso
+     * dejaba su contenido derramado bajo «Seguimiento de la situación». Por eso
      * se afirma la contención del panel y el orden sin solape, no la caja del
      * detalle (que, dentro de un scroll, puede medir más que la región).
      */
@@ -1445,7 +1446,7 @@ test.describe('detalle persistente del problema · 1920x1080', () => {
     })
 
     // Y una hija del mazo, con la mano repartida.
-    await page.getByTestId('breadcrumb-direction').click()
+    await page.getByTestId('deck-ribbon-back').click()
     await page
       .locator(`${CARD}[data-code="coord-operaciones-academicas"]`)
       .click()

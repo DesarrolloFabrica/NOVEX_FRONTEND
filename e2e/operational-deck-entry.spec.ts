@@ -1,5 +1,6 @@
 import { expect, test, type Page } from 'playwright/test'
 import { operationalOverviewFixture } from './operational-overview.fixture'
+import { authMeBody } from './support/authMe'
 
 /**
  * ENTRADA AL MAZO: la mesa se retira y queda el mazo origen.
@@ -110,7 +111,7 @@ async function installApi(page: Page) {
 
     if (url.pathname.endsWith('/auth/me')) {
       await route.fulfill({
-        json: { user: { ...session, fullName: session.name } },
+        json: authMeBody({ ...session, fullName: session.name }),
       })
       return
     }
@@ -389,7 +390,7 @@ test.describe('entrada al mazo · 1440x900', () => {
     await installApi(page)
     await openExperience(page)
 
-    const global = await measure(page, 'GLOBAL (referencia)')
+    await measure(page, 'GLOBAL (referencia)')
 
     await select(page, PARENT)
     await expect(
@@ -431,9 +432,10 @@ test.describe('entrada al mazo · 1440x900', () => {
     )
     await expect(page.locator(PANEL)).toHaveAttribute('data-code', PARENT)
 
-    // Un solo camino de regreso: la flecha de la miga, nunca un botón bajo
+    // Un solo camino de regreso: «Todas las coordinaciones» en la cinta de la
+    // baraja (la miga de pan estaba oculta y se retiró), nunca un botón bajo
     // las cartas.
-    await expect(page.getByTestId('breadcrumb-direction')).toHaveCount(1)
+    await expect(page.getByTestId('deck-ribbon-back')).toHaveCount(1)
     await expect(page.getByTestId('return-to-table')).toHaveCount(0)
 
     expect(deck.overflow.x).toBeLessThanOrEqual(0)
@@ -525,7 +527,7 @@ test.describe('entrada al mazo · 1440x900', () => {
 
     await select(page, PARENT)
     // Mientras no exista «Recoger mazo», el retorno disponible es la miga.
-    await page.getByTestId('breadcrumb-direction').click()
+    await page.getByTestId('deck-ribbon-back').click()
 
     await expect(
       page.getByTestId('operational-cards-experience'),

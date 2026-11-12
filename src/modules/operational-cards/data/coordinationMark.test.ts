@@ -59,7 +59,7 @@ describe('resolveProblemMark', () => {
     expect(mark.code).toBe('coord-especializaciones')
     expect(mark.asset).toBe('/iconos/display/IconoEspecializaciones.png')
     expect(mark.relation).toBe('internal')
-    expect(mark.originLine).toBe('Problema interno · Especializaciones')
+    expect(mark.originLine).toBe('Situación interna · Especializaciones')
   })
 
   it('dependencia vista desde la AFECTADA: representa a la responsable', () => {
@@ -142,7 +142,7 @@ describe('resolveProblemMark', () => {
     })
     expect(mark.code).toBe('coord-social-lab')
     expect(mark.asset).toBeNull()
-    expect(mark.originLine).toBe('Problema interno · Social Lab')
+    expect(mark.originLine).toBe('Situación interna · Social Lab')
   })
 
   it('code desconocido y sin nombre: lo declara, no lo atribuye', () => {
@@ -153,7 +153,7 @@ describe('resolveProblemMark', () => {
       viewpointCode: null,
     })
     expect(mark.asset).toBeNull()
-    expect(mark.originLine).toBe('Problema interno · coordinación no identificada')
+    expect(mark.originLine).toBe('Situación interna · coordinación no identificada')
   })
 
   it('histórico de analista sin coordinación: «Sin coordinación», neutra', () => {
@@ -164,7 +164,7 @@ describe('resolveProblemMark', () => {
       viewpointCode: null,
     })
     expect(mark.asset).toBeNull()
-    expect(mark.originLine).toBe('Problema interno · Sin coordinación')
+    expect(mark.originLine).toBe('Situación interna · Sin coordinación')
     expect(mark.roleLabel).toBeNull()
   })
 
@@ -194,10 +194,10 @@ describe('buildProblemRowAccessibleName', () => {
         title: 'Guiones pendientes',
         mark,
         severityLabel: 'Alta',
-        statusLabel: 'Abierto',
+        statusLabel: 'Abierta',
       }),
     ).toBe(
-      'Guiones pendientes. Dependencia que nos afecta. Coordinación responsable: Fábrica de Contenidos. Severidad Alta. Abierto.',
+      'Guiones pendientes. Dependencia que nos afecta. Coordinación responsable: Fábrica de Contenidos. Severidad Alta. Abierta.',
     )
   })
 
@@ -213,8 +213,8 @@ describe('buildProblemRowAccessibleName', () => {
         title: 'X',
         mark,
         severityLabel: 'Baja',
-        statusLabel: 'Cerrado',
+        statusLabel: 'Cerrada',
       }),
-    ).toBe('X. Problema interno. Sin coordinación. Severidad Baja. Cerrado.')
+    ).toBe('X. Situación interna. Sin coordinación. Severidad Baja. Cerrada.')
   })
 })

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from 'playwright/test'
+import { authMeBody } from './support/authMe'
 
 // Fase 1 de retiro del shell legacy: el recorrido de onboarding está suspendido (ONBOARDING_TOUR_SUSPENDED).
 // El estado persistido y el contrato con backend se conservan, pero el
@@ -92,10 +93,10 @@ async function installRoleOnboarding(
 
     if (path.endsWith('/auth/me')) {
       await route.fulfill({
-        json: {
-          user: {
+        json: authMeBody({
             id: session.id,
             fullName: session.name,
+            permissions: session.permissions,
             roleCode,
             roleName,
             coordinationId: null,
@@ -103,8 +104,7 @@ async function installRoleOnboarding(
             onboardingStep: serverStep,
             onboardingCompleted: serverCompleted,
             onboardingSeenAt: null,
-          },
-        },
+          }),
       })
       return
     }

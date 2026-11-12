@@ -8,7 +8,7 @@ import {
 } from '@/modules/impact-network/data/coordination-islands.config'
 
 /**
- * Presentación compartida de fichas de problema (Mis reportes / coordinación).
+ * Presentación compartida de fichas de situación (Mis reportes / coordinación).
  * Solo etiquetas y avisos; no recalcula SLA ni inventa severidad.
  */
 
@@ -21,17 +21,17 @@ export const DOSSIER_SEVERITY_LABEL = {
 
 /** Estados de bandeja activa (LEVEL 1). */
 export const DOSSIER_ACTIVE_STATUS_LABEL = {
-  OPEN: 'Abierto',
+  OPEN: 'Abierta',
   IN_PROGRESS: 'En atención',
 } as const
 
 /** Historial «Mis reportes»: incluye cierre y anulación administrativa. */
 export const DOSSIER_HISTORY_STATUS_LABEL: Record<string, string> = {
-  OPEN: 'Abierto',
+  OPEN: 'Abierta',
   IN_PROGRESS: 'En atención',
   RESOLVED: 'En atención',
-  CLOSED: 'Cerrado',
-  CANCELLED: 'Anulado',
+  CLOSED: 'Cerrada',
+  CANCELLED: 'Anulada',
 }
 
 export type DossierSlaHealth = 'on_track' | 'at_risk' | 'overdue' | 'closed'
@@ -45,7 +45,7 @@ export function resolveDossierTypeBadge(
   if (reportKind === 'INTER_COORDINATION') {
     return { key: 'dependency', label: 'Dependencia' }
   }
-  return { key: 'internal', label: 'Interno' }
+  return { key: 'internal', label: 'Interna' }
 }
 
 /** Solo aviso cuando hay riesgo o vencimiento; en plazo no se pinta alerta. */
@@ -53,10 +53,10 @@ export function resolveDossierSlaNotice(
   slaHealth: DossierSlaHealth | null | undefined,
 ): { tone: 'at_risk' | 'overdue'; label: string } | null {
   if (slaHealth === 'overdue') {
-    return { tone: 'overdue', label: 'SLA vencido' }
+    return { tone: 'overdue', label: 'Plazo vencido' }
   }
   if (slaHealth === 'at_risk') {
-    return { tone: 'at_risk', label: 'SLA en riesgo' }
+    return { tone: 'at_risk', label: 'Plazo en riesgo' }
   }
   return null
 }

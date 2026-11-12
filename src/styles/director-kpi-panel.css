@@ -426,3 +426,30 @@
 
 /* Títulos completos del ranking a demanda (teclado y lector incluidos). */
 
+
+/* Lectura fallida de indicadores: reintento en línea, con el granate de las acciones. */
+.director-direction-brief__retry {
+  margin-left: 6px;
+  padding: 4px 12px;
+  border: 1px solid #3a1418;
+  border-radius: 8px;
+  color: #fbeed0;
+  background: linear-gradient(180deg, #6a2128 0%, #3a1418 100%);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.director-direction-brief__retry:focus-visible {
+  outline: 2px solid #b45309;
+  outline-offset: 2px;
+}
+
+/* Desglose bajo «Requieren atención»: cuántas críticas y cuántas en alerta. */
+.director-alert-stat__breakdown {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.78em;
+  font-weight: 500;
+  opacity: 0.82;
+}

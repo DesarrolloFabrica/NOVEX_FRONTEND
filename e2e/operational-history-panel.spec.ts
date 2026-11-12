@@ -3,6 +3,7 @@ import { mkdirSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { operationalOverviewFixture } from './operational-overview.fixture'
+import { authMeBody } from './support/authMe'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const OUT = path.join(__dirname, 'artifacts', 'cta-history')
@@ -106,7 +107,7 @@ async function installAnalyst(page: Page) {
     const url = new URL(route.request().url())
     if (url.pathname.endsWith('/auth/me')) {
       await route.fulfill({
-        json: { user: { ...session, fullName: session.name } },
+        json: authMeBody({ ...session, fullName: session.name }),
       })
       return
     }
@@ -203,7 +204,7 @@ async function installAdmin(page: Page) {
     const url = new URL(route.request().url())
     if (url.pathname.endsWith('/auth/me')) {
       await route.fulfill({
-        json: { user: { ...session, fullName: session.name } },
+        json: authMeBody({ ...session, fullName: session.name }),
       })
       return
     }
@@ -261,7 +262,7 @@ async function installCoordinator(page: Page) {
     const url = new URL(route.request().url())
     if (url.pathname.endsWith('/auth/me')) {
       await route.fulfill({
-        json: { user: { ...session, fullName: session.name } },
+        json: authMeBody({ ...session, fullName: session.name }),
       })
       return
     }
@@ -366,7 +367,7 @@ test.describe('historial y CTAs compactos', () => {
       await settle(page)
       await expect(page.getByTestId('history-empty')).toBeVisible()
       await expect(page.getByTestId('history-empty')).toContainText(
-        'No hay problemas cerrados en este período',
+        'No hay situaciones cerradas en este período',
       )
 
       await page.screenshot({

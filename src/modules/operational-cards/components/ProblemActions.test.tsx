@@ -76,14 +76,14 @@ describe('ProblemActions · Pasar a En atención', () => {
 
   it('separa seguimiento y cierre con encabezados propios', () => {
     const html = markup({ detail: detail() })
-    expect(html).toContain('Seguimiento del problema')
+    expect(html).toContain('Seguimiento de la situación')
     expect(html).toContain('Cerrar con aprendizaje')
     expect(html).toContain('Aprendizaje del cierre')
     expect(html).toContain('data-testid="actions-status"')
-    expect(html).toContain('>Abierto<')
+    expect(html).toContain('>Abierta<')
     expect(html).toContain('data-surface="problem-tracking"')
     expect(html).toContain('data-surface="problem-resolution"')
-    const trackingIdx = html.indexOf('Seguimiento del problema')
+    const trackingIdx = html.indexOf('Seguimiento de la situación')
     const resolutionIdx = html.indexOf('Cerrar con aprendizaje')
     expect(trackingIdx).toBeGreaterThan(-1)
     expect(resolutionIdx).toBeGreaterThan(trackingIdx)
@@ -93,7 +93,7 @@ describe('ProblemActions · Pasar a En atención', () => {
     const html = markup({
       detail: detail({ status: 'IN_PROGRESS', canUpdate: true }),
     })
-    expect(html).toContain('Seguimiento del problema')
+    expect(html).toContain('Seguimiento de la situación')
     expect(html).toContain('>En atención<')
     expect(html).not.toContain('data-testid="status-advance-button"')
     expect(html).toContain('Cerrar con aprendizaje')
@@ -108,8 +108,8 @@ describe('ProblemActions · Pasar a En atención', () => {
         canResolve: false,
       }),
     })
-    expect(html).toContain('Seguimiento del problema')
-    expect(html).toContain('>Abierto<')
+    expect(html).toContain('Seguimiento de la situación')
+    expect(html).toContain('>Abierta<')
     expect(html).not.toContain('data-testid="status-advance-button"')
     expect(html).not.toContain('Cerrar con aprendizaje')
     expect(html).not.toContain('data-testid="resolve-form"')
@@ -418,7 +418,7 @@ describe('ProblemActions · administración (Fase 02B)', () => {
     expect(html).toContain('Situación anulada')
     expect(html).toContain('Acción administrativa excepcional')
     expect(html).toContain('data-testid="cancellation-record"')
-    expect(html).toContain('Anulado por Administrador General: Duplicado con FOL-102')
+    expect(html).toContain('Anulada por Administrador General: Duplicado con FOL-102')
   })
 })
 

@@ -256,13 +256,13 @@ export function buildCoordinationSummary(input: {
 
   const parts = [
     input.activeProblemsCount === 1
-      ? '1 problema activo'
-      : `${input.activeProblemsCount} problemas activos`,
+      ? '1 situación activa'
+      : `${input.activeProblemsCount} situaciones activas`,
   ]
 
   if (input.criticalCount > 0) {
     parts.push(
-      input.criticalCount === 1 ? '1 crítico' : `${input.criticalCount} críticos`,
+      input.criticalCount === 1 ? '1 crítica' : `${input.criticalCount} críticas`,
     )
   }
 

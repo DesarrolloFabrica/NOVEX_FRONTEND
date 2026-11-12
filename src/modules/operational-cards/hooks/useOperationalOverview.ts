@@ -122,6 +122,8 @@ export interface OperationalCardsController extends OperationalCardsState {
     /** Code de la responsable (INTER) o la carta (INTERNAL). */
     responsibleCoordinationCode: CoordinationId | null
     draft: ReportDraft
+    /** La categoría elegida es «Otra»: exige y envía la categoría escrita. */
+    categoryRequiresOtherText?: boolean
   }) => Promise<boolean>
   /** Cambia el tipo dentro del formulario unificado sin perder el borrador. */
   setReportFormKind: (kind: 'INTERNAL' | 'INTER_COORDINATION') => void
@@ -208,10 +210,18 @@ export function useOperationalOverview(
      * abrir el detalle y el historial al expandir la sección.
      */
     enableAnalysis?: boolean
+    /**
+     * Precarga en segundo plano los problemas de TODAS las coordinaciones para
+     * que cambiar de carta en la mesa sea instantáneo. Solo tiene sentido con
+     * mesa: el COORDINADOR ve una sola coordinación y la precarga le costaba
+     * ~34 peticiones extra por carga (y cupo del límite por IP). Por defecto, sí.
+     */
+    prefetchAllCoordinations?: boolean
   } = {},
 ): OperationalCardsController {
   const persistenceScope = options.persistenceScope ?? null
   const enableAnalysis = options.enableAnalysis === true
+  const prefetchAllCoordinations = options.prefetchAllCoordinations !== false
   const [state, dispatch] = useReducer(
     operationalCardsReducer,
     persistenceScope,
@@ -304,7 +314,7 @@ export function useOperationalOverview(
   // precarga ya la tenía en vuelo, comparten la petición.
   useEffect(() => {
     const coords = state.overview?.coordinations
-    if (!coords || coords.length === 0) return
+    if (!prefetchAllCoordinations || !coords || coords.length === 0) return
 
     let cancelled = false
     const pendingCoords = coords.filter(
@@ -349,7 +359,7 @@ export function useOperationalOverview(
       cancelIdle()
     }
     // Solo cuando llega/cambia el overview: la caché se lee del ref al arrancar.
-  }, [state.overview])
+  }, [state.overview, prefetchAllCoordinations])
 
   const selectedCode = state.selectedCoordinationCode
   const level1Status = state.level1.status
@@ -806,6 +816,7 @@ export function useOperationalOverview(
       selectedCoordinationId: string | null
       responsibleCoordinationCode: CoordinationId | null
       draft: ReportDraft
+      categoryRequiresOtherText?: boolean
     }): Promise<boolean> => {
       if (sendingRef.current) return false
       sendingRef.current = true
@@ -847,6 +858,7 @@ export function useOperationalOverview(
             reportKind: input.reportKind,
             selectedCoordinationId: input.selectedCoordinationId,
             selectedCoordinationCode: input.selectedCoordinationCode,
+            categoryRequiresOtherText: input.categoryRequiresOtherText,
           },
           idempotencyKey,
         )

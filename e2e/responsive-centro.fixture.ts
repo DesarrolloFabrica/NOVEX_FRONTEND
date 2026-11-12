@@ -1,6 +1,7 @@
 import type { Page } from 'playwright/test'
 import { flowStateResponse } from './flujo-state.fixture'
 import { operationalOverviewFixture } from './operational-overview.fixture'
+import { authMeBody } from './support/authMe'
 
 /**
  * Mocks del Centro Operacional para la batería responsive.
@@ -346,7 +347,7 @@ export async function installResponsiveCentro(page: Page, role: ResponsiveRole) 
 
     if (path.endsWith('/auth/me')) {
       await route.fulfill({
-        json: { user: { ...session, fullName: session.name, status: 'ACTIVE' } },
+        json: authMeBody({ ...session, fullName: session.name, status: 'ACTIVE' }),
       })
       return
     }

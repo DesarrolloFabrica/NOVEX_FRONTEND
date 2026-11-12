@@ -18,9 +18,9 @@ import type { ProblemDetail } from '@/modules/operational-cards/types/problem-de
  * Cronología se pide solo al desplegarse. El análisis IA se carga en una
  * sección contextual aparte (`sections.analysis`), no en este servicio.
  *
- * Las coordinaciones relacionadas (`relatedCoordinations`) no se leen aquí: no
- * representan un impacto medido ni intervienen en el Centro Operacional. Siguen
- * existiendo en el backend y en otras vistas.
+ * Las coordinaciones relacionadas (`relatedCoordinations`) se muestran en el
+ * expediente como CONTEXTO declarado por quien reportó: no representan un
+ * impacto medido ni intervienen en integridad, vidas o KPIs.
  */
 
 /** Prefijo de la historia mock del escenario QA (nunca una política real). */
@@ -64,6 +64,16 @@ export function toProblemDetail(situation: SituationResponse): ProblemDetail {
     reportKind: situation.reportKind ?? 'INTERNAL',
     affectedProcess: situation.affectedProcess ?? null,
     pendingDelivery: situation.pendingDelivery ?? null,
+    categoryCode: situation.categoryCode ?? null,
+    categoryName: situation.categoryName ?? null,
+    categoryOtherText: situation.categoryOtherText?.trim() || null,
+    relatedCoordinations: [...(situation.relatedCoordinations ?? [])]
+      .sort((a, b) => a.displayOrder - b.displayOrder)
+      .map((item) => ({
+        coordinationId: item.coordinationId,
+        code: item.coordinationCode,
+        name: item.coordinationName || item.coordinationShortName,
+      })),
     coordinationId: situation.coordinationId ?? null,
     affectedCoordinationId: situation.affectedCoordinationId ?? null,
     /*

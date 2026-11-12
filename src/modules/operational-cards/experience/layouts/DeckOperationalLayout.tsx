@@ -45,6 +45,7 @@ import { hasPermission } from '@/modules/auth/utils/permissions'
 import type { OperationalCenterExperienceId } from '@/modules/operational-cards/experience/resolveOperationalCenterExperience'
 import type { OperationalShellModel } from '@/modules/operational-cards/hooks/useOperationalShellModel'
 import type { CoordinationId } from '@/modules/impact-network/data/coordination-islands.config'
+import { OPERATIONAL_STATUS_LABEL } from '@/modules/operational-cards/data/operationalStatusLabel'
 
 
 
@@ -136,28 +137,28 @@ export function DeckOperationalLayout({
   }
 
   /*
-   * ADMIN y ANALISTA comparten las vistas de consulta (situaciones,
-   * aprendizajes, indicadores): antes el ANALISTA veía esas tarjetas con
+   * ADMIN y ANALISTA comparten las vistas de consulta (situaciones, historial
+   * e indicadores): antes el ANALISTA veía esas tarjetas con
    * flecha pero no llevaban a ninguna parte. Las acciones administrativas y
    * el «consultar» como botón principal siguen siendo solo del ADMIN (el
    * ANALISTA registra).
    */
-  const hasInsightViews = experience === 'admin' || experience === 'analyst'
-  const adminActionPanel = hasInsightViews
-    ? cloneElement(actionPanel as ReactElement<OperationalActionPanelProps>, {
-        onOpenHistory: openAdminHistory,
-        historyScopeLabel: 'todas las coordinaciones',
-        onOpenOperations: () => setAdminView('operations'),
-        onOpenLearnings: () => setAdminView('learnings'),
-        onOpenKpis: canViewKpis ? () => setAdminView('kpis') : undefined,
-        ...(experience === 'admin'
-          ? {
-              onPrimaryConsult: () => setAdminView('operations'),
-              onOpenAdminActions: () => setAdminView('admin-actions'),
-            }
-          : {}),
-      })
-    : actionPanel
+  // Este layout solo sirve a ADMIN y ANALISTA: ambos tienen las vistas de consulta.
+  const adminActionPanel = cloneElement(
+    actionPanel as ReactElement<OperationalActionPanelProps>,
+    {
+      onOpenHistory: openAdminHistory,
+      historyScopeLabel: 'todas las coordinaciones',
+      onOpenOperations: () => setAdminView('operations'),
+      onOpenKpis: canViewKpis ? () => setAdminView('kpis') : undefined,
+      ...(experience === 'admin'
+        ? {
+            onPrimaryConsult: () => setAdminView('operations'),
+            onOpenAdminActions: () => setAdminView('admin-actions'),
+          }
+        : {}),
+    },
+  )
 
   /*
    * «Registrar situación» se abre en un modal (como en el COORDINADOR): el
@@ -224,17 +225,16 @@ export function DeckOperationalLayout({
       <CircusScene />
 
       <OperationalRoleHeader
+        labelByCode={labelByCode}
         experience={experience}
         user={user}
         selectedCoordination={selectedCoordination}
         directionStatus={controller.overview?.directionStatus}
         activeProblemsCount={activeProblemsCount}
         criticalProblemsCount={criticalProblemsCount}
-        onReportSituation={
-          canCreate
-            ? () => controller.openReportForm('INTERNAL')
-            : undefined
-        }
+        /* Sin acceso rápido en la cabecera: «Registrar situación» ya está en
+           el panel derecho, en la barra del expediente y en el menú (eran
+           cuatro copias de la misma acción en una pantalla). */
         canCreate={canCreate}
       />
 
@@ -281,7 +281,8 @@ export function DeckOperationalLayout({
                       <IconTarget size={17} />
                     </span>
                     <span className="admin-general-summary__text">
-                      {activeProblemsCount} situaciones activas
+                      {activeProblemsCount}{' '}
+                      {activeProblemsCount === 1 ? 'situación activa' : 'situaciones activas'}
                     </span>
                   </li>
                   <li className="admin-general-summary__item">
@@ -290,13 +291,16 @@ export function DeckOperationalLayout({
                     </span>
                     <span className="admin-general-summary__text">
                       {criticalProblemsCount > 0
-                        ? `${criticalProblemsCount} críticas pendientes`
-                        : 'Sin incidentes pendientes'}
+                        ? `${criticalProblemsCount} ${criticalProblemsCount === 1 ? 'crítica pendiente' : 'críticas pendientes'}`
+                        : 'Sin situaciones críticas'}
                     </span>
                   </li>
                 </ul>
               </div>
 
+              {/* Solo para quien registra (o ya registró): al ADMIN, que no
+                  registra desde el Centro, le mostraba «0 reportes». */}
+              {canCreate || controller.myReports.total > 0 ? (
               <div className="admin-ticket-section" data-tour="my-reports">
                 <div className="admin-ticket-tab">
                   <span className="admin-ticket-tab__icon" aria-hidden="true">
@@ -322,12 +326,13 @@ export function DeckOperationalLayout({
                   </span>
                 </button>
               </div>
+              ) : null}
             </div>
           </ShellRegion>
 
           <ShellRegion
             region="coordination-problems"
-            title="Problemas de la coordinación"
+            title="Situaciones de la coordinación"
             hint={
               selectedCoordination ? undefined : 'Seleccione una coordinación'
             }
@@ -347,7 +352,7 @@ export function DeckOperationalLayout({
                       aria-hidden="true"
                     />
                     <div>
-                      <span className="coordination-focus-banner__label">Coordinación Activa</span>
+                      <span className="coordination-focus-banner__label">Coordinación observada</span>
                       <h3 className="coordination-focus-banner__title">
                         {labelByCode[selectedCoordination.code] ?? selectedCoordination.name}
                       </h3>
@@ -357,11 +362,8 @@ export function DeckOperationalLayout({
                     <span
                       className={`coordination-focus-banner__health coordination-focus-banner__health--${selectedCoordination.status.toLowerCase()}`}
                     >
-                      {selectedCoordination.status === 'ESTABLE'
-                        ? 'Estable'
-                        : selectedCoordination.status === 'ALERTA'
-                          ? 'Alerta'
-                          : 'Crítico'}
+                      {OPERATIONAL_STATUS_LABEL[selectedCoordination.status] ??
+                        selectedCoordination.status}
                     </span>
                   </div>
                 </div>
@@ -385,9 +387,9 @@ export function DeckOperationalLayout({
                 <div className="coordination-empty-prompt__icon" aria-hidden="true">
                   <IconLayers size={34} />
                 </div>
-                <h3 className="coordination-empty-prompt__title">Supervisión General de Coordinaciones</h3>
+                <h3 className="coordination-empty-prompt__title">Supervisión general de coordinaciones</h3>
                 <p className="coordination-empty-prompt__text">
-                  Seleccione una de las cartas en el escenario inferior para inspeccionar el estado de salud, incidentes activos y dependencias de esa coordinación.
+                  Seleccione una de las cartas en el escenario inferior para inspeccionar el estado de salud, las situaciones activas y las dependencias de esa coordinación.
                 </p>
               </div>
             )}
@@ -429,7 +431,7 @@ export function DeckOperationalLayout({
                 icon={<IconDocument size={22} />}
                 eyebrow="Mis reportes · consulta"
                 title="Mis reportes"
-                subtitle="Lo que has reportado en cualquier coordinación, con su estado actual."
+                subtitle="Lo que usted ha reportado en cualquier coordinación, con su estado actual."
                 onBack={() => setAdminView(null)}
               />
               <MyReportsPanel
@@ -450,7 +452,7 @@ export function DeckOperationalLayout({
               />
             </section>
           </div>
-        ) : hasInsightViews && insightView ? (
+        ) : insightView ? (
           <div
             className="action-panel"
             data-testid="action-panel"

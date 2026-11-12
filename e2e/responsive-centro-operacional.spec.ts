@@ -617,7 +617,7 @@ async function runDeckRole(
    * banda. El «Volver a la mesa» inferior ya no existe ni reserva alto.
    */
   await expect(page.getByTestId('return-to-table')).toHaveCount(0)
-  const back = page.getByTestId('breadcrumb-direction')
+  const back = page.getByTestId('deck-ribbon-back')
   await expect(back).toBeVisible()
   await expect(back).toHaveText('')
   const backBox = await box(back)
@@ -740,7 +740,7 @@ async function runDeckRole(
   }
 
   // La flecha también se usa con teclado: foco + Enter devuelve a la mesa.
-  await page.getByTestId('breadcrumb-direction').focus()
+  await page.getByTestId('deck-ribbon-back').focus()
   await page.keyboard.press('Enter')
   await expect(page.getByTestId('operational-breadcrumb')).toHaveCount(0)
   await expect(card).toHaveAttribute('data-selected', 'false')

@@ -158,13 +158,13 @@ function countOf(html: string, needle: string): number {
 const ALL_SECTIONS: ProblemSectionId[] = ['notes', 'other-evidences', 'timeline']
 
 describe('ProblemDetail · estructura', () => {
-  it('muestra folio, título, severidad, estado y SLA como texto', () => {
+  it('muestra folio, título, severidad, estado y plazo como texto', () => {
     const html = markup()
     expect(html).toContain('Nº 12CD')
     expect(html).toContain('Aulas sin conectividad')
     expect(html).toContain('>Crítica<')
-    expect(html).toContain('>Abierto<')
-    expect(html).toContain('SLA vencido')
+    expect(html).toContain('>Abierta<')
+    expect(html).toContain('Plazo vencido')
   })
 
   it('orden: encabezado → contexto → descripción → notas → cronología', () => {
@@ -346,7 +346,7 @@ describe('ProblemDetail · cronología', () => {
         }),
       }),
     )
-    expect(html).toContain('Problema registrado')
+    expect(html).toContain('Situación registrada')
     expect(html).toContain('Plazo operativo vencido')
     expect(html).toContain('Sistema')
     expect(html).toContain('Fecha límite:')
@@ -380,7 +380,7 @@ describe('ProblemDetail · carga y error del detalle', () => {
   it('en carga muestra esqueleto y ya el título disponible', () => {
     const html = markup(level2({ status: 'loading', detail: null }))
     expect(html).toContain('data-testid="detail-loading"')
-    expect(html).toContain('Detalle del problema')
+    expect(html).toContain('Detalle de la situación')
     expect(html).not.toContain('detail-notes-loading')
   })
 
@@ -462,7 +462,7 @@ describe('ProblemDetail · expediente', () => {
   it('la flecha no lleva texto visible pero sí nombre accesible', () => {
     const html = withBack()
     const back = html.slice(html.indexOf('<button'), html.indexOf('</button>'))
-    expect(back).toContain('aria-label="Volver a problemas"')
+    expect(back).toContain('aria-label="Volver a situaciones"')
     expect(back).toContain('<svg')
     expect(back).not.toMatch(/>\s*Volver\s*</)
   })
@@ -481,24 +481,24 @@ describe('ProblemDetail · expediente', () => {
   })
 
   it('distintivo de tipo: INTERNO o DEPENDENCIA', () => {
-    expect(markup()).toMatch(/data-dossier-type="internal"[^>]*>Interno</)
+    expect(markup()).toMatch(/data-dossier-type="internal"[^>]*>Interna</)
     expect(markup(level2({ detail: INTER_DETAIL }))).toMatch(
       /data-dossier-type="dependency"[^>]*>Dependencia</,
     )
   })
 
-  it('IN_PROGRESS se presenta como «En revisión» sin cambiar el valor', () => {
+  it('IN_PROGRESS se presenta como «En atención» sin cambiar el valor', () => {
     const html = markup(
       level2({ detail: { ...DETAIL, status: 'IN_PROGRESS' } }),
     )
     expect(html).toContain('data-status="IN_PROGRESS"')
-    expect(html).toContain('>En revisión<')
-    expect(html).not.toContain('En atención')
+    expect(html).toContain('>En atención<')
+    expect(html).not.toContain('En revisión')
   })
 
-  it('CLOSED se presenta como «Cerrado»', () => {
+  it('CLOSED se presenta como «Cerrada»', () => {
     const html = markup(level2({ detail: { ...DETAIL, status: 'CLOSED' } }))
-    expect(html).toContain('>Cerrado<')
+    expect(html).toContain('>Cerrada<')
   })
 
   it('interno: «Coordinación responsable» con su nombre completo, nunca solo «Coordinación»', () => {
@@ -529,5 +529,65 @@ describe('ProblemDetail · expediente', () => {
     )
     expect(html).toContain('Línea uno.\nLínea dos.')
     expect(html).toContain('>Descripción</h4>')
+  })
+})
+
+describe('ProblemDetail · categoría y coordinaciones relacionadas', () => {
+  it('muestra la categoría del catálogo', () => {
+    const html = markup(
+      level2({
+        detail: { ...DETAIL, categoryCode: 'INTERNET', categoryName: 'Internet' },
+      }),
+    )
+    expect(html).toContain('data-testid="detail-category"')
+    expect(html).toContain('Internet')
+    expect(html).not.toContain('detail-category-other-text')
+  })
+
+  it('con «Otra» muestra la categoría que escribió quien reportó', () => {
+    const html = markup(
+      level2({
+        detail: {
+          ...DETAIL,
+          categoryCode: 'OTRA',
+          categoryName: 'Otra',
+          categoryOtherText: 'Biblioteca',
+        },
+      }),
+    )
+    expect(html).toMatch(
+      /data-testid="detail-category-other-tag"[^>]*>Otra<\/span>/,
+    )
+    expect(html).toMatch(
+      /data-testid="detail-category-other-text"[^>]*>Biblioteca<\/span>/,
+    )
+  })
+
+  it('lista las coordinaciones relacionadas en su orden, dentro del contexto', () => {
+    const html = markup(
+      level2({
+        detail: {
+          ...DETAIL,
+          relatedCoordinations: [
+            { coordinationId: 'c2', code: 'coord-negocios', name: 'Negocios' },
+            { coordinationId: 'c3', code: 'coord-ingenierias', name: 'Ingenierías' },
+          ],
+        },
+      }),
+    )
+    const context = html.slice(
+      html.indexOf('data-testid="detail-context"'),
+      html.indexOf('</dl>'),
+    )
+    expect(context).toContain('Coordinaciones relacionadas')
+    expect(countOf(context, 'data-testid="detail-related-item"')).toBe(2)
+    const related = context.slice(context.indexOf('data-testid="detail-related"'))
+    expect(related.indexOf('Negocios')).toBeLessThan(related.indexOf('Ingenierías'))
+  })
+
+  it('sin categoría ni relacionadas no pinta filas vacías', () => {
+    const html = markup(level2({ detail: INTER_DETAIL }))
+    expect(html).not.toContain('data-testid="detail-category"')
+    expect(html).not.toContain('data-testid="detail-related"')
   })
 })

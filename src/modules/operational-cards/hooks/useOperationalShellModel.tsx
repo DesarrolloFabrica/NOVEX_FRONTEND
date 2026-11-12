@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { canCreateSituations, hasPermission } from '@/modules/auth/utils/permissions'
@@ -20,6 +20,10 @@ import { buildProductTable } from '@/modules/operational-cards/data/productHiera
 import { buildTableLayout } from '@/modules/operational-cards/data/tableLayout'
 import { useOperationalOverview } from '@/modules/operational-cards/hooks/useOperationalOverview'
 import { reportRequestKey } from '@/modules/operational-cards/data/situationViewpoint'
+import {
+  categoryRequiresOtherText,
+  orderReportCategories,
+} from '@/modules/operational-cards/data/reportCategories'
 import {
   emptyReportDraft,
   reportDraftKey,
@@ -70,6 +74,8 @@ export function useOperationalShellModel(
   const controller = useOperationalOverview({
     persistenceScope: user?.id ?? null,
     enableAnalysis: canViewAnalysis,
+    // Sin mesa no hay cartas que cambiar: solo se carga su coordinación.
+    prefetchAllCoordinations: !isCoordinator,
   })
   const { level0, overview, selectedCoordinationCode, hoveredCoordinationCode } =
     controller
@@ -166,6 +172,29 @@ export function useOperationalShellModel(
     [location.search],
   )
   const openReportForm = controller.openReportForm
+  /*
+   * Puerta única del formulario INTERNAL. Quien elige carta (ANALISTA) y no
+   * tiene ninguna observada —p. ej. tras «Todas las coordinaciones»— llegaba a
+   * un formulario sin destino («Elija primero en la mesa…») que tapaba la mesa.
+   * Ahora se preselecciona Coordinación General, la suya por defecto y donde
+   * puede operar; el modal lo dice («Se registrará en …») y puede cambiarla.
+   */
+  const openInternalReport = useCallback(() => {
+    if (
+      !isCoordinator &&
+      !controller.selectedCoordinationCode &&
+      overview?.coordinations.some((row) => row.code === GENERAL_COORDINATION_ID)
+    ) {
+      selectCoordination(GENERAL_COORDINATION_ID)
+    }
+    openReportForm('INTERNAL')
+  }, [
+    isCoordinator,
+    controller.selectedCoordinationCode,
+    overview,
+    selectCoordination,
+    openReportForm,
+  ])
   useEffect(() => {
     if (!reportIntent || level0 !== 'ready' || !overview) return
     if (!isCoordinator && reportIntent.coordination) {
@@ -176,7 +205,7 @@ export function useOperationalShellModel(
       )
       if (match) selectCoordination(match.code as CoordinationId)
     }
-    if (canCreate) openReportForm('INTERNAL')
+    if (canCreate) openInternalReport()
     navigate(
       {
         pathname: location.pathname,
@@ -192,7 +221,7 @@ export function useOperationalShellModel(
     isCoordinator,
     canCreate,
     selectCoordination,
-    openReportForm,
+    openInternalReport,
     location.hash,
     location.pathname,
     location.search,
@@ -296,6 +325,37 @@ export function useOperationalShellModel(
   ])
 
   /*
+   * Coordinaciones que se pueden marcar como RELACIONADAS: todas menos la de la
+   * carta (la propia en INTERNAL, la afectada en INTER). La responsable de una
+   * dependencia la descarta el propio formulario, porque cambia mientras se
+   * llena.
+   */
+  const relatedOptions = useMemo(() => {
+    if (!overview) return []
+    const excludeCode = isCoordinator
+      ? assignedCoordination?.code
+      : selectedCoordinationCode
+    return overview.coordinations
+      .filter((row) => row.code !== excludeCode)
+      .map((row) => ({
+        id: row.id,
+        label: labelByCode[row.code] ?? row.shortName,
+        code: row.code,
+      }))
+  }, [
+    overview,
+    selectedCoordinationCode,
+    labelByCode,
+    isCoordinator,
+    assignedCoordination,
+  ])
+
+  const reportCategories = useMemo(
+    () => orderReportCategories(categories),
+    [categories],
+  )
+
+  /*
    * INTERNAL se registra SIEMPRE en la carta seleccionada; para un COORDINADOR
    * la carta está fijada a su coordinación, así que su INTERNAL es de su área.
    * (El antiguo selector «Destino» se retiró: un problema que ocurre en otra
@@ -397,9 +457,7 @@ export function useOperationalShellModel(
       if (!allowLifecycleActions || !detail) return Promise.resolve(false)
       return controller.submitConsequence(detail.id, consequenceDraft)
     },
-    onReportSituation: canCreate
-      ? () => controller.openReportForm('INTERNAL')
-      : noop,
+    onReportSituation: canCreate ? openInternalReport : noop,
     onCancelReport: () => controller.closeReportForm(),
     onCloseDetail: () => controller.closeProblem(),
     onRetryDetail: () => {
@@ -452,21 +510,22 @@ export function useOperationalShellModel(
       : null,
     labelByCode: rowLabelByCode,
     colorByCode,
-    idleHint: isCoordinator
-      ? 'También puede seleccionar un problema de «Mis reportes» o de su coordinación para consultar el detalle.'
-      : null,
     reportForm: {
       reportKind,
       affectedLabel: selectedCoordination
         ? (labelByCode[selectedCoordination.code] ??
           selectedCoordination.shortName)
         : null,
-      categories,
+      categories: reportCategories,
       categoriesError,
       responsibleOptions,
+      relatedOptions,
       draft,
       submission: controller.submission,
       maxOccurredAt: nowAsLocalInput(),
+      // El ANALISTA no tiene coordinación propia: el formulario no le habla
+      // de «mi coordinación».
+      ownCoordination: isCoordinator,
       onDraftChange: (patch: Partial<typeof draft>) =>
         controller.setReportDraft(draftKey, { ...draft, ...patch }),
       onReportKindChange: canCreate
@@ -482,6 +541,9 @@ export function useOperationalShellModel(
           selectedCoordinationId: selectedCoordination?.id ?? null,
           responsibleCoordinationCode: responsibleCodeForSubmit,
           draft,
+          categoryRequiresOtherText:
+            reportKind === 'INTERNAL' &&
+            categoryRequiresOtherText(categories, draft.categoryId),
         })
       },
     },

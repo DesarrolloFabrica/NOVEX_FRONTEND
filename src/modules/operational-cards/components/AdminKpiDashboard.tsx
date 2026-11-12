@@ -61,6 +61,15 @@ export interface AdminKpiDashboardProps {
   onSelectCoordination: (code: string) => void
   /** Avisa al shell de que el tablero espera que se elija una carta. */
   onAwaitingCardChange?: (awaiting: boolean) => void
+  /**
+   * Indicadores de la Dirección ya cargados por el shell (DIRECTOR). Si llegan,
+   * el tablero no los vuelve a pedir: antes se descargaban dos veces.
+   */
+  directionSource?: {
+    direction: OperationalKpiDirectionSnapshot | null
+    error: string | null
+    reload: () => void
+  }
 }
 
 /* ========================================================================== */
@@ -200,7 +209,7 @@ function StatusBadge({ status }: { status: string }) {
 function SeverityBreakdown({ severity }: { severity: OperationalKpiSeverityCounts }) {
   const total = severity.critical + severity.high + severity.medium + severity.low
   if (total === 0) {
-    return <p className="kpi-empty">No hay problemas activos que clasificar.</p>
+    return <p className="kpi-empty">No hay situaciones activas que clasificar.</p>
   }
   return (
     <div className="kpi-stack">
@@ -284,6 +293,7 @@ export function AdminKpiDashboard({
   onOpenProblem,
   onSelectCoordination,
   onAwaitingCardChange,
+  directionSource,
 }: AdminKpiDashboardProps) {
   // Se recuerda la última lectura: abrir un expediente y volver no la pierde.
   const [scope, setScope] = useState<Scope>(lastReading.scope)
@@ -295,11 +305,18 @@ export function AdminKpiDashboard({
     lastReading = { scope, periodChoice }
   }, [scope, periodChoice])
 
-  const [direction, setDirection] = useState<OperationalKpiDirectionSnapshot | null>(null)
-  const [directionError, setDirectionError] = useState<string | null>(null)
+  const [ownDirection, setDirection] = useState<OperationalKpiDirectionSnapshot | null>(null)
+  const [ownDirectionError, setDirectionError] = useState<string | null>(null)
   const [directionAttempt, setDirectionAttempt] = useState(0)
+  const sharedDirection = Boolean(directionSource)
+  const direction = directionSource ? directionSource.direction : ownDirection
+  const directionError = directionSource ? directionSource.error : ownDirectionError
+  const retryDirection = directionSource
+    ? directionSource.reload
+    : () => setDirectionAttempt((value) => value + 1)
 
   useEffect(() => {
+    if (sharedDirection) return
     let cancelled = false
     setDirectionError(null)
     fetchOperationalKpiDirection()
@@ -312,7 +329,7 @@ export function AdminKpiDashboard({
     return () => {
       cancelled = true
     }
-  }, [directionAttempt])
+  }, [directionAttempt, sharedDirection])
 
   const coordinations = direction?.coordinations ?? []
   const labelOf = (row: OperationalKpiCoordinationSnapshot) =>
@@ -410,7 +427,7 @@ export function AdminKpiDashboard({
       {directionError ? (
         <ErrorBlock
           message={directionError}
-          onRetry={() => setDirectionAttempt((value) => value + 1)}
+          onRetry={retryDirection}
         />
       ) : !direction ? (
         <LoadingBlock />
@@ -469,7 +486,7 @@ function PickCardPrompt() {
       <strong>Elija una carta en la mesa</strong>
       <p>
         Pulse cualquier coordinación de la baraja de abajo y aquí verá su estado, su
-        actividad, cuánto llevan abiertos sus problemas y qué tipos se repiten.
+        actividad, cuánto llevan abiertas sus situaciones y qué tipos se repiten.
       </p>
       <span className="kpi-pick__hint">
         <span className="kpi-pick__arrow" aria-hidden="true">↙</span>
@@ -532,12 +549,12 @@ function DirectionView({
       <div className="kpi-tiles">
         <Tile
           value={problems.activeCount}
-          label="Problemas activos"
-          hint="Abiertos o en atención ahora"
+          label="Situaciones activas"
+          hint="Abiertas o en atención ahora"
         />
         <Tile
           value={problems.severity.critical}
-          label="Críticos"
+          label="Críticas"
           hint="Requieren atención inmediata"
           tone={problems.severity.critical > 0 ? 'critical' : 'stable'}
         />
@@ -550,14 +567,14 @@ function DirectionView({
         <Tile
           value={problems.status.open}
           label="Sin iniciar"
-          hint="Abiertos, aún nadie los trabaja"
+          hint="Abiertas, aún nadie las trabaja"
           tone={problems.status.open > 0 ? 'alert' : 'stable'}
         />
       </div>
 
       <Section
-        question="¿Qué tan graves son los problemas activos?"
-        help="Cada problema se clasifica de Baja a Crítica según su impacto en la operación."
+        question="¿Qué tan graves son las situaciones activas?"
+        help="Cada situación se clasifica de Baja a Crítica según su impacto en la operación."
       >
         <SeverityBreakdown severity={problems.severity} />
       </Section>
@@ -584,14 +601,14 @@ function DirectionView({
           <summary>¿Cómo se decide el estado?</summary>
           <ul>
             <li>
-              <b>Crítica</b>: tiene al menos 1 problema crítico, 3 altos o 5 activos, o
+              <b>Crítica</b>: tiene al menos 1 situación crítica, 3 altas o 5 activas, o
               afecta a 3 coordinaciones o más.
             </li>
             <li>
-              <b>En alerta</b>: tiene problemas activos sin llegar a esos umbrales.
+              <b>En alerta</b>: tiene situaciones activas sin llegar a esos umbrales.
             </li>
             <li>
-              <b>Estable</b>: no tiene problemas activos.
+              <b>Estable</b>: no tiene situaciones activas.
             </li>
             <li>
               La <b>Dirección</b> pasa a crítica cuando{' '}
@@ -603,11 +620,11 @@ function DirectionView({
       </Section>
 
       <Section
-        question="¿Dónde se concentran los problemas?"
-        help="Coordinaciones con problemas activos, de mayor a menor. Pulse una para ver su detalle."
+        question="¿Dónde se concentran las situaciones?"
+        help="Coordinaciones con situaciones activas, de mayor a menor. Pulse una para ver su detalle."
       >
         {withProblems.length === 0 ? (
-          <p className="kpi-empty">Ninguna coordinación tiene problemas activos.</p>
+          <p className="kpi-empty">Ninguna coordinación tiene situaciones activas.</p>
         ) : (
           <ul className="kpi-ranking">
             {withProblems.map((row) => (
@@ -637,7 +654,7 @@ function DirectionView({
                   </span>
                   <span className="kpi-ranking__meta">
                     <strong>{row.problems.activeCount}</strong>{' '}
-                    {row.problems.activeCount === 1 ? 'activo' : 'activos'}
+                    {row.problems.activeCount === 1 ? 'activa' : 'activas'}
                     {row.problems.severity.critical > 0
                       ? ` · ${row.problems.severity.critical} crít.`
                       : ''}
@@ -653,7 +670,7 @@ function DirectionView({
         )}
         {calm.length > 0 ? (
           <p className="kpi-calm">
-            <b>Sin problemas activos:</b> {calm.map(labelOf).join(', ')}.
+            <b>Sin situaciones activas:</b> {calm.map(labelOf).join(', ')}.
           </p>
         ) : null}
       </Section>
@@ -742,12 +759,12 @@ function CoordinationView({
         </div>
         <p className="kpi-hero__headline">{STATUS_HEADLINE[status] ?? explanation.headline}</p>
         <p className="kpi-hero__detail">
-          {status === 'ESTABLE' ? 'No tiene problemas activos.' : `Motivo: ${explanation.detail}`}
+          {status === 'ESTABLE' ? 'No tiene situaciones activas.' : `Motivo: ${explanation.detail}`}
         </p>
         <HealthMeter points={snapshot?.lifePoints ?? null} />
         <p className="kpi-hero__note">
-          La salud parte de 10 y baja con cada problema activo: 2 puntos si es
-          crítico o alto, 1 si es medio o bajo. Se recupera al resolverlos.
+          La salud parte de 10 y baja con cada situación activa: 2 puntos si es
+          crítica o alta, 1 si es media o baja. Se recupera al resolverlas.
         </p>
       </article>
 
@@ -763,8 +780,8 @@ function CoordinationView({
       ) : null}
 
       <Section
-        question="¿Qué tipo de problemas se repiten?"
-        help={`Problemas internos reportados en ${periodName}, agrupados por tipo.`}
+        question="¿Qué tipo de situaciones se repiten?"
+        help={`Situaciones internas reportadas en ${periodName}, agrupadas por tipo.`}
       >
         {recurrence.status === 'loading' ? <LoadingBlock /> : null}
         {recurrence.status === 'error' ? (
@@ -777,7 +794,7 @@ function CoordinationView({
 
       <Section
         question="¿Se están registrando aprendizajes?"
-        help="Al cerrar un problema se puede dejar la lección aprendida para no repetirlo."
+        help="Al cerrar una situación se puede dejar la lección aprendida para que no se repita."
       >
         {learnings.status === 'loading' ? <LoadingBlock /> : null}
         {learnings.status === 'error' ? (
@@ -813,12 +830,12 @@ function StateSections({
       <div className="kpi-tiles">
         <Tile
           value={state.activeAtPeriodEnd.count}
-          label="Activos ahora"
-          hint="Abiertos o en atención"
+          label="Activas ahora"
+          hint="Abiertas o en atención"
         />
         <Tile
           value={snapshot.severity.critical}
-          label="Críticos"
+          label="Críticas"
           hint="Requieren atención inmediata"
           tone={snapshot.severity.critical > 0 ? 'critical' : 'stable'}
         />
@@ -827,14 +844,14 @@ function StateSections({
           label="Antigüedad típica"
           hint={
             aging.medianAgeDays === null
-              ? 'Sin problemas activos'
+              ? 'Sin situaciones activas'
               : `La mitad lleva más de ${plural(aging.medianAgeDays, 'día', 'días')} abierta`
           }
           tone={(aging.medianAgeDays ?? 0) > 14 ? 'alert' : 'neutral'}
         />
         <Tile
           value={resolution.closedCount}
-          label={`Cerrados en ${periodName}`}
+          label={`Cerradas en ${periodName}`}
           hint={
             resolution.medianDays === null
               ? 'Aún sin cierres en el período'
@@ -846,7 +863,7 @@ function StateSections({
 
       <Section
         question={`¿Cuánto trabajo entró y salió en ${periodName}?`}
-        help="Reportados: problemas nuevos. Cerrados: problemas resueltos. Si entran más de los que salen, la carga crece."
+        help="Reportadas: situaciones nuevas. Cerradas: situaciones resueltas. Si entran más de las que salen, la carga crece."
         aside={
           <span className="kpi-balance" data-trend={created > closed ? 'up' : 'down'}>
             {created > closed
@@ -883,23 +900,23 @@ function StateSections({
         <ul className="kpi-legend kpi-legend--inline">
           <li data-tone="created">
             <span className="kpi-legend__swatch" aria-hidden="true" />
-            <span className="kpi-legend__label">Reportados</span>
+            <span className="kpi-legend__label">Reportadas</span>
             <strong>{created}</strong>
           </li>
           <li data-tone="closed">
             <span className="kpi-legend__swatch" aria-hidden="true" />
-            <span className="kpi-legend__label">Cerrados</span>
+            <span className="kpi-legend__label">Cerradas</span>
             <strong>{closed}</strong>
           </li>
         </ul>
       </Section>
 
       <Section
-        question="¿Cuánto tiempo llevan abiertos?"
-        help="Edad de los problemas activos desde que se reportaron. Los más antiguos suelen tener el plazo (SLA) vencido."
+        question="¿Cuánto tiempo llevan abiertas?"
+        help="Edad de las situaciones activas desde que se reportaron. Las más antiguas suelen tener el plazo vencido."
       >
         {aging.activeCount === 0 ? (
-          <p className="kpi-empty">No hay problemas activos.</p>
+          <p className="kpi-empty">No hay situaciones activas.</p>
         ) : (
           <>
             <ul className="kpi-bands">
@@ -918,7 +935,7 @@ function StateSections({
             </ul>
             {aging.oldest.length > 0 ? (
               <div className="kpi-oldest">
-                <h4>Los que más esperan</h4>
+                <h4>Las que más esperan</h4>
                 <ul>
                   {aging.oldest.map((item) => (
                     <li key={item.id}>
@@ -926,7 +943,7 @@ function StateSections({
                         type="button"
                         className="kpi-oldest__row"
                         onClick={() => onOpenProblem(item.id)}
-                        title="Abrir expediente"
+                        title="Abrir detalle"
                       >
                         <span className="kpi-oldest__age">
                           <strong>{item.ageDays}</strong> días
@@ -956,8 +973,8 @@ function StateSections({
       </Section>
 
       <Section
-        question="¿Qué tan graves son y quién los atiende?"
-        help="Gravedad de los problemas activos y si ya hay alguien trabajándolos."
+        question="¿Qué tan graves son y quién las atiende?"
+        help="Gravedad de las situaciones activas y si ya hay alguien trabajándolas."
       >
         <SeverityBreakdown severity={snapshot.severity} />
         {snapshot.activeCount > 0 ? (
@@ -971,8 +988,8 @@ function StateSections({
               <span>En atención</span>
             </div>
             <p>
-              {pct(snapshot.attention.inProgress, snapshot.activeCount)} % de los problemas
-              activos ya tiene a alguien trabajando en ellos.
+              {pct(snapshot.attention.inProgress, snapshot.activeCount)} % de las situaciones
+              activas ya tiene a alguien trabajando en ellas.
             </p>
           </div>
         ) : null}
@@ -987,7 +1004,7 @@ function CategoryBars({ recurrence }: { recurrence: InternalRecurrenceResponse }
     .sort((left, right) => right.totalCreated - left.totalCreated)
     .slice(0, 5)
   if (categories.length === 0) {
-    return <p className="kpi-empty">No se reportaron problemas internos en el período.</p>
+    return <p className="kpi-empty">No se reportaron situaciones internas en el período.</p>
   }
   const max = Math.max(1, ...categories.map((category) => category.totalCreated))
   return (
@@ -1009,7 +1026,7 @@ function LearningsBlock({ summary }: { summary: LearningsSummary }) {
   if (summary.closedCount === 0) {
     return (
       <p className="kpi-empty">
-        Aún no hay problemas cerrados en el período, así que no hay lecciones que contar.
+        Aún no hay situaciones cerradas en el período, así que no hay lecciones que contar.
       </p>
     )
   }

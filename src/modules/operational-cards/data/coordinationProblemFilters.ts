@@ -6,10 +6,10 @@ import type {
 import type { SituationsListScope } from '@/modules/api/situations.api'
 
 /**
- * Filtros del panel «Problemas de la coordinación».
+ * Filtros del panel «Situaciones de la coordinación».
  *
  * Son de PRESENTACIÓN: no tocan LEVEL 1, el snapshot operacional ni sus
- * conteos. Los activos (abiertos y en revisión) se filtran sobre la lista de
+ * conteos. Los activos (abiertos y en atención) se filtran sobre la lista de
  * LEVEL 1 que el panel ya tenía; los cerrados se piden aparte, paginados, con
  * la severidad aplicada en el servidor.
  */
@@ -47,22 +47,23 @@ export const STATUS_FILTER_OPTIONS: readonly {
   value: StatusFilter
   label: string
 }[] = [
-  { value: 'ACTIVE', label: 'Activos' },
-  { value: 'ALL', label: 'Todos' },
-  { value: 'OPEN', label: 'Abiertos' },
-  { value: 'IN_PROGRESS', label: 'En revisión' },
-  { value: 'CLOSED', label: 'Cerrados' },
+  { value: 'ACTIVE', label: 'Activas' },
+  { value: 'ALL', label: 'Todas' },
+  { value: 'OPEN', label: 'Abiertas' },
+  { value: 'IN_PROGRESS', label: 'En atención' },
+  { value: 'CLOSED', label: 'Cerradas' },
 ]
 
 /**
  * Etiquetas de estado de ESTE panel. `IN_PROGRESS` se presenta como «En
- * revisión»; el valor interno y el resto de vistas no cambian.
+ * atención», el mismo nombre que el botón «Pasar a En atención» y el resto del
+ * Centro; el valor interno no cambia.
  */
 export const PANEL_STATUS_LABEL: Readonly<Record<string, string>> = {
-  OPEN: 'Abierto',
-  IN_PROGRESS: 'En revisión',
-  RESOLVED: 'En revisión',
-  CLOSED: 'Cerrado',
+  OPEN: 'Abierta',
+  IN_PROGRESS: 'En atención',
+  RESOLVED: 'En atención',
+  CLOSED: 'Cerrada',
 }
 
 /** Fila del panel: un activo de LEVEL 1 o un cerrado del filtro. */
@@ -102,23 +103,23 @@ export function filterActiveProblems(
 }
 
 const SEVERITY_PHRASE: Record<SituationSeverity, string> = {
-  CRITICAL: 'críticos',
+  CRITICAL: 'críticas',
   HIGH: 'de severidad alta',
   MEDIUM: 'de severidad media',
   LOW: 'de severidad baja',
 }
 
 const STATUS_PHRASE: Record<StatusFilter, string | null> = {
-  ACTIVE: 'activos',
+  ACTIVE: 'activas',
   ALL: null,
-  OPEN: 'abiertos',
-  IN_PROGRESS: 'en revisión',
-  CLOSED: 'cerrados',
+  OPEN: 'abiertas',
+  IN_PROGRESS: 'en atención',
+  CLOSED: 'cerradas',
 }
 
 /**
  * Vacío con filtros: dice QUÉ combinación no tiene resultados, p. ej. «No hay
- * problemas críticos en revisión». Con lectura parcial aclara que se habla de
+ * situaciones críticas en atención». Con lectura parcial aclara que se habla de
  * lo visible para el usuario, no del área.
  */
 export function buildFilteredEmptyMessage(
@@ -126,7 +127,7 @@ export function buildFilteredEmptyMessage(
   scope: SituationsListScope,
 ): string {
   const status = STATUS_PHRASE[filters.status]
-  const parts = ['No hay problemas']
+  const parts = ['No hay situaciones']
   if (filters.severity === 'CRITICAL') {
     parts.push(SEVERITY_PHRASE.CRITICAL)
     if (status) parts.push(status)
@@ -134,7 +135,7 @@ export function buildFilteredEmptyMessage(
     if (status) parts.push(status)
     if (filters.severity !== 'ALL') parts.push(SEVERITY_PHRASE[filters.severity])
   }
-  if (!status && filters.severity === 'ALL') parts.push('registrados')
-  if (scope === 'own-only') parts.push('visibles para tu usuario')
+  if (!status && filters.severity === 'ALL') parts.push('registradas')
+  if (scope === 'own-only') parts.push('visibles para su usuario')
   return parts.join(' ')
 }

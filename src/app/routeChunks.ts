@@ -64,7 +64,9 @@ export function warmRouteChunks(pathname: string): void {
   }
 
   if (pathname.startsWith('/admin')) {
-    preloadAdminConsole()
+    // Solo el ADMIN entra a la consola: precargar sus datos para otro rol
+    // terminaba en cuatro 403 antes de que la guarda lo devolviera al Centro.
+    if (session.roleCode?.toUpperCase() === 'ADMIN') preloadAdminConsole()
     // El regreso al Centro tampoco debe esperar al código.
     whenIdle(() => {
       void loadOperationalCenter().catch(() => undefined)

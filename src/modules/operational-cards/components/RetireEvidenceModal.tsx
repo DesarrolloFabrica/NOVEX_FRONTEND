@@ -202,7 +202,7 @@ export function RetireEvidenceModal({
               required
               value={reason}
               disabled={isSubmitting}
-              placeholder="Indique por qué se retira esta evidencia del expediente activo…"
+              placeholder="Indique por qué se retira esta evidencia de la situación activa…"
               onChange={(e) => {
                 setReason(e.target.value)
                 setLocalError(null)

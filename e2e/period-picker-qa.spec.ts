@@ -3,6 +3,7 @@ import { mkdirSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { operationalOverviewFixture } from './operational-overview.fixture'
+import { authMeBody } from './support/authMe'
 
 /**
  * QA visual del selector temporal de ESTADO (DIRECTOR).
@@ -93,7 +94,7 @@ async function installDirector(page: Page) {
 
     if (pathName.endsWith('/auth/me')) {
       await route.fulfill({
-        json: { user: { ...session, fullName: session.name, status: 'ACTIVE' } },
+        json: authMeBody({ ...session, fullName: session.name, status: 'ACTIVE' }),
       })
       return
     }

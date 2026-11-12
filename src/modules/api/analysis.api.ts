@@ -35,10 +35,11 @@ export async function executeSituationAnalysis(
   )
 }
 
+/** Sin informe todavía el backend responde 204 y esto devuelve `undefined`. */
 export async function fetchSituationAnalysis(
   situationId: string,
-): Promise<SituationAIAnalysisResponse> {
-  return apiRequest<SituationAIAnalysisResponse>(
+): Promise<SituationAIAnalysisResponse | undefined> {
+  return apiRequest<SituationAIAnalysisResponse | undefined>(
     `/situations/${situationId}/analysis`,
   )
 }
@@ -93,7 +94,7 @@ export async function tryFetchSituationAnalysis(
   situationId: string,
 ): Promise<SituationAIAnalysisResponse | null> {
   try {
-    return await fetchSituationAnalysis(situationId)
+    return (await fetchSituationAnalysis(situationId)) ?? null
   } catch (error) {
     if (isAnalysisNotFoundError(error)) return null
     throw error

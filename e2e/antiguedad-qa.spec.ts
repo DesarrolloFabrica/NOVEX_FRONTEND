@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { flowStateResponse, type AgingProfile, type FlowQuery } from './flujo-state.fixture'
 import { operationalOverviewFixture } from './operational-overview.fixture'
 import { expectSingleScrollZone, expectStackedFullWidth } from './estado-lectura.helpers'
+import { authMeBody } from './support/authMe'
 
 /**
  * QA visual · ESTADO · grupo ANTIGÜEDAD (SNAPSHOT AT CUT · scope COORDINATION),
@@ -87,7 +88,7 @@ async function installDirector(page: Page, served: Served[]) {
     const p = url.pathname
     const q = Object.fromEntries(url.searchParams.entries())
     if (p.endsWith('/auth/me')) {
-      await route.fulfill({ json: { user: { ...session, fullName: session.name, status: 'ACTIVE' } } })
+      await route.fulfill({ json: authMeBody({ ...session, fullName: session.name, status: 'ACTIVE' }) })
       return
     }
     if (p.endsWith('/operational-overview')) {

@@ -9,6 +9,6 @@ import { useOperationalShellModel } from '@/modules/operational-cards/hooks/useO
  */
 export function DirectorOperationalShell() {
   const model = useOperationalShellModel('director')
-  const kpi = useDirectorKpi(model.selectedCoordination?.id ?? null)
+  const kpi = useDirectorKpi()
   return <DirectorOperationalLayout model={model} kpi={kpi} />
 }

@@ -5,7 +5,7 @@ import { canCreateSituations } from '@/modules/auth/utils/permissions'
 import { buildInternalReportUrl } from '@/modules/operational-cards/experience/reportIntent'
 import { getRoleDisplayName } from '@/modules/auth/utils/roleDisplay'
 import { normalizeRoleCode } from '@/modules/auth/utils/roleExperience'
-import { useOnboarding } from '@/modules/onboarding/OnboardingContext'
+import { useOnboarding } from '@/modules/onboarding/useOnboarding'
 import { CoordinatorPilotInvitation } from '@/modules/onboarding/tours/CoordinatorPilotInvitation'
 import { CoordinatorPilotTour } from '@/modules/onboarding/tours/CoordinatorPilotTour'
 import { NovexIcon } from '@/shared/components/NovexIcon'
@@ -15,20 +15,21 @@ import { resolvePlatformNavItems } from '@/shared/constants/platformNavigation'
 /** Ayuda breve según el rol: qué ve y qué puede hacer en su panel. */
 const ROLE_HELP: Record<string, readonly string[]> = {
   COORDINADOR: [
-    'Su panel muestra solo su coordinación. En «Situaciones» atienda primero las críticas.',
-    'Abra una situación para tomarla con «Pasar a En atención» y ciérrela registrando su aprendizaje.',
-    'Registre cualquier novedad desde «Registrar situación».',
+    'Su panel muestra solo su coordinación. En «Por resolver» atienda primero las situaciones críticas; «Afectan mi área» reúne las dependencias de otras áreas y «Mis reportes», lo que usted registró.',
+    'Abra una situación para pasarla a «En atención» y ciérrela registrando su aprendizaje.',
+    'Registre cualquier novedad desde «Registrar situación»; en «Consultar» encontrará el historial y la gestión.',
   ],
   ANALISTA: [
-    'Elija una carta de la mesa para ver los problemas de esa coordinación.',
-    'Desde el panel derecho registre situaciones o consulte el historial, la gestión de situaciones y los aprendizajes.',
+    'Elija una carta de la mesa para ver en el centro las situaciones de esa coordinación.',
+    'Desde el panel derecho registre una situación en la coordinación elegida o consulte el historial y la gestión de situaciones.',
   ],
   DIRECTOR: [
     'La vista inicial resume la Dirección: qué es lo más urgente y qué áreas piden atención.',
-    'Elija una carta o un área para ver sus problemas; a la derecha, los indicadores.',
+    'Elija una carta o un área para ver sus situaciones; a la derecha, los indicadores.',
   ],
   ADMIN: [
-    'Cada carta es una coordinación: al elegirla, el centro y el panel derecho cambian a ella.',
+    'Cada carta es una coordinación: al elegirla, el centro muestra sus situaciones.',
+    'En el panel derecho consulte la gestión de situaciones y las acciones administrativas; desde el detalle de una situación puede anularla o trasladarla.',
     'La Consola de administración gestiona usuarios, roles, permisos y coordinaciones.',
   ],
 }
@@ -57,10 +58,12 @@ export function OperationalCenterMenu() {
   const titleId = `${panelId}-title`
   const destinations = resolvePlatformNavItems(user?.roleCode)
   const tutorialAvailable = steps.length > 0
-  // Piloto manual: solo en desarrollo (Vite lo fija en false en producción) y solo
-  // para el COORDINADOR. No inicia nada automáticamente.
+  // Recorrido guiado del COORDINADOR: siempre en el servidor de desarrollo y,
+  // en un despliegue, solo si `VITE_ENABLE_COORDINATOR_TOUR=true` (por defecto
+  // apagado: producción no cambia sin decidirlo). No inicia nada solo.
   const pilotAvailable =
-    import.meta.env.DEV && normalizeRoleCode(user?.roleCode) === 'COORDINADOR'
+    (import.meta.env.DEV || import.meta.env.VITE_ENABLE_COORDINATOR_TOUR === 'true') &&
+    normalizeRoleCode(user?.roleCode) === 'COORDINADOR'
 
   useEffect(() => {
     if (!open) return
@@ -156,10 +159,10 @@ export function OperationalCenterMenu() {
 
           <header className="shell-menu__user">
             <span className="shell-menu__avatar" aria-hidden="true">
-              {(user?.name ?? 'Operador Novex').slice(0, 1)}
+              {(user?.name ?? 'Operador NOVEX').slice(0, 1)}
             </span>
             <div className="shell-menu__identity">
-              <strong>{user?.name ?? 'Operador Novex'}</strong>
+              <strong>{user?.name ?? 'Operador NOVEX'}</strong>
               <small>{getRoleDisplayName(user)}</small>
             </div>
           </header>
@@ -204,7 +207,7 @@ export function OperationalCenterMenu() {
                 </span>
                 <span className="shell-menu__text">
                   <strong>Registrar situación</strong>
-                  <small>Reportar un problema nuevo</small>
+                  <small>Reportar una situación nueva</small>
                 </span>
               </Link>
             ) : null}
@@ -267,8 +270,8 @@ export function OperationalCenterMenu() {
                   <NovexIcon name="sparkles" />
                 </span>
                 <span className="shell-menu__text">
-                  <strong>Piloto del tutorial</strong>
-                  <small>Solo en desarrollo</small>
+                  <strong>Recorrido guiado</strong>
+                  <small>Conozca su Centro Operacional</small>
                 </span>
               </button>
             ) : null}

@@ -274,12 +274,12 @@ export function summaryCountLabel(
   period: ProblemHistoryPeriod,
 ): string | null {
   if (typeof total !== 'number' || !Number.isFinite(total)) return null
-  const noun = total === 1 ? 'problema cerrado' : 'problemas cerrados'
+  const noun = total === 1 ? 'situación cerrada' : 'situaciones cerradas'
   return `${total} ${noun} ${period.summaryPhrase}`
 }
 
 export function emptyHistoryMessage(): string {
-  return `No hay problemas cerrados en este período`
+  return `No hay situaciones cerradas en este período`
 }
 
 export function emptyHistoryHint(period: ProblemHistoryPeriod): string {

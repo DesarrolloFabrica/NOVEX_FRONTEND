@@ -75,18 +75,18 @@ function explainCriticalRule(
         title: 'Estado crítico',
         detail:
           input.criticalCount === 1
-            ? 'hay 1 problema de severidad crítica.'
-            : `hay ${input.criticalCount} problemas de severidad crítica.`,
+            ? 'hay 1 situación de severidad crítica.'
+            : `hay ${input.criticalCount} situaciones de severidad crítica.`,
       }
     case 'HIGH_ACCUMULATION':
       return {
         title: 'Estado crítico',
-        detail: `${input.highCount} de los ${input.activeCount} problemas activos son de severidad alta; el umbral crítico es ${MVP_CRITICAL_HIGH_COUNT}.`,
+        detail: `${input.highCount} de las ${input.activeCount} situaciones activas son de severidad alta; el umbral crítico es ${MVP_CRITICAL_HIGH_COUNT}.`,
       }
     case 'ACTIVE_ACCUMULATION':
       return {
         title: 'Estado crítico por volumen',
-        detail: `${input.activeCount} problemas activos superan el umbral de ${MVP_CRITICAL_ACTIVE_COUNT}.`,
+        detail: `${input.activeCount} situaciones activas superan el umbral de ${MVP_CRITICAL_ACTIVE_COUNT}.`,
       }
     case 'IMPACT_PROPAGATION':
       return {
@@ -133,7 +133,7 @@ export function buildIntegrityExplanation(
   if (integrityStatus === 'ESTABLE') {
     return {
       headline: 'Estado estable',
-      detail: 'no hay problemas activos ni dependencias entrantes que elevan la lectura.',
+      detail: 'no hay situaciones activas ni dependencias entrantes que eleven la lectura.',
       extraCount: 0,
       policyCode: COORDINATION_INTEGRITY_POLICY_CODE,
       triggeredRules: [],
@@ -165,7 +165,7 @@ export function buildIntegrityExplanation(
   if (input.activeCount > 0) {
     return {
       headline: 'Estado en alerta',
-      detail: `hay ${input.activeCount} problemas activos sin alcanzar umbral crítico.`,
+      detail: `hay ${input.activeCount} situaciones activas sin alcanzar el umbral crítico.`,
       extraCount: 0,
       policyCode: COORDINATION_INTEGRITY_POLICY_CODE,
       triggeredRules: [],

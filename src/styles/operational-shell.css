@@ -2496,14 +2496,6 @@
   }
 }
 
-/*
- * Miga de la baraja: tipografía clara sobre madera/telón. Sin fondo de caja;
- * la sombra evita perder legibilidad al cambiar el velo del stage.
- */
-.operational-shell .operational-breadcrumb {
-  text-shadow: 0 1px 3px rgb(2 6 16 / 0.72);
-}
-
 /* ---------- Alto definido para la home ---------- */
 
 /*
@@ -3012,36 +3004,6 @@
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
-}
-
-.operational-role-header__user-caret {
-  font-size: 10px;
-  color: #f5d485;
-  margin-left: 2px;
-  line-height: 1;
-}
-
-.operational-role-header__menu-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(212, 175, 55, 0.4);
-  border-radius: 6px;
-  color: #f5d485;
-  font-size: 14px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 160ms ease;
-  flex-shrink: 0;
-}
-
-.operational-role-header__menu-btn:hover {
-  background: rgba(212, 175, 55, 0.22);
-  border-color: #f5d485;
-  color: #ffffff;
 }
 
 .operational-role-header__logo {
@@ -3915,10 +3877,6 @@
   grid-template-columns: minmax(0, 0.32fr) minmax(0, 0.68fr);
 }
 
-.operational-shell[data-shell-experience='admin'] .operational-breadcrumb {
-  display: none !important;
-}
-
 /* ---------- TICKET IZQUIERDO UNIFICADO (ADMIN) ---------- */
 
 .admin-left-ticket-wrapper {
@@ -4260,55 +4218,5 @@
 .operational-deck__ribbon-btn:hover {
   background: rgba(212, 175, 55, 0.5);
   transform: scale(1.08);
-}
-
-/* ==========================================================================
-   FASE 03D: MEDALLÓN DE RETORNO Y BREADCRUMB EN EL ESCENARIO
-   ========================================================================== */
-
-.operational-shell .operational-breadcrumb {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 14px 4px 6px;
-  background:
-    linear-gradient(180deg, rgba(32, 16, 24, 0.92) 0%, rgba(20, 10, 16, 0.88) 100%),
-    url('/assets/tickets/common/ticket-paper-cream.webp') center / cover;
-  border: 1px solid rgba(212, 175, 55, 0.5);
-  border-radius: 9999px;
-  box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 230, 160, 0.2);
-  backdrop-filter: blur(10px);
-  margin-left: 12px;
-  margin-top: 4px;
-}
-
-.operational-shell .operational-breadcrumb__back {
-  width: 26px;
-  height: 26px;
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.35) 0%, rgba(160, 115, 25, 0.45) 100%);
-  border: 1px solid rgba(245, 212, 133, 0.65);
-  border-radius: 9999px;
-  color: #fff8eb;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
-  cursor: pointer;
-  transition: all 160ms ease;
-}
-
-.operational-shell .operational-breadcrumb__back:hover {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.6) 0%, rgba(190, 140, 35, 0.7) 100%);
-  border-color: #f5d485;
-  box-shadow: 0 0 12px rgba(245, 212, 133, 0.55);
-  transform: scale(1.06);
-}
-
-.operational-shell .operational-breadcrumb__current {
-  color: #fceec5;
-  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 

@@ -1,5 +1,6 @@
 import { expect, test, type Page } from 'playwright/test'
 import { operationalOverviewFixture } from './operational-overview.fixture'
+import { authMeBody } from './support/authMe'
 
 /**
  * SHELL del Centro Operacional: dos zonas y un menú flotante.
@@ -111,7 +112,7 @@ async function installApi(page: Page) {
 
     if (url.pathname.endsWith('/auth/me')) {
       await route.fulfill({
-        json: { user: { ...session, fullName: session.name } },
+        json: authMeBody({ ...session, fullName: session.name }),
       })
       return
     }
@@ -404,7 +405,7 @@ test.describe('shell del Centro · 1440x900', () => {
     await expect(page.locator(CARD)).toHaveCount(9)
     await expect(page.locator(`${SLOT}[data-state="dimmed"]`)).toHaveCount(8)
     // El regreso es la flecha de la miga; el botón inferior ya no existe.
-    await expect(page.getByTestId('breadcrumb-direction')).toBeVisible()
+    await expect(page.getByTestId('deck-ribbon-back')).toBeVisible()
     await expect(page.getByTestId('return-to-table')).toHaveCount(0)
     expectInsideStage(simple)
     expect(simple.overflow.x).toBeLessThanOrEqual(0)
@@ -493,7 +494,7 @@ test.describe('shell del Centro · 1440x900', () => {
     await select(page, 'coord-b2b')
     const inSimple = await measureCharacter(page, 'SIMPLE_SELECTED')
 
-    await page.getByTestId('breadcrumb-direction').click()
+    await page.getByTestId('deck-ribbon-back').click()
     await expect(page.locator(PANEL)).toHaveCount(0)
     await select(page, PARENT)
     const inDeck = await measureCharacter(page, 'DECK_SELECTED')
@@ -531,7 +532,7 @@ test.describe('shell del Centro · 1440x900', () => {
     const before = await measure(page, 'GLOBAL antes')
 
     await select(page, 'coord-b2b')
-    await page.getByTestId('breadcrumb-direction').click()
+    await page.getByTestId('deck-ribbon-back').click()
     await expect(page.locator(PANEL)).toHaveCount(0)
 
     /*

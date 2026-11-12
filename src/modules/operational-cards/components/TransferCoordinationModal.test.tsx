@@ -271,7 +271,7 @@ describe('TransferCoordinationModal', () => {
           currentCoordinationCode="coord-b2b"
           coordinationOptions={options}
           isSubmitting={false}
-          error="La coordinación responsable cambió desde que consultó el caso. Vuelva a intentarlo."
+          error="La coordinación responsable cambió desde que consultó la situación. Vuelva a intentarlo."
           onClose={vi.fn()}
           onConfirm={vi.fn()}
           onRetryDetail={onRetryDetail}
@@ -282,7 +282,7 @@ describe('TransferCoordinationModal', () => {
     const errorEl = document.querySelector(
       '[data-testid="transfer-coordination-error"]',
     )
-    expect(errorEl?.textContent).toContain('cambió desde que consultó el caso')
+    expect(errorEl?.textContent).toContain('cambió desde que consultó la situación')
 
     const retryBtn = document.querySelector(
       '.novex-ops-modal__retry-btn',

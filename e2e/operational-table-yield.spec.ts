@@ -1,5 +1,6 @@
 import { expect, test, type Page } from 'playwright/test'
 import { operationalOverviewFixture } from './operational-overview.fixture'
+import { authMeBody } from './support/authMe'
 
 /**
  * Apertura hacia ARRIBA y cesión de la mesa (R4.2).
@@ -108,7 +109,7 @@ async function install(page: Page) {
     const { pathname } = new URL(route.request().url())
     if (pathname.endsWith('/auth/me')) {
       await route.fulfill({
-        json: { user: { ...session, fullName: session.name } },
+        json: authMeBody({ ...session, fullName: session.name }),
       })
       return
     }

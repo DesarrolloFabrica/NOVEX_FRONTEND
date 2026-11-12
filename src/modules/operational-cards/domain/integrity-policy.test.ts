@@ -19,7 +19,7 @@ describe('integrity-policy explicación determinista', () => {
     expect(collectTriggeredCriticalRules(input)).toEqual(['ACTIVE_ACCUMULATION'])
     const explanation = buildIntegrityExplanation('CRITICO', input)
     expect(formatIntegrityWhy(explanation)).toBe(
-      `Estado crítico por volumen: 10 problemas activos superan el umbral de ${MVP_CRITICAL_ACTIVE_COUNT}.`,
+      `Estado crítico por volumen: 10 situaciones activas superan el umbral de ${MVP_CRITICAL_ACTIVE_COUNT}.`,
     )
   })
 

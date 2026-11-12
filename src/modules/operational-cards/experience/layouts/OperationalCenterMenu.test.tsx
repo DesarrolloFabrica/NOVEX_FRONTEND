@@ -5,14 +5,14 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import type { User } from '@/modules/auth/types/user.types'
-import { useOnboarding } from '@/modules/onboarding/OnboardingContext'
+import { useOnboarding } from '@/modules/onboarding/useOnboarding'
 import { OperationalCenterMenu } from './OperationalCenterMenu'
 
 vi.mock('@/modules/auth/hooks/useAuth', () => ({
   useAuth: vi.fn(),
 }))
 
-vi.mock('@/modules/onboarding/OnboardingContext', () => ({
+vi.mock('@/modules/onboarding/useOnboarding', () => ({
   useOnboarding: vi.fn(),
 }))
 

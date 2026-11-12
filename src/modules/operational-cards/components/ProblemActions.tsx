@@ -209,7 +209,7 @@ export function ProblemActions({
       data-status={detail.status}
       data-coordination-id={detail.coordinationId ?? undefined}
       data-affected-coordination-id={detail.affectedCoordinationId ?? undefined}
-      aria-label="Acciones sobre el problema"
+      aria-label="Acciones sobre la situación"
     >
       {yaCerrado && (
         <ProblemResolutionRecord
@@ -242,7 +242,7 @@ export function ProblemActions({
               data-testid="cancellation-record"
               data-surface="problem-cancellation"
             >
-              Anulado por {detail.cancellation.cancelledByUserName}:{' '}
+              Anulada por {detail.cancellation.cancelledByUserName}:{' '}
               {detail.cancellation.reason}
             </p>
           )}
@@ -261,7 +261,7 @@ export function ProblemActions({
         >
           <div className="problem-actions__block-head">
             <h3 className="problem-actions__block-title">
-              Seguimiento del problema
+              Seguimiento de la situación
             </h3>
             <span
               className="problem-actions__status"
@@ -274,11 +274,11 @@ export function ProblemActions({
 
           {puedeAvanzar && (
             <div className="problem-actions__advance">
-              {/* Qué significa el paso, antes del botón: tomar el caso. */}
+              {/* Qué significa el paso, antes del botón: tomar la situación. */}
               <p className="problem-actions__advance-hint">
                 <strong>Siguiente paso:</strong> confirme que su equipo ya está
-                trabajando en este problema. El caso pasará a «En atención» y
-                quien lo reportó verá el avance.
+                trabajando en esta situación. Pasará a «En atención» y
+                quien la reportó verá el avance.
               </p>
               {enviandoAvance && (
                 <p
@@ -286,7 +286,7 @@ export function ProblemActions({
                   data-testid="status-advance-sending"
                   role="status"
                 >
-                  Actualizando el estado del caso…
+                  Actualizando el estado de la situación…
                 </p>
               )}
 
@@ -418,7 +418,7 @@ export function ProblemActions({
         >
           El cierre corresponde al coordinador de la coordinación responsable.
           Un analista solo puede cerrar cuando Coordinación General es la
-          responsable del problema.
+          responsable de la situación.
         </p>
       )}
 
@@ -443,7 +443,7 @@ export function ProblemActions({
           </div>
           <p className="problem-actions__block-hint">
             Acciones operativas excepcionales para administradores sobre la
-            asignación y vigencia del caso.
+            asignación y vigencia de la situación.
           </p>
 
           <div

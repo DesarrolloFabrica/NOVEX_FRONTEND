@@ -4,6 +4,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { flowStateResponse } from './flujo-state.fixture'
 import { operationalOverviewFixture } from './operational-overview.fixture'
+import { authMeBody } from './support/authMe'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const OUT = path.join(__dirname, 'artifacts', 'estado-hierarchy')
@@ -127,7 +128,7 @@ async function installDirectorEstado(page: Page, code: string) {
 
     if (pathName.endsWith('/auth/me')) {
       await route.fulfill({
-        json: { user: { ...session, fullName: session.name, status: 'ACTIVE' } },
+        json: authMeBody({ ...session, fullName: session.name, status: 'ACTIVE' }),
       })
       return
     }

@@ -168,20 +168,20 @@ export function splitProblemEvidences(items: readonly SituationEvidenceItem[]): 
 // ---------------------------------------------------------------- Cronología
 
 /**
- * Etiquetas de los eventos que el detalle muestra. El cierre usa «Problema
- * cerrado», el mismo vocabulario del bloque de resolución («Cerrar problema»,
- * «Problema cerrado»).
+ * Etiquetas de los eventos que el detalle muestra. El cierre usa «Situación
+ * cerrada», el mismo vocabulario del bloque de resolución («Cerrar situación»,
+ * «Situación cerrada»).
  */
 const TIMELINE_EVENT_LABEL: Record<string, string> = {
-  SITUATION_CREATED: 'Problema registrado',
+  SITUATION_CREATED: 'Situación registrada',
   STATUS_CHANGED: 'Estado cambiado',
   SEVERITY_CHANGED: 'Severidad cambiada',
-  UPDATED: 'Problema actualizado',
+  UPDATED: 'Situación actualizada',
   ATTACHMENT_ADDED: 'Evidencia agregada',
   ATTACHMENT_RETIRED: 'Evidencia retirada',
   SLA_WARNING: 'Plazo próximo a vencer',
   SLA_BREACHED: 'Plazo operativo vencido',
-  CLOSED: 'Problema cerrado',
+  CLOSED: 'Situación cerrada',
   CONSEQUENCE_ADDED: 'Afectación registrada',
   SEVERITY_ESCALATED: 'Severidad escalada',
   CANCELLED: 'Situación anulada',
@@ -315,7 +315,7 @@ function resolveDetails(entry: SituationTimelineEntry): string[] {
       const effectiveAt = formatProblemDateTime(nonEmpty(metadata?.effectiveAt))
       if (effectiveAt.iso) details.push(`Rige desde: ${effectiveAt.label}`)
       const policy = nonEmpty(metadata?.policyCode)
-      if (policy?.startsWith('qa-')) details.push('Historia QA simulada')
+      if (policy?.startsWith('qa-')) details.push('Escalamiento de prueba')
       break
     }
     default:

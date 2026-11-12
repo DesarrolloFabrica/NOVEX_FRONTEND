@@ -82,7 +82,7 @@ describe('Expediente del Director · aprendizaje en solo lectura', () => {
     expect(html).toContain('Coordinadora Fábrica')
     // Fecha de CIERRE (closedAt), no resolvedAt legado.
     expect(html).toContain('dateTime="2026-10-02T19:00:00.000Z"')
-    expect(html).toContain('Cerrado el')
+    expect(html).toContain('Cerrada el')
   })
 
   it('no monta controles: ni formulario de cierre, ni avance, ni edición', () => {

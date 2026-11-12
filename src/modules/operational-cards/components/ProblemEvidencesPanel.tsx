@@ -39,6 +39,8 @@ export interface ProblemEvidencesPanelProps {
   onRetire: (evidenceId: string, reason: string) => Promise<boolean>
   /** Tras un retiro confirmado, el padre recarga activas; aquí se refresca historial. */
   historyRefreshKey: number
+  /** El backend permite operar este caso: requisito para ver evidencias retiradas. */
+  caseOperable?: boolean
 }
 
 function Byline({
@@ -78,6 +80,7 @@ export function ProblemEvidencesPanel({
   submission,
   onRetire,
   historyRefreshKey,
+  caseOperable = true,
 }: ProblemEvidencesPanelProps) {
   const [tab, setTab] = useState<EvidenceTab>('active')
   const [historyAccess, setHistoryAccess] = useState<HistoryAccess>('idle')
@@ -101,7 +104,7 @@ export function ProblemEvidencesPanel({
       : null
 
   const loadHistory = useCallback(async () => {
-    if (!mayRequestRetiredEvidenceHistory(user)) {
+    if (!mayRequestRetiredEvidenceHistory(user, caseOperable)) {
       setHistoryAccess('denied')
       setHistoryItems([])
       return
@@ -134,7 +137,7 @@ export function ProblemEvidencesPanel({
       setHistoryError('No pudimos cargar el historial de evidencias.')
       setHistoryItems([])
     }
-  }, [situationId, user, tab])
+  }, [situationId, user, tab, caseOperable])
 
   // Al cambiar de situación se limpia el historial (evita datos obsoletos).
   useEffect(() => {
@@ -184,7 +187,7 @@ export function ProblemEvidencesPanel({
         <div
           className="problem-evidences__tabs"
           role="tablist"
-          aria-label="Evidencias del problema"
+          aria-label="Evidencias de la situación"
           data-testid="evidence-tabs"
         >
           <button
@@ -413,7 +416,7 @@ export function ProblemEvidencesPanel({
               className="detail-section__note"
               data-testid="evidence-history-empty"
             >
-              No hay evidencias retiradas en este expediente.
+              No hay evidencias retiradas en esta situación.
             </p>
           )}
 

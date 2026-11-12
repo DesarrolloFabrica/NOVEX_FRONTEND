@@ -211,7 +211,7 @@ export function CancelSituationModal({
 
         <div className="novex-ops-modal__context">
           <p className="novex-ops-modal__situation-title" title={situationTitle}>
-            Caso: <strong>{situationTitle}</strong>
+            Situación: <strong>{situationTitle}</strong>
           </p>
           <p id={descId} className="novex-ops-modal__hint novex-ops-modal__hint--warning">
             La anulación es una medida administrativa excepcional. A diferencia

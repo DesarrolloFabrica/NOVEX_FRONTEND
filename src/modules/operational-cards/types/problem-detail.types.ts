@@ -95,6 +95,16 @@ export interface ProblemDetail {
   reportKind: SituationReportKind
   affectedProcess: string | null
   pendingDelivery: string | null
+  /** Categoría del catálogo (`null` en INTER o en altas sin categoría). */
+  categoryCode?: string | null
+  categoryName?: string | null
+  /** Categoría escrita por quien reportó al elegir «Otra». */
+  categoryOtherText?: string | null
+  /**
+   * Coordinaciones que quien reportó declaró como relacionadas, en su orden.
+   * Contexto: no son responsables ni impacto medido.
+   */
+  relatedCoordinations?: readonly ProblemRelatedCoordination[]
   /** Autor del reporte, distinto de quien lo resuelve. */
   createdByUserName: string | null
   /** UUID de la coordinación responsable (traslado / control optimista). */
@@ -124,6 +134,12 @@ export interface ProblemDetail {
   resolution: ProblemResolution | null
   /** Anulación administrativa, si existe. */
   cancellation: ProblemCancellation | null
+}
+
+export interface ProblemRelatedCoordination {
+  coordinationId: string
+  code: string
+  name: string
 }
 
 /** Registro de anulación expuesto en el detalle. */

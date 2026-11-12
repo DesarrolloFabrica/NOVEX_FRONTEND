@@ -4,7 +4,6 @@ import { CoordinationCard } from '@/modules/operational-cards/components/Coordin
 import { CoordinatorProblemPanel } from '@/modules/operational-cards/components/CoordinatorProblemPanel'
 import { OperationalRoleHeader } from '@/modules/operational-cards/components/OperationalRoleHeader'
 import {
-  IconBook,
   IconCheckCircle,
   IconChevronRight,
   IconClipboard,
@@ -40,7 +39,7 @@ const STATUS_TEXT: Record<string, string> = {
 
 const MAX_LIVES = 10
 
-type ConsultView = 'operations' | 'learnings'
+type ConsultView = 'operations'
 
 /**
  * Lectura en una frase de lo que el coordinador tiene delante al entrar:
@@ -91,10 +90,10 @@ export function CoordinatorOperationalLayout({
   } = model
 
   /*
-   * Consultas del panel derecho: «Gestión de situaciones operativas» e
-   * «Historial y aprendizajes», las mismas vistas que ADMIN y ANALISTA (el
-   * backend ya limita al COORDINADOR a su coordinación). Al abrir un
-   * expediente desde una de ellas se recuerda la vista y «Volver» regresa.
+   * Consulta del panel derecho: «Gestión de situaciones operativas», la misma
+   * vista que ADMIN y ANALISTA (el backend ya limita al COORDINADOR a su
+   * coordinación). Al abrir un expediente desde ella se recuerda la vista y
+   * «Volver» regresa. Los cierres se consultan en «Historial».
    */
   const [consultView, setConsultView] = useState<ConsultView | null>(null)
   const returnViewRef = useRef<ConsultView | null>(null)
@@ -167,6 +166,7 @@ export function CoordinatorOperationalLayout({
       <CircusScene />
 
       <OperationalRoleHeader
+        labelByCode={labelByCode}
         experience="coordinator"
         user={user}
         assignedCoordination={own}
@@ -181,6 +181,7 @@ export function CoordinatorOperationalLayout({
       <header
         className="coordinator-intro"
         data-testid="coordinator-intro"
+        data-tour="coordinator-intro"
         data-status={own?.status.toLowerCase()}
       >
         <span className="coordinator-intro__medallion" aria-hidden="true">
@@ -246,7 +247,11 @@ export function CoordinatorOperationalLayout({
               ) : null}
 
               {own ? (
-                <dl className="coordinator-own__facts" data-tone={own.status.toLowerCase()}>
+                <dl
+                  className="coordinator-own__facts"
+                  data-tone={own.status.toLowerCase()}
+                  data-tour="own-facts"
+                >
                   <div className="coordinator-own__fact">
                     <dt>
                       <IconCheckCircle size={15} aria-hidden="true" /> Estado actual
@@ -348,7 +353,7 @@ export function CoordinatorOperationalLayout({
               <div>
                 <h2 className="coordinator-actions__title">Registrar situación</h2>
                 <p className="coordinator-actions__text">
-                  Reporte un problema de su coordinación o una dependencia con otra área.
+                  Registre una situación de su coordinación o una dependencia con otra área.
                 </p>
               </div>
             </div>
@@ -390,6 +395,7 @@ export function CoordinatorOperationalLayout({
             showTitle={false}
             ticketTheme={theme}
             ticketPanel="reports"
+            tourId="consult"
           >
             <div className="coordinator-actions__head">
               <span className="coordinator-actions__icon" aria-hidden="true">
@@ -409,12 +415,12 @@ export function CoordinatorOperationalLayout({
                   controller.openHistory()
                   controller.setHistoryPeriod(buildCyclePeriod(year, monthIndex < 6 ? 1 : 2))
                 }}
-                title="Problemas ya cerrados, por semana, mes o ciclo"
+                title="Situaciones cerradas por semana, mes o ciclo, con su aprendizaje"
               >
                 <IconClipboard size={22} aria-hidden="true" />
                 <span className="coordinator-actions__link-text">
-                  <span>Historial de problemas</span>
-                  <small>Problemas cerrados por semana, mes o ciclo</small>
+                  <span>Historial</span>
+                  <small>Cierres por semana, mes o ciclo, con su aprendizaje</small>
                 </span>
                 <IconChevronRight size={18} aria-hidden="true" />
               </button>
@@ -428,21 +434,7 @@ export function CoordinatorOperationalLayout({
                 <IconGear size={22} aria-hidden="true" />
                 <span className="coordinator-actions__link-text">
                   <span>Gestión de situaciones operativas</span>
-                  <small>Situaciones activas, por prioridad y SLA</small>
-                </span>
-                <IconChevronRight size={18} aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                className="coordinator-actions__link"
-                data-testid="guidance-learnings"
-                onClick={() => setConsultView('learnings')}
-                title="Cierres por período, con su cumplimiento de SLA y la lección registrada"
-              >
-                <IconBook size={22} aria-hidden="true" />
-                <span className="coordinator-actions__link-text">
-                  <span>Historial y aprendizajes</span>
-                  <small>Lecciones registradas al cerrar cada caso</small>
+                  <small>Situaciones activas, por prioridad y plazo</small>
                 </span>
                 <IconChevronRight size={18} aria-hidden="true" />
               </button>

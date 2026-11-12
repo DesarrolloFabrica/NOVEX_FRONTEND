@@ -101,7 +101,7 @@ describe('OperationalRoleHeader', () => {
 
     expect(container.textContent).toContain('Dirección de Operaciones')
     const healthPill = container.querySelector('[data-testid="director-health-pill"]')
-    expect(healthPill?.textContent).toContain('Salud Global: ALERTA')
+    expect(healthPill?.textContent).toContain('Salud global: Alerta')
 
     const chip = container.querySelector('[data-testid="director-attention-chip"]')
     expect(chip?.textContent).toContain('2 críticas')
@@ -155,7 +155,7 @@ describe('OperationalRoleHeader', () => {
 
     expect(container.textContent).toContain('Coordinación: Fábrica de Contenidos')
     const healthPill = container.querySelector('[data-testid="coordinator-health-pill"]')
-    expect(healthPill?.textContent).toContain('Estado: ALERTA')
+    expect(healthPill?.textContent).toContain('Estado: Alerta')
 
     const cta = container.querySelector<HTMLButtonElement>(
       '[data-testid="coordinator-quick-report"]',

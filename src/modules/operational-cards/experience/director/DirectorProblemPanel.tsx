@@ -20,9 +20,16 @@ import '@/styles/director-kpi-panel.css'
 export function DirectorProblemPanel({
   model,
   direction,
+  directionLoad = 'success',
+  directionError = null,
+  onRetryDirection,
 }: {
   model: OperationalShellModel
   direction: OperationalKpiDirectionSnapshot | null
+  /** Estado de la lectura de indicadores: sin ella no se afirma ningún estado. */
+  directionLoad?: 'loading' | 'error' | 'success'
+  directionError?: string | null
+  onRetryDirection?: () => void
 }) {
   const {
     controller,
@@ -46,7 +53,7 @@ export function DirectorProblemPanel({
         <ProblemDetail
           level2={controller.level2}
           onBack={controller.closeProblem}
-          backLabel="Volver a problemas"
+          backLabel="Volver a situaciones"
           selectedCoordinationCode={controller.selectedCoordinationCode}
           onToggleSection={controller.toggleSection}
           onRetrySection={controller.retrySection}
@@ -84,7 +91,7 @@ export function DirectorProblemPanel({
             className="problem-actions"
             data-testid="director-problem-resolution"
             data-read-only="true"
-            aria-label="Cierre del problema"
+            aria-label="Cierre de la situación"
           >
             <ProblemResolutionRecord
               resolution={detail.resolution}
@@ -137,13 +144,26 @@ export function DirectorProblemPanel({
    *   2. ¿Qué es lo más urgente?   → un botón directo a esa coordinación.
    *   3. ¿Dónde más hay que mirar? → el resto de áreas, por gravedad.
    */
-  const status = direction?.directionStatus ?? 'ESTABLE'
+  /*
+   * Sin indicadores no se inventa un estado: antes caía en ESTABLE y el
+   * director leía «La operación está estable» mientras cargaba o si la lectura
+   * fallaba. El estado del overview (mismo cálculo del backend) sirve de
+   * respaldo; si tampoco está, se dice que no hay dato.
+   */
+  const knownStatus =
+    direction?.directionStatus ?? controller.overview?.directionStatus ?? null
+  const status = knownStatus ?? 'DESCONOCIDO'
+  const unavailable = !direction && directionLoad !== 'success'
   const headline =
-    status === 'CRITICO'
-      ? 'La operación está en estado crítico'
-      : status === 'ALERTA'
-        ? 'La operación necesita atención'
-        : 'La operación está estable'
+    !knownStatus || status === 'DESCONOCIDO'
+      ? directionLoad === 'error'
+        ? 'No pudimos leer el estado de la Dirección'
+        : 'Consultando el estado de la Dirección…'
+      : status === 'CRITICO'
+        ? 'La operación está en estado crítico'
+        : status === 'ALERTA'
+          ? 'La operación necesita atención'
+          : 'La operación está estable'
   const urgent = alertCoordinations[0] ?? null
   const otherAreas = alertCoordinations.slice(1)
   const nameOf = (code: string, fallback: string) => labelByCode[code] ?? fallback
@@ -161,6 +181,21 @@ export function DirectorProblemPanel({
           Qué está pasando en la Dirección
         </span>
         <h2 className="director-direction-brief__title">{headline}</h2>
+        {unavailable && directionLoad === 'error' ? (
+          <p className="director-direction-brief__copy" role="alert">
+            {directionError ?? 'La lectura de indicadores falló.'}{' '}
+            {onRetryDirection ? (
+              <button
+                type="button"
+                className="director-direction-brief__retry"
+                data-testid="director-direction-retry"
+                onClick={onRetryDirection}
+              >
+                Reintentar
+              </button>
+            ) : null}
+          </p>
+        ) : null}
         {direction ? (
           <p className="director-direction-brief__copy">
             {plural(direction.problems.activeCount, 'situación activa', 'situaciones activas')}
@@ -195,7 +230,7 @@ export function DirectorProblemPanel({
               : ''}
           </span>
           <span className="director-direction-brief__urgent-cta" aria-hidden="true">
-            Ver sus problemas →
+            Ver sus situaciones →
           </span>
         </button>
       ) : null}
@@ -246,13 +281,13 @@ export function DirectorProblemPanel({
                               ? 'En alerta'
                               : 'Con actividad'}
                           {critical > 0
-                            ? ` · ${critical} ${critical === 1 ? 'crítico' : 'críticos'}`
+                            ? ` · ${critical} ${critical === 1 ? 'crítica' : 'críticas'}`
                             : ''}
                         </span>
                       </span>
                       <span
                         className="director-direction-brief__area-count"
-                        aria-label={`${coord.problems.activeCount} activos`}
+                        aria-label={`${coord.problems.activeCount} ${coord.problems.activeCount === 1 ? 'situación activa' : 'situaciones activas'}`}
                       >
                         {coord.problems.activeCount}
                       </span>

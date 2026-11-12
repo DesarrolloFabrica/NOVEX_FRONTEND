@@ -83,10 +83,10 @@ function countOf(html: string, needle: string): number {
 }
 
 describe('CoordinationProblemList · identidad de la coordinación', () => {
-  it('el título visible es solo «Problemas de la coordinación»', () => {
+  it('el título visible es solo «Situaciones de la coordinación»', () => {
     const html = markup(level1('ready', [problem('p1', 'CRITICAL')]))
 
-    expect(html).toMatch(/<h3[^>]*>Problemas de la coordinación<span/)
+    expect(html).toMatch(/<h3[^>]*>Situaciones de la coordinación<span/)
     expect(html).not.toContain('coordination-panel__eyebrow')
   })
 
@@ -158,7 +158,7 @@ describe('CoordinationProblemList · los cuatro estados de LEVEL 1', () => {
 
     // VERDAD NUEVA: con lectura COMPLETA, cero resultados sí significa que el
     // área no tiene problemas activos, y se dice sin ambigüedad.
-    expect(html).toContain('Sin problemas activos')
+    expect(html).toContain('Sin situaciones activas')
     expect(html).toContain('data-testid="coordination-panel-empty"')
   })
 
@@ -168,9 +168,9 @@ describe('CoordinationProblemList · los cuatro estados de LEVEL 1', () => {
     // coordinación rota parezca sana.
     const html = markup(level1('error'))
 
-    expect(html).toContain('No pudimos cargar los problemas de esta coordinación.')
+    expect(html).toContain('No pudimos cargar las situaciones de esta coordinación.')
     expect(html).toContain('role="alert"')
-    expect(html).not.toContain('Sin problemas activos')
+    expect(html).not.toContain('Sin situaciones activas')
     expect(html).not.toContain('data-testid="coordination-panel-empty"')
   })
 

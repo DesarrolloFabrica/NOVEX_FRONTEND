@@ -49,6 +49,15 @@ describe('evidenceAccess', () => {
     ).toBe(false)
   })
 
+  it('sin poder operar el caso, quien no es ADMIN no pide el historial (evita el 404 seguro)', () => {
+    const analyst = { roleCode: 'ANALISTA', permissions: ['SITUATIONS_UPDATE'] }
+    expect(mayRequestRetiredEvidenceHistory(analyst, false)).toBe(false)
+    expect(mayRequestRetiredEvidenceHistory(analyst, true)).toBe(true)
+    expect(
+      mayRequestRetiredEvidenceHistory({ roleCode: 'ADMIN', permissions: [] }, false),
+    ).toBe(true)
+  })
+
   it('ofrece retiro solo con UPDATE, shell operativo y caso workable', () => {
     expect(
       canOfferEvidenceRetirement({

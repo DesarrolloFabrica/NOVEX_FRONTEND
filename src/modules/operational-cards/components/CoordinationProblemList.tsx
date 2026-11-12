@@ -117,10 +117,10 @@ function ClosedLoadMore({
       onClick={onLoadMore}
     >
       {loading
-        ? 'Cargando cerrados…'
+        ? 'Cargando cerradas…'
         : error
-          ? 'No se pudieron cargar más cerrados. Reintentar'
-          : `Ver más cerrados (${remaining})`}
+          ? 'No se pudieron cargar más cerradas. Reintentar'
+          : `Ver más cerradas (${remaining})`}
     </button>
   )
 }
@@ -191,7 +191,10 @@ export function CoordinationProblemList({
    * viaja en el encabezado como texto para lectores de pantalla, para que la
    * región siga diciendo DE QUÉ coordinación habla.
    */
-  const ticketThemeId = resolveTicketTheme(coordination.code)
+  // Una fila sin tema propio (p. ej. `coord-servicios`, fuera de la mesa de
+  // producto) usa el tema «general», como los layouts: antes caía en la piel
+  // oscura antigua, con filas casi ilegibles sobre el pergamino.
+  const ticketThemeId = resolveTicketTheme(coordination.code) ?? 'general'
   const ticketPilot = Boolean(ticketThemeId)
 
   const bodyContent = (
@@ -208,7 +211,7 @@ export function CoordinationProblemList({
           data-testid="coordination-scope-note"
           role="status"
         >
-          Solo se muestran los problemas que usted reportó en esta
+          Solo se muestran las situaciones que usted reportó en esta
           coordinación. No es la lista completa del área.
         </p>
       ) : null}
@@ -234,7 +237,7 @@ export function CoordinationProblemList({
           data-testid="coordination-panel-error"
           role="alert"
         >
-          <p>No pudimos cargar los problemas de esta coordinación.</p>
+          <p>No pudimos cargar las situaciones de esta coordinación.</p>
           {onRetry && (
             <button
               type="button"
@@ -252,7 +255,7 @@ export function CoordinationProblemList({
           data-testid="coordination-panel-closed-error"
           role="alert"
         >
-          <p>No pudimos cargar los problemas cerrados de esta coordinación.</p>
+          <p>No pudimos cargar las situaciones cerradas de esta coordinación.</p>
           <button
             type="button"
             className="coordination-panel__retry"
@@ -289,7 +292,7 @@ export function CoordinationProblemList({
             className="coordination-panel__empty"
             data-testid="coordination-panel-empty-restricted"
           >
-            No hay problemas activos visibles para tu usuario
+            No hay situaciones activas visibles para su usuario
           </p>
         ) : (
           <div
@@ -348,13 +351,13 @@ export function CoordinationProblemList({
             <div className="coordination-panel__empty-ribbon">
               <span className="coordination-panel__empty-ribbon-tail left" aria-hidden="true" />
               <strong className="coordination-panel__empty-title">
-                Sin problemas activos
+                Sin situaciones activas
               </strong>
               <span className="coordination-panel__empty-ribbon-tail right" aria-hidden="true" />
             </div>
             <p className="coordination-panel__empty-desc">
               Esta coordinación opera con normalidad. No se registran
-              incidentes pendientes de resolución.
+              situaciones pendientes de resolución.
             </p>
           </div>
         )
@@ -368,7 +371,7 @@ export function CoordinationProblemList({
           // entra y sale con normalidad.
           tabIndex={0}
           role="group"
-          aria-label={`${defaultFilters ? 'Problemas activos' : 'Problemas filtrados'} de ${productLabel ?? identity.shortName}`}
+          aria-label={`${defaultFilters ? 'Situaciones activas' : 'Situaciones filtradas'} de ${productLabel ?? identity.shortName}`}
         >
           {rows.map((problem) => (
             <ProblemRow
@@ -390,7 +393,7 @@ export function CoordinationProblemList({
               data-testid="coordination-panel-closed-loading"
               role="status"
             >
-              Cargando cerrados…
+              Cargando situaciones cerradas…
             </p>
           ) : null}
 
@@ -400,7 +403,7 @@ export function CoordinationProblemList({
               data-testid="coordination-panel-closed-error"
               role="alert"
             >
-              No pudimos cargar los cerrados.{' '}
+              No pudimos cargar las situaciones cerradas.{' '}
               <button
                 type="button"
                 className="coordination-panel__retry"
@@ -437,7 +440,7 @@ export function CoordinationProblemList({
               : 'coordination-panel__name'
           }
         >
-          Problemas de la coordinación
+          Situaciones de la coordinación
           <span className="coordination-panel__sr-only">: {name}</span>
         </h3>
       </div>

@@ -73,6 +73,10 @@ export function ResponsibleCoordinationPicker({
     setActiveIndex(0)
     if (!value) setTouched(true)
   }
+  // El cierre por clic fuera lee la versión vigente: con la anterior, `value`
+  // quedaba congelado al abrir y el campo podía marcarse como incompleto.
+  const closeRef = useRef(close)
+  closeRef.current = close
 
   const openPicker = () => {
     if (disabled || options.length === 0) return
@@ -103,7 +107,7 @@ export function ResponsibleCoordinationPicker({
     if (!open) return
     const onPointerDown = (event: MouseEvent) => {
       if (!rootRef.current?.contains(event.target as Node)) {
-        close()
+        closeRef.current()
       }
     }
     document.addEventListener('mousedown', onPointerDown)

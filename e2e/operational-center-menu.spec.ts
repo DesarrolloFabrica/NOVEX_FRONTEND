@@ -98,7 +98,7 @@ test.describe('menú flotante táctil', () => {
       .locator('[data-testid="coordination-card"][data-code="coord-especializaciones"]')
     await card.tap()
     await expect(card).toHaveAttribute('data-selected', 'true')
-    await page.getByTestId('breadcrumb-direction').tap()
+    await page.getByTestId('deck-ribbon-back').tap()
     await expect(page.getByTestId('operational-breadcrumb')).toHaveCount(0)
     await expect(card).toHaveAttribute('data-selected', 'false')
   })

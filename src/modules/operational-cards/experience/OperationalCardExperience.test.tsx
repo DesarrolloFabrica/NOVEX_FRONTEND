@@ -83,13 +83,13 @@ describe('OperationalCardExperience · regreso a la mesa', () => {
     ['coordinación simple', 'coord-b2b', 'SIMPLE_SELECTED', 'B2B'],
     ['mazo abierto', 'coord-operaciones-academicas', 'DECK_SELECTED', 'Operación Académica'],
     ['subcarta observada', 'coord-ingenierias', 'DECK_SELECTED', 'Ingenierías'],
-  ])('%s: una flecha, la coordinación al lado y ningún botón inferior', (_label, code, mode, name) => {
+  ])('%s: sin miga de pan ni botón inferior (el regreso vive en la cinta «Todas las coordinaciones»)', (_label, code, mode) => {
     const html = render(code)
 
     expect(html).toContain(`data-composition-mode="${mode}"`)
-    expect(html.match(/data-testid="breadcrumb-direction"/g)).toHaveLength(1)
-    expect(html).toContain('aria-label="Volver a Dirección de Operaciones"')
-    expect(html.match(/aria-current="page">([^<]*)</)?.[1]).toBe(name)
+    // La miga estaba oculta en los cuatro roles y se retiró: el regreso a la
+    // mesa es la cinta de la baraja.
+    expect(html).not.toContain('data-testid="breadcrumb-direction"')
     expect(html).not.toContain('data-testid="return-to-table"')
     expect(html).not.toContain('Volver a la mesa')
   })

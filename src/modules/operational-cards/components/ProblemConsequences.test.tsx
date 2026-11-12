@@ -189,12 +189,12 @@ describe('Detalle · Afectaciones', () => {
     const block = html.slice(composer)
     expect(block).toMatch(/<h5[^>]*>Agregar afectación<\/h5>/)
     expect(block).toContain(
-      'Registra una nueva consecuencia generada mientras el problema continúa activo.',
+      'Registre una nueva consecuencia generada mientras la situación continúa activa.',
     )
     expect(block).toContain('data-testid="consequence-description"')
     expect(block).toContain('data-testid="consequence-occurred-at"')
     expect(block).toMatch(/data-testid="consequence-submit"[^>]*>Registrar afectación</)
-    // El CTA es el de la subsección, no el de «Cerrar problema».
+    // El CTA es el de la subsección, no el de «Cerrar situación».
     expect(block).toContain('class="problem-consequences__submit"')
     expect(block).not.toContain('problem-actions__submit')
   })
@@ -257,7 +257,7 @@ describe('Detalle · Severidad reportada vs actual', () => {
     expect(html).toBe('')
   })
 
-  it('si escaló, muestra «Reportado como · Actual» y el acceso al historial', () => {
+  it('si escaló, muestra «Reportada como · Actual» y el acceso al historial', () => {
     const html = renderToStaticMarkup(
       <ProblemDetail
         level2={level2(detail())}
@@ -265,7 +265,7 @@ describe('Detalle · Severidad reportada vs actual', () => {
       />,
     )
     expect(html).toContain('data-testid="severity-trail"')
-    expect(html).toMatch(/Reportado como.*Media.*Actual.*Crítica/s)
+    expect(html).toMatch(/Reportada como.*Media.*Actual.*Crítica/s)
     expect(html).toContain('Ver historial')
     // El badge principal sigue siendo la severidad EFECTIVA.
     expect(html).toMatch(/data-testid="detail-severity"[^>]*>Crítica/)

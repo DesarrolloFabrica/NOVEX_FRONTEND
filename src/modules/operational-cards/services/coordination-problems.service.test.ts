@@ -204,7 +204,7 @@ describe('buildCoordinationSummary', () => {
         criticalCount: 1,
         affectedCoordinationCount: 2,
       }),
-    ).toBe('3 problemas activos · 1 crítico · afecta 2 áreas')
+    ).toBe('3 situaciones activas · 1 crítica · afecta 2 áreas')
   })
 
   it('omite lo que no aplica y usa singular cuando toca', () => {
@@ -214,7 +214,7 @@ describe('buildCoordinationSummary', () => {
         criticalCount: 0,
         affectedCoordinationCount: 1,
       }),
-    ).toBe('1 problema activo · afecta 1 área')
+    ).toBe('1 situación activa · afecta 1 área')
   })
 
   it('sin impacto no menciona áreas', () => {
@@ -224,7 +224,7 @@ describe('buildCoordinationSummary', () => {
         criticalCount: 2,
         affectedCoordinationCount: 0,
       }),
-    ).toBe('4 problemas activos · 2 críticos')
+    ).toBe('4 situaciones activas · 2 críticas')
   })
 })
 
@@ -278,7 +278,7 @@ describe('Fase 01B.2 · K-03: buildCoordinationSummary separa poblaciones', () =
         affectedCoordinationCount: 0,
         incomingDependencyCount: 3,
       }),
-    ).toBe('2 problemas activos · 3 dependencias externas afectan mi área')
+    ).toBe('2 situaciones activas · 3 dependencias externas afectan mi área')
   })
 
   it('sin problemas propios pero con dependencias entrantes, lo dice', () => {

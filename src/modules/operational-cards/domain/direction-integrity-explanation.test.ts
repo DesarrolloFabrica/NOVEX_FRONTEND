@@ -40,7 +40,7 @@ describe('buildDirectionIntegrityExplanation (K-01)', () => {
     expect(why).toBe('Estado crítico: 2 señales críticas entre coordinaciones (umbral: 2).')
   })
 
-  it('ALERTA por una sola señal crítica no dice «hay 1 problema crítico»', () => {
+  it('ALERTA por una sola señal crítica no dice «hay 1 situación crítica»', () => {
     const why = formatIntegrityWhy(
       buildDirectionIntegrityExplanation(
         'ALERTA',
@@ -53,7 +53,7 @@ describe('buildDirectionIntegrityExplanation (K-01)', () => {
     )
     expect(why).toContain('hay 1 señal crítica')
     expect(why).toContain('Registro de analista')
-    expect(why).not.toMatch(/problema/)
+    expect(why).not.toMatch(/problema|situaci/)
   })
 
   it('ALERTA por umbral de alertas', () => {
@@ -66,7 +66,7 @@ describe('buildDirectionIntegrityExplanation (K-01)', () => {
     expect(why).toBe('Estado en alerta: 5 señales de alerta de 15 coordinaciones (umbral: 5).')
   })
 
-  it('ESTABLE con alertas por debajo del umbral no afirma «no hay problemas activos»', () => {
+  it('ESTABLE con alertas por debajo del umbral no afirma «no hay situaciones activas»', () => {
     const why = formatIntegrityWhy(
       buildDirectionIntegrityExplanation(
         'ESTABLE',
@@ -74,7 +74,7 @@ describe('buildDirectionIntegrityExplanation (K-01)', () => {
       ),
     )
     expect(why).toContain('4 señales de alerta')
-    expect(why).not.toMatch(/no hay problemas activos/)
+    expect(why).not.toMatch(/no hay (problemas|situaciones) activ/)
   })
 
   it('DESCONOCIDO por coordinaciones sin datos', () => {

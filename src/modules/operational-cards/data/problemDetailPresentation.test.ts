@@ -116,7 +116,7 @@ describe('toProblemTimelineEntryView', () => {
       }),
     )
     expect(view.label).toBe('Estado cambiado')
-    expect(view.transition).toEqual({ from: 'Abierto', to: 'En atención' })
+    expect(view.transition).toEqual({ from: 'Abierta', to: 'En atención' })
     expect(view.actor).toBe('Coordinadora')
     // La descripción del backend repite la transición: no se muestra.
     expect(view.details).toEqual(['Nota: Se asignó al equipo de soporte.'])
@@ -125,7 +125,7 @@ describe('toProblemTimelineEntryView', () => {
   it('el cierre usa el vocabulario de la resolución', () => {
     expect(
       toProblemTimelineEntryView(entry({ eventType: 'CLOSED' })).label,
-    ).toBe('Problema cerrado')
+    ).toBe('Situación cerrada')
   })
 
   it('traduce la severidad anterior y nueva', () => {
