@@ -50,9 +50,9 @@ body:has(.novex-login-stage) .novex-login-curtains[data-state='open'] {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(1.2rem, 3vh, 2.5rem);
+  gap: clamp(1.1rem, 2.5vh, 2rem);
   width: 100%;
-  min-height: min(80vh, 48rem);
+  min-height: min(84vh, 52rem);
   padding: 2rem 1rem 2rem 0;
   color: #491a1d;
 }
@@ -85,8 +85,8 @@ body:has(.novex-login-stage) .novex-login-curtains[data-state='open'] {
 
 .novex-login-stage__character-slot {
   flex: none;
-  width: clamp(10rem, 18vw, 17rem);
-  height: clamp(10rem, 18vw, 17rem);
+  width: clamp(9rem, 15vw, 14rem);
+  height: clamp(9rem, 15vw, 14rem);
   min-height: 0;
   padding: 0;
   border: 3px solid #c99647;
@@ -108,14 +108,61 @@ body:has(.novex-login-stage) .novex-login-curtains[data-state='open'] {
 }
 .novex-login-stage__character-canvas { filter: none; }
 
+.novex-login-stage__introduction {
+  display: grid;
+  justify-items: center;
+  max-width: 30rem;
+  text-align: center;
+}
+.novex-login-stage__intro-rule {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  width: min(100%, 12rem);
+  color: #a76f2a;
+  font-size: .9rem;
+}
+.novex-login-stage__intro-rule::before,
+.novex-login-stage__intro-rule::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #b7874a);
+}
+.novex-login-stage__intro-rule::after { rotate: 180deg; }
+.novex-login-stage__introduction h2 {
+  margin: .7rem 0 .45rem;
+  color: #571824;
+  font: 400 clamp(1.35rem, 1.75vw, 1.75rem)/1.2 Georgia, 'Times New Roman', serif;
+}
+.novex-login-stage__introduction p {
+  max-width: 28rem;
+  margin: 0;
+  color: #5c3830;
+  font-size: clamp(.85rem, .93vw, .98rem);
+  line-height: 1.55;
+}
+.novex-login-stage__intro-topics {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .55rem;
+  margin-top: .8rem;
+  color: #75442d;
+  font-size: .76rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
 .novex-login-stage__panel {
   width: min(100%, 37rem);
   padding: clamp(2rem, 4vw, 4rem) clamp(1.5rem, 4vw, 4rem);
   border: 1.5px solid #d9ae66;
   border-radius: 1.6rem;
   color: #f8edda;
-  background: linear-gradient(145deg, rgb(101 21 36 / .64), rgb(44 7 17 / .44));
-  box-shadow: 0 22px 55px rgb(27 1 9 / .2), inset 0 1px rgb(255 220 157 / .12);
+  background: radial-gradient(ellipse at 50% 0, rgb(154 55 61 / .29), transparent 65%), linear-gradient(145deg, rgb(101 21 36 / .72), rgb(44 7 17 / .65));
+  box-shadow: 0 22px 55px rgb(27 1 9 / .26), inset 0 1px rgb(255 220 157 / .15);
   filter: none;
   animation: none;
 }
@@ -129,6 +176,14 @@ body:has(.novex-login-stage) .novex-login-curtains[data-state='open'] {
   color: #f3d59b;
   font-size: 1.4rem;
   background: #5b1020;
+}
+.novex-login-stage__panel-kicker {
+  margin: 0 0 .8rem;
+  color: #e3bb77;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .25em;
+  text-transform: uppercase;
 }
 .novex-login-stage__panel-header h2 {
   color: #fff1dd;
@@ -146,7 +201,8 @@ body:has(.novex-login-stage) .novex-login-curtains[data-state='open'] {
   line-height: 1.5;
 }
 .novex-login-stage__auth-stack { margin-top: clamp(1.5rem, 4vh, 2.4rem); }
-.novex-login-stage__google { min-height: 3.5rem; background: #fff; border-radius: .7rem; }
+.novex-login-stage__google { min-height: 3.5rem; border-radius: .7rem; }
+.novex-login-stage__google > div { filter: drop-shadow(0 3px 8px rgb(23 0 7 / .14)); }
 .novex-login-stage__google iframe { width: 100% !important; }
 .novex-login-stage__separator { margin: 1.4rem 0; color: #f7e7d4; }
 .novex-login-stage__separator > span { background: rgb(229 181 119 / .55); }
@@ -167,15 +223,16 @@ body:has(.novex-login-stage) .novex-login-curtains[data-state='open'] {
   border-color: #e4bb71;
   border-radius: .65rem;
   color: #251708;
-  background: linear-gradient(180deg, #ffe4a6, #c9903e);
-  box-shadow: inset 0 1px rgb(255 255 255 / .6), 0 4px 12px rgb(25 1 7 / .15);
+  background: linear-gradient(180deg, #ffe7b1 0%, #edbd71 49%, #c89041 100%);
+  box-shadow: inset 0 1px rgb(255 255 255 / .72), inset 0 -2px rgb(128 75 24 / .26), 0 6px 14px rgb(25 1 7 / .18);
   font-size: 1rem;
 }
 .novex-login-stage__primary-action:disabled {
-  border-color: #a7865b;
-  color: #493b2b;
-  background: #c8af86;
-  opacity: .78;
+  border-color: #c69a5b;
+  color: #5c4029;
+  background: linear-gradient(180deg, #f7ddaa, #d5a968);
+  box-shadow: inset 0 1px rgb(255 255 255 / .42);
+  opacity: 1;
 }
 .novex-login-stage__primary-action:focus-visible,
 .novex-login-stage__input:focus-visible { outline: 3px solid #f5c976; outline-offset: 3px; }
@@ -205,6 +262,7 @@ body:has(.novex-login-stage) .novex-login-curtains[data-state='open'] {
     gap: 1rem;
   }
   .novex-login-stage__character-slot { width: 7rem; height: 7rem; }
+  .novex-login-stage__introduction { max-width: 30rem; }
   .novex-login-stage__title h1 { font-size: clamp(3.7rem, 13vw, 6rem); }
   .novex-login-stage__panel { max-width: 34rem; }
 }
@@ -214,6 +272,9 @@ body:has(.novex-login-stage) .novex-login-curtains[data-state='open'] {
   .novex-login-stage__eyebrow,
   .novex-login-stage__tagline { color: #f7dfb8; }
   .novex-login-stage__title h1 { color: #fff0d7; }
+  .novex-login-stage__introduction h2 { color: #fff0d7; }
+  .novex-login-stage__introduction p { color: #f0d7ce; }
+  .novex-login-stage__intro-topics { display: none; }
   .novex-login-stage__panel { padding: 2rem 1.25rem; }
   .novex-login-stage__panel-header h2 { font-size: 2.2rem; }
 }

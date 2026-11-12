@@ -150,35 +150,49 @@ export function LoginPage() {
 
   return (
     <main className="novex-login-stage">
-      {/* Capas escénicas. Las cortinas (fases siguientes) se montan entre overlay y contenido. */}
+      {/* Fondo editorial; la transición de acceso se monta fuera de esta página. */}
       <div className="novex-login-stage__background" aria-hidden="true" />
       <div className="novex-login-stage__overlay" aria-hidden="true" />
 
       <div className="novex-login-stage__content">
         <div className="novex-login-stage__identity">
-        <header className="novex-login-stage__brand">
-          <p className="novex-login-stage__eyebrow">
-            <span aria-hidden="true" />
-            Centro operacional
-            <span aria-hidden="true" />
-          </p>
-          <div className="novex-login-stage__title"><h1>NOVEX</h1></div>
-          <p className="novex-login-stage__tagline">Inteligencia para decidir</p>
-        </header>
+          <header className="novex-login-stage__brand">
+            <p className="novex-login-stage__eyebrow">
+              <span aria-hidden="true" />
+              Centro operacional
+              <span aria-hidden="true" />
+            </p>
+            <div className="novex-login-stage__title"><h1>NOVEX</h1></div>
+            <p className="novex-login-stage__tagline">Inteligencia para decidir</p>
+          </header>
 
-        {/* Zona del personaje: marquesina de luces + personaje Rive. */}
-        <div className="novex-login-stage__character-slot">
-          <LoginStageSpotlight characterRef={characterRef} />
-        </div>
+          <div className="novex-login-stage__character-slot">
+            <LoginStageSpotlight characterRef={characterRef} />
+          </div>
+
+          <div className="novex-login-stage__introduction">
+            <span className="novex-login-stage__intro-rule" aria-hidden="true">✦</span>
+            <h2>Una visión clara de la operación</h2>
+            <p>
+              NOVEX reúne el estado de las coordinaciones, las situaciones operativas
+              y los indicadores que ayudan a tomar decisiones oportunas.
+            </p>
+            <div className="novex-login-stage__intro-topics" aria-label="Funciones de NOVEX">
+              <span>Seguimiento</span><span aria-hidden="true">·</span>
+              <span>Coordinación</span><span aria-hidden="true">·</span>
+              <span>Decisiones</span>
+            </div>
+          </div>
         </div>
 
         <section className="novex-login-stage__panel" aria-labelledby="access-title">
           <header className="novex-login-stage__panel-header">
+            <p className="novex-login-stage__panel-kicker">Acceso institucional</p>
             <h2 id="access-title">Accede a tu cuenta</h2>
             <p className="novex-login-stage__panel-lead">
               {emailLoginEnabled
-                ? 'Ingresa con tu cuenta institucional para continuar en el Centro Operacional.'
-                : 'Ingresa con tu cuenta de Google institucional para continuar en el Centro Operacional.'}
+                ? 'Continúa con tu cuenta institucional para consultar tu espacio de trabajo.'
+                : 'Continúa con tu cuenta de Google institucional para consultar tu espacio de trabajo.'}
             </p>
           </header>
 
