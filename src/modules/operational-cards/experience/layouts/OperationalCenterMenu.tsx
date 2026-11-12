@@ -22,6 +22,7 @@ const ROLE_HELP: Record<string, readonly string[]> = {
   ANALISTA: [
     'Elija una carta de la mesa para ver en el centro las situaciones de esa coordinación.',
     'Desde el panel derecho registre una situación en la coordinación elegida o consulte el historial y la gestión de situaciones.',
+    'En «Indicadores» revise los KPIs de la operación, de toda la mesa o por coordinación.',
   ],
   DIRECTOR: [
     'La vista inicial resume la Dirección: qué es lo más urgente y qué áreas piden atención.',
