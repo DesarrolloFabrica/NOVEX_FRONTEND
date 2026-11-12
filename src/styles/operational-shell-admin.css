@@ -3136,6 +3136,32 @@
 }
 
 /*
+ * Pareja acción principal + Indicadores: misma línea base. La acción principal
+ * hereda de operational-shell.css un margen (4px 0 10px) y otro tamaño de
+ * letra; en la pareja ambos botones comparten caja, tipografía y relleno.
+ */
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .action-panel__cta-safe:has(.action-panel__cta--kpis) {
+  align-items: center;
+  /* El aire inferior que antes daba el margen de la acción principal. */
+  margin: 4px 0 10px;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .action-panel__cta-safe:has(.action-panel__cta--kpis) > :is(.action-panel__cta--prominent, .action-panel__cta--kpis) {
+  box-sizing: border-box;
+  height: 44px;
+  margin: 0;
+  padding: 0 14px;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .action-panel__cta-safe:has(.action-panel__cta--kpis) > .action-panel__cta-note {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+/*
  * Las gráficas necesitan más ancho que una lista: con los indicadores abiertos
  * la columna derecha pasa del 29 % al 42 % (el ancho que usa el DIRECTOR).
  * El cambio de ancho es inmediato; lo que se anima es la entrada del panel
@@ -4331,6 +4357,14 @@
     padding: 0 10px;
     font-size: 13px;
     white-space: nowrap;
+  }
+
+  /* Misma compactación para la pareja (su regla base tiene más especificidad). */
+  .operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .action-panel__cta-safe:has(.action-panel__cta--kpis) > :is(.action-panel__cta--prominent, .action-panel__cta--kpis) {
+    gap: 7px;
+    height: 40px;
+    padding: 0 10px;
+    font-size: 13px;
   }
 
   .operational-shell.operational-shell:is([data-shell-experience='admin'], [data-shell-experience='analyst'], [data-shell-experience='director'], [data-shell-experience='coordinator'])[data-shell-layout='deck'] .action-panel__cta--prominent > span:not(.action-panel__cta-icon),
