@@ -19,16 +19,14 @@
     <!--
       Precarga del escenario que se va a pintar primero, según el destino:
       con sesión guardada fuera del login, el escenario del circo del Centro;
-      si no, el del login (marca, fondo y telones). Antes se precargaban
+      si no, el del login (marca y fondo institucional). Antes se precargaban
       siempre los del login, también al recargar el Centro.
     -->
     <script>
       ;(function () {
         var assets = [
           ['/novex-mark.webp', 'high'],
-          ['/assets/login/login-stage-background.webp', 'high'],
-          ['/assets/login/curtain-left.webp', 'auto'],
-          ['/assets/login/curtain-right.webp', 'auto'],
+          ['/assets/login/login-institutional-background.webp', 'high'],
         ]
         try {
           if (
@@ -55,7 +53,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Cinzel:wght@700;800&family=Merriweather:ital,wght@0,700;0,900;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..500&family=Cinzel:wght@700;800&family=Merriweather:ital,wght@0,700;0,900;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"
       rel="stylesheet"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

@@ -2,7 +2,7 @@
 // Responsabilidad: envolver todas las rutas y alojar overlays de app (transición post-login).
 
 import { Outlet } from 'react-router-dom'
-import { PostLoginCurtainTransition } from '@/shared/components/PostLoginCurtainTransition'
+import { PostLoginEntryTransition } from '@/shared/components/PostLoginEntryTransition'
 import { OnboardingProvider } from '@/modules/onboarding/OnboardingContext'
 import { OnboardingTour } from '@/modules/onboarding/OnboardingTour'
 import { PostLoginTransitionCueProvider } from '@/shared/transition/PostLoginTransitionCueProvider'
@@ -12,7 +12,7 @@ export function RootLayout() {
     <OnboardingProvider>
       <PostLoginTransitionCueProvider>
         <Outlet />
-        <PostLoginCurtainTransition />
+        <PostLoginEntryTransition />
       </PostLoginTransitionCueProvider>
       <OnboardingTour />
     </OnboardingProvider>

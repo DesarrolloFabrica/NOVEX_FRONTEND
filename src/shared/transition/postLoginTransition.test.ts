@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { NOVEX_CHARACTER_REACTIONS } from '@/shared/character/novexCharacterRive'
 import {
+  COVER_MIN_HOLD_MS,
   POST_LOGIN_REACTION,
   POST_LOGIN_REACTION_MS,
-  curtainStateForPhase,
+  coverStateForPhase,
+  remainingCoverHoldMs,
   postLoginTransitionReducer,
   reactionHoldMs,
 } from '@/shared/transition/postLoginTransition'
@@ -26,20 +28,20 @@ const run = (events: PostLoginTransitionEvent[], from: PostLoginTransitionPhase 
 describe('transición post-login · secuencia', () => {
   it('recorre reacción → cierre → cubierto → apertura → reposo', () => {
     expect(
-      run(['start', 'reaction-done', 'curtains-closed', 'destination-mounted', 'curtains-opened']),
+      run(['start', 'reaction-done', 'cover-closed', 'destination-mounted', 'cover-opened']),
     ).toEqual(['reacting', 'closing', 'covered', 'opening', 'idle'])
   })
 
   it('no navega dos veces: eventos repetidos o fuera de orden no avanzan', () => {
-    expect(postLoginTransitionReducer('covered', 'curtains-closed')).toBe('covered')
+    expect(postLoginTransitionReducer('covered', 'cover-closed')).toBe('covered')
     expect(postLoginTransitionReducer('covered', 'start')).toBe('covered')
     expect(postLoginTransitionReducer('opening', 'destination-mounted')).toBe('opening')
-    expect(postLoginTransitionReducer('idle', 'curtains-opened')).toBe('idle')
+    expect(postLoginTransitionReducer('idle', 'cover-opened')).toBe('idle')
   })
 
   it('no cierra sin reacción previa ni abre sin destino montado', () => {
     expect(postLoginTransitionReducer('idle', 'reaction-done')).toBe('idle')
-    expect(postLoginTransitionReducer('reacting', 'curtains-closed')).toBe('reacting')
+    expect(postLoginTransitionReducer('reacting', 'cover-closed')).toBe('reacting')
     expect(postLoginTransitionReducer('closing', 'destination-mounted')).toBe('closing')
   })
 
@@ -50,18 +52,26 @@ describe('transición post-login · secuencia', () => {
   })
 })
 
-describe('transición post-login · cortinas por fase', () => {
-  it('en /login sin transición enmarcan la escena; fuera de /login no existen', () => {
-    expect(curtainStateForPhase('idle', true)).toBe('open')
-    expect(curtainStateForPhase('idle', false)).toBeNull()
+describe('transición post-login · obturador por fase', () => {
+  it('en /login sin transición queda abierto (fuera de vista); fuera de /login no existe', () => {
+    expect(coverStateForPhase('idle', true)).toBe('open')
+    expect(coverStateForPhase('idle', false)).toBeNull()
   })
 
-  it('durante la reacción siguen abiertas; cierran antes de navegar y se retiran en destino', () => {
-    expect(curtainStateForPhase('reacting', true)).toBe('open')
-    expect(curtainStateForPhase('closing', true)).toBe('closed')
-    expect(curtainStateForPhase('covered', true)).toBe('closed')
-    expect(curtainStateForPhase('covered', false)).toBe('closed')
-    expect(curtainStateForPhase('opening', false)).toBe('retracted')
+  it('durante la reacción sigue abierto; cierra antes de navegar y se retira en destino', () => {
+    expect(coverStateForPhase('reacting', true)).toBe('open')
+    expect(coverStateForPhase('closing', true)).toBe('closed')
+    expect(coverStateForPhase('covered', true)).toBe('closed')
+    expect(coverStateForPhase('covered', false)).toBe('closed')
+    expect(coverStateForPhase('opening', false)).toBe('retracted')
+  })
+})
+
+describe('transición post-login · tiempo cubierto', () => {
+  it('mantiene el sello el mínimo y nunca devuelve una espera negativa', () => {
+    expect(remainingCoverHoldMs(1000, 1000)).toBe(COVER_MIN_HOLD_MS)
+    expect(remainingCoverHoldMs(1000, 1400)).toBe(COVER_MIN_HOLD_MS - 400)
+    expect(remainingCoverHoldMs(1000, 1000 + COVER_MIN_HOLD_MS + 250)).toBe(0)
   })
 })
 

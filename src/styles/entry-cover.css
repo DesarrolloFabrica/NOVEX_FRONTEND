@@ -1,0 +1,265 @@
+/* Obturador de entrada post-login (EntryCover).
+ *
+ * Dos hojas de vino profundo se cierran sobre el centro, el sello NOVEX sube
+ * letra por letra sobre la junta y una barra de latón marca la carga. Al abrir,
+ * el sello se disuelve y las hojas se separan (arriba / abajo) sobre el destino.
+ *
+ * Solo `transform` y `opacity`. El final de cada movimiento lo marca el
+ * `transitionend` de `transform` de las dos hojas (ver EntryCover.tsx).
+ */
+
+.novex-entry-cover {
+  --cover-layer: 1200;
+  --cover-close-ms: 640ms;
+  --cover-close-ease: cubic-bezier(0.83, 0, 0.17, 1);
+  --cover-open-ms: 880ms;
+  --cover-open-ease: cubic-bezier(0.76, 0, 0.24, 1);
+  --cover-open-delay: 180ms;
+  /* El sello entra cuando las hojas ya casi se tocan. */
+  --cover-seal-delay: 520ms;
+  --cover-wine: #2a0710;
+  --cover-wine-lift: #4a0f1d;
+  --cover-ink: #f8ead0;
+  --cover-brass: #d9a95a;
+  --cover-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .9 0 0 0 0 .8 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+
+  position: fixed;
+  inset: 0;
+  z-index: var(--cover-layer);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.novex-entry-cover[data-state='closed'],
+.novex-entry-cover[data-blocking='true'] {
+  pointer-events: auto;
+}
+
+/* ------------------------------------------------------------------- hojas */
+
+.novex-entry-cover__leaf {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  /* Un píxel de solape en la junta evita una rendija con zoom fraccional. */
+  height: calc(50% + 1px);
+  will-change: transform;
+  transition: transform var(--cover-open-ms) var(--cover-open-ease) var(--cover-open-delay);
+}
+
+.novex-entry-cover__leaf--top {
+  top: 0;
+  transform: translateY(-101%);
+  background:
+    var(--cover-grain),
+    radial-gradient(ellipse 70% 60% at 50% 100%, var(--cover-wine-lift), transparent 72%),
+    var(--cover-wine);
+}
+
+.novex-entry-cover__leaf--bottom {
+  bottom: 0;
+  transform: translateY(101%);
+  background:
+    var(--cover-grain),
+    radial-gradient(ellipse 70% 60% at 50% 0%, var(--cover-wine-lift), transparent 72%),
+    var(--cover-wine);
+}
+
+.novex-entry-cover[data-state='closed'] .novex-entry-cover__leaf {
+  transform: translateY(0);
+  transition: transform var(--cover-close-ms) var(--cover-close-ease);
+}
+
+/* Junta: hilo de latón que se tiende de centro a bordes al cerrar. */
+.novex-entry-cover::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cover-brass) 18%, var(--cover-brass) 82%, transparent);
+  opacity: 0;
+  transform: scaleX(0);
+  transition: opacity 160ms ease-out, transform 0s linear 160ms;
+}
+
+.novex-entry-cover[data-state='closed']::after {
+  opacity: 0.55;
+  transform: scaleX(1);
+  transition:
+    opacity 200ms ease-out var(--cover-close-ms),
+    transform 900ms var(--cover-open-ease) calc(var(--cover-close-ms) - 60ms);
+}
+
+/* ------------------------------------------------------------------- sello */
+
+.novex-entry-cover__seal {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: clamp(0.9rem, 2vh, 1.4rem);
+  padding: 1.5rem;
+  color: var(--cover-ink);
+  text-align: center;
+  opacity: 0;
+  transform: scale(1);
+  transition: opacity 240ms ease-in, transform 420ms var(--cover-open-ease);
+}
+
+.novex-entry-cover[data-state='closed'] .novex-entry-cover__seal {
+  opacity: 1;
+  transition: opacity 1ms linear var(--cover-seal-delay);
+}
+
+.novex-entry-cover[data-state='retracted'] .novex-entry-cover__seal {
+  transform: scale(1.04);
+}
+
+.novex-entry-cover__kicker,
+.novex-entry-cover__status {
+  margin: 0;
+  font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  opacity: 0;
+}
+
+.novex-entry-cover__kicker {
+  color: var(--cover-brass);
+  font-size: clamp(0.68rem, 0.9vw, 0.8rem);
+  font-weight: 600;
+  letter-spacing: 0.42em;
+  /* Compensa el tracking final para centrar ópticamente. */
+  margin-right: -0.42em;
+  text-transform: uppercase;
+}
+
+.novex-entry-cover__wordmark {
+  display: flex;
+  margin: 0;
+  /* La fuente se ve gruesa en un viewport grande: el sello es la pieza. */
+  font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
+  font-size: clamp(4.75rem, 15vw, 13.5rem);
+  font-weight: 600;
+  font-optical-sizing: auto;
+  font-variation-settings: 'SOFT' 0, 'WONK' 0;
+  letter-spacing: -0.05em;
+  line-height: 0.86;
+}
+
+/* Cada letra sube desde detrás de su propia máscara. */
+.novex-entry-cover__letter {
+  display: inline-block;
+  overflow: hidden;
+  padding: 0.04em 0.01em 0.08em;
+}
+
+.novex-entry-cover__letter > span {
+  display: inline-block;
+  transform: translateY(110%);
+}
+
+.novex-entry-cover__progress {
+  position: relative;
+  width: clamp(9rem, 18vw, 15rem);
+  height: 2px;
+  overflow: hidden;
+  background: rgb(217 169 90 / 0.18);
+  opacity: 0;
+}
+
+.novex-entry-cover__progress > span {
+  position: absolute;
+  inset: 0;
+  background: var(--cover-brass);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.novex-entry-cover__status {
+  color: rgb(248 234 208 / 0.68);
+  font-size: clamp(0.78rem, 0.95vw, 0.88rem);
+  letter-spacing: 0.02em;
+}
+
+/* Coreografía del sello (solo cerrado). */
+.novex-entry-cover[data-state='closed'] .novex-entry-cover__kicker {
+  animation: novex-cover-fade 420ms ease-out var(--cover-seal-delay) both;
+}
+
+.novex-entry-cover[data-state='closed'] .novex-entry-cover__letter > span {
+  animation: novex-cover-letter 620ms cubic-bezier(0.2, 0.9, 0.2, 1)
+    calc(var(--cover-seal-delay) + 40ms + var(--i, 0) * 55ms) both;
+}
+
+.novex-entry-cover[data-state='closed'] .novex-entry-cover__progress {
+  animation: novex-cover-fade 300ms ease-out calc(var(--cover-seal-delay) + 220ms) both;
+}
+
+.novex-entry-cover[data-state='closed'] .novex-entry-cover__progress > span {
+  animation: novex-cover-progress 1000ms cubic-bezier(0.45, 0, 0.2, 1)
+    calc(var(--cover-seal-delay) + 260ms) both;
+}
+
+.novex-entry-cover[data-state='closed'] .novex-entry-cover__status {
+  animation: novex-cover-fade 420ms ease-out calc(var(--cover-seal-delay) + 340ms) both;
+}
+
+/* Al retirarse, el sello conserva su último fotograma mientras se disuelve. */
+.novex-entry-cover[data-state='retracted'] :is(
+    .novex-entry-cover__kicker,
+    .novex-entry-cover__progress,
+    .novex-entry-cover__status
+  ) {
+  opacity: 1;
+}
+
+.novex-entry-cover[data-state='retracted'] .novex-entry-cover__letter > span,
+.novex-entry-cover[data-state='retracted'] .novex-entry-cover__progress > span {
+  transform: none;
+}
+
+@keyframes novex-cover-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes novex-cover-letter {
+  from { transform: translateY(110%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes novex-cover-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Reduced motion: corte directo, sin recorridos. 1 ms (no 0) para que el
+   navegador siga emitiendo transitionend y la secuencia avance. */
+@media (prefers-reduced-motion: reduce) {
+  .novex-entry-cover__leaf,
+  .novex-entry-cover[data-state='closed'] .novex-entry-cover__leaf {
+    transition-duration: 1ms !important;
+    transition-delay: 0s !important;
+  }
+
+  .novex-entry-cover::after,
+  .novex-entry-cover__seal,
+  .novex-entry-cover[data-state='closed'] .novex-entry-cover__seal {
+    transition: none !important;
+  }
+
+  .novex-entry-cover[data-state='closed'] :is(
+      .novex-entry-cover__kicker,
+      .novex-entry-cover__letter > span,
+      .novex-entry-cover__progress,
+      .novex-entry-cover__progress > span,
+      .novex-entry-cover__status
+    ) {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

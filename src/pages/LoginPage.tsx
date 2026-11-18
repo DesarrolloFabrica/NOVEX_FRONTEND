@@ -13,12 +13,7 @@ import {
   sanitizeReturnPath,
   type SessionExpiryNotice,
 } from '@/modules/auth/utils/sessionExpiryNotice'
-import {
-  NOVEX_BETA_HINT,
-  NOVEX_BETA_LABEL,
-} from '@/shared/constants/platformStatus'
 import { LoginStageSpotlight } from '@/pages/LoginStageSpotlight'
-import { LoginTicketFrame } from '@/pages/LoginTicketFrame'
 import type { NovexCharacterHandle } from '@/shared/character/NovexCharacterFigure'
 import { POST_LOGIN_REACTION, reactionHoldMs } from '@/shared/transition/postLoginTransition'
 import { usePostLoginTransitionCue } from '@/shared/transition/postLoginTransitionCue'
@@ -81,8 +76,8 @@ export function LoginPage() {
     if (!isAuthenticated) return
 
     if (loginAttemptedRef.current) {
-      // Inicio de la transición teatral: el personaje celebra y el host global
-      // (PostLoginCurtainTransition) espera su reacción antes de cerrar cortinas.
+      // Inicio de la transición de entrada: el personaje celebra y el host global
+      // (PostLoginEntryTransition) espera su reacción antes de cerrar el obturador.
       // Si el personaje aún no estaba listo, no hay reacción que esperar.
       if (!celebratedRef.current) {
         celebratedRef.current = true
@@ -155,43 +150,49 @@ export function LoginPage() {
 
   return (
     <main className="novex-login-stage">
-      {/* Capas escénicas. Las cortinas (fases siguientes) se montan entre overlay y contenido. */}
+      {/* Fondo editorial; la transición de acceso se monta fuera de esta página. */}
       <div className="novex-login-stage__background" aria-hidden="true" />
       <div className="novex-login-stage__overlay" aria-hidden="true" />
 
       <div className="novex-login-stage__content">
-        <header className="novex-login-stage__brand">
-          <p className="novex-login-stage__eyebrow">
-            <span aria-hidden="true" />
-            Centro operacional
-            <span aria-hidden="true" />
-          </p>
-          <div className="novex-login-stage__title">
-            <h1>NOVEX</h1>
-            <span
-              className="novex-beta-mark"
-              title={NOVEX_BETA_HINT}
-              aria-label={NOVEX_BETA_HINT}
-            >
-              {NOVEX_BETA_LABEL}
-            </span>
-          </div>
-          <p className="novex-login-stage__tagline">Inteligencia para decidir</p>
-        </header>
+        <div className="novex-login-stage__identity">
+          <header className="novex-login-stage__brand">
+            <p className="novex-login-stage__eyebrow">
+              <span aria-hidden="true" />
+              Centro operacional
+              <span aria-hidden="true" />
+            </p>
+            <div className="novex-login-stage__title"><h1>NOVEX</h1></div>
+            <p className="novex-login-stage__tagline">Inteligencia para decidir</p>
+          </header>
 
-        {/* Zona del personaje: marquesina de luces + personaje Rive. */}
-        <div className="novex-login-stage__character-slot">
-          <LoginStageSpotlight characterRef={characterRef} />
+          <div className="novex-login-stage__character-slot">
+            <LoginStageSpotlight characterRef={characterRef} />
+          </div>
+
+          <div className="novex-login-stage__introduction">
+            <span className="novex-login-stage__intro-rule" aria-hidden="true" />
+            <h2>Una visión clara de la operación</h2>
+            <p>
+              NOVEX reúne el estado de las coordinaciones, las situaciones operativas
+              y los indicadores que ayudan a tomar decisiones oportunas.
+            </p>
+            <ul className="novex-login-stage__intro-topics" aria-label="Funciones de NOVEX">
+              <li>Seguimiento</li>
+              <li>Coordinación</li>
+              <li>Decisiones</li>
+            </ul>
+          </div>
         </div>
 
         <section className="novex-login-stage__panel" aria-labelledby="access-title">
-          <LoginTicketFrame />
           <header className="novex-login-stage__panel-header">
-            <h2 id="access-title">Acceda a <strong>NOVEX</strong></h2>
+            <p className="novex-login-stage__panel-kicker">Acceso institucional</p>
+            <h2 id="access-title">Accede a tu cuenta</h2>
             <p className="novex-login-stage__panel-lead">
               {emailLoginEnabled
-                ? 'Ingrese con Google o con su correo institucional.'
-                : 'Ingrese con su cuenta de Google institucional.'}
+                ? 'Ingresa con tu cuenta institucional para abrir tu centro operacional.'
+                : 'Ingresa con tu cuenta de Google institucional para abrir tu centro operacional.'}
             </p>
           </header>
 
@@ -222,8 +223,9 @@ export function LoginPage() {
                 onError={handleGoogleError}
                 useOneTap={false}
                 ux_mode="popup"
-                theme="filled_black"
+                theme="outline"
                 size="large"
+                width="400"
                 text="signin_with"
                 shape="rectangular"
                 logo_alignment="left"
@@ -234,7 +236,7 @@ export function LoginPage() {
               <>
                 <div className="novex-login-stage__separator" aria-hidden="true">
                   <span />
-                  <b>o</b>
+                  <b>o con tu correo</b>
                   <span />
                 </div>
 
