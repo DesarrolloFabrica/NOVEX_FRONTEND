@@ -109,6 +109,11 @@ export interface OperationalActionPanelProps {
   onPrimaryConsult?: () => void
   /** Acceso a los indicadores (KPI). Solo se muestra si se pasa. */
   onOpenKpis?: () => void
+  /**
+   * Acción «Exportar Excel» (ADMIN / ANALISTA). Fila completa bajo la pareja
+   * principal; el layout decide si se ofrece.
+   */
+  exportAction?: ReactNode
   /** Alcance que nombra la cabecera del historial. */
   historyScopeLabel?: string
   labelByCode?: Readonly<Record<string, string>>
@@ -152,6 +157,7 @@ export function OperationalActionPanel({
   onOpenAdminActions,
   onPrimaryConsult,
   onOpenKpis,
+  exportAction,
   historyScopeLabel,
   labelByCode,
   colorByCode,
@@ -392,6 +398,12 @@ export function OperationalActionPanel({
               </span>
               <span>Indicadores</span>
             </button>
+          ) : null}
+
+          {exportAction ? (
+            <div className="action-panel__cta-export" data-testid="export-cta">
+              {exportAction}
+            </div>
           ) : null}
 
           {canCreate && !hasCoordination ? (

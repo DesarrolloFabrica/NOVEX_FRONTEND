@@ -153,3 +153,21 @@ export const IconBan = (p: IconProps) => (
     <path d="m5.7 5.7 12.6 12.6" />
   </LineIcon>
 )
+
+export const IconDownload = (p: IconProps) => (
+  <LineIcon {...p}>
+    <path d="M12 4v11" />
+    <path d="m7.5 10.5 4.5 4.5 4.5-4.5" />
+    <path d="M5 19.5h14" />
+  </LineIcon>
+)
+
+/** Hoja de cálculo: cuadrícula con cabecera marcada. */
+export const IconSpreadsheet = (p: IconProps) => (
+  <LineIcon {...p}>
+    <rect x="4" y="4" width="16" height="16" rx="2" />
+    <path d="M4 9.5h16" />
+    <path d="M4 14.75h16" />
+    <path d="M10 9.5V20" />
+  </LineIcon>
+)

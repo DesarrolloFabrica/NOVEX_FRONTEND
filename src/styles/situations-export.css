@@ -1,0 +1,713 @@
+/*
+ * EXPORTAR SITUACIONES ACTIVAS A EXCEL (ADMIN · DIRECTOR · ANALISTA).
+ *
+ * Botón del panel principal y diálogo de opciones. Misma piel que el resto del
+ * Centro Operacional (pergamino, vino y oro), con tokens propios: el diálogo se
+ * monta en <body> y no hereda las variables del shell.
+ */
+
+.situations-export,
+.situations-export-trigger {
+  --sx-serif: 'Merriweather', Georgia, 'Times New Roman', serif;
+  --sx-sans: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  --sx-ink: #2a1a0e;
+  --sx-ink-soft: #5c4631;
+  --sx-gold: #b88c3c;
+  --sx-gold-soft: #f5d485;
+  --sx-gold-deep: #8a602d;
+  --sx-wine: #4a1a1e;
+  --sx-wine-deep: #2c0d10;
+  --sx-paper: #fffaf0;
+  --sx-paper-deep: #f6ead1;
+  --sx-line: rgb(138 96 45 / 0.28);
+  --sx-focus: rgb(201 154 59 / 0.55);
+}
+
+/* ── Botón del panel ─────────────────────────────────────────────────────── */
+
+.situations-export-trigger {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 40px;
+  margin: 0;
+  padding: 0 14px;
+  border: 1px solid rgb(184 140 60 / 0.65);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #fffdf6 0%, #f8edd4 100%);
+  color: var(--sx-wine);
+  font: 700 14px / 1 var(--sx-sans);
+  text-align: left;
+  box-shadow:
+    0 2px 6px rgb(58 20 24 / 0.12),
+    inset 0 1px 0 rgb(255 255 255 / 0.8);
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+}
+
+.situations-export-trigger:hover {
+  border-color: var(--sx-gold-deep);
+  background: linear-gradient(180deg, #fffaf0 0%, #f3e3bf 100%);
+  transform: translateY(-1px);
+}
+
+.situations-export-trigger:focus-visible {
+  outline: 2px solid var(--sx-gold-deep);
+  outline-offset: 2px;
+}
+
+.situations-export-trigger__icon {
+  display: inline-grid;
+  color: #1e6b3a;
+}
+
+.situations-export-trigger__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.situations-export-trigger__hint {
+  color: var(--sx-ink-soft);
+  font: 600 11px / 1 var(--sx-sans);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.situations-export-trigger__notice:empty {
+  display: none;
+}
+
+.situations-export-trigger__notice {
+  display: block;
+  margin-top: 6px;
+  color: #1e6b3a;
+  font: 600 12px / 1.3 var(--sx-sans, 'Segoe UI', system-ui, sans-serif);
+  overflow-wrap: anywhere;
+}
+
+/* En el panel derecho (ADMIN / ANALISTA): fila completa bajo la pareja. */
+.action-panel__cta-export {
+  grid-column: 1 / -1;
+}
+
+/* En la lectura del DIRECTOR: bajo la cabecera de indicadores. */
+.director-export-bar {
+  margin: 0 0 12px;
+}
+
+@media (max-width: 1440px) {
+  .situations-export-trigger {
+    min-height: 38px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  .situations-export-trigger__hint {
+    display: none;
+  }
+}
+
+/* ── Diálogo ─────────────────────────────────────────────────────────────── */
+
+.situations-export {
+  position: fixed;
+  z-index: 1300;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+  font-family: var(--sx-sans);
+}
+
+.situations-export__backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 40%, rgb(58 20 24 / 0.55) 0%, rgb(20 6 8 / 0.82) 100%);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  animation: sx-fade 200ms ease-out both;
+}
+
+.situations-export__dialog {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(720px, 100%);
+  max-height: min(860px, calc(100dvh - 48px));
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--sx-gold);
+  border-radius: 20px;
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgb(255 255 255 / 0.65) 0%, transparent 45%),
+    linear-gradient(180deg, var(--sx-paper) 0%, var(--sx-paper-deep) 100%);
+  box-shadow:
+    inset 0 0 0 4px var(--sx-paper),
+    inset 0 0 0 5px rgb(184 140 60 / 0.55),
+    0 30px 70px rgb(10 3 2 / 0.6);
+  color: var(--sx-ink);
+  color-scheme: light;
+  animation: sx-in 240ms cubic-bezier(0.22, 0.8, 0.24, 1) both;
+}
+
+.situations-export__header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 22px 26px 18px;
+  border-bottom: 1px solid rgb(184 140 60 / 0.35);
+}
+
+.situations-export__medallion {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #7a2a31 0%, #3a1418 70%, #24090c 100%);
+  box-shadow:
+    0 0 0 3px var(--sx-gold-soft),
+    0 0 0 5px var(--sx-gold-deep),
+    0 8px 16px rgb(58 20 24 / 0.35);
+  color: var(--sx-gold-soft);
+}
+
+.situations-export__heading {
+  min-width: 0;
+}
+
+.situations-export__eyebrow {
+  color: var(--sx-gold-deep);
+  font: 700 11px var(--sx-sans);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.situations-export__title {
+  margin: 2px 0;
+  color: var(--sx-ink);
+  font: 900 clamp(21px, 2vw, 26px) / 1.15 var(--sx-serif);
+}
+
+.situations-export__subtitle {
+  margin: 0;
+  color: var(--sx-ink-soft);
+  font: 500 13.5px / 1.45 var(--sx-sans);
+  text-wrap: pretty;
+}
+
+.situations-export__close {
+  display: grid;
+  align-self: start;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid rgb(90 62 30 / 0.3);
+  border-radius: 50%;
+  background: #fffdf8;
+  color: var(--sx-ink);
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.situations-export__close:hover:not(:disabled) {
+  border-color: var(--sx-gold-deep);
+  background: #fff3d8;
+}
+
+.situations-export__body {
+  display: grid;
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: 18px;
+  overflow-y: auto;
+  padding: 18px 26px 20px;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(138 96 45 / 0.45) transparent;
+}
+
+.situations-export__row {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 18px;
+}
+
+.situations-export__group {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.situations-export__legend {
+  margin: 0 0 8px;
+  padding: 0;
+  color: var(--sx-gold-deep);
+  font: 700 11.5px var(--sx-sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Entradas nativas ocultas visualmente pero accesibles. */
+.situations-export :is(.situations-export__segment, .situations-export__chip) input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.situations-export__segmented {
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--sx-line);
+  border-radius: 12px;
+  background: rgb(255 253 246 / 0.8);
+}
+
+.situations-export__segment {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 9px;
+  color: var(--sx-ink-soft);
+  font: 600 13.5px var(--sx-sans);
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.situations-export__segment[data-disabled] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.situations-export__segment[data-checked] {
+  background: linear-gradient(180deg, var(--sx-wine) 0%, var(--sx-wine-deep) 100%);
+  color: #fbeed0;
+  box-shadow: 0 2px 6px rgb(44 13 16 / 0.25);
+}
+
+.situations-export__segment:has(input:focus-visible),
+.situations-export__chip:has(input:focus-visible) {
+  outline: 3px solid var(--sx-focus);
+  outline-offset: 2px;
+}
+
+.situations-export__count {
+  display: inline-grid;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 6px;
+  place-items: center;
+  border-radius: 999px;
+  background: rgb(138 96 45 / 0.14);
+  color: var(--sx-ink);
+  font: 700 11.5px / 1 var(--sx-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+.situations-export__segment[data-checked] .situations-export__count {
+  background: rgb(245 212 133 / 0.22);
+  color: var(--sx-gold-soft);
+}
+
+.situations-export__picker {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid var(--sx-line);
+  border-radius: 12px;
+  background: rgb(255 253 246 / 0.7);
+}
+
+.situations-export__picker-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  margin: 0 4px 6px;
+}
+
+.situations-export__link {
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: var(--sx-gold-deep);
+  font: 700 12.5px var(--sx-sans);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.situations-export__link:focus-visible {
+  outline: 2px solid var(--sx-focus);
+  outline-offset: 2px;
+}
+
+.situations-export__coordinations {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 6px;
+  max-height: 220px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.situations-export__coordination {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: var(--sx-ink);
+  font: 500 13.5px / 1.25 var(--sx-sans);
+  cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.situations-export__coordination:hover {
+  background: rgb(245 212 133 / 0.18);
+}
+
+.situations-export__coordination[data-checked] {
+  border-color: rgb(184 140 60 / 0.55);
+  background: rgb(245 212 133 / 0.26);
+}
+
+.situations-export__coordination input,
+.situations-export__sheet input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--sx-wine);
+}
+
+.situations-export__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.12);
+}
+
+.situations-export__coordination-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.situations-export__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.situations-export__chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--sx-line);
+  border-radius: 999px;
+  background: rgb(255 253 246 / 0.85);
+  color: var(--sx-ink-soft);
+  font: 600 13px var(--sx-sans);
+  cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.situations-export__chip:hover {
+  border-color: var(--sx-gold);
+}
+
+.situations-export__chip[data-checked] {
+  border-color: var(--sx-gold-deep);
+  background: #fff3d8;
+  color: var(--sx-ink);
+}
+
+.situations-export__chip[data-checked]::before {
+  content: '';
+  width: 6px;
+  height: 10px;
+  margin: -3px 1px 0 0;
+  border: solid var(--sx-wine);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.situations-export__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.situations-export__chip[data-severity='CRITICAL'] .situations-export__dot { background: #b42318; }
+.situations-export__chip[data-severity='HIGH'] .situations-export__dot { background: #c4620f; }
+.situations-export__chip[data-severity='MEDIUM'] .situations-export__dot { background: #c99a0b; }
+.situations-export__chip[data-severity='LOW'] .situations-export__dot { background: #2f8a50; }
+
+.situations-export__chip:not([data-checked]) .situations-export__dot {
+  opacity: 0.4;
+}
+
+.situations-export__sheets {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.situations-export__sheet {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--sx-line);
+  border-radius: 10px;
+  background: rgb(255 253 246 / 0.75);
+  cursor: pointer;
+  transition: border-color 140ms ease, background-color 140ms ease;
+}
+
+.situations-export__sheet input {
+  margin-top: 2px;
+}
+
+.situations-export__sheet[data-checked] {
+  border-color: rgb(184 140 60 / 0.6);
+  background: rgb(255 243 216 / 0.7);
+}
+
+.situations-export__sheet[data-locked] {
+  cursor: default;
+}
+
+.situations-export__sheet-text {
+  display: grid;
+  gap: 2px;
+}
+
+.situations-export__sheet-text strong {
+  color: var(--sx-ink);
+  font: 700 13.5px / 1.3 var(--sx-sans);
+}
+
+.situations-export__sheet-text strong small {
+  color: var(--sx-gold-deep);
+  font-weight: 600;
+}
+
+.situations-export__sheet-text > span {
+  color: var(--sx-ink-soft);
+  font: 500 12.5px / 1.45 var(--sx-sans);
+}
+
+.situations-export__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 18px;
+  padding: 14px 26px 18px;
+  border-top: 1px solid rgb(184 140 60 / 0.35);
+  background: rgb(255 250 240 / 0.85);
+}
+
+.situations-export__estimate {
+  flex: 1 1 220px;
+  margin: 0;
+  color: var(--sx-ink-soft);
+  font: 500 13px / 1.4 var(--sx-sans);
+}
+
+.situations-export__estimate strong {
+  color: var(--sx-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.situations-export__problem {
+  color: #9a4a0b;
+  font-weight: 600;
+}
+
+.situations-export__error {
+  color: #9b1c1c;
+  font-weight: 600;
+}
+
+.situations-export__actions {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.situations-export__secondary,
+.situations-export__primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 18px;
+  border-radius: 10px;
+  font: 700 14px / 1 var(--sx-sans);
+  cursor: pointer;
+  transition: filter 160ms ease, transform 160ms ease, background-color 160ms ease;
+}
+
+.situations-export__secondary {
+  border: 1px solid rgb(90 62 30 / 0.3);
+  background: #fffdf8;
+  color: var(--sx-ink);
+}
+
+.situations-export__secondary:hover:not(:disabled) {
+  background: #fff3d8;
+}
+
+.situations-export__primary {
+  min-width: 176px;
+  border: 1px solid rgb(245 212 133 / 0.6);
+  background: linear-gradient(180deg, var(--sx-wine) 0%, var(--sx-wine-deep) 100%);
+  color: #fbeed0;
+  box-shadow:
+    0 4px 10px rgb(44 13 16 / 0.3),
+    inset 0 1px 0 rgb(255 230 160 / 0.2);
+}
+
+.situations-export__primary svg {
+  color: var(--sx-gold-soft);
+}
+
+.situations-export__primary:hover:not(:disabled) {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+:is(.situations-export__secondary, .situations-export__primary, .situations-export__close):focus-visible {
+  outline: 3px solid var(--sx-focus);
+  outline-offset: 2px;
+}
+
+:is(.situations-export__secondary, .situations-export__primary, .situations-export__close):disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.situations-export__primary[disabled]:has(.situations-export__spinner) {
+  opacity: 0.9;
+  cursor: progress;
+}
+
+.situations-export__spinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgb(245 212 133 / 0.35);
+  border-top-color: var(--sx-gold-soft);
+  border-radius: 50%;
+  animation: sx-spin 800ms linear infinite;
+}
+
+@keyframes sx-fade {
+  from { opacity: 0; }
+}
+
+@keyframes sx-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+}
+
+@keyframes sx-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 640px) {
+  .situations-export {
+    align-items: end;
+    padding: 0;
+  }
+
+  .situations-export__dialog {
+    width: 100%;
+    max-height: calc(100dvh - 24px);
+    border-radius: 18px 18px 0 0;
+  }
+
+  .situations-export__header {
+    gap: 12px;
+    padding: 16px 16px 14px;
+  }
+
+  .situations-export__medallion {
+    width: 42px;
+    height: 42px;
+  }
+
+  .situations-export__body {
+    padding: 14px 16px 16px;
+  }
+
+  .situations-export__row {
+    grid-template-columns: 1fr;
+  }
+
+  .situations-export__segmented {
+    display: grid;
+    grid-auto-flow: row;
+    width: 100%;
+  }
+
+  .situations-export__footer {
+    padding: 12px 16px 16px;
+  }
+
+  .situations-export__actions {
+    width: 100%;
+  }
+
+  .situations-export__actions > * {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .situations-export__backdrop,
+  .situations-export__dialog {
+    animation: none;
+  }
+
+  .situations-export-trigger,
+  .situations-export__primary {
+    transition: none;
+  }
+
+  .situations-export-trigger:hover,
+  .situations-export__primary:hover:not(:disabled) {
+    transform: none;
+  }
+
+  .situations-export__spinner {
+    animation-duration: 2s;
+  }
+}

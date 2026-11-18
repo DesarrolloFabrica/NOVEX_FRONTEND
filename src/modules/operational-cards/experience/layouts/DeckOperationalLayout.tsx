@@ -40,6 +40,11 @@ import {
   ShellRegion,
 } from '@/modules/operational-cards/experience/layouts/OperationalCenterChrome'
 import { ReportSituationModal } from '@/modules/operational-cards/experience/layouts/ReportSituationModal'
+import { ExportSituationsButton } from '@/modules/operational-cards/export/ExportSituationsButton'
+import {
+  canExportSituations,
+  toExportCoordinationOptions,
+} from '@/modules/operational-cards/export/exportAccess'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { hasPermission } from '@/modules/auth/utils/permissions'
 import type { OperationalCenterExperienceId } from '@/modules/operational-cards/experience/resolveOperationalCenterExperience'
@@ -151,6 +156,15 @@ export function DeckOperationalLayout({
       historyScopeLabel: 'todas las coordinaciones',
       onOpenOperations: () => setAdminView('operations'),
       onOpenKpis: canViewKpis ? () => setAdminView('kpis') : undefined,
+      exportAction: canExportSituations(user) ? (
+        <ExportSituationsButton
+          coordinations={toExportCoordinationOptions(
+            controller.overview?.coordinations ?? [],
+            labelByCode,
+          )}
+          observedCoordinationId={selectedCoordination?.id ?? null}
+        />
+      ) : undefined,
       ...(experience === 'admin'
         ? {
             onPrimaryConsult: () => setAdminView('operations'),

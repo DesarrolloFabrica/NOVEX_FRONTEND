@@ -49,3 +49,36 @@ for (const [roleCode, experience] of [
     await expect(page.getByTestId('platform-menu-trigger')).toHaveCount(0)
   })
 }
+
+/*
+ * EXPORTAR EXCEL de situaciones activas: solo ADMIN, DIRECTOR y ANALISTA lo
+ * ven en su panel principal; el diálogo permite elegir qué descargar.
+ */
+for (const roleCode of ['ANALISTA', 'DIRECTOR', 'ADMIN'] as const) {
+  test(`${roleCode} ve «Exportar Excel» y su diálogo de opciones`, async ({ page }) => {
+    await installRoleExperience(page, roleCode)
+    await page.goto('/')
+
+    const trigger = page.getByTestId('situations-export-open')
+    await expect(trigger).toBeVisible()
+    await page.screenshot({ path: `test-results/export-panel-${roleCode.toLowerCase()}.png` })
+    await trigger.click()
+
+    const dialog = page.getByRole('dialog', { name: 'Situaciones activas' })
+    await expect(dialog).toBeVisible()
+    await expect(page.getByTestId('situations-export-submit')).toBeEnabled()
+    await expect(page.getByTestId('export-sheet-situations')).toBeDisabled()
+    await page.screenshot({ path: `test-results/export-${roleCode.toLowerCase()}.png` })
+
+    await page.keyboard.press('Escape')
+    await expect(dialog).toHaveCount(0)
+    await expect(trigger).toBeFocused()
+  })
+}
+
+test('el coordinador no ve «Exportar Excel»', async ({ page }) => {
+  await installRoleExperience(page, 'COORDINADOR')
+  await page.goto('/')
+  await expect(page.getByTestId('operational-shell')).toBeVisible()
+  await expect(page.getByTestId('situations-export-open')).toHaveCount(0)
+})

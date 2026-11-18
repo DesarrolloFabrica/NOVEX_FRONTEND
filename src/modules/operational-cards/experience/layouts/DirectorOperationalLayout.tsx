@@ -20,6 +20,11 @@ import {
   renderCircusDeckRibbon,
 } from '@/modules/operational-cards/experience/layouts/circusDeckRibbon'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
+import { ExportSituationsButton } from '@/modules/operational-cards/export/ExportSituationsButton'
+import {
+  canExportSituations,
+  toExportCoordinationOptions,
+} from '@/modules/operational-cards/export/exportAccess'
 import type { DirectorKpiModel } from '@/modules/operational-cards/hooks/useDirectorKpi'
 import { OPERATIONAL_STATUS_LABEL } from '@/modules/operational-cards/data/operationalStatusLabel'
 import type { OperationalShellModel } from '@/modules/operational-cards/hooks/useOperationalShellModel'
@@ -320,6 +325,17 @@ export function DirectorOperationalLayout({
               title="Indicadores operacionales"
               subtitle="Cómo está la operación hoy, dónde se concentran las situaciones y cómo evolucionan."
             />
+            {canExportSituations(user) ? (
+              <div className="director-export-bar" data-testid="director-export-bar">
+                <ExportSituationsButton
+                  coordinations={toExportCoordinationOptions(
+                    controller.overview?.coordinations ?? [],
+                    labelByCode,
+                  )}
+                  observedCoordinationId={selectedCoordination?.id ?? null}
+                />
+              </div>
+            ) : null}
             <AdminKpiDashboard
               selectedCoordinationId={selectedCoordination?.id ?? null}
               labelByCode={labelByCode}

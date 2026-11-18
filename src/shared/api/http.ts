@@ -138,3 +138,87 @@ export async function apiRequest<T>(
 
   return (await response.json()) as T
 }
+
+export interface ApiDownload {
+  blob: Blob
+  /** Nombre que propone el servidor (Content-Disposition), si lo envía. */
+  filename: string | null
+}
+
+/** Extrae el nombre de archivo de una cabecera Content-Disposition. */
+export function parseContentDispositionFilename(
+  header: string | null,
+): string | null {
+  if (!header) return null
+  const encoded = /filename\*\s*=\s*(?:UTF-8'')?([^;]+)/i.exec(header)
+  if (encoded) {
+    try {
+      return decodeURIComponent(encoded[1].trim().replace(/^"|"$/g, ''))
+    } catch {
+      // Cae al nombre simple.
+    }
+  }
+  const plain = /filename\s*=\s*"?([^";]+)"?/i.exec(header)
+  return plain ? plain[1].trim() : null
+}
+
+/**
+ * Descarga binaria autenticada (p. ej. un .xlsx). Mismo manejo de errores y de
+ * sesión caducada que `apiRequest`, pero devuelve el cuerpo como Blob.
+ */
+export async function apiDownload(
+  path: string,
+  init?: RequestInit,
+): Promise<ApiDownload> {
+  const accessToken = readAccessToken()
+  const apiBaseUrl = getApiBaseUrl()
+  let response: Response
+
+  try {
+    response = await fetch(`${apiBaseUrl}${path}`, {
+      ...init,
+      headers: {
+        Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/json',
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        ...(init?.headers ?? {}),
+      },
+    })
+  } catch (cause) {
+    if (isTimeoutError(cause)) {
+      throw new ApiError(
+        'La descarga tardó demasiado en responder. Intente de nuevo o acote los filtros.',
+        0,
+        { cause, code: 'TIMEOUT' },
+      )
+    }
+    throw new ApiError(
+      'No se pudo conectar con la API para generar el archivo. Verifique su conexión.',
+      0,
+      { cause, code: 'NETWORK_ERROR' },
+    )
+  }
+
+  if (!response.ok) {
+    const body = await readErrorBody(response)
+    let message = `Error HTTP ${response.status}`
+    if (typeof body.message === 'string') message = body.message
+    else if (Array.isArray(body.message)) message = body.message.join(', ')
+    if (response.status >= 500 && body.requestId) {
+      message = `${message} (Ref: ${body.requestId})`
+    }
+    if (shouldHandleUnauthorized(path, response.status)) {
+      unauthorizedHandler?.()
+    }
+    throw new ApiError(message, response.status, {
+      code: body.code,
+      requestId: body.requestId,
+    })
+  }
+
+  return {
+    blob: await response.blob(),
+    filename: parseContentDispositionFilename(
+      response.headers.get('Content-Disposition'),
+    ),
+  }
+}
