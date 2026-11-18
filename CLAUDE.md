@@ -10,8 +10,8 @@ SPA React (Cartas y Circo): Centro Operacional por rol, personaje Rive, KPIs Dir
 
 ## Rama de trabajo
 
-- **Trabajo:** `refactor/novex-consolidacion` (prod `b726c47` + fases 01B/02/03a + recorrido del coordinador).
-- **Producción:** `origin/main` / tag `novex-circo-prod-20261027` — **no** pushear sin autorización.
+- **Trabajo:** `refactor/novex-consolidacion` (desplegada en prod el 2026-11-18).
+- **Producción:** `origin/main` / tag `novex-prod-20261118` (`aec31a4`; anterior `novex-circo-prod-20261027`) — **no** pushear sin autorización.
 - **Conservar sin tocar:** `Alejo-Rama`.
 - Tutorial: tour general suspendido (`ONBOARDING_TOUR_SUSPENDED`). Recorrido del COORDINADOR (`src/modules/onboarding/`): en desarrollo, o en un despliegue con `VITE_ENABLE_COORDINATOR_TOUR=true`. **No activar en prod** sin validación y autorización.
 

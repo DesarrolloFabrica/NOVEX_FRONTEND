@@ -7,8 +7,9 @@ SPA React de **NOVEX** (Cartas y Circo): Centro Operacional por rol, personaje R
 
 | Ref | Commit | Uso |
 |---|---|---|
-| `origin/main` / tag `novex-circo-prod-20261027` | `b726c47` | Producción |
-| `refactor/novex-consolidacion` | tip de la rama | Desarrollo (sin desplegar) |
+| `origin/main` / tag `novex-prod-20261118` | `aec31a4` | Producción (desde 2026-11-18) |
+| tag `novex-circo-prod-20261027` | `b726c47` | Release anterior |
+| `refactor/novex-consolidacion` | tip de la rama | Desarrollo (base del despliegue actual) |
 | `Alejo-Rama` | conservada | No modificar en consolidación |
 
 **Node 22.** Push a `main` despliega Cloud Run.
